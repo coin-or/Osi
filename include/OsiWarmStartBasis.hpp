@@ -55,13 +55,13 @@ public:
   }
   void setStructStatus(int i, Status st) {
     char& st_byte = structuralStatus_[i>>2];
-    st_byte &= ~(3 << (i&3));
-    st_byte |= (st << (i&3));
+    st_byte &= ~(3 << ((i&3)<<1));
+    st_byte |= (st << ((i&3)<<1));
   }
   void setArtifStatus(int i, Status st) {
     char& st_byte = artificialStatus_[i>>2];
     st_byte &= ~(3 << ((i&3)<<1));
-    st_byte |= st << ((i&3)<<1);
+    st_byte |= (st << ((i&3)<<1));
   }
 
   /** Assign the status vectors to be the warmstart information. In this

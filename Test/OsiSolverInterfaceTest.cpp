@@ -894,10 +894,12 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     
     // Test getting and setting of objective offset
     double objOffset;
-    assert( si.getDblParam(OsiObjOffset,objOffset) );
+    bool supportOsiObjOffset = si.getDblParam(OsiObjOffset,objOffset);
+    assert( supportOsiObjOffset );
     assert( eq( objOffset, 0.0 ) );
-    assert( si.setDblParam(OsiObjOffset, 3.21) );
-    assert( si.getDblParam(OsiObjOffset,objOffset) );
+    supportOsiObjOffset = si.setDblParam(OsiObjOffset, 3.21);
+    assert( supportOsiObjOffset );
+    si.getDblParam(OsiObjOffset,objOffset);
     assert( eq( objOffset, 3.21 ) );
     
     delete &si;
@@ -1054,7 +1056,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     double objOffset;
     bool supported = si2->getDblParam(OsiObjOffset,objOffset);
     assert( supported );
-    if( !eq( objOffset, 3.21 ) )
+    if( !eq( objOffset, 0.0 ) )
       failureMessage(solverName,"getDblParam OsiObjOffset on cloned solverInterface");
     delete si2;
   }

@@ -493,6 +493,11 @@ void OsiSolverInterfaceMpsUnitTest
               failureMessage(siName[i],"skipping pilot. does not solve after many hours on windows");
               continue;
             }
+            // Does not converge to solution after many hours run time for pilot
+            if ( mpsName[m]=="pilot87" ) {
+              failureMessage(siName[i],"skipping pilot. does not solve after an hour cpu time on windows");
+              continue;
+            }
           }
         }
 #     endif

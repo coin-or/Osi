@@ -195,7 +195,18 @@ void OsiCpxSolverInterface::resolve()
 
   CPXLPptr lp = getLpPtr( OsiCpxSolverInterface::FREECACHED_RESULTS );
 
-  CPXdualopt( env_, lp );   
+  int term = CPXdualopt( env_, lp );   
+
+  /* If the problem is found infeasible during presolve, resolve it to get a 
+     proper term code */
+  if (term == CPXERR_PRESLV_INForUNBD){
+    cpx_status = CPXsetintparam(lp_data->cpxenv, CPX_PARAM_PREIND, CPX_OFF);
+    CPX_check_error("dual_simplex - CPXsetintparam");
+    term = CPXdualopt(lp_data->cpxenv, lp_data->lp);
+    CPX_check_error("dual_simplex - CPXdualopt");
+    cpx_status = CPXsetintparam(lp_data->cpxenv, CPX_PARAM_PREIND, CPX_ON);
+    CPX_check_error("dual_simplex - CPXsetintparam");
+  }
 }
 //-----------------------------------------------------------------------------
 void OsiCpxSolverInterface::branchAndBound()
@@ -432,7 +443,7 @@ bool OsiCpxSolverInterface::isProvenPrimalInfeasible() const
   int stat = CPXgetstat( env_, getMutableLpPtr() );
 
 #if CPX_VERSION >= 800
-  // The origial return is not correct because the return code is with respect
+  // In CPLEX 8, the return code is with respect
   // to the original problem, regardless of the algorithm used to solve it
   // --tkr 7/31/03
   return (stat == CPX_STAT_INFEASIBLE);
@@ -454,12 +465,18 @@ bool OsiCpxSolverInterface::isProvenDualInfeasible() const
   debugMessage("OsiCpxSolverInterface::isProvenDualInfeasible()\n");
 
   int stat = CPXgetstat( env_, getMutableLpPtr() );
-  int method = CPXgetmethod( env_, getMutableLpPtr() );
 
 #if CPX_VERSION >= 800
-  return (method == CPX_ALG_PRIMAL && stat == CPX_STAT_UNBOUNDED || 
-	  method == CPX_ALG_DUAL && stat == CPX_STAT_INFEASIBLE);
+  // In CPLEX 8, the return code is with respect
+  // to the original problem, regardless of the algorithm used to solve it
+  // --tkr 7/31/03
+  return (stat == CPX_UNBOUNDED)
+  //return (method == CPX_ALG_PRIMAL && stat == CPX_STAT_UNBOUNDED || 
+  //	  method == CPX_ALG_DUAL && stat == CPX_STAT_INFEASIBLE);
 #else
+
+  int method = CPXgetmethod( env_, getMutableLpPtr() );
+
   return (method == CPX_ALG_PRIMAL && stat == CPX_UNBOUNDED || 
 	  method == CPX_ALG_DUAL && stat == CPX_INFEASIBLE || 
 	  stat == CPX_ABORT_DUAL_INFEAS || 
@@ -938,9 +955,50 @@ double OsiCpxSolverInterface::getObjSense() const
 
 bool OsiCpxSolverInterface::isContinuous( int colNumber ) const
 {
-  debugMessage("OsiCpxSolverInterface::isContinuous(%d)\n", colNumber);
+<<<<<<< OsiCpxSolverInterface.cpp
+  CPXLPptr lp = getMutableLpPtr();
+  int probType = CPXgetprobtype(env_, lp);
+  bool ctype;
 
+#if CPX_VERSION >= 800
+  if ( probType == CPXPROB_RELAXEDMILP || probType == CPXPROB_LP) {
+    int err = CPXchgprobtype(env_, lp, CPXPROB_MILP);
+    checkCPXerror( err, "CPXchgprobtype", "isContinuous" );
+  }
+#else
+  if ( probType == CPXPROB_RELAXED || probType == CPXPROB_LP) {
+    int err = CPXchgprobtype(env_, lp, CPXPROB_MIP);
+    checkCPXerror( err, "CPXchgprobtype", "isContinuous" );
+  }
+#endif
+
+  ctype = getCtype()[colNumber] == CPX_CONTINUOUS;
+=======
+  debugMessage("OsiCpxSolverInterface::isContinuous(%d)\n", colNumber);
+>>>>>>> 1.12
+
+<<<<<<< OsiCpxSolverInterface.cpp
+#if 0
+#if CPX_VERSION >= 800
+  if ( probType == CPXPROB_MILP ) {
+    int err = CPXchgprobtype(env_, lp, CPXPROB_RELAXEDMILP);
+    checkCPXerror( err, "CPXchgprobtype", "isContinuous" );
+  }
+#else
+  if ( probType == CPXPROB_MIP ) {
+    int err = CPXchgprobtype(env_, lp, CPXPROB_RELAXED);
+    checkCPXerror( err, "CPXchgprobtype", "isContinuous" );
+  }
+#endif
+#endif
+
+  int err = CPXchgprobtype( env_, lp, probType );
+  checkCPXerror( err, "CPXchgprobtype", "setInteger" );
+
+  return ctype;
+=======
   return getCtype()[colNumber] == CPX_CONTINUOUS;
+>>>>>>> 1.12
 }
 
 //------------------------------------------------------------------
@@ -1548,6 +1606,32 @@ OsiCpxSolverInterface::setContinuous(int index)
 void
 OsiCpxSolverInterface::setInteger(int index)
 {
+<<<<<<< OsiCpxSolverInterface.cpp
+  CPXLPptr lp = getLpPtr( OsiCpxSolverInterface::FREECACHED_COLUMN );
+  int probType = CPXgetprobtype( env_, lp );
+  int err;
+  char type = 'I';
+#if CPX_VERSION >= 800
+  if( probType == CPXPROB_LP || probType == CPXPROB_RELAXEDMILP ) 
+     {
+	err = CPXchgprobtype( env_, lp, CPXPROB_MILP );
+	checkCPXerror( err, "CPXchgprobtype", "setInteger" );
+     }  
+#else
+  if( probType == CPXPROB_LP || probType == CPXPROB_RELAXEDMIP ) 
+     {
+	err = CPXchgprobtype( env_, lp, CPXPROB_MIP );
+	checkCPXerror( err, "CPXchgprobtype", "setInteger" );
+     }  
+#endif
+  if( getColLower()[index] == 0.0 && getColUpper()[index] == 1.0 )
+     type = 'B';
+  err = CPXchgctype( env_, lp, 1, &index, &type );
+  checkCPXerror( err, "CPXchgctype", "setInteger");
+
+  err = CPXchgprobtype( env_, lp, probType );
+  checkCPXerror( err, "CPXchgprobtype", "setInteger" );
+=======
   debugMessage("OsiCpxSolverInterface::setInteger(%d)\n", index);
 
   assert(coltype_ != NULL);
@@ -1565,6 +1649,7 @@ OsiCpxSolverInterface::setInteger(int index)
       err = CPXchgctype( env_, lp, 1, &index, &coltype_[index] );
       checkCPXerror( err, "CPXchgctype", "setInteger" );
     }
+>>>>>>> 1.12
 }
 //-----------------------------------------------------------------------------
 void
@@ -1579,10 +1664,50 @@ OsiCpxSolverInterface::setContinuous(const int* indices, int len)
 void
 OsiCpxSolverInterface::setInteger(const int* indices, int len)
 {
-  debugMessage("OsiCpxSolverInterface::setInteger(%p, %d)\n", indices, len);
+<<<<<<< OsiCpxSolverInterface.cpp
+  CPXLPptr lp = getLpPtr( OsiCpxSolverInterface::FREECACHED_COLUMN );
+  int probType = CPXgetprobtype( env_, lp );
+  int err;
 
+#if CPX_VERSION >= 800
+  if( probType == CPXPROB_LP || probType == CPXPROB_RELAXEDMILP ) 
+    {
+      err = CPXchgprobtype( env_, lp, CPXPROB_MILP );
+      checkCPXerror( err, "CPXchgprobtype", "setInteger" );
+    }  
+#else
+  if( probType == CPXPROB_LP || probType == CPXPROB_RELAXEDMIP ) 
+    {
+      err = CPXchgprobtype( env_, lp, CPXPROB_MIP );
+      checkCPXerror( err, "CPXchgprobtype", "setInteger" );
+    }  
+#endif
+=======
+  debugMessage("OsiCpxSolverInterface::setInteger(%p, %d)\n", indices, len);
+>>>>>>> 1.12
+
+<<<<<<< OsiCpxSolverInterface.cpp
+  char* type = new char[len];
+  CoinFillN( type, len, 'I' );
+  const double* clb = getColLower();
+  const double* cub = getColUpper();
+=======
+>>>>>>> 1.12
   for( int i = 0; i < len; ++i )
+<<<<<<< OsiCpxSolverInterface.cpp
+    {
+      if( clb[indices[i]] == 0.0 && cub[indices[i]] == 1.0 )
+	type[i] = 'B';
+    }
+  err = CPXchgctype( env_, lp, len, const_cast<int*>(indices), type );
+  checkCPXerror( err, "CPXchgctype", "setInteger");
+  delete[] type;
+
+  err = CPXchgprobtype( env_, lp, probType );
+  checkCPXerror( err, "CPXchgprobtype", "setInteger" );
+=======
      setInteger(indices[i]);
+>>>>>>> 1.12
 }
 //#############################################################################
 
@@ -2288,10 +2413,10 @@ void OsiCpxSolverInterface::incrementInstanceCounter()
 #ifndef NDEBUG
       CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_ON ); // for testing purposes
 #endif
-      char logfileName[]="cplex.log";
-      char filemode[]="a+";
-      CPXFILEptr fp = CPXfopen( logfileName, filemode );
-      CPXsetlogfile( env_, fp );
+      //char logfileName[]="cplex.log";
+      //char filemode[]="a+";
+      //CPXFILEptr fp = CPXfopen( logfileName, filemode );
+      //CPXsetlogfile( env_, fp );
       err = sscanf( CPXversion( env_ ), "%d.%d.%d", &cpxVersionMajor_, &cpxVersionMinor_, &cpxVersionMinorMinor_ );
       assert( err == 3 );
     }

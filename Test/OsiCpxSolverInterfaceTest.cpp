@@ -88,6 +88,8 @@ void OsiCpxSolverInterfaceUnitTest( const std::string & mpsDir, const std::strin
     assert( m.rowsol_==NULL );
     assert( m.matrixByRow_==NULL );
     assert( m.matrixByCol_==NULL );
+    assert( m.coltype_==NULL );
+    assert( m.coltypesize_==0 );
     assert( OsiCpxSolverInterface::getNumInstances()==1 );
     assert( m.getApplicationData() == NULL );
     int i=2346;
@@ -541,7 +543,6 @@ void OsiCpxSolverInterfaceUnitTest( const std::string & mpsDir, const std::strin
 	assert( m.obj_==NULL );
 	assert( m.collower_==NULL );
 	assert( m.colupper_==NULL );
-	assert( m.ctype_==NULL );
         assert( m.rowrange_==NULL );
         assert( m.rowsense_==NULL );
         assert( m.rhs_==NULL );
@@ -556,7 +557,7 @@ void OsiCpxSolverInterfaceUnitTest( const std::string & mpsDir, const std::strin
 	assert( siC1.obj_==NULL );
 	assert( siC1.collower_==NULL );
 	assert( siC1.colupper_==NULL );
-	assert( siC1.coltype_==NULL );
+	// assert( siC1.coltype_==NULL );
         assert( siC1.rowrange_==NULL );
         assert( siC1.rowsense_==NULL );
         assert( siC1.rhs_==NULL );
@@ -651,7 +652,7 @@ void OsiCpxSolverInterfaceUnitTest( const std::string & mpsDir, const std::strin
 	assert( siC1.obj_==NULL );
 	assert( siC1.collower_==NULL );
 	assert( siC1.colupper_==NULL );
-	assert( siC1.coltype_==NULL );
+	// assert( siC1.coltype_==NULL );
         assert( siC1.rowrange_==NULL );
         assert( siC1.rowsense_==NULL );
         assert( siC1.rhs_==NULL );
@@ -692,7 +693,7 @@ void OsiCpxSolverInterfaceUnitTest( const std::string & mpsDir, const std::strin
       assert( lhs.obj_==NULL );
       assert( lhs.collower_==NULL );
       assert( lhs.colupper_==NULL );
-      assert( lhs.coltype_==NULL );
+      // assert( lhs.coltype_==NULL );
       assert( lhs.rowrange_==NULL );
       assert( lhs.rowsense_==NULL );
       assert( lhs.rhs_==NULL ); 

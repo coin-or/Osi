@@ -1164,7 +1164,7 @@ const double * OsiCpxSolverInterface::getRowActivity() const
           {
              double *rowslack = new double[nrows];
              int err = CPXgetmipslack( env_, getMutableLpPtr(), rowslack, 0, nrows-1 );
-             if ( err == CPXERR_NO_SOLN || err == CPXERR_NO_INT_SOLUTION )
+             if ( err == CPXERR_NO_SOLN || err == CPXERR_NO_INT_SOLN )
                 CoinFillN( rowact_, nrows, 0.0 );
              else
              {

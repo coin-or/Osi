@@ -1594,6 +1594,17 @@ OsiClpSolverInterface::getRowActivity() const
     return modelPtr_->solutionRegion(0);
   }
 }
+double 
+OsiClpSolverInterface::getObjValue() const 
+{
+#if 0
+   // This does not pass unitTest when getObjValue is called before solve.
+   return modelPtr_->objectiveValue();
+#else
+   return OsiSolverInterface::getObjValue();
+#endif
+}
+
 /* Set an objective function coefficient */
 void 
 OsiClpSolverInterface::setObjCoeff( int elementIndex, double elementValue )

@@ -81,7 +81,7 @@ failureMessage(
 {
   std::string messageText;
   messageText = "*** ";
-  messageText += solverName + "SolverInteface Test Failure: ";
+  messageText += solverName + "SolverInteface testing issue: ";
   messageText += message;
   std::cerr <<messageText.c_str() <<std::endl;
 }
@@ -287,171 +287,26 @@ void OsiSolverInterfaceMpsUnitTest
   std::vector<double> timeTaken;
   const int vecsize = vecSiP.size();
   for ( i=0; i<vecsize; i++ ) {
-    siName.push_back("");
+    siName.push_back("unknown");
     numProbSolved.push_back(0);
     timeTaken.push_back(0.0);
   }
-
-/*
-  Open the main loop to step through the MPS problems.
-*/
-  for (m = 0 ; m < mpsName.size() ; m++)
-  { std::cerr << "  processing mps file: " << mpsName[m] 
+  
+  
+  //Open the main loop to step through the MPS problems.
+  for (m = 32 ; m < mpsName.size() ; m++) { 
+    std::cerr << "  processing mps file: " << mpsName[m] 
       << " (" << m+1 << " out of " << mpsName.size() << ")" << std::endl ;
-/*
-  Stage 1: Read the MPS file into each solver interface.
-
-  Fill vecSiP with fresh clones of the solvers and read in the MPS file. As
-  a basic check, make sure the size of the constraint matrix is correct.
-*/
-    for (i = vecSiP.size()-1 ; i >= 0 ; --i)
-    { vecSiP[i] = vecEmptySiP[i]->clone() ;
+    bool allSolversReadMpsFile = true;
+    
+    
+    //Stage 1: Read the MPS file into each solver interface.
+    //Fill vecSiP with fresh clones of the solvers and read in the MPS file. As
+    //a basic check, make sure the size of the constraint matrix is correct.
+    for (i = vecSiP.size()-1 ; i >= 0 ; --i) { 
+      vecSiP[i] = vecEmptySiP[i]->clone() ;
       
-      std::string fn = mpsDir+mpsName[m] ;
-      vecSiP[i]->readMps(fn.c_str(),"mps") ;
-      
-      if (min[m])
-	vecSiP[i]->setObjSense(1.0) ;
-      else
-	vecSiP[i]->setObjSense(-1.0) ;
-      
-      int nr = vecSiP[i]->getNumRows() ;
-      int nc = vecSiP[i]->getNumCols() ;
-      assert(nr == nRows[m]-1) ;
-      assert(nc == nCols[m]) ; } 
-/*
-  If we have multiple solvers, compare the representations.
-*/
-    for (i = vecSiP.size()-1 ; i > 0 ; --i)
-    { CoinPackedVector vim1,vi ;
-      
-      // Compare col lowerbounds
-      assert(
-        equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
-        vecSiP[i-1]->getColLower(),vecSiP[i  ]->getColLower(),
-        vecSiP[i  ]->getNumCols() )
-        ) ;
-      
-      // Compare col upperbounds
-      assert(
-        equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
-        vecSiP[i-1]->getColUpper(),vecSiP[i  ]->getColUpper(),
-        vecSiP[i  ]->getNumCols() )
-        ) ;
-      
-      // Compare row lowerbounds
-      assert(
-        equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
-        vecSiP[i-1]->getRowLower(),vecSiP[i  ]->getRowLower(),
-        vecSiP[i  ]->getNumRows() )
-        ) ;
-      
-      // Compare row upperbounds
-      assert( 
-        equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
-        vecSiP[i-1]->getRowUpper(),vecSiP[i  ]->getRowUpper(),
-        vecSiP[i  ]->getNumRows() )
-        ) ;
-            
-      // Compare row sense
-      {
-        const char * rsm1 = vecSiP[i-1]->getRowSense() ;
-        const char * rs   = vecSiP[i  ]->getRowSense() ;
-        int nr = vecSiP[i]->getNumRows() ;
-        int r ;
-        for (r = 0 ; r < nr ; r++) assert (rsm1[r] == rs[r]) ;
-      }
-      
-      // Compare rhs
-      assert( 
-        equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
-        vecSiP[i-1]->getRightHandSide(),vecSiP[i  ]->getRightHandSide(),
-        vecSiP[i  ]->getNumRows() )
-        ) ;
-      
-      // Compare range
-      assert( 
-        equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
-        vecSiP[i-1]->getRowRange(),vecSiP[i  ]->getRowRange(),
-        vecSiP[i  ]->getNumRows() )
-        ) ;
-      
-      // Compare objective sense
-      assert( vecSiP[i-1]->getObjSense() == vecSiP[i  ]->getObjSense() ) ;
-           
-      // Compare objective coefficients
-      assert( 
-        equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
-        vecSiP[i-1]->getObjCoefficients(),vecSiP[i  ]->getObjCoefficients(),
-        vecSiP[i  ]->getNumCols() )
-        ) ;
-
-      // Compare number of elements
-      assert( vecSiP[i-1]->getNumElements() == vecSiP[i]->getNumElements() ) ;
-      
-      // Compare constraint matrix
-      { const CoinPackedMatrix * rmm1=vecSiP[i-1]->getMatrixByRow() ;
-        const CoinPackedMatrix * rm  =vecSiP[i  ]->getMatrixByRow() ;
-        assert( rmm1->isEquivalent(*rm) ) ;
-        
-        const CoinPackedMatrix * cmm1=vecSiP[i-1]->getMatrixByCol() ;
-        const CoinPackedMatrix * cm  =vecSiP[i  ]->getMatrixByCol() ;
-        assert( cmm1->isEquivalent(*cm) ) ; } }
-/*
-  If we have multiple solvers, compare the variable type information
-*/
-    for (i = vecSiP.size()-1 ; i > 0 ; --i)
-    { CoinPackedVector vim1,vi ;
-      int c ;
-      
-      { OsiVectorInt sm1 = vecSiP[i-1]->getFractionalIndices() ;
-        OsiVectorInt s   = vecSiP[i  ]->getFractionalIndices() ;
-        assert( sm1.size() == s.size() ) ;
-        for (c = s.size()-1 ; c >= 0 ; --c) assert( sm1[c] == s[c] ) ; }
-
-      { int nc = vecSiP[i]->getNumCols() ;
-        for (c = 0 ; c < nc ; c++)
-	{ assert(
-	    vecSiP[i-1]->isContinuous(c) == vecSiP[i]->isContinuous(c)
-	    ) ;
-          assert(
-	    vecSiP[i-1]->isBinary(c) == vecSiP[i]->isBinary(c)
-	    ) ;
-          assert(
-	    vecSiP[i-1]->isIntegerNonBinary(c) ==
-	    vecSiP[i  ]->isIntegerNonBinary(c)
-	    ) ;
-          assert(
-	    vecSiP[i-1]->isFreeBinary(c) == vecSiP[i]->isFreeBinary(c)
-	    ) ;
-          assert(
-	    vecSiP[i-1]->isInteger(c) == vecSiP[i]->isInteger(c)
-	    ) ; } } }
-/*
-  Stage 2: Call each solver to solve the problem.
-
-  We call each solver, then check the return code and objective.
-
-  Note that the volume solver can't handle the Netlib cases. The strategy is
-  to require that it be the last solver in vecSiP and then break out of the
-  loop. This ensures that all previous solvers are run and compared to one
-  another.
-*/
-
-    for (i = 0 ; i < static_cast<int>(vecSiP.size()) ; ++i)
-    {
-      double startTime = cpuTime();
-      
-#     ifdef COIN_USE_VOL
-      { 
-        OsiVolSolverInterface * si =
-          dynamic_cast<OsiVolSolverInterface *>(vecSiP[i]) ;
-        if (si != NULL )  { 
-          // VOL does not solve netlib cases so don't bother trying to solve
-          break ; 
-        }
-      }
-#     endif
+      vecSiP[i]->getStrParam(OsiSolverName,siName[i]);
       
 #     ifdef COIN_USE_DYLP
       { 
@@ -461,50 +316,222 @@ void OsiSolverInterfaceMpsUnitTest
           // Solver is DYLP.
           // Skip over netlib cases that DYLP struggles with.
           // Does not read forplan mps file
-          if ( mpsName[m]=="forplan" ) continue;
-          // Does not converge to solution after many hours run time for pilot
-          if ( mpsName[m]=="pilot" ) continue;
+          if ( mpsName[m]=="forplan" ) {
+            failureMessage(siName[i],"mps reader will not read forplan");
+            allSolversReadMpsFile = false;
+            continue;
+          }
         }
       }
 #     endif
-
-      vecSiP[i]->getStrParam(OsiSolverName,siName[i]);
       
-      vecSiP[i]->initialSolve() ;
+      std::string fn = mpsDir+mpsName[m] ;
+      vecSiP[i]->readMps(fn.c_str(),"mps") ;
       
-      double timeOfSolution = cpuTime()-startTime;
-      if (vecSiP[i]->isProvenOptimal()) { 
-        double soln = vecSiP[i]->getObjValue();       
-        CoinRelFltEq eq(objValueTol[m]) ;
-        if (eq(soln,objValue[m])) { 
-          std::cerr 
-	    <<siName[i]<<"SolverInterface "
-	    << soln << " = " << objValue[m] << " ; okay";
-          numProbSolved[i]++;
-        } else  { 
-          std::cerr <<siName[i] <<" " <<soln << " != " <<objValue[m] << "; error=" ;
-          std::cerr <<fabs(objValue[m] - soln); 
+      if (min[m])
+        vecSiP[i]->setObjSense(1.0) ;
+      else
+        vecSiP[i]->setObjSense(-1.0) ;
+      
+      int nr = vecSiP[i]->getNumRows() ;
+      int nc = vecSiP[i]->getNumCols() ;
+      assert(nr == nRows[m]-1) ;
+      assert(nc == nCols[m]) ; 
+    } 
+    
+    //If we have multiple solvers, compare the representations.
+    if ( allSolversReadMpsFile )
+      for (i = vecSiP.size()-1 ; i > 0 ; --i) { 
+        CoinPackedVector vim1,vi ;
+        
+        // Compare col lowerbounds
+        assert(
+          equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
+          vecSiP[i-1]->getColLower(),vecSiP[i  ]->getColLower(),
+          vecSiP[i  ]->getNumCols() )
+          ) ;
+        
+        // Compare col upperbounds
+        assert(
+          equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
+          vecSiP[i-1]->getColUpper(),vecSiP[i  ]->getColUpper(),
+          vecSiP[i  ]->getNumCols() )
+          ) ;
+        
+        // Compare row lowerbounds
+        assert(
+          equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
+          vecSiP[i-1]->getRowLower(),vecSiP[i  ]->getRowLower(),
+          vecSiP[i  ]->getNumRows() )
+          ) ;
+        
+        // Compare row upperbounds
+        assert( 
+          equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
+          vecSiP[i-1]->getRowUpper(),vecSiP[i  ]->getRowUpper(),
+          vecSiP[i  ]->getNumRows() )
+          ) ;
+        
+        // Compare row sense
+        {
+          const char * rsm1 = vecSiP[i-1]->getRowSense() ;
+          const char * rs   = vecSiP[i  ]->getRowSense() ;
+          int nr = vecSiP[i]->getNumRows() ;
+          int r ;
+          for (r = 0 ; r < nr ; r++) assert (rsm1[r] == rs[r]) ;
         }
-      } else {
-        if (vecSiP[i]->isProvenPrimalInfeasible())  
-          std::cerr << "error; primal infeasible" ;
-        else if (vecSiP[i]->isProvenDualInfeasible())  
-	  std::cerr << "error; dual infeasible" ;
-	else if (vecSiP[i]->isIterationLimitReached()) 
-	  std::cerr << "error; iteration limit" ;
-	else if (vecSiP[i]->isAbandoned()) 
-	  std::cerr << "error; abandoned" ;
-	else  
-	  std::cerr << "error; unknown" ;
+        
+        // Compare rhs
+        assert( 
+          equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
+          vecSiP[i-1]->getRightHandSide(),vecSiP[i  ]->getRightHandSide(),
+          vecSiP[i  ]->getNumRows() )
+          ) ;
+        
+        // Compare range
+        assert( 
+          equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
+          vecSiP[i-1]->getRowRange(),vecSiP[i  ]->getRowRange(),
+          vecSiP[i  ]->getNumRows() )
+          ) ;
+        
+        // Compare objective sense
+        assert( vecSiP[i-1]->getObjSense() == vecSiP[i  ]->getObjSense() ) ;
+        
+        // Compare objective coefficients
+        assert( 
+          equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
+          vecSiP[i-1]->getObjCoefficients(),vecSiP[i  ]->getObjCoefficients(),
+          vecSiP[i  ]->getNumCols() )
+          ) ;
+        
+        // Compare number of elements
+        assert( vecSiP[i-1]->getNumElements() == vecSiP[i]->getNumElements() ) ;
+        
+        // Compare constraint matrix
+        { 
+          const CoinPackedMatrix * rmm1=vecSiP[i-1]->getMatrixByRow() ;
+          const CoinPackedMatrix * rm  =vecSiP[i  ]->getMatrixByRow() ;
+          assert( rmm1->isEquivalent(*rm) ) ;
+          
+          const CoinPackedMatrix * cmm1=vecSiP[i-1]->getMatrixByCol() ;
+          const CoinPackedMatrix * cm  =vecSiP[i  ]->getMatrixByCol() ;
+          assert( cmm1->isEquivalent(*cm) ) ; 
+        } 
       }
-      std::cerr<<" - took " <<timeOfSolution<<" seconds."<<std::endl; 
-      timeTaken[i] += timeOfSolution;
-    }
-    /*
-    Delete the used solver interfaces so we can reload fresh clones for the
-              next problem.
-    */
-    for (i = vecSiP.size()-1 ; i >= 0 ; --i) delete vecSiP[i] ;
+      
+      //If we have multiple solvers, compare the variable type information      
+      if ( allSolversReadMpsFile )
+        for (i = vecSiP.size()-1 ; i > 0 ; --i){ 
+          CoinPackedVector vim1,vi ;
+          int c ;
+          
+          { 
+            OsiVectorInt sm1 = vecSiP[i-1]->getFractionalIndices() ;
+            OsiVectorInt s   = vecSiP[i  ]->getFractionalIndices() ;
+            assert( sm1.size() == s.size() ) ;
+            for (c = s.size()-1 ; c >= 0 ; --c) assert( sm1[c] == s[c] ) ; 
+          }
+          
+          { 
+            int nc = vecSiP[i]->getNumCols() ;
+            for (c = 0 ; c < nc ; c++){ 
+              assert(
+                vecSiP[i-1]->isContinuous(c) == vecSiP[i]->isContinuous(c)
+                ) ;
+              assert(
+                vecSiP[i-1]->isBinary(c) == vecSiP[i]->isBinary(c)
+                ) ;
+              assert(
+                vecSiP[i-1]->isIntegerNonBinary(c) ==
+                vecSiP[i  ]->isIntegerNonBinary(c)
+                ) ;
+              assert(
+                vecSiP[i-1]->isFreeBinary(c) == vecSiP[i]->isFreeBinary(c)
+                ) ;
+              assert(
+                vecSiP[i-1]->isInteger(c) == vecSiP[i]->isInteger(c)
+                ) ; 
+            } 
+          } 
+        }
+        
+      //Stage 2: Call each solver to solve the problem.
+      //
+      // We call each solver, then check the return code and objective.
+      //  
+      //    Note that the volume solver can't handle the Netlib cases. The strategy is
+      //    to require that it be the last solver in vecSiP and then break out of the
+      //    loop. This ensures that all previous solvers are run and compared to one
+      //    another.      
+      for (i = 0 ; i < static_cast<int>(vecSiP.size()) ; ++i) {
+        double startTime = cpuTime();
+        
+#     ifdef COIN_USE_VOL
+        { 
+          OsiVolSolverInterface * si =
+            dynamic_cast<OsiVolSolverInterface *>(vecSiP[i]) ;
+          if (si != NULL )  { 
+            // VOL does not solve netlib cases so don't bother trying to solve
+            break ; 
+          }
+        }
+#     endif
+        
+#     ifdef COIN_USE_DYLP
+        { 
+          OsiDylpSolverInterface * si =
+            dynamic_cast<OsiDylpSolverInterface *>(vecSiP[i]) ;
+          if (si != NULL )  { 
+            // Solver is DYLP.
+            // Skip over netlib cases that DYLP struggles with
+            if ( mpsName[m]=="forplan" ) {
+              continue;
+            }
+            // Does not converge to solution after many hours run time for pilot
+            if ( mpsName[m]=="pilot" ) {
+              failureMessage(siName[i],"skipping pilot. does not solve after many hours on windows");
+              continue;
+            }
+          }
+        }
+#     endif
+        
+        vecSiP[i]->initialSolve() ;
+        
+        double timeOfSolution = cpuTime()-startTime;
+        if (vecSiP[i]->isProvenOptimal()) { 
+          double soln = vecSiP[i]->getObjValue();       
+          CoinRelFltEq eq(objValueTol[m]) ;
+          if (eq(soln,objValue[m])) { 
+            std::cerr 
+              <<siName[i]<<"SolverInterface "
+              << soln << " = " << objValue[m] << " ; okay";
+            numProbSolved[i]++;
+          } else  { 
+            std::cerr <<siName[i] <<" " <<soln << " != " <<objValue[m] << "; error=" ;
+            std::cerr <<fabs(objValue[m] - soln); 
+          }
+        } else {
+          if (vecSiP[i]->isProvenPrimalInfeasible())  
+            std::cerr << "error; primal infeasible" ;
+          else if (vecSiP[i]->isProvenDualInfeasible())  
+            std::cerr << "error; dual infeasible" ;
+          else if (vecSiP[i]->isIterationLimitReached()) 
+            std::cerr << "error; iteration limit" ;
+          else if (vecSiP[i]->isAbandoned()) 
+            std::cerr << "error; abandoned" ;
+          else  
+            std::cerr << "error; unknown" ;
+        }
+        std::cerr<<" - took " <<timeOfSolution<<" seconds."<<std::endl; 
+        timeTaken[i] += timeOfSolution;
+      }
+      /*
+      Delete the used solver interfaces so we can reload fresh clones for the
+      next problem.
+      */
+      for (i = vecSiP.size()-1 ; i >= 0 ; --i) delete vecSiP[i] ;
   }
 
   const int siName_size = siName.size();

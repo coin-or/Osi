@@ -250,7 +250,8 @@ int OsiFactorization::checkPivot(double saveFromU,
       status = 0;
     } else {
 #if OSI_DEBUG
-      std::cout << oldPivot << " " << saveFromU << std::endl;
+      std::cout <<"inaccurate pivot "<< oldPivot << " " 
+		<< saveFromU << std::endl;
 #endif
       if ( fabs ( fabs ( oldPivot ) - fabs ( saveFromU ) ) < 1.0e-12 ||
         fabs ( 1.0 - fabs ( saveFromU / oldPivot ) ) < 1.0e-8 ) {
@@ -263,7 +264,8 @@ int OsiFactorization::checkPivot(double saveFromU,
     //error
     status = 2;
 #if OSI_DEBUG
-    std::cout << saveFromU / oldPivot << " " << saveFromU << std::endl;
+    std::cout <<"inaccurate pivot "<< saveFromU / oldPivot 
+	      << " " << saveFromU << std::endl;
 #endif
   } 
   return status;
@@ -600,7 +602,8 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
     }       
     OsiBigIndex added = totalElements_ - factorElements_;
     
-    if ( added > extra && added > ( factorElements_ ) << 1 && !status ) {
+    if ( added > extra && added > ( factorElements_ ) << 1 && !status 
+	 && 3*totalElements_ > 2*(lengthAreaU_+lengthAreaL_)) {
       status = 3;
       if ( messageLevel_ & 4 ) {
         std::cout << "Factorization has "<< totalElements_
@@ -699,7 +702,7 @@ OsiFactorization::updateColumnTranspose ( OsiIndexedVector * regionSparse,
 	iRow = j;
 	region[iRow] = value;
 	regionIndex[numberNonZero++] = iRow;
-      }				
+      }
     }
   } else {
     for ( j = 0; j < numberRows_; j ++ ) {
@@ -709,7 +712,7 @@ OsiFactorization::updateColumnTranspose ( OsiIndexedVector * regionSparse,
 	iRow = pivotColumn_[j];
 	region[iRow] = value;
 	regionIndex[numberNonZero++] = iRow;
-      }				
+      }
     }
   }
   regionSparse->setNumElements ( numberNonZero );

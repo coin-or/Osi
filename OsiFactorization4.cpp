@@ -45,11 +45,11 @@ OsiFactorization::unPermuteTranspose ( OsiIndexedVector * regionSparse,
       for ( j = 0; j <  numberNonZero2 ; j++ ) {
 	int iRow = regionIndex2[j];
 	int newRow = permuteBack[iRow];
-	
+
 	region[newRow] = region2[iRow];
 	region2[iRow] = 0.0;
 	regionIndex[j] = newRow;
-      }			
+      }
       regionSparse2->setNumElements ( 0 );
 #ifdef OSI_DEBUG
       regionSparse2->checkClean();
@@ -60,13 +60,13 @@ OsiFactorization::unPermuteTranspose ( OsiIndexedVector * regionSparse,
       for ( j = 0; j < numberNonZero2 ; j++ ) {
 	int iRow = regionIndex2[j];
 	int newRow = permuteBack[iRow];
-	
+
 	region[newRow] = region2[iRow];
 	regionIndex[j] = newRow;
-      }			
-    }			
+      }
+    }
     regionSparse->setNumElements (  numberNonZero2 );
-  }				
+  }
 }
 
 //  updateColumnUDensish.  Updates part of column (FTRANU)
@@ -95,31 +95,31 @@ OsiFactorization::updateColumnUDensish ( OsiIndexedVector * regionSparse) const
       for ( j = start; j < end; j++ ) {
 	double value = element[j];
 	int iRow = indexRow[j];
-	
+
 	region[iRow] -= value * pivotValue;
       }
       region[i] = pivotValue*pivotRegion[i];
       regionIndex[numberNonZero++] = i;
     } else {
       region[i] = 0.0;
-    }				
-  }			
+    }
+  }
 
   // now do slacks
   double factor = slackValue_;
   if (factor==1.0) {
-    for ( i = numberSlacks_-1; i>=0;i--) {				
+    for ( i = numberSlacks_-1; i>=0;i--) {
       double absValue = fabs ( region[i] );
       if ( absValue ) {
 	if ( absValue > tolerance ) {
 	  regionIndex[numberNonZero++] = i;
 	} else {
 	  region[i] = 0.0;
-	}				
-      }				
+	}
+      }
     }
   } else {
-    for ( i = numberSlacks_-1; i>=0;i--) {				
+    for ( i = numberSlacks_-1; i>=0;i--) {
       double absValue = fabs ( region[i] );
       if ( absValue ) {
 	if ( absValue > tolerance ) {
@@ -127,8 +127,8 @@ OsiFactorization::updateColumnUDensish ( OsiIndexedVector * regionSparse) const
 	  region [i] *= factor;
 	} else {
 	  region[i] = 0.0;
-	}				
-      }				
+	}
+      }
     }
   }
   regionSparse->setNumElements ( numberNonZero );
@@ -230,12 +230,12 @@ OsiFactorization::updateColumnUSparse ( OsiIndexedVector * regionSparse,
       for ( j = start; j < start+number; j++ ) {
 	double value = element[j];
 	int iRow = indexRow[j];
-	
+
 	region[iRow] -=  value * pivotValue;
-      }		
+      }
     } else {
       region[iPivot]=0.0;
-    }		
+    }
   }
   // slacks
   if (slackValue_==1.0) {
@@ -385,7 +385,7 @@ void OsiFactorization::gutsOfCopy(const OsiFactorization &other)
     numberIn = numberInColumn_[iRow];
     CoinDisjointCopyN ( other.indexRowU_ + start, numberIn, indexRowU_ + start );
     CoinDisjointCopyN ( other.elementU_ + start, numberIn, elementU_ + start );
-  }				
+  }
   // L is contiguous
   CoinDisjointCopyN ( other.elementL_, lengthL_, elementL_ );
   CoinDisjointCopyN ( other.indexRowL_, lengthL_, indexRowL_ );
@@ -426,14 +426,14 @@ OsiFactorization::updateColumnR ( OsiIndexedVector * regionSparse ) const
       double value = element[j];
       int jRow = indexRow[j];
       pivotValue = pivotValue - value * region[jRow];
-    }				
+    }
     if ( fabs ( pivotValue ) > tolerance ) {
       region[i] = pivotValue;
       regionIndex[numberNonZero++] = i;
     } else {
       region[i] = 0.0;
-    }				
-  }				
+    }
+  }
   //set counts
   regionSparse->setNumElements ( numberNonZero );
 }
@@ -490,14 +490,14 @@ OsiFactorization::updateColumnTransposeR ( OsiIndexedVector * regionSparse ) con
 	      spare[iRow]=numberNonZero;
 	      regionIndex[numberNonZero++]=iRow;
 	    }
-	  }				
+	  }
 	  region[putRow] = pivotValue;
 	  // modify list
 	  int position=spare[i];
 	  regionIndex[position]=putRow;
 	  spare[putRow]=position;
-	}				
-      }				
+	}
+      }
       regionSparse->setNumElements(numberNonZero);
     } else {
       for ( i = last ; i >= numberRows_; i-- ) {
@@ -511,14 +511,14 @@ OsiFactorization::updateColumnTransposeR ( OsiIndexedVector * regionSparse ) con
 	    double value = element[j];
 	    int iRow = indexRow[j];
 	    region[iRow] -= value * pivotValue;
-	  }				
+	  }
 	  region[putRow] = pivotValue;
 	  //putRow must have been zero before so put on list ??
 	  //but can't catch up so will have to do L from end
 	  //unless we update lookBtran in replaceColumn - yes
-	}				
+	}
       }
-    }				
+    }
   }
 }
 /* Updates one column (FTRAN) from region2 and permutes.
@@ -547,7 +547,7 @@ int OsiFactorization::updateColumn ( OsiIndexedVector * regionSparse,
     iRow = permute[iRow];
     region[iRow] = value;
     regionIndex[j] = iRow;
-  }				
+  }
   regionSparse->setNumElements ( numberNonZero );
   // will be negative if no room
   int number=updateColumn ( regionSparse, FTUpdate );
@@ -565,7 +565,7 @@ int OsiFactorization::updateColumn ( OsiIndexedVector * regionSparse,
       iRow = permuteBack[iRow];
       array[iRow] = value;
       index[j] = iRow;
-    }			
+    }
     regionSparse->setNumElements(0);
     regionSparse2->setNumElements(numberNonZero);
   }
@@ -595,7 +595,7 @@ int OsiFactorization::updateColumn ( OsiIndexedVector * regionSparse,
     iRow = permute[iRow];
     region[iRow] = value;
     regionIndex[j] = iRow;
-  }				
+  }
   regionSparse->setNumElements ( number );
   // if no room will return negative
   numberNonZero = updateColumn ( regionSparse, FTUpdate );
@@ -609,7 +609,7 @@ int OsiFactorization::updateColumn ( OsiIndexedVector * regionSparse,
     iRow = permuteBack[iRow];
     array[iRow] = value;
     index[j] = iRow;
-  }			
+  }
   regionSparse->setNumElements(0);
   return numberNonZero;
 }
@@ -634,7 +634,7 @@ int OsiFactorization::updateColumn ( OsiIndexedVector * regionSparse,
     iRow = permute[iRow];
     region[iRow] = value;
     regionIndex[j] = iRow;
-  }				
+  }
   regionSparse->setNumElements ( number );
   // if no room will return negative
   numberNonZero = updateColumn ( regionSparse );
@@ -648,7 +648,7 @@ int OsiFactorization::updateColumn ( OsiIndexedVector * regionSparse,
     iRow = permuteBack[iRow];
     array[iRow] = value;
     index[j] = iRow;
-  }			
+  }
   regionSparse->setNumElements(0);
   return numberNonZero;
 }
@@ -674,7 +674,7 @@ int OsiFactorization::updateColumn ( OsiIndexedVector * regionSparse,
       int iRow = permute[j];
       region[iRow] = value;
       regionIndex[numberNonZero++] = iRow;
-    }				
+    }
   }
   regionSparse->setNumElements ( numberNonZero );
   // if no room will return negative
@@ -688,7 +688,7 @@ int OsiFactorization::updateColumn ( OsiIndexedVector * regionSparse,
     region[iRow]=0.0;
     iRow = permuteBack[iRow];
     array[iRow] = value;
-  }			
+  }
   regionSparse->setNumElements(0);
   return numberNonZero;
 }
@@ -711,7 +711,7 @@ int OsiFactorization::updateColumn ( OsiIndexedVector * regionSparse,
       int iRow = permute[j];
       region[iRow] = value;
       regionIndex[numberNonZero++] = iRow;
-    }				
+    }
   }
   regionSparse->setNumElements ( numberNonZero );
   // if no room will return negative
@@ -725,7 +725,7 @@ int OsiFactorization::updateColumn ( OsiIndexedVector * regionSparse,
     region[iRow]=0.0;
     iRow = permuteBack[iRow];
     array[iRow] = value;
-  }			
+  }
   regionSparse->setNumElements(0);
   return numberNonZero;
 }
@@ -733,8 +733,8 @@ int OsiFactorization::updateColumn ( OsiIndexedVector * regionSparse,
 void
 OsiFactorization::goSparse ( )
 {
-  if (!sparseThreshold_)
-    sparseThreshold_=(numberRows_+9)/10;
+  if (!sparseThreshold_&&numberRows_>400)
+    sparseThreshold_=(numberRows_-300)/7;
   //sparseThreshold_=99999;
   // allow for stack, list, next and char map of mark
   int nRowIndex = (maximumRowsExtra_+sizeof(int)-1)/

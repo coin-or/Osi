@@ -456,7 +456,10 @@ bool OsiClpSolverInterface::isProvenDualInfeasible() const
   const int stat = modelPtr_->status();
   return stat == 2;
 }
-
+/* 
+   NOTE - Coding if limit > 1.0e30 says that 1.0e29 is loose bound
+   so all maximization tests are changed 
+*/
 bool OsiClpSolverInterface::isPrimalObjectiveLimitReached() const
 {
   double limit = 0.0;
@@ -471,13 +474,13 @@ bool OsiClpSolverInterface::isPrimalObjectiveLimitReached() const
 
   switch (lastAlgorithm_) {
    case 0: // no simplex was needed
-     return maxmin > 0 ? (obj < limit) /*minim*/ : (obj > limit) /*maxim*/;
+     return maxmin > 0 ? (obj < limit) /*minim*/ : (-obj < limit) /*maxim*/;
    case 2: // dual simplex
      if (modelPtr_->status() == 0) // optimal
-	return maxmin > 0 ? (obj < limit) /*minim*/ : (obj > limit) /*maxim*/;
+	return maxmin > 0 ? (obj < limit) /*minim*/ : (-obj < limit) /*maxim*/;
      return false;
    case 1: // primal simplex
-     return maxmin > 0 ? (obj < limit) /*minim*/ : (obj > limit) /*maxim*/;
+     return maxmin > 0 ? (obj < limit) /*minim*/ : (-obj < limit) /*maxim*/;
   }
   return false; // fake return
 }
@@ -497,16 +500,16 @@ bool OsiClpSolverInterface::isDualObjectiveLimitReached() const
 
   switch (lastAlgorithm_) {
    case 0: // no simplex was needed
-     return maxmin > 0 ? (obj > limit) /*minim*/ : (obj < limit) /*maxim*/;
+     return maxmin > 0 ? (obj > limit) /*minim*/ : (-obj > limit) /*maxim*/;
    case 1: // primal simplex
      if (modelPtr_->status() == 0) // optimal
-	return maxmin > 0 ? (obj > limit) /*minim*/ : (obj < limit) /*maxim*/;
+	return maxmin > 0 ? (obj > limit) /*minim*/ : (-obj > limit) /*maxim*/;
      return false;
    case 2: // dual simplex
      if (modelPtr_->status() != 0 && modelPtr_->status() != 3)
 	// over dual limit
 	return true;
-     return maxmin > 0 ? (obj > limit) /*minim*/ : (obj < limit) /*maxim*/;
+     return maxmin > 0 ? (obj > limit) /*minim*/ : (-obj > limit) /*maxim*/;
   }
   return false; // fake return
 }

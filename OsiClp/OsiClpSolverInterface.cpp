@@ -1784,7 +1784,7 @@ OsiClpSolverInterface::getReducedGradient(
   double * save = new double [numberColumns];
   memcpy(save,modelPtr_->costRegion(),numberColumns*sizeof(double));
   memcpy(modelPtr_->costRegion(),c,numberColumns*sizeof(double));
-  modelPtr_->computeDuals();
+  modelPtr_->computeDuals(NULL);
   memcpy(modelPtr_->costRegion(),save,numberColumns*sizeof(double));
   delete [] save;
   int numberRows = modelPtr_->numberRows();
@@ -1801,7 +1801,7 @@ void OsiClpSolverInterface::setObjectiveAndRefresh(double* c)
   int numberColumns = modelPtr_->numberColumns();
   memcpy(modelPtr_->objective(),c,numberColumns*sizeof(double));
   memcpy(modelPtr_->costRegion(),c,numberColumns*sizeof(double));
-  modelPtr_->computeDuals();
+  modelPtr_->computeDuals(NULL);
 }
 
 //Get a row of the tableau

@@ -46,13 +46,13 @@ OsiIndexedVector::empty()
 OsiIndexedVector &
 OsiIndexedVector::operator=(const OsiIndexedVector & rhs)
 {
-   if (this != &rhs) {
-      clear();
-      gutsOfSetVector(rhs.capacity_,rhs.nElements_, rhs.indices_, rhs.elements_,
-		      OsiPackedVectorBase::testForDuplicateIndex(),
-		      "operator=");
-   }
-   return *this;
+  if (this != &rhs) {
+    clear();
+    gutsOfSetVector(rhs.capacity_,rhs.nElements_, rhs.indices_, rhs.elements_,
+      OsiPackedVectorBase::testForDuplicateIndex(),
+      "operator=");
+  }
+  return *this;
 }
 
 //#############################################################################
@@ -60,13 +60,13 @@ OsiIndexedVector::operator=(const OsiIndexedVector & rhs)
 OsiIndexedVector &
 OsiIndexedVector::operator=(const OsiPackedVectorBase & rhs)
 {
-   if (this != &rhs) {
-      clear();
-      gutsOfSetVector(rhs.getNumElements(), rhs.getIndices(), rhs.getElements(),
-		      OsiPackedVectorBase::testForDuplicateIndex(),
-		      "operator= from base");
-   }
-   return *this;
+  if (this != &rhs) {
+    clear();
+    gutsOfSetVector(rhs.getNumElements(), rhs.getIndices(), rhs.getElements(),
+      OsiPackedVectorBase::testForDuplicateIndex(),
+      "operator= from base");
+  }
+  return *this;
 }
 
 //#############################################################################
@@ -74,13 +74,13 @@ OsiIndexedVector::operator=(const OsiPackedVectorBase & rhs)
 void
 OsiIndexedVector::borrowVector(int size, int numberIndices, int* inds, double* elems)
 {
-   empty();
-   capacity_=size;
-   nElements_ = numberIndices;
-   indices_ = inds;  
-   elements_ = elems;
-
-   // whole point about borrowvector is that it is lightweight so no testing is done
+  empty();
+  capacity_=size;
+  nElements_ = numberIndices;
+  indices_ = inds;  
+  elements_ = elems;
+  
+  // whole point about borrowvector is that it is lightweight so no testing is done
 }
 
 //#############################################################################
@@ -103,10 +103,10 @@ OsiIndexedVector::returnVector()
 
 void
 OsiIndexedVector::setVector(int size, const int * inds, const double * elems,
-			   bool testForDuplicateIndex)
+                            bool testForDuplicateIndex)
 {
-   clear();
-   gutsOfSetVector(size, inds, elems, testForDuplicateIndex, "setVector");
+  clear();
+  gutsOfSetVector(size, inds, elems, testForDuplicateIndex, "setVector");
 }
 //#############################################################################
 
@@ -114,34 +114,34 @@ OsiIndexedVector::setVector(int size, const int * inds, const double * elems,
 void 
 OsiIndexedVector::setVector(int size, int numberIndices, const int * inds, const double * elems)
 {
-   clear();
-   gutsOfSetVector(size, numberIndices, inds, elems, false, "setVector");
+  clear();
+  gutsOfSetVector(size, numberIndices, inds, elems, false, "setVector");
 }
 //#############################################################################
 
 void
 OsiIndexedVector::setConstant(int size, const int * inds, double value,
-			     bool testForDuplicateIndex)
+                              bool testForDuplicateIndex)
 {
-   clear();
-   gutsOfSetConstant(size, inds, value, testForDuplicateIndex, "setConstant");
+  clear();
+  gutsOfSetConstant(size, inds, value, testForDuplicateIndex, "setConstant");
 }
 
 //#############################################################################
 
 void
 OsiIndexedVector::setFull(int size, const double * elems,
-			 bool testForDuplicateIndex) 
+                          bool testForDuplicateIndex) 
 {
   // Clear out any values presently stored
   clear();
   OsiPackedVectorBase::setTestForDuplicateIndex(testForDuplicateIndex);
   // and clear index set
   clearIndexSet();
-
+  
   if (size<0)
-      throw CoinError("negative number of indices", "setFull", "OsiIndexedVector");
-
+    throw CoinError("negative number of indices", "setFull", "OsiIndexedVector");
+  
   reserve(size);
   nElements_ = 0;
   // elements_ array is all zero
@@ -161,24 +161,24 @@ OsiIndexedVector::setFull(int size, const double * elems,
 double &
 OsiIndexedVector::operator[](int index) const
 {
-   if ( index >= capacity_ ) 
-      throw CoinError("index >= capacity()", "[]", "OsiIndexedVector");
-   if ( index < 0 ) 
-      throw CoinError("index < 0" , "[]", "OsiIndexedVector");
-   double * where = elements_ + index;
-   return *where;
-
+  if ( index >= capacity_ ) 
+    throw CoinError("index >= capacity()", "[]", "OsiIndexedVector");
+  if ( index < 0 ) 
+    throw CoinError("index < 0" , "[]", "OsiIndexedVector");
+  double * where = elements_ + index;
+  return *where;
+  
 }
 //#############################################################################
 
 void
 OsiIndexedVector::setElement(int index, double element)
 {
-   if ( index >= nElements_ ) 
-      throw CoinError("index >= size()", "setElement", "OsiIndexedVector");
-   if ( index < 0 ) 
-      throw CoinError("index < 0" , "setElement", "OsiIndexedVector");
-   elements_[indices_[index]] = element;
+  if ( index >= nElements_ ) 
+    throw CoinError("index >= size()", "setElement", "OsiIndexedVector");
+  if ( index < 0 ) 
+    throw CoinError("index < 0" , "setElement", "OsiIndexedVector");
+  elements_[indices_[index]] = element;
 }
 
 //#############################################################################
@@ -186,18 +186,18 @@ OsiIndexedVector::setElement(int index, double element)
 void
 OsiIndexedVector::insert( int index, double element )
 {
-   if ( index < 0 ) 
-      throw CoinError("index < 0" , "setElement", "OsiIndexedVector");
-   if (index >= capacity_)
-     reserve(index+1);
-   if (elements_[index])
-     throw CoinError("Index already exists", "insert", "OsiIndexedVector");
-   indices_[nElements_++] = index;
-   elements_[index] = element;
-   // and clear index set
-   clearIndexSet();
-   delete [] packedElements_;
-   packedElements_=NULL;
+  if ( index < 0 ) 
+    throw CoinError("index < 0" , "setElement", "OsiIndexedVector");
+  if (index >= capacity_)
+    reserve(index+1);
+  if (elements_[index])
+    throw CoinError("Index already exists", "insert", "OsiIndexedVector");
+  indices_[nElements_++] = index;
+  elements_[index] = element;
+  // and clear index set
+  clearIndexSet();
+  delete [] packedElements_;
+  packedElements_=NULL;
 }
 
 //#############################################################################
@@ -228,12 +228,12 @@ OsiIndexedVector::append(const OsiPackedVectorBase & caboose)
       numberDuplicates++;
       value += elements_[indexValue];
       if (fabs(value)<1.0e-30) 
-	needClean=true; // need to go through again
+        needClean=true; // need to go through again
       elements_[indexValue]=value;
     } else {
       if (fabs(value)>=1.0e-30) {
-	elements_[indexValue]=value;
-	indices_[nElements_++]=indexValue;
+        elements_[indexValue]=value;
+        indices_[nElements_++]=indexValue;
       }
     }
   }
@@ -245,9 +245,9 @@ OsiIndexedVector::append(const OsiPackedVectorBase & caboose)
       int indexValue=indices_[i];
       double value=elements_[indexValue];
       if (fabs(value)>=1.0e-30) {
-	indices_[nElements_++]=indexValue;
+        indices_[nElements_++]=indexValue;
       } else {
-	elements_[indexValue]=0.0;
+        elements_[indexValue]=0.0;
       }
     }
   }
@@ -264,21 +264,21 @@ OsiIndexedVector::append(const OsiPackedVectorBase & caboose)
 void
 OsiIndexedVector::swap(int i, int j) 
 {
-   if ( i >= nElements_ ) 
-      throw CoinError("index i >= size()","swap","OsiIndexedVector");
-   if ( i < 0 ) 
-      throw CoinError("index i < 0" ,"swap","OsiIndexedVector");
-   if ( j >= nElements_ ) 
-      throw CoinError("index j >= size()","swap","OsiIndexedVector");
-   if ( j < 0 ) 
-      throw CoinError("index j < 0" ,"swap","OsiIndexedVector");
-
-   // Swap positions i and j of the
-   // indices array
-
-   int isave = indices_[i];
-   indices_[i] = indices_[j];
-   indices_[j] = isave;
+  if ( i >= nElements_ ) 
+    throw CoinError("index i >= size()","swap","OsiIndexedVector");
+  if ( i < 0 ) 
+    throw CoinError("index i < 0" ,"swap","OsiIndexedVector");
+  if ( j >= nElements_ ) 
+    throw CoinError("index j >= size()","swap","OsiIndexedVector");
+  if ( j < 0 ) 
+    throw CoinError("index j < 0" ,"swap","OsiIndexedVector");
+  
+  // Swap positions i and j of the
+  // indices array
+  
+  int isave = indices_[i];
+  indices_[i] = indices_[j];
+  indices_[j] = isave;
 }
 
 //#############################################################################
@@ -346,27 +346,27 @@ OsiIndexedVector::reserve(int n)
   if ( n < capacity_ ) {
     if (n<0) 
       throw CoinError("negative capacity", "reserve", "OsiIndexedVector");
-
+    
     int nNew=0;
     for (i=0;i<nElements_;i++) {
       int indexValue=indices_[i];
       if (indexValue<n) {
-	indices_[nNew++]=indexValue;
+        indices_[nNew++]=indexValue;
       } else {
-	elements_[indexValue]=0.0;
+        elements_[indexValue]=0.0;
       }
     }
     nElements_=nNew;
   } else if (n>capacity_) {
-
+    
     // save pointers to existing data
     int * tempIndices = indices_;
     double * tempElements = elements_;
-
+    
     // allocate new space
     indices_ = new int [n];
     elements_ = new double [n];
-
+    
     // copy data to new space
     // and zero out part of array
     if (nElements_ > 0) {
@@ -391,99 +391,99 @@ OsiIndexedVector::reserve(int n)
 //#############################################################################
 
 OsiIndexedVector::OsiIndexedVector (bool testForDuplicateIndex) :
-   OsiPackedVectorBase(),
-   indices_(NULL),
-   elements_(NULL),
-   nElements_(0),
-   packedElements_(NULL),
-   capacity_(0)
+OsiPackedVectorBase(),
+indices_(NULL),
+elements_(NULL),
+nElements_(0),
+packedElements_(NULL),
+capacity_(0)
 {
-   // This won't fail, the indexed vector is empty. There can't be duplicate
-   // indices.
-   OsiPackedVectorBase::setTestForDuplicateIndex(testForDuplicateIndex);
+  // This won't fail, the indexed vector is empty. There can't be duplicate
+  // indices.
+  OsiPackedVectorBase::setTestForDuplicateIndex(testForDuplicateIndex);
 }
 
 //-----------------------------------------------------------------------------
 
 OsiIndexedVector::OsiIndexedVector(int size,
-				 const int * inds, const double * elems,
-				 bool testForDuplicateIndex) :
-   OsiPackedVectorBase(),
-   indices_(NULL),
-   elements_(NULL),
-   nElements_(0),
-   packedElements_(NULL),
-   capacity_(0)
+                                   const int * inds, const double * elems,
+                                   bool testForDuplicateIndex) :
+OsiPackedVectorBase(),
+indices_(NULL),
+elements_(NULL),
+nElements_(0),
+packedElements_(NULL),
+capacity_(0)
 {
-   gutsOfSetVector(size, inds, elems, testForDuplicateIndex,
-		   "constructor for array value");
+  gutsOfSetVector(size, inds, elems, testForDuplicateIndex,
+    "constructor for array value");
 }
 
 //-----------------------------------------------------------------------------
 
 OsiIndexedVector::OsiIndexedVector(int size,
-				 const int * inds, double value,
-				 bool testForDuplicateIndex) :
-   OsiPackedVectorBase(),
-   indices_(NULL),
-   elements_(NULL),
-   nElements_(0),
-   packedElements_(NULL),
-   capacity_(0)
+                                   const int * inds, double value,
+                                   bool testForDuplicateIndex) :
+OsiPackedVectorBase(),
+indices_(NULL),
+elements_(NULL),
+nElements_(0),
+packedElements_(NULL),
+capacity_(0)
 {
-   gutsOfSetConstant(size, inds, value, testForDuplicateIndex,
-		     "constructor for constant value");
+  gutsOfSetConstant(size, inds, value, testForDuplicateIndex,
+    "constructor for constant value");
 }
 
 //-----------------------------------------------------------------------------
 
 OsiIndexedVector::OsiIndexedVector(int size, const double * element,
-				 bool testForDuplicateIndex) :
-   OsiPackedVectorBase(),
-   indices_(NULL),
-   elements_(NULL),
-   nElements_(0),
-   packedElements_(NULL),
-   capacity_(0)
+                                   bool testForDuplicateIndex) :
+OsiPackedVectorBase(),
+indices_(NULL),
+elements_(NULL),
+nElements_(0),
+packedElements_(NULL),
+capacity_(0)
 {
-   setFull(size, element, testForDuplicateIndex);
+  setFull(size, element, testForDuplicateIndex);
 }
 
 //-----------------------------------------------------------------------------
 
 OsiIndexedVector::OsiIndexedVector(const OsiPackedVectorBase & rhs) :
-   OsiPackedVectorBase(),
-   indices_(NULL),
-   elements_(NULL),
-   nElements_(0),
-   packedElements_(NULL),
-   capacity_(0)
+OsiPackedVectorBase(),
+indices_(NULL),
+elements_(NULL),
+nElements_(0),
+packedElements_(NULL),
+capacity_(0)
 {  
-   gutsOfSetVector(rhs.getNumElements(), rhs.getIndices(), rhs.getElements(),
-		   rhs.testForDuplicateIndex(), "copy constructor from base");
+  gutsOfSetVector(rhs.getNumElements(), rhs.getIndices(), rhs.getElements(),
+    rhs.testForDuplicateIndex(), "copy constructor from base");
 }
 
 //-----------------------------------------------------------------------------
 
 OsiIndexedVector::OsiIndexedVector(const OsiIndexedVector & rhs) :
-   OsiPackedVectorBase(),
-   indices_(NULL),
-   elements_(NULL),
-   nElements_(0),
-   packedElements_(NULL),
-   capacity_(0)
+OsiPackedVectorBase(),
+indices_(NULL),
+elements_(NULL),
+nElements_(0),
+packedElements_(NULL),
+capacity_(0)
 {  
-   gutsOfSetVector(rhs.capacity_,rhs.nElements_, rhs.indices_, rhs.elements_,
-		   rhs.testForDuplicateIndex(), "copy constructor");
+  gutsOfSetVector(rhs.capacity_,rhs.nElements_, rhs.indices_, rhs.elements_,
+    rhs.testForDuplicateIndex(), "copy constructor");
 }
 
 //-----------------------------------------------------------------------------
 
 OsiIndexedVector::~OsiIndexedVector ()
 {
-   delete [] indices_;
-   delete [] packedElements_;
-   delete [] elements_;
+  delete [] indices_;
+  delete [] packedElements_;
+  delete [] elements_;
 }
 //#############################################################################
 
@@ -518,11 +518,11 @@ OsiIndexedVector::getElements()
 /// Return the sum of two indexed vectors
 OsiIndexedVector 
 OsiIndexedVector::operator+(
-			   const OsiIndexedVector& op2)
+                            const OsiIndexedVector& op2)
 {
   int i;
   int nElements=nElements_;
-  int capacity = max(capacity_,op2.capacity_);
+  int capacity = CoinMax(capacity_,op2.capacity_);
   OsiIndexedVector newOne(*this);
   newOne.reserve(capacity);
   bool needClean=false;
@@ -533,14 +533,14 @@ OsiIndexedVector::operator+(
     double oldValue=elements_[indexValue];
     if (!oldValue) {
       if (fabs(value)>=1.0e-30) {
-	newOne.elements_[indexValue]=value;
-	newOne.indices_[nElements++]=indexValue;
+        newOne.elements_[indexValue]=value;
+        newOne.indices_[nElements++]=indexValue;
       }
     } else {
       value += oldValue;
       newOne.elements_[indexValue]=value;
       if (fabs(value)<1.0e-30) {
-	needClean=true;
+        needClean=true;
       }
     }
   }
@@ -552,9 +552,9 @@ OsiIndexedVector::operator+(
       int indexValue=newOne.indices_[i];
       double value=newOne.elements_[indexValue];
       if (fabs(value)>=1.0e-30) {
-	newOne.indices_[nElements_++]=indexValue;
+        newOne.indices_[nElements_++]=indexValue;
       } else {
-	newOne.elements_[indexValue]=0.0;
+        newOne.elements_[indexValue]=0.0;
       }
     }
   }
@@ -564,11 +564,11 @@ OsiIndexedVector::operator+(
 /// Return the difference of two indexed vectors
 OsiIndexedVector 
 OsiIndexedVector::operator-(
-			   const OsiIndexedVector& op2)
+                            const OsiIndexedVector& op2)
 {
   int i;
   int nElements=nElements_;
-  int capacity = max(capacity_,op2.capacity_);
+  int capacity = CoinMax(capacity_,op2.capacity_);
   OsiIndexedVector newOne(*this);
   newOne.reserve(capacity);
   bool needClean=false;
@@ -579,14 +579,14 @@ OsiIndexedVector::operator-(
     double oldValue=elements_[indexValue];
     if (!oldValue) {
       if (fabs(value)>=1.0e-30) {
-	newOne.elements_[indexValue]=-value;
-	newOne.indices_[nElements++]=indexValue;
+        newOne.elements_[indexValue]=-value;
+        newOne.indices_[nElements++]=indexValue;
       }
     } else {
       value = oldValue-value;
       newOne.elements_[indexValue]=value;
       if (fabs(value)<1.0e-30) {
-	needClean=true;
+        needClean=true;
       }
     }
   }
@@ -598,9 +598,9 @@ OsiIndexedVector::operator-(
       int indexValue=newOne.indices_[i];
       double value=newOne.elements_[indexValue];
       if (fabs(value)>=1.0e-30) {
-	newOne.indices_[nElements_++]=indexValue;
+        newOne.indices_[nElements_++]=indexValue;
       } else {
-	newOne.elements_[indexValue]=0.0;
+        newOne.elements_[indexValue]=0.0;
       }
     }
   }
@@ -610,11 +610,11 @@ OsiIndexedVector::operator-(
 /// Return the element-wise product of two indexed vectors
 OsiIndexedVector 
 OsiIndexedVector::operator*(
-			   const OsiIndexedVector& op2)
+                            const OsiIndexedVector& op2)
 {
   int i;
   int nElements=nElements_;
-  int capacity = max(capacity_,op2.capacity_);
+  int capacity = CoinMax(capacity_,op2.capacity_);
   OsiIndexedVector newOne(*this);
   newOne.reserve(capacity);
   bool needClean=false;
@@ -627,7 +627,7 @@ OsiIndexedVector::operator*(
       value *= oldValue;
       newOne.elements_[indexValue]=value;
       if (fabs(value)<1.0e-30) {
-	needClean=true;
+        needClean=true;
       }
     }
   }
@@ -639,9 +639,9 @@ OsiIndexedVector::operator*(
       int indexValue=newOne.indices_[i];
       double value=newOne.elements_[indexValue];
       if (fabs(value)>=1.0e-30) {
-	newOne.indices_[nElements_++]=indexValue;
+        newOne.indices_[nElements_++]=indexValue;
       } else {
-	newOne.elements_[indexValue]=0.0;
+        newOne.elements_[indexValue]=0.0;
       }
     }
   }
@@ -651,12 +651,12 @@ OsiIndexedVector::operator*(
 /// Return the element-wise ratio of two indexed vectors
 OsiIndexedVector 
 OsiIndexedVector::operator/(
-			   const OsiIndexedVector& op2) 
+                            const OsiIndexedVector& op2) 
 {
   // I am treating 0.0/0.0 as 0.0
   int i;
   int nElements=nElements_;
-  int capacity = max(capacity_,op2.capacity_);
+  int capacity = CoinMax(capacity_,op2.capacity_);
   OsiIndexedVector newOne(*this);
   newOne.reserve(capacity);
   bool needClean=false;
@@ -667,11 +667,11 @@ OsiIndexedVector::operator/(
     double oldValue=elements_[indexValue];
     if (oldValue) {
       if (!value)
-	throw CoinError("zero divisor", "/", "OsiIndexedVector");
+        throw CoinError("zero divisor", "/", "OsiIndexedVector");
       value = oldValue/value;
       newOne.elements_[indexValue]=value;
       if (fabs(value)<1.0e-30) {
-	needClean=true;
+        needClean=true;
       }
     }
   }
@@ -683,9 +683,9 @@ OsiIndexedVector::operator/(
       int indexValue=newOne.indices_[i];
       double value=newOne.elements_[indexValue];
       if (fabs(value)>=1.0e-30) {
-	newOne.indices_[nElements_++]=indexValue;
+        newOne.indices_[nElements_++]=indexValue;
       } else {
-	newOne.elements_[indexValue]=0.0;
+        newOne.elements_[indexValue]=0.0;
       }
     }
   }
@@ -698,32 +698,32 @@ OsiIndexedVector::sortDecrIndex()
 { 
   double * elements = getElements();
   CoinSort_2(indices_, indices_ + nElements_, elements,
-		CoinFirstGreater_2<int, double>());
+    CoinFirstGreater_2<int, double>());
 }
-  
+
 void 
 OsiIndexedVector::sortIncrElement()
 { 
   double * elements = getElements();
   CoinSort_2(elements, elements + nElements_, indices_,
-		CoinFirstLess_2<double, int>());
+    CoinFirstLess_2<double, int>());
 }
-  
+
 void 
 OsiIndexedVector::sortDecrElement()
 { 
   double * elements = getElements();
   CoinSort_2(elements, elements + nElements_, indices_,
-		CoinFirstGreater_2<double, int>());
+    CoinFirstGreater_2<double, int>());
 }
 
 //#############################################################################
 
 void
 OsiIndexedVector::gutsOfSetVector(int size,
-				 const int * inds, const double * elems,
-				 bool testForDuplicateIndex,
-				 const char * method) 
+                                  const int * inds, const double * elems,
+                                  bool testForDuplicateIndex,
+                                  const char * method) 
 {
   // we are going to do a faster test for duplicates so test base class when empty
   OsiPackedVectorBase::setTestForDuplicateIndex(testForDuplicateIndex);
@@ -755,12 +755,12 @@ OsiIndexedVector::gutsOfSetVector(int size,
       numberDuplicates++;
       value += elements_[indexValue];
       if (fabs(value)<1.0e-30) 
-	needClean=true; // need to go through again
+        needClean=true; // need to go through again
       elements_[indexValue]=value;
     } else {
       if (fabs(value)>=1.0e-30) {
-	elements_[indexValue]=value;
-	indices_[nElements_++]=indexValue;
+        elements_[indexValue]=value;
+        indices_[nElements_++]=indexValue;
       }
     }
   }
@@ -772,9 +772,9 @@ OsiIndexedVector::gutsOfSetVector(int size,
       int indexValue=indices_[i];
       double value=elements_[indexValue];
       if (fabs(value)>=1.0e-30) {
-	indices_[nElements_++]=indexValue;
+        indices_[nElements_++]=indexValue;
       } else {
-	elements_[indexValue]=0.0;
+        elements_[indexValue]=0.0;
       }
     }
   }
@@ -786,9 +786,9 @@ OsiIndexedVector::gutsOfSetVector(int size,
 
 void
 OsiIndexedVector::gutsOfSetVector(int size, int numberIndices, 
-				 const int * inds, const double * elems,
-				 bool testForDuplicateIndex,
-				 const char * method) 
+                                  const int * inds, const double * elems,
+                                  bool testForDuplicateIndex,
+                                  const char * method) 
 {
   // we are not going to test for duplicates so test base class when empty
   OsiPackedVectorBase::setTestForDuplicateIndex(testForDuplicateIndex);
@@ -814,12 +814,12 @@ OsiIndexedVector::gutsOfSetVector(int size, int numberIndices,
       numberDuplicates++;
       value += elements_[indexValue];
       if (fabs(value)<1.0e-30) 
-	needClean=true; // need to go through again
+        needClean=true; // need to go through again
       elements_[indexValue]=value;
     } else {
       if (fabs(value)>=1.0e-30) {
-	elements_[indexValue]=value;
-	indices_[nElements_++]=indexValue;
+        elements_[indexValue]=value;
+        indices_[nElements_++]=indexValue;
       }
     }
   }
@@ -831,9 +831,9 @@ OsiIndexedVector::gutsOfSetVector(int size, int numberIndices,
       int indexValue=indices_[i];
       double value=elements_[indexValue];
       if (fabs(value)>=1.0e-30) {
-	indices_[nElements_++]=indexValue;
+        indices_[nElements_++]=indexValue;
       } else {
-	elements_[indexValue]=0.0;
+        elements_[indexValue]=0.0;
       }
     }
   }
@@ -845,9 +845,9 @@ OsiIndexedVector::gutsOfSetVector(int size, int numberIndices,
 
 void
 OsiIndexedVector::gutsOfSetConstant(int size,
-				   const int * inds, double value,
-				   bool testForDuplicateIndex,
-				   const char * method) 
+                                    const int * inds, double value,
+                                    bool testForDuplicateIndex,
+                                    const char * method) 
 {
   // we are going to do a faster test for duplicates so test base class when empty
   OsiPackedVectorBase::setTestForDuplicateIndex(testForDuplicateIndex);
@@ -879,12 +879,12 @@ OsiIndexedVector::gutsOfSetConstant(int size,
       numberDuplicates++;
       value += elements_[indexValue];
       if (fabs(value)<1.0e-30) 
-	needClean=true; // need to go through again
+        needClean=true; // need to go through again
       elements_[indexValue]=value;
     } else {
       if (fabs(value)>=1.0e-30) {
-	elements_[indexValue]=value;
-	indices_[nElements_++]=indexValue;
+        elements_[indexValue]=value;
+        indices_[nElements_++]=indexValue;
       }
     }
   }
@@ -896,9 +896,9 @@ OsiIndexedVector::gutsOfSetConstant(int size,
       int indexValue=indices_[i];
       double value=elements_[indexValue];
       if (fabs(value)>=1.0e-30) {
-	indices_[nElements_++]=indexValue;
+        indices_[nElements_++]=indexValue;
       } else {
-	elements_[indexValue]=0.0;
+        elements_[indexValue]=0.0;
       }
     }
   }

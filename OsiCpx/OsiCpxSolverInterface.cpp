@@ -82,11 +82,20 @@ void OsiCpxSolverInterface::initialSolve()
   // then must change problem type.
   // CPLEX will return an error condition if this is not done
   int probType = CPXgetprobtype(env_,lp);
-  if ( probType == CPXPROB_MIP ) 
+
+#if CPX_VERSION >= 800
+  if ( probType == CPXPROB_MILP )
+    {
+      int err = CPXchgprobtype( env_, lp, CPXPROB_RELAXEDMILP );
+      checkCPXerror( err, "CPXchgprobtype", "initialSolve" );
+    }
+#else
+  if ( probType == CPXPROB_MIP )
     {
       int err = CPXchgprobtype( env_, lp, CPXPROB_RELAXED );
       checkCPXerror( err, "CPXchgprobtype", "initialSolve" );
     }
+#endif     
 
   CPXprimopt( env_, lp );
 }
@@ -98,11 +107,20 @@ void OsiCpxSolverInterface::resolve()
   // then must change problem type.
   // CPLEX will return an error condition if this is not done
   int probType = CPXgetprobtype( env_, lp );
-  if ( probType == CPXPROB_MIP ) 
+
+#if CPX_VERSION >= 800
+  if ( probType == CPXPROB_MILP )
+    {
+      int err = CPXchgprobtype( env_, lp, CPXPROB_RELAXEDMILP );
+      checkCPXerror( err, "CPXchgprobtype", "resolve" );
+    }
+#else
+  if ( probType == CPXPROB_MIP )
     {
       int err = CPXchgprobtype( env_, lp, CPXPROB_RELAXED );
       checkCPXerror( err, "CPXchgprobtype", "resolve" );
     }
+#endif
 
   CPXdualopt( env_, lp );   
 }
@@ -112,11 +130,20 @@ void OsiCpxSolverInterface::branchAndBound()
   CPXLPptr lp = getLpPtr( OsiCpxSolverInterface::FREECACHED_RESULTS );
 
   int probType = CPXgetprobtype( env_, lp );
+
+#if CPX_VERSION >= 800
+  if ( probType != CPXPROB_MILP ) 
+    {
+      int err = CPXchgprobtype( env_, lp, CPXPROB_MILP );
+      checkCPXerror( err, "CPXchgprobtype", "branchAndBound" );
+    }
+#else
   if ( probType != CPXPROB_MIP ) 
     {
       int err = CPXchgprobtype( env_, lp, CPXPROB_MIP );
       checkCPXerror( err, "CPXchgprobtype", "branchAndBound" );
     }
+#endif
 
   CPXmipopt( env_, lp );
 }
@@ -194,11 +221,11 @@ OsiCpxSolverInterface::setStrParam(OsiStrParam key, const std::string & value)
 {
   bool retval=false;
   switch (key) {
-
   case OsiProbName:
     OsiSolverInterface::setStrParam(key,value);
     return retval = true;
-
+  case OsiSolverName:
+    return false;
   case OsiLastStrParam:
     return false;
   }
@@ -279,6 +306,7 @@ OsiCpxSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
   case OsiLastStrParam:
     return false;
   }
+
   return true;
 }
 
@@ -290,20 +318,34 @@ bool OsiCpxSolverInterface::isAbandoned() const
 {
   int stat = CPXgetstat( env_, getMutableLpPtr() );
 
+#if CPX_VERSION >= 800
+  return (stat == 0 || 
+	  stat == CPX_STAT_NUM_BEST || 
+	  stat == CPX_STAT_NUM_BEST || 
+	  stat == CPX_STAT_ABORT_USER || 
+	  stat == CPX_STAT_ABORT_USER || 
+	  stat == CPX_STAT_ABORT_USER);
+#else
   return (stat == 0 || 
 	  stat == CPX_NUM_BEST_FEAS || 
 	  stat == CPX_NUM_BEST_INFEAS || 
 	  stat == CPX_ABORT_FEAS || 
 	  stat == CPX_ABORT_INFEAS || 
 	  stat == CPX_ABORT_CROSSOVER);
+#endif
 }
 
 bool OsiCpxSolverInterface::isProvenOptimal() const
 {
   int stat = CPXgetstat( env_, getMutableLpPtr() );
 
+#if CPX_VERSION >= 800
+  return (stat == CPX_STAT_OPTIMAL || 
+	  stat == CPX_STAT_OPTIMAL_INFEAS);
+#else
   return (stat == CPX_OPTIMAL || 
 	  stat == CPX_OPTIMAL_INFEAS);
+#endif
 }
 
 bool OsiCpxSolverInterface::isProvenPrimalInfeasible() const
@@ -311,10 +353,15 @@ bool OsiCpxSolverInterface::isProvenPrimalInfeasible() const
   int stat = CPXgetstat( env_, getMutableLpPtr() );
   int method = CPXgetmethod( env_, getMutableLpPtr() );
 
+#if CPX_VERSION >= 800
+  return (method == CPX_ALG_PRIMAL && stat == CPX_STAT_INFEASIBLE || 
+	  method == CPX_ALG_DUAL && stat == CPX_STAT_UNBOUNDED);
+#else
   return (method == CPX_ALG_PRIMAL && stat == CPX_INFEASIBLE || 
 	  method == CPX_ALG_DUAL && stat == CPX_UNBOUNDED || 
 	  stat == CPX_ABORT_PRIM_INFEAS ||
 	  stat == CPX_ABORT_PRIM_DUAL_INFEAS);
+#endif
 }
 
 bool OsiCpxSolverInterface::isProvenDualInfeasible() const
@@ -322,10 +369,15 @@ bool OsiCpxSolverInterface::isProvenDualInfeasible() const
   int stat = CPXgetstat( env_, getMutableLpPtr() );
   int method = CPXgetmethod( env_, getMutableLpPtr() );
 
+#if CPX_VERSION >= 800
+  return (method == CPX_ALG_PRIMAL && stat == CPX_STAT_UNBOUNDED || 
+	  method == CPX_ALG_DUAL && stat == CPX_STAT_INFEASIBLE);
+#else
   return (method == CPX_ALG_PRIMAL && stat == CPX_UNBOUNDED || 
 	  method == CPX_ALG_DUAL && stat == CPX_INFEASIBLE || 
 	  stat == CPX_ABORT_DUAL_INFEAS || 
 	  stat == CPX_ABORT_PRIM_DUAL_INFEAS);
+#endif
 }
 
 bool OsiCpxSolverInterface::isPrimalObjectiveLimitReached() const
@@ -333,7 +385,11 @@ bool OsiCpxSolverInterface::isPrimalObjectiveLimitReached() const
   int stat = CPXgetstat( env_, getMutableLpPtr() );
   int method = CPXgetmethod( env_, getMutableLpPtr() );
 
+#if CPX_VERSION >= 800
+  return method == CPX_ALG_PRIMAL && stat == CPX_STAT_ABORT_OBJ_LIM;
+#else
   return method == CPX_ALG_PRIMAL && stat == CPX_OBJ_LIM;
+#endif
 }
 
 bool OsiCpxSolverInterface::isDualObjectiveLimitReached() const
@@ -341,14 +397,22 @@ bool OsiCpxSolverInterface::isDualObjectiveLimitReached() const
   int stat = CPXgetstat( env_, getMutableLpPtr() );
   int method = CPXgetmethod( env_, getMutableLpPtr() );
 
+#if CPX_VERSION >= 800
+  return method == CPX_ALG_DUAL && stat == CPX_STAT_ABORT_OBJ_LIM;
+#else
   return method == CPX_ALG_DUAL && stat == CPX_OBJ_LIM;
+#endif
 }
 
 bool OsiCpxSolverInterface::isIterationLimitReached() const
 {
   int stat = CPXgetstat( env_, getMutableLpPtr() );
 
+#if CPX_VERSION >= 800
+  return stat == CPX_STAT_ABORT_IT_LIM;
+#else
   return stat == CPX_IT_LIM_FEAS || stat == CPX_IT_LIM_INFEAS;
+#endif
 }
 
 //#############################################################################
@@ -743,17 +807,31 @@ bool OsiCpxSolverInterface::isContinuous( int colNumber ) const
   int probType = CPXgetprobtype(env_, lp);
   bool ctype;
 
+#if CPX_VERSION >= 800
+  if ( probType == CPXPROB_RELAXEDMILP ) {
+    int err = CPXchgprobtype(env_, lp, CPXPROB_MILP);
+    checkCPXerror( err, "CPXchgprobtype", "isContinuous" );
+  }
+#else
   if ( probType == CPXPROB_RELAXED ) {
     int err = CPXchgprobtype(env_, lp, CPXPROB_MIP);
     checkCPXerror( err, "CPXchgprobtype", "isContinuous" );
   }
-  
+#endif
+
   ctype = getCtype()[colNumber] == CPX_CONTINUOUS;
 
+#if CPX_VERSION >= 800
+  if ( probType == CPXPROB_RELAXEDMILP ) {
+    int err = CPXchgprobtype(env_, lp, CPXPROB_RELAXEDMILP);
+    checkCPXerror( err, "CPXchgprobtype", "isContinuous" );
+  }
+#else
   if ( probType == CPXPROB_RELAXED ) {
     int err = CPXchgprobtype(env_, lp, CPXPROB_RELAXED);
     checkCPXerror( err, "CPXchgprobtype", "isContinuous" );
   }
+#endif
 
   return ctype;
 }
@@ -873,7 +951,12 @@ const double * OsiCpxSolverInterface::getColSolution() const
 	{
 	  colsol_ = new double[ncols]; 
 	  int probType = CPXgetprobtype(env_,lp);
+
+#if CPX_VERSION >= 800
+	  if ( probType == CPXPROB_MILP ) {
+#else
 	  if ( probType == CPXPROB_MIP ) {
+#endif
 	    int err = CPXgetmipx( env_, lp, colsol_, 0, ncols-1 );
 	    if ( err == CPXERR_NO_INT_SOLN ) 
 	      CoinFillN( colsol_, ncols, 0.0 );
@@ -954,7 +1037,12 @@ double OsiCpxSolverInterface::getObjValue() const
 
   CPXLPptr lp = getMutableLpPtr();
   int probType = CPXgetprobtype(env_,lp);
+
+#if CPX_VERSION >= 800
+  if ( probType == CPXPROB_MILP ) {
+#else
   if ( probType == CPXPROB_MIP ) {
+#endif
     err = CPXgetmipobjval( env_, lp, &objval);
     if ( err == CPXERR_NO_INT_SOLN ) 
       // => return 0.0 as objective value (?? is this the correct behaviour ??)
@@ -1149,7 +1237,11 @@ OsiCpxSolverInterface::setInteger(int index)
   char type = 'I';
   if( probType == CPXPROB_LP ) 
     {
+#if CPX_VERSION >= 800
+      err = CPXchgprobtype( env_, lp, CPXPROB_MILP );
+#else
       err = CPXchgprobtype( env_, lp, CPXPROB_MIP );
+#endif
       checkCPXerror( err, "CPXchgprobtype", "setInteger" );
     }  
   if( getColLower()[index] == 0.0 && getColUpper()[index] == 1.0 )
@@ -1180,8 +1272,13 @@ OsiCpxSolverInterface::setInteger(const int* indices, int len)
   CPXLPptr lp = getLpPtr( OsiCpxSolverInterface::FREECACHED_COLUMN );
   int probType = CPXgetprobtype( env_, lp );
 
-  if ( probType == CPXPROB_LP ) 
+  if ( probType == CPXPROB_LP ) {
+#if CPX_VERSION >= 800
+    CPXchgprobtype(env_,lp,CPXPROB_MILP);
+#else
     CPXchgprobtype(env_,lp,CPXPROB_MIP);
+#endif
+  }
 
   int err;
   char* type = new char[len];
@@ -1756,6 +1853,32 @@ void OsiCpxSolverInterface::writeMps( const char * filename,
   checkCPXerror( err, "CPXwriteprob", "writeMps" );
 }
 
+//-----------------------------------------------------------------------------
+// Write lp files
+//-----------------------------------------------------------------------------
+
+void OsiCpxSolverInterface::writeLp( const char * filename,
+				     const char * extension ) const
+{
+  char filetype[4] = "LP";
+  std::string f(filename);
+  std::string e(extension);
+  std::string fullname = f + "." + e;
+  int err = CPXwriteprob( env_, getMutableLpPtr(), const_cast<char*>( fullname.c_str() ), filetype );
+  checkCPXerror( err, "CPXwriteprob", "writeLp" );
+}
+
+//############################################################################
+// My functions
+//############################################################################
+
+double * OsiCpxSolverInterface::getSlacks()
+{
+	double *slacks= new double[getNumRows()];
+	CPXgetslack(env_,getLpPtr(),slacks,0,getNumRows()-1);
+	return slacks;
+}
+
 //#############################################################################
 // CPX specific public interfaces
 //#############################################################################
@@ -1801,7 +1924,13 @@ void OsiCpxSolverInterface::incrementInstanceCounter()
   if ( numInstances_ == 0 )
     {
       int err;
+
+#if CPX_VERSION >= 800
+      env_ = CPXopenCPLEX( &err );
+#else
       env_ = CPXopenCPLEXdevelop( &err );
+#endif
+
       checkCPXerror( err, "CPXopenCPLEXdevelop", "incrementInstanceCounter" );
       assert( env_ != NULL );
 #ifndef NDEBUG
@@ -1845,7 +1974,7 @@ unsigned int OsiCpxSolverInterface::getNumInstances()
 //-------------------------------------------------------------------
 // Default Constructor 
 //-------------------------------------------------------------------
-OsiCpxSolverInterface::OsiCpxSolverInterface ()
+OsiCpxSolverInterface::OsiCpxSolverInterface()
   : OsiSolverInterface(),
     lp_(NULL),
     hotStartCStat_(NULL),
@@ -1918,7 +2047,7 @@ OsiCpxSolverInterface::OsiCpxSolverInterface( const OsiCpxSolverInterface & sour
 //-------------------------------------------------------------------
 // Destructor 
 //-------------------------------------------------------------------
-OsiCpxSolverInterface::~OsiCpxSolverInterface ()
+OsiCpxSolverInterface::~OsiCpxSolverInterface()
 {
   gutsOfDestructor();
   decrementInstanceCounter();
@@ -2047,6 +2176,8 @@ CPXLPptr OsiCpxSolverInterface::getMutableLpPtr() const
       lp_ = CPXcreateprob( env_, &err, const_cast<char*>(pn.c_str()) );
 #endif
       checkCPXerror( err, "CPXcreateprob", "getMutableLpPtr" );
+//      err = CPXchgprobtype(env_,lp_,CPXPROB_LP);
+//      checkCPXerror( err, "CPXchgprobtype", "getMutableLpPtr" );
       assert( lp_ != NULL ); 
     }
   return lp_;
@@ -2150,6 +2281,8 @@ void OsiCpxSolverInterface::gutsOfConstructor()
   int err;
   lp_ = CPXcreateprob( env_, &err, "OSI_CPLEX" );
   checkCPXerror( err, "CPXcreateprob", "gutsOfConstructor" );
+//  err = CPXchgprobtype(env_,lp_,CPXPROB_LP);
+//  checkCPXerror( err, "CPXchgprobtype", "getMutableLpPtr" );
   assert( lp_ != NULL );
 #endif
 }

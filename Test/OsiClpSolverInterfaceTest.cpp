@@ -44,7 +44,7 @@ OsiClpMessageTest::print()
 //--------------------------------------------------------------------------
 // test EKKsolution methods.
 void
-OsiClpSolverInterfaceUnitTest(const std::string & mpsDir)
+OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir)
 {
   
   // Test default constructor
@@ -811,6 +811,6 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir)
   // Do common solverInterface testing 
   {
     OsiClpSolverInterface m;
-    OsiSolverInterfaceCommonUnitTest(&m, mpsDir);
+    OsiSolverInterfaceCommonUnitTest(&m, mpsDir,netlibDir);
   }
 }

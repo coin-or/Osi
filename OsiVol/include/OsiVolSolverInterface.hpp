@@ -23,7 +23,7 @@ static const double OsiVolInfinity = 1.0e31;
 
 class OsiVolSolverInterface :
    public OsiSolverInterface, public VOL_user_hooks {
-   friend void OsiVolSolverInterfaceUnitTest(const std::string & mpsDir);
+   friend void OsiVolSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 private:
   class OsiVolMatrixOneMinusOne_ {
@@ -830,6 +830,6 @@ private:
     optimization, the compilation takes 10-15 minutes and the machine pages
     (has 256M core memory!)... */
 void
-OsiVolSolverInterfaceUnitTest(const std::string & mpsDir);
+OsiVolSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 #endif

@@ -29,7 +29,7 @@
 //-----------------------------------------------------------------------
 // Test XPRESS-MP solution methods.
 void
-OsiXprSolverInterfaceUnitTest(const std::string & mpsDir)
+OsiXprSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir)
 {
 
 #if 0
@@ -839,6 +839,6 @@ OsiXprSolverInterfaceUnitTest(const std::string & mpsDir)
   // base class testing method.
   {
     OsiXprSolverInterface m;
-    OsiSolverInterfaceCommonUnitTest(&m, mpsDir);
+    OsiSolverInterfaceCommonUnitTest(&m, mpsDir,netlibDir);
   }
 }

@@ -80,7 +80,7 @@ void test_starts (const std::string& mpsDir)
   return ; } ;
 
 
-void OsiDylpSolverInterfaceUnitTest (const std::string& mpsDir)
+void OsiDylpSolverInterfaceUnitTest (const std::string& mpsDir, const std::string & netlibDir)
 /*
   Dylp unit test driver.
 */
@@ -88,7 +88,7 @@ void OsiDylpSolverInterfaceUnitTest (const std::string& mpsDir)
   std::cout <<
     "Calling OsiSolverInterfaceCommonUnitTest for basic tests ...\n" ;
   OsiDylpSolverInterface* osi = new OsiDylpSolverInterface ;
-  OsiSolverInterfaceCommonUnitTest(osi,mpsDir) ;
+  OsiSolverInterfaceCommonUnitTest(osi,mpsDir,netlibDir) ;
   delete osi ;
   std::cout <<
     "Testing cold/warm/hot start ...\n" ;

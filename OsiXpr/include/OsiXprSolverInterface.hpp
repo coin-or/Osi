@@ -19,7 +19,7 @@
     Instantiation of OsiSolverInterface for XPRESS-MP
  */
 class OsiXprSolverInterface : public OsiSolverInterface {
-   friend void OsiXprSolverInterfaceUnitTest(const std::string & mpsDir);
+   friend void OsiXprSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 public:
   /**@name Solve methods */
   //@{
@@ -774,6 +774,6 @@ private:
     library should be compiled with optimization on, but this method should be
     compiled with debugging. */
 void
-OsiXprSolverInterfaceUnitTest(const std::string & mpsDir);
+OsiXprSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 #endif

@@ -14,13 +14,13 @@
 //--------------------------------------------------------------------------
 // test EKKsolution methods.
 void
-OsiVolSolverInterfaceUnitTest(const std::string & mpsDir)
+OsiVolSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir)
 {
 
   // Do common solverInterface testing
   {
     OsiVolSolverInterface m;
-    OsiSolverInterfaceCommonUnitTest(&m, mpsDir);
+    OsiSolverInterfaceCommonUnitTest(&m, mpsDir,netlibDir);
   }
 
 }

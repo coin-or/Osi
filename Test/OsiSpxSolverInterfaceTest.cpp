@@ -68,7 +68,7 @@ void OsiSpxSolverInterface::printBounds()
 }
 
 //--------------------------------------------------------------------------
-void OsiSpxSolverInterfaceUnitTest( const std::string & mpsDir )
+void OsiSpxSolverInterfaceUnitTest( const std::string & mpsDir, const std::string & netlibDir )
 {
   // Test default constructor
   {
@@ -732,6 +732,6 @@ void OsiSpxSolverInterfaceUnitTest( const std::string & mpsDir )
   // base class testing method.
   {
     OsiSpxSolverInterface m;
-    OsiSolverInterfaceCommonUnitTest(&m, mpsDir);
+    OsiSolverInterfaceCommonUnitTest(&m, mpsDir,netlibDir);
   }
 }

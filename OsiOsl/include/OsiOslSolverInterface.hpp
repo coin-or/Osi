@@ -23,7 +23,7 @@
 */
 
 class OsiOslSolverInterface : public OsiSolverInterface {
-   friend void OsiOslSolverInterfaceUnitTest(const std::string & mpsDir);
+   friend void OsiOslSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 public:
   //---------------------------------------------------------------------------
@@ -714,6 +714,6 @@ private:
     optimization, the compilation takes 10-15 minutes and the machine pages
     (has 256M core memory!)... */
 void
-OsiOslSolverInterfaceUnitTest(const std::string & mpsDir);
+OsiOslSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 #endif

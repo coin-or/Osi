@@ -269,42 +269,42 @@ int main (int argc, const char *argv[])
 
 #ifdef COIN_USE_OSL
   testingMessage( "Testing OsiOslSolverInterface\n" );
-  OsiOslSolverInterfaceUnitTest(mpsDir);
+  OsiOslSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
 #ifdef COIN_USE_XPR
   testingMessage( "Testing OsiXprSolverInterface\n" );
-  OsiXprSolverInterfaceUnitTest(mpsDir);
+  OsiXprSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
 #ifdef COIN_USE_CPX
   testingMessage( "Testing OsiCpxSolverInterface\n" );
-  OsiCpxSolverInterfaceUnitTest(mpsDir);
+  OsiCpxSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
 #ifdef COIN_USE_SPX
   testingMessage( "Testing OsiSpxSolverInterface\n" );
-  OsiSpxSolverInterfaceUnitTest(mpsDir);
+  OsiSpxSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
 #ifdef COIN_USE_VOL
   testingMessage( "Testing OsiVolSolverInterface\n" );
-  OsiVolSolverInterfaceUnitTest(mpsDir);
+  OsiVolSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
 #ifdef COIN_USE_DYLP
   testingMessage( "Testing OsiDylpSolverInterface\n" );
-  OsiDylpSolverInterfaceUnitTest(mpsDir);
+  OsiDylpSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
   
 #ifdef COIN_USE_GLPK
   testingMessage( "Testing OsiGlpkSolverInterface\n" );
-  OsiGlpkSolverInterfaceUnitTest(mpsDir);
+  OsiGlpkSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
   
 #ifdef COIN_USE_CLP
   testingMessage( "Testing OsiClpSolverInterface\n" );
-  OsiClpSolverInterfaceUnitTest(mpsDir);
+  OsiClpSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
   if (parms.find("-testOsiSolverInterface") != parms.end())

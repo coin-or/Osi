@@ -70,6 +70,21 @@ static double cpuTime()
 #endif
   return cpu_temp;
 }
+
+//--------------------------------------------------------------------------
+// A helper function to write out a message about a test failure
+static void
+failureMessage(
+               const std::string & solverName,
+               const std::string & message )
+{
+  std::string messageText;
+  messageText = "*** ";
+  messageText += solverName + "SolverInteface Test Failure: ";
+  messageText += message;
+  std::cerr <<messageText.c_str();
+}
+
 //--------------------------------------------------------------------------
 // A helper function to compare the equivalence of two vectors 
 static bool
@@ -436,6 +451,21 @@ void OsiSolverInterfaceMpsUnitTest
         }
       }
 #     endif
+      
+#     ifdef COIN_USE_DYLP
+      { 
+        OsiDylpSolverInterface * si =
+          dynamic_cast<OsiDylpSolverInterface *>(vecSiP[i]) ;
+        if (si != NULL )  { 
+          // Solver is DYLP.
+          // Skip over netlib cases that DYLP struggles with.
+          // Does not read forplan mps file
+          if ( mpsName[m]=="forplan" ) continue;
+          // Does not converge to solution after many hours run time for pilot
+          if ( mpsName[m]=="pilot" ) continue;
+        }
+      }
+#     endif
 
       vecSiP[i]->getStrParam(OsiSolverName,siName[i]);
       
@@ -527,21 +557,48 @@ static bool testDblParam(OsiSolverInterface * si, int k, double val)
 
 void
 OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
-				 const std::string & mpsDir)
+				 const std::string & mpsDir, 
+         const std::string & netlibDir)
 {
+  
+  int i;
+  CoinRelFltEq eq;
+
   // Test that solverInterface knows its name.
   // The name is used for displaying messages when testing
+  std::string solverName;
   {
     OsiSolverInterface * si = emptySi->clone();
-    std::string solverName;
     bool supportsSolverName = si->getStrParam(OsiSolverName,solverName);
     assert( supportsSolverName );
     assert( solverName != "Unknown Solver" );
     delete si;
   }
+
+  // Determine if this is the emptySi is an OsiVoSolverInterface
+  bool volSolverInterface = false;
+  {
+    const OsiVolSolverInterface * vsi =
+      dynamic_cast<const OsiVolSolverInterface *>(emptySi);
+    if ( vsi != NULL ) volSolverInterface = true;
+  }
+
+  // Test that solverInterface knows about constants
+  // in objective function.
+  // Do not perform test if Vol solver, because it
+  // requires problems of a special form and can not
+  // solve netlib e226.
+  if ( !volSolverInterface ) {
+    OsiSolverInterface * si = emptySi->clone();
+    std::string fn = netlibDir+"e226";
+    si->readMps(fn.c_str(),"mps");
+    si->initialSolve();
+    double objValue = si->getObjValue(); 
+    if( !eq(objValue,-18.751929066+7.113) )
+      failureMessage(solverName,"getObjValue with constant in objective function");
+    delete si;
+  }
   
-  int i;
-  CoinRelFltEq eq;
   std::string fn = mpsDir+"exmip1";
   OsiSolverInterface * exmip1Si = emptySi->clone(); 
   exmip1Si->readMps(fn.c_str(),"mps");

@@ -71,7 +71,7 @@ void OsiGlpkSolverInterface::printBounds()
 }
 
 //--------------------------------------------------------------------------
-void OsiGlpkSolverInterfaceUnitTest( const std::string & mpsDir )
+void OsiGlpkSolverInterfaceUnitTest( const std::string & mpsDir, const std::string & netlibDir )
 {
   // Test default constructor
   {
@@ -786,7 +786,7 @@ void OsiGlpkSolverInterfaceUnitTest( const std::string & mpsDir )
   // base class testing method.
   {
     OsiGlpkSolverInterface m;
-    OsiSolverInterfaceCommonUnitTest(&m, mpsDir);
+    OsiSolverInterfaceCommonUnitTest(&m, mpsDir,netlibDir);
   }
 }
 #endif

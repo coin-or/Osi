@@ -25,7 +25,7 @@
 */
 
 class OsiCpxSolverInterface : public OsiSolverInterface {
-  friend void OsiCpxSolverInterfaceUnitTest(const std::string & mpsDir);
+  friend void OsiCpxSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
   
 public:
   
@@ -776,6 +776,6 @@ private:
     have to be compiled into the library. And that's a gain, because the
     library should be compiled with optimization on, but this method should be
     compiled with debugging. */
-void OsiCpxSolverInterfaceUnitTest(const std::string & mpsDir);
+void OsiCpxSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 #endif

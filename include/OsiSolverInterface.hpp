@@ -42,7 +42,8 @@ For example:
 class OsiSolverInterface  {
    friend void OsiSolverInterfaceCommonUnitTest(
       const OsiSolverInterface* emptySi,
-      const std::string & mpsDir);
+      const std::string & mpsDir,
+      const std::string & netlibDir);
    friend void OsiSolverInterfaceMpsUnitTest(
       const std::vector<OsiSolverInterface*> & vecSiP,
       const std::string & mpsDir);
@@ -873,7 +874,8 @@ protected:
 void
 OsiSolverInterfaceCommonUnitTest(
    const OsiSolverInterface* emptySi,
-   const std::string & mpsDir);
+   const std::string & mpsDir,
+   const std::string & netlibDir);
 
 //#############################################################################
 /** A function that tests that a lot of problems given in MPS files (mostly

@@ -30,7 +30,7 @@ static const double OsiClpInfinity = DBL_MAX;
 
 class OsiClpSolverInterface :
    public OsiSolverInterface {
-   friend void OsiClpSolverInterfaceUnitTest(const std::string & mpsDir);
+   friend void OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 public:
   //---------------------------------------------------------------------------
@@ -686,6 +686,6 @@ private:
     optimization, the compilation takes 10-15 minutes and the machine pages
     (has 256M core memory!)... */
 void
-OsiClpSolverInterfaceUnitTest(const std::string & mpsDir);
+OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 #endif

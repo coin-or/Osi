@@ -419,7 +419,7 @@ extern "C" void trapMessages(EKKModel * model, int  msgno, int nreal,
 //--------------------------------------------------------------------------
 // test EKKsolution methods.
 void
-OsiOslSolverInterfaceUnitTest(const std::string & mpsDir)
+OsiOslSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir)
 {
 
   // Test default constructor
@@ -1127,7 +1127,7 @@ OsiOslSolverInterfaceUnitTest(const std::string & mpsDir)
   // Do common solverInterface testing 
   {
     OsiOslSolverInterface m;
-    OsiSolverInterfaceCommonUnitTest(&m, mpsDir);
+    OsiSolverInterfaceCommonUnitTest(&m, mpsDir, netlibDir );
   }
 
   // Do primitive branch and bound

@@ -62,7 +62,7 @@ extern "C" {
 
 class OsiDylpSolverInterface: public OsiSolverInterface
 
-{ friend void OsiDylpSolverInterfaceUnitTest(const std::string & mpsDir) ;
+{ friend void OsiDylpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir) ;
 
 /*
   Consult the COIN OSI documentation or relevant source code for details
@@ -868,6 +868,6 @@ class OsiDylpWarmStartBasis : public CoinWarmStartBasis
   OsiDylpSolverInterfaceTest.cpp
 */
 
-void OsiDylpSolverInterfaceUnitTest(const std::string & mpsDir) ;
+void OsiDylpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir) ;
 
 #endif // OsiDylpSolverInterface_H

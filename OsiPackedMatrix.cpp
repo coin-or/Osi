@@ -316,6 +316,46 @@ OsiPackedMatrix::removeGaps()
 //#############################################################################
 
 void
+OsiPackedMatrix::submatrixOf(const OsiPackedMatrix& matrix,
+			     const int numMajor, const int * indMajor)
+   throw(CoinError)
+{
+   int i;
+
+   int* sortedIndPtr = OsiTestIndexSet(numMajor, indMajor, matrix.majorDim_,
+				       "submatrixOf");
+   const int * sortedInd = sortedIndPtr == 0 ? indMajor : sortedIndPtr;
+
+   gutsOfDestructor();
+
+   // Count how many nonzeros there'll be
+   int nzcnt = 0;
+   const int* length = matrix.getVectorLengths();
+   for (i = 0; i < numMajor; ++i) {
+      nzcnt += length[sortedInd[i]];
+   }
+
+   colOrdered_ = matrix.colOrdered_;
+   maxMajorDim_ = int(numMajor * (1+extraMajor_) + 1);
+   maxSize_ = int(nzcnt * (1+extraMajor_) * (1+extraGap_) + 100);
+   length_ = new int[maxMajorDim_];
+   start_ = new int[maxMajorDim_+1];
+   index_ = new int[maxSize_];
+   element_ = new double[maxSize_];
+   majorDim_ = 0;
+   minorDim_ = matrix.minorDim_;
+   size_ = 0;
+
+   for (i = 0; i < numMajor; ++i) {
+      appendMajorVector(matrix.getVector(sortedInd[i]));
+   }
+
+   delete[] sortedIndPtr;
+}
+
+//#############################################################################
+
+void
 OsiPackedMatrix::copyOf(const OsiPackedMatrix& rhs)
 {
    if (this != &rhs) {
@@ -955,7 +995,9 @@ OsiPackedMatrix::deleteMajorVectors(const int numDel,
 				    const int * indDel) throw(CoinError)
 {
    int *sortedDelPtr = OsiTestIndexSet(numDel, indDel, majorDim_,
-					  "deleteMajorVectors");
+				       "deleteMajorVectors");
+   const int * sortedDel = sortedDelPtr == 0 ? indDel : sortedDelPtr;
+
    if (numDel == majorDim_) {
       // everything is deleted
       majorDim_ = 0;
@@ -964,12 +1006,6 @@ OsiPackedMatrix::deleteMajorVectors(const int numDel,
 	 delete[] sortedDelPtr;
       return;
    }
-
-   const int * sortedDel = sortedDelPtr;
-
-   bool needToFree = sortedDel != 0;
-   if (sortedDel == 0)
-      sortedDel = indDel;
 
    int deleted = 0;
    const int last = numDel - 1;
@@ -1005,8 +1041,7 @@ OsiPackedMatrix::deleteMajorVectors(const int numDel,
       start_[0] = 0;
    }
 
-   if (needToFree)
-      delete[] sortedDelPtr;
+   delete[] sortedDelPtr;
 }
 
 //#############################################################################
@@ -1145,14 +1180,57 @@ OsiPackedMatrix::OsiPackedMatrix() :
 
 //-----------------------------------------------------------------------------
 
-OsiPackedMatrix::OsiPackedMatrix (const bool colordered,
-				  const int minor, const int major,
-				  const int numels,
-				  const double * elem, const int * ind,
-				  const int * start, const int * len) :
-   colOrdered_(true),
-   extraGap_(0.25),
-   extraMajor_(0.25),
+OsiPackedMatrix::OsiPackedMatrix(const bool colordered,
+				 const double extraMajor,
+				 const double extraGap) :
+   colOrdered_(colordered),
+   extraGap_(extraGap),
+   extraMajor_(extraMajor),
+   element_(0), 
+   index_(0),
+   start_(0),
+   length_(0),
+   majorDim_(0),
+   minorDim_(0),
+   size_(0),
+   maxMajorDim_(0),
+   maxSize_(0) {}
+
+//-----------------------------------------------------------------------------
+
+OsiPackedMatrix::OsiPackedMatrix(const bool colordered,
+				 const int minor, const int major,
+				 const int numels,
+				 const double * elem, const int * ind,
+				 const int * start, const int * len,
+				 const double extraMajor,
+				 const double extraGap) :
+   colOrdered_(colordered),
+   extraGap_(extraGap),
+   extraMajor_(extraMajor),
+   element_(NULL),
+   index_(NULL),
+   start_(NULL),
+   length_(NULL),
+   majorDim_(0),
+   minorDim_(0),
+   size_(0),
+   maxMajorDim_(0),
+   maxSize_(0)
+{
+   gutsOfOpEqual(colordered, minor, major, numels, elem, ind, start, len);
+}
+
+//-----------------------------------------------------------------------------
+
+OsiPackedMatrix::OsiPackedMatrix(const bool colordered,
+				 const int minor, const int major,
+				 const int numels,
+				 const double * elem, const int * ind,
+				 const int * start, const int * len) :
+   colOrdered_(colordered),
+   extraGap_(0.0),
+   extraMajor_(0.0),
    element_(NULL),
    index_(NULL),
    start_(NULL),

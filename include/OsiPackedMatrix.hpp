@@ -213,6 +213,21 @@ public:
     /** Remove the gaps from the matrix if there were any */
     void removeGaps();
  
+    /** Extract a submatrix from matrix. Those major-dimension vectors of
+	the matrix comprise the submatrix whose indices are given in the
+	arguments. */
+    void submatrixOf(const OsiPackedMatrix& matrix,
+		     const int numMajor, const int * indMajor)
+       throw(CoinError);
+#if 0
+    /** Extract a submatrix from matrix. Those major/minor-dimension vectors of
+	the matrix comprise the submatrix whose indices are given in the
+	arguments. */
+    void submatrixOf(const OsiPackedMatrix& matrix,
+		     const int numMajor, const int * indMajor,
+		     const int numMinor, const int * indMinor) throw(CoinError);
+#endif
+
     /** Copy method. This method makes an exact replica of the argument,
         including the extra space parameters. */
     void copyOf(const OsiPackedMatrix& rhs);
@@ -261,14 +276,6 @@ public:
     /** Swap the content of the two packed matrix. */
     void swap(OsiPackedMatrix& matrix);
    
-#if 0
-    /** Extract a submatrix from matrix. Those major/minor-dimension vectors of
-	the matrix comprise the submatrix whose indices are given in the
-	arguments. */
-    void submatrixOf(const OsiPackedMatrix& matrix,
-		     const int numMajor, const int * indMajor,
-		     const int numMinor, const int * indMinor) throw(CoinError);
-#endif
   //@}
 
   //---------------------------------------------------------------------------
@@ -464,6 +471,16 @@ public:
    //@{
    /// Default Constructor creates an empty column ordered packed matrix
    OsiPackedMatrix();
+
+   /// A constructor where the ordering and the gaps are specified
+   OsiPackedMatrix(const bool colordered,
+		   const double extraMajor, const double extraGap);
+
+   OsiPackedMatrix(const bool colordered,
+		   const int minor, const int major, const int numels,
+		   const double * elem, const int * ind,
+		   const int * start, const int * len,
+		   const double extraMajor, const double extraGap);
 
    OsiPackedMatrix(const bool colordered,
 		   const int minor, const int major, const int numels,

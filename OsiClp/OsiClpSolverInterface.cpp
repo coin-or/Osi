@@ -1224,6 +1224,9 @@ OsiClpSolverInterface::loadProblem(const CoinPackedMatrix& matrix,
 				   const double* obj,
 				   const double* rowlb, const double* rowub)
 {
+  // Get rid of integer information (modelPtr will get rid of its copy)
+  delete [] integerInformation_;
+  integerInformation_=NULL;
   modelPtr_->loadProblem(matrix, collb, colub, obj, rowlb, rowub);
   linearObjective_ = modelPtr_->objective();
   freeCachedResults();
@@ -1238,16 +1241,19 @@ OsiClpSolverInterface::assignProblem(CoinPackedMatrix*& matrix,
 				     double*& obj,
 				     double*& rowlb, double*& rowub)
 {
-   modelPtr_->loadProblem(*matrix, collb, colub, obj, rowlb, rowub);
-   linearObjective_ = modelPtr_->objective();
-
-   freeCachedResults();
-   delete matrix;   matrix = NULL;
-   delete[] collb;  collb = NULL;
-   delete[] colub;  colub = NULL;
-   delete[] obj;    obj = NULL;
-   delete[] rowlb;  rowlb = NULL;
-   delete[] rowub;  rowub = NULL;
+  // Get rid of integer information (modelPtr will get rid of its copy)
+  delete [] integerInformation_;
+  integerInformation_=NULL;
+  modelPtr_->loadProblem(*matrix, collb, colub, obj, rowlb, rowub);
+  linearObjective_ = modelPtr_->objective();
+  
+  freeCachedResults();
+  delete matrix;   matrix = NULL;
+  delete[] collb;  collb = NULL;
+  delete[] colub;  colub = NULL;
+  delete[] obj;    obj = NULL;
+  delete[] rowlb;  rowlb = NULL;
+  delete[] rowub;  rowub = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -1259,19 +1265,22 @@ OsiClpSolverInterface::loadProblem(const CoinPackedMatrix& matrix,
 				   const char* rowsen, const double* rowrhs,   
 				   const double* rowrng)
 {
-   assert( rowsen != NULL );
-   assert( rowrhs != NULL );
-   int numrows = matrix.getNumRows();
-   double * rowlb = new double[numrows];
-   double * rowub = new double[numrows];
-   for (int i = numrows-1; i >= 0; --i) {   
-      convertSenseToBound(rowsen[i],rowrhs[i],rowrng[i],rowlb[i],rowub[i]);
-   }
-   modelPtr_->loadProblem(matrix, collb, colub, obj, rowlb, rowub);
-   linearObjective_ = modelPtr_->objective();
-   freeCachedResults();
-   delete [] rowlb;
-   delete [] rowub;
+  // Get rid of integer information (modelPtr will get rid of its copy)
+  delete [] integerInformation_;
+  integerInformation_=NULL;
+  assert( rowsen != NULL );
+  assert( rowrhs != NULL );
+  int numrows = matrix.getNumRows();
+  double * rowlb = new double[numrows];
+  double * rowub = new double[numrows];
+  for (int i = numrows-1; i >= 0; --i) {   
+    convertSenseToBound(rowsen[i],rowrhs[i],rowrng[i],rowlb[i],rowub[i]);
+  }
+  modelPtr_->loadProblem(matrix, collb, colub, obj, rowlb, rowub);
+  linearObjective_ = modelPtr_->objective();
+  freeCachedResults();
+  delete [] rowlb;
+  delete [] rowub;
 }
 
 //-----------------------------------------------------------------------------
@@ -1283,15 +1292,18 @@ OsiClpSolverInterface::assignProblem(CoinPackedMatrix*& matrix,
 				     char*& rowsen, double*& rowrhs,
 				     double*& rowrng)
 {
-   loadProblem(*matrix, collb, colub, obj, rowsen, rowrhs, rowrng);
-   linearObjective_ = modelPtr_->objective();
-   delete matrix;   matrix = NULL;
-   delete[] collb;  collb = NULL;
-   delete[] colub;  colub = NULL;
-   delete[] obj;    obj = NULL;
-   delete[] rowsen; rowsen = NULL;
-   delete[] rowrhs; rowrhs = NULL;
-   delete[] rowrng; rowrng = NULL;
+  // Get rid of integer information (modelPtr will get rid of its copy)
+  delete [] integerInformation_;
+  integerInformation_=NULL;
+  loadProblem(*matrix, collb, colub, obj, rowsen, rowrhs, rowrng);
+  linearObjective_ = modelPtr_->objective();
+  delete matrix;   matrix = NULL;
+  delete[] collb;  collb = NULL;
+  delete[] colub;  colub = NULL;
+  delete[] obj;    obj = NULL;
+  delete[] rowsen; rowsen = NULL;
+  delete[] rowrhs; rowrhs = NULL;
+  delete[] rowrng; rowrng = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -1304,6 +1316,9 @@ OsiClpSolverInterface::loadProblem(const int numcols, const int numrows,
 				   const double* obj,
 				   const double* rowlb, const double* rowub)
 {
+  // Get rid of integer information (modelPtr will get rid of its copy)
+  delete [] integerInformation_;
+  integerInformation_=NULL;
   modelPtr_->loadProblem(numcols, numrows, start,  index,
 	    value, collb, colub, obj,
 	    rowlb,  rowub);
@@ -1321,20 +1336,23 @@ OsiClpSolverInterface::loadProblem(const int numcols, const int numrows,
 				   const char* rowsen, const double* rowrhs,   
 				   const double* rowrng)
 {
-   assert( rowsen != NULL );
-   assert( rowrhs != NULL );
-   double * rowlb = new double[numrows];
-   double * rowub = new double[numrows];
-   for (int i = numrows-1; i >= 0; --i) {   
-      convertSenseToBound(rowsen[i],rowrhs[i],rowrng[i],rowlb[i],rowub[i]);
-   }
-   modelPtr_->loadProblem(numcols, numrows, start,  index,
-	     value, collb, colub, obj,
-	     rowlb,  rowub);
-   linearObjective_ = modelPtr_->objective();
-   freeCachedResults();
-   delete[] rowlb;
-   delete[] rowub;
+  // Get rid of integer information (modelPtr will get rid of its copy)
+  delete [] integerInformation_;
+  integerInformation_=NULL;
+  assert( rowsen != NULL );
+  assert( rowrhs != NULL );
+  double * rowlb = new double[numrows];
+  double * rowub = new double[numrows];
+  for (int i = numrows-1; i >= 0; --i) {   
+    convertSenseToBound(rowsen[i],rowrhs[i],rowrng[i],rowlb[i],rowub[i]);
+  }
+  modelPtr_->loadProblem(numcols, numrows, start,  index,
+			 value, collb, colub, obj,
+			 rowlb,  rowub);
+  linearObjective_ = modelPtr_->objective();
+  freeCachedResults();
+  delete[] rowlb;
+  delete[] rowub;
 }
 
 //-----------------------------------------------------------------------------

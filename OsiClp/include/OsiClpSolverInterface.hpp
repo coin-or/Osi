@@ -519,6 +519,10 @@ public:
       virtual void addCol(const CoinPackedVectorBase& vec,
     			     const double collb, const double colub,   
     			     const double obj);
+      /** Add a column (primal variable) to the problem. */
+      virtual void addCol(int numberElements, const int * rows, const double * elements,
+			  const double collb, const double colub,   
+			  const double obj) ;
       /** */
       virtual void addCols(const int numcols,
 			   const CoinPackedVectorBase * const * cols,

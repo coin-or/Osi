@@ -1071,6 +1071,15 @@ OsiClpSolverInterface::addCol(const CoinPackedVectorBase& vec,
   }
   freeCachedResults();
 }
+/* Add a column (primal variable) to the problem. */
+void 
+OsiClpSolverInterface::addCol(int numberElements, const int * rows, const double * elements,
+			   const double collb, const double colub,   
+			   const double obj) 
+{
+  CoinPackedVector column(numberElements, rows, elements);
+  addCol(column,collb,colub,obj);
+}
 //-----------------------------------------------------------------------------
 void 
 OsiClpSolverInterface::addCols(const int numcols,

@@ -99,6 +99,7 @@ OsiCpxSolverInterface::switchToLP( void )
 
      int err = CPXchgprobtype( env_, lp, CPXPROB_LP );
      checkCPXerror( err, "CPXchgprobtype", "switchToLP" );
+     probtypemip_ = FALSE;
   }
 }
 
@@ -130,6 +131,7 @@ OsiCpxSolverInterface::switchToMIP( void )
      checkCPXerror( err, "CPXchgctype", "switchToMIP" );
 
      delete[] cindarray;
+     probtypemip_ = TRUE;
   }
 }
 
@@ -433,11 +435,13 @@ bool OsiCpxSolverInterface::isProvenOptimal() const
   int stat = CPXgetstat( env_, getMutableLpPtr() );
 
 #if CPX_VERSION >= 800
-  return (stat == CPX_STAT_OPTIMAL || 
-	  stat == CPX_STAT_OPTIMAL_INFEAS);
+  return ((probtypemip_ == false && 
+	  (stat == CPX_STAT_OPTIMAL || stat == CPX_STAT_OPTIMAL_INFEAS)) ||
+	  probtypemip_ == true && stat == CPXMIP_OPTIMAL);
 #else
-  return (stat == CPX_OPTIMAL || 
-	  stat == CPX_OPTIMAL_INFEAS);
+  return ((probtypemip_ == false && 
+	  (stat == CPX_OPTIMAL || stat == CPX_OPTIMAL_INFEAS)) ||
+	  probtypemip_ == true && stat == CPXMIP_OPTIMAL);
 #endif
 }
 

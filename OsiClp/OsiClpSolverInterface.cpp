@@ -56,6 +56,13 @@ void OsiClpSolverInterface::initialSolve()
   // set reasonable defaults
   bool takeHint;
   OsiHintStrength strength;
+  // Switch off printing if asked to
+  assert(getHintParam(OsiDoReducePrint,takeHint,strength));
+  int saveMessageLevel=messageHandler()->logLevel();
+  if (strength!=OsiHintIgnore&&takeHint) {
+    if (saveMessageLevel)
+      solver.messageHandler()->setLogLevel(saveMessageLevel-1);
+  }
   // scaling
   assert(getHintParam(OsiDoScale,takeHint,strength));
   if (strength==OsiHintIgnore||takeHint)
@@ -182,6 +189,7 @@ void OsiClpSolverInterface::initialSolve()
   }
   basis_ = getBasis(&solver);
   //basis_.print();
+  solver.messageHandler()->setLogLevel(saveMessageLevel);
   solver.returnModel(*modelPtr_);
   time1 = cpuTime()-time1;
   totalTime += time1;
@@ -199,6 +207,13 @@ void OsiClpSolverInterface::resolve()
   // set reasonable defaults
   bool takeHint;
   OsiHintStrength strength;
+  // Switch off printing if asked to
+  assert(getHintParam(OsiDoReducePrint,takeHint,strength));
+  int saveMessageLevel=messageHandler()->logLevel();
+  if (strength!=OsiHintIgnore&&takeHint) {
+    if (saveMessageLevel)
+      solver.messageHandler()->setLogLevel(saveMessageLevel-1);
+  }
   // scaling
   assert(getHintParam(OsiDoScale,takeHint,strength));
   if (strength==OsiHintIgnore||takeHint)
@@ -276,6 +291,7 @@ void OsiClpSolverInterface::resolve()
   }
   basis_ = getBasis(&solver);
   //basis_.print();
+  solver.messageHandler()->setLogLevel(saveMessageLevel);
   solver.returnModel(*modelPtr_);
 }
 
@@ -514,6 +530,16 @@ void OsiClpSolverInterface::solveFromHotStart()
   int numberColumns = modelPtr_->numberColumns();
   memcpy(modelPtr_->primalColumnSolution(),columnActivity_,
 	 numberColumns*sizeof(double));
+  bool takeHint;
+  OsiHintStrength strength;
+  // Switch off printing if asked to
+  assert(getHintParam(OsiDoReducePrint,takeHint,strength));
+  int saveMessageLevel=messageHandler()->logLevel();
+  if (strength!=OsiHintIgnore&&takeHint) {
+    if (saveMessageLevel)
+      messageHandler()->setLogLevel(saveMessageLevel-1);
+  }
+  messageHandler()->setLogLevel(saveMessageLevel);
   resolve();
   
 }

@@ -195,9 +195,11 @@ public:
       return true;
     }
     // Set a hint parameter
-    virtual bool setHintParam(OsiHintParam key, bool yesNo,
+    virtual bool setHintParam(OsiHintParam key, bool yesNo=true,
 			      OsiHintStrength strength=OsiHintTry,
 			      void * otherInformation=NULL) {
+      if (key==OsiLastHintParam)
+	return false; 
       hintParam_[key] = yesNo;
       hintStrength_[key] = strength;
       if (strength == OsiForceDo)
@@ -224,6 +226,8 @@ public:
     virtual bool getHintParam(OsiHintParam key, bool& yesNo,
 			      OsiHintStrength& strength,
 			      void *& otherInformation) const {
+      if (key==OsiLastHintParam)
+	return false; 
       yesNo = hintParam_[key];
       strength = hintStrength_[key];
       otherInformation=NULL;
@@ -232,12 +236,16 @@ public:
     // get a hint parameter (less information)
     virtual bool getHintParam(OsiHintParam key, bool& yesNo,
 			      OsiHintStrength& strength) const {
+      if (key==OsiLastHintParam)
+	return false; 
       yesNo = hintParam_[key];
       strength = hintStrength_[key];
       return true;
     }
     // get a hint parameter (even less information)
     virtual bool getHintParam(OsiHintParam key, bool& yesNo) const {
+      if (key==OsiLastHintParam)
+	return false; 
       yesNo = hintParam_[key];
       return true;
     }

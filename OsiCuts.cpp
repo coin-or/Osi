@@ -280,3 +280,4 @@ OsiCuts::const_iterator OsiCuts::const_iterator::operator++() {
   }
   return *this;
 }
+

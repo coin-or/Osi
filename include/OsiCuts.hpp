@@ -370,11 +370,18 @@ OsiCut * OsiCuts::mostEffectiveCutPtr()
 void
 OsiCuts::printCuts() const  
 { 
-  const_iterator b=begin();
-  const_iterator e=end();
-  for ( OsiCuts::const_iterator it=b; it!=e; ++it ) 
-    (*it)->print();
-
+  // do all column cuts first
+  int i;
+  int numberColCuts=sizeColCuts();
+  for (i=0;i<numberColCuts;i++) {
+    const OsiColCut * cut = colCutPtr(i);
+    cut->print();
+  }
+  int numberRowCuts=sizeRowCuts();
+  for (i=0;i<numberRowCuts;i++) {
+    const OsiRowCut * cut = rowCutPtr(i);
+    cut->print();
+  }
 }
 
 //----------------------------------------------------------------

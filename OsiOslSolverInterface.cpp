@@ -1389,7 +1389,11 @@ matrixByColumn_(NULL)
 //-------------------------------------------------------------------
 OsiSolverInterface * OsiOslSolverInterface::clone(bool CopyData) const
 {
-  return (new OsiOslSolverInterface(*this));
+   if (CopyData) {
+      return new OsiOslSolverInterface(*this);
+   } else {
+      return new OsiOslSolverInterface();
+   }
 }
 
 #if 0

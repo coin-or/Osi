@@ -9,7 +9,6 @@
 
 #include "CoinHelperFunctions.hpp"
 #include "OsiIndexedVector.hpp"
-#define TINY_ELEMENT 1.0e-30
 //#############################################################################
 
 void
@@ -149,7 +148,7 @@ OsiIndexedVector::setFull(int size, const double * elems,
   for (i=0;i<size;i++) {
     int indexValue=i;
     double value=elems[i];
-    if (fabs(value)>=TINY_ELEMENT) {
+    if (fabs(value)>=OSI_INDEXED_TINY_ELEMENT) {
       elements_[indexValue]=value;
       indices_[nElements_++]=indexValue;
     }
@@ -211,16 +210,27 @@ OsiIndexedVector::add( int index, double element )
     reserve(index+1);
   if (elements_[index]) {
     element += elements_[index];
-    if (fabs(element)>= TINY_ELEMENT) {
+    if (fabs(element)>= OSI_INDEXED_TINY_ELEMENT) {
       elements_[index] = element;
     } else {
       elements_[index] = 1.0e-100;
     }
-  } else if (fabs(element)>= TINY_ELEMENT) {
+  } else if (fabs(element)>= OSI_INDEXED_TINY_ELEMENT) {
     indices_[nElements_++] = index;
     elements_[index] = element;
    }
   // and clear index set
+  clearIndexSet();
+  delete [] packedElements_;
+  packedElements_=NULL;
+}
+
+//#############################################################################
+
+void
+OsiIndexedVector::stopQuickAdd( )
+{
+  // clear index set
   clearIndexSet();
   delete [] packedElements_;
   packedElements_=NULL;
@@ -273,6 +283,7 @@ void OsiIndexedVector::checkClean()
   for (i=0;i<capacity_;i++) {
     assert(!copy[i]);
   }
+  delete [] copy;
 }
 
 //#############################################################################
@@ -302,11 +313,11 @@ OsiIndexedVector::append(const OsiPackedVectorBase & caboose)
     if (elements_[indexValue]) {
       numberDuplicates++;
       value += elements_[indexValue];
-      if (fabs(value)<TINY_ELEMENT) 
+      if (fabs(value)<OSI_INDEXED_TINY_ELEMENT) 
 	needClean=true; // need to go through again
       elements_[indexValue]=value;
     } else {
-      if (fabs(value)>=TINY_ELEMENT) {
+      if (fabs(value)>=OSI_INDEXED_TINY_ELEMENT) {
 	elements_[indexValue]=value;
 	indices_[nElements_++]=indexValue;
       }
@@ -319,7 +330,7 @@ OsiIndexedVector::append(const OsiPackedVectorBase & caboose)
     for (i=0;i<size;i++) {
       int indexValue=indices_[i];
       double value=elements_[indexValue];
-      if (fabs(value)>=TINY_ELEMENT) {
+      if (fabs(value)>=OSI_INDEXED_TINY_ELEMENT) {
 	indices_[nElements_++]=indexValue;
       } else {
         elements_[indexValue]=0.0;
@@ -607,14 +618,14 @@ OsiIndexedVector::operator+(
     double value=op2.elements_[indexValue];
     double oldValue=elements_[indexValue];
     if (!oldValue) {
-      if (fabs(value)>=TINY_ELEMENT) {
+      if (fabs(value)>=OSI_INDEXED_TINY_ELEMENT) {
 	newOne.elements_[indexValue]=value;
 	newOne.indices_[nElements++]=indexValue;
       }
     } else {
       value += oldValue;
       newOne.elements_[indexValue]=value;
-      if (fabs(value)<TINY_ELEMENT) {
+      if (fabs(value)<OSI_INDEXED_TINY_ELEMENT) {
 	needClean=true;
       }
     }
@@ -626,7 +637,7 @@ OsiIndexedVector::operator+(
     for (i=0;i<nElements;i++) {
       int indexValue=newOne.indices_[i];
       double value=newOne.elements_[indexValue];
-      if (fabs(value)>=TINY_ELEMENT) {
+      if (fabs(value)>=OSI_INDEXED_TINY_ELEMENT) {
 	newOne.indices_[nElements_++]=indexValue;
       } else {
         newOne.elements_[indexValue]=0.0;
@@ -653,14 +664,14 @@ OsiIndexedVector::operator-(
     double value=op2.elements_[indexValue];
     double oldValue=elements_[indexValue];
     if (!oldValue) {
-      if (fabs(value)>=TINY_ELEMENT) {
+      if (fabs(value)>=OSI_INDEXED_TINY_ELEMENT) {
 	newOne.elements_[indexValue]=-value;
 	newOne.indices_[nElements++]=indexValue;
       }
     } else {
       value = oldValue-value;
       newOne.elements_[indexValue]=value;
-      if (fabs(value)<TINY_ELEMENT) {
+      if (fabs(value)<OSI_INDEXED_TINY_ELEMENT) {
 	needClean=true;
       }
     }
@@ -672,7 +683,7 @@ OsiIndexedVector::operator-(
     for (i=0;i<nElements;i++) {
       int indexValue=newOne.indices_[i];
       double value=newOne.elements_[indexValue];
-      if (fabs(value)>=TINY_ELEMENT) {
+      if (fabs(value)>=OSI_INDEXED_TINY_ELEMENT) {
 	newOne.indices_[nElements_++]=indexValue;
       } else {
         newOne.elements_[indexValue]=0.0;
@@ -701,7 +712,7 @@ OsiIndexedVector::operator*(
     if (oldValue) {
       value *= oldValue;
       newOne.elements_[indexValue]=value;
-      if (fabs(value)<TINY_ELEMENT) {
+      if (fabs(value)<OSI_INDEXED_TINY_ELEMENT) {
 	needClean=true;
       }
     }
@@ -713,7 +724,7 @@ OsiIndexedVector::operator*(
     for (i=0;i<nElements;i++) {
       int indexValue=newOne.indices_[i];
       double value=newOne.elements_[indexValue];
-      if (fabs(value)>=TINY_ELEMENT) {
+      if (fabs(value)>=OSI_INDEXED_TINY_ELEMENT) {
 	newOne.indices_[nElements_++]=indexValue;
       } else {
         newOne.elements_[indexValue]=0.0;
@@ -745,7 +756,7 @@ OsiIndexedVector::operator/(
         throw CoinError("zero divisor", "/", "OsiIndexedVector");
       value = oldValue/value;
       newOne.elements_[indexValue]=value;
-      if (fabs(value)<TINY_ELEMENT) {
+      if (fabs(value)<OSI_INDEXED_TINY_ELEMENT) {
 	needClean=true;
       }
     }
@@ -757,7 +768,7 @@ OsiIndexedVector::operator/(
     for (i=0;i<nElements;i++) {
       int indexValue=newOne.indices_[i];
       double value=newOne.elements_[indexValue];
-      if (fabs(value)>=TINY_ELEMENT) {
+      if (fabs(value)>=OSI_INDEXED_TINY_ELEMENT) {
 	newOne.indices_[nElements_++]=indexValue;
       } else {
         newOne.elements_[indexValue]=0.0;
@@ -829,11 +840,11 @@ OsiIndexedVector::gutsOfSetVector(int size,
     if (elements_[indexValue]) {
       numberDuplicates++;
       value += elements_[indexValue];
-      if (fabs(value)<TINY_ELEMENT) 
+      if (fabs(value)<OSI_INDEXED_TINY_ELEMENT) 
 	needClean=true; // need to go through again
       elements_[indexValue]=value;
     } else {
-      if (fabs(value)>=TINY_ELEMENT) {
+      if (fabs(value)>=OSI_INDEXED_TINY_ELEMENT) {
 	elements_[indexValue]=value;
 	indices_[nElements_++]=indexValue;
       }
@@ -846,7 +857,7 @@ OsiIndexedVector::gutsOfSetVector(int size,
     for (i=0;i<size;i++) {
       int indexValue=indices_[i];
       double value=elements_[indexValue];
-      if (fabs(value)>=TINY_ELEMENT) {
+      if (fabs(value)>=OSI_INDEXED_TINY_ELEMENT) {
 	indices_[nElements_++]=indexValue;
       } else {
         elements_[indexValue]=0.0;
@@ -888,11 +899,11 @@ OsiIndexedVector::gutsOfSetVector(int size, int numberIndices,
     if (elements_[indexValue]) {
       numberDuplicates++;
       value += elements_[indexValue];
-      if (fabs(value)<TINY_ELEMENT) 
+      if (fabs(value)<OSI_INDEXED_TINY_ELEMENT) 
 	needClean=true; // need to go through again
       elements_[indexValue]=value;
     } else {
-      if (fabs(value)>=TINY_ELEMENT) {
+      if (fabs(value)>=OSI_INDEXED_TINY_ELEMENT) {
 	elements_[indexValue]=value;
 	indices_[nElements_++]=indexValue;
       }
@@ -905,7 +916,7 @@ OsiIndexedVector::gutsOfSetVector(int size, int numberIndices,
     for (i=0;i<size;i++) {
       int indexValue=indices_[i];
       double value=elements_[indexValue];
-      if (fabs(value)>=TINY_ELEMENT) {
+      if (fabs(value)>=OSI_INDEXED_TINY_ELEMENT) {
 	indices_[nElements_++]=indexValue;
       } else {
         elements_[indexValue]=0.0;
@@ -953,11 +964,11 @@ OsiIndexedVector::gutsOfSetConstant(int size,
     if (elements_[indexValue]) {
       numberDuplicates++;
       value += elements_[indexValue];
-      if (fabs(value)<TINY_ELEMENT) 
+      if (fabs(value)<OSI_INDEXED_TINY_ELEMENT) 
 	needClean=true; // need to go through again
       elements_[indexValue]=value;
     } else {
-      if (fabs(value)>=TINY_ELEMENT) {
+      if (fabs(value)>=OSI_INDEXED_TINY_ELEMENT) {
 	elements_[indexValue]=value;
 	indices_[nElements_++]=indexValue;
       }
@@ -970,7 +981,7 @@ OsiIndexedVector::gutsOfSetConstant(int size,
     for (i=0;i<size;i++) {
       int indexValue=indices_[i];
       double value=elements_[indexValue];
-      if (fabs(value)>=TINY_ELEMENT) {
+      if (fabs(value)>=OSI_INDEXED_TINY_ELEMENT) {
 	indices_[nElements_++]=indexValue;
       } else {
         elements_[indexValue]=0.0;

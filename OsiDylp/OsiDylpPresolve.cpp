@@ -98,7 +98,7 @@
 */
 
 namespace {
-  char sccsid[] = "@(#)OsiDylpPresolve.cpp	1.2	09/16/04" ;
+  char sccsid[] = "@(#)OsiDylpPresolve.cpp	1.4	09/16/04" ;
   char cvsid[] = "$Id$" ;
 }
 
@@ -371,7 +371,6 @@ void ODSI::doPresolve ()
   and lower bounds.
 */
   postActions_ = make_fixed(preObj_,postActions_) ;
-  const CoinPresolveAction *initfixedActions = postActions_ ;
 # if PRESOLVE_DEBUG || PRESOLVE_CONSISTENCY
   check_and_tell(preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
 # endif
@@ -531,7 +530,7 @@ void ODSI::doPresolve ()
   but disable substitution of equalities into other constraints
   (fill_level = 0).
 */
-      if (dual)
+      if (doDualStuff)
       { for (int iter = 0 ; iter < 5 ; iter++)
 	{ const CoinPresolveAction *const marker = postActions_ ;
 	  postActions_ = remove_dual_action::presolve(preObj_,postActions_) ;
@@ -615,16 +614,15 @@ void ODSI::doPresolve ()
 */
   else
   { CoinMessageHandler *handler = preObj_->messageHandler() ;
-    CoinMessages &messages = preObj_->messages() ;
     if (preObj_->status() == infeasibleStatus)
-    { handler->message(COIN_PRESOLVE_INFEAS,messages)
+    { handler->message(COIN_PRESOLVE_INFEAS,preObj_->messages())
 	  << preObj_->feasibilityTolerance_ << CoinMessageEol ; }
     else
     if (preObj_->status() == unboundedStatus)
-    { handler->message(COIN_PRESOLVE_UNBOUND,messages)
+    { handler->message(COIN_PRESOLVE_UNBOUND,preObj_->messages())
 	  << CoinMessageEol ; }
     else
-    { handler->message(COIN_PRESOLVE_INFEASUNBOUND,messages)
+    { handler->message(COIN_PRESOLVE_INFEASUNBOUND,preObj_->messages())
 	  << CoinMessageEol ; } }
 
   return ; }

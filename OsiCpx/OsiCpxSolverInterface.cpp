@@ -1164,14 +1164,13 @@ const double * OsiCpxSolverInterface::getRowActivity() const
           {
              double *rowslack = new double[nrows];
              int err = CPXgetmipslack( env_, getMutableLpPtr(), rowslack, 0, nrows-1 );
-             if ( err == CPXERR_NO_SOLN )
+             if ( err == CPXERR_NO_SOLN || err == CPXERR_NO_INT_SOLUTION )
                 CoinFillN( rowact_, nrows, 0.0 );
              else
              {
-                // *FIXME* : this has to be tested for ranged rows
                 checkCPXerror( err, "CPXgetmipslack", "getRowActivity" );
                 for( int r = 0; r < nrows; ++r )
-                   rowact_[r] = getRightHandSide()[r] - rowslack[r];
+                   rowact_[r] = getRightHandSide()[r] + rowslack[r];
              }
              delete [] rowslack;
           }

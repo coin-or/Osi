@@ -170,13 +170,14 @@ const double CoinInfinity = DBL_MAX ;
 */
 
 namespace {
-  char sccsid[] = "@(#)OsiDylpSolverInterface.cpp	1.16	06/22/04" ;
+  char sccsid[] = "@(#)OsiDylpSolverInterface.cpp	1.17	09/16/04" ;
   char cvsid[] = "$Id$" ;
 }
 
 #include <string>
 #include <cassert>
 #include <sstream>
+#include "CoinTime.hpp"
 #include <OsiColCut.hpp>
 #include <OsiRowCut.hpp>
 #include <OsiRowCutDebugger.hpp>
@@ -294,11 +295,6 @@ bool cmdecho = false,
     Initialisation of the basis data structures is delayed until the user
     actually attempts to solve an lp.
 */
-/*! \var bool OsiDylpSolverInterface::recursive
-    \brief Indicates a recursive invocation is active.
-
-    Used to limit recursion during presolve.
-*/
 /*! \var OsiDylpSolverInterface *OsiDylpSolverInterface::dylp_owner
     \brief ODSI instance controlling dylp
 
@@ -309,7 +305,6 @@ bool cmdecho = false,
 
 int ODSI::reference_count = 0 ;
 bool ODSI::basis_ready = false ;
-bool ODSI::recursive = false ;
 ODSI *ODSI::dylp_owner = 0 ;
 
 //@}
@@ -1009,7 +1004,7 @@ void ODSI::calc_objval ()
 	  scheme for handling dylp parameters.
 */
 
-inline void ODSI::construct_lpprob ()
+void ODSI::construct_lpprob ()
 
 { lpprob = new lpprob_struct ;
   memset(lpprob, 0, sizeof(lpprob_struct)) ;
@@ -1022,7 +1017,7 @@ inline void ODSI::construct_lpprob ()
   return ; }
 
 
-/*! \brief Construct and initialize default options and tolerances.
+/*! \brief Construct and initialise default options and tolerances.
 */
 
 inline void ODSI::construct_options ()
@@ -1331,10 +1326,13 @@ void ODSI::load_problem (const CoinPackedMatrix& matrix,
   major packed matrix structure and dylp constraint sense and right-hand-side
   (rhs, rhslow) vectors.
 
-  The matrix description consists of row and column size and three arrays.
+  The matrix description consists of row and column size and four arrays.
   Coefficients and corresponding row indices are given in value and index,
-  respectively. The vector start contains the starting index in (value,
-  index) for each column.
+  respectively (the bulk storage). The vectors start and len contain the
+  starting position and length, respectively, of each column in the bulk
+  storage arrays. By passing in an explicit len array, we can handle both
+  fully packed matrices (the usual case) and loosely packed matrices
+  (as produced by presolve).
 
   The first action is to free the existing problem.  Existing options and
   tolerances settings are saved, if they exist, and will be restored after
@@ -1352,7 +1350,8 @@ void ODSI::load_problem (const CoinPackedMatrix& matrix,
 */
 
 void ODSI::load_problem (const int colcnt, const int rowcnt,
-	   const int *start, const int *index, const double *value,
+	   const int *start, const int *len,
+	   const int *index, const double *value,
 	   const double* col_lower, const double* col_upper, const double* obj,
 	   const contyp_enum *ctyp, const double* rhs, const double* rhslow)
 
@@ -1391,7 +1390,7 @@ void ODSI::load_problem (const int colcnt, const int rowcnt,
 
   for (int j = 0 ; j < colcnt ; j++)
   { int startj = start[j] ;
-    int lenj = start[j+1]-startj ;
+    int lenj = (len)?(len[j]):(start[j+1]-startj) ;
 
     for (int ndx = 0 ; ndx < lenj ; ndx++)
     { coeffs[ndx].ndx = idx(index[startj+ndx]) ;
@@ -1523,8 +1522,9 @@ void ODSI::gen_rowparms (int rowcnt,
 
 /*!
   Creates the shell of an ODSI object. The options and tolerances structures
-  will be instantiated and initialized, but not the lp problem or constraint
-  system structures.
+  will be instantiated and initialised, but nothing else specific to dylp.
+  Message and hint structures inherited from OsiSolverInterface are
+  initialised.
 
   Creation of the first ODSI object triggers initialisation of the i/o
   subsystem.
@@ -1567,7 +1567,14 @@ ODSI::OsiDylpSolverInterface ()
     _row_sense(0),
     _row_upper(0),
     _matrix_by_row(0),
-    _matrix_by_col(0)
+    _matrix_by_col(0),
+
+    preObj_(0),
+    postActions_(0),
+    postObj_(0),
+    savedConsys_(0),
+    passLimit_(5),
+    keepIntegers_(false)
 
 {
 /*
@@ -1598,9 +1605,10 @@ ODSI::OsiDylpSolverInterface ()
 
 /*!
   A true copy --- no data structures are shared with the original. The
-  statistics structure and hot start information are not copied. The copy
-  does not inherit open files from the original. Cached information is
-  not replicated.
+  statistics structure, hot start structure, and presolve structures are not
+  copied (but presolve control information is copied). The copy does not
+  inherit open files from the original. Cached information is not
+  replicated.
 */
 
 ODSI::OsiDylpSolverInterface (const OsiDylpSolverInterface& src)
@@ -1635,7 +1643,14 @@ ODSI::OsiDylpSolverInterface (const OsiDylpSolverInterface& src)
     _row_sense(0),
     _row_upper(0),
     _matrix_by_row(0),
-    _matrix_by_col(0)
+    _matrix_by_col(0),
+
+    preObj_(0),			// do not copy presolve structures
+    postActions_(0),
+    postObj_(0),
+    savedConsys_(0),
+    passLimit_(src.passLimit_),
+    keepIntegers_(src.keepIntegers_)
 
 { if (src.consys)
   { bool r = consys_dupsys(src.consys,&consys,src.consys->parts) ;
@@ -1781,6 +1796,13 @@ OsiDylpSolverInterface &ODSI::operator= (const OsiDylpSolverInterface &rhs)
   Because the lpprob structure is created only when dylp is actually
   called, it's possible that the interface contains only a constraint system.
 
+  With the addition of presolve capability, it's also possible to have an
+  lpprob but (apparently) no consys. This comes about if the client, for some
+  reason, solves the lp and then decides to try again using presolve.
+  Presolve will save the original constraint system and then restore it. Note
+  that there's no point in saving any existing basis, even when applying
+  presolve in resolve(), as we'll need a modified basis to get started.
+
   If the base ODSI object will be retained, set preserve_interface to true.
   This will retain the current options and tolerance settings.
 */
@@ -1798,8 +1820,9 @@ void ODSI::destruct_problem (bool preserve_interface)
 
   if (lpprob)
   { assert(lpprob->consys == consys) ;
-    consys_free(consys) ;
-    consys = 0 ;
+    if (consys)
+    { consys_free(consys) ;
+      consys = 0 ; }
     dy_freesoln(lpprob) ;
     delete lpprob ;
     lpprob = 0 ; }
@@ -1883,6 +1906,7 @@ ODSI::~OsiDylpSolverInterface ()
   Destroy the problem-specific structures used by dylp, and close the log
   and output files, if open.
 */
+  destruct_presolve() ;
   destruct_problem(false) ;
   if (isactive(local_logchn)) (void) closefile(local_logchn) ;
   if (isactive(local_outchn)) (void) closefile(local_outchn) ;
@@ -1912,6 +1936,7 @@ void ODSI::reset ()
   Destroy the problem-specific structures used by dylp, and close the log
   file, if open.
 */
+  destruct_presolve() ;
   destruct_problem(false) ;
   if (isactive(local_logchn))
   { (void) closefile(local_logchn) ;
@@ -3097,7 +3122,8 @@ ODSI::loadProblem (const int colcnt, const int rowcnt,
   contyp_enum *ctyp = new contyp_enum[rowcnt] ;
 
   gen_rowparms(rowcnt,rhs,rhslow,ctyp,row_lower,row_upper) ;
-  load_problem(colcnt,rowcnt,start,index,value,
+
+  load_problem(colcnt,rowcnt,start,0,index,value,
 	       col_lower,col_upper,obj,ctyp,rhs,rhslow) ;
 
   delete[] rhs ;
@@ -3124,7 +3150,7 @@ ODSI::loadProblem (const int colcnt, const int rowcnt,
   contyp_enum *ctyp = new contyp_enum[rowcnt] ;
 
   gen_rowparms(rowcnt,rhs,rhslow,ctyp,sense,rhsin,range) ;
-  load_problem(colcnt,rowcnt,start,index,value,
+  load_problem(colcnt,rowcnt,start,0,index,value,
 	       col_lower,col_upper,obj,ctyp,rhs,rhslow) ;
 
   delete[] rhs ;
@@ -3391,15 +3417,16 @@ void ODSI::unimp_hint (bool dylpSense, bool hintSense,
 
 
 /*!
-  Since dylp really only looks at the options and tolerances structures for
-  the solver instance, the approach taken for hints is to stash them away and
-  make the appropriate modifications in the options and tolerances
-  structures.  Hints are therefore persistent across all calls to the solver,
-  until explicitly changed.
+  Dylp only looks at the options and tolerances structures for the solver
+  instance --- it has no knowledge of hints. For hints that aren't
+  implemented in the ODSI code, the approach is to stash them away and make
+  the appropriate modifications in the options and tolerances structures.
+  Hints are therefore persistent across all calls to the solver, until
+  explicitly changed.
 
-  Note that the client retains ownership of the blocks specified by the
-  (void *) arguments. If ODSI took ownership, it would need to know how to
-  allocate and free the block, and that way lies madness.
+  Note that the client retains ownership of the blocks specified by the (void
+  *) arguments. If ODSI took ownership, it would need to know how to allocate
+  and free the block, and that way lies madness.
 */
 
 bool ODSI::setHintParam (OsiHintParam key, bool sense,
@@ -3434,10 +3461,11 @@ bool ODSI::setHintParam (OsiHintParam key, bool sense,
   switch (key)
   {
 /*
-  No native presolve.
+  In the process of implementing native presolve. initialSolve only at first.
+  Nothing more to do here, as presolve is handled within ODSI.
 */
     case OsiDoPresolveInInitial:
-    { unimp_hint(false,sense,strength,"presolve for initialSolve") ;
+    { // unimp_hint(false,sense,strength,"presolve for initialSolve") ;
       retval = true ;
       break ; }
     case OsiDoPresolveInResolve:
@@ -3546,7 +3574,7 @@ inline bool ODSI::getHintParam (OsiHintParam key, bool &sense,
 
   if (retval == false) return (false) ;
 
-  info = info_[key] ;
+  info = &info_[key] ;
 
   return (true) ; }
 
@@ -3754,8 +3782,9 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
   Time to undo any constraint flips. We also have to tweak the corresponding
   duals --- flipping the sign of a row in the basis corresponds to flipping the
   sign of a column in the basis inverse, which means that the sign of the
-  corresponding dual is flipped. This requires a little care --- if we're in
-  dynamic mode, some constraints may be inactive.
+  corresponding dual is flipped. (Or just look at it as yA = (-y)(-A).)  We
+  need to walk the basis here. If dylp is in dynamic mode, there may be fewer
+  active constraints than when we started.
 */
   if (flips > 0)
   { for (ndx = lpprob->consys->concnt ; ndx > 0 ; ndx--)
@@ -3767,7 +3796,7 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
 	  return (lpFATAL) ; } } }
     if (lpprob->y != NULL)
     { basis = lpprob->basis ;
-      for (ndx = 0 ; ndx < basis->len ; ndx++)
+      for (ndx = 1 ; ndx <= basis->len ; ndx++)
       { cndx = basis->el[ndx].cndx ;
 	if (flipped[cndx] == true) lpprob->y[ndx] = -lpprob->y[ndx] ; } } }
   FREE(flipped) ;
@@ -3808,14 +3837,18 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
   The first actions make sure all is in order: there must be a valid lpprob
   structure, the basis package must be initialised, and this ODSI object must
   own the solver. The routine then sets a few other dylp parameters to
-  appropriate values for the initial solution of the lp and calls the solver.
+  appropriate values for the initial solution of the lp and calls the
+  solver.
 
-  Forcing fullsys here is a good choice in terms of the performance of the
-  code, but it does reduce flexibility. This should be made into a hint.
+  Forcing fullsys here is generally a good choice in terms of the performance
+  of the code, but it does reduce flexibility. This should be made into a
+  hint.
 */
 void ODSI::initialSolve ()
 
-{ 
+{ CoinMessageHandler *hdl = messageHandler() ; 
+  flags save_ctlopts ;
+  bool save_finpurge_vars,save_finpurge_cons ;
 /*
   The minimum requirement is a constraint system. Options and tolerances should
   also be present --- they're established when the ODSI object is created.
@@ -3842,36 +3875,115 @@ void ODSI::initialSolve ()
   { dylp_owner->detach_dylp() ;
     clrflg(lpprob->ctlopts,lpctlDYVALID) ; }
 /*
+  Are we going to do presolve and postsolve? If so, now's the time to presolve
+  the constraint system.
+*/
+  double startTime = CoinCpuTime() ;
+  double presolveTime = startTime ;
+  bool presolving ;
+  double bias = 0 ;
+  { OsiHintStrength strength ;
+    bool sense ;
+    (void) getHintParam(OsiDoPresolveInInitial,sense,strength) ;
+    if (sense == true)
+    { presolving = true ; }
+    else
+    { presolving = false ; } }
+  if (presolving == true)
+  { preObj_ = initialisePresolve(false) ;
+    doPresolve() ;
+    if (evalPresolve() == true)
+    { saveOriginalSys() ;
+      installPresolve() ;
+      bias = preObj_->dobias_ ; }
+    else
+    { destruct_presolve() ;
+      presolving = false ; }
+    presolveTime = CoinCpuTime() ; }
+/*
+  Remove any active basis and trash any cached solution.
+*/
+  delete activeBasis ;
+  activeBasis = 0 ;
+  activeIsModified = false ;
+  destruct_col_cache() ;
+  destruct_row_cache() ;
+/*
   Establish logging and echo values, and invoke the solver.
 */
   if (isactive(local_logchn)) logchn = local_logchn ;
   gtxecho = initial_gtxecho ;
+  if (presolving == true)
+  { save_ctlopts = getflg(lpprob->ctlopts,lpctlNOFREE|lpctlACTVARSOUT) ;
+    clrflg(lpprob->ctlopts,lpctlNOFREE|lpctlACTVARSOUT) ;
+    save_finpurge_vars = initialSolveOptions->finpurge.vars ;
+    initialSolveOptions->finpurge.vars = false ;
+    save_finpurge_cons = initialSolveOptions->finpurge.cons ;
+    initialSolveOptions->finpurge.cons = false ; }
   lp_retval = do_lp(startCold) ;
+  if (presolving == true)
+  { lpprob->ctlopts = setflg(lpprob->ctlopts,save_ctlopts) ;
+    initialSolveOptions->finpurge.vars = save_finpurge_vars ;
+    initialSolveOptions->finpurge.cons = save_finpurge_cons ; }
+  double firstLPTime = CoinCpuTime() ;
+  hdl->message(ODSI_LPRESULT,messages_)
+    << dy_prtlpret(lp_retval)
+    << getObjSense()*(lpprob->obj+bias) << lpprob->iters
+    << CoinMessageEol ;
   if (!(lp_retval == lpOPTIMAL || lp_retval == lpINFEAS ||
 	lp_retval == lpUNBOUNDED))
   { throw CoinError("Call to dylp failed.",
 		    "initialSolve","OsiDylpSolverInterface") ; }
+# if 1
+  dylp_printsoln(true,true) ;
+# endif
 /*
-  Trash the cached solution. This needs to happen regardless of how the lp
-  turned out. It needs to be done ahead of getWarmStart, which will try to
-  access reduced costs.
+  If we did presolve, we now need to do a postsolve, install a warm start,
+  and call dylp one more time to set up the optimal solution with the original
+  constraint system. Note that assignPresolveToPostsolve destroys the presolve
+  object. When we're done, we again need to clean out the active basis and
+  cached solution established as we set up for the second call to dylp.
 */
+  double postsolveTime = firstLPTime ;
+  double secondLPTime = firstLPTime ;
+  int presolIters = lpprob->iters ;
+  if (presolving == true)
+  { postObj_ = initialisePostsolve(preObj_) ;
+    doPostsolve() ;
+    installPostsolve() ;
+    postsolveTime = CoinCpuTime() ;
+    lp_retval = do_lp(startWarm) ;
+    secondLPTime = CoinCpuTime() ;
+    hdl->message(ODSI_LPRESULT,messages_)
+      << dy_prtlpret(lp_retval) << getObjSense()*lpprob->obj << lpprob->iters
+      << CoinMessageEol ;
+    if (!(lp_retval == lpOPTIMAL || lp_retval == lpINFEAS ||
+	  lp_retval == lpUNBOUNDED))
+    { throw CoinError("Call to dylp failed (postsolve).",
+		      "initialSolve","OsiDylpSolverInterface") ; }
+    lpprob->iters += presolIters ;
+    delete activeBasis ;
+    activeBasis = 0 ;
+    activeIsModified = false ;
     destruct_col_cache() ;
-    destruct_row_cache() ;
+    destruct_row_cache() ; }
+# if 1
+  printf("Problem %s: tot %.4f pre %.4f lp1 %d %.4f post %.4f lp2 %d %.4f\n",
+	 consys->nme,secondLPTime-startTime,
+	 presolveTime-startTime,
+	 presolIters,firstLPTime-presolveTime,
+	 postsolveTime-firstLPTime,
+	 lpprob->iters-presolIters,secondLPTime-postsolveTime) ;
+# endif
 /*
   Tidy up. If all went well, indicate this object owns the solver, set the
   objective, and set the active basis. If we've failed, do the opposite.
-  Note that we have to remove any current active basis first, or getWarmStart
-  will hand it back to us.
 
   Any of lpOPTIMAL, lpINFEAS, or lpUNBOUNDED can (in theory) be hot started
   after allowable problem modifications, hence can be flagged lpctlDYVALID.
   dylp overloads lpprob->obj with the index of the unbounded variable when
   returning lpUNBOUNDED, so we need to fake the objective.
 */
-  delete activeBasis ;
-  activeBasis = 0 ;
-  activeIsModified = false ;
   if (flgon(lpprob->ctlopts,lpctlDYVALID))
   { dylp_owner = this ;
     if (lpprob->lpret == lpUNBOUNDED)
@@ -4873,20 +4985,38 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
     activeIsModified = false ;
     return (true) ; }
 /*
-  Use a dynamic cast to make sure we have an OsiDylpWarmStartBasis. Then check
+  Use a dynamic cast to make sure we have a CoinWarmStartBasis. Then check
   the size --- 0 x 0 is just a request to remove the active basis.
 */
-  const OsiDylpWarmStartBasis *wsb =
-			dynamic_cast<const OsiDylpWarmStartBasis *>(ws) ;
-  if (!wsb)
-  { handler_->message(ODSI_NOTODWSB,messages_) ;
+  const CoinWarmStartBasis *cwsb =
+			dynamic_cast<const CoinWarmStartBasis *>(ws) ;
+  if (!cwsb)
+  { handler_->message(ODSI_NOTODWSB,messages_) << "Coin" ;
     return (false) ; }
-  int varcnt = wsb->getNumStructural() ;
-  int concnt = wsb->getNumArtificial() ;
+  int varcnt = cwsb->getNumStructural() ;
+  int concnt = cwsb->getNumArtificial() ;
   if (varcnt == 0 && concnt == 0)
   { delete activeBasis ;
     activeBasis = 0 ;
     activeIsModified = false ;
+    return (true) ; }
+/*
+  Use a dynamic cast to see if we have an OsiDylpWarmStartBasis. If not,
+  make one. 
+*/
+  const OsiDylpWarmStartBasis *wsb ;
+  bool ourBasis = false ;
+  wsb = dynamic_cast<const OsiDylpWarmStartBasis *>(ws) ;
+  if (!wsb)
+  { wsb = new OsiDylpWarmStartBasis(*cwsb) ;
+    ourBasis = true ; }
+  varcnt = wsb->getNumStructural() ;
+  concnt = wsb->getNumArtificial() ;
+  if (varcnt == 0 && concnt == 0)
+  { delete activeBasis ;
+    activeBasis = 0 ;
+    activeIsModified = false ;
+    if (ourBasis == true) delete wsb ;
     return (true) ; }
 /*
   Do we have an lpprob structure yet? If not, construct one.
@@ -4909,6 +5039,7 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
   if (!(varcnt == getNumCols() && concnt == getNumRows()))
   { handler_->message(ODSI_ODWSBBADSIZE,messages_) <<
       concnt << varcnt << getNumRows() << getNumCols() ;
+    if (ourBasis == true) delete wsb ;
     return (false) ; }
 
   const char *const strucStatus = wsb->getStructuralStatus() ;
@@ -5062,13 +5193,20 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
   resolveOptions->forcewarm = true ;
 /*
   One last thing --- make a copy of wsb to be the active basis (that is, unless
-  wsb is the active basis, and we're simply installing it in lpprob).
+  wsb is the active basis, and we're simply installing it in lpprob). If we
+  already have a copy, so much the better.
 */
-  if (wsb != static_cast<const CoinWarmStart*>(activeBasis))
+  if (wsb != activeBasis)
   { delete activeBasis ;
-    activeBasis = wsb->clone() ;
+    if (ourBasis == false)
+    { activeBasis = wsb->clone() ; }
+    else
+    { activeBasis = const_cast<OsiDylpWarmStartBasis *>(wsb) ;
+      ourBasis = false ; }
     activeIsModified = false ; }
   
+  if (ourBasis == true) delete wsb ;
+
   return (true) ; }
 
 
@@ -5098,7 +5236,7 @@ void ODSI::resolve ()
   { dylp_owner->detach_dylp() ;
     clrflg(lpprob->ctlopts,lpctlDYVALID) ; }
 /*
-  We're reoptimising, so you might ask ``Why should we need to initialize the
+  We're reoptimising, so you might ask ``Why should we need to initialise the
   basis?''. Consider this scenario: we've optimised with ODSI object1, and
   captured a warm start. Then we destroy object1, create object2, install the
   warm start, and call resolve(). That's why we need to do this.  The second
@@ -5488,8 +5626,8 @@ void ODSI::dylp_outfile (const char *name)
 void ODSI::dylp_printsoln (bool wantSoln, bool wantStats)
 
 { if (isactive(local_outchn))
-  { if (wantStats) dy_dumpstats(local_outchn,FALSE,statistics,consys) ;
-    if (wantSoln) dy_dumpcompact(local_outchn,FALSE,lpprob,FALSE) ; }
+  { if (wantStats) dy_dumpstats(local_outchn,false,statistics,consys) ;
+    if (wantSoln) dy_dumpcompact(local_outchn,false,lpprob,false) ; }
 
   return ; }
 

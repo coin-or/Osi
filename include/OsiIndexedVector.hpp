@@ -206,7 +206,15 @@ public:
 		   elements_[index] = element;
 		 }
 	       };
-   /// Stops quickAdd - so sorts etc will work
+   /** Makes nonzero tiny.
+       This version does no checking and must be followed by
+       stopQuickAdd */
+   inline void zero(int index)
+               {
+		 if (elements_[index]) 
+		   elements_[index] = 1.0e-100;
+	       };
+   /// Stops quickAdd or zero - so sorts etc will work
    void stopQuickAdd();
    /** set all small values to zero and return number remaining
       - < tolerance => 0.0 */

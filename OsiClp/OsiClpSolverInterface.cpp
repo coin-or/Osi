@@ -48,6 +48,8 @@ void OsiClpSolverInterface::initialSolve()
   ClpSimplex solver;
   double time1 = cpuTime();
   solver.borrowModel(*modelPtr_);
+  // Set message handler to have same levels etc
+  solver.passInMessageHandler(handler_);
   // set reasonable defaults
   solver.scaling(1);
   solver.setDualBound(1.0e6);
@@ -77,6 +79,8 @@ void OsiClpSolverInterface::resolve()
 
   ClpSimplex solver;
   solver.borrowModel(*modelPtr_);
+  // Set message handler to have same levels etc
+  solver.passInMessageHandler(handler_);
   solver.setBasis(basis_);
   solver.scaling();
 

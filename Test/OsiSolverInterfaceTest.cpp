@@ -28,6 +28,9 @@
 #ifdef COIN_USE_OSL
 #include "OsiOslSolverInterface.hpp"
 #endif
+#ifdef COIN_USE_CLP
+#include "OsiClpSolverInterface.hpp"
+#endif
 #include "OsiFloatEqual.hpp"
 #include "OsiPackedVector.hpp"
 #include "OsiPackedMatrix.hpp"
@@ -255,6 +258,7 @@ void OsiSolverInterfaceMpsUnitTest
 */
     for (i = vecSiP.size()-1 ; i >= 0 ; --i)
     { vecSiP[i] = vecEmptySiP[i]->clone() ;
+    std::cout<<vecEmptySiP[i]<<" "<<vecSiP[i]<<std::endl;
       
       std::string fn = mpsDir+mpsName[m] ;
       vecSiP[i]->readMps(fn.c_str(),"mps") ;
@@ -400,13 +404,22 @@ void OsiSolverInterfaceMpsUnitTest
         }
       }
 #     endif
+#     ifdef COIN_USE_CLP
+      { 
+        OsiClpSolverInterface * si =
+          dynamic_cast<OsiClpSolverInterface *>(vecSiP[i]) ;
+        if (si != NULL )  {    
+          siName[i]="OsiClpSolverInterface";
+        }
+      }
+#     endif
 #     ifdef COIN_USE_DYLP
       { 
         OsiDylpSolverInterface * si =
           dynamic_cast<OsiDylpSolverInterface *>(vecSiP[i]) ;
         if (si != NULL )  {    
           siName[i]="OsiDylpSolverInterface";
-          // Is this an MPS file that OslDylpSolverInterface handles
+          // Is this an MPS file that OsiDylpSolverInterface handles
           if ( mpsName[m]=="cycle" ||
                mpsName[m]=="d6cube" ||
                mpsName[m]=="fit1d" || 

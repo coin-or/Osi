@@ -331,17 +331,17 @@ int main (int argc, const char *argv[])
     OsiSolverInterface * spxSi = new OsiSpxSolverInterface;
     vecSi.push_back(spxSi);
 #endif
-#   if COIN_USE_VOL
-    OsiSolverInterface * volSi = new OsiVolSolverInterface;
-    vecSi.push_back(volSi);
+#   if COIN_USE_CLP
+    OsiSolverInterface * clpSi = new OsiClpSolverInterface;
+    vecSi.push_back(clpSi);
 #endif
 #   if COIN_USE_DYLP
     OsiSolverInterface * dylpSi = new OsiDylpSolverInterface;
     vecSi.push_back(dylpSi);
 #endif
-#   if COIN_USE_CLP
-    OsiSolverInterface * clpSi = new OsiClpSolverInterface;
-    vecSi.push_back(clpSi);
+#   if COIN_USE_VOL
+    OsiSolverInterface * volSi = new OsiVolSolverInterface;
+    vecSi.push_back(volSi);
 #endif
 
     testingMessage( "Testing OsiSolverInterface\n" );

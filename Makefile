@@ -23,16 +23,16 @@ libOsi :
 	${MAKE} -f Makefile.Osi library
 
 $(SOLVERLIBS) : lib% :
-	(cd $* && ${MAKE} -f Makefile.$* library)
+	(cd $* && ${MAKE} -f Makefile library)
 
 inst-libOsi :
 	${MAKE} -f Makefile.Osi install
 
 $(addprefix inst-,$(SOLVERLIBS)) : inst-lib% :
-	(cd $* && ${MAKE} -f Makefile.$* install)
+	(cd $* && ${MAKE} -f Makefile install)
 
 clean-libOsi :
 	${MAKE} -f Makefile.Osi clean
 
 $(addprefix clean-,$(SOLVERLIBS)) : clean-lib% :
-	(cd $* && ${MAKE} -f Makefile.$* clean)
+	(cd $* && ${MAKE} -f Makefile clean)

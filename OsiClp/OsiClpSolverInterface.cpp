@@ -874,6 +874,7 @@ OsiClpSolverInterface::setRowBounds( int elementIndex,
     lower=-COIN_DBL_MAX;
   if (upper>1.0e27)
     upper=COIN_DBL_MAX;
+  assert (upper>=lower);
   modelPtr_->rowLower()[elementIndex] = lower;
   modelPtr_->rowUpper()[elementIndex] = upper;
 }
@@ -902,6 +903,7 @@ void OsiClpSolverInterface::setColSetBounds(const int* indexFirst,
       lower[iCol]=-COIN_DBL_MAX;
     if (upper[iCol]>1.0e27)
       upper[iCol]=COIN_DBL_MAX;
+    assert (upper[iCol]>=lower[iCol]);
   }
   if (modelPtr_->solveType()==2) {
     // directly into code as well
@@ -963,6 +965,7 @@ void OsiClpSolverInterface::setRowSetBounds(const int* indexFirst,
       lower[iRow]=-COIN_DBL_MAX;
     if (upper[iRow]>1.0e27)
       upper[iRow]=COIN_DBL_MAX;
+    assert (upper[iRow]>=lower[iRow]);
   }
   if (rowsense_ != NULL) {
     assert ((rhs_ != NULL) && (rowrange_ != NULL));
@@ -1993,6 +1996,7 @@ OsiClpSolverInterface::setColBounds( int elementIndex,
     lower=-COIN_DBL_MAX;
   if (upper>1.0e27)
     upper=COIN_DBL_MAX;
+  assert (upper>=lower);
   modelPtr_->columnLower()[elementIndex] = lower;
   modelPtr_->columnUpper()[elementIndex] = upper;
   if (modelPtr_->solveType()==2) {

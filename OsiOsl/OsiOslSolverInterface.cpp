@@ -1654,5 +1654,4 @@ void OsiOslSolverInterface::extractSenseRhsRange() const
 }
 
 //#############################################################################
-
 #endif

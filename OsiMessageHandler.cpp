@@ -17,7 +17,7 @@ OsiOneMessage::OsiOneMessage()
   externalNumber_=-1;
   message_=NULL;
   severity_='I';
-  detail_=128;
+  detail_=-1;
 }
 /* Destructor */
 OsiOneMessage::~OsiOneMessage()

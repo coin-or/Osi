@@ -16,6 +16,7 @@
 #include "CoinHelperFunctions.hpp"
 #include "CoinSort.hpp"
 #include "OsiSolverInterface.hpp"
+#include "OsiSimplexInterface.hpp"
 #include "OsiRowCutDebugger.hpp"
 #ifdef COIN_USE_OSL
 #include "OsiOslSolverInterface.hpp"
@@ -141,6 +142,12 @@ int main (int argc, const char *argv[])
     testingMessage( "Testing OsiRowCutDebugger with OsiOslSolverInterface\n" );
     OsiRowCutDebuggerUnitTest(&oslSi,mpsDir);
   }
+  {
+    OsiOslSolverInterface oslSi;
+    testingMessage( "Testing OsiSimplexInterface with OsiOslSolverInterface\n" );
+    OsiSimplexInterfaceCommonUnitTest(&oslSi,mpsDir);
+  }
+
 #endif
 
 #ifdef COIN_USE_XPR  
@@ -158,6 +165,11 @@ int main (int argc, const char *argv[])
     OsiXprSolverInterface xprSi;
     testingMessage( "Testing OsiRowCutDebugger with OsiXprSolverInterface\n" );
     OsiRowCutDebuggerUnitTest(&xprSi,mpsDir);
+  }
+  {
+    OsiXprSolverInterface xprSi;
+    testingMessage( "Testing OsiSimplexInterface with OsiXprSolverInterface\n" );
+    OsiSimplexInterfaceCommonUnitTest(&xprSi,mpsDir);
   }
 #endif
 
@@ -177,6 +189,11 @@ int main (int argc, const char *argv[])
     testingMessage( "Testing OsiRowCutDebugger with OsiCpxSolverInterface\n" );
     OsiRowCutDebuggerUnitTest(&cpxSi,mpsDir);
   }
+  {
+    OsiCpxSolverInterface cpxSi;
+    testingMessage( "Testing OsiSimplexInterface with OsiCpxSolverInterface\n" );
+    OsiSimplexInterfaceCommonUnitTest(&cpxSi,mpsDir);
+  }
 #endif
 
 #ifdef COIN_USE_SPX
@@ -194,6 +211,11 @@ int main (int argc, const char *argv[])
     OsiSpxSolverInterface spxSi;
     testingMessage( "Testing OsiRowCutDebugger with OsiSpxSolverInterface\n" );
     OsiRowCutDebuggerUnitTest(&spxSi,mpsDir);
+  }
+  {
+    OsiSpxSolverInterface spxSi;
+    testingMessage( "Testing OsiSimplexInterface with OsiSpxSolverInterface\n" );
+    OsiSimplexInterfaceCommonUnitTest(&spxSi,mpsDir);
   }
 #endif
 
@@ -226,6 +248,11 @@ int main (int argc, const char *argv[])
     testingMessage( "Testing OsiRowCutDebugger with OsiDylpSolverInterface\n" );
     OsiRowCutDebuggerUnitTest(&dylpSi,mpsDir);
   }
+  {
+    OsiDylpSolverInterface dylpSi;
+    testingMessage( "Testing OsiSimplexInterface with OsiDylpSolverInterface\n" );
+    OsiSimplexInterfaceCommonUnitTest(&dylpSi,mpsDir);
+  }
 #endif
 
 #ifdef COIN_USE_GLPK
@@ -244,6 +271,11 @@ int main (int argc, const char *argv[])
     testingMessage( "Testing OsiRowCutDebugger with OsiGlpkSolverInterface\n" );
     OsiRowCutDebuggerUnitTest(&glpkSi,mpsDir);
   }
+  {
+    OsiGlpkSolverInterface glpkSi;
+    testingMessage( "Testing OsiSimplexInterface with OsiGlpkSolverInterface\n" );
+    OsiSimplexInterfaceCommonUnitTest(&glpkSi,mpsDir);
+  }
 #endif
 
 #ifdef COIN_USE_CLP  
@@ -261,6 +293,11 @@ int main (int argc, const char *argv[])
     OsiClpSolverInterface clpSi;
     testingMessage( "Testing OsiRowCutDebugger with OsiClpSolverInterface\n" );
     OsiRowCutDebuggerUnitTest(&clpSi,mpsDir);
+  }
+  {
+    OsiClpSolverInterface clpSi;
+    testingMessage( "Testing OsiSimplexInterface with OsiClpSolverInterface\n" );
+    OsiSimplexInterfaceCommonUnitTest(&clpSi,mpsDir);
   }
 #endif
 

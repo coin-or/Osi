@@ -11,6 +11,7 @@
 #include "ClpSimplex.hpp"
 #include "CoinPackedMatrix.hpp"
 #include "OsiSolverInterface.hpp"
+#include "OsiSimplexInterface.hpp"
 #include "CoinWarmStartBasis.hpp"
 
 class OsiRowCut;
@@ -29,7 +30,7 @@ static const double OsiClpInfinity = DBL_MAX;
 */
 
 class OsiClpSolverInterface :
-   public OsiSolverInterface {
+   public OsiSolverInterface, public OsiSimplexInterface {
    friend void OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 public:

@@ -6,8 +6,8 @@
 
 #include <string>
 #include <cstdio>
-//#include <xpresso.h>
 
+#include "xprs.h"
 #include "OsiSolverInterface.hpp"
 //#include "CoinPackedVector.hpp"
 #include "CoinWarmStartBasis.hpp"
@@ -589,6 +589,9 @@ public:
 
     /**@name Log File  */
     //@{
+    static int iXprCallCount_;
+
+
       /// Get logfile FILE *
       static FILE * getLogFilePtr();
       /**Set logfile name. The logfile is an attempt to 
@@ -644,14 +647,15 @@ private:
     /// Counts calls to incrementInstanceCounter()
     static  unsigned int osiSerial_;
 
-    /// Pointer to solver object for the active problem
-    static  const   OsiXprSolverInterface *xprCurrentProblem_;
   //@}
 
   /**@name Private methods */
   //@{
     /// The real work of a copy constructor (used by copy and assignment)
     void gutsOfCopy( const OsiXprSolverInterface & source );
+
+    /// The real work of a constructor (used by construct and assignment)
+    void gutsOfConstructor(); 
 
     /// The real work of a destructor (used by copy and assignment)
     void gutsOfDestructor(); 
@@ -689,13 +693,9 @@ private:
 
     /**@name Data to suupport for XPRESS-MP multiple matrix facility */
     //@{
-
-      /// Flag indicating that XPRESS has a saved copy of this problem
-      mutable bool    xprSaved_;
-
-      /// XPRESS matrix number for this saved problem
-      mutable int     xprMatrixId_;
-
+    
+    mutable XPRSprob prob_;
+    
       /// XPRESS problem name (should be unique for each saved problem)
       mutable std::string  xprProbname_;
     //@}

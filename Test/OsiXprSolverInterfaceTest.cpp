@@ -46,8 +46,8 @@ OsiXprSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
   {
     assert( OsiXprSolverInterface::getNumInstances()==0 );
     OsiXprSolverInterface m;
-    assert( m.xprSaved_ == false );
-    assert( m.xprMatrixId_ = -1 );
+    //    assert( m.xprSaved_ == false );
+    //    assert( m.xprMatrixId_ = -1 );
     assert( m.xprProbname_ == "" );
     assert( m.matrixByRow_ == NULL );
     assert( m.colupper_ == NULL );
@@ -63,7 +63,7 @@ OsiXprSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     assert( m.ivartype_ == NULL );
     assert( m.vartype_  == NULL );
     assert( OsiXprSolverInterface::getNumInstances() == 1 );
-    assert( OsiXprSolverInterface::xprCurrentProblem_ == NULL );
+    //    assert( OsiXprSolverInterface::xprCurrentProblem_ == NULL );
     assert( m.getApplicationData() == NULL );
     int i = 2346;
     m.setApplicationData(&i);
@@ -77,7 +77,7 @@ OsiXprSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     assert( OsiXprSolverInterface::getNumInstances() == 1 );
     std::string fn = mpsDir+"exmip1";
     m.readMps(fn.c_str());
-    assert( OsiXprSolverInterface::xprCurrentProblem_ == &m );
+    //    assert( OsiXprSolverInterface::xprCurrentProblem_ == &m );
     // This assert fails on windows because fn is mixed case and xprProbname_is uppercase.
     //assert( m.xprProbname_ == fn );
     int ad = 13579;

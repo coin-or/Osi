@@ -148,12 +148,15 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
     // move across feasibility tolerance
     prob.feasibilityTolerance_ = feasibilityTolerance;
 
-    // Do presolve
-
-    paction_ = presolve(&prob);
-
-    result =0; 
-
+/*
+  Do presolve. Allow for the possibility that presolve might be ineffective
+  (i.e., we're feasible but no postsolve actions are queued.
+*/
+    paction_ = presolve(&prob) ;
+    result = 0 ; 
+/*
+  This we don't need to do unless presolve actually reduced the system.
+*/
     if (prob.status_==0&&paction_) {
       // Looks feasible but double check to see if anything slipped through
       int n		= prob.ncols_;
@@ -187,7 +190,10 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
 	}
       }
     }
-    if (prob.status_==0&&paction_) {
+/*
+  Nor this, assuming the si's clone function works.
+*/
+    if (prob.status_==0 && paction_) {
       // feasible
     
       prob.update_model(presolvedModel_, nrows_, ncols_, nelems_);
@@ -270,8 +276,8 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
 	  }
 	}
       }
-    } else {
-      // infeasible
+    } else if (prob.status_ != 0) {
+      // infeasible or unbounded
       delete [] prob.sol_;
       delete [] prob.acts_;
       delete [] prob.colstat_;
@@ -1041,13 +1047,9 @@ CoinPrePostsolveMatrix::CoinPrePostsolveMatrix(const OsiSolverInterface * si,
 					     int nrows_in,
 					     CoinBigIndex nelems_in) :
   ncols_(si->getNumCols()),
+  nelems_(si->getNumElements()),
   ncols0_(ncols_in),
   nrows0_(nrows_in),
-  nelems_(si->getNumElements()),
-
-  handler_(0),
-  defaultHandler_(false),
-  messages_(),
 
   mcstrt_(new CoinBigIndex[ncols_in+1]),
   hincol_(new int[ncols_in+1]),
@@ -1065,7 +1067,11 @@ CoinPrePostsolveMatrix::CoinPrePostsolveMatrix(const OsiSolverInterface * si,
   ztolzb_(getTolerance(si, OsiPrimalTolerance)),
   ztoldj_(getTolerance(si, OsiDualTolerance)),
 
-  maxmin_(si->getObjSense())
+  maxmin_(si->getObjSense()),
+
+  handler_(0),
+  defaultHandler_(false),
+  messages_()
 
 {
   si->getDblParam(OsiObjOffset,originalOffset_);
@@ -1135,14 +1141,14 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
   integerType_(new unsigned char[ncols0_in]),
   feasibilityTolerance_(0.0),
   status_(-1),
-  rowsToDo_(new int [nrows_in]),
-  numberRowsToDo_(0),
-  nextRowsToDo_(new int[nrows_in]),
-  numberNextRowsToDo_(0),
   colsToDo_(new int [ncols0_in]),
   numberColsToDo_(0),
   nextColsToDo_(new int[ncols0_in]),
-  numberNextColsToDo_(0)
+  numberNextColsToDo_(0),
+  rowsToDo_(new int [nrows_in]),
+  numberRowsToDo_(0),
+  nextRowsToDo_(new int[nrows_in]),
+  numberNextRowsToDo_(0)
 
 {
   nrows_ = si->getNumRows() ;

@@ -76,11 +76,11 @@ void OsiClpSolverInterface::initialSolve()
   } else {
     solver.scaling(0);
   }
-  solver.setDualBound(1.0e6);
-  solver.setDualTolerance(1.0e-7);
+  //solver.setDualBound(1.0e6);
+  //solver.setDualTolerance(1.0e-7);
   ClpDualRowSteepest steep;
   solver.setDualRowPivotAlgorithm(steep);
-  solver.setPrimalTolerance(1.0e-8);
+  //solver.setPrimalTolerance(1.0e-8);
   ClpPrimalColumnSteepest steepP;
   solver.setPrimalColumnPivotAlgorithm(steepP);
   /*
@@ -133,7 +133,7 @@ void OsiClpSolverInterface::initialSolve()
       //std::cout<<"** Analysis indicates model infeasible"
       //       <<std::endl;
       // up dual bound for safety
-      model2->setDualBound(1.0e11);
+      //model2->setDualBound(1.0e11);
       model2->dual();
       // check if clp thought it was in a loop
       if (model2->status()==3&&
@@ -143,7 +143,7 @@ void OsiClpSolverInterface::initialSolve()
       }
     } else {
       // up infeasibility cost for safety
-      model2->setInfeasibilityCost(1.0e10);
+      //model2->setInfeasibilityCost(1.0e10);
       model2->primal();
       // check if clp thought it was in a loop
       if (model2->status()==3
@@ -256,7 +256,7 @@ void OsiClpSolverInterface::resolve()
     model2->factorization()->maximumPivots(100+model2->numberRows()/50);
     if (algorithm<0) {
       // up dual bound for safety
-      model2->setDualBound(1.0e10);
+      //model2->setDualBound(1.0e10);
       model2->dual();
       // check if clp thought it was in a loop
       if (model2->status()==3&&
@@ -266,7 +266,7 @@ void OsiClpSolverInterface::resolve()
       }
     } else {
       // up infeasibility cost for safety
-      model2->setInfeasibilityCost(1.0e10);
+      //model2->setInfeasibilityCost(1.0e10);
       model2->primal();
       // check if clp thought it was in a loop
       if (model2->status()==3

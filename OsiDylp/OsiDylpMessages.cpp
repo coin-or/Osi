@@ -7,7 +7,7 @@
 */
 
 namespace {
-  char sccsid[] = "@(#)OsiDylpMessages.cpp	1.4	06/22/04" ;
+  char sccsid[] = "@(#)OsiDylpMessages.cpp	1.5	09/16/04" ;
   char cvsid[] = "$Id$" ;
 }
 
@@ -89,11 +89,19 @@ static MsgDefn us_en_defns[] = {
   { ODSI_IGNORED, 3001, 2, "Ignored unsupported hint; %s." },
   { ODSI_EMPTYODWSB, 6101, 1, "Empty warm start basis object." },
   { ODSI_NOTODWSB, 6102, 1,
-    "The warm start basis object is not an OsiDylpWarmStartBasis object." },
+    "The warm start basis object is not a %sWarmStartBasis object." },
   { ODSI_ODWSBBADSIZE, 6103, 1,
     "Basis size %d x %d does not match constraint system size %d x %d." },
-  {ODSI_ODWSBBADSTATUS, 6104, 1,
+  { ODSI_ODWSBBADSTATUS, 6104, 1,
     "Flipping %s (%d) from %s to %s; lack of finite bound." },
+  { ODSI_PRESOL_STATS, 100, 2,
+    "%s %d constraints, %d variables, %d coefficients." }, 
+  { ODSI_PRESOL_PASS, 101, 3,
+    "Presolve pass %d: dropped %d constraints, %d variables." },
+  { ODSI_POSTSOL, 200, 2, "Postsolve %s."},
+  { ODSI_POSTSOL_ACT, 201, 3, "Applying postsolve transform %s."},
+  { ODSI_LPRESULT, 050, 3,
+    "dylp result %s, z = %g, iters = %d." },
   { ODSI_DUMMY_END, 999999, 0, "" }
 } ;
 
@@ -101,6 +109,7 @@ static MsgDefn uk_en_defns[] = {
   { ODSI_TEST_MSG, 0001, 2, "Blimey, this must be the uk_en test message" },
   { ODSI_DUMMY_END, 999999, 0, "" }
 } ;
+
 
 /*
   We seem to need a dummy CoinMessages object to prevent the compiler from
@@ -115,7 +124,7 @@ static MsgDefn uk_en_defns[] = {
 } /* End unnamed:file */
 
 /*!
-  This function constructs a CoinMessage object filled with a default set of
+  This function constructs a CoinMessages object filled with a default set of
   messages, overlaid with whatever is available for the specified language.
   It is used to establish the initial set of messages, and is also called
   whenever the language is changed. The latter, because there's no way of
@@ -128,10 +137,10 @@ static MsgDefn uk_en_defns[] = {
 void ODSI::setOsiDylpMessages (CoinMessages::Language local_language)
 
   
-{ CoinMessages(sizeof(us_en_defns)/sizeof(MsgDefn)) ;
+{ CoinMessages odsiMessages(sizeof(us_en_defns)/sizeof(MsgDefn)) ;
 
-  messages_.setLanguage(local_language) ;
-  strcpy(messages_.source_,"dylp");
+  odsiMessages.setLanguage(local_language) ;
+  strcpy(odsiMessages.source_,"dylp");
 
 /*
   Yes, this is gloriously redundant, but it's set up in anticipation of
@@ -150,7 +159,7 @@ void ODSI::setOsiDylpMessages (CoinMessages::Language local_language)
 */
   while (msgdefn->inID != ODSI_DUMMY_END)
   { CoinOneMessage coinmsg(msgdefn->exID,msgdefn->lvl,msgdefn->fmt) ;
-    messages_.addMessage(msgdefn->inID,coinmsg) ;
+    odsiMessages.addMessage(msgdefn->inID,coinmsg) ;
     msgdefn++ ; }
 /*
   Now, if the local language differs from the default language, load any
@@ -170,9 +179,10 @@ void ODSI::setOsiDylpMessages (CoinMessages::Language local_language)
 	break; } }
 
     while (msgdefn->inID != ODSI_DUMMY_END)
-    { messages_.replaceMessage(msgdefn->inID,msgdefn->fmt) ;
+    { odsiMessages.replaceMessage(msgdefn->inID,msgdefn->fmt) ;
       msgdefn++ ; } }
 
+  messages_ = odsiMessages ;
   return ; }
 
 

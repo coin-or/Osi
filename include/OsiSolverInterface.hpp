@@ -717,6 +717,17 @@ public:
 			   const CoinPackedVectorBase * const * rows,
     			   const char* rowsen, const double* rowrhs,   
     			   const double* rowrng);
+      /** Add a row (constraint) to the problem. */
+      virtual void addRow(int numberElements, const int * columns, const double * element,
+    			  const double rowlb, const double rowub) ;
+      /** Add a set of rows (constraints) to the problem.
+      
+	The default implementation simply makes repeated calls to
+	addRow().
+      */
+      virtual void addRows(const int numrows,
+			   const int * rowStarts, const int * columns, const double * element,
+			   const double* rowlb, const double* rowub);
 #if 0
       /** */
       virtual void addRows(const CoinPackedMatrix& matrix,

@@ -243,6 +243,32 @@ OsiSolverInterface::addRows(const int numrows,
     addRow(*rows[i], rowsen[i], rowrhs[i], rowrng[i]);
   }
 }
+/* Add a row (constraint) to the problem. */
+void 
+OsiSolverInterface::addRow(int numberElements, const int * columns, const double * elements,
+			   const double rowlb, const double rowub) 
+{
+  CoinPackedVector row(numberElements, columns, elements);
+  addRow(row,rowlb,rowub);
+}
+/* Add a set of rows (constraints) to the problem.
+   
+The default implementation simply makes repeated calls to addRow().
+*/
+void 
+OsiSolverInterface::addRows(const int numrows,
+			    const int * rowStarts, const int * columns, const double * elements,
+			    const double* rowlb, const double* rowub)
+{
+  double infinity = getInfinity();
+  for (int i = 0; i < numrows; ++i) {
+    int start = rowStarts[i];
+    int number = rowStarts[i+1]-start;
+    assert (number>=0);
+    addRow(number, columns+start, elements+start, rowlb ? rowlb[i] : -infinity, 
+	   rowub ? rowub[i] : infinity);
+  }
+}
 
 
 //#############################################################################

@@ -2845,6 +2845,48 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 
   delete si;
       }
+      // Test adding rows to NULL - alternative format
+      {
+	OsiSolverInterface *  si = emptySi->clone();
+	int i;
+
+	//Matrix
+	int column[]={0,1,2,0,1,2};
+	double row1E[]={4.0,7.0,5.0};
+	double row2E[]={7.0,4.0,5.0};
+	double row12E[]={4.0,7.0,5.0,7.0,4.0,5.0};
+	int starts[]={0,3,6};
+	double ub[]={100.0,100.0};
+	//CoinPackedVector row1(3,column,row1E);
+	//CoinPackedVector row2(3,column,row2E);
+
+	double objective[]={5.0,6.0,5.5};
+
+	{
+	  // Add empty columns
+	  for (i=0;i<3;i++) 
+	    si->addCol(CoinPackedVector(),0.0,10.0,objective[i]);
+	  
+	  // Add rows
+	  si->addRow(3,column,row1E,2.0,100.0);
+	  si->addRow(3,column,row2E,2.0,100.0);
+	  // and again
+	  si->addRows(2,starts,column,row12E,NULL,ub);
+	  
+	  // Vol can not solve problem of this form
+	  if ( !volSolverInterface ) {
+	    // solve
+	    si->initialSolve();
+	    
+	    CoinRelFltEq eq(1.0e-7) ;
+	    double objValue = si->getObjValue();
+	    if ( !eq(objValue,2.0) )
+	      failureMessage(solverName,"getObjValue after adding empty cols and then rows.");;
+	  }
+	}
+	
+	delete si;
+      }
       // Test adding columns to NULL
       {
 	OsiSolverInterface *  si = emptySi->clone();

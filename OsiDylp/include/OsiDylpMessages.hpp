@@ -3,13 +3,13 @@
 #define OsiDylpMessages_H
 
 /*! \legal
-  Copyright (C) 2003.
+  Copyright (C) 2004.
   Lou Hafer, International Business Machines Corporation and others. All
   Rights Reserved.
 */
 
 /*
-  sccs: @(#)OsiDylpMessages.hpp	1.3     03/18/04
+  sccs: @(#)OsiDylpMessages.hpp	1.4     06/22/04
   cvs: $Id$
 */
 

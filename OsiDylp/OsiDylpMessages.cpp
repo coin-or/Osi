@@ -1,13 +1,13 @@
 #ifdef COIN_USE_DYLP
 
 /*! \legal
-  Copyright (C) 2003.
+  Copyright (C) 2004.
   Lou Hafer, International Business Machines Corporation and others. All
   Rights Reserved.
 */
 
 namespace {
-  char sccsid[] = "@(#)OsiDylpMessages.cpp	1.3	03/18/04" ;
+  char sccsid[] = "@(#)OsiDylpMessages.cpp	1.4	06/22/04" ;
   char cvsid[] = "$Id$" ;
 }
 

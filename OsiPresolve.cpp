@@ -193,7 +193,7 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
 /*
   Nor this, assuming the si's clone function works.
 */
-    if (prob.status_==0 && paction_) {
+    if (prob.status_ == 0 && paction_) {
       // feasible
     
       prob.update_model(presolvedModel_, nrows_, ncols_, nelems_);
@@ -276,12 +276,9 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
 	  }
 	}
       }
-    } else if (prob.status_ != 0) {
+    } else if (prob.status_ != 0) { 
       // infeasible or unbounded
-      delete [] prob.sol_;
-      delete [] prob.acts_;
-      delete [] prob.colstat_;
-      result=1;
+      result = 1 ;
     }
   }
   if (!result) {

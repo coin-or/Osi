@@ -226,6 +226,7 @@ OsiFactorization::updateColumnL ( OsiIndexedVector * regionSparse) const
     } 
   }
 }
+
 int OsiFactorization::checkPivot(double saveFromU,
 				 double oldPivot) const
 {

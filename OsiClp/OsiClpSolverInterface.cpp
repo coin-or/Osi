@@ -214,8 +214,12 @@ void OsiClpSolverInterface::initialSolve()
     solver.setColumnScale(NULL);
   }
   solver.returnModel(*modelPtr_);
-  if (startFinishOptions)
+  if (startFinishOptions) {
+    int save = modelPtr_->logLevel();
+    modelPtr_->setLogLevel(0);
     modelPtr_->dual(0,startFinishOptions);
+    modelPtr_->setLogLevel(save);
+  }
   if (saveSolveType==2) {
     enableSimplexInterface(doingPrimal);
   }

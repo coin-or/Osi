@@ -52,13 +52,16 @@
 #ifdef COIN_USE_MSK
 #include "OsiMskSolverInterface.hpp"
 #endif
+
 // Function Prototypes. Function definitions is in this file.
 void testingMessage( const char * const msg );
 
 //----------------------------------------------------------------
-// unitTest [-mpsDir=V1] [-netlibDir=V2] [-skipOsiSolverInterface]
+// unitTest [-nobuf] [-mpsDir=V1] [-netlibDir=V2] [-testOsiSolverInterface]
 // 
 // where:
+//   -nobuf: remove buffering on cout (stdout); useful to keep cout and cerr
+//	 messages synchronised when redirecting output to a file or pipe.
 //   -mpsDir: directory containing mps test files
 //       Default value V1="../Mps/Sample"    
 //   -netlibDir: directory containing netlib files
@@ -76,7 +79,7 @@ int main (int argc, const char *argv[])
 
   /*
     Makes debugging output more comprehensible. Still suffers from interleave
-    of stdout and stderr.
+    of cout (stdout) and cerr (stderr), but -nobuf deals with that.
   */
   std::ios::sync_with_stdio() ;
 
@@ -86,18 +89,19 @@ int main (int argc, const char *argv[])
 
   // define valid parameter keywords
   std::set<std::string> definedKeyWords;
+  definedKeyWords.insert("-cerr2cout");
   definedKeyWords.insert("-mpsDir");
   definedKeyWords.insert("-netlibDir");
   definedKeyWords.insert("-testOsiSolverInterface");
 
-  // Create a map of parmater keys and associated data
+  // Create a map of parameter keys and associated data
   std::map<std::string,std::string> parms;
   for ( i=1; i<argc; i++ ) {
     std::string parm(argv[i]);
     std::string key,value;
     unsigned int  eqPos = parm.find('=');
 
-    // Does parm contain and '='
+    // Does parm contain an '='
     if ( eqPos==std::string::npos ) {
       //Parm does not contain '='
       key = parm;
@@ -111,22 +115,29 @@ int main (int argc, const char *argv[])
     if ( definedKeyWords.find(key) == definedKeyWords.end() ) {
       // invalid key word.
       // Write help text
-      std::cerr <<"Undefined parameter \"" <<key <<"\".\n";
-      std::cerr <<"Correct usage: \n";
-      std::cerr <<"  unitTest [-mpsDir=V1] [-netlibDir=V2] [-testOsiSolverInterface]\n";
-      std::cerr <<"  where:\n";
-      std::cerr <<"    -mpsDir: directory containing mps test files\n";
-      std::cerr <<"        Default value V1=\"../Mps/Sample\"\n";
-      std::cerr <<"    -netlibDir: directory containing netlib files\n";
-      std::cerr <<"        Default value V2=\"../Mps/Netlib\"\n";
-      std::cerr <<"    -testOsiSolverInterface\n";
-      std::cerr <<"        If specified, then OsiSolveInterface::unitTest\n";
-      std::cerr <<"        is run.\n";
+      std::cerr << "Undefined parameter \"" <<key <<"\".\n";
+      std::cerr << "Correct usage: \n";
+      std::cerr << "  unitTest [-nobuf] [-mpsDir=V1] [-netlibDir=V2]" ;
+      std::cerr << " [-testOsiSolverInterface]\n";
+      std::cerr << "where:\n";
+      std::cerr << "  -cerr2cout: redirect cerr to cout; sometimes useful\n" ;
+      std::cerr << "	    to synchronise cout & cerr.\n" ;
+      std::cerr << "  -mpsDir: directory containing mps test files\n";
+      std::cerr << "        Default value V1=\"../Mps/Sample\"\n";
+      std::cerr << "  -netlibDir: directory containing netlib files\n";
+      std::cerr << "        Default value V2=\"../Mps/Netlib\"\n";
+      std::cerr << "  -testOsiSolverInterface\n";
+      std::cerr << "        If specified, then OsiSolveInterface::unitTest\n";
+      std::cerr << "        is run.\n";
       return 1;
     }
     parms[key]=value;
   }
-  
+
+  // Redirect cerr? This must occur before any i/o is performed.
+  if (parms.find("-cerr2cout") != parms.end())
+  { std::cerr.rdbuf(std::cout.rdbuf()) ; }
+
   const char dirsep =  CoinFindDirSeparator();
   // Set directory containing mps data files.
   std::string mpsDir;
@@ -512,9 +523,11 @@ int main (int argc, const char *argv[])
 }
 
  
-// Display message on stdout and stderr
+// Display message on stdout and stderr. Flush cout buffer before printing the
+// message, so that output comes out in order in spite of buffered cout.
 void testingMessage( const char * const msg )
 {
+  std::cout.flush() ;
   std::cerr <<msg;
   //cout <<endl <<"*****************************************"
   //     <<endl <<msg <<endl;

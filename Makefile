@@ -37,7 +37,7 @@ ifneq ($(filter COIN_libDylp,$(CoinLibsDefined)),)
     SOLVERLIBS += libOsiDylp
 endif
 ifneq ($(filter COIN_libGlpk,$(CoinLibsDefined)),)
-#    SOLVERLIBS += libOsiGlpk
+    SOLVERLIBS += libOsiGlpk
 endif
 
 export SOLVERLIBS

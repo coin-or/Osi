@@ -13,6 +13,7 @@
 #include "OsiCollections.hpp"
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
+#include "CoinFloatEqual.hpp"
 
 /** Collections of row cuts and column cuts
 */
@@ -122,8 +123,12 @@ public:
   //@{
     /** \brief Insert a row cut */
     inline void insert( const OsiRowCut & rc );
-    /** \brief Insert a row cut unless it is a duplicate - cut may get sorted*/
-    void insertIfNotDuplicate( OsiRowCut & rc );
+    /** \brief Insert a row cut unless it is a duplicate - cut may get sorted.
+       Duplicate is defined as CoinAbsFltEq says same*/
+    void insertIfNotDuplicate( OsiRowCut & rc , CoinAbsFltEq treatAsSame=CoinAbsFltEq(1.0e-12) );
+    /** \brief Insert a row cut unless it is a duplicate - cut may get sorted.
+       Duplicate is defined as CoinRelFltEq says same*/
+    void insertIfNotDuplicate( OsiRowCut & rc , CoinRelFltEq treatAsSame );
     /** \brief Insert a column cut */
     inline void insert( const OsiColCut & cc );
 

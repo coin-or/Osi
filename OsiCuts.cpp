@@ -281,9 +281,9 @@ OsiCuts::const_iterator OsiCuts::const_iterator::operator++() {
   return *this;
 }
 
-/* Insert a row cut unless it is a duplicate */
+/* Insert a row cut unless it is a duplicate (CoinAbsFltEq)*/
 void 
-OsiCuts::insertIfNotDuplicate( OsiRowCut & rc )
+OsiCuts::insertIfNotDuplicate( OsiRowCut & rc , CoinAbsFltEq treatAsSame)
 {
   double newLb = rc.lb();
   double newUb = rc.ub();
@@ -298,9 +298,9 @@ OsiCuts::insertIfNotDuplicate( OsiRowCut & rc )
     const OsiRowCut * cutPtr = rowCutPtr(i);
     if (cutPtr->row().getNumElements()!=numberElements)
       continue;
-    if (fabs(cutPtr->lb()-newLb)>1.0e-12)
+    if (!treatAsSame(cutPtr->lb(),newLb))
       continue;
-    if (fabs(cutPtr->ub()-newUb)>1.0e-12)
+    if (!treatAsSame(cutPtr->ub(),newUb))
       continue;
     const CoinPackedVector * thisVector = &(cutPtr->row());
     const int * indices = thisVector->getIndices();
@@ -309,7 +309,52 @@ OsiCuts::insertIfNotDuplicate( OsiRowCut & rc )
     for(j=0;j<numberElements;j++) {
       if (indices[j]!=newIndices[j])
 	break;
-      if (fabs(elements[j]-newElements[j])>1.0e-12)
+      if (!treatAsSame(elements[j],newElements[j]))
+	break;
+    }
+    if (j==numberElements) {
+      notDuplicate=false;
+      break;
+    }
+  }
+  if (notDuplicate) {
+    OsiRowCut * newCutPtr = new OsiRowCut();
+    newCutPtr->setLb(newLb);
+    newCutPtr->setUb(newUb);
+    newCutPtr->setRow(vector);
+    rowCutPtrs_.push_back(newCutPtr);
+  }
+}
+
+/* Insert a row cut unless it is a duplicate (CoinRelFltEq)*/
+void 
+OsiCuts::insertIfNotDuplicate( OsiRowCut & rc , CoinRelFltEq treatAsSame)
+{
+  double newLb = rc.lb();
+  double newUb = rc.ub();
+  CoinPackedVector vector = rc.row();
+  int numberElements =vector.getNumElements();
+  int * newIndices = vector.getIndices();
+  double * newElements = vector.getElements();
+  CoinSort_2(newIndices,newIndices+numberElements,newElements);
+  bool notDuplicate=true;
+  int numberRowCuts = sizeRowCuts();
+  for ( int i =0; i<numberRowCuts;i++) {
+    const OsiRowCut * cutPtr = rowCutPtr(i);
+    if (cutPtr->row().getNumElements()!=numberElements)
+      continue;
+    if (!treatAsSame(cutPtr->lb(),newLb))
+      continue;
+    if (!treatAsSame(cutPtr->ub(),newUb))
+      continue;
+    const CoinPackedVector * thisVector = &(cutPtr->row());
+    const int * indices = thisVector->getIndices();
+    const double * elements = thisVector->getElements();
+    int j;
+    for(j=0;j<numberElements;j++) {
+      if (indices[j]!=newIndices[j])
+	break;
+      if (!treatAsSame(elements[j],newElements[j]))
 	break;
     }
     if (j==numberElements) {

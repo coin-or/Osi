@@ -1753,7 +1753,8 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   if ( !volSolverInterface ) {
     OsiSolverInterface * si = emptySi->clone();
     std::string fn = netlibDir+"e226";
-    si->readMps(fn.c_str(),"mps");
+    int mpsRc = si->readMps(fn.c_str(),"mps");
+    assert(mpsRc==0);
     si->initialSolve();
     double objValue = si->getObjValue(); 
     if( !eq(objValue,-18.751929066+7.113) )

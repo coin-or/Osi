@@ -246,6 +246,7 @@ OsiIndexedVector::clean( double tolerance )
   clearIndexSet();
   delete [] packedElements_;
   packedElements_=NULL;
+  return nElements_;
 }
 
 //#############################################################################

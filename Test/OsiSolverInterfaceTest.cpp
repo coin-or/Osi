@@ -5,6 +5,10 @@
 #  pragma warning(disable:4786)
 #endif
  
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
+
 #include <cstdlib>
 #include <cassert>
 #include <vector>
@@ -42,9 +46,6 @@
 #include "OsiRowCut.hpp"
 #include "OsiCuts.hpp"
 
-#ifdef NDEBUG
-#undef NDEBUG
-#endif
 
 #include <time.h>
 #ifndef _MSC_VER

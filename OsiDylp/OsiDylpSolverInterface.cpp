@@ -298,7 +298,8 @@ template<class T> inline T* ODSI::copy (const T* src)
 #ifdef _MSC_VER
 #  define CLONE(zz_type_zz,zz_src_zz,zz_dst_zz) \
 	    if (zz_src_zz) \
-	    { zz_dst_zz = new zz_type_zz ; \
+	    { /*zz_dst_zz = (zz_type_zz *)malloc(sizeof(zz_type_zz)) ;*/ \
+	      zz_dst_zz = new zz_type_zz ; \
 	      memcpy(zz_dst_zz,zz_src_zz,sizeof(zz_type_zz)) ; } \
 	    else \
 	    { zz_dst_zz = NULL ; }
@@ -973,10 +974,10 @@ void ODSI::load_problem (const CoinPackedMatrix& matrix,
 */
   construct_options() ;
   if (preserve_options)
-  { delete options ;
+  { /* delete options ;removed cause sometimes malloc'ed and should then be freed to avoid crashes */
     options = preserve_options ; }
   if (preserve_tolerances)
-  { delete tolerances ;
+  { /* delete tolerances ; removed cause sometimes malloc'ed and should then be freed to avoid crashes */
     tolerances = preserve_tolerances ; }
   construct_lpprob() ;
 
@@ -1365,10 +1366,10 @@ void ODSI::destruct_problem ()
     lpprob = 0 ; }
   
   if (options)
-  { delete options ;
+  { /*delete options ;removed cause sometimes malloc'ed and should then be freed to avoid crashes */
     options = 0 ; }
   if (tolerances)
-  { delete tolerances ;
+  { /* delete tolerances ;removed cause sometimes malloc'ed and should then be freed to avoid crashes */
     tolerances = 0 ; }
   if (statistics)
   { delete statistics ;

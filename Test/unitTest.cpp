@@ -18,6 +18,10 @@
 #include "OsiSolverInterface.hpp"
 #include "OsiSimplexInterface.hpp"
 #include "OsiRowCutDebugger.hpp"
+
+// #undef COIN_USE_CLP
+#undef COIN_USE_DYLP
+
 #ifdef COIN_USE_OSL
 #include "OsiOslSolverInterface.hpp"
 #endif
@@ -63,6 +67,12 @@ void testingMessage( const char * const msg );
 int main (int argc, const char *argv[])
 {
   int i;
+
+  /*
+    Makes debugging output more comprehensible. Still suffers from interleave
+    of stdout and stderr.
+  */
+  std::ios::sync_with_stdio() ;
 
 #ifdef COIN_USE_XPR
   OsiXprSolverInterface::setLogFileName("xprCallTrace.txt");

@@ -563,6 +563,10 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   
   int i;
   CoinRelFltEq eq;
+  
+  std::string fn = mpsDir+"exmip1";
+  OsiSolverInterface * exmip1Si = emptySi->clone(); 
+  exmip1Si->readMps(fn.c_str(),"mps");
 
   // Test that solverInterface knows its name.
   // The name is used for displaying messages when testing
@@ -630,17 +634,6 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       failureMessage(solverName,"getObjValue with constant in objective function");
     delete si;
   }
-  
-  std::string fn = mpsDir+"exmip1";
-  OsiSolverInterface * exmip1Si = emptySi->clone(); 
-  exmip1Si->readMps(fn.c_str(),"mps");
-
-
-  // Solver Interfaces do not presently pass this set of tests.
-  // Something should be done to make them consistent.
-  // When there is an empty solver interface should
-  // getColLower() return NULL or a zero length vector??
-  // similar question for other methods.
 
   // Test that values returned from an empty solverInterface
   {
@@ -648,30 +641,30 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     if( si->getNumRows()!=0 )
       failureMessage(solverName,"getNumRows with empty solverInterface");
     if( si->getNumCols()!=0 )
-      failureMessage(solverName,"getNumCols with empty solverInterface");;
+      failureMessage(solverName,"getNumCols with empty solverInterface");
     if( si->getNumElements()!=0 )
-      failureMessage(solverName,"getNumElements with empty solverInterface");;
+      failureMessage(solverName,"getNumElements with empty solverInterface");
     if( si->getColLower()!=NULL )
-      failureMessage(solverName,"getColLower with empty solverInterface");;
+      failureMessage(solverName,"getColLower with empty solverInterface");
     if( si->getColUpper()!=NULL )
-      failureMessage(solverName,"getColUpper with empty solverInterface");;
+      failureMessage(solverName,"getColUpper with empty solverInterface");
     if( si->getColSolution()!=NULL )
-      failureMessage(solverName,"getColSolution with empty solverInterface");;
+      failureMessage(solverName,"getColSolution with empty solverInterface");
     if( si->getObjCoefficients()!=NULL )
-      failureMessage(solverName,"getObjCoefficients with empty solverInterface");;
+      failureMessage(solverName,"getObjCoefficients with empty solverInterface");
     if( si->getRowRange()!=NULL )
-      failureMessage(solverName,"getRowRange with empty solverInterface");;
+      failureMessage(solverName,"getRowRange with empty solverInterface");
     if( si->getRightHandSide()!=NULL )
-      failureMessage(solverName,"getRightHandSide with empty solverInterface");;
+      failureMessage(solverName,"getRightHandSide with empty solverInterface");
     if( si->getRowSense()!=NULL )
-      failureMessage(solverName,"getRowSense with empty solverInterface");;
+      failureMessage(solverName,"getRowSense with empty solverInterface");
     if( si->getRowLower()!=NULL )
-      failureMessage(solverName,"getRowLower with empty solverInterface");;
+      failureMessage(solverName,"getRowLower with empty solverInterface");
     if( si->getRowUpper()!=NULL )
-      failureMessage(solverName,"getRowUpper with empty solverInterface");;
+      failureMessage(solverName,"getRowUpper with empty solverInterface");
     delete si;
   }
-
+  
   
   // Test that problem was loaded correctly
   {
@@ -802,6 +795,151 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     assert( exmip1Si->getDblParam(OsiObjOffset,objOffset) );
     assert( eq( objOffset, 3.21 ) );
   }
+
+  
+  // Test clone
+  {
+    OsiSolverInterface * si2;  
+    int ad = 13579;
+    {
+      OsiSolverInterface * si1 = exmip1Si->clone(); 
+      int ad = 13579;
+      si1->setApplicationData(&ad);
+      assert( *((int *)(si1->getApplicationData())) == ad );
+      si2 = si1->clone();
+      delete si1;
+    }
+    
+    if( *((int *)(si2->getApplicationData())) != ad )
+      failureMessage(solverName,"getApplicationData on cloned solverInterface");
+
+    const char   * exmip1Sirs  = si2->getRowSense();
+    assert( exmip1Sirs[0]=='G' );
+    assert( exmip1Sirs[1]=='L' );
+    assert( exmip1Sirs[2]=='E' );
+    assert( exmip1Sirs[3]=='R' );
+    assert( exmip1Sirs[4]=='R' );
+    
+    const double * exmip1Sirhs = si2->getRightHandSide();
+    assert( eq(exmip1Sirhs[0],2.5) );
+    assert( eq(exmip1Sirhs[1],2.1) );
+    assert( eq(exmip1Sirhs[2],4.0) );
+    assert( eq(exmip1Sirhs[3],5.0) );
+    assert( eq(exmip1Sirhs[4],15.) ); 
+    
+    const double * exmip1Sirr  = si2->getRowRange();
+    assert( eq(exmip1Sirr[0],0.0) );
+    assert( eq(exmip1Sirr[1],0.0) );
+    assert( eq(exmip1Sirr[2],0.0) );
+    assert( eq(exmip1Sirr[3],5.0-1.8) );
+    assert( eq(exmip1Sirr[4],15.0-3.0) );
+    
+    CoinPackedMatrix pm;
+    pm.setExtraGap(0.0);
+    pm.setExtraMajor(0.0);
+    pm = *si2->getMatrixByRow();
+    
+    const double * ev = pm.getElements();
+    assert( eq(ev[0],   3.0) );
+    assert( eq(ev[1],   1.0) );
+    assert( eq(ev[2],  -2.0) );
+    assert( eq(ev[3],  -1.0) );
+    assert( eq(ev[4],  -1.0) );
+    assert( eq(ev[5],   2.0) );
+    assert( eq(ev[6],   1.1) );
+    assert( eq(ev[7],   1.0) );
+    assert( eq(ev[8],   1.0) );
+    assert( eq(ev[9],   2.8) );
+    assert( eq(ev[10], -1.2) );
+    assert( eq(ev[11],  5.6) );
+    assert( eq(ev[12],  1.0) );
+    assert( eq(ev[13],  1.9) );
+    
+    const int * mi = pm.getVectorStarts();
+    assert( mi[0]==0 );
+    assert( mi[1]==5 );
+    assert( mi[2]==7 );
+    assert( mi[3]==9 );
+    assert( mi[4]==11 );
+    assert( mi[5]==14 );
+    
+    const int * ei = pm.getIndices();
+    assert( ei[0]  ==  0 );
+    assert( ei[1]  ==  1 );
+    assert( ei[2]  ==  3 );
+    assert( ei[3]  ==  4 );
+    assert( ei[4]  ==  7 );
+    assert( ei[5]  ==  1 );
+    assert( ei[6]  ==  2 );
+    assert( ei[7]  ==  2 );
+    assert( ei[8]  ==  5 );
+    assert( ei[9]  ==  3 );
+    assert( ei[10] ==  6 );
+    assert( ei[11] ==  0 );
+    assert( ei[12] ==  4 );
+    assert( ei[13] ==  7 );    
+    
+    assert( pm.getMajorDim() == 5 ); 
+    assert( pm.getNumElements() == 14 );
+    
+    int nc = si2->getNumCols();
+    int nr = si2->getNumRows();
+    const double * cl = si2->getColLower();
+    const double * cu = si2->getColUpper();
+    const double * rl = si2->getRowLower();
+    const double * ru = si2->getRowUpper();
+    assert( nc == 8 );
+    assert( nr == 5 );
+    assert( eq(cl[0],2.5) );
+    assert( eq(cl[1],0.0) );
+    assert( eq(cl[2],0.0) );
+    assert( eq(cl[3],0.0) );
+    assert( eq(cl[4],0.5) );
+    assert( eq(cl[5],0.0) );
+    assert( eq(cl[6],0.0) );
+    assert( eq(cl[7],0.0) );
+    assert( eq(cu[0],si2->getInfinity()) );
+    assert( eq(cu[1],4.1) );
+    assert( eq(cu[2],1.0) );
+    assert( eq(cu[3],1.0) );
+    assert( eq(cu[4],4.0) );
+    assert( eq(cu[5],si2->getInfinity()) );
+    assert( eq(cu[6],si2->getInfinity()) );
+    assert( eq(cu[7],4.3) );
+
+    assert( eq(rl[0],2.5) );
+    assert( eq(rl[1],-si2->getInfinity()) );
+    assert( eq(rl[2],4.0) );
+    assert( eq(rl[3],1.8) );
+    assert( eq(rl[4],3.0) );
+    assert( eq(ru[0],si2->getInfinity()) );
+    assert( eq(ru[1],2.1) );
+    assert( eq(ru[2],4.0) );
+    assert( eq(ru[3],5.0) );
+    assert( eq(ru[4],15.0) );
+    
+    //const double * cs = si2->colsol();
+    //assert( eq(cs[0],0.0) );
+    //assert( eq(cs[7],0.0) );
+    //assert( eq(si2->getObjValue(),0.0) );
+    
+    assert( eq( si2->getObjCoefficients()[0],  1.0) );
+    assert( eq( si2->getObjCoefficients()[1],  0.0) );
+    assert( eq( si2->getObjCoefficients()[2],  0.0) );
+    assert( eq( si2->getObjCoefficients()[3],  0.0) );
+    assert( eq( si2->getObjCoefficients()[4],  2.0) );
+    assert( eq( si2->getObjCoefficients()[5],  0.0) );
+    assert( eq( si2->getObjCoefficients()[6],  0.0) );
+    assert( eq( si2->getObjCoefficients()[7], -1.0) );
+
+    // Test getting and setting of objective offset
+    double objOffset;
+    assert( si2->getDblParam(OsiObjOffset,objOffset) );
+    if( !eq( objOffset, 3.21 ) )
+      failureMessage(solverName,"getDblParam OsiObjOffset on cloned solverInterface");
+    delete si2;
+  }
+
     
   // Test load and assign problem
   {   

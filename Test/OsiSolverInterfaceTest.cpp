@@ -16,6 +16,18 @@
 #include <sstream>
 #include <cstdio>
 
+/*
+  A utility definition which allows for easy suppression of unused variable
+  warnings from GCC. Handy in this environment, where we're constantly def'ing
+  things in and out.
+*/
+#ifndef UNUSED
+# if defined(__GNUC__)
+#   define UNUSED __attribute__((unused))
+# else
+#   define UNUSED
+# endif
+#endif
 
 #include "OsiSolverInterface.hpp"
 #ifdef COIN_USE_VOL
@@ -1289,26 +1301,6 @@ void OsiSolverInterfaceMpsUnitTest
       vecSiP[i] = vecEmptySiP[i]->clone() ;
       
       vecSiP[i]->getStrParam(OsiSolverName,siName[i]);
-/* 
-  REMOVE ME
-
-  #     ifdef COIN_USE_DYLP
-      { 
-        OsiDylpSolverInterface * si =
-          dynamic_cast<OsiDylpSolverInterface *>(vecSiP[i]) ;
-        if (si != NULL )  { 
-          // Solver is DYLP.
-          // Skip over netlib cases that DYLP struggles with.
-          // Does not read forplan mps file
-          if ( mpsName[m]=="forplan" ) {
-            failureMessage(siName[i],"mps reader will not read forplan");
-            allSolversReadMpsFile = false;
-            continue;
-          }
-        }
-      }
-  #     endif
-*/
       
       std::string fn = mpsDir+mpsName[m] ;
       vecSiP[i]->readMps(fn.c_str(),"mps") ;
@@ -1463,32 +1455,11 @@ void OsiSolverInterfaceMpsUnitTest
         }
 #     endif
 
-/*
-  #     ifdef COIN_USE_DYLP
-        { 
-          OsiDylpSolverInterface * si =
-            dynamic_cast<OsiDylpSolverInterface *>(vecSiP[i]) ;
-          if (si != NULL )  { 
-            // Solver is DYLP.
-            // Skip over netlib cases that DYLP struggles with
-	    if ( mpsName[m]=="forplan" ) { continue; }
-            // Does not converge to solution after many hours run time for pilot
-            if ( mpsName[m]=="pilot" ) {
-              failureMessage(siName[i],"skipping pilot. does not solve after many hours on windows");
-              continue;
-            }
-            // Does not converge to solution after many hours run time for pilot
-            if ( mpsName[m]=="pilot87" ) {
-              failureMessage(siName[i],"skipping pilot. does not solve after an hour cpu time on windows");
-              continue;
-            }
-          }
-        }
-  #     endif
-*/
-        
-        vecSiP[i]->initialSolve() ;
-        
+	try
+	{ vecSiP[i]->initialSolve() ; }
+	catch (CoinError &thrownErr)
+	{ std::cerr << thrownErr.className() << "::" << thrownErr.methodName()
+		    << ": " << thrownErr.message() << std::endl ; }
         double timeOfSolution = CoinCpuTime()-startTime;
         if (vecSiP[i]->isProvenOptimal()) { 
           double soln = vecSiP[i]->getObjValue();       
@@ -1496,7 +1467,9 @@ void OsiSolverInterfaceMpsUnitTest
           if (eq(soln,objValue[m])) { 
             std::cerr 
               <<siName[i]<<"SolverInterface "
-              << soln << " = " << objValue[m] << " ; okay";
+              << soln << " = " << objValue[m] <<", "
+	      << vecSiP[i]->getIterationCount() << " iters"
+	      << "; okay";
             numProbSolved[i]++;
           } else  { 
             std::cerr <<siName[i] <<" " <<soln << " != " <<objValue[m] << "; error=" ;
@@ -1712,8 +1685,8 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     delete si;
   }
 
-  // Determine if this is the emptySi is an OsiVolSolverInterface
-  bool volSolverInterface = false;
+  // Determine if this emptySi is an OsiVolSolverInterface
+  bool volSolverInterface UNUSED = false;
   {
 #ifdef COIN_USE_VOL
     const OsiVolSolverInterface * si =
@@ -1722,10 +1695,8 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 #endif
   }
 
-  // Determine if this is the emptySi is an OsiOslSolverInterface
-#ifdef COIN_USE_OSL
-  bool oslSolverInterface = false;
-#endif
+  // Determine if this emptySi is an OsiOslSolverInterface
+  bool oslSolverInterface UNUSED = false;
   {
 #ifdef COIN_USE_OSL
     const OsiOslSolverInterface * si =
@@ -1734,18 +1705,18 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 #endif
   }
 
-  // Determine if this is the emptySi is an OsiDylpSolverInterface
-#ifdef COIN_USE_DYLP
-  bool dylpSolverInterface = false;
+  // Determine if this emptySi is an OsiDylpSolverInterface
+  bool dylpSolverInterface UNUSED = false;
   {
+#ifdef COIN_USE_DYLP
     const OsiDylpSolverInterface * si =
       dynamic_cast<const OsiDylpSolverInterface *>(emptySi);
     if ( si != NULL ) dylpSolverInterface = true;
-  }
 #endif
+  }
 
-  // Determine if this is the emptySi is an OsiGlpkSolverInterface
-  bool glpkSolverInterface = false;
+  // Determine if this emptySi is an OsiGlpkSolverInterface
+  bool glpkSolverInterface UNUSED = false;
   {
 #ifdef COIN_USE_GLPK
     const OsiGlpkSolverInterface * si =
@@ -1754,8 +1725,8 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 #endif
   }
 
-  // Determine if this is the emptySi is an OsiFmpSolverInterface
-  bool fmpSolverInterface = false;
+  // Determine if this emptySi is an OsiFmpSolverInterface
+  bool fmpSolverInterface UNUSED = false;
   {
 #ifdef COIN_USE_FMP
     const OsiFmpSolverInterface * si =
@@ -1765,7 +1736,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   }
 
   // Determine if this is the emptySi is an OsiSymSolverInterface
-  bool symSolverInterface = false;
+  bool symSolverInterface UNUSED = false;
   {
 #ifdef COIN_USE_SYM
      const OsiSymSolverInterface * si =
@@ -3301,7 +3272,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   }
   /*
     Orphan comment? If anyone happens to poke at the code that this belongs
-    to, move it. 
+    to, move it. My guess is it should go somewhere in the deSmedt tests.
 
     With this matrix we have a primal/dual infeas problem. Leaving the first
     row makes it primal feas, leaving the first col makes it dual feas.

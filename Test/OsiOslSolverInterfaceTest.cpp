@@ -17,8 +17,10 @@
 // below needed for pathetic branch and bound code
 #include <vector>
 #include <map>
-using std::max;
-using std::min;
+#ifndef _MSC_VER
+  using std::max;
+  using std::min;
+#endif
 // Trivial class for Branch and Bound
 
 class OsiNodeSimple  {

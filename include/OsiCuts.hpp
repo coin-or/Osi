@@ -118,27 +118,28 @@ public:
   //
   //------------------------------------------------------------------- 
     
-  /**@name Inserting a cut into collection */
+  /** \name Inserting a cut into collection */
   //@{
-    /// Insert row cut
+    /** \brief Insert a row cut */
     inline void insert( const OsiRowCut & rc );
-    /// Insert column cut
+    /** \brief Insert a column cut */
     inline void insert( const OsiColCut & cc );
 
-    /**@name Inserting a cut into collection using a pointer reference
-
-       The OsiCuts class takes control of and manages the storage for the
-       cut including the deletion of the cut.
+    /** \brief Insert a row cut.
+    
+      The OsiCuts object takes control of the cut object.
+      On return, \c rcPtr is NULL.
     */
-    //@{ 
-      /// Insert row cut. On return rcPtr is NULL.
-      inline void insert( OsiRowCut * & rcPtr );
-      /// Insert column cut. On return ccPtr is NULL.
-      inline void insert( OsiColCut * & ccPtr );
+    inline void insert( OsiRowCut * & rcPtr );
+    /** \brief Insert a column cut.
+    
+      The OsiCuts object takes control of the cut object.
+      On return \c ccPtr is NULL.
+    */
+    inline void insert( OsiColCut * & ccPtr );
 #if 0
   inline void insert( OsiCut    * & cPtr  );
 #endif
-    //@}
   //@}
 
   /**@name Number of cuts in collection */

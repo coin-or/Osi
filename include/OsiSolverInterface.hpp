@@ -310,28 +310,40 @@ public:
   //@}
 
   //---------------------------------------------------------------------------
-  /**@name Warm start methods */
+  /** \name Warm start methods
+
+    Note that the warm start methods return a generic CoinWarmStart object.
+    The precise characteristics of this object are solver-dependent. Clients
+    who wish to maintain a maximum degree of solver independence should take
+    care to avoid unnecessary assumptions about the properties of a warm start
+    object.
+  */
   //@{
     /*! \brief Get an empty warm start object
       
       This routine returns an empty warm start object. Its purpose is
-      to provide a way to give a client a warm start object of the
-      appropriate type, which can resized and modified as desired.
+      to provide a way for a client to acquire a warm start object of the
+      appropriate type for the solver, which can then be resized and modified
+      as desired.
     */
 
     virtual CoinWarmStart *getEmptyWarmStart () const = 0 ;
 
-    /** Get warm start information.
+    /** \brief Get warm start information.
 
-      If there is no valid solution, an empty warm start object (0 rows, 0
-      columns) wil be returned.
+      Return warm start information for the current state of the solver
+      interface. If there is no valid warm start information, an empty warm
+      start object wil be returned.
     */
     virtual CoinWarmStart* getWarmStart() const = 0;
 
-    /** Set warm start information.
+    /** \brief Set warm start information.
     
-      Return true/false depending on whether the warm start information was
-      accepted or not. */
+      Return true or false depending on whether the warm start information was
+      accepted or not.
+      By definition, a call to setWarmStart with an empty warm start object
+      should remove the warm start information held in the solver interface.
+   */
     virtual bool setWarmStart(const CoinWarmStart* warmstart) = 0;
   //@}
 
@@ -652,7 +664,7 @@ public:
     //-------------------------------------------------------------------------
     
     //-------------------------------------------------------------------------
-    /**@name Methods to expand a problem.
+    /**@name Methods to modify the constraint system.
 
        Note that new columns are added as continuous variables.
 
@@ -690,7 +702,12 @@ public:
 			   const double* collb, const double* colub,   
 			   const double* obj);
 #endif
-      /** Remove a set of columns (primal variables) from the problem.  */
+      /** \brief Remove a set of columns (primal variables) from the
+		 problem.
+
+	The solver interface for a basis-oriented solver will maintain valid
+	warm start information if all deleted variables are nonbasic.
+      */
       virtual void deleteCols(const int num, const int * colIndices) = 0;
     
       /** Add a row (constraint) to the problem. */
@@ -737,7 +754,11 @@ public:
     			   const char* rowsen, const double* rowrhs,   
     			   const double* rowrng);
 #endif
-      /** Delete a set of rows (constraints) from the problem. */
+      /** \brief Delete a set of rows (constraints) from the problem.
+
+	The solver interface for a basis-oriented solver will maintain valid
+	warm start information if all deleted rows are loose.
+      */
       virtual void deleteRows(const int num, const int * rowIndices) = 0;
     
       //-----------------------------------------------------------------------

@@ -721,6 +721,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     pm.setExtraGap(0.0);
     pm.setExtraMajor(0.0);
     pm = *exmip1Si->getMatrixByRow();
+    pm.removeGaps();
     
     const double * ev = pm.getElements();
     assert( eq(ev[0],   3.0) );
@@ -826,19 +827,84 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     assert( eq( exmip1Si->getObjCoefficients()[5],  0.0) );
     assert( eq( exmip1Si->getObjCoefficients()[6],  0.0) );
     assert( eq( exmip1Si->getObjCoefficients()[7], -1.0) );
-
+  }
+  
+  
+  // Test matrixByCol method
+  {
+    OsiSolverInterface & si = *exmip1Si->clone();
+    CoinPackedMatrix sm = *si.getMatrixByCol();
+    sm.removeGaps();
+    
+    CoinRelFltEq eq;
+    bool getElementsOK = true;
+    const double * ev = sm.getElements();
+    if( !eq(ev[0],   3.0) )getElementsOK = false;
+    if( !eq(ev[1],   5.6) )getElementsOK = false;
+    if( !eq(ev[2],   1.0) )getElementsOK = false;
+    if( !eq(ev[3],   2.0) )getElementsOK = false;
+    if( !eq(ev[4],   1.1) )getElementsOK = false;
+    if( !eq(ev[5],   1.0) )getElementsOK = false;
+    if( !eq(ev[6],  -2.0) )getElementsOK = false;
+    if( !eq(ev[7],   2.8) )getElementsOK = false;
+    if( !eq(ev[8],  -1.0) )getElementsOK = false;
+    if( !eq(ev[9],   1.0) )getElementsOK = false;
+    if( !eq(ev[10],  1.0) )getElementsOK = false;
+    if( !eq(ev[11], -1.2) )getElementsOK = false;
+    if( !eq(ev[12], -1.0) )getElementsOK = false;
+    if( !eq(ev[13],  1.9) )getElementsOK = false;
+    if ( !getElementsOK )         
+      failureMessage(solverName,"getMatrixByCol()->getElements()");
+    
+    const int * mi = sm.getVectorStarts();
+    assert( mi[0]==0 );
+    assert( mi[1]==2 );
+    assert( mi[2]==4 );
+    assert( mi[3]==6 );
+    assert( mi[4]==8 );
+    assert( mi[5]==10 );
+    assert( mi[6]==11 );
+    assert( mi[7]==12 );
+    assert( mi[8]==14 );
+    
+    bool getIndicesOK = true;
+    const int * ei = sm.getIndices();
+    if( ei[0]  !=  0 )getIndicesOK = false;
+    if( ei[1]  !=  4 )getIndicesOK = false;
+    if( ei[2]  !=  0 )getIndicesOK = false;
+    if( ei[3]  !=  1 )getIndicesOK = false;
+    if( ei[4]  !=  1 )getIndicesOK = false;
+    if( ei[5]  !=  2 )getIndicesOK = false;
+    if( ei[6]  !=  0 )getIndicesOK = false;
+    if( ei[7]  !=  3 )getIndicesOK = false;
+    if( ei[8]  !=  0 )getIndicesOK = false;
+    if( ei[9]  !=  4 )getIndicesOK = false;
+    if( ei[10] !=  2 )getIndicesOK = false;
+    if( ei[11] !=  3 )getIndicesOK = false;
+    if( ei[12] !=  0 )getIndicesOK = false;
+    if( ei[13] !=  4 )getIndicesOK = false;  
+    if ( !getIndicesOK )         
+      failureMessage(solverName,"getMatrixByCol()->getIndices()");  
+    
+    if( sm.getMajorDim() == 8 ); 
+    if( sm.getNumElements() == 14 );
+    
+    if( sm.getSizeVectorStarts()==9 );
+    if( sm.getMinorDim() == 5 ); 
+    
     // Test getting and setting of objective offset
     double objOffset;
-    assert( exmip1Si->getDblParam(OsiObjOffset,objOffset) );
+    assert( si.getDblParam(OsiObjOffset,objOffset) );
     assert( eq( objOffset, 0.0 ) );
-    assert( exmip1Si->setDblParam(OsiObjOffset, 3.21) );
-    assert( exmip1Si->getDblParam(OsiObjOffset,objOffset) );
+    assert( si.setDblParam(OsiObjOffset, 3.21) );
+    assert( si.getDblParam(OsiObjOffset,objOffset) );
     assert( eq( objOffset, 3.21 ) );
+    
+    delete &si;
   }
-
-  
-  // Test clone
-  {
+   
+    // Test clone
+    {
     OsiSolverInterface * si2;  
     int ad = 13579;
     {

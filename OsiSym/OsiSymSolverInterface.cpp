@@ -286,6 +286,9 @@ bool OsiSymSolverInterface::setSymParam(OsiSymIntParam key, int value)
    case OsiSymGenerateCglProbingCuts:
        keyVal = "generate_cgl_probing_cuts";
        break;
+   case OsiSymGenerateCglCliqueCuts:
+       keyVal = "generate_cgl_clique_cuts";
+       break;
    case OsiSymGenerateCglFlowAndCoverCuts:
        keyVal = "generate_cgl_flow_and_cover_cuts";
        break;
@@ -692,6 +695,26 @@ void OsiSymSolverInterface::parseCommandLine(int argc, char **argv)
 {
 
    sym_parse_command_line(env_, argc, argv);
+
+}
+
+/*===========================================================================*/
+/*===========================================================================*/
+
+void OsiSymSolverInterface::readMps(char * infile)
+{
+
+  sym_read_mps(env_, infile);
+
+}
+
+/*===========================================================================*/
+/*===========================================================================*/
+
+void OsiSymSolverInterface::readGmpl(char * modelFile, char * dataFile)
+{
+
+  sym_read_gmpl(env_, modelFile, dataFile);
 
 }
 

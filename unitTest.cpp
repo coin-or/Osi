@@ -42,9 +42,9 @@ void testingMessage( const char * const msg );
 // 
 // where:
 //   -mpsDir: directory containing mps test files
-//       Default value V1="../Mps"    
+//       Default value V1="../Mps/Sample"    
 //   -netlibDir: directory containing netlib files
-//       Default value V2="../Mps-netlib"
+//       Default value V2="../Mps/Netlib"
 //   -testOsiSolverInterface
 //       If specified, then OsiSolveInterface::unitTest
 //       is skipped over and not run.
@@ -92,9 +92,9 @@ int main (int argc, const char *argv[])
       std::cerr <<"  unitTest [-mpsDir=V1] [-netlibDir=V2] [-testOsiSolverInterface]\n";
       std::cerr <<"  where:\n";
       std::cerr <<"    -mpsDir: directory containing mps test files\n";
-      std::cerr <<"        Default value V1=\"../Mps\"\n";
+      std::cerr <<"        Default value V1=\"../Mps/Sample\"\n";
       std::cerr <<"    -netlibDir: directory containing netlib files\n";
-      std::cerr <<"        Default value V2=\"../Mps-netlib\"\n";
+      std::cerr <<"        Default value V2=\"../Mps/Netlib\"\n";
       std::cerr <<"    -testOsiSolverInterface\n";
       std::cerr <<"        If specified, then OsiSolveInterface::unitTest\n";
       std::cerr <<"        is run.\n";
@@ -108,14 +108,14 @@ int main (int argc, const char *argv[])
   if (parms.find("-mpsDir") != parms.end())
     mpsDir=parms["-mpsDir"]+"/";
   else 
-    mpsDir = "../Mps/";  
+    mpsDir = "../Mps/Sample/";  
  
   // Set directory containing netlib data files.
   std::string netlibDir;
   if (parms.find("-netlibDir") != parms.end())
     netlibDir=parms["-netlibDir"]+"/";
   else 
-    netlibDir = "../Mps-netlib/";  
+    netlibDir = "../Mps/Netlib/";  
 
   // *FIXME* : these tests should be written... 
   //  testingMessage( "Testing CoinHelperFunctions\n" );

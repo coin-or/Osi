@@ -9,7 +9,8 @@ OptLevel := -O
 LIBNAME := OsiDylp
 
 LIBSRC :=
-LIBSRC += OsiDylpSolverInterface.cpp
+LIBSRC += OsiDylpMessages.cpp \
+	  OsiDylpSolverInterface.cpp
 
 ##############################################################################
 # You should not need to edit below this line.

@@ -3,8 +3,9 @@
 #define OsiDylpSolverInterface_H
 
 /*! \legal
-  Copyright (C) 2002, Lou Hafer, Stephen Tse, International Business Machines
-  Corporation and others. All Rights Reserved.
+  Copyright (C) 2002, 2003.
+  Lou Hafer, Stephen Tse, International Business Machines Corporation and
+  others. All Rights Reserved.
 */
 
 /*! \file OsiDylpSolverInterface.hpp
@@ -16,12 +17,14 @@
 */
 
 /*
-  %W%	%G%
+  sccs: %W%	%G%
+  cvs: $Id$
 */
 
 #include <CoinPackedMatrix.hpp>
 #include <OsiSolverInterface.hpp>
 #include <CoinWarmStart.hpp>
+#include <CoinMessageHandler.hpp>
 
 #define DYLP_INTERNAL
 extern "C" {
@@ -31,23 +34,20 @@ extern "C" {
 /*! \class OsiDylpSolverInterface
     \brief COIN OSI layer for dylp
 
-  Very roughly: the class OsiDylpSolverInterface (ODSI) is the top level
-  object. It implements the public functions defined for an OsiSolverInterface
-  object.
+  The class OsiDylpSolverInterface (ODSI) is the top level object. It
+  implements the public functions defined for an OsiSolverInterface object.
 
   The OSI layer (or at least the OSI test suite) expects that the constraint
   system read back from the solver will be the same as the constraint system
   given to the solver.  Dylp expects that any grooming of the constraint
   system will be done before it's called, and furthermore expects that this
-  grooming will include conversion of >= constraints to <= constraints. This
-  creates a bit of a conflict. The solution here is to turn off constraint
-  system grooming normally done in mpsio.c:mpsin, and move it to a wrapper,
-  dylp.c:dylp_dolp. dylp_dolp only implements the conversion from >= to <=,
-  which is reversible. dylp can tolerate empty constraints.  dylp_dolp also
-  embodies a rudimentary strategy that attempts to recover from numerical
-  inaccuracy by refactoring the basis more often (on the premise that this
-  will reduce numerical inaccuracy in calculations involving the basis
-  inverse).
+  grooming will include conversion of >= constraints to <= constraints.  The
+  solution here is to do this grooming in a wrapper, dylp.c:dylp_dolp.
+  dylp_dolp only implements the conversion from >= to <=, which is
+  reversible. dylp can tolerate empty constraints.  dylp_dolp also embodies a
+  rudimentary strategy that attempts to recover from numerical inaccuracy by
+  refactoring the basis more often (on the premise that this will reduce
+  numerical inaccuracy in calculations involving the basis inverse).
 
   Within dylp, a constraint system is held in a row- and column-linked
   structure called a consys_struct. The lp problem (constraint system plus
@@ -85,11 +85,11 @@ public:
 
   OsiDylpSolverInterface(const OsiDylpSolverInterface& src) ;
 
-  /*! \brief Clone */
+  /*! \brief Clone the solver object */
 
   OsiSolverInterface* clone(bool copyData = true) const ;
 
-  /*! \brief Default destructor */
+  /*! \brief Destructor */
 
   ~OsiDylpSolverInterface() ;
 
@@ -111,42 +111,47 @@ public:
   /*! \brief Load a problem description (OSI packed matrix, row sense,
 	  parameters unaffected).
   */
-  void loadProblem(const CoinPackedMatrix&, const double *, const double *, 
-    const double *, const char *, const double *, const double*) ;
+  void loadProblem(const CoinPackedMatrix &matrix,
+		   const double *collb, const double *colub, const double *obj,
+		   const char *rowsen, const double *rowrhs,
+		   const double *rowrng) ;
 
   /*! \brief Load a problem description (OSI packed matrix, row bounds,
 	  parameters unaffected).
   */
-  void loadProblem(const CoinPackedMatrix&, const double *, const double *,
-    const double *, const double *, const double*) ;
+  void loadProblem(const CoinPackedMatrix &matrix,
+		   const double *collb, const double *colub, const double *obj,
+		   const double *rowlb, const double *rowub) ;
   
   /*! \brief Load a problem description (standard column-major packed
 	  matrix, row sense, parameters unaffected)
   */
-  void loadProblem (const int colcnt, const int rowcnt,
-    const int *start, const int *index, const double *value,
-    const double* col_lower, const double* col_upper, const double* obj,
-    const char* sense, const double* rhsin, const double* range) ;
+  void loadProblem(const int colcnt, const int rowcnt,
+	       const int *start, const int *index, const double *value,
+	       const double *collb, const double *colub, const double *obj,
+	       const char *sense, const double *rhsin, const double *range) ;
 
   /*! \brief Load a problem description (standard column-major packed
 	   matrix, row bounds, parameters unaffected)
   */
   void loadProblem(const int colcnt, const int rowcnt,
-    const int *start, const int *index, const double *value,
-    const double* col_lower, const double* col_upper, const double* obj,
-    const double* row_lower, const double* row_upper) ;
+		   const int *start, const int *index, const double *value,
+		   const double *collb, const double *colub, const double *obj,
+		   const double *row_lower, const double *row_upper) ;
 
   /*! \brief Load a problem description (OSI packed matrix, row sense,
 	  parameters destroyed).
   */
-  void assignProblem(CoinPackedMatrix*&, double*&, double*&, double*&, 
-    char*&, double*&, double*&) ;
+  void assignProblem(CoinPackedMatrix *&matrix,
+		     double *&collb, double *&colub, double *&obj, 
+		     char *&rowsen, double *&rowrhs, double *&rowrng) ;
 
   /*! \brief Load a problem description (OSI packed matrix, row bounds,
 	  parameters destroyed).
   */
-  void assignProblem(CoinPackedMatrix*&, double*&, double*&, 
-    double*&, double*&, double*&) ;
+  void assignProblem(CoinPackedMatrix *&matrix,
+		     double *&collb, double *&colub, double *&obj,
+		     double *&rowlb, double *&rowub) ;
 
 //@}
 
@@ -176,19 +181,19 @@ public:
 
   /*! \brief Return true if the variable is continuous */
 
-  bool isContinuous(int) const ;
+  bool isContinuous(int colIndex) const ;
 
   /*! \brief Return true if the variable is binary */
 
-  bool isBinary(int i) const ;
+  bool isBinary(int colIndex) const ;
 
   /*! \brief Return true if the variable is general integer */
 
-  bool isIntegerNonBinary (int i) const ;
+  bool isIntegerNonBinary (int colIndex) const ;
 
   /*! \brief Return true if the variable is integer (general or binary) */
 
-  bool isInteger (int i) const ;
+  bool isInteger (int colIndex) const ;
 
   /*! \brief Get the row sense (constraint type) vector */
 
@@ -220,11 +225,11 @@ public:
 
   /*! \brief Get a pointer to a row-major copy of the constraint matrix */
 
-  const CoinPackedMatrix* getMatrixByRow() const ;
+  const CoinPackedMatrix *getMatrixByRow() const ;
 
   /*! \brief Get a pointer to a column-major copy of the constraint matrix */
 
-  const CoinPackedMatrix* getMatrixByCol() const ;
+  const CoinPackedMatrix *getMatrixByCol() const ;
 //@}
 
 /*! \name Methods to modify the problem */
@@ -232,81 +237,82 @@ public:
 
   /*! \brief Set a single variable to be continuous. */
 
-  void setContinuous(int) ;
+  void setContinuous(int index) ;
 
   /*! \brief Set a list of variables to be continuous. */
 
-  void setContinuous(const int*, int) ;
+  void setContinuous(const int *indices, int len) ;
 
   /*! \brief Set a single variable to be integer. */
 
-  void setInteger(int) ;
+  void setInteger(int index) ;
 
   /*! \brief Set a list of variables to be integer. */
 
-  void setInteger(const int*, int) ;
+  void setInteger(const int *indices, int len) ;
 
   /*! \brief Set the lower bound on a column (variable) */
 
-  void setColLower(int, double) ;
+  void setColLower(int index, double value) ;
 
   /*! \brief Set the upper bound on a column (variable) */
 
-  void setColUpper(int, double) ;
+  void setColUpper(int index, double value) ;
 
   /*! \brief Set the lower bound on a row (constraint) */
 
-  void setRowLower(int, double) ;
+  void setRowLower(int index, double value) ;
 
   /*! \brief Set the upper bound on a row (constraint) */
 
-  void setRowUpper(int, double) ;
+  void setRowUpper(int index, double value) ;
 
   /*! \brief Set the type of a row (constraint) */
 
-  void setRowType(int, char, double, double) ;
+  void setRowType(int index, char rowsen, double rowrhs, double rowrng) ;
 
   /*! \brief Set an objective function coefficient */
 
-  void setObjCoeff (int, double) ;
+  void setObjCoeff (int index, double value) ;
 
   /*! \brief Set the sense (min/max) of the objective */
 
-  void setObjSense(double) ;
+  void setObjSense(double sense) ;
 
   /*! \brief Set the value of the primal variables in the problem solution */
 
-  void setColSolution(const double*) ;
+  void setColSolution(const double *colsol) ;
 
   /*! \brief Add a column (variable) to the problem */
 
-  void addCol(const CoinPackedVectorBase&,
-	      const double, const double, const double) ;
+  void addCol(const CoinPackedVectorBase &vec,
+	      const double collb, const double colub, const double obj) ;
 
   /*! \brief Remove column(s) (variable(s)) from the problem */
 
-  void deleteCols(const int, const int*) ;
+  void deleteCols(const int num, const int *colIndices) ;
 
   /*! \brief Add a row (constraint) to the problem */
 
-  void addRow(const CoinPackedVectorBase&, const double, const double) ;
+  void addRow(const CoinPackedVectorBase &row,
+	      const double rowlb, const double rowub) ;
 
   /*! \brief Add a row (constraint) to the problem */
 
-  void addRow(const CoinPackedVectorBase&,
-	      const char, const double, const double) ;
+  void addRow(const CoinPackedVectorBase &row,
+	      const char rowsen, const double rowrhs, const double rowrng) ;
 
   /*! \brief Delete row(s) (constraint(s)) from the problem */
 
-  void deleteRows(const int, const int*) ;
+  void deleteRows(const int num, const int *rowIndices) ;
 
   /*! \brief Apply a row (constraint) cut (add one constraint) */
 
-  void applyRowCut(const OsiRowCut&) ;
+  void applyRowCut(const OsiRowCut &cut) ;
 
   /*! \brief Apply a column (variable) cut (adjust one or more bounds) */
 
-  void applyColCut(const OsiColCut&) ;
+  void applyColCut(const OsiColCut &cut) ;
 //@}
 
 /*! \name Solve methods */
@@ -322,7 +328,7 @@ public:
 
   /*! \brief Apply a warm start object. */
 
-  bool setWarmStart(const CoinWarmStart*) ;
+  bool setWarmStart(const CoinWarmStart* warmStart) ;
 
   /*! \brief Call dylp to reoptimize (warm or hot start). */
 
@@ -399,20 +405,32 @@ public:
 
   /*! \brief Get an OSI integer parameter */
 
-  bool getIntParam(OsiIntParam key, int& value) const ;
+  bool getIntParam(OsiIntParam key, int &value) const ;
 
   /*! \brief Get an OSI double parameter */
 
-  bool getDblParam(OsiDblParam key, double& value) const ;
+  bool getDblParam(OsiDblParam key, double &value) const ;
 
   /*! \brief Get an OSI string parameter */
 
-  bool getStrParam(OsiStrParam key, std::string& value) const ;
+  bool getStrParam(OsiStrParam key, std::string &value) const ;
+
+  /* For overload resolution with OSI::getHintParam functions. */
+
+  using OsiSolverInterface::getHintParam ;
 
   /*! \brief Get an OSI hint */
 
   bool getHintParam(OsiHintParam key, bool &sense,
 		    OsiHintStrength &strength, void *&info) const ;
+
+  /*! \brief Change the language for OsiDylp messages */
+
+  inline void newLanguage(CoinMessages::Language language)
+  { messages_ = setOsiDylpMessages(language) ; } ;
+
+  inline void setLanguage(CoinMessages::Language language)
+  { messages_ = setOsiDylpMessages(language) ; } ;
 
 //@}
 
@@ -452,6 +470,10 @@ public:
   /*! \brief Establish a log file */
 
   void dylp_logfile(const char* name, bool echo) ;
+
+  /*! \brief Set the language for messages */
+
+  CoinMessages setOsiDylpMessages(CoinMessages::Language local_language) ;
 
 //@}
 
@@ -526,7 +548,8 @@ private:
 
   /*! \brief Log echo control for this ODSI instance */
 
-  bool local_gtxecho ;
+  bool initial_gtxecho ;
+  bool resolve_gtxecho ;
 
   /*! \brief Result of last call to solver for this ODSI instance */
 
@@ -546,6 +569,10 @@ private:
   /*! \brief Array for info blocks associated with hints. */
 
   void *info_[OsiLastHintParam] ;
+
+  /*! \brief Allow messages from CoinMpsIO package. */
+
+  bool mps_debug ;
 
 //@}
 
@@ -619,7 +646,7 @@ private:
     char clazzi, contyp_enum ctypi, double rhsi, double rhslowi) ;
   void worst_case_primal() ;
   void calc_objval() ;
-  bool unimpHint(bool dylpSense, bool hintSense,
+  void unimp_hint(bool dylpSense, bool hintSense,
 		 OsiHintStrength hintStrength, const char *msgString) ;
 
 //@}
@@ -679,6 +706,7 @@ private:
 
 /*! \name Vector helper functions */
 //@{
+  template<class T> static T* idx_vec(T* data) ;
   static int idx(int i) ;
   template<class T> static T* inv_vec(T* data) ;
   static int inv(int i) ;
@@ -720,28 +748,40 @@ class OsiDylpWarmStartBasis : public CoinWarmStartBasis
 
   /*! \brief Return the number of active constraints */
 
-  int getNumConstraint() const { return (numConstraints_) ; }
+  inline int getNumConstraint() const
+
+  { return (numConstraints_) ; }
 
   /*! \brief Return the constraint status vector */
 
-  const char *getConstraintStatus () const { return (constraintStatus_) ; }
+  inline const char *getConstraintStatus () const
 
-  char *getConstraintStatus () { return (constraintStatus_) ; }
+  { return (constraintStatus_) ; }
+
+  inline char *getConstraintStatus () { return (constraintStatus_) ; }
 
   /*! \brief Return the status of a single constraint. */
 
-  Status getConStatus (int i) const
+  inline Status getConStatus (int i) const
 
   { const int st = (constraintStatus_[i>>2] >> ((i&3)<<1)) & 3 ;
     return (static_cast<CoinWarmStartBasis::Status>(st)) ; }
 
   /*! \brief Set the status of a single constraint */
 
-  void setConStatus (int i, Status st)
+  inline void setConStatus (int i, Status st)
 
   { char &st_byte = constraintStatus_[i>>2] ;
     st_byte &= ~(3 << ((i&3)<<1)) ;
     st_byte |= (st << ((i&3)<<1)) ; }
+
+  /*! \brief Set the lp phase for this solution */
+
+  inline void setPhase (dyphase_enum phase) { phase_ = phase ; }
+
+  /*! \brief Get the lp phase for this solution. */
+
+  inline dyphase_enum getPhase () const { return (phase_) ; }
 
 //@}
 
@@ -835,6 +875,8 @@ class OsiDylpWarmStartBasis : public CoinWarmStartBasis
 
 /*! \name Constraint status private data members */
 //@{
+
+  dyphase_enum phase_ ;
 
   int numConstraints_ ;
   char *constraintStatus_ ;

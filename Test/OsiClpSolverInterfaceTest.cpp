@@ -468,12 +468,13 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir)
       int *inx = new int[nc];
       for (c=0;c<nc;c++) inx[c]=c;
       double *el = new double[nc];
-      for (c=0;c<nc;c++) el[c]=1.0+((double)c)*((double)c);
+      for (c=0;c<nc;c++) el[c]=1.0e-50+((double)c)*((double)c);
       
       cuts[0].setRow(nc,inx,el);
       cuts[0].setLb(-100.);
       cuts[0].setUb(500.);
       cuts[0].setEffectiveness(22);
+      el[4]=0.0; // to get inf later
       
       for (c=2;c<4;c++) {
 	el[0]=1.0;
@@ -483,15 +484,28 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir)
 	cuts[c-1].setUb(100.);
 	cuts[c-1].setEffectiveness(c);
       }
-
+      fim.writeMps("x1.mps");
       fim.applyRowCuts(3,cuts);
-      // resolve
+      fim.writeMps("x2.mps");
+      // resolve - should get message about zero elements
       fim.resolve();
+      fim.writeMps("x3.mps");
       // check integer solution
       const double * cs = fim.getColSolution();
       CoinRelFltEq eq;
       assert( eq(cs[2],   1.0) );
       assert( eq(cs[3],   1.0) );
+      // check will find invalid matrix
+      el[0]=1.0/el[4];
+      inx[0]=0;
+      cuts[0].setRow(nc,inx,el);
+      cuts[0].setLb(-100.);
+      cuts[0].setUb(500.);
+      cuts[0].setEffectiveness(22);
+      fim.applyRowCut(cuts[0]);
+      // resolve - should get message about zero elements
+      fim.resolve();
+      assert (fim.isAbandoned());
       delete[]el;
       delete[]inx;
     }

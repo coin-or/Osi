@@ -181,11 +181,8 @@ OsiClpSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
 
 bool OsiClpSolverInterface::isAbandoned() const
 {
-  // *THINK*:
-  // in *our* current setup if there are to many numerical difficulties, or
-  // more precisely there is a severe error condition then CLP just outputs a
-  // message and exits. We could change this, but will do it later.
-  return false;
+  // not sure about -1 (should not happen)
+  return (modelPtr_->status()==4||modelPtr_->status()==-1);
 }
 
 bool OsiClpSolverInterface::isProvenOptimal() const

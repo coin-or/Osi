@@ -774,10 +774,22 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     assert( eq(ru[3],5.0) );
     assert( eq(ru[4],15.0) );
     
-    //const double * cs = exmip1Si->colsol();
-    //assert( eq(cs[0],0.0) );
-    //assert( eq(cs[7],0.0) );
-    //assert( eq(exmip1Si->getObjValue(),0.0) );
+    // make sure col solution is something reasonable,
+    // that is between upper and lower bounds
+    const double * cs = exmip1Si->getColSolution();
+    int c;
+    bool okColSol=true;
+    double inf = exmip1Si->getInfinity();
+    for ( c=0; c<nc; c++ ) {
+      // if colSol is not between column bounds then 
+      // colSol is unreasonable.
+      if( !(cl[c]<=cs[c] && cs[c]<=cu[c]) ) okColSol=false;
+      // if at least one column bound is not infinite,
+      // then it is unreasonble to have colSol as infinite
+      if ( (cl[c]<inf || cu[c]<inf) && cs[c]>=inf ) okColSol=false;
+    }
+    if( !okColSol )
+      failureMessage(solverName,"getColSolution before solve");
     
     assert( eq( exmip1Si->getObjCoefficients()[0],  1.0) );
     assert( eq( exmip1Si->getObjCoefficients()[1],  0.0) );
@@ -918,11 +930,23 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     assert( eq(ru[2],4.0) );
     assert( eq(ru[3],5.0) );
     assert( eq(ru[4],15.0) );
-    
-    //const double * cs = si2->colsol();
-    //assert( eq(cs[0],0.0) );
-    //assert( eq(cs[7],0.0) );
-    //assert( eq(si2->getObjValue(),0.0) );
+        
+    // make sure col solution is something reasonable,
+    // that is between upper and lower bounds
+    const double * cs = exmip1Si->getColSolution();
+    int c;
+    bool okColSol=true;
+    double inf = exmip1Si->getInfinity();
+    for ( c=0; c<nc; c++ ) {
+      // if colSol is not between column bounds then 
+      // colSol is unreasonable.
+      if( !(cl[c]<=cs[c] && cs[c]<=cu[c]) ) okColSol=false;
+      // if at least one column bound is not infinite,
+      // then it is unreasonble to have colSol as infinite
+      if ( (cl[c]<inf || cu[c]<inf) && cs[c]>=inf ) okColSol=false;
+    }
+    if( !okColSol )
+      failureMessage(solverName,"getColSolution before solve on cloned solverInterface");
     
     assert( eq( si2->getObjCoefficients()[0],  1.0) );
     assert( eq( si2->getObjCoefficients()[1],  0.0) );

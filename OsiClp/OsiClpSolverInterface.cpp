@@ -2537,6 +2537,7 @@ OsiClpSolverInterface::setHintParam(OsiHintParam key, bool yesNo,
 void 
 OsiClpSolverInterface::branchAndBound() {
   throw CoinError("Sorry, Clp doesn't implement B&B.  This is because the original Simple Branch and Bound\n\
-code has been much developed and moved to Sbb.  If you want a native Branch and Bound code use Sbb",
+code has been much developed and moved to Sbb which is now Cbc\n\
+.  If you want a native Branch and Bound code use Cbc",
 		  "branchAndBound","OsiClpSolverInterface");
 };

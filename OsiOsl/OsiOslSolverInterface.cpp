@@ -32,10 +32,10 @@ toColumnOrderedGapFree(const CoinPackedMatrix& matrix)
 	    break;
       if (i >= 0) {
 	 // got to get rid of the gaps
-	 m = new CoinPackedMatrix();
-	 m->setExtraGap(0.0);
-	 m->setExtraMajor(0.0);
-	 m->operator=(matrix);
+        m = new CoinPackedMatrix(true,matrix.getNumRows(),matrix.getNumCols(),
+                                 matrix.getNumElements(),matrix.getElements(),
+                                 matrix.getIndices(),matrix.getVectorStarts(),
+                                 matrix.getVectorLengths(),0.0,0.0);
       }
    } else {
       // must create a column ordered copy without gaps

@@ -41,7 +41,7 @@ export LibType OptLevel LIBNAME LIBSRC
 default: install
 
 install library : % :
-	(cd $(CoinDir)/Cbc && $(MAKE) install)
+	(cd $(CoinDir)/Cbc && $(MAKE) -f Makefile.lightweight install)
 	(cd $(CoinDir)/Osi && $(MAKE) -f Makefile.Osi install)
 	$(MAKE) -f ${MakefileDir}/Makefile.lib $*
 

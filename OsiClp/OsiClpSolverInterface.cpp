@@ -113,6 +113,11 @@ void OsiClpSolverInterface::initialSolve()
   if (strength!=OsiHintIgnore&&takeHint) {
     Presolve pinfo;
     ClpSimplex * model2 = pinfo.presolvedModel(solver,1.0e-8);
+    if (!model2) {
+      // problem found to be infeasible - whats best?
+      model2 = &solver;
+    }
+      
     // change from 200 (unless changed)
     if (model2->factorization()->maximumPivots()==200)
       model2->factorization()->maximumPivots(100+model2->numberRows()/50);
@@ -156,12 +161,14 @@ void OsiClpSolverInterface::initialSolve()
 	model2->dual();
       }
     }
-    pinfo.postsolve(true);
+    if (model2!=&solver) {
+      pinfo.postsolve(true);
     
-    delete model2;
-    //printf("Resolving from postsolved model\n");
-    // later try without (1) and check duals before solve
-    solver.primal(1);
+      delete model2;
+      //printf("Resolving from postsolved model\n");
+      // later try without (1) and check duals before solve
+      solver.primal(1);
+    }
     lastAlgorithm_=1; // primal
     //if (solver.numberIterations())
     //printf("****** iterated %d\n",solver.numberIterations());
@@ -256,6 +263,10 @@ void OsiClpSolverInterface::resolve()
   if (strength!=OsiHintIgnore&&takeHint) {
     Presolve pinfo;
     ClpSimplex * model2 = pinfo.presolvedModel(solver,1.0e-8);
+    if (!model2) {
+      // problem found to be infeasible - whats best?
+      model2 = &solver;
+    }
     // change from 200
     model2->factorization()->maximumPivots(100+model2->numberRows()/50);
     if (algorithm<0) {
@@ -279,12 +290,14 @@ void OsiClpSolverInterface::resolve()
 	model2->dual();
       }
     }
-    pinfo.postsolve(true);
+    if (model2!=&solver) {
+      pinfo.postsolve(true);
     
-    delete model2;
-    // later try without (1) and check duals before solve
-    solver.primal(1);
-    lastAlgorithm_=1; // primal
+      delete model2;
+      // later try without (1) and check duals before solve
+      solver.primal(1);
+      lastAlgorithm_=1; // primal
+    }
     //if (solver.numberIterations())
     //printf("****** iterated %d\n",solver.numberIterations());
   } else {

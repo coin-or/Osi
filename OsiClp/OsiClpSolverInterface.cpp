@@ -377,7 +377,7 @@ void OsiClpSolverInterface::resolve()
       startFinishOptions=1+4;
       if ((specialOptions_&8)!=0)
         startFinishOptions +=2; // allow re-use of factorization
-      if((specialOptions_&4)==0) 
+      if((specialOptions_&4)==0||!takeHint) 
         modelPtr_->setSpecialOptions(saveOptions|(64|128|512|1024|4096));
       else
         modelPtr_->setSpecialOptions(saveOptions|(64|128|512|1024|2048|4096));

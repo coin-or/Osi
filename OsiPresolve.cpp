@@ -1234,10 +1234,10 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
     memcpy(acts_,si->getRowActivity(),nrows_*sizeof(double));
     CoinWarmStartBasis * basis  = 
     dynamic_cast<CoinWarmStartBasis*>(si->getWarmStart());
-    assert (basis);
     colstat_ = new unsigned char [nrows_+ncols_];
     rowstat_ = colstat_+ncols_;
-    if (basis->getNumStructural()==ncols_) {
+    // If basis is NULL then put in all slack basis
+    if (basis&&basis->getNumStructural()==ncols_) {
       int i;
       for (i=0;i<ncols_;i++) {
 	colstat_[i] = basis->getStructStatus(i);

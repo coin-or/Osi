@@ -2034,7 +2034,8 @@ OsiClpSolverInterface::reset()
   lastAlgorithm_=0;
   notOwned_=false;
   modelPtr_ = new ClpSimplex();
-  delete linearObjective_;
+  // This is also deleted by Clp --tkr 7/31/03
+  // delete linearObjective_;
   linearObjective_ = NULL;
   fillParamMaps();
 }

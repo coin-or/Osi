@@ -1505,6 +1505,7 @@ int OsiMpsReader::readMps()
 	  if ( gotRhs ) {
 	    while ( mpsfile.nextField (  ) == OSI_RHS_SECTION ) {
 	    }
+	    break;
 	  } else {
 	    gotRhs = true;
 	    strcpy ( lastColumn, mpsfile.columnName (  ) );
@@ -1589,6 +1590,7 @@ int OsiMpsReader::readMps()
 	    if ( gotRange ) {
 	      while ( mpsfile.nextField (  ) == OSI_RANGE_SECTION ) {
 	      }
+	      break;
 	    } else {
 	      gotRange = true;
 	      strcpy ( lastColumn, mpsfile.columnName (  ) );
@@ -1739,6 +1741,7 @@ int OsiMpsReader::readMps()
 	  if ( gotBound ) {
 	    while ( mpsfile.nextField (  ) == OSI_BOUND_SECTION ) {
 	    }
+	    break;
 	  } else {
 	    gotBound = true;;
 	    strcpy ( lastColumn, mpsfile.columnName (  ) );

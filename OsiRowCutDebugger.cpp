@@ -342,6 +342,16 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
     expectedNumberColumns=2756;
   }
 
+  // nw04
+  else if ( modelL == "nw04" ) {
+    probType=pure0_1;
+    int intIndicesAt1[]={
+      231 ,1792 ,1980 ,7548 ,21051 ,28514 ,53087 ,53382 ,76917 };
+    int numIndices = sizeof(intIndicesAt1)/sizeof(int);
+    intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=87482;
+  }
+
   // bell3a
   else if ( modelL == "bell3a" ) {
     probType=generalMip;
@@ -362,6 +372,41 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
     int numIndices = sizeof(intIndicesAt1)/sizeof(int);
     intSoln.setConstant(numIndices,intIndicesAt1,1.0);
     expectedNumberColumns=2025;
+  }
+
+  // rentacar
+  else if ( modelL == "rentacar" ) {
+    probType=continuousWith0_1;
+    int intIndicesAt1[]={
+      9502 ,9505 ,9507 ,9511 ,9512 ,9513 ,9514 ,9515 ,9516 ,9521 ,
+      9522 ,9526 ,9534 ,9535 ,9536 ,9537 ,9542 ,9543 ,9544 ,9548 ,
+      9550 ,9554 };
+    int numIndices = sizeof(intIndicesAt1)/sizeof(int);
+    intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=9557;
+  }
+
+  // qiu
+  else if ( modelL == "qiu" ) {
+    probType=continuousWith0_1;
+    int intIndicesAt1[]={
+      0 ,5 ,8 ,9 ,11 ,13 ,16 ,17 ,19 ,20 ,
+      24 ,28 ,32 ,33 ,35 ,37 ,40 ,47 };
+    int numIndices = sizeof(intIndicesAt1)/sizeof(int);
+    intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=840;
+  }
+
+  // pk1
+  else if ( modelL == "pk1" ) {
+    probType=continuousWith0_1;
+    int intIndicesAt1[]={
+      1 ,4 ,5 ,6 ,7 ,11 ,13 ,16 ,17 ,23 ,
+      24 ,27 ,28 ,34 ,35 ,37 ,43 ,44 ,45 ,46 ,
+      47 ,51 ,52 ,54 };
+    int numIndices = sizeof(intIndicesAt1)/sizeof(int);
+    intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=86;
   }
 
   // danoint

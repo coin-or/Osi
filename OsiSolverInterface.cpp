@@ -902,7 +902,8 @@ OsiSolverInterface::readGMPL(const char *filename, const char * dataname)
 {
   CoinMpsIO m;
   m.setInfinity(getInfinity());
-  
+  m.passInMessageHandler(handler_);
+
   int numberErrors = m.readGMPL(filename,dataname,false);
   handler_->message(COIN_SOLVER_MPS,messages_)
     <<m.getProblemName()<< numberErrors <<CoinMessageEol;

@@ -2692,12 +2692,12 @@ const double* ODSI::getColSolution () const
 */
 { if (_col_x) return _col_x ;
 
-  if (!(lpprob && lpprob->status && lpprob->x)) return (0) ;
-
   int n = getNumCols() ;
   flags statj ;
   double* solution = new double[n] ;
 
+  
+  if (lpprob && lpprob->status && lpprob->x) {
 /*
   Walk the status vector, taking values for basic variables from lpprob.x and
   values for nonbasic variables from the appropriate bounds vector.
@@ -2722,6 +2722,22 @@ const double* ODSI::getColSolution () const
 	case vstatSB:
 	{ solution[j] = -DYLP_INFINITY ;
 	  break ; } } } }
+  }
+  else {
+    // Return something reasonable.
+    const double * colLb = getColLower();
+    const double * colUb = getColUpper();
+    int nc =getNumCols();
+    int c;
+    for ( c=0; c<nc; c++ ) {
+      if ( fabs(colLb[c]) < fabs(colUb[c]) ) {
+        solution[c] = colLb[c];
+      }
+      else {
+        solution[c] = colUb[c];
+      }
+    }
+  }
 
   _col_x = solution ;
   return (_col_x) ; }

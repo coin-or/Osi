@@ -214,7 +214,7 @@ void OsiSymSolverInterfaceUnitTest( const std::string & mpsDir, const std::strin
     // Test fraction Indices
     {
       OsiSymSolverInterface fim;
-      std::string fn = mpsDir+"exmip1";
+      std::string fn = mpsDir+"exmip1.mps";
       fim.readMps(const_cast<char *>(fn.c_str()));
       //fim.setModelPtr(m);
       // exmip1.mps has 2 integer variables with index 2 & 3

@@ -18,6 +18,12 @@ include ${MakefileDir}/Makefile.location
 
 default: unitTest
 
-unitTest clean :
+unitTest :
 	(cd .. && ${MAKE} install)
 	${MAKE} -f Makefile.test $*
+
+clean :
+	@rm -rf Junk
+	@rm -rf $(DEPDIR)
+	@rm -rf $(TARGETDIR)
+

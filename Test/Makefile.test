@@ -1,7 +1,7 @@
 # Select optimization (-O or -g). -O will be automatically bumped up to the 
 # highest level of optimization the compiler supports. If want something in
 # between then specify the exact level you want, e.g., -O1 or -O2
-OptLevel := -g
+OptLevel := -O
 
 ##############################################################################
 # You should not need to edit below this line.
@@ -72,6 +72,12 @@ ifneq ($(filter COIN_libOsiSym,$(CoinLibsDefined)),)
     LibName += ${OsiSymLibName} ${SymLibName} libCgl.so 
     Define  += ${OsiSymDefine} ${SymDefine} COIN_USE_SYM
     TESTSRC += OsiSymSolverInterfaceTest.cpp
+    ifeq ($(UNAME),CYGWIN)
+    Define += HAS_RANDOM HAS_SRANDOM
+    endif
+    ifeq ($(UNAME),Linux)
+    Define += HAS_RANDOM HAS_SRANDOM
+    endif
 endif
 
 ifneq ($(filter COIN_libOsiVol,$(CoinLibsDefined)),)
@@ -202,11 +208,6 @@ $(TARGETDIR)/unitTest : $(TESTOBJ)
 
 doc:
 	doxygen $(MakefileDir)/doxygen.conf
-
-clean :
-	rm -rf Junk
-	@rm -rf $(DEPDIR)
-	@rm -rf $(TARGETDIR)
 
 ###############################################################################
 

@@ -25,6 +25,7 @@
 #include <OsiSolverInterface.hpp>
 #include <CoinWarmStart.hpp>
 #include <CoinMessageHandler.hpp>
+#include <CoinMpsIO.hpp>
 
 #define DYLP_INTERNAL
 extern "C" {
@@ -97,7 +98,9 @@ public:
 
   ~OsiDylpSolverInterface() ;
 
-  /*! \brief Reset the SI to the state produced by the default constructor. */
+  /*! \brief Reset the solver object to the state produced by the default
+	     constructor.
+  */
 
   void reset() ;
 
@@ -291,6 +294,10 @@ public:
 
   void setColSolution(const double *colsol) ;
 
+  /*! \brief Set the value of the dual variables in the problem solution */
+
+  void setRowPrice(const double*) ;
+
   /*! \brief Add a column (variable) to the problem */
 
   void addCol(const CoinPackedVectorBase &vec,
@@ -332,17 +339,17 @@ public:
 
   /*! \brief Build a warm start object for the current lp solution. */
 
-  CoinWarmStart* getWarmStart() const ;
+  CoinWarmStart *getWarmStart() const ;
 
   /*! \brief Apply a warm start object. */
 
-  bool setWarmStart(const CoinWarmStart* warmStart) ;
+  bool setWarmStart(const CoinWarmStart *warmStart) ;
 
-  /*! \brief Call dylp to reoptimize (warm or hot start). */
+  /*! \brief Call dylp to reoptimize (warm start). */
 
   void resolve() ;
 
-  /*! \brief Set options to allow a hot start. */
+  /*! \brief Create a hot start snapshot. */
 
   void markHotStart() ;
 
@@ -350,7 +357,7 @@ public:
 
   void solveFromHotStart() ;
 
-  /*! \brief For dylp, a noop */
+  /*! \brief Delete the hot start snapshot. */
 
   void unmarkHotStart() ;
 
@@ -384,6 +391,13 @@ public:
 
   int getIterationCount() const ;
 
+  /*! \brief Is the primal objective limit reached? */
+
+  bool isPrimalObjectiveLimitReached() const ;
+
+  /*! \brief Is the dual objective limit reached? */
+
+  bool isDualObjectiveLimitReached() const ;
 //@}
 
 
@@ -437,6 +451,8 @@ public:
   inline void newLanguage(CoinMessages::Language language)
   { setOsiDylpMessages(language) ; } ;
 
+  /*! \brief An alias for OsiDylpSolverInterface::newLanguage. */
+
   inline void setLanguage(CoinMessages::Language language)
   { setOsiDylpMessages(language) ; } ;
 
@@ -467,6 +483,15 @@ public:
 
 //@}
 
+/*! \name Debugging Methods */
+//@{
+
+  /*! \brief Activate the row cut debugger */
+
+  void activateRowCutDebugger (const char * modelName) ;
+
+//@}
+
 /*! \name Dylp-specific methods */
 //@{
 
@@ -492,18 +517,6 @@ public:
   /*! \brief Invoke the solver's built-in branch-and-bound algorithm. */
 
   void branchAndBound() ;
-
-  /*! \brief Set the value of the dual variables in the problem solution */
-
-  void setRowPrice(const double*) ;
-
-  /*! \brief Is the primal objective limit reached? */
-
-  bool isPrimalObjectiveLimitReached() const ;
-
-  /*! \brief Is the dual objective limit reached? */
-
-  bool isDualObjectiveLimitReached() const ;
 
   /*! \brief Get as many dual rays as the solver can provide */
 
@@ -582,6 +595,10 @@ private:
 
   bool mps_debug ;
 
+  /*! \brief Warm start object used as a fallback for hot start */
+
+  CoinWarmStart *hotstart_fallback ;
+
 //@}
 
 
@@ -622,7 +639,8 @@ private:
   void gen_rowparms(int rowcnt,
 	       double *rhs, double *rhslow, contyp_enum *ctyp,
 	       const char *sense, const double *rhsin, const double *range) ;
-  void load_problem(const CoinPackedMatrix& matrix,
+  void load_problem(const CoinMpsIO &mps) ;
+  void load_problem(const CoinPackedMatrix &matrix,
 	 const double* col_lower, const double* col_upper, const double* obj,
 	 const contyp_enum *ctyp, const double* rhs, const double* rhslow) ;
   void load_problem (const int colcnt, const int rowcnt,
@@ -735,169 +753,12 @@ private:
 } ;
 
 
-
-/*! \class OsiDylpWarmStartBasis
-    \brief The dylp warm start object
-
-  This derived class is necessary because dylp by default works with a subset
-  of the full constraint system. The warm start object needs to contain a
-  list of the active constraints in addition to the status information
-  included in CoinWarmStartBasis.
-
-  Constraint status is coded using the CoinWarmStartBasis::Status codes. Active
-  constraints are coded as atUpperBound or atLowerBound, inactive as isFree.
-*/
-
-#include "CoinWarmStartBasis.hpp"
-
-class OsiDylpWarmStartBasis : public CoinWarmStartBasis
-
-{ public:
-
-/*! \name Functions to access constraint status */
-//@{
-
-  /*! \brief Return the number of active constraints */
-
-  inline int getNumConstraint() const
-
-  { return (numConstraints_) ; }
-
-  /*! \brief Return the constraint status vector */
-
-  inline const char *getConstraintStatus () const
-
-  { return (constraintStatus_) ; }
-
-  inline char *getConstraintStatus () { return (constraintStatus_) ; }
-
-  /*! \brief Return the status of a single constraint. */
-
-  inline Status getConStatus (int i) const
-
-  { const int st = (constraintStatus_[i>>2] >> ((i&3)<<1)) & 3 ;
-    return (static_cast<CoinWarmStartBasis::Status>(st)) ; }
-
-  /*! \brief Set the status of a single constraint */
-
-  inline void setConStatus (int i, Status st)
-
-  { char &st_byte = constraintStatus_[i>>2] ;
-    st_byte &= ~(3 << ((i&3)<<1)) ;
-    st_byte |= (st << ((i&3)<<1)) ; }
-
-  /*! \brief Set the lp phase for this solution */
-
-  inline void setPhase (dyphase_enum phase) { phase_ = phase ; }
-
-  /*! \brief Get the lp phase for this solution. */
-
-  inline dyphase_enum getPhase () const { return (phase_) ; }
-
-//@}
-
-/*! \name Constructors, Destructors, and related functions */
-//@{
-
-  /*! \brief Default constructor (empty object) */
-
-  OsiDylpWarmStartBasis ()
-
-    : CoinWarmStartBasis(),
-      numConstraints_(0),
-      constraintStatus_(0)
-
-  { /* intentionally left blank */ }
-
-
-  /*! \brief Copy constructor */
-
-  OsiDylpWarmStartBasis (const OsiDylpWarmStartBasis &ws)
-
-    : CoinWarmStartBasis(ws),
-      numConstraints_(ws.numConstraints_),
-      constraintStatus_(0)
-
-  { constraintStatus_ = new char[(numConstraints_+3)/4] ;
-    CoinDisjointCopyN(ws.constraintStatus_,
-		      (numConstraints_+3)/4,constraintStatus_) ; }
-
-
-  /*! \brief Construct by copying status arrays */
-
-  OsiDylpWarmStartBasis
-  (int ns, int na, const char *sStat, const char *aStat, const char *cStat)
-
-    : CoinWarmStartBasis(ns,na,sStat,aStat),
-      numConstraints_(na),
-      constraintStatus_(0)
-
-  { constraintStatus_ = new char[(na+3)/4] ;
-    CoinDisjointCopyN(cStat,(na+3)/4,constraintStatus_) ; }
-
-
-  /*! \brief Destructor */
-
-  ~OsiDylpWarmStartBasis ()
-
-  { delete[] constraintStatus_ ; }
-
-
-  /*! \brief Resize and initialize the warm start object.  */
-
-  void setSize (int ns, int na)
-
-  { CoinWarmStartBasis::setSize(ns,na) ;
-    delete[] constraintStatus_ ;
-    constraintStatus_ = new char[(na+3)/4] ;
-    CoinFillN(constraintStatus_,(na+3)/4,(char)0) ;
-    numConstraints_ = na ; }
-
-
-  /*! \brief Assignment of status arrays (parameters destroyed) */
-
-  void assignBasisStatus
-  (int ns, int na, char *&sStat, char *&aStat, char *&cStat)
-
-  { CoinWarmStartBasis::assignBasisStatus(ns,na,sStat,sStat) ;
-    delete[] constraintStatus_ ;
-    numConstraints_ = na ;
-    constraintStatus_ = cStat ;
-    cStat = 0 ; }
-
-
-  /*! \brief Assignment of structure (parameter preserved) */
-
-  OsiDylpWarmStartBasis& operator= (const OsiDylpWarmStartBasis &rhs)
-
-  { if (this != &rhs)
-    { CoinWarmStartBasis::operator= (rhs) ;
-      delete[] constraintStatus_ ;
-      constraintStatus_ = new char[(numConstraints_+3)/4] ;
-      numConstraints_ = rhs.numConstraints_ ;
-      CoinDisjointCopyN(rhs.constraintStatus_,(numConstraints_+3)/4,
-			constraintStatus_) ; }
-    
-    return *this ; }
-
-//@}
-
-  private:
-
-/*! \name Constraint status private data members */
-//@{
-
-  dyphase_enum phase_ ;
-
-  int numConstraints_ ;
-  char *constraintStatus_ ;
-
-//@}
-
-} ;
-
 /*
   OsiDylpSolverInterfaceTest.cpp
+*/
+
+/*! \brief Unit test for OsiDylpSolverInterface.
+    \relates OsiDylpSolverInterface
 */
 
 void OsiDylpSolverInterfaceUnitTest(const std::string & mpsDir) ;

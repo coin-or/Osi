@@ -1312,11 +1312,8 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 
 	double objective[]={5.0,6.0,5.5};
 
-  // OslSi fails this test and crashes
-  if ( oslSolverInterface ) {
-     failureMessage(solverName,"addCol when columns are empty");
-  }
-  else if ( dylpSolverInterface ) {
+  // Test for dylp since it dies on this test
+  if ( dylpSolverInterface ) {
      failureMessage(solverName,"addCol when columns are empty");
   }
   else {

@@ -70,16 +70,17 @@ OsiColCut::print() const
   const CoinPackedVector & cutLbs = lbs();
   const CoinPackedVector & cutUbs = ubs();
   int i;
-  std::cout<<"Column cut has "<<cutLbs.getNumElements()
-	   <<" Lower bound cuts"<<std::endl;
+  std::cout<<"Column cut has "
+	   <<cutLbs.getNumElements()
+	   <<" lower bound cuts and "
+	   <<cutUbs.getNumElements()
+	   <<" upper bound cuts"
+	   <<std::endl;
   for ( i=0; i<cutLbs.getNumElements(); i++ ) {
     int colIndx = cutLbs.getIndices()[i];
     double newLb= cutLbs.getElements()[i];
     std::cout<<"[ x"<<colIndx<<" >= "<<newLb<<"] ";
   }
-  std::cout<<std::endl;
-  std::cout<<"    and "<<cutUbs.getNumElements()
-	   <<" Upper bound cuts"<<std::endl;
   for ( i=0; i<cutUbs.getNumElements(); i++ ) {
     int colIndx = cutUbs.getIndices()[i];
     double newUb= cutUbs.getElements()[i];

@@ -81,7 +81,7 @@ failureMessage(
 {
   std::string messageText;
   messageText = "*** ";
-  messageText += solverName + "SolverInteface testing issue: ";
+  messageText += solverName + "SolverInterface testing issue: ";
   messageText += message;
   std::cerr <<messageText.c_str() <<std::endl;
 }
@@ -186,7 +186,7 @@ bool test1VivianDeSmedt(OsiSolverInterface *s)
 
 	s->setObjSense(-1);
 
-	s->resolve();
+	s->initialSolve();
 
 	ret = ret && s->isProvenOptimal();
 	ret = ret && !s->isProvenPrimalInfeasible();
@@ -279,7 +279,7 @@ bool test2VivianDeSmedt(OsiSolverInterface *s)
 
 	s->setObjSense(-1);
 
-	s->resolve();
+	s->initialSolve();
 
 	ret = ret && s->isProvenOptimal();
 	ret = ret && !s->isProvenPrimalInfeasible();
@@ -336,7 +336,7 @@ bool test3VivianDeSmedt(OsiSolverInterface *s)
 
 	s->writeMps("test");
 
-	s->resolve();
+	s->initialSolve();
 
 	ret = ret && s->isProvenOptimal();
 	ret = ret && !s->isProvenPrimalInfeasible();
@@ -392,7 +392,7 @@ bool test4VivianDeSmedt(OsiSolverInterface *s)
 
 	s->writeMps("test");
 
-	s->resolve();
+	s->initialSolve();
 
 	ret = ret && s->isProvenOptimal();
 	ret = ret && !s->isProvenPrimalInfeasible();
@@ -424,6 +424,21 @@ bool test4VivianDeSmedt(OsiSolverInterface *s)
 
 //--------------------------------------------------------------------------
 
+/*
+  Constructs the system
+
+     max    3x1 +  x2
+
+    -inf <= 2x1 +  x2 <= 10
+    -inf <=  x1 + 3x2 <= 15
+
+  The optimal solution is unbounded. Objective is then changed to
+
+     max     x1 +  x2
+
+  which has a bounded optimum at x1 = 3, x2 = 4.
+*/
+
 bool test5VivianDeSmedt(OsiSolverInterface *s)
 {
 	bool ret = true;
@@ -448,8 +463,22 @@ bool test5VivianDeSmedt(OsiSolverInterface *s)
 	s->setObjSense(-1);
 
 	s->writeMps("test");
+/*
+  Clp problem here --- if the call to initialSolve() is changed to resolve(),
+  Clp comes up with the correct answer.
 
-	s->resolve();
+  #ifdef COIN_USE_CLP
+    bool ClpSolverInterface = false ;
+    const OsiClpSolverInterface * si =
+      dynamic_cast<const OsiClpSolverInterface *>(s);
+    if ( si != NULL ) ClpSolverInterface = true;
+  #endif
+
+	if (ClpSolverInterface)
+	  s->resolve() ;
+	else
+*/
+	  s->initialSolve();
 
 	ret = ret && !s->isProvenOptimal();
 	ret = ret && !s->isProvenPrimalInfeasible();
@@ -501,7 +530,7 @@ bool test6VivianDeSmedt(OsiSolverInterface *s)
 
 	s->writeMps("test");
 
-	s->resolve();
+	s->initialSolve();
 
 	ret = ret && s->isProvenOptimal();
 	ret = ret && !s->isProvenPrimalInfeasible();
@@ -559,7 +588,7 @@ bool test7VivianDeSmedt(OsiSolverInterface *s)
 
 	s->writeMps("test");
 
-	s->resolve();
+	s->initialSolve();
 
 	ret = ret && !s->isProvenOptimal();
 	ret = ret && s->isProvenPrimalInfeasible();
@@ -602,7 +631,7 @@ bool test8VivianDeSmedt(OsiSolverInterface *s)
 
 	s->writeMps("test");
 
-	s->resolve();
+	s->initialSolve();
 
 	ret = ret && s->isProvenOptimal();
 	ret = ret && !s->isProvenPrimalInfeasible();
@@ -664,7 +693,7 @@ bool test9VivianDeSmedt(OsiSolverInterface *s)
 
 	s->writeMps("test");
 
-	s->resolve();
+	s->initialSolve();
 
 	ret = ret && s->isProvenOptimal();
 	ret = ret && !s->isProvenPrimalInfeasible();
@@ -720,7 +749,7 @@ bool test10VivianDeSmedt(OsiSolverInterface *s)
 
 	s->writeMps("test");
 
-	s->resolve();
+	s->initialSolve();
 
 	ret = ret && s->isProvenOptimal();
 	ret = ret && !s->isProvenPrimalInfeasible();
@@ -774,7 +803,7 @@ bool test11VivianDeSmedt(OsiSolverInterface *s)
 
 	s->writeMps("test");
 
-	s->resolve();
+	s->initialSolve();
 
 	ret = ret && s->isProvenOptimal();
 	ret = ret && !s->isProvenPrimalInfeasible();
@@ -861,7 +890,7 @@ bool test12VivianDeSmedt(OsiSolverInterface *s)
 
 	s->setObjSense(-1);
 
-	s->resolve();
+	s->initialSolve();
 
 	ret = ret && s->isProvenOptimal();
 	ret = ret && !s->isProvenPrimalInfeasible();
@@ -946,7 +975,7 @@ bool test13VivianDeSmedt(OsiSolverInterface *s)
 
 	s->setObjSense(-1);
 
-	s->resolve();
+	s->initialSolve();
 
 	ret = ret && s->isProvenOptimal();
 	ret = ret && !s->isProvenPrimalInfeasible();
@@ -1003,7 +1032,7 @@ bool test14VivianDeSmedt(OsiSolverInterface *s)
 
 	s->writeMps("test");
 
-	s->resolve();
+	s->initialSolve();
 
 	ret = ret && s->isProvenOptimal();
 	ret = ret && !s->isProvenPrimalInfeasible();
@@ -1060,7 +1089,7 @@ bool test15VivianDeSmedt(OsiSolverInterface *s)
 
 	s->writeMps("test");
 
-	s->resolve();
+	s->initialSolve();
 
 	ret = ret && s->isProvenOptimal();
 	ret = ret && !s->isProvenPrimalInfeasible();
@@ -1573,6 +1602,38 @@ static bool testHintParam(OsiSolverInterface * si, int k, bool val,
 //#############################################################################
 //#############################################################################
 
+CoinPackedMatrix &BuildExmip1Mtx ()
+/*
+  Simple function to build a packed matrix for the exmip1 example used in
+  tests. The function exists solely to hide the intermediate variables.
+  Probably could be written as an initialised declaration.
+  See COIN/Mps/Samples/exmip1.mps for a human-readable presentation.
+
+  Ordered triples seem easiest. They're listed in row-major order.
+*/
+
+{ int rowndxs[] = { 0, 0, 0, 0, 0,
+		    1, 1,
+		    2, 2,
+		    3, 3,
+		    4, 4, 4 } ;
+  int colndxs[] = { 0, 1, 3, 4, 7,
+		    1, 2,
+		    2, 5,
+		    3, 6,
+		    0, 4, 7 } ;
+  double coeffs[] = { 3.0, 1.0, -2.0, -1.0, -1.0,
+		      2.0, 1.1,
+		      1.0, 1.0,
+		      2.8, -1.2,
+		      5.6, 1.0, 1.9 } ;
+
+  static CoinPackedMatrix exmip1mtx =
+    CoinPackedMatrix(true,&rowndxs[0],&colndxs[0],&coeffs[0],14) ;
+
+  return (exmip1mtx) ; }
+
+
 void
 OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 				 const std::string & mpsDir, 
@@ -1581,7 +1642,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   
   int i;
   CoinRelFltEq eq;
-  
+
   std::string fn = mpsDir+"exmip1";
   OsiSolverInterface * exmip1Si = emptySi->clone(); 
   exmip1Si->readMps(fn.c_str(),"mps");
@@ -1687,8 +1748,9 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   
   
   // Test that problem was loaded correctly
-  {
-    const char   * exmip1Sirs  = exmip1Si->getRowSense();
+
+  { const char   * exmip1Sirs  = exmip1Si->getRowSense();
+
     assert( exmip1Sirs[0]=='G' );
     assert( exmip1Sirs[1]=='L' );
     assert( exmip1Sirs[2]=='E' );
@@ -1708,55 +1770,15 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     assert( eq(exmip1Sirr[2],0.0) );
     assert( eq(exmip1Sirr[3],5.0-1.8) );
     assert( eq(exmip1Sirr[4],15.0-3.0) );
-    
+
+    CoinPackedMatrix goldmtx ;
+    goldmtx.reverseOrderedCopyOf(BuildExmip1Mtx()) ;
     CoinPackedMatrix pm;
     pm.setExtraGap(0.0);
     pm.setExtraMajor(0.0);
     pm = *exmip1Si->getMatrixByRow();
     pm.removeGaps();
-    
-    const double * ev = pm.getElements();
-    assert( eq(ev[0],   3.0) );
-    assert( eq(ev[1],   1.0) );
-    assert( eq(ev[2],  -2.0) );
-    assert( eq(ev[3],  -1.0) );
-    assert( eq(ev[4],  -1.0) );
-    assert( eq(ev[5],   2.0) );
-    assert( eq(ev[6],   1.1) );
-    assert( eq(ev[7],   1.0) );
-    assert( eq(ev[8],   1.0) );
-    assert( eq(ev[9],   2.8) );
-    assert( eq(ev[10], -1.2) );
-    assert( eq(ev[11],  5.6) );
-    assert( eq(ev[12],  1.0) );
-    assert( eq(ev[13],  1.9) );
-    
-    const int * mi = pm.getVectorStarts();
-    assert( mi[0]==0 );
-    assert( mi[1]==5 );
-    assert( mi[2]==7 );
-    assert( mi[3]==9 );
-    assert( mi[4]==11 );
-    assert( mi[5]==14 );
-    
-    const int * ei = pm.getIndices();
-    assert( ei[0]  ==  0 );
-    assert( ei[1]  ==  1 );
-    assert( ei[2]  ==  3 );
-    assert( ei[3]  ==  4 );
-    assert( ei[4]  ==  7 );
-    assert( ei[5]  ==  1 );
-    assert( ei[6]  ==  2 );
-    assert( ei[7]  ==  2 );
-    assert( ei[8]  ==  5 );
-    assert( ei[9]  ==  3 );
-    assert( ei[10] ==  6 );
-    assert( ei[11] ==  0 );
-    assert( ei[12] ==  4 );
-    assert( ei[13] ==  7 );    
-    
-    assert( pm.getMajorDim() == 5 ); 
-    assert( pm.getNumElements() == 14 );
+    assert(goldmtx.isEquivalent(pm)) ;
     
     int nc = exmip1Si->getNumCols();
     int nr = exmip1Si->getNumRows();
@@ -1805,8 +1827,10 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       // colSol is unreasonable.
       if( !(cl[c]<=cs[c] && cs[c]<=cu[c]) ) okColSol=false;
       // if at least one column bound is not infinite,
-      // then it is unreasonble to have colSol as infinite
-      if ( (cl[c]<inf || cu[c]<inf) && cs[c]>=inf ) okColSol=false;
+      // then it is unreasonable to have colSol as infinite
+      // FIXME: temporarily commented out pending some group thought on the
+      //	semantics of this test. -- lh, 03.04.29 --
+      // if ( (cl[c]<inf || cu[c]<inf) && cs[c]>=inf ) okColSol=false;
     }
     if( !okColSol )
       failureMessage(solverName,"getColSolution before solve");
@@ -1834,65 +1858,14 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   
   // Test matrixByCol method
   {
+    CoinPackedMatrix &goldmtx = BuildExmip1Mtx() ;
     OsiSolverInterface & si = *exmip1Si->clone();
     CoinPackedMatrix sm = *si.getMatrixByCol();
     sm.removeGaps();
-    
-    CoinRelFltEq eq;
-    bool getElementsOK = true;
-    const double * ev = sm.getElements();
-    if( !eq(ev[0],   3.0) )getElementsOK = false;
-    if( !eq(ev[1],   5.6) )getElementsOK = false;
-    if( !eq(ev[2],   1.0) )getElementsOK = false;
-    if( !eq(ev[3],   2.0) )getElementsOK = false;
-    if( !eq(ev[4],   1.1) )getElementsOK = false;
-    if( !eq(ev[5],   1.0) )getElementsOK = false;
-    if( !eq(ev[6],  -2.0) )getElementsOK = false;
-    if( !eq(ev[7],   2.8) )getElementsOK = false;
-    if( !eq(ev[8],  -1.0) )getElementsOK = false;
-    if( !eq(ev[9],   1.0) )getElementsOK = false;
-    if( !eq(ev[10],  1.0) )getElementsOK = false;
-    if( !eq(ev[11], -1.2) )getElementsOK = false;
-    if( !eq(ev[12], -1.0) )getElementsOK = false;
-    if( !eq(ev[13],  1.9) )getElementsOK = false;
-    if ( !getElementsOK )         
-      failureMessage(solverName,"getMatrixByCol()->getElements()");
-    
-    const int * mi = sm.getVectorStarts();
-    assert( mi[0]==0 );
-    assert( mi[1]==2 );
-    assert( mi[2]==4 );
-    assert( mi[3]==6 );
-    assert( mi[4]==8 );
-    assert( mi[5]==10 );
-    assert( mi[6]==11 );
-    assert( mi[7]==12 );
-    assert( mi[8]==14 );
-    
-    bool getIndicesOK = true;
-    const int * ei = sm.getIndices();
-    if( ei[0]  !=  0 )getIndicesOK = false;
-    if( ei[1]  !=  4 )getIndicesOK = false;
-    if( ei[2]  !=  0 )getIndicesOK = false;
-    if( ei[3]  !=  1 )getIndicesOK = false;
-    if( ei[4]  !=  1 )getIndicesOK = false;
-    if( ei[5]  !=  2 )getIndicesOK = false;
-    if( ei[6]  !=  0 )getIndicesOK = false;
-    if( ei[7]  !=  3 )getIndicesOK = false;
-    if( ei[8]  !=  0 )getIndicesOK = false;
-    if( ei[9]  !=  4 )getIndicesOK = false;
-    if( ei[10] !=  2 )getIndicesOK = false;
-    if( ei[11] !=  3 )getIndicesOK = false;
-    if( ei[12] !=  0 )getIndicesOK = false;
-    if( ei[13] !=  4 )getIndicesOK = false;  
-    if ( !getIndicesOK )         
-      failureMessage(solverName,"getMatrixByCol()->getIndices()");  
-    
-    if( sm.getMajorDim() == 8 ); 
-    if( sm.getNumElements() == 14 );
-    
-    if( sm.getSizeVectorStarts()==9 );
-    if( sm.getMinorDim() == 5 ); 
+    bool getByColOK = goldmtx.isEquivalent(sm) ;
+
+    if (!getByColOK)
+      failureMessage(solverName,"getMatrixByCol()") ;
     
     // Test getting and setting of objective offset
     double objOffset;
@@ -1907,8 +1880,8 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     delete &si;
   }
    
-    // Test clone
-    {
+  // Test clone
+  {
     OsiSolverInterface * si2;  
     int ad = 13579;
     {
@@ -1944,53 +1917,13 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     assert( eq(exmip1Sirr[3],5.0-1.8) );
     assert( eq(exmip1Sirr[4],15.0-3.0) );
     
+    CoinPackedMatrix goldmtx ;
+    goldmtx.reverseOrderedCopyOf(BuildExmip1Mtx()) ;
     CoinPackedMatrix pm;
     pm.setExtraGap(0.0);
     pm.setExtraMajor(0.0);
     pm = *si2->getMatrixByRow();
-    
-    const double * ev = pm.getElements();
-    assert( eq(ev[0],   3.0) );
-    assert( eq(ev[1],   1.0) );
-    assert( eq(ev[2],  -2.0) );
-    assert( eq(ev[3],  -1.0) );
-    assert( eq(ev[4],  -1.0) );
-    assert( eq(ev[5],   2.0) );
-    assert( eq(ev[6],   1.1) );
-    assert( eq(ev[7],   1.0) );
-    assert( eq(ev[8],   1.0) );
-    assert( eq(ev[9],   2.8) );
-    assert( eq(ev[10], -1.2) );
-    assert( eq(ev[11],  5.6) );
-    assert( eq(ev[12],  1.0) );
-    assert( eq(ev[13],  1.9) );
-    
-    const int * mi = pm.getVectorStarts();
-    assert( mi[0]==0 );
-    assert( mi[1]==5 );
-    assert( mi[2]==7 );
-    assert( mi[3]==9 );
-    assert( mi[4]==11 );
-    assert( mi[5]==14 );
-    
-    const int * ei = pm.getIndices();
-    assert( ei[0]  ==  0 );
-    assert( ei[1]  ==  1 );
-    assert( ei[2]  ==  3 );
-    assert( ei[3]  ==  4 );
-    assert( ei[4]  ==  7 );
-    assert( ei[5]  ==  1 );
-    assert( ei[6]  ==  2 );
-    assert( ei[7]  ==  2 );
-    assert( ei[8]  ==  5 );
-    assert( ei[9]  ==  3 );
-    assert( ei[10] ==  6 );
-    assert( ei[11] ==  0 );
-    assert( ei[12] ==  4 );
-    assert( ei[13] ==  7 );    
-    
-    assert( pm.getMajorDim() == 5 ); 
-    assert( pm.getNumElements() == 14 );
+    assert(goldmtx.isEquivalent(pm)) ;
     
     int nc = si2->getNumCols();
     int nr = si2->getNumRows();
@@ -2039,8 +1972,10 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       // colSol is unreasonable.
       if( !(cl[c]<=cs[c] && cs[c]<=cu[c]) ) okColSol=false;
       // if at least one column bound is not infinite,
-      // then it is unreasonble to have colSol as infinite
-      if ( (cl[c]<inf || cu[c]<inf) && cs[c]>=inf ) okColSol=false;
+      // then it is unreasonable to have colSol as infinite
+      // FIXME: temporarily commented out pending some group thought on the
+      //	semantics of this test. -- lh, 03.04.29 --
+      // if ( (cl[c]<inf || cu[c]<inf) && cs[c]>=inf ) okColSol=false;
     }
     if( !okColSol )
       failureMessage(solverName,"getColSolution before solve on cloned solverInterface");
@@ -2214,11 +2149,8 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     
 
   // Test setting solution
-  if ( dylpSolverInterface ) {
-     // Test for dylp since it does not support this function
-     failureMessage(solverName,"setting solution is unsupported");
-  }
-  else if ( glpkSolverInterface ) {
+
+  if ( glpkSolverInterface ) {
      // Test for glpk since it does not support this function
      failureMessage(solverName,"setting solution is not yet implemented");
   }
@@ -2247,6 +2179,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   }
 
   // Test column type methods
+
   if ( volSolverInterface ) {
      // Test for vol since it does not support this function
      failureMessage(solverName,"column type methods all report continuous");
@@ -2281,11 +2214,8 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     assert( !fim.isIntegerNonBinary(4) );
     
     // Test fractionalIndices
-    if ( dylpSolverInterface ) {
-      // Test for dylp since it does not support setting column solution
-      failureMessage(solverName,"getFractionalIndices");
-    }
-    else if ( glpkSolverInterface ) {
+
+    if ( glpkSolverInterface ) {
       // Test for glpk since it does not support setting column solution
       failureMessage(solverName,"getFractionalIndices");
     }
@@ -2340,12 +2270,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     
   // Test load and assign problem
   {
-    
-    if ( dylpSolverInterface ) {
-      // Test for dylp since it does not support setting column solution
-      failureMessage(solverName,"Test load and assign problem");
-    }
-    else {   
+    {   
       OsiSolverInterface * base = exmip1Si->clone();
       OsiSolverInterface *  si1 = emptySi->clone(); 
       OsiSolverInterface *  si2 = emptySi->clone(); 
@@ -2862,11 +2787,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 
 	double objective[]={5.0,6.0,5.5};
 
-  // Test for dylp since it dies on this test
-  if ( dylpSolverInterface ) {
-     failureMessage(solverName,"addCol when columns are empty");
-  }
-  else {
+  {
 	  // Add empty columns
 	  for (i=0;i<3;i++) 
 	    si->addCol(CoinPackedVector(),0.0,10.0,objective[i]);
@@ -2904,11 +2825,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 	CoinPackedVector col3(2,row,col3E);
 
 	double objective[]={5.0,6.0,5.5};
-
-  if ( dylpSolverInterface ) {
-    failureMessage(solverName,"addCol add columns to null");
-  }
-  else {
+  {
 	  // Add empty rows
 	  for (i=0;i<2;i++) 
 	    si->addRow(CoinPackedVector(),2.0,100.0);
@@ -3104,11 +3021,10 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     delete si;
   }
   
-  // Test case submitted by Vivian De Smedt (slightly modifed to work with Vol Algorithm).
-  if ( dylpSolverInterface ) {
-    failureMessage(solverName,"Vivian De Smedt testcase problem on addCol call");
-  }
-  else if ( glpkSolverInterface ) {
+  // Test case submitted by Vivian De Smedt (slightly modifed to work with
+  // Vol Algorithm).
+
+  if ( glpkSolverInterface ) {
     failureMessage(solverName,"Vivian De Smedt testcase problem on loadProblem call");
   }
   else {
@@ -3135,8 +3051,8 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     s->addRow(r2, -inf, 15);
     
     s->setObjSense(-1);
-    
-    s->resolve();
+
+    s->initialSolve() ;
     const double * colSol = s->getColSolution();
     // Don't test for exact answer, because Vol algorithm
     // only returns an appoximate solution
@@ -3181,8 +3097,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     for (i = 0; i < test_functions.size(); ++i) {	
       OsiSolverInterface *s = emptySi->clone();
       const char * testName = test_functions[i].second;
-      if ( dylpSolverInterface ) failureMessage(*s, testName);
-      else {
+      {
         bool test = test_functions[i].first(s);
         if (!test)
           failureMessage(*s, testName);
@@ -3191,6 +3106,9 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     }
   }
   /*
+    Orphan comment? If anyone happens to poke at the code that this belongs
+    to, move it. 
+
     With this matrix we have a primal/dual infeas problem. Leaving the first
     row makes it primal feas, leaving the first col makes it dual feas.
     All vars are >= 0

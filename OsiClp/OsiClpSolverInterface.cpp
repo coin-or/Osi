@@ -36,6 +36,8 @@ void OsiClpSolverInterface::initialSolve()
     disableSimplexInterface();
     solver.setSolveType(1);
   }
+  int saveOptions = solver.specialOptions();
+  solver.setSpecialOptions(saveOptions|64); // go as far as possible
   // Set message handler to have same levels etc
   solver.passInMessageHandler(handler_);
   // set reasonable defaults
@@ -197,6 +199,7 @@ void OsiClpSolverInterface::initialSolve()
   //basis_.print();
   solver.messageHandler()->setLogLevel(saveMessageLevel);
   const double * rowScale2 = solver.rowScale();
+  solver.setSpecialOptions(saveOptions);
   if (!rowScale1&&rowScale2) {
     // need to release memory
     solver.setRowScale(NULL);

@@ -1140,7 +1140,8 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     double * binvA = (double*) malloc((n_cols+n_rows) * sizeof(double));
     
     printf("B-1 A");
-    for(int i = 0; i < n_rows; i++){
+    int i;
+    for( i = 0; i < n_rows; i++){
       m.getBInvARow(i, binvA,binvA+n_cols);
       printf("\nrow: %d -> ",i);
       for(int j=0; j < n_cols+n_rows; j++){
@@ -1149,7 +1150,7 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     }
     printf("\n");
     printf("And by column");
-    for(int i = 0; i < n_cols+n_rows; i++){
+    for( i = 0; i < n_cols+n_rows; i++){
       m.getBInvACol(i, binvA);
       printf("\ncolumn: %d -> ",i);
       for(int j=0; j < n_rows; j++){
@@ -1205,7 +1206,8 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     m.getBasics(pivots);
     
     printf("B-1 A");
-    for(int i = 0; i < n_rows; i++){
+    int i;
+    for( i = 0; i < n_rows; i++){
       m.getBInvARow(i, binvA,binvA+n_cols);
       printf("\nrow: %d (pivot %d) -> ",i,pivots[i]);
       for(int j=0; j < n_cols+n_rows; j++){
@@ -1214,7 +1216,7 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     }
     printf("\n");
     printf("And by column");
-    for(int i = 0; i < n_cols+n_rows; i++){
+    for( i = 0; i < n_cols+n_rows; i++){
       m.getBInvACol(i, binvA);
       printf("\ncolumn: %d -> ",i);
       for(int j=0; j < n_rows; j++){

@@ -91,6 +91,9 @@ public:
   /// Deletes columns
   void deleteColumns(int number, const int * which);
 
+  /// Prints in readable format (for debug)
+  void print() const;
+
 private:
   ///@name Private data members
   //@{

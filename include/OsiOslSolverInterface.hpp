@@ -39,6 +39,11 @@ public:
     /// Invoke solver's built-in enumeration algorithm
     virtual void branchAndBound();
   //@}
+#if 1
+    /** Read an mps file from the given filename */
+    virtual int readMps(const char *filename,
+			 const char *extension = "mps");
+#endif
   
   //---------------------------------------------------------------------------
   /**@name Parameter set/get methods

@@ -10,7 +10,6 @@
 #include <cfloat>
 
 #include "OsiMpsReader.hpp"
-
 #include <math.h>
 #include <string>
 #include <stdio.h>
@@ -43,7 +42,109 @@ enum OSIMpsType { OSI_N_ROW, OSI_E_ROW, OSI_L_ROW, OSI_G_ROW,
   OSI_MI_BOUND, OSI_PL_BOUND, OSI_BV_BOUND, OSI_UI_BOUND,
   OSI_SC_BOUND, OSI_UNKNOWN_MPS_TYPE
 };
+static double osi_strtod(char * ptr, char ** output) 
+{
 
+  static const double fraction[]=
+  {1.0,1.0e-1,1.0e-2,1.0e-3,1.0e-4,1.0e-5,1.0e-6,1.0e-7,1.0e-8,
+   1.0e-9,1.0e-10,1.0e-11,1.0e-12,1.0e-13,1.0e-14,1.0e-15,1.0e-16,
+   1.0e-17,1.0e-18,1.0e-19};
+
+  static const double exponent[]=
+  {1.0e-9,1.0e-8,1.0e-7,1.0e-6,1.0e-5,1.0e-4,1.0e-3,1.0e-2,1.0e-1,
+   1.0,1.0e1,1.0e2,1.0e3,1.0e4,1.0e5,1.0e6,1.0e7,1.0e8,1.0e9};
+
+  double value = 0.0;
+  char * save = ptr;
+
+  // take off leading white space
+  while (*ptr==' '||*ptr=='\t')
+    ptr++;
+  double sign1=1.0;
+  // do + or -
+  if (*ptr=='-') {
+    sign1=-1.0;
+    ptr++;
+  } else if (*ptr=='+') {
+    ptr++;
+  }
+  // more white space
+  while (*ptr==' '||*ptr=='\t')
+    ptr++;
+  char thisChar=0;
+  while (value<1.0e30) {
+    thisChar = *ptr;
+    ptr++;
+    if (thisChar>='0'&&thisChar<='9') 
+      value = value*10.0+thisChar-'0';
+    else
+      break;
+  }
+  if (value<1.0e30) {
+    if (thisChar=='.') {
+      // do fraction
+      double value2 = 0.0;
+      int nfrac=0;
+      while (nfrac<20) {
+	thisChar = *ptr;
+	ptr++;
+	if (thisChar>='0'&&thisChar<='9') {
+	  value2 = value2*10.0+thisChar-'0';
+	  nfrac++;
+	} else {
+	  break;
+	}
+      }
+      if (nfrac<20) {
+	value += value2*fraction[nfrac];
+      } else {
+	thisChar='x'; // force error
+      }
+    }
+    if (thisChar=='e'||thisChar=='E') {
+      // exponent
+      int sign2=1;
+      // do + or -
+      if (*ptr=='-') {
+	sign2=-1;
+	ptr++;
+      } else if (*ptr=='+') {
+	ptr++;
+      }
+      int value3 = 0;
+      while (value3<100) {
+	thisChar = *ptr;
+	ptr++;
+	if (thisChar>='0'&&thisChar<='9') {
+	  value3 = value3*10+thisChar-'0';
+	} else {
+	  break;
+	}
+      }
+      if (value3<200) {
+	value3 *= sign2; // power of 10
+	if (abs(value3)<10) {
+	  // do most common by lookup (for accuracy?)
+	  value *= exponent[value3+9];
+	} else {
+	  value *= pow(10.0,value3);
+	}
+      } else {
+	thisChar='x'; // force error
+      }
+    } 
+    if (thisChar==0||thisChar=='\t'||thisChar==' ') {
+      // okay
+      *output=ptr;
+    } else {
+      *output=save;
+    }
+  } else {
+    // bad value
+    *output=save;
+  }
+  return value*sign1;
+} 
 /// Very simple code for reading MPS data
 class OSIMpsio {
 
@@ -71,8 +172,8 @@ public:
   inline OSIMpsType mpsType (  ) const {
     return mpsType_;
   };
-  /// Cleans card - taking out trailing blanks
-  void cleanCard();
+  /// Reads and cleans card - taking out trailing blanks - return 1 if EOF
+  int cleanCard();
   /// Returns row name of current field
   inline const char *rowName (  ) const {
     return rowName_;
@@ -100,6 +201,8 @@ private:
 
   /**@name data */
   //@{
+  /// Current value
+  double value_;
   /// Current card image
   char card_[MAX_CARD_LENGTH];
   /// Current position within card image
@@ -112,8 +215,6 @@ private:
   char rowName_[MAX_FIELD_LENGTH];
   /// Current column name
   char columnName_[MAX_FIELD_LENGTH];
-  /// Current value
-  double value_;
   /// File pointer
   FILE *fp_;
   /// Which section we think we are in
@@ -163,20 +264,28 @@ const static char *mpsTypes[] = {
   "  ", "UP", "FX", "LO", "FR", "MI", "PL", "BV", "UI", "SC"
 };
 
-void OSIMpsio::cleanCard()
+int OSIMpsio::cleanCard()
 {
-  cardNumber_++;
-  char * lastNonBlank = card_-1;
-  char * image = card_;
-  while ( *image != '\0' ) {
-    if ( *image != '\t' && *image < ' ' ) {
-      break;
-    } else if ( *image != '\t' && *image != ' ') {
-      lastNonBlank = image;
+  //memset ( card_, 0, MAX_CARD_LENGTH );
+  char *getit = fgets ( card_, MAX_CARD_LENGTH, fp_ );
+  
+  if ( getit ) {
+    cardNumber_++;
+    char * lastNonBlank = card_-1;
+    char * image = card_;
+    while ( *image != '\0' ) {
+      if ( *image != '\t' && *image < ' ' ) {
+	break;
+      } else if ( *image != '\t' && *image != ' ') {
+	lastNonBlank = image;
+      }
+      image++;
     }
-    image++;
+    *(lastNonBlank+1)='\0';
+    return 0;
+  } else {
+    return 1;
   }
-  *(lastNonBlank+1)='\0';
 }
 
 char *
@@ -214,14 +323,11 @@ OSIMpsio::OSIMpsio (  FILE * fp )
 
   while ( !found ) {
     // need new image
-    char *getit = fgets ( card_, MAX_CARD_LENGTH, fp_ );
 
-    if ( !getit ) {
+    if ( cleanCard() ) {
       section_ = OSI_EOF_SECTION;
       break;
     }
-    // strip off newline etc
-    cleanCard();
     if ( !strncmp ( card_, "NAME", 4 ) ) {
       section_ = OSI_NAME_SECTION;
       char *next = card_ + 4;
@@ -307,13 +413,10 @@ OSIMpsio::nextField (  )
   }
   while ( !gotCard ) {
     // need new image
-    char *getit = fgets ( card_, MAX_CARD_LENGTH, fp_ );
 
-    if ( !getit ) {
+    if ( cleanCard() ) {
       return OSI_EOF_SECTION;
     }
-    // strip off newline
-    cleanCard();
     if ( card_[0] == ' ' ) {
       // not a section or comment
       position_ = card_;
@@ -491,10 +594,10 @@ OSIMpsio::nextField (  )
 		  save = *nextBlank;
 		  *nextBlank = '\0';
 		}
-		value_ = -1.0e100;
-		sscanf ( next, "%lg", &value_ );
-		//may have to allow some extra formats
-		assert ( value_ > -1.0e50 );
+		char * after;
+		value_ = osi_strtod(next,&after);
+		// see if error
+		assert(after>next);
 		if ( nextBlank ) {
 		  *nextBlank = save;
 		  position_ = nextBlank;
@@ -554,9 +657,10 @@ OSIMpsio::nextField (  )
 	      save = *nextBlank;
 	      *nextBlank = '\0';
 	    }
-	    sscanf ( next, "%lg", &value_ );
-	    //may have to allow some extra formats
-	    assert ( value_ > -1.0e50 );
+	    char * after;
+	    value_ = osi_strtod(next,&after);
+	    // see if error
+	    assert(after>next);
 	    if ( nextBlank ) {
 	      *nextBlank = save;
 	      position_ = nextBlank;
@@ -636,10 +740,11 @@ OSIMpsio::nextField (  )
       save = *nextBlank;
       *nextBlank = '\0';
     }
-    value_ = -1.0e100;
-    sscanf ( next, "%lg", &value_ );
-    //may have to allow some extra formats
-    assert ( value_ > -1.0e50 );
+    //value_ = -1.0e100;
+    char * after;
+    value_ = osi_strtod(next,&after);
+    // see if error
+    assert(after>next);
     if ( nextBlank ) {
       *nextBlank = save;
       position_ = nextBlank;
@@ -1080,13 +1185,14 @@ int OsiMpsReader::readMps()
 
 	    for ( i = k; i < numberElements_; i++ ) {
 	      OSIRowIndex irow = row[i];
-
+#if 0
 	      if ( fabs ( element[i] ) > tinyElement ) {
 		element[k++] = element[i];
 	      }
+#endif
 	      rowUsed[irow] = -1;
 	    }
-	    numberElements_ = k;
+	    //numberElements_ = k;
 	  }
 	  column = numberColumns_;
 	  if ( numberColumns_ == maxColumns ) {

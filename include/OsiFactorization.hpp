@@ -78,17 +78,6 @@ public:
   int factorize ( const OsiPackedMatrix & matrix, 
 		  int rowIsBasic[], int columnIsBasic[] , 
 		  double areaFactor = 0.0 );
-  /** Same but with OsiPackedMatrix components split out and
-      allows scaling */
-  int factorize ( int numberRows, int numberColumns,
-		  const OsiBigIndex * columnStart,
-		  const int * columnLength,
-		  const int * row,
-		  const double * element,
-		  int rowIsBasic[], int columnIsBasic[] , 
-		  double areaFactor = 0.0 ,
-		  double * rowScale = NULL,
-		  double * columnScale = NULL);
   /** When given as triplets.
   Actually does factorization.  maximumL is guessed maximum size of L part of
   final factorization, maximumU of U part.  These are multiplied by
@@ -392,7 +381,7 @@ public:
 		      int indicesColumn[], double elements[] );
   //@}
 
-private:
+protected:
 
   /**@name used by factorization */
   /// Gets space for a factorization, called by constructors
@@ -997,7 +986,7 @@ private:
   /********************************* END LARGE TEMPLATE ********/
   //@}
 ////////////////// data //////////////////
-private:
+protected:
 
   /**@name data */
   //@{

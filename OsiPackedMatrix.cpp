@@ -15,6 +15,7 @@
 #include "CoinHelperFunctions.hpp"
 #include "OsiPackedVectorBase.hpp"
 #include "OsiPackedMatrix.hpp"
+#include <stdio.h>
 
 //#############################################################################
 
@@ -1730,4 +1731,58 @@ OsiPackedMatrix::dumpMatrix(const char* fname) const
     fprintf(out, "\nFinished dumping matrix\n");
     fclose(out);
   }
+}
+bool 
+OsiPackedMatrix::isEquivalent2(const OsiPackedMatrix& rhs) const
+{
+  OsiRelFltEq eq;
+  // Both must be column order or both row ordered and must be of same size
+  if (isColOrdered() ^ rhs.isColOrdered()) {
+    std::cerr<<"Ordering "<<isColOrdered()<<
+      " rhs - "<<rhs.isColOrdered()<<std::endl;
+    return false;
+  }
+  if (getNumCols() != rhs.getNumCols()) {
+    std::cerr<<"NumCols "<<getNumCols()<<
+      " rhs - "<<rhs.getNumCols()<<std::endl;
+    return false;
+  }
+  if  (getNumRows() != rhs.getNumRows()) {
+    std::cerr<<"NumRows "<<getNumRows()<<
+      " rhs - "<<rhs.getNumRows()<<std::endl;
+    return false;
+  }
+  if  (getNumElements() != rhs.getNumElements()) {
+    std::cerr<<"NumElements "<<getNumElements()<<
+      " rhs - "<<rhs.getNumElements()<<std::endl;
+    return false;
+  }
+  
+  for (int i=getMajorDim()-1; i >= 0; --i) {
+    OsiShallowPackedVector pv = getVector(i);
+    OsiShallowPackedVector rhsPv = rhs.getVector(i);
+    if ( !pv.isEquivalent(rhsPv,eq) ) {
+      std::cerr<<"vector # "<<i<<" nel "<<pv.getNumElements()<<
+      " rhs - "<<rhsPv.getNumElements()<<std::endl;
+      int j;
+      const int * inds = pv.getIndices();
+      const double * elems = pv.getElements();
+      const int * inds2 = rhsPv.getIndices();
+      const double * elems2 = rhsPv.getElements();
+      for ( j = 0 ;j < pv.getNumElements() ;  ++j) {
+	double diff = elems[j]-elems2[j];
+	if (diff) {
+	  std::cerr<<j<<"( "<<inds[j]<<", "<<elems[j]<<"), rhs ( "<<
+	    inds2[j]<<", "<<elems2[j]<<") diff "<<
+	    diff<<std::endl;
+	  const int * xx = (const int *) (elems+j);
+	  printf("%x %x",xx[0],xx[1]);
+	  xx = (const int *) (elems2+j);
+	  printf(" %x %x\n",xx[0],xx[1]);
+	}
+      }
+      //return false;
+    }
+  }
+  return true;
 }

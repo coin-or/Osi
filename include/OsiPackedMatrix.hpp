@@ -464,6 +464,7 @@ public:
    {
       return isEquivalent(rhs,  OsiRelFltEq());
    }
+  bool isEquivalent2(const OsiPackedMatrix& rhs) const;
    //@}
 
    //--------------------------------------------------------------------------

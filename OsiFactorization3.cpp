@@ -877,7 +877,10 @@ OsiFactorization::updateColumnTransposeU ( OsiIndexedVector * regionSparse) cons
             kPivot=indexColumn[j];
             /* put back on stack */
             next[nStack++] --;
-            if (!mark[kPivot]) {
+	    // could have been zapped - if so ignore
+	    OsiBigIndex getElement = convertRowToColumn[j];
+	    double value = element[getElement];
+            if (value&&!mark[kPivot]) {
               /* and new one */
               stack[nStack]=kPivot;
 	      mark[kPivot]=2;

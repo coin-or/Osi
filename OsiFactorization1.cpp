@@ -334,146 +334,6 @@ int OsiFactorization::factorize (
 
   return status_;
 }
-//Part of LP
-int OsiFactorization::factorize ( int numberRows, int numberColumns,
-				  const OsiBigIndex * columnStart,
-				  const int * columnLength,
-				  const int * row,
-				  const double * element,
-				  int rowIsBasic[],
-				  int columnIsBasic[],
-				  double areaFactor ,
-				  double * rowScale,
-				  double * columnScale)
-{
-  // maybe for speed will be better to leave as many regions as possible
-  gutsOfDestructor();
-  gutsOfInitialize(2);
-  if (areaFactor)
-    areaFactor_ = areaFactor;
-  int numberBasic = 0;
-  OsiBigIndex numberElements=0;
-  int numberRowBasic=0;
-
-  // compute how much in basis
-
-  int i;
-
-  for (i=0;i<numberRows;i++) {
-    if (rowIsBasic[i]>=0)
-      numberRowBasic++;
-  }
-
-  numberBasic = numberRowBasic;
-
-  for (i=0;i<numberColumns;i++) {
-    if (columnIsBasic[i]>=0) {
-      numberBasic++;
-      numberElements += columnLength[i];
-    }
-  }
-  if ( numberBasic > numberRows ) {
-    return -2; // say too many in basis
-  }				
-  numberElements = 3 * numberBasic + 3 * numberElements + 10000;
-  getAreas ( numberRows, numberBasic, numberElements,
-	     2 * numberElements );
-  //fill
-  //copy
-  numberBasic=0;
-  numberElements=0;
-  for (i=0;i<numberRows;i++) {
-    if (rowIsBasic[i]>=0) {
-      indexRowU_[numberElements]=i;
-      indexColumnU_[numberElements]=numberBasic;
-      elementU_[numberElements++]=slackValue_;
-      numberBasic++;
-    }
-  }
-  if (!rowScale) {
-    // no scaling
-    for (i=0;i<numberColumns;i++) {
-      if (columnIsBasic[i]>=0) {
-	int j;
-	for (j=columnStart[i];j<columnStart[i]+columnLength[i];j++) {
-	  indexRowU_[numberElements]=row[j];
-	  indexColumnU_[numberElements]=numberBasic;
-	  elementU_[numberElements++]=element[j];
-	}
-	numberBasic++;
-      }
-    }
-  } else {
-    // scaling
-    for (i=0;i<numberColumns;i++) {
-      if (columnIsBasic[i]>=0) {
-	int j;
-	double scale = columnScale[i];
-	for (j=columnStart[i];j<columnStart[i]+columnLength[i];j++) {
-	  int iRow = row[j];
-	  indexRowU_[numberElements]=iRow;
-	  indexColumnU_[numberElements]=numberBasic;
-	  elementU_[numberElements++]=element[j]*scale*rowScale[iRow];
-	}
-	numberBasic++;
-      }
-    }
-  }
-  lengthU_ = numberElements;
-
-  preProcess ( 0 );
-  factor (  );
-  numberBasic=0;
-  if (status_ == 0) {
-    int * permuteBack = permuteBack_;
-    int * back = pivotColumnBack_;
-    for (i=0;i<numberRows;i++) {
-      if (rowIsBasic[i]>=0) {
-	rowIsBasic[i]=permuteBack[back[numberBasic++]];
-      }
-    }
-    for (i=0;i<numberColumns;i++) {
-      if (columnIsBasic[i]>=0) {
-	columnIsBasic[i]=permuteBack[back[numberBasic++]];
-      }
-    }
-    if (increasingRows_>1) {
-      // Set up permutation vector
-      if (increasingRows_<3) {
-	// these arrays start off as copies of permute
-	// (and we could use permute_ instead of pivotColumn (not back though))
-	CoinDisjointCopyN ( permute_, numberRows_ , pivotColumn_  );
-	CoinDisjointCopyN ( permuteBack_, numberRows_ , pivotColumnBack_  );
-      }
-    } else {
-      // Set up permutation vector
-      // (we could use permute_ instead of pivotColumn (not back though))
-      for (i=0;i<numberRows_;i++) {
-	int k=pivotColumn_[i];
-	pivotColumn_[i]=pivotColumnBack_[i];
-	pivotColumnBack_[i]=k;
-      }
-    }
-  } else if (status_ == -1) {
-    // mark as basic or non basic
-    for (i=0;i<numberRows_;i++) {
-      if (rowIsBasic[i]>=0) {
-	if (pivotColumn_[numberBasic]>=0) 
-	  rowIsBasic[i]=pivotColumn_[numberBasic];
-	numberBasic++;
-      }
-    }
-    for (i=0;i<numberColumns;i++) {
-      if (columnIsBasic[i]>=0) {
-	if (pivotColumn_[numberBasic]>=0) 
-	  columnIsBasic[i]=pivotColumn_[numberBasic];
-	numberBasic++;
-      }
-    }
-  }
-
-  return status_;
-}
 //Given as triplets
 int OsiFactorization::factorize (
 			     int numberOfRows,
@@ -951,10 +811,11 @@ OsiFactorization::factor (  )
 	}			
 	for ( i = 0; i < numberGoodU_; i++ ) {
 	  int goodRow = pivotRowL_[i];	//valid pivot row
-
+#ifdef OSI_DEBUG
 	  if ( i != nextRow_[goodRow] ) {
-	    std::cout << "bad1" << std::endl;
-	  }			
+	    std::cout << "bad1 OsiFactorization:factor" << std::endl;
+	  }	
+#endif		
 	  int goodColumn = pivotColumn_[i];
 
 	  lastRow_[goodRow] = goodColumn;	//will now have -1 or column sequence

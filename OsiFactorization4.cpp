@@ -649,6 +649,83 @@ int OsiFactorization::updateColumn ( OsiIndexedVector * regionSparse,
   regionSparse->setNumElements(0);
   return numberNonZero;
 }
+/* Updates one column (FTRAN) to/from array - no indices
+   This assumes user is thinking non-permuted
+   - returns un-permuted result in array.
+   region starts as zero and is zero at end */
+int OsiFactorization::updateColumn ( OsiIndexedVector * regionSparse,
+			double array[], //unpacked 
+			bool FTUpdate ) 
+{
+  //permute and move indices into index array
+  int *regionIndex = regionSparse->getIndices (  );
+  int numberNonZero=0;
+  int *permute = permute_;
+  double * region = regionSparse->denseVector();
+
+  int j;
+  for ( j = 0; j < numberRows_; j ++ ) {
+    if (array[j]) {
+      double value = array[j];
+      array[j]=0.0;
+      int iRow = permute[j];
+      region[iRow] = value;
+      regionIndex[numberNonZero++] = iRow;
+    }				
+  }
+  regionSparse->setNumElements ( numberNonZero );
+  // if no room will return negative
+  numberNonZero = updateColumn ( regionSparse, FTUpdate );
+  // permute back
+  int number = regionSparse->getNumElements();
+  int * permuteBack = pivotColumnBack_;
+  for ( j = 0; j < number; j ++ ) {
+    int iRow = regionIndex[j];
+    double value = region[iRow];
+    region[iRow]=0.0;
+    iRow = permuteBack[iRow];
+    array[iRow] = value;
+  }			
+  regionSparse->setNumElements(0);
+  return numberNonZero;
+}
+
+// const version
+int OsiFactorization::updateColumn ( OsiIndexedVector * regionSparse,
+			double array[] ) const
+{
+  //permute and move indices into index array
+  int *regionIndex = regionSparse->getIndices (  );
+  int numberNonZero=0;
+  int *permute = permute_;
+  double * region = regionSparse->denseVector();
+
+  int j;
+  for ( j = 0; j < numberRows_; j ++ ) {
+    if (array[j]) {
+      double value = array[j];
+      array[j]=0.0;
+      int iRow = permute[j];
+      region[iRow] = value;
+      regionIndex[numberNonZero++] = iRow;
+    }				
+  }
+  regionSparse->setNumElements ( numberNonZero );
+  // if no room will return negative
+  numberNonZero = updateColumn ( regionSparse );
+  // permute back
+  int number = regionSparse->getNumElements();
+  int * permuteBack = pivotColumnBack_;
+  for ( j = 0; j < number; j ++ ) {
+    int iRow = regionIndex[j];
+    double value = region[iRow];
+    region[iRow]=0.0;
+    iRow = permuteBack[iRow];
+    array[iRow] = value;
+  }			
+  regionSparse->setNumElements(0);
+  return numberNonZero;
+}
 //  makes a row copy of L
 void
 OsiFactorization::goSparse ( )

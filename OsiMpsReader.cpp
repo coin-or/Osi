@@ -6,10 +6,10 @@
 #endif
 
 #include <cassert>
+#include <cmath>
+#include <cfloat>
 
 #include "OsiMpsReader.hpp"
-const bool True = true;
-const bool False = false;
 
 #include <math.h>
 #include <string>
@@ -126,9 +126,6 @@ private:
   bool eightChar_;
   //@}
 };
-#include "OsiCuts.hpp"
-#include "OsiRowCut.hpp"
-#include "OsiColCut.hpp"
 
 //#############################################################################
 // sections
@@ -1767,7 +1764,7 @@ const double * OsiMpsReader::getRowUpper() const
   return rowupper_;
 }
  
-/** A quick inlined function to convert from lb/ub stryle constraint
+/** A quick inlined function to convert from lb/ub style constraint
     definition to sense/rhs/range style */
 inline void
 OsiMpsReader::convertBoundToSense(const double lower, const double upper,

@@ -561,6 +561,13 @@ OsiFactorization::updateColumnTranspose ( OsiIndexedVector * regionSparse,
   int j;
   int iRow;
   if (increasingRows_ > 2) {
+    for ( j = 0; j < number; j ++ ) {
+      iRow = index[j];
+      double value = vector[iRow];
+      vector[iRow]=0.0;
+      region[iRow] = value;
+      regionIndex[j] = iRow;
+    } 
   } else {
     for ( j = 0; j < number; j ++ ) {
       iRow = index[j];
@@ -573,7 +580,15 @@ OsiFactorization::updateColumnTranspose ( OsiIndexedVector * regionSparse,
   }
   regionSparse->setNumElements ( numberNonZero );
   number =  updateColumnTranspose ( regionSparse );
-  if (increasingRows_ < 3) {
+  if (increasingRows_ > 2 ) {
+    for (i=0;i<number;i++) {
+      int iRow=regionIndex[i];
+      double value = region[iRow];
+      region[iRow]=0.0;
+      vector[iRow]=value;
+      index[i]=iRow;
+    }
+  } else {
     for (i=0;i<number;i++) {
       int iRow=regionIndex[i];
       double value = region[iRow];
@@ -591,6 +606,70 @@ OsiFactorization::updateColumnTranspose ( OsiIndexedVector * regionSparse,
 #endif
   return number;
 }
+
+//  updateColumnTranspose.  Updates one column transpose (BTRAN)
+int
+OsiFactorization::updateColumnTranspose ( OsiIndexedVector * regionSparse,
+					  double vector[]) const
+{
+  //zero region
+  regionSparse->clear (  );
+  double *region = regionSparse->denseVector (  );
+  int i;
+  
+  //move indices into index array
+  int *regionIndex = regionSparse->getIndices (  );
+  int numberNonZero = 0;
+  int j;
+  int iRow;
+  if (increasingRows_ > 2) {
+    for ( j = 0; j < numberRows_; j ++ ) {
+      if (vector[j]) {
+	double value = vector[j];
+	vector[j]=0.0;
+	iRow = j;
+	region[iRow] = value;
+	regionIndex[numberNonZero++] = iRow;
+      }				
+    }
+  } else {
+    for ( j = 0; j < numberRows_; j ++ ) {
+      if (vector[j]) {
+	double value = vector[j];
+	vector[j]=0.0;
+	iRow = pivotColumn_[j];
+	region[iRow] = value;
+	regionIndex[numberNonZero++] = iRow;
+      }				
+    }
+  }
+  regionSparse->setNumElements ( numberNonZero );
+  int number =  updateColumnTranspose ( regionSparse );
+  if (increasingRows_ > 2 ) {
+    for (i=0;i<number;i++) {
+      iRow=regionIndex[i];
+      double value = region[iRow];
+      region[iRow]=0.0;
+      vector[iRow]=value;
+    }
+  } else {
+    for (i=0;i<number;i++) {
+      iRow=regionIndex[i];
+      double value = region[iRow];
+      region[iRow]=0.0;
+      iRow=permuteBack_[iRow];
+      vector[iRow]=value;
+    }
+  }
+  regionSparse->setNumElements(0);
+#ifdef DEBUG
+  for (i=0;i<numberRowsExtra_;i++) {
+    assert (!region[i]);
+  }
+#endif
+  return number;
+}
+
 
 //  updateColumnTranspose.  Updates one column transpose (BTRAN)
 int

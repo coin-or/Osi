@@ -49,7 +49,7 @@ public:
 
   /// Destructor
    ~OsiFactorization (  );
-  /// Debug show object
+  /// Debug show object (shows one representation)
   void show_self (  ) const;
   /// = copy
     OsiFactorization & operator = ( const OsiFactorization & other );
@@ -68,7 +68,14 @@ public:
   int factorize ( const OsiPackedMatrix & matrix, 
 		  int rowIsBasic[], int columnIsBasic[] , 
 		  double areaFactor = 0.0 );
-
+  /// Same but with OsiPackedMatrix components split out
+  int factorize ( int numberRows, int numberColumns,
+		  const OsiBigIndex * columnStart,
+		  const int * columnLength,
+		  const int * row,
+		  const double * element,
+		  int rowIsBasic[], int columnIsBasic[] , 
+		  double areaFactor = 0.0 );
   /** When given as triplets.
   Actually does factorization.  maximumL is guessed maximum size of L part of
   final factorization, maximumU of U part.  These are multiplied by
@@ -80,9 +87,9 @@ public:
   If status is singular, then basic variables have +1 and ones thrown out have -INT_MAX
   to say thrown out.
   returns 0 -okay, -1 singular, -99 memory */
-  int factorize ( int numberOfRows,
-		  int numberOfColumns,
-		  OsiBigIndex numberOfElements,
+  int factorize ( int numberRows,
+		  int numberColumns,
+		  OsiBigIndex numberElements,
 		  OsiBigIndex maximumL,
 		  OsiBigIndex maximumU,
 		  const int indicesRow[],
@@ -95,9 +102,9 @@ public:
       final factorization, maximumU of U part.  These are multiplied by
       areaFactor which can be computed by user or internally.  
       returns 0 -okay, -99 memory */
-  int factorizePart1 ( int numberOfRows,
-		       int numberOfColumns,
-		       OsiBigIndex numberOfElements,
+  int factorizePart1 ( int numberRows,
+		       int numberColumns,
+		       OsiBigIndex numberElements,
 		       OsiBigIndex maximumL,
 		       OsiBigIndex maximumU,
 		       int * indicesRow[],
@@ -239,7 +246,7 @@ public:
       returns 0=OK, 1=Probably OK, 2=singular, 3=no room */
   int replaceColumn ( int pivotRow,
 			 double pivotCheck,
-			 int numberOfElements,
+			 int numberElements,
 			 int index[], double array[] );
 
   /** Replaces one Column to basis,
@@ -248,34 +255,77 @@ public:
   int replaceColumn ( OsiIndexedVector * regionSparse,
 			 int pivotRow,
 			 double pivotCheck );
-  /// Throws away incoming column
+  /// Throws away incoming column (I am not sure really needed)
   void throwAwayColumn (  );
   //@}
 
-  /**@name various uses of factorization (return code number elements) */
+  /**@name various uses of factorization (return code number elements) 
+   which user may want to know about */
   //@{
   /** Updates one column (FTRAN) from region2
-      This assumes user is thinking non-permuted
-      - returns un-permuted result in region2.
+      number returned is negative if no room
       region1 starts as zero and is zero at end */
   int updateColumn ( OsiIndexedVector * regionSparse,
 			OsiIndexedVector * regionSparse2,
 			bool FTUpdate = false ) ;
-  /** Updates one column (FTRAN) to/from array
-      This assumes user is thinking non-permuted
-      - returns un-permuted result in array.
+  /** Updates one column (FTRAN) to/from array 
       number returned is negative if no room
+      indices contains list of nonzeros and is updated
       region starts as zero and is zero at end */
   int updateColumn ( OsiIndexedVector * regionSparse,
 			double array[], //unpacked
 			int index[],
 			int number,
 			bool FTUpdate = false ) ;
-  /// This version has same effect as above with FTUpdate==false
+  /** Updates one column (FTRAN) to/from array 
+      number returned is negative if no room
+      ** For large problems you should ALWAYS know where the nonzeros
+      are, so please try and migrate to previous method after you
+      have got code working using this simple method - thank you!
+      (the only exception is if you know input is dense e.g. rhs)
+      region starts as zero and is zero at end */
+  int updateColumn ( OsiIndexedVector * regionSparse,
+			double array[], //unpacked
+			bool FTUpdate = false ) ;
+  /** These two versions has same effect as above with FTUpdate==false
+      so number returned is always >=0 */
   int updateColumn ( OsiIndexedVector * regionSparse,
 			double array[], //unpacked
 			int index[],
 			int number) const;
+  int updateColumn ( OsiIndexedVector * regionSparse,
+			double array[] ) const;
+  /** Updates one column transpose (BTRAN)
+      indices contains list of nonzeros and is updated.
+      returns number of nonzeros */
+  int updateColumnTranspose ( OsiIndexedVector * regionSparse,
+				 double array[], //unpacked
+				 int index[],
+				 int number) const;
+  /** Updates one column transpose (BTRAN)
+      ** For large problems you should ALWAYS know where the nonzeros
+      are, so please try and migrate to previous method after you
+      have got code working using this simple method - thank you!
+      (the only exception is if you know input is dense e.g. dense objective)
+      returns number of nonzeros */
+  int updateColumnTranspose ( OsiIndexedVector * regionSparse,
+				 double array[] ) const;
+  /** Updates one column (BTRAN) from region2
+      region1 starts as zero and is zero at end */
+  int updateColumnTranspose ( OsiIndexedVector * regionSparse,
+			      OsiIndexedVector * regionSparse2) const;
+  /** makes a row copy of L for speed and to allow very sparse problems */
+  void goSparse();
+  /**  get sparse threshold */
+  int sparseThreshold ( ) const;
+  /**  set sparse threshold */
+  void sparseThreshold ( int value );
+  //@}
+  /// *** Below this user may not want to know about
+
+  /**@name various uses of factorization (return code number elements) 
+   which user may not want to know about (left over from my LP code) */
+  //@{
   /// Updates one column (FTRAN) already permuted
   int updateColumn ( OsiIndexedVector * regionSparse,
 			bool FTUpdate = false ) ;
@@ -285,31 +335,12 @@ public:
   /// Updates one column transpose (BTRAN) already permuted
   int updateColumnTranspose ( OsiIndexedVector * regionSparse ) const;
 
-  /// Updates one column transpose (BTRAN) - assumes user is thinking non-permuted
-  int updateColumnTranspose ( OsiIndexedVector * regionSparse,
-				 double array[], //unpacked
-				 int index[],
-				 int number) const;
-  /** Updates one column (BTRAN) from region2
-      This assumes user is thinking non-permuted
-      - returns un-permuted result in region2.
-      region1 starts as zero and is zero at end */
-  int updateColumnTranspose ( OsiIndexedVector * regionSparse,
-			      OsiIndexedVector * regionSparse2) const;
-
-
   /** Takes off permutation vector (only needed if increasingRows_>1),
       zeroes out region2 if wanted. */
   void unPermuteTranspose ( OsiIndexedVector * regionSparse,
 			    OsiIndexedVector * regionSparse2,
 			    bool erase = true ) const;
 
-  /** makes a row copy of L for speed and to allow very sparse problems */
-  void goSparse();
-  /**  get sparse threshold */
-  int sparseThreshold ( ) const;
-  /**  set sparse threshold */
-  void sparseThreshold ( int value );
   //@}
 
   /**@name various updates - none of which have been written! */
@@ -317,18 +348,18 @@ public:
 
   /** Adds given elements to Basis and updates factorization,
       can increase size of basis. Returns rank */
-  int add ( OsiBigIndex numberOfElements,
+  int add ( OsiBigIndex numberElements,
 	       int indicesRow[],
 	       int indicesColumn[], double elements[] );
 
   /** Adds one Column to basis,
       can increase size of basis. Returns rank */
-  int addColumn ( OsiBigIndex numberOfElements,
+  int addColumn ( OsiBigIndex numberElements,
 		     int indicesRow[], double elements[] );
 
   /** Adds one Row to basis,
       can increase size of basis. Returns rank */
-  int addRow ( OsiBigIndex numberOfElements,
+  int addRow ( OsiBigIndex numberElements,
 		  int indicesColumn[], double elements[] );
 
   /// Deletes one Column from basis, returns rank
@@ -338,7 +369,7 @@ public:
 
   /** Replaces one Row in basis,
       returns 0=OK, 1=Probably OK, 2=singular */
-  int replaceRow ( OsiBigIndex numberOfElements,
+  int replaceRow ( OsiBigIndex numberElements,
 		      int indicesColumn[], double elements[] );
   //@}
 
@@ -346,8 +377,8 @@ private:
 
   /**@name used by factorization */
   /// Gets space for a factorization, called by constructors
-  void getAreas ( int numberOfRows,
-		  int numberOfColumns,
+  void getAreas ( int numberRows,
+		  int numberColumns,
 		  OsiBigIndex maximumL,
 		  OsiBigIndex maximumU );
 
@@ -951,7 +982,7 @@ private:
   /********************************* END LARGE TEMPLATE ********/
   //@}
 ////////////////// data //////////////////
-protected:
+private:
 
   /**@name data */
   //@{

@@ -2210,7 +2210,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     // Test fractionalIndices
 
     {
-      double sol[]={1.0, 2.0, 2.9, 3.0, 4.0};
+      double sol[]={1.0, 2.0, 2.9, 3.0, 4.0,0.0,0.0,0.0};
       fim.setColSolution(sol);
       OsiVectorInt fi = fim.getFractionalIndices(1e-5);
       assert( fi.size() == 1 );

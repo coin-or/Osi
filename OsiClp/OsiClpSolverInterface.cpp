@@ -3,6 +3,9 @@
 
 #include <cassert>
 
+#if 1
+#include "CoinTime.hpp"
+#else
 #include <time.h>
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
@@ -11,6 +14,7 @@
 #include <sys/times.h>
 #include <sys/resource.h>
 #include <unistd.h>
+#endif
 #endif
 
 #include "CoinHelperFunctions.hpp"
@@ -29,23 +33,23 @@
 #include "Presolve.hpp"
 
 static double totalTime=0.0;
-static double cpuTime()
-{
-  double cpu_temp;
-#if defined(_MSC_VER)
-  unsigned int ticksnow;        /* clock_t is same as int */
+//  static double cpuTime()
+//  {
+//    double cpu_temp;
+//  #if defined(_MSC_VER)
+//    unsigned int ticksnow;        /* clock_t is same as int */
   
-  ticksnow = (unsigned int)clock();
+//    ticksnow = (unsigned int)clock();
   
-  cpu_temp = (double)((double)ticksnow/CLOCKS_PER_SEC);
-#else
-  struct rusage usage;
-  getrusage(RUSAGE_SELF,&usage);
-  cpu_temp = usage.ru_utime.tv_sec;
-  cpu_temp += 1.0e-6*((double) usage.ru_utime.tv_usec);
-#endif
-  return cpu_temp;
-}
+//    cpu_temp = (double)((double)ticksnow/CLOCKS_PER_SEC);
+//  #else
+//    struct rusage usage;
+//    getrusage(RUSAGE_SELF,&usage);
+//    cpu_temp = usage.ru_utime.tv_sec;
+//    cpu_temp += 1.0e-6*((double) usage.ru_utime.tv_usec);
+//  #endif
+//    return cpu_temp;
+//  }
 
 //#############################################################################
 // Solve methods
@@ -53,7 +57,7 @@ static double cpuTime()
 void OsiClpSolverInterface::initialSolve()
 {
   ClpSimplex solver;
-  double time1 = cpuTime();
+  double time1 = CoinCpuTime();
   solver.borrowModel(*modelPtr_);
   // Set message handler to have same levels etc
   solver.passInMessageHandler(handler_);
@@ -81,6 +85,7 @@ void OsiClpSolverInterface::initialSolve()
   }
   //solver.setDualBound(1.0e6);
   //solver.setDualTolerance(1.0e-7);
+
   ClpDualRowSteepest steep;
   solver.setDualRowPivotAlgorithm(steep);
   //solver.setPrimalTolerance(1.0e-8);
@@ -212,10 +217,11 @@ void OsiClpSolverInterface::initialSolve()
   //basis_.print();
   solver.messageHandler()->setLogLevel(saveMessageLevel);
   solver.returnModel(*modelPtr_);
-  time1 = cpuTime()-time1;
+  time1 = CoinCpuTime()-time1;
   totalTime += time1;
   //std::cout<<time1<<" seconds - total "<<totalTime<<std::endl;
 }
+
 //-----------------------------------------------------------------------------
 void OsiClpSolverInterface::resolve()
 {
@@ -552,10 +558,6 @@ void OsiClpSolverInterface::markHotStart()
 {
   delete ws_;
   ws_ = dynamic_cast<CoinWarmStartBasis*>(getWarmStart());
-  modelPtr_->getIntParam(ClpMaxNumIteration,itlimOrig_);
-  int itlim;
-  modelPtr_->getIntParam(ClpMaxNumIterationHotStart, itlim);
-  modelPtr_->setIntParam(ClpMaxNumIteration,itlim);
   int numberRows = modelPtr_->numberRows();
   rowActivity_= new double[numberRows];
   memcpy(rowActivity_,modelPtr_->primalRowSolution(),
@@ -587,14 +589,17 @@ void OsiClpSolverInterface::solveFromHotStart()
       messageHandler()->setLogLevel(saveMessageLevel-1);
   }
   messageHandler()->setLogLevel(saveMessageLevel);
+
+  modelPtr_->getIntParam(ClpMaxNumIteration,itlimOrig_);
+  int itlim;
+  modelPtr_->getIntParam(ClpMaxNumIterationHotStart, itlim);
+  modelPtr_->setIntParam(ClpMaxNumIteration,itlim);
   resolve();
-  
+  modelPtr_->setIntParam(ClpMaxNumIteration,itlimOrig_);
 }
 
 void OsiClpSolverInterface::unmarkHotStart()
 {
-
-  modelPtr_->setIntParam(ClpMaxNumIteration,itlimOrig_);
   delete ws_;
   ws_ = NULL;
   delete [] rowActivity_;
@@ -1006,6 +1011,7 @@ OsiClpSolverInterface::assignProblem(CoinPackedMatrix*& matrix,
 {
    modelPtr_->loadProblem(*matrix, collb, colub, obj, rowlb, rowub);
    linearObjective_ = modelPtr_->objective();
+
    freeCachedResults();
    delete matrix;   matrix = NULL;
    delete[] collb;  collb = NULL;
@@ -1939,6 +1945,7 @@ OsiClpSolverInterface::getBInvARow(int row, double* z)
 //Get a row of the basis inverse
 void 
 OsiClpSolverInterface::getBInvRow(int row, double* z)
+
 {
   assert (modelPtr_->solveType()==2);
   ClpFactorization * factorization = modelPtr_->factorization();

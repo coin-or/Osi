@@ -95,7 +95,7 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       OsiClpSolverInterface lhs;
       {      
         OsiClpSolverInterface im(m);        
-	
+        
         OsiClpSolverInterface imC1(im);
         assert( imC1.getModelPtr()!=im.getModelPtr() );
         assert( imC1.getNumCols() == im.getNumCols() );
@@ -105,7 +105,7 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
         assert( imC2.getModelPtr()!=im.getModelPtr() );
         assert( imC2.getNumCols() == im.getNumCols() );
         assert( imC2.getNumRows() == im.getNumRows() );  
-	
+        
         assert( imC2.getModelPtr()!=imC1.getModelPtr() );
         
         lhs=imC2;
@@ -193,7 +193,7 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       // Test fractionalIndices
       {
         double sol[]={2.9,3.0};
-	memcpy(fim.modelPtr_->primalColumnSolution()+2,sol,2*sizeof(double));
+        memcpy(fim.modelPtr_->primalColumnSolution()+2,sol,2*sizeof(double));
         OsiVectorInt fi = fim.getFractionalIndices(1e-5);
         assert( fi.size() == 1 );
         assert( fi[0]==2 );
@@ -201,14 +201,14 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
         // Set integer variables very close to integer values
         sol[0]=5 + .00001/2.;
         sol[1]=8 - .00001/2.;
-	memcpy(fim.modelPtr_->primalColumnSolution()+2,sol,2*sizeof(double));
+        memcpy(fim.modelPtr_->primalColumnSolution()+2,sol,2*sizeof(double));
         fi = fim.getFractionalIndices(1e-5);
         assert( fi.size() == 0 );
         
         // Set integer variables close, but beyond tolerances
         sol[0]=5 + .00001*2.;
         sol[1]=8 - .00001*2.;
-	memcpy(fim.modelPtr_->primalColumnSolution()+2,sol,2*sizeof(double));
+        memcpy(fim.modelPtr_->primalColumnSolution()+2,sol,2*sizeof(double));
         fi = fim.getFractionalIndices(1e-5);
         assert( fi.size() == 2 );
         assert( fi[0]==2 );
@@ -236,27 +236,27 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     {
       OsiClpSolverInterface solver;
       try {
-	solver.setObjCoeff(0,0.0);
+        solver.setObjCoeff(0,0.0);
       }
       catch (CoinError e) {
-	std::cout<<"Correct throw"<<std::endl;
+        std::cout<<"Correct throw"<<std::endl;
       }
       std::string fn = mpsDir+"exmip1";
       solver.readMps(fn.c_str(),"mps");
       try {
-	solver.setObjCoeff(0,0.0);
+        solver.setObjCoeff(0,0.0);
       }
       catch (CoinError e) {
-	std::cout<<"** Incorrect throw"<<std::endl;
-	abort();
+        std::cout<<"** Incorrect throw"<<std::endl;
+        abort();
       }
       try {
-	int index[]={0,20};
-	double value[]={0.0,0.0,0.0,0.0};
-	solver.setColSetBounds(index,index+2,value);
+        int index[]={0,20};
+        double value[]={0.0,0.0,0.0,0.0};
+        solver.setColSetBounds(index,index+2,value);
       }
       catch (CoinError e) {
-	std::cout<<"Correct throw"<<std::endl;
+        std::cout<<"Correct throw"<<std::endl;
       }
     }
     // Test apply cuts method
@@ -519,12 +519,12 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       el[4]=0.0; // to get inf later
       
       for (c=2;c<4;c++) {
-	el[0]=1.0;
-	inx[0]=c;
-	cuts[c-1].setRow(1,inx,el);
-	cuts[c-1].setLb(1.);
-	cuts[c-1].setUb(100.);
-	cuts[c-1].setEffectiveness(c);
+        el[0]=1.0;
+        inx[0]=c;
+        cuts[c-1].setRow(1,inx,el);
+        cuts[c-1].setLb(1.);
+        cuts[c-1].setUb(100.);
+        cuts[c-1].setEffectiveness(c);
       }
       fim.writeMps("x1.mps");
       fim.applyRowCuts(3,cuts);
@@ -881,12 +881,12 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     std::cout << "Dual Ray: " << std::endl;
     for(int i = 0; i < m.getNumRows(); i++){
       if(fabs(rays[0][i]) > 0.00001)
-	std::cout << i << " : " << rays[0][i] << std::endl;
+        std::cout << i << " : " << rays[0][i] << std::endl;
     }
     
     std::cout << "isProvenOptimal = " << m.isProvenOptimal() << std::endl;
     std::cout << "isProvenPrimalInfeasible = " << m.isProvenPrimalInfeasible()
-	 << std::endl;
+         << std::endl;
     
     delete [] rays[0];
     
@@ -1032,14 +1032,14 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       const double * dj;
       const double * dual;
       if ((numberIterations&1)==0) {
-	// use given ones
-	dj = m.getReducedCost();
-	dual = m.getRowPrice();
+        // use given ones
+        dj = m.getReducedCost();
+        dual = m.getRowPrice();
       } else {
-	// create
-	dj = djs;
-	dual = duals;
-	m.getReducedGradient(djs,duals,fakeCost);
+        // create
+        dj = djs;
+        dual = duals;
+        m.getReducedGradient(djs,duals,fakeCost);
       }
       int i;
       int colIn=9999;
@@ -1048,34 +1048,34 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       // find most negative reduced cost
       // Should check basic - but should be okay on this problem
       for (i=0;i<numberRows;i++) {
-	double value=dual[i];
-	if (value>best) {
-	  direction=-1;
-	  best=value;
-	  colIn=-i-1;
-	}
+        double value=dual[i];
+        if (value>best) {
+          direction=-1;
+          best=value;
+          colIn=-i-1;
+        }
       }
       for (i=0;i<numberColumns;i++) {
-	double value=dj[i];
-	if (value<-best&&solution[i]<1.0e-6) {
-	  direction=1;
-	  best=-value;
-	  colIn=i;
-	} else if (value>best&&solution[i]>1.0-1.0e-6) {
-	  direction=-1;
-	  best=value;
-	  colIn=i;
-	}
+        double value=dj[i];
+        if (value<-best&&solution[i]<1.0e-6) {
+          direction=1;
+          best=-value;
+          colIn=i;
+        } else if (value>best&&solution[i]>1.0-1.0e-6) {
+          direction=-1;
+          best=value;
+          colIn=i;
+        }
       }
       if (colIn==9999)
-	break; // should be optimal
+        break; // should be optimal
       int colOut;
       int outStatus;
       double theta;
       int returnCode=m.primalPivotResult(colIn,direction,colOut,outStatus,theta,NULL);
       assert (!returnCode);
       printf("out %d, direction %d theta %g\n",
-	     colOut,outStatus,theta);
+             colOut,outStatus,theta);
       numberIterations++;
     }
     delete [] fakeCost;
@@ -1172,10 +1172,10 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
               }
             }
           }
-	}
+        }
       }
       if (colIn==9999)
-	break; // should be optimal
+        break; // should be optimal
       // update objective - djs is spare array
       const double * obj = m.getObjCoefficients();
       for (i=0;i<numberColumns;i++) {
@@ -1191,7 +1191,7 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       assert (!returnCode);
       double objValue = m.getObjValue(); // printed one may not be accurate
       printf("in %d out %d, direction %d theta %g, objvalue %g\n",
-	     colIn,colOut,outStatus,theta,objValue);
+             colIn,colOut,outStatus,theta,objValue);
       numberIterations++;
     }
     // update objective to totalChange- djs is spare array
@@ -1262,20 +1262,21 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     double * binvA = (double*) malloc((n_cols+n_rows) * sizeof(double));
     
     printf("B-1 A");
-    for(int i = 0; i < n_rows; i++){
+    int i;
+    for( i = 0; i < n_rows; i++){
       m.getBInvARow(i, binvA,binvA+n_cols);
       printf("\nrow: %d -> ",i);
       for(int j=0; j < n_cols+n_rows; j++){
-	printf("%g, ", binvA[j]);
+        printf("%g, ", binvA[j]);
       }
     }
     printf("\n");
     printf("And by column");
-    for(int i = 0; i < n_cols+n_rows; i++){
+    for( i = 0; i < n_cols+n_rows; i++){
       m.getBInvACol(i, binvA);
       printf("\ncolumn: %d -> ",i);
       for(int j=0; j < n_rows; j++){
-	printf("%g, ", binvA[j]);
+        printf("%g, ", binvA[j]);
       }
     }
     printf("\n");
@@ -1327,20 +1328,21 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     m.getBasics(pivots);
     
     printf("B-1 A");
-    for(int i = 0; i < n_rows; i++){
+    int i;
+    for( i = 0; i < n_rows; i++){
       m.getBInvARow(i, binvA,binvA+n_cols);
       printf("\nrow: %d (pivot %d) -> ",i,pivots[i]);
       for(int j=0; j < n_cols+n_rows; j++){
-	printf("%g, ", binvA[j]);
+        printf("%g, ", binvA[j]);
       }
     }
     printf("\n");
     printf("And by column");
-    for(int i = 0; i < n_cols+n_rows; i++){
+    for( i = 0; i < n_cols+n_rows; i++){
       m.getBInvACol(i, binvA);
       printf("\ncolumn: %d -> ",i);
       for(int j=0; j < n_rows; j++){
-	printf("%g, ", binvA[j]);
+        printf("%g, ", binvA[j]);
       }
     }
     printf("\n");

@@ -1450,7 +1450,7 @@ int OsiMpsReader::readMps()
       colupper[i]=infinity_;
     }
     // set up integer region just in case
-    integerType_ = new char[numberColumns];
+    integerType_ = (char *) malloc (numberColumns_*sizeof(char));
 
     for ( column = 0; column < numberColumns; column++ ) {
       if ( columnType[column] == OSI_INTORG ) {

@@ -147,7 +147,7 @@ private:
   //@}
 };
 // inline after getting array
-inline OsiWarmStartBasis::Status getStatus(char * array, int i)  {
+inline OsiWarmStartBasis::Status getStatus(const char *array, int i)  {
   const int st = (array[i>>2] >> ((i&3)<<1)) & 3;
   return static_cast<OsiWarmStartBasis::Status>(st);
 }

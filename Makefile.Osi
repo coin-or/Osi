@@ -1,0 +1,56 @@
+# Static or shared libraries should be built (STATIC or SHARED)?
+LibType := SHARED
+
+# Select optimization (-O or -g). -O will be automatically bumped up to the 
+# highest level of optimization the compiler supports. If want something in
+# between then specify the exact level you want, e.g., -O1 or -O2
+OptLevel := -O
+
+# Look at the ${CoinDir}/Makefiles/Makefile.location file and edit
+# the location of the various libraries
+
+##############################################################################
+# You should not need to edit below this line.
+###############################################################################
+
+LIBNAME := Osi
+
+LIBSRC =
+
+LIBSRC += OsiCut.cpp
+LIBSRC += OsiColCut.cpp
+LIBSRC += OsiRowCut.cpp
+LIBSRC += OsiRowCutDebugger.cpp
+LIBSRC += OsiCuts.cpp
+
+LIBSRC += OsiSolverInterface.cpp
+
+##############################################################################
+# The location of the customized Makefiles
+export CoinDir = $(shell cd ..; pwd)
+export MakefileDir := $(CoinDir)/Makefiles
+include ${MakefileDir}/Makefile.coin
+include ${MakefileDir}/Makefile.location
+
+export ExtraIncDir  := ${CoinIncDir} ${zlibIncDir} ${bzlibIncDir}
+export ExtraLibDir  := ${CoinLibDir} ${zlibLibDir} ${bzlibLibDir}
+export ExtraLibName := ${CoinLibName} ${zlibLibName} ${bzlibLibName}
+export ExtraDefine  := ${CoinDefine} ${zlibDefine} ${bzlibDefine}
+
+export LibType OptLevel LIBNAME LIBSRC
+
+###############################################################################
+
+.DELETE_ON_ERROR:
+
+.PHONY: default install libosi library clean doc
+
+default: install
+
+install doc library: % :
+	(cd ../Coin && ${MAKE} install)
+	$(MAKE) -f ${MakefileDir}/Makefile.lib $*
+clean :
+	@rm -rf Junk
+	@rm -rf $(UNAME)
+	@rm -rf dep

@@ -8,8 +8,82 @@
 #include <cfloat>
 
 #include "OsiRowCut.hpp"
-#include "OsiFloatEqual.hpp"
 
+#ifndef OSI_INLINE_ROWCUT_METHODS
+
+//  //-------------------------------------------------------------------
+//  // Set/Get lower & upper bounds
+//  //-------------------------------------------------------------------
+double OsiRowCut::lb() const { return lb_; }
+void OsiRowCut::setLb(double lb) { lb_ = lb; }
+double OsiRowCut::ub() const { return ub_; }
+void OsiRowCut::setUb(double ub) { ub_ = ub; }
+
+//-------------------------------------------------------------------
+// Set row elements
+//------------------------------------------------------------------- 
+void OsiRowCut::setRow(int size, 
+		       const int * colIndices, const double * elements)
+{
+  row_.setVector(size,colIndices,elements);
+}
+void OsiRowCut::setRow( const CoinPackedVector & v )
+{
+  row_ = v;
+}
+
+//-------------------------------------------------------------------
+// Get the row
+//-------------------------------------------------------------------
+const CoinPackedVector & OsiRowCut::row() const 
+{ 
+  return row_; 
+}
+
+//----------------------------------------------------------------
+// == operator 
+//-------------------------------------------------------------------
+bool
+OsiRowCut::operator==(const OsiRowCut& rhs) const
+{
+  if ( this->OsiCut::operator!=(rhs) ) return false;
+  if ( row() != rhs.row() ) return false;
+  if ( lb() != rhs.lb() ) return false;
+  if ( ub() != rhs.ub() ) return false;
+  return true;
+}
+bool
+OsiRowCut::operator!=(const OsiRowCut& rhs) const
+{
+  return !( (*this)==rhs );
+}
+
+
+//----------------------------------------------------------------
+// consistent & infeasible 
+//-------------------------------------------------------------------
+bool OsiRowCut::consistent() const
+{
+  const CoinPackedVector & r=row();
+  r.duplicateIndex("consistent", "OsiRowCut");
+  if ( r.getMinIndex() < 0 ) return false;
+  return true;
+}
+bool OsiRowCut::consistent(const OsiSolverInterface& im) const
+{  
+  const CoinPackedVector & r=row();
+  if ( r.getMaxIndex() >= im.getNumCols() ) return false;
+
+  return true;
+}
+bool OsiRowCut::infeasible(const OsiSolverInterface &im) const
+{
+  if ( lb() > ub() ) return true;
+
+  return false;
+}
+
+#endif
 
 //-------------------------------------------------------------------
 // Row sense, rhs, range

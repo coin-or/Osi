@@ -5,11 +5,10 @@
 
 #include <string>
 
+#include "CoinPackedVector.hpp"
+
 #include "OsiCollections.hpp"
-#include "OsiPackedVector.hpp"
 #include "OsiCut.hpp"
-
-
 
 /** Column Cut Class
 
@@ -36,7 +35,7 @@ public:
     const double * lbElements );   
   
   /// Set column lower bounds from a packed vector
-  inline void setLbs( const OsiPackedVector & lbs );
+  inline void setLbs( const CoinPackedVector & lbs );
   
   /// Set column upper bounds 
   inline void setUbs( 
@@ -45,7 +44,7 @@ public:
     const double * ubElements );
   
   /// Set column upper bounds from a packed vector
-  inline void setUbs( const OsiPackedVector & ubs );
+  inline void setUbs( const CoinPackedVector & ubs );
   //@}
   
   //----------------------------------------------------------------
@@ -53,9 +52,9 @@ public:
   /**@name Getting column bounds */
   //@{
   /// Get column lower bounds
-  inline const OsiPackedVector & lbs() const;
+  inline const CoinPackedVector & lbs() const;
   /// Get column upper bounds
-  inline const OsiPackedVector & ubs() const;
+  inline const CoinPackedVector & ubs() const;
   //@}
   
   /**@name Comparison operators  */
@@ -127,9 +126,9 @@ private:
   /**@name Private member data */
   //@{
   /// Lower bounds
-  OsiPackedVector lbs_;
+  CoinPackedVector lbs_;
   /// Upper bounds
-  OsiPackedVector ubs_;
+  CoinPackedVector ubs_;
   //@}
   
 };
@@ -155,12 +154,12 @@ void OsiColCut::setUbs(
   ubs_.setVector(size,colIndices,ubElements);
 }
 //
-void OsiColCut::setLbs( const OsiPackedVector & lbs )
+void OsiColCut::setLbs( const CoinPackedVector & lbs )
 {
   lbs_ = lbs;
 }
 //
-void OsiColCut::setUbs( const OsiPackedVector & ubs )
+void OsiColCut::setUbs( const CoinPackedVector & ubs )
 {
   ubs_ = ubs;
 }
@@ -168,12 +167,12 @@ void OsiColCut::setUbs( const OsiPackedVector & ubs )
 //-------------------------------------------------------------------
 // Get Column Lower Bounds and Column Upper Bounds
 //-------------------------------------------------------------------
-const OsiPackedVector & OsiColCut::lbs() const 
+const CoinPackedVector & OsiColCut::lbs() const 
 { 
   return lbs_; 
 }
 //
-const OsiPackedVector & OsiColCut::ubs() const 
+const CoinPackedVector & OsiColCut::ubs() const 
 { 
   return ubs_; 
 }
@@ -206,8 +205,8 @@ OsiColCut::operator!=(
 //-------------------------------------------------------------------
 bool OsiColCut::consistent() const
 {
-  const OsiPackedVector & lb = lbs();
-  const OsiPackedVector & ub = ubs();
+  const CoinPackedVector & lb = lbs();
+  const CoinPackedVector & ub = ubs();
   // Test for consistent cut.
   // Are packed vectors consistent?
   lb.duplicateIndex("consistent", "OsiColCut");
@@ -219,8 +218,8 @@ bool OsiColCut::consistent() const
 //
 bool OsiColCut::consistent(const OsiSolverInterface& im) const
 {  
-  const OsiPackedVector & lb = lbs();
-  const OsiPackedVector & ub = ubs();
+  const CoinPackedVector & lb = lbs();
+  const CoinPackedVector & ub = ubs();
   
   // Test for consistent cut.
   if ( lb.getMaxIndex() >= im.getNumCols() ) return false;
@@ -234,8 +233,8 @@ bool OsiColCut::feasible(const OsiSolverInterface &im) const
 {
   const double * oldColLb = im.getColLower();
   const double * oldColUb = im.getColUpper();
-  const OsiPackedVector & cutLbs = lbs();
-  const OsiPackedVector & cutUbs = ubs();
+  const CoinPackedVector & cutLbs = lbs();
+  const CoinPackedVector & cutUbs = ubs();
   int i;
   
   for ( i=0; i<cutLbs.size(); i++ ) {
@@ -272,8 +271,8 @@ bool OsiColCut::infeasible(const OsiSolverInterface &im) const
 {
   const double * oldColLb = im.getColLower();
   const double * oldColUb = im.getColUpper();
-  const OsiPackedVector & cutLbs = lbs();
-  const OsiPackedVector & cutUbs = ubs();
+  const CoinPackedVector & cutLbs = lbs();
+  const CoinPackedVector & cutUbs = ubs();
   int i;
   
   for ( i=0; i<cutLbs.getNumElements(); i++ ) {

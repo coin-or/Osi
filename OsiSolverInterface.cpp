@@ -8,13 +8,15 @@
 #include <iostream>
 
 #include "CoinHelperFunctions.hpp"
-#include "OsiWarmStart.hpp"
+#include "CoinMpsIO.hpp"
+#include "CoinMessage.hpp"
+#include "CoinWarmStart.hpp"
+
 #include "OsiSolverInterface.hpp"
 #include "OsiCuts.hpp"
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
 #include "OsiRowCutDebugger.hpp"
-#include "OsiMpsReader.hpp"
 
 //#############################################################################
 // Hotstart related methods (primarily used in strong branching)
@@ -50,7 +52,7 @@ OsiSolverInterface::getFractionalIndices(const double etol) const
 {
    const int colnum = getNumCols();
    OsiVectorInt frac;
-   OsiAbsFltEq eq(etol);
+   CoinAbsFltEq eq(etol);
    for (int i = 0; i < colnum; ++i) {
       if (isInteger(i)) {
 	 const double ci = getColSolution()[i];
@@ -167,7 +169,7 @@ OsiSolverInterface::setInteger(const int* indices, int len)
 //-----------------------------------------------------------------------------
 void
 OsiSolverInterface::addCols(const int numcols,
-			    const OsiPackedVectorBase * const * cols,
+			    const CoinPackedVectorBase * const * cols,
 			    const double* collb, const double* colub,   
 			    const double* obj)
 {
@@ -178,7 +180,7 @@ OsiSolverInterface::addCols(const int numcols,
 //-----------------------------------------------------------------------------
 void
 OsiSolverInterface::addRows(const int numrows,
-			    const OsiPackedVectorBase * const * rows,
+			    const CoinPackedVectorBase * const * rows,
 			    const double* rowlb, const double* rowub)
 {
   for (int i = 0; i < numrows; ++i) {
@@ -188,7 +190,7 @@ OsiSolverInterface::addRows(const int numrows,
 //-----------------------------------------------------------------------------
 void
 OsiSolverInterface::addRows(const int numrows,
-			    const OsiPackedVectorBase * const * rows,
+			    const CoinPackedVectorBase * const * rows,
 			    const char* rowsen, const double* rowrhs,   
 			    const double* rowrng)
 {
@@ -253,6 +255,18 @@ OsiSolverInterface::applyCuts( const OsiCuts & cs, double effectivenessLb )
   
   return retVal;
 }
+/* Apply a collection of row cuts which are all effective.
+   applyCuts seems to do one at a time which seems inefficient.
+   The default does slowly, but solvers can override.
+*/
+void 
+OsiSolverInterface::applyRowCuts(int numberCuts, const OsiRowCut * cuts)
+{
+  int i;
+  for (i=0;i<numberCuts;i++) {
+    applyRowCut(cuts[i]);
+  }
+}
 
 //#############################################################################
 // Set/Get Application Data
@@ -314,7 +328,8 @@ const OsiRowCutDebugger * OsiSolverInterface::getRowCutDebugger() const
 OsiSolverInterface::OsiSolverInterface () :
   appData_(NULL), 
   rowCutDebugger_(NULL),
-  ws_(NULL)
+  ws_(NULL),
+  defaultHandler_(true)
 {
   intParam_[OsiMaxNumIteration] = 9999999;
   intParam_[OsiMaxNumIterationHotStart] = 9999999;
@@ -326,21 +341,30 @@ OsiSolverInterface::OsiSolverInterface () :
   dblParam_[OsiObjOffset] = 0.0;
 
   strParam_[OsiProbName] = "OsiDefaultName";
+  handler_ = new CoinMessageHandler();
+  messages_ = CoinMessage();
 }
 
 //-------------------------------------------------------------------
 // Copy constructor 
 //-------------------------------------------------------------------
-OsiSolverInterface::OsiSolverInterface (const OsiSolverInterface & source) :
-  appData_(source.appData_),
+OsiSolverInterface::OsiSolverInterface (const OsiSolverInterface & rhs) :
+  appData_(rhs.appData_),
   rowCutDebugger_(NULL),
-  ws_(NULL)
+  ws_(NULL),
+  defaultHandler_(true)
 {  
-  if ( source.rowCutDebugger_!=NULL )
-    rowCutDebugger_ = new OsiRowCutDebugger(*source.rowCutDebugger_);
-  CoinDisjointCopyN(source.intParam_, OsiLastIntParam, intParam_);
-  CoinDisjointCopyN(source.dblParam_, OsiLastDblParam, dblParam_);
-  CoinDisjointCopyN(source.strParam_, OsiLastStrParam, strParam_);
+  if ( rhs.rowCutDebugger_!=NULL )
+    rowCutDebugger_ = new OsiRowCutDebugger(*rhs.rowCutDebugger_);
+  defaultHandler_ = rhs.defaultHandler_;
+  if (defaultHandler_)
+    handler_ = new CoinMessageHandler(*rhs.handler_);
+  else
+    handler_ = rhs.handler_;
+  messages_ = CoinMessage();
+  CoinDisjointCopyN(rhs.intParam_, OsiLastIntParam, intParam_);
+  CoinDisjointCopyN(rhs.dblParam_, OsiLastDblParam, dblParam_);
+  CoinDisjointCopyN(rhs.strParam_, OsiLastStrParam, strParam_);
 }
 
 //-------------------------------------------------------------------
@@ -353,6 +377,10 @@ OsiSolverInterface::~OsiSolverInterface ()
   rowCutDebugger_ = NULL;
   delete ws_;
   ws_ = NULL;
+  if (defaultHandler_) {
+    delete handler_;
+    handler_ = NULL;
+  }
 }
 
 //----------------------------------------------------------------
@@ -373,7 +401,16 @@ OsiSolverInterface::operator=(const OsiSolverInterface& rhs)
     CoinDisjointCopyN(rhs.strParam_, OsiLastStrParam, strParam_);
     delete ws_;
     ws_ = NULL;
-  }
+     if (defaultHandler_) {
+      delete handler_;
+      handler_ = NULL;
+    }
+    defaultHandler_ = rhs.defaultHandler_;
+    if (defaultHandler_)
+      handler_ = new CoinMessageHandler(*rhs.handler_);
+    else
+      handler_ = rhs.handler_;
+ }
   return *this;
 }
 
@@ -393,13 +430,13 @@ int OsiSolverInterface::readMps(const char * filename,
     // no extension so no trailing period
     fullname = f;
   }
-  OsiMpsReader m;
+  CoinMpsIO m;
   int numberErrors;
   m.setInfinity(getInfinity());
   
   numberErrors = m.readMps(filename,extension);
-  std::cout <<m.getProblemName()<<" read with " << numberErrors <<
-    " errors" <<std::endl;
+  handler_->message(COIN_SOLVER_MPS,messages_)
+    <<m.getProblemName()<< numberErrors <<CoinMessageEol;
   if (!numberErrors) {
 
     // set objective function offest
@@ -427,4 +464,49 @@ int OsiSolverInterface::readMps(const char * filename,
     }
   }
   return numberErrors;
+}
+
+int 
+OsiSolverInterface::writeMps(const char *filename, 
+			     const char ** rowNames, 
+			     const char ** columnNames,
+			     int formatType,
+			     int numberAcross) const
+{
+   const int numcols = getNumCols();
+   char* integrality = new char[numcols];
+   bool hasInteger = false;
+   for (int i = 0; i < numcols; ++i) {
+      if (isInteger(i)) {
+	 integrality[i] = 1;
+	 hasInteger = true;
+      } else {
+	 integrality[i] = 0;
+      }
+   }
+
+   CoinMpsIO writer;
+   writer.setInfinity(getInfinity());
+   writer.passInMessageHandler(handler_);
+   writer.setMpsData(*getMatrixByCol(), getInfinity(),
+		     getColLower(), getColUpper(),
+		     getObjCoefficients(), hasInteger ? integrality : 0,
+		     getRowLower(), getRowUpper(),
+		     (const char **)0, (const char **)0);
+   delete[] integrality;
+   return writer.writeMps(filename, 1 /*gzip it*/, formatType, numberAcross);
+}
+
+// Pass in Message handler (not deleted at end)
+void 
+OsiSolverInterface::passInMessageHandler(CoinMessageHandler * handler)
+{
+  defaultHandler_=false;
+  handler_=handler;
+}
+// Set language
+void 
+OsiSolverInterface::newLanguage(CoinMessages::Language language)
+{
+  messages_ = CoinMessage(language);
 }

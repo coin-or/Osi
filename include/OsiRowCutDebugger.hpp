@@ -33,7 +33,8 @@ public:
   virtual bool invalidCut(const OsiRowCut & rowcut) const;
 
   /// Return optimal solution
-  const double * optimalSolution() const;
+  const double * optimalSolution() const
+  { return optimalSolution_;};
   //@}
 
   /**@name Activate Debugger */

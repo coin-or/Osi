@@ -82,6 +82,14 @@ ifneq ($(filter COIN_libOsiXpr,$(CoinLibsDefined)),)
     TESTSRC += OsiXprSolverInterfaceTest.cpp
 endif
 
+ifneq ($(filter COIN_libOsiMsk,$(CoinLibsDefined)),)
+    IncDir  += ${OsiMskIncDir} ${MskIncDir}
+    LibDir  += ${OsiMskLibDir} ${MskLibDir}
+    LibName += ${OsiMskLibName} ${MskLibName}
+    Define  += ${OsiMskDefine} ${MskDefine} COIN_USE_MSK
+    TESTSRC += OsiMskSolverInterfaceTest.cpp
+endif
+
 ##############################################################################
 
 IncDir += ${OsiIncDir} ${CoinIncDir} ${zlibIncDir} ${bzlibIncDir}

@@ -1,4 +1,4 @@
-//  LAST EDIT: Tue Aug 28 17:40:30 2001 by Tobias Pfender (opt14!bzfpfend) 
+//  LAST EDIT: Fri Aug 31 15:28:40 2001 by Tobias Pfender (opt14!bzfpfend) 
 // Copyright (C) 2000, International Business Machines
 // Corporation and others.  All Rights Reserved.
 #if defined(_MSC_VER)
@@ -113,7 +113,7 @@ OsiSolverInterfaceMpsUnitTest(
   mpsName.push_back("degen2");min.push_back(true);nRows.push_back(445);nCols.push_back(534);objValueTol.push_back(1.e-10);objValue.push_back(-1.4351780000e+03);
   mpsName.push_back("degen3");min.push_back(true);nRows.push_back(1504);nCols.push_back(1818);objValueTol.push_back(1.e-10);objValue.push_back(-9.8729400000e+02);
   // CPLEX READ ERROR  mpsName.push_back("dfl001");min.push_back(true);nRows.push_back(6072);nCols.push_back(12230);objValueTol.push_back(1.e-5);objValue.push_back(1.1266396047E+07);
-  mpsName.push_back("e226");min.push_back(true);nRows.push_back(224);nCols.push_back(282);objValueTol.push_back(1.e-10);objValue.push_back(/*-1.8751929066e+01*/-11.638929066371);
+  mpsName.push_back("e226");min.push_back(true);nRows.push_back(224);nCols.push_back(282);objValueTol.push_back(1.e-10);objValue.push_back(-1.8751929066e+01);
   mpsName.push_back("etamacro");min.push_back(true);nRows.push_back(401);nCols.push_back(688);objValueTol.push_back(1.e-6);objValue.push_back(-7.5571521774e+02 );
   mpsName.push_back("fffff800");min.push_back(true);nRows.push_back(525);nCols.push_back(854);objValueTol.push_back(1.e-6);objValue.push_back(5.5567961165e+05);
   mpsName.push_back("finnis");min.push_back(true);nRows.push_back(498);nCols.push_back(614);objValueTol.push_back(1.e-6);objValue.push_back(1.7279096547e+05);
@@ -354,8 +354,8 @@ OsiSolverInterfaceMpsUnitTest(
     
     
     // Solve problem, looping once for each solver interface
-    for( i=vecSiP.size()-1; i>=0; --i ) { 
-
+    for( i = 0; i < static_cast<int>( vecSiP.size() ); ++i ) {   // ??? changed direction of loop because Volume Solver should be the last one in the loop
+      
 #ifdef COIN_USE_VOL
       // Volume Solver Interface can not solve netlib cases, so
       // if volume is being tested we are done.

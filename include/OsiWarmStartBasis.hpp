@@ -36,16 +36,7 @@ public:
   const char * getArtificialStatus() const { return artificialStatus_; }
   char * getArtificialStatus() { return artificialStatus_; }
 
-  void setSize(int ns, int na) {
-    delete[] structuralStatus_;
-    delete[] artificialStatus_;
-    structuralStatus_ = new char[(ns + 3) / 4];
-    artificialStatus_ = new char[(na + 3) / 4];
-    CoinFillN(structuralStatus_, (ns + 3) / 4, (char)0);
-    CoinFillN(artificialStatus_, (na + 3) / 4, (char)0);
-    numArtificial_ = na;
-    numStructural_ = ns;
-  }
+  void setSize(int ns, int na) ;
 
   Status getStructStatus(int i) const {
     const int st = (structuralStatus_[i>>2] >> ((i&3)<<1)) & 3;
@@ -76,61 +67,30 @@ public:
       variable is in byte <code>(sStat[i>>2]</code>, bits 0,1 if i%4 == 0,
       bits 2,3 if i%4 == 1, etc.
   */
-  void assignBasisStatus(int ns, int na, char*& sStat, char*& aStat) {
-    delete[] structuralStatus_;
-    delete[] artificialStatus_;
-    numStructural_ = ns;
-    numArtificial_ = na;
-    structuralStatus_ = sStat;
-    artificialStatus_ = aStat;
-    sStat = 0;
-    aStat = 0;
-  }
+  void assignBasisStatus(int ns, int na, char*& sStat, char*& aStat) ;
 
   OsiWarmStartBasis() :
     numStructural_(0), numArtificial_(0),
-    structuralStatus_(0), artificialStatus_(0) {}
+    structuralStatus_(NULL), artificialStatus_(NULL) {}
 
-  OsiWarmStartBasis(int ns, int na, const char* sStat, const char* aStat) :
-    numStructural_(ns), numArtificial_(na),
-    structuralStatus_(0), artificialStatus_(0) {
-    structuralStatus_ = new char[(ns + 3) / 4];
-    artificialStatus_ = new char[(na + 3) / 4];
-    CoinDisjointCopyN(sStat, (ns + 3) / 4, structuralStatus_);
-    CoinDisjointCopyN(aStat, (na + 3) / 4, artificialStatus_);
-  }
-  OsiWarmStartBasis(const OsiWarmStartBasis& ws) :
-    numStructural_(ws.numStructural_), numArtificial_(ws.numArtificial_),
-    structuralStatus_(0), artificialStatus_(0) {
-    structuralStatus_ = new char[(numStructural_ + 3) / 4];
-    artificialStatus_ = new char[(numArtificial_ + 3) / 4];
-    CoinDisjointCopyN(ws.structuralStatus_, (numStructural_ + 3) / 4,
-		      structuralStatus_);
-    CoinDisjointCopyN(ws.artificialStatus_, (numArtificial_ + 3) / 4,
-		      artificialStatus_);
-  }
+  OsiWarmStartBasis(int ns, int na, const char* sStat, const char* aStat) ;
+
+  OsiWarmStartBasis(const OsiWarmStartBasis& ws) ;
 
   virtual ~OsiWarmStartBasis() {
     delete[] structuralStatus_;
     delete[] artificialStatus_;
   }
 
-  OsiWarmStartBasis& operator=(const OsiWarmStartBasis& rhs)
-  {
-    if (this != &rhs) {
-      numStructural_=rhs.numStructural_;
-      numArtificial_=rhs.numArtificial_;
-      delete [] structuralStatus_;
-      delete [] artificialStatus_;
-      structuralStatus_ = new char[(numStructural_ + 3) / 4];
-      artificialStatus_ = new char[(numArtificial_ + 3) / 4];
-      CoinDisjointCopyN(rhs.structuralStatus_, (numStructural_ + 3) / 4,
-			structuralStatus_);
-      CoinDisjointCopyN(rhs.artificialStatus_, (numArtificial_ + 3) / 4,
-			artificialStatus_);
-    }
-    return *this;
-  };
+  OsiWarmStartBasis& operator=(const OsiWarmStartBasis& rhs) ;
+
+  /// Resizes 
+  void resize (int newNumberRows, int newNumberColumns);
+  /// Deletes rows
+  void deleteRows(int number, const int * which);
+  /// Deletes columns
+  void deleteColumns(int number, const int * which);
+
 private:
   ///@name Private data members
   //@{

@@ -10,7 +10,7 @@
 //  OsiFactorization.  Constructor
 OsiFactorization::OsiFactorization (  )
 {
-  gutsOfInitialize(3);
+  gutsOfInitialize(7);
 }
 
 /// Copy constructor 
@@ -54,6 +54,41 @@ void OsiFactorization::gutsOfDestructor()
   delete [] startRowL_ ;
   delete [] indexColumnL_ ;
   delete []sparse_;
+#ifdef ZEROFAULT
+  // make more visible
+  elementU_ = NULL;
+  startRowU_ = NULL;
+  convertRowToColumnU_ = NULL;
+  indexRowU_ = NULL;
+  indexColumnU_ = NULL;
+  startColumnU_ = NULL;
+  elementL_ = NULL;
+  indexRowL_ = NULL;
+  startColumnL_ = NULL;
+  startColumnR_ = NULL;
+  numberInRow_ = NULL;
+  numberInColumn_ = NULL;
+  numberInColumnPlus_ = NULL;
+  pivotColumn_ = NULL;
+  pivotColumnBack_ = NULL;
+  firstCount_ = NULL;
+  nextCount_ = NULL;
+  lastCount_ = NULL;
+  permute_ = NULL;
+  permuteBack_ = NULL;
+  nextColumn_ = NULL;
+  lastColumn_ = NULL;
+  nextRow_ = NULL;
+  lastRow_ = NULL;
+  saveColumn_ = NULL;
+  markRow_ = NULL;
+  pivotRowL_ = NULL;
+  pivotRegion_ = NULL;
+  elementByRowL_ = NULL;
+  startRowL_ = NULL;
+  indexColumnL_ = NULL;
+  sparse_= NULL;
+#endif
 }
 // type - 1 bit tolerances etc, 2 rest
 void OsiFactorization::gutsOfInitialize(int type)
@@ -133,6 +168,8 @@ void OsiFactorization::gutsOfInitialize(int type)
     // always switch off sparse
     sparseThreshold_=0;
     sparse_=NULL;
+  }
+  if ((type&4)!=0) {
     // we need to get 1 element arrays for any with length n+1 !!
     startColumnL_ = new OsiBigIndex [ 1 ];
     startColumnR_ = new OsiBigIndex [ 1 ];
@@ -146,9 +183,28 @@ void OsiFactorization::gutsOfInitialize(int type)
     pivotColumnBack_ = new int [ 1 ];
     startColumnU_ = new OsiBigIndex [ 1 ];
     numberInColumn_ = new int [ 1 ];
+    numberInColumnPlus_ = new int [ 1 ];
     pivotColumn_ = new int [ 1 ];
     nextColumn_ = new int [ 1 ];
     lastColumn_ = new int [ 1 ];
+#ifdef ZEROFAULT
+    startColumnL_[0] = 0;
+    startColumnR_[0] = 0;
+    startRowU_[0] = 0;
+    numberInRow_[0] = 0;
+    nextRow_[0] = 0;
+    lastRow_[0] = 0;
+    pivotRegion_[0] = 0.0;
+    permuteBack_[0] = 0;
+    permute_[0] = 0;
+    pivotColumnBack_[0] = 0;
+    startColumnU_[0] = 0;
+    numberInColumn_[0] = 0;
+    numberInColumnPlus_[0] = 0;
+    pivotColumn_[0] = 0;
+    nextColumn_[0] = 0;
+    lastColumn_[0] = 0;
+#endif
   }
 }
 //Part of LP
@@ -284,9 +340,11 @@ int OsiFactorization::factorize ( int numberRows, int numberColumns,
 				  const int * columnLength,
 				  const int * row,
 				  const double * element,
-				 int rowIsBasic[],
-				 int columnIsBasic[],
-				 double areaFactor )
+				  int rowIsBasic[],
+				  int columnIsBasic[],
+				  double areaFactor ,
+				  double * rowScale,
+				  double * columnScale)
 {
   // maybe for speed will be better to leave as many regions as possible
   gutsOfDestructor();
@@ -332,15 +390,33 @@ int OsiFactorization::factorize ( int numberRows, int numberColumns,
       numberBasic++;
     }
   }
-  for (i=0;i<numberColumns;i++) {
-    if (columnIsBasic[i]>=0) {
-      int j;
-      for (j=columnStart[i];j<columnStart[i]+columnLength[i];j++) {
-	indexRowU_[numberElements]=row[j];
-	indexColumnU_[numberElements]=numberBasic;
-	elementU_[numberElements++]=element[j];
+  if (!rowScale) {
+    // no scaling
+    for (i=0;i<numberColumns;i++) {
+      if (columnIsBasic[i]>=0) {
+	int j;
+	for (j=columnStart[i];j<columnStart[i]+columnLength[i];j++) {
+	  indexRowU_[numberElements]=row[j];
+	  indexColumnU_[numberElements]=numberBasic;
+	  elementU_[numberElements++]=element[j];
+	}
+	numberBasic++;
       }
-      numberBasic++;
+    }
+  } else {
+    // scaling
+    for (i=0;i<numberColumns;i++) {
+      if (columnIsBasic[i]>=0) {
+	int j;
+	double scale = columnScale[i];
+	for (j=columnStart[i];j<columnStart[i]+columnLength[i];j++) {
+	  int iRow = row[j];
+	  indexRowU_[numberElements]=iRow;
+	  indexColumnU_[numberElements]=numberBasic;
+	  elementU_[numberElements++]=element[j]*scale*rowScale[iRow];
+	}
+	numberBasic++;
+      }
     }
   }
   lengthU_ = numberElements;
@@ -620,13 +696,32 @@ OsiFactorization::getAreas ( int numberOfRows,
   indexRowL_ = new int [ lengthAreaL_ ];
   startColumnL_ = new OsiBigIndex [ numberRows_ + 1 ];
   startColumnL_[0] = 0;
-  startRowU_ = new OsiBigIndex [ maximumRowsExtra_ + 1 + 7777];
-  numberInRow_ = new int [ maximumRowsExtra_ + 1 +7777];
-  markRow_ = new int [ numberRows_ + 7777];
+  startRowU_ = new OsiBigIndex [ maximumRowsExtra_ + 1 ];
+  // make sure this is valid
+  startRowU_[maximumRowsExtra_]=0;
+  numberInRow_ = new int [ maximumRowsExtra_ + 1 ];
+  markRow_ = new int [ numberRows_ ];
   pivotRowL_ = new int [ numberRows_ + 1 ];
   nextRow_ = new int [ maximumRowsExtra_ + 1 ];
   lastRow_ = new int [ maximumRowsExtra_ + 1 ];
+  permute_ = new int [ maximumRowsExtra_ + 1 ];
   pivotRegion_ = new double [ maximumRowsExtra_ + 1 ];
+#ifdef ZEROFAULT
+  memset(elementU_,'a',lengthAreaU_*sizeof(double));
+  memset(indexRowU_,'b',lengthAreaU_*sizeof(int));
+  memset(indexColumnU_,'c',lengthAreaU_*sizeof(int));
+  memset(elementL_,'d',lengthAreaL_*sizeof(double));
+  memset(indexRowL_,'e',lengthAreaL_*sizeof(int));
+  memset(startColumnL_+1,'f',numberRows_*sizeof(OsiBigIndex));
+  memset(startRowU_,'g',maximumRowsExtra_*sizeof(OsiBigIndex));
+  memset(numberInRow_,'h',(maximumRowsExtra_+1)*sizeof(int));
+  memset(markRow_,'i',numberRows_*sizeof(int));
+  memset(pivotRowL_,'j',(numberRows_+1)*sizeof(int));
+  memset(nextRow_,'k',(maximumRowsExtra_+1)*sizeof(int));
+  memset(lastRow_,'l',(maximumRowsExtra_+1)*sizeof(int));
+  memset(permute_,'l',(maximumRowsExtra_+1)*sizeof(int));
+  memset(pivotRegion_,'m',(maximumRowsExtra_+1)*sizeof(double));
+#endif
   startColumnU_ = new OsiBigIndex [ maximumColumnsExtra_ + 1 ];
   numberInColumn_ = new int [ maximumColumnsExtra_ + 1 ];
   numberInColumnPlus_ = new int [ maximumColumnsExtra_ + 1 ];
@@ -634,6 +729,15 @@ OsiFactorization::getAreas ( int numberOfRows,
   nextColumn_ = new int [ maximumColumnsExtra_ + 1 ];
   lastColumn_ = new int [ maximumColumnsExtra_ + 1 ];
   saveColumn_ = new int [ numberColumns_ ];
+#ifdef ZEROFAULT
+  memset(startColumnU_,'a',(maximumColumnsExtra_+1)*sizeof(OsiBigIndex));
+  memset(numberInColumn_,'b',(maximumColumnsExtra_+1)*sizeof(int));
+  memset(numberInColumnPlus_,'c',(maximumColumnsExtra_+1)*sizeof(int));
+  memset(pivotColumn_,'d',(maximumColumnsExtra_+1)*sizeof(int));
+  memset(nextColumn_,'e',(maximumColumnsExtra_+1)*sizeof(int));
+  memset(lastColumn_,'f',(maximumColumnsExtra_+1)*sizeof(int));
+  memset(saveColumn_,'g',numberColumns_*sizeof(int));
+#endif
   if ( numberRows_ + numberColumns_ ) {
     if ( numberRows_ > numberColumns_ ) {
       biggerDimension_ = numberRows_;
@@ -643,10 +747,18 @@ OsiFactorization::getAreas ( int numberOfRows,
     firstCount_ = new int [ biggerDimension_ + 2 ];
     nextCount_ = new int [ numberRows_ + numberColumns_ ];
     lastCount_ = new int [ numberRows_ + numberColumns_ ];
+#ifdef ZEROFAULT
+    memset(firstCount_,'g',(biggerDimension_ + 2 )*sizeof(int));
+    memset(nextCount_,'h',(numberRows_+numberColumns_)*sizeof(int));
+    memset(lastCount_,'i',(numberRows_+numberColumns_)*sizeof(int));
+#endif
   } else {
     firstCount_ = new int [ 2 ];
-    nextCount_ = 0;
-    lastCount_ = 0;
+    nextCount_ = NULL;
+    lastCount_ = NULL;
+#ifdef ZEROFAULT
+    memset(firstCount_,'g', 2 *sizeof(int));
+#endif
     biggerDimension_ = 0;
   }				
 }
@@ -827,8 +939,10 @@ OsiFactorization::factor (  )
     {
       if ( numberGoodU_ < numberRows_ ) {
 	int i, k;
-
+	
+	int * swap = permute_;
 	permute_ = nextRow_;
+	nextRow_ = swap;
 	for ( i = 0; i < numberRows_; i++ ) {
 	  lastRow_[i] = -1;
 	}			
@@ -1315,10 +1429,15 @@ OsiFactorization::cleanup (  )
   //use nextRow for permutation  (as that is what it is)
   int i;
 
+  int * swap = permute_;
   permute_ = nextRow_;
+  nextRow_ = swap;
   //safety feature
   permute_[numberRows_] = 0;
   permuteBack_ = new int [ maximumRowsExtra_ + 1 ];
+#ifdef ZEROFAULT
+  memset(permuteBack_,'w',(maximumRowsExtra_+1)*sizeof(int));
+#endif
   for ( i = 0; i < numberRows_; i++ ) {
     int iRow = permute_[i];
 
@@ -1327,7 +1446,6 @@ OsiFactorization::cleanup (  )
   //redo nextRow_
   int extraSpace = maximumPivots_;
 
-  nextRow_ = new int [ maximumRowsExtra_ + 1 ];
   for ( i = 0; i < numberColumns_; i++ ) {
     int number = numberInColumn_[i];	//always 0?
     int processed = numberInColumnPlus_[i];
@@ -1342,6 +1460,9 @@ OsiFactorization::cleanup (  )
   int numberU = 0;
 
   pivotColumnBack_ = new int [ maximumRowsExtra_ + 1 ];
+#ifdef ZEROFAULT
+  memset(pivotColumnBack_,'q',(maximumRowsExtra_+1)*sizeof(int));
+#endif
   for ( i = 0; i < numberColumns_; i++ ) {
     int iColumn = pivotColumn_[i];
 
@@ -1539,6 +1660,9 @@ OsiFactorization::cleanup (  )
   delete []  pivotRowL_ ;
   pivotRowL_ = 0;
   startColumnR_ = new OsiBigIndex [ extraSpace + 1 ];
+#ifdef ZEROFAULT
+  memset(startColumnR_,'z',(extraSpace + 1)*sizeof(OsiBigIndex));
+#endif
   //use L for R if room
   OsiBigIndex space = lengthAreaL_ - lengthL_;
   OsiBigIndex spaceUsed = lengthL_ + lengthU_;
@@ -1745,13 +1869,13 @@ OsiFactorization::pivotOneOtherRow ( int pivotRow,
 	  for ( i = startColumn + 1; i < endColumn; i++ ) {
 	    iRow = nextIRow;
 	    value = nextValue;
-#ifdef CHECKING
+#ifdef ZEROFAULT
 	    // doesn't matter reading uninitialized but annoys checking
 	    if ( i + 1 < endColumn ) {
 #endif
 	      nextIRow = indexRowU_[i + 1];
 	      nextValue = elementU_[i + 1];
-#ifdef CHECKING
+#ifdef ZEROFAULT
 	    }
 #endif
 	    if ( iRow != pivotRow ) {
@@ -1777,13 +1901,13 @@ OsiFactorization::pivotOneOtherRow ( int pivotRow,
 	  for ( i = startColumn + 1; i < endColumn; i++ ) {
 	    iRow = nextIRow;
 	    value = nextValue;
-#ifdef CHECKING
+#ifdef ZEROFAULT
 	    // doesn't matter reading uninitialized but annoys checking
 	    if ( i + 1 < endColumn ) {
 #endif
 	      nextIRow = indexRowU_[i + 1];
 	      nextValue = elementU_[i + 1];
-#ifdef CHECKING
+#ifdef ZEROFAULT
 	    }
 #endif
 	    if ( iRow != pivotRow ) {
@@ -1810,13 +1934,13 @@ OsiFactorization::pivotOneOtherRow ( int pivotRow,
 	for ( i = startColumn + 1; i < endColumn; i++ ) {
 	  iRow = nextIRow;
 	  value = nextValue;
-#ifdef CHECKING
+#ifdef ZEROFAULT
 	  // doesn't matter reading uninitialized but annoys checking
 	  if ( i + 1 < endColumn ) {
 #endif
 	    nextIRow = indexRowU_[i + 1];
 	    nextValue = elementU_[i + 1];
-#ifdef CHECKING
+#ifdef ZEROFAULT
 	  }
 #endif
 	  if ( iRow != otherRow ) {

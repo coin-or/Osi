@@ -1463,11 +1463,12 @@ int OsiMpsReader::readMps()
 	integerType_[column] = 0;
       }
     }
+    // start hash even if no bound section - to make sure names survive
+    startHash ( columnName, numberColumns_ , 1 );
     if ( mpsfile.whichSection (  ) == OSI_BOUND_SECTION ) {
       memset ( lastColumn, '\0', 200 );
       bool gotBound = false;
 
-      startHash ( columnName, numberColumns_ , 1 );
       while ( mpsfile.nextField (  ) == OSI_BOUND_SECTION ) {
 	if ( strcmp ( lastColumn, mpsfile.columnName (  ) ) ) {
 
@@ -1624,8 +1625,8 @@ int OsiMpsReader::readMps()
 	  }
 	}
       }
-      stopHash ( 1 );
     }
+    stopHash ( 1 );
     // clean up integers
     if ( !numberIntegers ) {
       free(integerType_);

@@ -78,14 +78,17 @@ public:
   int factorize ( const OsiPackedMatrix & matrix, 
 		  int rowIsBasic[], int columnIsBasic[] , 
 		  double areaFactor = 0.0 );
-  /// Same but with OsiPackedMatrix components split out
+  /** Same but with OsiPackedMatrix components split out and
+      allows scaling */
   int factorize ( int numberRows, int numberColumns,
 		  const OsiBigIndex * columnStart,
 		  const int * columnLength,
 		  const int * row,
 		  const double * element,
 		  int rowIsBasic[], int columnIsBasic[] , 
-		  double areaFactor = 0.0 );
+		  double areaFactor = 0.0 ,
+		  double * rowScale = NULL,
+		  double * columnScale = NULL);
   /** When given as triplets.
   Actually does factorization.  maximumL is guessed maximum size of L part of
   final factorization, maximumU of U part.  These are multiplied by
@@ -501,9 +504,9 @@ private:
   /** Returns accuracy status of replaceColumn
       returns 0=OK, 1=Probably OK, 2=singular */
   int checkPivot(double saveFromU, double oldPivot) const;
-  /// The real work of constructors etc
+  /// The real work of constructors etc 
   void gutsOfDestructor();
-  /// 1 bit - tolerances etc, 2 rest (could be more granular)
+  /// 1 bit - tolerances etc, 2 more, 4 dummy arrays
   void gutsOfInitialize(int type);
   void gutsOfCopy(const OsiFactorization &other);
 
@@ -964,10 +967,7 @@ private:
     OsiBigIndex end = startRowU[iRow] + number;
     int saveIndex;
 
-#ifdef CHECKING
-    if ( next != maximumRowsExtra_ )
-#endif
-      saveIndex = indexColumnU[startRowU[next]];
+    saveIndex = indexColumnU[startRowU[next]];
 
     //add in
     for ( jColumn = 0; jColumn < numberInPivotRow; jColumn++ ) {
@@ -979,11 +979,7 @@ private:
       indexColumnU[end] = saveColumn[jColumn];
       end += test;
     }				
-    //put back next one in case zapped
-#ifdef CHECKING
-    if ( next != maximumRowsExtra_ )
-#endif
-      indexColumnU[startRowU[next]] = saveIndex;
+    indexColumnU[startRowU[next]] = saveIndex;
     markRow[iRow] = -1;
     number = end - startRowU[iRow];
     numberInRow[iRow] = number;

@@ -1359,7 +1359,6 @@ OsiPackedMatrix::OsiPackedMatrix(
       /* pick up the entry with your right hand */
       double value = elements[k];
       int iRow=rowIndices[k];
-      int iColumnSave=0;
       colIndices[k]=-2;	/* the hole */
 
       while (1) {

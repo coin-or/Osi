@@ -53,22 +53,26 @@ toColumnOrderedGapFree(const CoinPackedMatrix& matrix)
 void OsiOslSolverInterface::initialSolve()
 {
   EKKModel* model = getMutableModelPtr();
-
+  int rtcod;
 #if 0
   ekk_crash(model,1); 
-  ekk_primalSimplex(model,1);
+  rtcod=ekk_primalSimplex(model,1);
 #elif 0
   ekk_setIiternum(model, 0);
-  ekk_simplex(model, 2); // *FIXME* : why not 0 (eitherSimplex)
+  rtcod=ekk_simplex(model, 2); // *FIXME* : why not 0 (eitherSimplex)
 #else
   ekk_setIiternum(model, 0);
-  ekk_simplex(model, 0);
+  rtcod=ekk_simplex(model, 0);
 #endif
+  // If abandoned use B&B status which says abandoned
+  if (rtcod>200)
+    ekk_setIprobstat(model,6);
 }
 //-----------------------------------------------------------------------------
 void OsiOslSolverInterface::resolve()
 {
   EKKModel* model = getMutableModelPtr();
+  int rtcod;
 
   ekk_mergeBlocks(model, 1);
   ekk_setIiternum(model, 0);
@@ -84,10 +88,13 @@ void OsiOslSolverInterface::resolve()
       ekk_messagePrintOff(model,317);
   }
 #if 0
-  ekk_dualSimplex(model); // *FIXME* : why not 0 (eitherSimplex)
+  rtcod=ekk_dualSimplex(model); // *FIXME* : why not 0 (eitherSimplex)
 #else
-  ekk_simplex(model, 256 + 32); // no presolve and no scaling
+  rtcod=ekk_simplex(model, 256 + 32); // no presolve and no scaling
 #endif
+  // If abandoned use B&B status which says abandoned
+  if (rtcod>200)
+    ekk_setIprobstat(model,6);
 }
 //-----------------------------------------------------------------------------
 void OsiOslSolverInterface::branchAndBound()
@@ -281,16 +288,12 @@ OsiOslSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
 
 bool OsiOslSolverInterface::isAbandoned() const
 {
-  // *THINK*:
-  // in *our* current setup if there are to many numerical difficulties, or
-  // more precisely there is a severe error condition then OSL just outputs a
-  // message and exits. We could change this, but will do it later.
-  return false;
+  EKKModel* model = getMutableModelPtr();
+  return (ekk_getIprobstat(model)==6);
 }
 
 bool OsiOslSolverInterface::isProvenOptimal() const
 {
-  // *TEST*
   EKKModel* model = getMutableModelPtr();
   const int stat = ekk_getIprobstat(model);
   return (stat == 0);
@@ -313,7 +316,6 @@ bool OsiOslSolverInterface::isProvenPrimalInfeasible() const
 
 bool OsiOslSolverInterface::isProvenDualInfeasible() const
 {
-  // *TEST*
   EKKModel* model = getMutableModelPtr();
   const int stat = ekk_getIprobstat(model);
   return stat == 2;
@@ -330,6 +332,8 @@ bool OsiOslSolverInterface::isPrimalObjectiveLimitReached() const
   }
    
   EKKModel* model = getMutableModelPtr();
+  if (ekk_getIprobstat(model)==6)
+    return false;
   const int lastalgo = ekk_lastAlgorithm(model);
   const double obj = ekk_getRobjvalue(model);
   const double maxmin = ekk_getRmaxmin(model);
@@ -358,6 +362,8 @@ bool OsiOslSolverInterface::isDualObjectiveLimitReached() const
   }
    
   EKKModel* model = getMutableModelPtr();
+  if (ekk_getIprobstat(model)==6)
+    return false;
   const int lastalgo = ekk_lastAlgorithm(model);
   const double obj = ekk_getRobjvalue(model);
   const double maxmin = ekk_getRmaxmin(model);
@@ -382,6 +388,8 @@ bool OsiOslSolverInterface::isIterationLimitReached() const
 {
   // *TEST*
   EKKModel* model = getMutableModelPtr();
+  if (ekk_getIprobstat(model)==6)
+    return false;
   const int stat = ekk_getIprobstat(model);
   return (stat == 3);
 }

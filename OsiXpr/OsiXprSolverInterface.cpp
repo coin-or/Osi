@@ -982,12 +982,13 @@ const double * OsiXprSolverInterface::getRowActivity() const
       if( nrows > 0 ) {
 	int status;
 
+	rowact_ = new double[nrows];
+
 	getipv(N_PSTAT, &status);
 
 	if ( status == 7 ) {
 	  int i;
 
-	  rowact_ = new double[nrows];
 	  solution(NULL, rowact_, NULL, NULL);
 
 	  for ( i = 0;  i < nrows;  i++ )

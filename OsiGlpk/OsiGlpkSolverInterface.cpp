@@ -1030,6 +1030,7 @@ const CoinPackedMatrix * OsiGlpkSolverInterface::getMatrixByRow() const
 			{
 				--colind[j];
 			}
+
 			// Note:  lpx_get_mat_row apparently may return the
 			// elements in decreasing order.  This differs from
 			// people's standard expectations but is not an error.
@@ -1783,15 +1784,15 @@ void
 OsiGlpkSolverInterface::deleteRows(const int num, const int * rowIndices)
 {
 
-	int *rowIndicesPlus1 = new int[num];
+	int *rowIndicesPlus1 = new int[num+1];
         LPX *model = getMutableModelPtr();
 	freeCachedData( OsiGlpkSolverInterface::KEEPCACHED_COLUMN );
 
 	for( int i = 0; i < num; i++ )
 	{
-		rowIndicesPlus1[i]=rowIndices[i]+1;
+		rowIndicesPlus1[i+1]=rowIndices[i]+1;
 	}
-	lpx_del_rows(model,num,rowIndicesPlus1);
+	lpx_del_rows(model, num, rowIndicesPlus1);
 }
 
 //#############################################################################

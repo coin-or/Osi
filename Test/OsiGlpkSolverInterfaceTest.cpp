@@ -25,6 +25,10 @@
 #include "OsiColCut.hpp"
 #include "CoinMessage.hpp"
 
+// Added so build windows build with dsp files works,
+// when not building with cplex.
+#ifdef COIN_USE_GLPK
+
 //#############################################################################
 
 #ifdef NDEBUG
@@ -1155,3 +1159,4 @@ OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & n
     OsiSolverInterfaceCommonUnitTest(&m, mpsDir,netlibDir);
   }
 }
+#endif

@@ -29,6 +29,10 @@
 #undef NDEBUG
 #endif
 
+// Added so build windows build with dsp files works,
+// when not building with cplex.
+#ifdef COIN_USE_SPX
+
 void OsiSpxSolverInterface::printBounds()
 {
   int nc = getNumCols();
@@ -735,3 +739,4 @@ void OsiSpxSolverInterfaceUnitTest( const std::string & mpsDir, const std::strin
     OsiSolverInterfaceCommonUnitTest(&m, mpsDir,netlibDir);
   }
 }
+#endif

@@ -21,6 +21,10 @@
 #endif
 
 
+// Added so build windows build with dsp files works,
+// when not building with cplex.
+#ifdef COIN_USE_FMP
+
 //#############################################################################
 
 
@@ -347,3 +351,4 @@ OsiFmpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     OsiSolverInterfaceCommonUnitTest(&m, mpsDir, netlibDir);
   }
 }
+#endif

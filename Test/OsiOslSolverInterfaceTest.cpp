@@ -21,6 +21,11 @@
   using std::max;
   using std::min;
 #endif
+  
+// Added so build windows build with dsp files works,
+// when not building with cplex.
+#ifdef COIN_USE_OSL
+
 // Trivial class for Branch and Bound
 
 class OsiNodeSimple  {
@@ -912,3 +917,4 @@ OsiOslSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
   assert(OsiOslSolverInterface::getNumInstances()==0);
 
 }
+#endif

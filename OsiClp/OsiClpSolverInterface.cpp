@@ -1832,7 +1832,8 @@ OsiClpSolverInterface::enableSimplexInterface(bool doingPrimal)
   modelPtr_->setDualRowPivotAlgorithm(dantzig);
   ClpPrimalColumnDantzig dantzigP;
   modelPtr_->setPrimalColumnPivotAlgorithm(dantzigP);
-  assert (!modelPtr_->startup(0));
+  int returnCode=modelPtr_->startup(0);
+  assert (!returnCode);
 }
 
 //Undo whatever setting changes the above method had to make

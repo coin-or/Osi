@@ -1136,7 +1136,12 @@ double OsiGlpkSolverInterface::getObjValue() const
 {
         LPX *model = getMutableModelPtr();
 	assert( lpx_get_status( model ) != LPX_UNDEF );
-	return lpx_get_obj_val( model );
+  
+  // Adjust objective function value by constant term in objective function
+  double objOffset;
+  getDblParam(OsiObjOffset,objOffset);
+
+	return lpx_get_obj_val( model ) - objOffset;
 }
 
 //-----------------------------------------------------------------------------

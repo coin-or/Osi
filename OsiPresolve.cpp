@@ -580,6 +580,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 
     // Check number rows dropped
     int lastDropped=0;
+    prob->pass_=0;
     for (iLoop=0;iLoop<numberPasses_;iLoop++) {
 #ifdef PRESOLVE_SUMMARY
       printf("Starting major pass %d\n",iLoop+1);

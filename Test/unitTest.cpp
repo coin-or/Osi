@@ -42,6 +42,9 @@
 #ifdef COIN_USE_DYLP
 #include "OsiDylpSolverInterface.hpp"
 #endif
+#ifdef COIN_USE_CLP
+#include "OsiClpSolverInterface.hpp"
+#endif
 // Function Prototypes. Function definitions is in this file.
 void testingMessage( const char * const msg );
 
@@ -252,6 +255,24 @@ int main (int argc, const char *argv[])
   }
 #endif
 
+#ifdef COIN_USE_CLP  
+  {
+    OsiClpSolverInterface clpSi;
+    testingMessage( "Testing OsiRowCut with OsiClpSolverInterface\n" );
+    OsiRowCutUnitTest(&clpSi,mpsDir);
+  }
+  {
+    OsiClpSolverInterface clpSi;
+    testingMessage( "Testing OsiColCut with OsiClpSolverInterface\n" );
+    OsiColCutUnitTest(&clpSi,mpsDir);
+  }
+  {
+    OsiClpSolverInterface clpSi;
+    testingMessage( "Testing OsiRowCutDebugger with OsiClpSolverInterface\n" );
+    OsiRowCutDebuggerUnitTest(&clpSi,mpsDir);
+  }
+#endif
+
   testingMessage( "Testing OsiCuts\n" );
   OsiCutsUnitTest();
 
@@ -285,6 +306,11 @@ int main (int argc, const char *argv[])
   OsiDylpSolverInterfaceUnitTest(mpsDir);
 #endif
   
+#ifdef COIN_USE_CLP
+  testingMessage( "Testing OsiClpSolverInterface\n" );
+  OsiClpSolverInterfaceUnitTest(mpsDir);
+#endif
+
   if (parms.find("-testOsiSolverInterface") != parms.end())
   {
     // Create vector of solver interfaces
@@ -312,6 +338,10 @@ int main (int argc, const char *argv[])
 #   if COIN_USE_DYLP
     OsiSolverInterface * dylpSi = new OsiDylpSolverInterface;
     vecSi.push_back(dylpSi);
+#endif
+#   if COIN_USE_CLP
+    OsiSolverInterface * clpSi = new OsiClpSolverInterface;
+    vecSi.push_back(clpSi);
 #endif
 
     testingMessage( "Testing OsiSolverInterface\n" );

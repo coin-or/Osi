@@ -1,5 +1,6 @@
 SOLVERLIBS += libOsiOsl
 SOLVERLIBS += libOsiVol
+#SOLVERLIBS += libOsiClp
 #LIBS += osicpx
 #LIBS += osiclp
 #LIBS += osispx

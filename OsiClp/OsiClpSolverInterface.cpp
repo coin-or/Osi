@@ -252,13 +252,13 @@ void OsiClpSolverInterface::resolve()
   // sort out hints;
   // algorithm -1 force dual, +1 force primal
   int algorithm = -1;
-  gotHint = (getHintParam(OsiDoDualInInitial,takeHint,strength));
+  gotHint = (getHintParam(OsiDoDualInResolve,takeHint,strength));
   assert (gotHint);
   if (strength!=OsiHintIgnore)
     algorithm = takeHint ? -1 : 1;
   //solver.saveModel("save.bad");
   // presolve
-  gotHint = (getHintParam(OsiDoPresolveInInitial,takeHint,strength));
+  gotHint = (getHintParam(OsiDoPresolveInResolve,takeHint,strength));
   assert (gotHint);
   if (strength!=OsiHintIgnore&&takeHint) {
     Presolve pinfo;

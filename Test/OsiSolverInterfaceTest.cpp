@@ -12,7 +12,9 @@
 #include <cstdio>
 
 #include "OsiSolverInterface.hpp"
+#ifdef COIN_USE_VOL
 #include "OsiVolSolverInterface.hpp"
+#endif
 #ifdef COIN_USE_DYLP
 #  include "OsiDyLpSolverInterface.hpp"
 #endif

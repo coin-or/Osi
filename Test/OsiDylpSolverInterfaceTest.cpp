@@ -1,6 +1,6 @@
 /*! \legal
-  Copyright (C) 2002, Lou Hafer, Stephen Tse, International Business Machines
-  Corporation and others. All Rights Reserved.
+  Copyright (C) 2002, 2003, Lou Hafer, Stephen Tse, International Business
+  Machines Corporation and others. All Rights Reserved.
 */
 
 #ifdef COIN_USE_DYLP
@@ -23,8 +23,8 @@
 
 #include <iostream>
 #include <assert.h>
-#include <CoinWarmStartBasis.hpp>
 #include "OsiDylpSolverInterface.hpp"
+#include "OsiDylpWarmStartBasis.hpp"
 #include "OsiDylpMessages.hpp"
 
 
@@ -34,16 +34,32 @@ static char cvsid[] = "$Id$" ;
 
 void test_starts (const std::string& mpsDir)
 /*
-  Some basic tests: Solve the exmip1 sample MPS file with the initialSolve
-  routine, then check warm and hot starts. The warm start object is derived
-  from one solver, which is then discarded, and applied to a newly created
-  second solver.
+  This routine makes a number of checks for warm and hot start capabilities.
+    * Create and attempt to set an empty warm start object.
+    * Create an ODSI object and solve the exmip1 sample MPS file with
+      initialSolve.
+    * Get a warm start object, then destroy the ODSI object. Create a new ODSI
+      object, clone the saved warm start, install it, and resolve. Check that
+      the objective is the same and that we did not pivot.
+    * Change the objective sense and resolve from hot start.
 */
 { OsiDylpSolverInterface *osi = new OsiDylpSolverInterface ;
   OsiHintStrength strength ;
   bool sense ;
   void *info ;
 
+/*
+  Create an empty warm start object and try to set it. The create should
+  succeed, the set should fail.
+*/
+  { std::cout << "Checking behaviour for empty warm start object.\n" ;
+    CoinWarmStart *ws = osi->getWarmStart() ;
+    assert(ws) ;
+    assert(!osi->setWarmStart(ws)) ;
+    delete ws ; }
+/*
+  Read in exmip1 and solve it.
+*/
   std::cout << "Boosting verbosity.\n" ;
   osi->setHintParam(OsiDoReducePrint,false) ;
 
@@ -57,10 +73,12 @@ void test_starts (const std::string& mpsDir)
   double val = osi->getObjValue() ;
   std::cout << "And the answer is " << val << ".\n" ;
   assert(fabs(val - 3.23) < 0.01) ;
-
+/*
+  Grab a warm start object.
+*/
   std::cout << "Getting a warm start object ... \n" ;
   CoinWarmStart *ws = osi->getWarmStart() ;
-
+  assert(ws) ;
 /*
   Brief interruption for an idiot check: are the signs of the reduced costs
   correct in the solution, given minimisation? Easy to test with status info
@@ -98,14 +116,22 @@ void test_starts (const std::string& mpsDir)
 */
   std::cout << "Discarding current ODSI object ... \n" ;
   delete osi ;
-
 /*
-  We've discarded the first solver. Now create a second solver, read in the
-  problem again, and try a warm start. Set the print level quite high.
+  We've discarded the first solver. Create a second solver, and read in the
+  problem. Clone the original warm start object and destroy the original.
+  Install the clone in the new solver, and resolve. Check that we did not
+  pivot and that the objective hasn't changed. Set the print level quite high.
 */
-
   std::cout << "Creating new ODSI object ... \n" ;
   osi = new OsiDylpSolverInterface ;
+  assert(osi) ;
+  std::cout << "Testing anonymous clone for warm start ... \n" ;
+  CoinWarmStart *ws_clone = ws->clone() ;
+  assert(ws_clone) ;
+  delete ws ;
+  ws = ws_clone ;
+  ws_clone = 0 ;
+
   int level = 5 ;
   osi->setHintParam(OsiDoReducePrint,true,OsiForceDo,&level) ;
   osi->getHintParam(OsiDoReducePrint,sense,strength,info) ;
@@ -113,15 +139,17 @@ void test_starts (const std::string& mpsDir)
 
   osi->readMps(exmpsfile.c_str(), "mps") ;
 
-  std::cout << "Setting a warm start object ... \n" ;
-  osi->setWarmStart(ws) ;
+  std::cout << "Installing cloned warm start object ... \n" ;
+  assert(osi->setWarmStart(ws)) ;
   std::cout << "Resolving the lp ... \n" ;
 
   osi->resolve() ;
   val = osi->getObjValue() ;
-  std::cout << "\nAnd the answer is " << val << ".\n" ;
+  int pivots = osi->getIterationCount() ;
+  std::cout << "\nAnd the answer is " << val << " after " <<
+	       pivots << " pivots.\n" ;
   delete ws ;
-  assert(fabs(val - 3.23) < 0.01) ;
+  assert(fabs(val - 3.23) < 0.01 && pivots == 0) ;
 
   osi->setHintParam(OsiDoReducePrint,true,OsiForceDo) ;
   std::cout << "Reducing verbosity.\n" ;
@@ -186,20 +214,26 @@ void test_starts (const std::string& mpsDir)
   return ; } ;
 
 
+/*!
+  This is the unit test routine for OsiDylpSolverInterface. It tests for
+  problems that have been uncovered and fixed already. If it fails, you've
+  probably tickled a new bug. Please file a bug report.
+*/
+
 void OsiDylpSolverInterfaceUnitTest (const std::string &mpsDir,
 				     const std::string &netLibDir)
 /*
   Dylp unit test driver.
 */
 { std::cout << "Starting dylp OSI interface tests ...\n" ;
-  std::cout <<
-    "Calling OsiSolverInterfaceCommonUnitTest for basic tests ...\n" ;
   OsiDylpSolverInterface* osi = new OsiDylpSolverInterface ;
   osi->handler_->setLogLevel(3) ;
   osi->handler_->message(ODSI_TEST_MSG,osi->messages_) ;
   osi->newLanguage(CoinMessages::uk_en) ;
   osi->handler_->message(ODSI_TEST_MSG,osi->messages_) ;
   osi->handler_->finish() ;
+  std::cout <<
+    "Calling OsiSolverInterfaceCommonUnitTest for basic tests ...\n" ;
   OsiSolverInterfaceCommonUnitTest(osi,mpsDir,netLibDir) ;
 /*
   Test the reset function.

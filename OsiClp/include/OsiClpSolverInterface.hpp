@@ -49,7 +49,6 @@ public:
     };
   //@}
 
-#ifdef OSISIMPLEXINTERFACE
   ///@name OsiSimplexInterface methods 
   //@{
 
@@ -58,7 +57,7 @@ public:
      reduced costs, etc.) are updated when individual pivots are executed
      and can be queried by other methods 
   */
-  virtual void enableSimplexInterface();
+  virtual void enableSimplexInterface(bool doingPrimal);
 
   ///Undo whatever setting changes the above method had to make
   virtual void disableSimplexInterface();
@@ -73,10 +72,12 @@ public:
      2. It is ensured that effects on the solver are the same
 
      Returns a basis status of the structural/artificial variables 
+     At present as warm start i.e 0 free, 1 basic, 2 upper, 3 lower
   */
   virtual void getBasisStatus(int* cstat, int* rstat);
 
-  ///Set the status of structural/artificial variables 
+  /** Set the status of structural/artificial variables and
+      factorize, update solution etc */
   virtual int setBasisStatus(const int* cstat, const int* rstat);
 
   /** Perform a pivot by substituting a colIn for colOut in the basis. 
@@ -110,7 +111,9 @@ public:
 			      double& t, CoinPackedVector* dx);
 
   ///Get the reduced gradient for the cost vector c 
-  virtual void getReducedGradient(double* z, const double * c);
+  virtual void getReducedGradient(double* columnReducedCosts, 
+				  double * duals,
+				  const double * c);
 
   /** Set a new objective and apply the old basis so that the
       reduced costs are properly updated  */
@@ -135,7 +138,6 @@ public:
   virtual void getBasics(int* index);
 
   //@}
-#endif
   //---------------------------------------------------------------------------
   /**@name Parameter set/get methods
 

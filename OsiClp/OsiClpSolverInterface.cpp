@@ -14,6 +14,7 @@
 #endif
 
 #include "CoinHelperFunctions.hpp"
+#include "CoinIndexedVector.hpp"
 #include "ClpDualRowSteepest.hpp"
 #include "ClpPrimalColumnSteepest.hpp"
 #include "ClpFactorization.hpp"
@@ -1589,17 +1590,18 @@ OsiClpSolverInterface::setColBounds( int elementIndex,
     modelPtr_->upperRegion(1)[elementIndex] = upper;
   }
 }
-#ifdef OSISIMPLEXINTERFACE
 /*Enables normal operation of subsequent functions.
   This method is supposed to ensure that all typical things (like
   reduced costs, etc.) are updated when individual pivots are executed
   and can be queried by other methods 
 */
 void 
-OsiClpSolverInterface::enableSimplexInterface()
+OsiClpSolverInterface::enableSimplexInterface(bool doingPrimal)
 {
   assert (modelPtr_->solveType()==1);
   modelPtr_->setSolveType(2);
+  modelPtr_->scaling(0);
+  // Do initialization
 }
 
 //Undo whatever setting changes the above method had to make
@@ -1608,6 +1610,7 @@ OsiClpSolverInterface::disableSimplexInterface()
 {
   assert (modelPtr_->solveType()==2);
   modelPtr_->setSolveType(1);
+  abort();
 }
 /* The following two methods may be replaced by the
    methods of OsiSolverInterface using OsiWarmStartBasis if:
@@ -1620,12 +1623,31 @@ OsiClpSolverInterface::disableSimplexInterface()
 void 
 OsiClpSolverInterface::getBasisStatus(int* cstat, int* rstat)
 {
+  assert (modelPtr_->solveType()==2);
+  int i, n;
+  n=modelPtr_->numberRows();
+  for (i=0;i<n;i++)
+    rstat[i] = modelPtr_->getRowStatus(i);
+  n=modelPtr_->numberColumns();
+  for (i=0;i<n;i++)
+    cstat[i] = modelPtr_->getColumnStatus(i);
 }
 
 //Set the status of structural/artificial variables 
 int 
 OsiClpSolverInterface::setBasisStatus(const int* cstat, const int* rstat)
 {
+  assert (modelPtr_->solveType()==2);
+  modelPtr_->createStatus();
+  int i, n;
+  n=modelPtr_->numberRows();
+  for (i=0;i<n;i++)
+    modelPtr_->setRowStatus(i,(ClpSimplex::Status) rstat[i]);
+  n=modelPtr_->numberColumns();
+  for (i=0;i<n;i++)
+    modelPtr_->setColumnStatus(i,(ClpSimplex::Status) cstat[i]);
+  abort();
+  return 0;
 }
 
 /* Perform a pivot by substituting a colIn for colOut in the basis. 
@@ -1635,6 +1657,8 @@ OsiClpSolverInterface::setBasisStatus(const int* cstat, const int* rstat)
 int 
 OsiClpSolverInterface::pivot(int colIn, int colOut, int outStatus)
 {
+  assert (modelPtr_->solveType()==2);
+  abort();
   return 0;
 }
 
@@ -1653,6 +1677,8 @@ OsiClpSolverInterface::primalPivotResult(int colIn, int sign,
 					 int& colOut, int& outStatus, 
 					 double& t, CoinPackedVector* dx)
 {
+  assert (modelPtr_->solveType()==2);
+  abort();
   return 0;
 }
 
@@ -1667,43 +1693,109 @@ OsiClpSolverInterface::dualPivotResult(int& colIn, int& sign,
 			      int colOut, int outStatus, 
 			      double& t, CoinPackedVector* dx)
 {
+  assert (modelPtr_->solveType()==2);
+  abort();
   return 0;
 }
 
 //Get the reduced gradient for the cost vector c 
 void 
-OsiClpSolverInterface::getReducedGradient(double* z, const double * c)
+OsiClpSolverInterface::getReducedGradient(
+					  double* columnReducedCosts, 
+					  double * duals,
+					  const double * c)
 {
+  assert (modelPtr_->solveType()==2);
+  abort();
 }
 
 /* Set a new objective and apply the old basis so that the
    reduced costs are properly updated  */
 void OsiClpSolverInterface::setObjectiveAndRefresh(double* c)
 {
+  assert (modelPtr_->solveType()==2);
+  abort();
 }
 
 //Get a row of the tableau
 void 
 OsiClpSolverInterface::getBInvARow(int row, double* z)
 {
+  assert (modelPtr_->solveType()==2);
+  ClpFactorization * factorization = modelPtr_->factorization();
+  CoinIndexedVector * rowArray0 = modelPtr_->rowArray(0);
+  CoinIndexedVector * rowArray1 = modelPtr_->rowArray(1);
+  CoinIndexedVector * columnArray0 = modelPtr_->columnArray(0);
+  CoinIndexedVector * columnArray1 = modelPtr_->columnArray(1);
+  rowArray0->clear();
+  rowArray1->clear();
+  columnArray0->clear();
+  columnArray1->clear();
+  // put +1 in row
+  rowArray1->insert(row,1.0);
+  factorization->updateColumnTranspose(rowArray0,rowArray1);
+  // put row of tableau in rowArray1 and columnArray0
+  modelPtr_->clpMatrix()->transposeTimes(modelPtr_,1.0,
+			    rowArray0,columnArray1,columnArray0);
+  memcpy(z,columnArray0->denseVector(),
+	 modelPtr_->numberColumns()*sizeof(double));
+  // don't need to clear everything always, but doesn't cost
+  rowArray0->clear();
+  rowArray1->clear();
+  columnArray0->clear();
+  columnArray1->clear();
 }
 
 //Get a row of the basis inverse
 void 
 OsiClpSolverInterface::getBInvRow(int row, double* z)
 {
+  assert (modelPtr_->solveType()==2);
+  ClpFactorization * factorization = modelPtr_->factorization();
+  CoinIndexedVector * rowArray0 = modelPtr_->rowArray(0);
+  CoinIndexedVector * rowArray1 = modelPtr_->rowArray(1);
+  rowArray0->clear();
+  rowArray1->clear();
+  // put +1 in row
+  rowArray1->insert(row,1.0);
+  factorization->updateColumnTranspose(rowArray0,rowArray1);
+  memcpy(z,rowArray1->denseVector(),modelPtr_->numberRows()*sizeof(double));
+  rowArray1->clear();
 }
 
 //Get a column of the tableau
 void 
 OsiClpSolverInterface::getBInvACol(int col, double* vec)
 {
+  assert (modelPtr_->solveType()==2);
+  ClpFactorization * factorization = modelPtr_->factorization();
+  CoinIndexedVector * rowArray0 = modelPtr_->rowArray(0);
+  CoinIndexedVector * rowArray1 = modelPtr_->rowArray(1);
+  rowArray0->clear();
+  rowArray1->clear();
+  // get column of matrix
+  assert(col>=0&&col<modelPtr_->numberColumns());
+  modelPtr_->unpack(rowArray1,col);
+  factorization->updateColumn(rowArray0,rowArray1,false);
+  memcpy(vec,rowArray1->denseVector(),modelPtr_->numberRows()*sizeof(double));
+  rowArray1->clear();
 }
 
 //Get a column of the basis inverse
 void 
 OsiClpSolverInterface::getBInvCol(int col, double* vec)
 {
+  assert (modelPtr_->solveType()==2);
+  ClpFactorization * factorization = modelPtr_->factorization();
+  CoinIndexedVector * rowArray0 = modelPtr_->rowArray(0);
+  CoinIndexedVector * rowArray1 = modelPtr_->rowArray(1);
+  rowArray0->clear();
+  rowArray1->clear();
+  // put +1 in row
+  rowArray1->insert(col,1.0);
+  factorization->updateColumn(rowArray0,rowArray1,false);
+  memcpy(vec,rowArray1->denseVector(),modelPtr_->numberRows()*sizeof(double));
+  rowArray1->clear();
 }
 
 /* Get basic indices (order of indices corresponds to the
@@ -1713,6 +1805,9 @@ OsiClpSolverInterface::getBInvCol(int col, double* vec)
 void 
 OsiClpSolverInterface::getBasics(int* index)
 {
+  assert (modelPtr_->solveType()==2);
+  assert (index);
+  memcpy(index,modelPtr_->pivotVariable(),
+	 modelPtr_->numberRows()*sizeof(int));
 }
-#endif
 

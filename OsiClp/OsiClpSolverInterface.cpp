@@ -7,10 +7,6 @@
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
-#else
-#include <sys/times.h>
-#include <sys/resource.h>
-#include <unistd.h>
 #endif
 
 #include "CoinHelperFunctions.hpp"
@@ -29,23 +25,6 @@
 #include "ClpPresolve.hpp"
 
 static double totalTime=0.0;
-static double cpuTime()
-{
-  double cpu_temp;
-#if defined(_MSC_VER)
-  unsigned int ticksnow;        /* clock_t is same as int */
-  
-  ticksnow = (unsigned int)clock();
-  
-  cpu_temp = (double)((double)ticksnow/CLOCKS_PER_SEC);
-#else
-  struct rusage usage;
-  getrusage(RUSAGE_SELF,&usage);
-  cpu_temp = usage.ru_utime.tv_sec;
-  cpu_temp += 1.0e-6*((double) usage.ru_utime.tv_usec);
-#endif
-  return cpu_temp;
-}
 
 //#############################################################################
 // Solve methods
@@ -53,7 +32,7 @@ static double cpuTime()
 void OsiClpSolverInterface::initialSolve()
 {
   ClpSimplex solver;
-  double time1 = cpuTime();
+  double time1 = CoinCpuTime();
   solver.borrowModel(*modelPtr_);
   // Set message handler to have same levels etc
   solver.passInMessageHandler(handler_);
@@ -212,7 +191,7 @@ void OsiClpSolverInterface::initialSolve()
   //basis_.print();
   solver.messageHandler()->setLogLevel(saveMessageLevel);
   solver.returnModel(*modelPtr_);
-  time1 = cpuTime()-time1;
+  time1 = CoinCpuTime()-time1;
   totalTime += time1;
   //std::cout<<time1<<" seconds - total "<<totalTime<<std::endl;
 }

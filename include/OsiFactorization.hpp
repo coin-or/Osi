@@ -60,7 +60,8 @@ public:
   /** When part of LP - given by basic variables.
   Actually does factorization.
   Arrays passed in have non negative value to say basic.
-  If status is okay, basic variables have pivot row.
+  If status is okay, basic variables have pivot row - this is only needed
+  if increasingRows_ >1
   If status is singular, then basic variables have +1 and ones thrown out have -INT_MAX
   to say thrown out.
   returns 0 -okay, -1 singular, -2 too many in basis, -99 memory */
@@ -74,7 +75,8 @@ public:
   areaFactor which can be computed by user or internally.  
   Arrays are copied in.  I could add flag to delete arrays to save a 
   bit of memory.
-  If status okay, array has pivot rows.
+  If status okay, permutation has pivot rows - this is only needed
+  if increasingRows_ >1 (if not then 0,1,2..
   If status is singular, then basic variables have +1 and ones thrown out have -INT_MAX
   to say thrown out.
   returns 0 -okay, -1 singular, -99 memory */
@@ -87,6 +89,29 @@ public:
 		  const int indicesColumn[], const double elements[] ,
 		  int permutation[],
 		  double areaFactor = 0.0);
+  /** Two part version for maximum flexibility
+      This part creates arrays for user to fill.
+      maximumL is guessed maximum size of L part of
+      final factorization, maximumU of U part.  These are multiplied by
+      areaFactor which can be computed by user or internally.  
+      returns 0 -okay, -99 memory */
+  int factorizePart1 ( int numberOfRows,
+		       int numberOfColumns,
+		       OsiBigIndex numberOfElements,
+		       OsiBigIndex maximumL,
+		       OsiBigIndex maximumU,
+		       int * indicesRow[],
+		       int * indicesColumn[],
+		       double * elements[],
+		  double areaFactor = 0.0);
+  /** This is part two of factorization
+      Arrays belong to factorization and were returned by part 1
+      If status okay, permutation has pivot rows - this is only needed
+      if increasingRows_ >1 (if not then 0,1,2..
+      If status is singular, then basic variables have +1 and ones thrown out have -INT_MAX
+      to say thrown out.
+      returns 0 -okay, -1 singular, -99 memory */
+  int factorizePart2 (int permutation[]);
   //@}
 
   /**@name general stuff such as permutation or status */
@@ -150,7 +175,10 @@ public:
   inline bool increasingRows (  ) const {
     return increasingRows_ > 1;
   };
-  /// 0 - no permutation (not coded), 1 user need not bother,2 user needs to know
+  /** 0 - no increasing rows - no nothing (not coded)
+      1 - no permutation (i.e. basis order in is pivot order), 
+      2 user wants slacks pivoting on own rows,
+      3 user needs to know everything as row are really increasing */
   inline void increasingRows ( int value  ) {
     increasingRows_ = value;
   };
@@ -179,6 +207,8 @@ public:
     return slackValue_ ;
   };
   void slackValue (  double value );
+  /// Returns maximum absolute value in factorization
+  double maximumCoefficient() const;
   //@}
 
   /**@name some simple stuff */
@@ -274,8 +304,8 @@ public:
 			    OsiIndexedVector * regionSparse2,
 			    bool erase = true ) const;
 
-  /** makes a row copy of L for speed */
-  void makeRowCopyL();
+  /** makes a row copy of L for speed and to allow very sparse problems */
+  void goSparse();
   /**  get sparse threshold */
   int sparseThreshold ( ) const;
   /**  set sparse threshold */

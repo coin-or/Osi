@@ -5,6 +5,7 @@
 #include "CoinHelperFunctions.hpp"
 #include "OsiPackedMatrix.hpp"
 
+#include <stdio.h>
 //:class OsiFactorization.  Deals with Factorization and Updates
 //  OsiFactorization.  Constructor
 OsiFactorization::OsiFactorization (  )
@@ -220,16 +221,26 @@ int OsiFactorization::factorize (
 	columnIsBasic[i]=permuteBack[back[numberBasic++]];
       }
     }
-    // Set up permutation vector
-    if (increasingRows_<2) {
-      // these arrays start off as copies of permute
-      // (and we could use permute_ instead of pivotColumn (not back though))
-      CoinDisjointCopyN ( permute_, numberRows_ , pivotColumn_  );
-      CoinDisjointCopyN ( permuteBack_, numberRows_ , pivotColumnBack_  );
+    if (increasingRows_>1) {
+      // Set up permutation vector
+      if (increasingRows_<3) {
+	// these arrays start off as copies of permute
+	// (and we could use permute_ instead of pivotColumn (not back though))
+	CoinDisjointCopyN ( permute_, numberRows_ , pivotColumn_  );
+	CoinDisjointCopyN ( permuteBack_, numberRows_ , pivotColumnBack_  );
+      }
+    } else {
+      // Set up permutation vector
+      // (we could use permute_ instead of pivotColumn (not back though))
+      for (i=0;i<numberRows_;i++) {
+	int k=pivotColumn_[i];
+	pivotColumn_[i]=pivotColumnBack_[i];
+	pivotColumnBack_[i]=k;
+      }
     }
   } else if (status_ == -1) {
     // mark as basic or non basic
-    for (i=0;i<numberRows;i++) {
+    for (i=0;i<numberRows_;i++) {
       if (rowIsBasic[i]>=0) {
 	if (pivotColumn_[numberBasic]>=0) 
 	  rowIsBasic[i]=pivotColumn_[numberBasic];
@@ -275,21 +286,117 @@ int OsiFactorization::factorize (
   //say which column is pivoting on which row
   int i;
   if (status_ == 0) {
-    int * permuteBack = permuteBack_;
-    int * back = pivotColumnBack_;
-    for (i=0;i<numberOfColumns;i++) {
-      permutation[i]=permuteBack[back[i]];
-    }
-    // Set up permutation vector
-    if (increasingRows_<2) {
-      // these arrays start off as copies of permute
-      // (and we could use permute_ instead of pivotColumn (not back though))
-      CoinDisjointCopyN ( permute_, numberRows_ , pivotColumn_  );
-      CoinDisjointCopyN ( permuteBack_, numberRows_ , pivotColumnBack_  );
+    if (increasingRows_>1) {
+      int * permuteBack = permuteBack_;
+      int * back = pivotColumnBack_;
+      // permute so slacks on own rows etc
+      for (i=0;i<numberOfColumns;i++) {
+	permutation[i]=permuteBack[back[i]];
+      }
+      // Set up permutation vector
+      if (increasingRows_<3) {
+	// these arrays start off as copies of permute
+	// (and we could use permute_ instead of pivotColumn (not back though))
+	CoinDisjointCopyN ( permute_, numberRows_ , pivotColumn_  );
+	CoinDisjointCopyN ( permuteBack_, numberRows_ , pivotColumnBack_  );
+      }
+    } else {
+      // Set up permutation vector
+      // (we could use permute_ instead of pivotColumn (not back though))
+      for (i=0;i<numberOfRows;i++) {
+	int k=pivotColumn_[i];
+	pivotColumn_[i]=pivotColumnBack_[i];
+	pivotColumnBack_[i]=k;
+      }
+      for (i=0;i<numberOfColumns;i++) {
+	permutation[i]=i;
+      }
     }
   } else if (status_ == -1) {
     // mark as basic or non basic
     for (i=0;i<numberOfColumns;i++) {
+      if (pivotColumn_[i]>=0) {
+	permutation[i]=pivotColumn_[i];
+      } else {
+	permutation[i]=-1;
+      }
+    }
+  }
+
+  return status_;
+}
+/* Two part version for maximum flexibility
+   This part creates arrays for user to fill.
+   maximumL is guessed maximum size of L part of
+   final factorization, maximumU of U part.  These are multiplied by
+   areaFactor which can be computed by user or internally.  
+   returns 0 -okay, -99 memory */
+int 
+OsiFactorization::factorizePart1 ( int numberOfRows,
+				   int numberOfColumns,
+				   OsiBigIndex numberOfElements,
+				   OsiBigIndex maximumL,
+				   OsiBigIndex maximumU,
+				   int * indicesRow[],
+				   int * indicesColumn[],
+				   double * elements[],
+				   double areaFactor)
+{
+  // maybe for speed will be better to leave as many regions as possible
+  gutsOfDestructor();
+  gutsOfInitialize(2);
+  if (areaFactor)
+    areaFactor_ = areaFactor;
+  OsiBigIndex numberElements = 3 * numberOfRows + 3 * numberOfElements + 10000;
+  getAreas ( numberOfRows, numberOfRows, numberElements,
+	     2 * numberElements );
+  // need to trap memory for -99 code
+  *indicesRow = indexRowU_ ;
+  *indicesColumn = indexColumnU_ ;
+  *elements = elementU_ ;
+  lengthU_ = numberOfElements;
+  return 0;
+}
+/* This is part two of factorization
+   Arrays belong to factorization and were returned by part 1
+   If status okay, permutation has pivot rows.
+   If status is singular, then basic variables have +1 and ones thrown out have -INT_MAX
+   to say thrown out.
+   returns 0 -okay, -1 singular, -99 memory */
+int 
+OsiFactorization::factorizePart2 (int permutation[])
+{
+  preProcess ( 0 );
+  factor (  );
+  //say which column is pivoting on which row
+  int i;
+  int * permuteBack = permuteBack_;
+  int * back = pivotColumnBack_;
+  // permute so slacks on own rows etc
+  for (i=0;i<numberColumns_;i++) {
+    permutation[i]=permuteBack[back[i]];
+  }
+  if (status_ == 0) {
+    if (increasingRows_>1) {
+      // Set up permutation vector
+      if (increasingRows_<3) {
+	// these arrays start off as copies of permute
+	// (and we could use permute_ instead of pivotColumn (not back though))
+	CoinDisjointCopyN ( permute_, numberRows_ , pivotColumn_  );
+	CoinDisjointCopyN ( permuteBack_, numberRows_ , pivotColumnBack_  );
+      }
+    } else {
+      // Set up permutation vector
+      // (we could use permute_ instead of pivotColumn (not back though))
+      for (i=0;i<numberRows_;i++) {
+	int k=pivotColumn_[i];
+	pivotColumn_[i]=pivotColumnBack_[i];
+	pivotColumnBack_[i]=k;
+      }
+    }
+  } else if (status_ == -1) {
+    // mark as basic or non basic
+    for (i=0;i<numberColumns_;i++) {
       if (pivotColumn_[i]>=0) {
 	permutation[i]=pivotColumn_[i];
       } else {

@@ -389,7 +389,7 @@ void OsiFactorization::gutsOfCopy(const OsiFactorization &other)
   CoinDisjointCopyN ( other.indexRowL_, lengthL_, indexRowL_ );
   CoinDisjointCopyN ( other.startColumnL_, numberRows_ + 1, startColumnL_ );
   if (other.sparseThreshold_) {
-    makeRowCopyL();
+    goSparse();
   }
 }
 //  updateColumnR.  Updates part of column (FTRANR)
@@ -521,7 +521,7 @@ OsiFactorization::updateColumnTransposeR ( OsiIndexedVector * regionSparse ) con
 }
 /* Updates one column (FTRAN) from region2 and permutes.
    region1 starts as zero
-   If increasingRows_>1
+   If increasingRows_>2
    - returns permuted result in region1 and region2 is zero.
    otherwise
    - returns un-permuted result in region2 and region1 is zero */
@@ -549,7 +549,7 @@ int OsiFactorization::updateColumn ( OsiIndexedVector * regionSparse,
   regionSparse->setNumElements ( numberNonZero );
   // will be negative if no room
   int number=updateColumn ( regionSparse, FTUpdate );
-  if (increasingRows_>1) {
+  if (increasingRows_>2) {
     // say region2 empty
     regionSparse2->setNumElements(0);
   } else {
@@ -651,7 +651,7 @@ int OsiFactorization::updateColumn ( OsiIndexedVector * regionSparse,
 }
 //  makes a row copy of L
 void
-OsiFactorization::makeRowCopyL ( )
+OsiFactorization::goSparse ( )
 {
   if (!sparseThreshold_)
     sparseThreshold_=(numberRows_+9)/10;
@@ -725,7 +725,7 @@ OsiFactorization::sparseThreshold ( int value )
     sparse_=NULL;
   } else if (value>0&&!sparseThreshold_) {
     sparseThreshold_=value;
-    makeRowCopyL();
+    goSparse();
   }
 }
 void OsiFactorization::maximumPivots (  int value )

@@ -239,7 +239,7 @@ OsiFactorization::replaceColumn ( int pivotRow,
   region->reserve(numberRowsExtra_ );
   int status;
   
-  if (increasingRows_>1) {
+  if (increasingRows_>2) {
     status =
       updateColumn ( region, elements, indicesRow, numberOfElements, true );
   } else {
@@ -276,7 +276,7 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
   }   
   
   int realPivotRow;
-  if (increasingRows_>1) {
+  if (increasingRows_>2) {
     realPivotRow = pivotRow;
   } else {
     realPivotRow = pivotColumn_[pivotRow];
@@ -560,7 +560,7 @@ OsiFactorization::updateColumnTranspose ( OsiIndexedVector * regionSparse,
   int numberNonZero = number;
   int j;
   int iRow;
-  if (increasingRows_ > 1) {
+  if (increasingRows_ > 2) {
   } else {
     for ( j = 0; j < number; j ++ ) {
       iRow = index[j];
@@ -573,7 +573,7 @@ OsiFactorization::updateColumnTranspose ( OsiIndexedVector * regionSparse,
   }
   regionSparse->setNumElements ( numberNonZero );
   number =  updateColumnTranspose ( regionSparse );
-  if (increasingRows_ < 2) {
+  if (increasingRows_ < 3) {
     for (i=0;i<number;i++) {
       int iRow=regionIndex[i];
       double value = region[iRow];
@@ -611,7 +611,7 @@ OsiFactorization::updateColumnTranspose ( OsiIndexedVector * regionSparse,
   int numberNonZero = number;
   int j;
   int iRow;
-  if (increasingRows_ > 1) {
+  if (increasingRows_ > 2) {
     abort(); // needs coding
   } else {
     for ( j = 0; j < number; j ++ ) {
@@ -625,7 +625,7 @@ OsiFactorization::updateColumnTranspose ( OsiIndexedVector * regionSparse,
   }
   regionSparse->setNumElements ( numberNonZero );
   number =  updateColumnTranspose ( regionSparse );
-  if (increasingRows_ < 2) {
+  if (increasingRows_ < 3) {
     for (i=0;i<number;i++) {
       int iRow=regionIndex[i];
       double value = region[iRow];

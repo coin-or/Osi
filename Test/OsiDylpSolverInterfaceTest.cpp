@@ -21,7 +21,7 @@
 
 #include <iostream>
 #include <assert.h>
-#include <OsiWarmStartBasis.hpp>
+#include <CoinWarmStartBasis.hpp>
 #include "OsiDylpSolverInterface.hpp"
 
 

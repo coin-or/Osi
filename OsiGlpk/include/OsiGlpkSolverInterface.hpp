@@ -1,4 +1,4 @@
-//  LAST EDIT: Mon 25 Feb 2002 by Brady Hunsaker
+//  LAST EDIT: Sun 2 Nov 2003 by Brady Hunsaker
 //-----------------------------------------------------------------------------
 // name:     OSI Interface for GLPK
 // author:   Vivian DE Smedt
@@ -7,7 +7,9 @@
 // date:     17/11/2001
 // comments: please scan this file for '???' and read the comments
 //-----------------------------------------------------------------------------
-// Copyright (C) 2001, Vivian De Smedt, Brady Hunsaker
+// Copyright (C) 2001, Vivian De Smedt, Braden Hunsaker
+// Copyright (C) 2003  University of Pittsburgh
+//   University of Pittsburgh coding done by Brady Hunsaker
 // All Rights Reserved.
 
 #ifndef OsiGlpkSolverInterface_H
@@ -64,6 +66,8 @@ public:
     bool setIntParam(OsiIntParam key, int value);
     // Set an double parameter
     bool setDblParam(OsiDblParam key, double value);
+    // Set a string parameter
+    bool setStrParam(OsiStrParam key, const std::string & value);
     // Get an integer parameter
     bool getIntParam(OsiIntParam key, int& value) const;
     // Get an double parameter
@@ -598,8 +602,11 @@ public:
     FREECACHED_RESULTS = KEEPCACHED_ALL & !KEEPCACHED_RESULTS
   };
 
+  /// Get pointer to GLPK model
+  LPX * getModelPtr();
+
   //@}
-  
+
   /**@name Constructors and destructor */
   //@{
   /// Default Constructor
@@ -616,6 +623,9 @@ public:
   
   /// Destructor 
   virtual ~OsiGlpkSolverInterface();
+
+  /// Resets as if default constructor
+  virtual void reset();
   //@}
   
 protected:

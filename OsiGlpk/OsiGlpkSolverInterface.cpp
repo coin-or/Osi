@@ -1,15 +1,16 @@
-//  LAST EDIT: Saturday 3 May 2003 by Brady Hunsaker
+//  LAST EDIT: Sun 2 Nov 2003 by Brady Hunsaker
 //-----------------------------------------------------------------------------
 // name:     OSI Interface for GLPK
 // author:   Vivian DE Smedt
 //           Bruxelles (Belgium)
 //           email: vdesmedt@cso.ulb.ac.be
-// author: ...
 // date:     17/11/2001 
 // comments: please scan this file for '???' and read the comments
 //-----------------------------------------------------------------------------
 // Copyright (C) 2001, 2002 Vivian De Smedt
 // Copyright (C) 2002, 2003 Braden Hunsaker 
+// Copyright (C) 2003  University of Pittsburgh
+//    University of Pittsburgh coding done by Brady Hunsaker
 // All Rights Reserved.
 //
 // More Comments:
@@ -25,6 +26,10 @@
 // the most recent solution call.  We add an extra variable to the class to
 // record which solution call was most recent (lp or mip).
 //
+//
+// Possible areas of improvement
+// -----------------------------
+//
 // Methods that are not implemented:
 //
 //  getPrimalRays, getDualRays
@@ -38,6 +43,8 @@
 // making things functional and not too messy.  There's plenty of room
 // for more efficient implementations.
 //
+// Some comments refer to GLPK 3.2.1.  Some of these details may have 
+// changed for GLPK 4.1.  Should check this.
 
 //#ifdef COIN_USE_GLPK
 #if defined(_MSC_VER)
@@ -232,8 +239,8 @@ OsiGlpkSolverInterface::setIntParam( OsiIntParam key, int value )
 bool
 OsiGlpkSolverInterface::setDblParam( OsiDblParam key, double value )
 {
-	bool retval = false;
-	switch ( key )
+  bool retval = false;
+  switch ( key )
     {
     case OsiDualObjectiveLimit:
       // as of 3.2.1, GLPK only uses this if it does dual simplex
@@ -293,6 +300,23 @@ OsiGlpkSolverInterface::setDblParam( OsiDblParam key, double value )
 		break;
     }
 	return retval;
+}
+
+//-----------------------------------------------------------------------------
+
+bool
+OsiGlpkSolverInterface::setStrParam(OsiStrParam key, const std::string & value)
+{
+  switch (key) {
+  case OsiProbName:
+    lpx_set_prob_name( getMutableModelPtr(), const_cast<char *>(value.c_str()));
+    return true;
+  case OsiSolverName:
+    return false;
+  case OsiLastStrParam:
+    return false;
+  }
+  return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -367,7 +391,7 @@ OsiGlpkSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
   //	bool retval = false;
   switch (key) {
   case OsiProbName:
-    OsiSolverInterface::getStrParam(key, value);
+    value = lpx_get_prob_name( getMutableModelPtr() );
     break;
   case OsiSolverName:
     value = "glpk";
@@ -553,7 +577,7 @@ bool OsiGlpkSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
 	for( i = 0; i < numrows; i++)
 	{
 		int stat;
-		switch( ws->getStructStatus(i) )
+		switch( ws->getArtifStatus(i) )
 		{
 		case CoinWarmStartBasis::basic:
 			stat = LPX_BS;
@@ -1929,8 +1953,8 @@ OsiGlpkSolverInterface::loadProblem(const int numcols, const int numrows,
   if (numrows > 0)
     lpx_add_rows( model, numrows );
 
-  // How many elements?
-  int numelem = start[ numrows ];
+  // How many elements?  Column-major, so indices of start are columns
+  int numelem = start[ numcols ];
   //  int numelem = 0;
   //  while ( index[numelem] != 0 )
   //    numelem++;
@@ -1944,26 +1968,6 @@ OsiGlpkSolverInterface::loadProblem(const int numcols, const int numrows,
       value_adj[i] = value[i-1];
     }
 
-#if 0
-  int j;
-  for( j = 0; j < numrows; j++ )
-    {
-      setRowBounds( j, rowlb ? rowlb[j]:-inf, rowub ? rowub[j]:inf );
-
-      // Note that we should really add one to start[j].  However, we need
-      // to give GLPK the address one before that, so it turns out to be
-      // just start[j]
-      lpx_set_mat_row( model, j+1, start[j+1]-start[j], 
-		       &(index_adj[start[j]]), &(value_adj[start[j]]) );
-    }
-
-  for( i = 0; i < numcols; i++ )
-    {
-      setColBounds( i, collb ? collb[i]:0.0, 
-		    colub ? colub[i]:inf );
-      setObjCoeff( i, obj ? obj[i]:0.0 );
-    }
-#else
   for( i = 0; i < numcols; i++ )
   {
 	setColBounds( i, collb ? collb[i]:0.0, 
@@ -1976,7 +1980,6 @@ OsiGlpkSolverInterface::loadProblem(const int numcols, const int numrows,
   {
       setRowBounds( j, rowlb ? rowlb[j]:-inf, rowub ? rowub[j]:inf );
   }
-#endif
   
 }
 //-----------------------------------------------------------------------------
@@ -2195,6 +2198,17 @@ void OsiGlpkSolverInterface::writeMps( const char * filename,
 #endif
 }
 
+//############################################################################
+// GLPK-specific methods
+//############################################################################
+
+// Get a pointer to the instance
+LPX * OsiGlpkSolverInterface::getModelPtr ()
+{
+  freeCachedResults();
+  return lp_;
+}
+
 //#############################################################################
 // Constructors, destructors clone and assignment
 //#############################################################################
@@ -2242,6 +2256,27 @@ OsiGlpkSolverInterface::~OsiGlpkSolverInterface ()
 {
 	gutsOfDestructor();
 }
+
+// Resets 
+// ??? look over this carefully to be sure it is correct
+void OsiGlpkSolverInterface::reset()
+{
+   setInitialData();  // this is from the base class OsiSolverInterface
+   gutsOfDestructor();
+
+   bbWasLast_ = 0;
+   
+   maxIteration_ = INT_MAX;
+   hotStartMaxIteration_ = 0;
+   
+   lp_ = lpx_create_prob();
+   char name[] = "OSI_GLPK";
+   lpx_set_prob_name( lp_, name );
+   lpx_set_class( lp_, LPX_MIP );
+   assert( lp_ != NULL );
+
+}
+
 
 //-----------------------------------------------------------------------------
 // Assignment operator

@@ -910,7 +910,8 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       int colOut;
       int outStatus;
       double theta;
-      assert(!m.primalPivotResult(colIn,direction,colOut,outStatus,theta,NULL));
+      int returnCode=m.primalPivotResult(colIn,direction,colOut,outStatus,theta,NULL);
+      assert (!returnCode);
       printf("out %d, direction %d theta %g\n",
 	     colOut,outStatus,theta);
       numberIterations++;

@@ -1,4 +1,3 @@
-//  LAST EDIT: Fri Aug 31 15:28:40 2001 by Tobias Pfender (opt14!bzfpfend) 
 // Copyright (C) 2000, International Business Machines
 // Corporation and others.  All Rights Reserved.
 #if defined(_MSC_VER)
@@ -14,6 +13,12 @@
 
 #include "OsiSolverInterface.hpp"
 #include "OsiVolSolverInterface.hpp"
+#ifdef COIN_USE_DYLP
+#  include "OsiDyLpSolverInterface.hpp"
+#endif
+#include "OsiXprSolverInterface.hpp"
+#include "OsiCpxSolverInterface.hpp"
+#include "OsiOslSolverInterface.hpp"
 #include "OsiFloatEqual.hpp"
 #include "OsiPackedVector.hpp"
 #include "OsiPackedMatrix.hpp"
@@ -60,408 +65,432 @@ equivalentVectors(const OsiSolverInterface * si1,
 
 //--------------------------------------------------------------------------
 
-void
-OsiSolverInterfaceMpsUnitTest(
-  const std::vector<OsiSolverInterface*> & vecEmptySiP,
-  const std::string & mpsDir)
-{
-  int i;
-  unsigned int m;
 
-  // Establish that the solver interfaces obtain good solutions
-  // for a set of problems (netlib)
+/*! \brief Run solvers on NetLib problems.
 
-  // Define test problems: 
-  //   mps names, 
-  //   maximization or minimization, 
-  //   Number of rows and columns in problem, and
-  //   objective function value
-  std::vector<std::string> mpsName;
-  std::vector<bool> min;
-  std::vector<int> nRows;
-  std::vector<int> nCols;
-  std::vector<double> objValue;
-  std::vector<double> objValueTol;
+  The routine creates a vector of NetLib problems (problem name, objective,
+  various other characteristics), and a vector of solvers to be tested.
   
-  mpsName.push_back("25fv47");
-  min.push_back(true);
-  nRows.push_back(822);
-  nCols.push_back(1571);
-  objValueTol.push_back(1.E-10);
-  objValue.push_back(5.5018458883E+03);
-  
-  mpsName.push_back("80bau3b");min.push_back(true);nRows.push_back(2263);nCols.push_back(9799);objValueTol.push_back(1.e-10);objValue.push_back(9.8722419241E+05);
-  mpsName.push_back("adlittle");min.push_back(true);nRows.push_back(57);nCols.push_back(97);objValueTol.push_back(1.e-10);objValue.push_back(2.2549496316e+05);
-  mpsName.push_back("afiro");min.push_back(true);nRows.push_back(28);nCols.push_back(32);objValueTol.push_back(1.e-10);objValue.push_back(-4.6475314286e+02);
-  mpsName.push_back("agg");min.push_back(true);nRows.push_back(489);nCols.push_back(163);objValueTol.push_back(1.e-10);objValue.push_back(-3.5991767287e+07);
-  mpsName.push_back("agg2");min.push_back(true);nRows.push_back(517);nCols.push_back(302);objValueTol.push_back(1.e-10);objValue.push_back(-2.0239252356e+07);
-  mpsName.push_back("agg3");min.push_back(true);nRows.push_back(517);nCols.push_back(302);objValueTol.push_back(1.e-10);objValue.push_back(1.0312115935e+07);
-  mpsName.push_back("bandm");min.push_back(true);nRows.push_back(306);nCols.push_back(472);objValueTol.push_back(1.e-10);objValue.push_back(-1.5862801845e+02);
-  mpsName.push_back("beaconfd");min.push_back(true);nRows.push_back(174);nCols.push_back(262);objValueTol.push_back(1.e-10);objValue.push_back(3.3592485807e+04);
-  mpsName.push_back("blend");min.push_back(true);nRows.push_back(75);nCols.push_back(83);objValueTol.push_back(1.e-10);objValue.push_back(-3.0812149846e+01);
-  mpsName.push_back("bnl1");min.push_back(true);nRows.push_back(644);nCols.push_back(1175);objValueTol.push_back(1.e-10);objValue.push_back(1.9776295615E+03);
-  mpsName.push_back("bnl2");min.push_back(true);nRows.push_back(2325);nCols.push_back(3489);objValueTol.push_back(1.e-10);objValue.push_back(1.8112365404e+03);
-  mpsName.push_back("boeing1");min.push_back(true);nRows.push_back(/*351*/352);nCols.push_back(384);objValueTol.push_back(1.e-10);objValue.push_back(-3.3521356751e+02);
-  mpsName.push_back("boeing2");min.push_back(true);nRows.push_back(167);nCols.push_back(143);objValueTol.push_back(1.e-10);objValue.push_back(-3.1501872802e+02);
-  mpsName.push_back("bore3d");min.push_back(true);nRows.push_back(234);nCols.push_back(315);objValueTol.push_back(1.e-10);objValue.push_back(1.3730803942e+03);
-  mpsName.push_back("brandy");min.push_back(true);nRows.push_back(221);nCols.push_back(249);objValueTol.push_back(1.e-10);objValue.push_back(1.5185098965e+03);
-  mpsName.push_back("capri");min.push_back(true);nRows.push_back(272);nCols.push_back(353);objValueTol.push_back(1.e-10);objValue.push_back(2.6900129138e+03);
-  mpsName.push_back("cycle");min.push_back(true);nRows.push_back(1904);nCols.push_back(2857);objValueTol.push_back(1.e-9);objValue.push_back(-5.2263930249e+00);
-  mpsName.push_back("czprob");min.push_back(true);nRows.push_back(930);nCols.push_back(3523);objValueTol.push_back(1.e-10);objValue.push_back(2.1851966989e+06);
-  mpsName.push_back("d2q06c");min.push_back(true);nRows.push_back(2172);nCols.push_back(5167);objValueTol.push_back(1.e-7);objValue.push_back(122784.21557456);
-  mpsName.push_back("d6cube");min.push_back(true);nRows.push_back(416);nCols.push_back(6184);objValueTol.push_back(1.e-10);objValue.push_back(3.1549166667e+02);
-  mpsName.push_back("degen2");min.push_back(true);nRows.push_back(445);nCols.push_back(534);objValueTol.push_back(1.e-10);objValue.push_back(-1.4351780000e+03);
-  mpsName.push_back("degen3");min.push_back(true);nRows.push_back(1504);nCols.push_back(1818);objValueTol.push_back(1.e-10);objValue.push_back(-9.8729400000e+02);
-  mpsName.push_back("dfl001");min.push_back(true);nRows.push_back(6072);nCols.push_back(12230);objValueTol.push_back(1.e-5);objValue.push_back(1.1266396047E+07);
-  mpsName.push_back("e226");min.push_back(true);nRows.push_back(224);nCols.push_back(282);objValueTol.push_back(1.e-10);objValue.push_back(-1.8751929066e+01+7.113); // The correct answer includes -7.113 term. This is a constant in the objective function. See line 1683 of the mps file.
-  mpsName.push_back("etamacro");min.push_back(true);nRows.push_back(401);nCols.push_back(688);objValueTol.push_back(1.e-6);objValue.push_back(-7.5571521774e+02 );
-  mpsName.push_back("fffff800");min.push_back(true);nRows.push_back(525);nCols.push_back(854);objValueTol.push_back(1.e-6);objValue.push_back(5.5567961165e+05);
-  mpsName.push_back("finnis");min.push_back(true);nRows.push_back(498);nCols.push_back(614);objValueTol.push_back(1.e-6);objValue.push_back(1.7279096547e+05);
-  mpsName.push_back("fit1d");min.push_back(true);nRows.push_back(25);nCols.push_back(1026);objValueTol.push_back(1.e-10);objValue.push_back(-9.1463780924e+03);
-  mpsName.push_back("fit1p");min.push_back(true);nRows.push_back(628);nCols.push_back(1677);objValueTol.push_back(1.e-10);objValue.push_back(9.1463780924e+03);
-  mpsName.push_back("fit2d");min.push_back(true);nRows.push_back(26);nCols.push_back(10500);objValueTol.push_back(1.e-10);objValue.push_back(-6.8464293294e+04);
-  mpsName.push_back("fit2p");min.push_back(true);nRows.push_back(3001);nCols.push_back(13525);objValueTol.push_back(1.e-9);objValue.push_back(6.8464293232e+04);
-  mpsName.push_back("forplan");min.push_back(true);nRows.push_back(162);nCols.push_back(421);objValueTol.push_back(1.e-6);objValue.push_back(-6.6421873953e+02);
-  mpsName.push_back("ganges");min.push_back(true);nRows.push_back(1310);nCols.push_back(1681);objValueTol.push_back(1.e-5);objValue.push_back(-1.0958636356e+05);
-  mpsName.push_back("gfrd-pnc");min.push_back(true);nRows.push_back(617);nCols.push_back(1092);objValueTol.push_back(1.e-10);objValue.push_back(6.9022359995e+06);
-  mpsName.push_back("greenbea");min.push_back(true);nRows.push_back(2393);nCols.push_back(5405);objValueTol.push_back(1.e-10);objValue.push_back(/*-7.2462405908e+07*/-72555248.129846);
-  mpsName.push_back("greenbeb");min.push_back(true);nRows.push_back(2393);nCols.push_back(5405);objValueTol.push_back(1.e-10);objValue.push_back(/*-4.3021476065e+06*/-4302260.2612066);
-  mpsName.push_back("grow15");min.push_back(true);nRows.push_back(301);nCols.push_back(645);objValueTol.push_back(1.e-10);objValue.push_back(-1.0687094129e+08);
-  mpsName.push_back("grow22");min.push_back(true);nRows.push_back(441);nCols.push_back(946);objValueTol.push_back(1.e-10);objValue.push_back(-1.6083433648e+08);
-  mpsName.push_back("grow7");min.push_back(true);nRows.push_back(141);nCols.push_back(301);objValueTol.push_back(1.e-10);objValue.push_back(-4.7787811815e+07);
-  mpsName.push_back("israel");min.push_back(true);nRows.push_back(175);nCols.push_back(142);objValueTol.push_back(1.e-10);objValue.push_back(-8.9664482186e+05);
-  mpsName.push_back("kb2");min.push_back(true);nRows.push_back(44);nCols.push_back(41);objValueTol.push_back(1.e-10);objValue.push_back(-1.7499001299e+03);
-  mpsName.push_back("lotfi");min.push_back(true);nRows.push_back(154);nCols.push_back(308);objValueTol.push_back(1.e-10);objValue.push_back(-2.5264706062e+01);
-  mpsName.push_back("maros");min.push_back(true);nRows.push_back(847);nCols.push_back(1443);objValueTol.push_back(1.e-10);objValue.push_back(-5.8063743701e+04);
-  mpsName.push_back("maros-r7");min.push_back(true);nRows.push_back(3137);nCols.push_back(9408);objValueTol.push_back(1.e-10);objValue.push_back(1.4971851665e+06);
-  mpsName.push_back("modszk1");min.push_back(true);nRows.push_back(688);nCols.push_back(1620);objValueTol.push_back(1.e-10);objValue.push_back(3.2061972906e+02);
-  mpsName.push_back("nesm");min.push_back(true);nRows.push_back(663);nCols.push_back(2923);objValueTol.push_back(1.e-5);objValue.push_back(1.4076073035e+07);
-  mpsName.push_back("perold");min.push_back(true);nRows.push_back(626);nCols.push_back(1376);objValueTol.push_back(1.e-6);objValue.push_back(-9.3807580773e+03);
-  mpsName.push_back("pilot");min.push_back(true);nRows.push_back(1442);nCols.push_back(3652);objValueTol.push_back(1.e-5);objValue.push_back(/*-5.5740430007e+02*/-557.48972927292);
-  mpsName.push_back("pilot4");min.push_back(true);nRows.push_back(411);nCols.push_back(1000);objValueTol.push_back(1.e-8);objValue.push_back(-2.5811392641e+03);
-  mpsName.push_back("pilot87");min.push_back(true);nRows.push_back(2031);nCols.push_back(4883);objValueTol.push_back(1.e-5);objValue.push_back(3.0171072827e+02);
-  mpsName.push_back("pilotnov");min.push_back(true);nRows.push_back(976);nCols.push_back(2172);objValueTol.push_back(1.e-10);objValue.push_back(-4.4972761882e+03);
-  //mpsName.push_back("qap8");min.push_back(true);nRows.push_back(913);nCols.push_back(1632);objValueTol.push_back(1.e-10);objValue.push_back(2.0350000000e+02);
-  //mpsName.push_back("qap12");min.push_back(true);nRows.push_back(3193);nCols.push_back(8856);objValueTol.push_back(1.e-10);objValue.push_back(5.2289435056e+02);
-  //mpsName.push_back("qap15");min.push_back(true);nRows.push_back(6331);nCols.push_back(22275);objValueTol.push_back(1.e-10);objValue.push_back(1.0409940410e+03);
-  mpsName.push_back("recipe");min.push_back(true);nRows.push_back(92);nCols.push_back(180);objValueTol.push_back(1.e-10);objValue.push_back(-2.6661600000e+02);
-  mpsName.push_back("sc105");min.push_back(true);nRows.push_back(106);nCols.push_back(103);objValueTol.push_back(1.e-10);objValue.push_back(-5.2202061212e+01);
-  mpsName.push_back("sc205");min.push_back(true);nRows.push_back(206);nCols.push_back(203);objValueTol.push_back(1.e-10);objValue.push_back(-5.2202061212e+01);
-  mpsName.push_back("sc50a");min.push_back(true);nRows.push_back(51);nCols.push_back(48);objValueTol.push_back(1.e-10);objValue.push_back(-6.4575077059e+01);
-  mpsName.push_back("sc50b");min.push_back(true);nRows.push_back(51);nCols.push_back(48);objValueTol.push_back(1.e-10);objValue.push_back(-7.0000000000e+01);
-  mpsName.push_back("scagr25");min.push_back(true);nRows.push_back(472);nCols.push_back(500);objValueTol.push_back(1.e-10);objValue.push_back(-1.4753433061e+07);
-  mpsName.push_back("scagr7");min.push_back(true);nRows.push_back(130);nCols.push_back(140);objValueTol.push_back(1.e-6);objValue.push_back(-2.3313892548e+06);
-  mpsName.push_back("scfxm1");min.push_back(true);nRows.push_back(331);nCols.push_back(457);objValueTol.push_back(1.e-10);objValue.push_back(1.8416759028e+04);
-  mpsName.push_back("scfxm2");min.push_back(true);nRows.push_back(661);nCols.push_back(914);objValueTol.push_back(1.e-10);objValue.push_back(3.6660261565e+04);
-  mpsName.push_back("scfxm3");min.push_back(true);nRows.push_back(991);nCols.push_back(1371);objValueTol.push_back(1.e-10);objValue.push_back(5.4901254550e+04);
-  mpsName.push_back("scorpion");min.push_back(true);nRows.push_back(389);nCols.push_back(358);objValueTol.push_back(1.e-10);objValue.push_back(1.8781248227e+03);
-  mpsName.push_back("scrs8");min.push_back(true);nRows.push_back(491);nCols.push_back(1169);objValueTol.push_back(1.e-5);objValue.push_back(9.0429998619e+02);
-  mpsName.push_back("scsd1");min.push_back(true);nRows.push_back(78);nCols.push_back(760);objValueTol.push_back(1.e-10);objValue.push_back(8.6666666743e+00);
-  mpsName.push_back("scsd6");min.push_back(true);nRows.push_back(148);nCols.push_back(1350);objValueTol.push_back(1.e-10);objValue.push_back(5.0500000078e+01);
-  mpsName.push_back("scsd8");min.push_back(true);nRows.push_back(398);nCols.push_back(2750);objValueTol.push_back(1.e-10);objValue.push_back(9.0499999993e+02);
-  mpsName.push_back("sctap1");min.push_back(true);nRows.push_back(301);nCols.push_back(480);objValueTol.push_back(1.e-10);objValue.push_back(1.4122500000e+03);
-  mpsName.push_back("sctap2");min.push_back(true);nRows.push_back(1091);nCols.push_back(1880);objValueTol.push_back(1.e-10);objValue.push_back(1.7248071429e+03);
-  mpsName.push_back("sctap3");min.push_back(true);nRows.push_back(1481);nCols.push_back(2480);objValueTol.push_back(1.e-10);objValue.push_back(1.4240000000e+03);
-  mpsName.push_back("seba");min.push_back(true);nRows.push_back(516);nCols.push_back(1028);objValueTol.push_back(1.e-10);objValue.push_back(1.5711600000e+04);
-  mpsName.push_back("share1b");min.push_back(true);nRows.push_back(118);nCols.push_back(225);objValueTol.push_back(1.e-10);objValue.push_back(-7.6589318579e+04);
-  mpsName.push_back("share2b");min.push_back(true);nRows.push_back(97);nCols.push_back(79);objValueTol.push_back(1.e-10);objValue.push_back(-4.1573224074e+02);
-  mpsName.push_back("shell");min.push_back(true);nRows.push_back(537);nCols.push_back(1775);objValueTol.push_back(1.e-10);objValue.push_back(1.2088253460e+09);
-  mpsName.push_back("ship04l");min.push_back(true);nRows.push_back(403);nCols.push_back(2118);objValueTol.push_back(1.e-10);objValue.push_back(1.7933245380e+06);
-  mpsName.push_back("ship04s");min.push_back(true);nRows.push_back(403);nCols.push_back(1458);objValueTol.push_back(1.e-10);objValue.push_back(1.7987147004e+06);
-  mpsName.push_back("ship08l");min.push_back(true);nRows.push_back(779);nCols.push_back(4283);objValueTol.push_back(1.e-10);objValue.push_back(1.9090552114e+06);
-  mpsName.push_back("ship08s");min.push_back(true);nRows.push_back(779);nCols.push_back(2387);objValueTol.push_back(1.e-10);objValue.push_back(1.9200982105e+06);
-  mpsName.push_back("ship12l");min.push_back(true);nRows.push_back(1152);nCols.push_back(5427);objValueTol.push_back(1.e-10);objValue.push_back(1.4701879193e+06);
-  mpsName.push_back("ship12s");min.push_back(true);nRows.push_back(1152);nCols.push_back(2763);objValueTol.push_back(1.e-10);objValue.push_back(1.4892361344e+06);
-  mpsName.push_back("sierra");min.push_back(true);nRows.push_back(1228);nCols.push_back(2036);objValueTol.push_back(1.e-10);objValue.push_back(1.5394362184e+07);
-  mpsName.push_back("stair");min.push_back(true);nRows.push_back(357);nCols.push_back(467);objValueTol.push_back(1.e-10);objValue.push_back(-2.5126695119e+02);
-  mpsName.push_back("standata");min.push_back(true);nRows.push_back(360);nCols.push_back(1075);objValueTol.push_back(1.e-10);objValue.push_back(1.2576995000e+03);
-  //mpsName.push_back("standgub");min.push_back(true);nRows.push_back(362);nCols.push_back(1184);objValueTol.push_back(1.e-10);objValue.push_back(1257.6995); 
-  mpsName.push_back("standmps");min.push_back(true);nRows.push_back(468);nCols.push_back(1075);objValueTol.push_back(1.e-10);objValue.push_back(1.4060175000E+03); 
-  mpsName.push_back("stocfor1");min.push_back(true);nRows.push_back(118);nCols.push_back(111);objValueTol.push_back(1.e-10);objValue.push_back(-4.1131976219E+04);
-  mpsName.push_back("stocfor2");min.push_back(true);nRows.push_back(2158);nCols.push_back(2031);objValueTol.push_back(1.e-10);objValue.push_back(-3.9024408538e+04);
-  //mpsName.push_back("stocfor3");min.push_back(true);nRows.push_back(16676);nCols.push_back(15695);objValueTol.push_back(1.e-10);objValue.push_back(-3.9976661576e+04);
-  //mpsName.push_back("truss");min.push_back(true);nRows.push_back(1001);nCols.push_back(8806);objValueTol.push_back(1.e-10);objValue.push_back(4.5881584719e+05);
-  mpsName.push_back("tuff");min.push_back(true);nRows.push_back(334);nCols.push_back(587);objValueTol.push_back(1.e-10);objValue.push_back(2.9214776509e-01);
-  mpsName.push_back("vtpbase");min.push_back(true);nRows.push_back(199);nCols.push_back(203);objValueTol.push_back(1.e-10);objValue.push_back(1.2983146246e+05);
-  mpsName.push_back("wood1p");min.push_back(true);nRows.push_back(245);nCols.push_back(2594);objValueTol.push_back(1.e-10);objValue.push_back(1.4429024116e+00);
-  mpsName.push_back("woodw");min.push_back(true);nRows.push_back(1099);nCols.push_back(8405);objValueTol.push_back(1.e-10);objValue.push_back(1.3044763331E+00);
-  
-  // Create vector of solver interfaces
-  std::vector<OsiSolverInterface*> vecSiP(vecEmptySiP.size());
-  
-  //assert(dynamic_cast<OsiOslSolverInterface*>(vecEmptySiP[0]) != NULL );
-  
-  // Loop once for each Mps File
-  for (m=0; m<mpsName.size(); m++ ) {
-    std::cerr <<"  processing mps file: " <<mpsName[m] 
-      <<" (" <<m+1 <<" out of " <<mpsName.size() <<")" <<std::endl;
-    
-    // Read problem, looping once for each solver interface
-    for( i=vecSiP.size()-1; i>=0; --i ) {
+  Each solver is run on each problem. The run is deemed successful if the
+  solver reports the correct problem size after loading and returns the
+  correct objective value after optimization.
+
+  If multiple solvers are available, the results are compared pairwise against
+  the results reported by adjacent solvers in the solver vector. Due to
+  limitations of the volume solver, it must be the last solver in vecEmptySiP.
+*/
+
+void OsiSolverInterfaceMpsUnitTest
+  (const std::vector<OsiSolverInterface*> & vecEmptySiP,
+   const std::string & mpsDir)
+
+{ int i ;
+  unsigned int m ;
+
+/*
+  Vectors to hold test problem names and characteristics. The objective value
+  after optimization (objValue) must agree to the specified tolerance
+  (objValueTol).
+*/
+  std::vector<std::string> mpsName ;
+  std::vector<bool> min ;
+  std::vector<int> nRows ;
+  std::vector<int> nCols ;
+  std::vector<double> objValue ;
+  std::vector<double> objValueTol ;
+/*
+  And a macro to make the vector creation marginally readable.
+*/
+#define PUSH_MPS(zz_mpsName_zz,zz_min_zz,\
+		 zz_nRows_zz,zz_nCols_zz,zz_objValue_zz,zz_objValueTol_zz) \
+  mpsName.push_back(zz_mpsName_zz) ; \
+  min.push_back(zz_min_zz) ; \
+  nRows.push_back(zz_nRows_zz) ; \
+  nCols.push_back(zz_nCols_zz) ; \
+  objValueTol.push_back(zz_objValueTol_zz) ; \
+  objValue.push_back(zz_objValue_zz) ;
+
+/*
+  Load up the problem vector. Note that the row counts here include the
+  objective function.
+*/
+  PUSH_MPS("25fv47",true,822,1571,5.5018458883E+03,1.0e-10)
+  PUSH_MPS("80bau3b",true,2263,9799,9.8722419241E+05,1.e-10)
+  PUSH_MPS("adlittle",true,57,97,2.2549496316e+05,1.e-10)
+  PUSH_MPS("afiro",true,28,32,-4.6475314286e+02,1.e-10)
+  PUSH_MPS("agg",true,489,163,-3.5991767287e+07,1.e-10)
+  PUSH_MPS("agg2",true,517,302,-2.0239252356e+07,1.e-10)
+  PUSH_MPS("agg3",true,517,302,1.0312115935e+07,1.e-10)
+  PUSH_MPS("bandm",true,306,472,-1.5862801845e+02,1.e-10)
+  PUSH_MPS("beaconfd",true,174,262,3.3592485807e+04,1.e-10)
+  PUSH_MPS("blend",true,75,83,-3.0812149846e+01,1.e-10)
+  PUSH_MPS("bnl1",true,644,1175,1.9776295615E+03,1.e-10)
+  PUSH_MPS("bnl2",true,2325,3489,1.8112365404e+03,1.e-10)
+  PUSH_MPS("boeing1",true,/*351*/352,384,-3.3521356751e+02,1.e-10)
+  PUSH_MPS("boeing2",true,167,143,-3.1501872802e+02,1.e-10)
+  PUSH_MPS("bore3d",true,234,315,1.3730803942e+03,1.e-10)
+  PUSH_MPS("brandy",true,221,249,1.5185098965e+03,1.e-10)
+  PUSH_MPS("capri",true,272,353,2.6900129138e+03,1.e-10)
+  PUSH_MPS("cycle",true,1904,2857,-5.2263930249e+00,1.e-9)
+  PUSH_MPS("czprob",true,930,3523,2.1851966989e+06,1.e-10)
+  PUSH_MPS("d2q06c",true,2172,5167,122784.21557456,1.e-7)
+  PUSH_MPS("d6cube",true,416,6184,3.1549166667e+02,1.e-10)
+  PUSH_MPS("degen2",true,445,534,-1.4351780000e+03,1.e-10)
+  PUSH_MPS("degen3",true,1504,1818,-9.8729400000e+02,1.e-10)
+  PUSH_MPS("dfl001",true,6072,12230,1.1266396047E+07,1.e-5)
+  PUSH_MPS("e226",true,224,282,(-18.751929066+7.113),1.e-10) // NOTE: Objective function has constant of 7.113
+  PUSH_MPS("etamacro",true,401,688,-7.5571521774e+02 ,1.e-6)
+  PUSH_MPS("fffff800",true,525,854,5.5567961165e+05,1.e-6)
+  PUSH_MPS("finnis",true,498,614,1.7279096547e+05,1.e-6)
+  PUSH_MPS("fit1d",true,25,1026,-9.1463780924e+03,1.e-10)
+  PUSH_MPS("fit1p",true,628,1677,9.1463780924e+03,1.e-10)
+  PUSH_MPS("fit2d",true,26,10500,-6.8464293294e+04,1.e-10)
+  PUSH_MPS("fit2p",true,3001,13525,6.8464293232e+04,1.e-9)
+  PUSH_MPS("forplan",true,162,421,-6.6421873953e+02,1.e-6)
+  PUSH_MPS("ganges",true,1310,1681,-1.0958636356e+05,1.e-5)
+  PUSH_MPS("gfrd-pnc",true,617,1092,6.9022359995e+06,1.e-10)
+  PUSH_MPS("greenbea",true,2393,5405,/*-7.2462405908e+07*/-72555248.129846,1.e-10)
+  PUSH_MPS("greenbeb",true,2393,5405,/*-4.3021476065e+06*/-4302260.2612066,1.e-10)
+  PUSH_MPS("grow15",true,301,645,-1.0687094129e+08,1.e-10)
+  PUSH_MPS("grow22",true,441,946,-1.6083433648e+08,1.e-10)
+  PUSH_MPS("grow7",true,141,301,-4.7787811815e+07,1.e-10)
+  PUSH_MPS("israel",true,175,142,-8.9664482186e+05,1.e-10)
+  PUSH_MPS("kb2",true,44,41,-1.7499001299e+03,1.e-10)
+  PUSH_MPS("lotfi",true,154,308,-2.5264706062e+01,1.e-10)
+  PUSH_MPS("maros",true,847,1443,-5.8063743701e+04,1.e-10)
+  PUSH_MPS("maros-r7",true,3137,9408,1.4971851665e+06,1.e-10)
+  PUSH_MPS("modszk1",true,688,1620,3.2061972906e+02,1.e-10)
+  PUSH_MPS("nesm",true,663,2923,1.4076073035e+07,1.e-5)
+  PUSH_MPS("perold",true,626,1376,-9.3807580773e+03,1.e-6)
+  PUSH_MPS("pilot",true,1442,3652,/*-5.5740430007e+02*/-557.48972927292,1.e-5)
+  PUSH_MPS("pilot4",true,411,1000,-2.5811392641e+03,1.e-8)
+  PUSH_MPS("pilot87",true,2031,4883,3.0171072827e+02,1.e-5)
+  PUSH_MPS("pilotnov",true,976,2172,-4.4972761882e+03,1.e-10)
+  // ?? PUSH_MPS("qap8",true,913,1632,2.0350000000e+02,1.e-10)
+  // ?? PUSH_MPS("qap12",true,3193,8856,5.2289435056e+02,1.e-10)
+  // ?? PUSH_MPS("qap15",true,6331,22275,1.0409940410e+03,1.e-10)
+  PUSH_MPS("recipe",true,92,180,-2.6661600000e+02,1.e-10)
+  PUSH_MPS("sc105",true,106,103,-5.2202061212e+01,1.e-10)
+  PUSH_MPS("sc205",true,206,203,-5.2202061212e+01,1.e-10)
+  PUSH_MPS("sc50a",true,51,48,-6.4575077059e+01,1.e-10)
+  PUSH_MPS("sc50b",true,51,48,-7.0000000000e+01,1.e-10)
+  PUSH_MPS("scagr25",true,472,500,-1.4753433061e+07,1.e-10)
+  PUSH_MPS("scagr7",true,130,140,-2.3313892548e+06,1.e-6)
+  PUSH_MPS("scfxm1",true,331,457,1.8416759028e+04,1.e-10)
+  PUSH_MPS("scfxm2",true,661,914,3.6660261565e+04,1.e-10)
+  PUSH_MPS("scfxm3",true,991,1371,5.4901254550e+04,1.e-10)
+  PUSH_MPS("scorpion",true,389,358,1.8781248227e+03,1.e-10)
+  PUSH_MPS("scrs8",true,491,1169,9.0429998619e+02,1.e-5)
+  PUSH_MPS("scsd1",true,78,760,8.6666666743e+00,1.e-10)
+  PUSH_MPS("scsd6",true,148,1350,5.0500000078e+01,1.e-10)
+  PUSH_MPS("scsd8",true,398,2750,9.0499999993e+02,1.e-10)
+  PUSH_MPS("sctap1",true,301,480,1.4122500000e+03,1.e-10)
+  PUSH_MPS("sctap2",true,1091,1880,1.7248071429e+03,1.e-10)
+  PUSH_MPS("sctap3",true,1481,2480,1.4240000000e+03,1.e-10)
+  PUSH_MPS("seba",true,516,1028,1.5711600000e+04,1.e-10)
+  PUSH_MPS("share1b",true,118,225,-7.6589318579e+04,1.e-10)
+  PUSH_MPS("share2b",true,97,79,-4.1573224074e+02,1.e-10)
+  PUSH_MPS("shell",true,537,1775,1.2088253460e+09,1.e-10)
+  PUSH_MPS("ship04l",true,403,2118,1.7933245380e+06,1.e-10)
+  PUSH_MPS("ship04s",true,403,1458,1.7987147004e+06,1.e-10)
+  PUSH_MPS("ship08l",true,779,4283,1.9090552114e+06,1.e-10)
+  PUSH_MPS("ship08s",true,779,2387,1.9200982105e+06,1.e-10)
+  PUSH_MPS("ship12l",true,1152,5427,1.4701879193e+06,1.e-10)
+  PUSH_MPS("ship12s",true,1152,2763,1.4892361344e+06,1.e-10)
+  PUSH_MPS("sierra",true,1228,2036,1.5394362184e+07,1.e-10)
+  PUSH_MPS("stair",true,357,467,-2.5126695119e+02,1.e-10)
+  PUSH_MPS("standata",true,360,1075,1.2576995000e+03,1.e-10)
+  // GUB PUSH_MPS("standgub",true,362,1184,1257.6995,1.e-10) 
+  PUSH_MPS("standmps",true,468,1075,1.4060175000E+03,1.e-10) 
+  PUSH_MPS("stocfor1",true,118,111,-4.1131976219E+04,1.e-10)
+  PUSH_MPS("stocfor2",true,2158,2031,-3.9024408538e+04,1.e-10)
+  // ?? PUSH_MPS("stocfor3",true,16676,15695,-3.9976661576e+04,1.e-10)
+  // ?? PUSH_MPS("truss",true,1001,8806,4.5881584719e+05,1.e-10)
+  PUSH_MPS("tuff",true,334,587,2.9214776509e-01,1.e-10)
+  PUSH_MPS("vtpbase",true,199,203,1.2983146246e+05,1.e-10)
+  PUSH_MPS("wood1p",true,245,2594,1.4429024116e+00,1.e-10)
+  PUSH_MPS("woodw",true,1099,8405,1.3044763331E+00,1.e-10)
+
+#undef PUSH_MPS
+
+/*
+  Create a vector of solver interfaces that we can use to run the test
+  problems. The strategy is to create a fresh clone of the `empty' solvers
+  from vecEmptySiP for each problem, then proceed in stages: read the MPS
+  file, solve the problem, check the solution. If there are multiple
+  solvers in vecSiP, the results of each solver are compared with its
+  neighbors in the vector.
+*/
+  std::vector<OsiSolverInterface*> vecSiP(vecEmptySiP.size()) ;
+
+  // Create vector to store a name for each solver interface
+  // and a count on the number of problems the solver intface solved.
+  std::vector<std::string> siName;
+  std::vector<int> numProbSolved;
+  for ( i=0; i<vecSiP.size(); i++ ) {
+    siName.push_back("");
+    numProbSolved.push_back(0);
+  }
+
+/*
+  Open the main loop to step through the MPS problems.
+*/
+  for (m = 0 ; m < mpsName.size() ; m++)
+  { std::cerr << "  processing mps file: " << mpsName[m] 
+      << " (" << m+1 << " out of " << mpsName.size() << ")" << std::endl ;
+/*
+  Stage 1: Read the MPS file into each solver interface.
+
+  Fill vecSiP with fresh clones of the solvers and read in the MPS file. As
+  a basic check, make sure the size of the constraint matrix is correct.
+*/
+    for (i = vecSiP.size()-1 ; i >= 0 ; --i)
+    { vecSiP[i] = vecEmptySiP[i]->clone() ;
       
-      // Populate Local SolverInterface vector
-      vecSiP[i] = vecEmptySiP[i]->clone();   
+      std::string fn = mpsDir+mpsName[m] ;
+      vecSiP[i]->readMps(fn.c_str(),"mps") ;
       
-      // Read data mps file,
-      std::string fn = mpsDir+mpsName[m];
-      vecSiP[i]->readMps(fn.c_str(),"mps");
+      if (min[m])
+	vecSiP[i]->setObjSense(1.0) ;
+      else
+	vecSiP[i]->setObjSense(-1.0) ;
       
-      // set objective sense,
-      if(min[m]) vecSiP[i]->setObjSense(1.0);
-      else       vecSiP[i]->setObjSense(-1.0);
+      int nr = vecSiP[i]->getNumRows() ;
+      int nc = vecSiP[i]->getNumCols() ;
+      assert(nr == nRows[m]-1) ;
+      assert(nc == nCols[m]) ; } 
+/*
+  If we have multiple solvers, compare the representations.
+*/
+    for (i = vecSiP.size()-1 ; i > 0 ; --i)
+    { OsiPackedVector vim1,vi ;
       
-      // test size of matrix
-      int nr=vecSiP[i]->getNumRows();
-      int nc=vecSiP[i]->getNumCols();      
-      assert( nr==nRows[m]-1 /*|| nr==nRows[m]*/);
-      assert(nc==nCols[m]);      
-    } 
-    
-    // Test that Solver Interfaces are returning the same values
-    for( i=vecSiP.size()-1; i>0; --i ) {
-      OsiPackedVector vim1,vi;
-      
-      // Test col lowerbounds
+      // Compare col lowerbounds
       assert(
         equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
         vecSiP[i-1]->getColLower(),vecSiP[i  ]->getColLower(),
         vecSiP[i  ]->getNumCols() )
-        );
+        ) ;
       
-      // Test col upperbounds
+      // Compare col upperbounds
       assert(
         equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
         vecSiP[i-1]->getColUpper(),vecSiP[i  ]->getColUpper(),
         vecSiP[i  ]->getNumCols() )
-        );
+        ) ;
       
-      // Test obj coefficients
-      assert (
-        equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
-        vecSiP[i-1]->getObjCoefficients(),vecSiP[i  ]->getObjCoefficients(),
-        vecSiP[i  ]->getNumCols() )
-        );
-      
-      // Test row lowerbounds
+      // Compare row lowerbounds
       assert(
         equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
         vecSiP[i-1]->getRowLower(),vecSiP[i  ]->getRowLower(),
         vecSiP[i  ]->getNumRows() )
-        );
+        ) ;
       
-      // Test row upperbounds
+      // Compare row upperbounds
       assert( 
         equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
         vecSiP[i-1]->getRowUpper(),vecSiP[i  ]->getRowUpper(),
         vecSiP[i  ]->getNumRows() )
-        );
+        ) ;
             
-      //Test rowsense
+      // Compare row sense
       {
-        const char * rsm1 = vecSiP[i-1]->getRowSense();
-        const char * rs   = vecSiP[i  ]->getRowSense();
-        int nr = vecSiP[i]->getNumRows();
-        int r;
-        for ( r=0; r<nr; r++ )
-          assert ( rsm1[r] == rs[r] );
+        const char * rsm1 = vecSiP[i-1]->getRowSense() ;
+        const char * rs   = vecSiP[i  ]->getRowSense() ;
+        int nr = vecSiP[i]->getNumRows() ;
+        int r ;
+        for (r = 0 ; r < nr ; r++) assert (rsm1[r] == rs[r]) ;
       }
       
-      // Test rhs
+      // Compare rhs
       assert( 
         equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
         vecSiP[i-1]->getRightHandSide(),vecSiP[i  ]->getRightHandSide(),
         vecSiP[i  ]->getNumRows() )
-        );
+        ) ;
       
-      // Test range
+      // Compare range
       assert( 
         equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
         vecSiP[i-1]->getRowRange(),vecSiP[i  ]->getRowRange(),
         vecSiP[i  ]->getNumRows() )
-        );
+        ) ;
       
+      // Compare objective sense
+      assert( vecSiP[i-1]->getObjSense() == vecSiP[i  ]->getObjSense() ) ;
            
-      // Test getObjCoefficients
+      // Compare objective coefficients
       assert( 
         equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
         vecSiP[i-1]->getObjCoefficients(),vecSiP[i  ]->getObjCoefficients(),
         vecSiP[i  ]->getNumCols() )
-        );
+        ) ;
 
-      // Test numels
-      assert( vecSiP[i-1]->getNumElements() == vecSiP[i]->getNumElements() );
+      // Compare number of elements
+      assert( vecSiP[i-1]->getNumElements() == vecSiP[i]->getNumElements() ) ;
       
-      // Objective Sense
-      assert( vecSiP[i-1]->getObjSense() == vecSiP[i  ]->getObjSense() );
-
-      //Test constraint matrix
-      {
-        const OsiPackedMatrix * rmm1=vecSiP[i-1]->getMatrixByRow();
-        const OsiPackedMatrix * rm  =vecSiP[i  ]->getMatrixByRow();
-        assert( rmm1->isEquivalent(*rm) );
+      // Compare constraint matrix
+      { const OsiPackedMatrix * rmm1=vecSiP[i-1]->getMatrixByRow() ;
+        const OsiPackedMatrix * rm  =vecSiP[i  ]->getMatrixByRow() ;
+        assert( rmm1->isEquivalent(*rm) ) ;
         
-        const OsiPackedMatrix * cmm1=vecSiP[i-1]->getMatrixByCol();
-        const OsiPackedMatrix * cm  =vecSiP[i  ]->getMatrixByCol();
-        assert( cmm1->isEquivalent(*cm) );
-      }
+        const OsiPackedMatrix * cmm1=vecSiP[i-1]->getMatrixByCol() ;
+        const OsiPackedMatrix * cm  =vecSiP[i  ]->getMatrixByCol() ;
+        assert( cmm1->isEquivalent(*cm) ) ; } }
+/*
+  If we have multiple solvers, compare the variable type information
+*/
+    for (i = vecSiP.size()-1 ; i > 0 ; --i)
+    { OsiPackedVector vim1,vi ;
+      int c ;
       
-    }
+      { OsiVectorInt sm1 = vecSiP[i-1]->getFractionalIndices() ;
+        OsiVectorInt s   = vecSiP[i  ]->getFractionalIndices() ;
+        assert( sm1.size() == s.size() ) ;
+        for (c = s.size()-1 ; c >= 0 ; --c) assert( sm1[c] == s[c] ) ; }
 
-    //----------------
-          
-    
-    // Before solving test:
-    // isContinuous, isBinary, isInteger, isIngegerNonBinary, isFreeBinary
-    // getFractionalIndices
-    for( i=vecSiP.size()-1; i>0; --i ) {
-      OsiPackedVector vim1,vi;
-      
-      int c;
-      for ( c=0; c<vecSiP[i  ]->getNumCols(); c++ ) {
-        assert( !(vecSiP[i-1]->isContinuous(c) ^ vecSiP[i]->isContinuous(c)) );
-      }      
-      
-      //test getFractionalIndices
-      {
-        OsiVectorInt sm1 = vecSiP[i-1]->getFractionalIndices();
-        OsiVectorInt s   = vecSiP[i  ]->getFractionalIndices();
-        assert( sm1.size() == s.size() );
-        int c;
-        for ( c=s.size()-1; c>=0; --c )
-          assert ( sm1[c] == s[c] );
-      }
+      { int nc = vecSiP[i]->getNumCols() ;
+        for (c = 0 ; c < nc ; c++)
+	{ assert(
+	    vecSiP[i-1]->isContinuous(c) == vecSiP[i]->isContinuous(c)
+	    ) ;
+          assert(
+	    vecSiP[i-1]->isBinary(c) == vecSiP[i]->isBinary(c)
+	    ) ;
+          assert(
+	    vecSiP[i-1]->isIntegerNonBinary(c) ==
+	    vecSiP[i  ]->isIntegerNonBinary(c)
+	    ) ;
+          assert(
+	    vecSiP[i-1]->isFreeBinary(c) == vecSiP[i]->isFreeBinary(c)
+	    ) ;
+          assert(
+	    vecSiP[i-1]->isInteger(c) == vecSiP[i]->isInteger(c)
+	    ) ; } } }
+/*
+  Stage 2: Call each solver to solve the problem.
 
-      // Test isContinuous, isBinary, isInteger, isIngegerNonBinary, isFreeBinary
-      {
-        int c;
-        int nc = vecSiP[i]->getNumCols();
-        for( c=0; c<nc; c++ ){
-          assert( ( vecSiP[i-1]->isContinuous(c) &&  vecSiP[i]->isContinuous(c))
-            ||    (!vecSiP[i-1]->isContinuous(c) && !vecSiP[i]->isContinuous(c)) );
-          assert( ( vecSiP[i-1]->isBinary(c) &&  vecSiP[i]->isBinary(c))
-            ||    (!vecSiP[i-1]->isBinary(c) && !vecSiP[i]->isBinary(c)) );
-          assert( ( vecSiP[i-1]->isIntegerNonBinary(c) &&  vecSiP[i]->isIntegerNonBinary(c))
-            ||    (!vecSiP[i-1]->isIntegerNonBinary(c) && !vecSiP[i]->isIntegerNonBinary(c)) );
-          assert( ( vecSiP[i-1]->isFreeBinary(c) &&  vecSiP[i]->isFreeBinary(c))
-            ||    (!vecSiP[i-1]->isFreeBinary(c) && !vecSiP[i]->isFreeBinary(c)) );
-          assert( ( vecSiP[i-1]->isInteger(c) &&  vecSiP[i]->isInteger(c))
-            ||    (!vecSiP[i-1]->isInteger(c) && !vecSiP[i]->isInteger(c)) );
+  We call each solver, then check the return code and objective.
+
+  Note that the volume solver can't handle the Netlib cases. The strategy is
+  to require that it be the last solver in vecSiP and then break out of the
+  loop. This ensures that all previous solvers are run and compared to one
+  another.
+*/
+
+    for (i = 0 ; i < static_cast<int>(vecSiP.size()) ; ++i)
+    {
+#     ifdef COIN_USE_VOL
+      { 
+        OsiVolSolverInterface * si =
+          dynamic_cast<OsiVolSolverInterface *>(vecSiP[i]) ;
+        if (si != NULL )  { 
+          siName[i]="OsiVolSolverInterface";
+          // VOL does not solve netlib cases so don't bother trying to solve
+          break ; 
         }
       }
-
-    }
-
-    
-    
-    // Solve problem, looping once for each solver interface
-    for( i = 0; i < static_cast<int>( vecSiP.size() ); ++i ) {   // ??? changed direction of loop because Volume Solver should be the last one in the loop
-      
-#ifdef COIN_USE_VOL
-      // Volume Solver Interface can not solve netlib cases, so
-      // if volume is being tested we are done.
-      {
-        OsiVolSolverInterface * vsi = dynamic_cast<OsiVolSolverInterface *>(vecSiP[i]);
-        if ( vsi != NULL ) {
-          // This one is VolSi, make sure it is the last one.
-          // If it isn't then the order of solver interfaces in
-          // vecSiP should be changed to ensure that the VolSi is last.
-          assert( i == static_cast<int>(vecSiP.size()-1) );
-          break;
+#     endif
+#     ifdef COIN_USE_DYLP
+      { 
+        OsiDylpSolverInterface * si =
+          dynamic_cast<OsiDylpSolverInterface *>(vecSiP[i]) ;
+        if (si != NULL )  {    
+          siName[i]="OsiDylpSolverInterface";
+          // Is this an MPS file that OslDylpSolverInterface handles
+          if ( mpsName[m]=="cycle" ||
+               mpsName[m]=="d6cube" ||
+               mpsName[m]=="fit1d" || 
+               mpsName[m]=="grow15" || 
+               mpsName[m]=="grow22" || 
+               mpsName[m]=="maros" || 
+               mpsName[m]=="pilot" || 
+               mpsName[m]=="pilot4" || 
+               mpsName[m]=="pilotnov" || 
+               mpsName[m]=="wood1p" )break ; 
         }
       }
-#endif
-
-      // Solve LP
-      vecSiP[i]->initialSolve();
+#     endif
+#     ifdef COIN_USE_XPR
+      { 
+        OsiXprSolverInterface * si =
+          dynamic_cast<OsiXprSolverInterface *>(vecSiP[i]) ;
+        if (si != NULL )  {    
+          siName[i]="OsiXprSolverInterface";
+        }
+      }
+#     endif
+#     ifdef COIN_USE_CPX
+      { 
+        OsiCpxSolverInterface * si =
+          dynamic_cast<OsiCpxSolverInterface *>(vecSiP[i]) ;
+        if (si != NULL )  {    
+          siName[i]="OsiCpxSolverInterface";
+        }
+      }
+#     endif
+#     ifdef COIN_USE_OSL
+      { 
+        OsiOslSolverInterface * si =
+          dynamic_cast<OsiOslSolverInterface *>(vecSiP[i]) ;
+        if (si != NULL )  {    
+          siName[i]="OsiOslSolverInterface";
+        }
+      }
+#     endif
       
-      // Test objective solution value
-      {
+      vecSiP[i]->initialSolve() ;
+      
+      if (vecSiP[i]->isProvenOptimal()) { 
         double soln = vecSiP[i]->getObjValue();       
-        OsiRelFltEq eq(objValueTol[m]);
-        //std::cerr <<soln <<",  " <<objValue[m] <<std::endl;
-        assert(eq(soln,objValue[m]));
-      }
-    }
-    
-    // Test that Solver Interfaces are returning the same solution values
-    for( i=vecSiP.size()-1; i>0; --i ) {
-      OsiPackedVector vim1,vi;
-
-#ifdef COIN_USE_VOL
-      // Volume Solver Interface can not solve netlib cases, so
-      // if volume is being tested we are done.
-      {
-        OsiVolSolverInterface * vsi = dynamic_cast<OsiVolSolverInterface *>(vecSiP[i]);
-        if ( vsi != NULL ) {
-          // This one is VolSi, make sure it is the last one.
-          // If it isn't then the order of solver interfaces in
-          // vecSiP should be changed to ensure that the VolSi is last.
-          assert( i == static_cast<int>(vecSiP.size()-1) );
-          break;
+        OsiRelFltEq eq(objValueTol[m]) ;
+        if (eq(soln,objValue[m])) { 
+          //std::cerr << soln << " = " << objValue[m] << " ; ok." <<std::endl; 
+          numProbSolved[i]++; 
+        }
+        else  { 
+          std::cerr <<siName[i] <<" " <<soln << " != " <<objValue[m] << "; error=" ;
+          std::cerr <<fabs(objValue[m] - soln) <<std::endl; 
         }
       }
-#endif
- 
-#if 0
-      // Solvers don't seem to give same col solutions.
-      // Test col solution
-      assert(equivalentVectors(vecSiP[i-1],vecSiP[i], .1 /*objValueTol[m]*/,
-			       vecSiP[i-1]->colsol(),vecSiP[i  ]->colsol(),
-			       vecSiP[i  ]->getNumCols() ) );
-#endif
-
-#if 0
-      // Solvers don't seem to return the same row solution
-      // Test row solution
-      assert(equivalentVectors(vecSiP[i-1],vecSiP[i], .1 /*objValueTol[m]*/,
-			       vecSiP[i-1]->rowprice(),vecSiP[i  ]->rowprice(),
-			       vecSiP[i  ]->getNumRows() ) );
-#endif
-      
-      int c;
-      for ( c=0; c<vecSiP[i  ]->getNumCols(); c++ ) {
-        //std::cerr <<c <<" " <<vecSiP[i-1]->isContinuous(c) <<" " <<vecSiP[i  ]->isContinuous(c) <<std::endl;
-        assert( !(vecSiP[i-1]->isContinuous(c) ^ vecSiP[i]->isContinuous(c)) );
-      }
-      
-      
-      //test getFractionalIndices
-      {
-        OsiVectorInt sm1 = vecSiP[i-1]->getFractionalIndices();
-        OsiVectorInt s   = vecSiP[i  ]->getFractionalIndices();
-        assert( sm1.size() == s.size() );
-        int c;
-        for ( c=s.size()-1; c>=0; --c )
-          assert ( sm1[c] == s[c] );
-      }
-
-      // Test isContinuous, isBinary, isInteger, isIngegerNonBinary, isFreeBinary
-      {
-        int c;
-        int nc = vecSiP[i]->getNumCols();
-        for( c=0; c<nc; c++ ){
-          assert( ( vecSiP[i-1]->isContinuous(c) &&  vecSiP[i]->isContinuous(c))
-            ||    (!vecSiP[i-1]->isContinuous(c) && !vecSiP[i]->isContinuous(c)) );
-          assert( ( vecSiP[i-1]->isBinary(c) &&  vecSiP[i]->isBinary(c))
-            ||    (!vecSiP[i-1]->isBinary(c) && !vecSiP[i]->isBinary(c)) );
-          assert( ( vecSiP[i-1]->isIntegerNonBinary(c) &&  vecSiP[i]->isIntegerNonBinary(c))
-            ||    (!vecSiP[i-1]->isIntegerNonBinary(c) && !vecSiP[i]->isIntegerNonBinary(c)) );
-          assert( ( vecSiP[i-1]->isFreeBinary(c) &&  vecSiP[i]->isFreeBinary(c))
-            ||    (!vecSiP[i-1]->isFreeBinary(c) && !vecSiP[i]->isFreeBinary(c)) );
-          assert( ( vecSiP[i-1]->isInteger(c) &&  vecSiP[i]->isInteger(c))
-            ||    (!vecSiP[i-1]->isInteger(c) && !vecSiP[i]->isInteger(c)) );
+      else
+        if (vecSiP[i]->isProvenPrimalInfeasible()) { 
+          std::cerr << "error; primal infeasible" << std::endl ; 
         }
-      }
-
+        else
+          if (vecSiP[i]->isProvenDualInfeasible()) { 
+            std::cerr << "error; dual infeasible" << std::endl ; 
+          }
+          else
+            if (vecSiP[i]->isIterationLimitReached()) { 
+              std::cerr << "error; iteration limit" << std::endl ; 
+            }
+            else
+              if (vecSiP[i]->isAbandoned())  { 
+                std::cerr << "error; abandoned" << std::endl ; 
+              }
+              else  { 
+                std::cerr << "error; unknown" << std::endl ; 
+              } 
     }
-    
-    
-    // Delete locally created solver interfaces
-    for( i=vecSiP.size()-1; i>=0; --i)
-      delete vecSiP[i];
+    /*
+    Delete the used solver interfaces so we can reload fresh clones for the
+              next problem.
+    */
+    for (i = vecSiP.size()-1 ; i >= 0 ; --i) delete vecSiP[i] ;
   }
-  
+
+  for ( i=0; i<siName.size(); i++ ) {
+    std::cerr 
+      <<siName[i] 
+      <<" solved " 
+      <<numProbSolved[i]
+      <<" out of "
+      <<objValue.size()
+      <<std::endl;
+  } 
 }
+
 
 //#############################################################################
 //#############################################################################
@@ -492,7 +521,7 @@ static bool testDblParam(OsiSolverInterface * si, int k, double val)
   }
   return ret;
 }
- 
+
 //#############################################################################
 //#############################################################################
 
@@ -706,7 +735,6 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
         si7->setDblParam(OsiObjOffset,objOffset);
         si8->setDblParam(OsiObjOffset,objOffset);
       }
-        
       OsiPackedMatrix * pm = new OsiPackedMatrix(*base->getMatrixByCol());
       double * clb = new double[base->getNumCols()];
       std::copy(base->getColLower(),

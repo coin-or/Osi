@@ -552,10 +552,6 @@ void OsiOslSolverInterface::markHotStart()
   EKKModel* model = getMutableModelPtr();
   delete ws_;
   ws_ = dynamic_cast<CoinWarmStartBasis*>(getWarmStart());
-  itlimOrig_ = ekk_getImaxiter(model);
-  int itlim;
-  OsiSolverInterface::getIntParam(OsiMaxNumIterationHotStart, itlim);
-  ekk_setImaxiter(model, itlim);
   //  ekk_startFastDualSimplex(model, itlim);
 }
 
@@ -566,7 +562,12 @@ void OsiOslSolverInterface::solveFromHotStart()
   ekk_setIiternum(model, 0);
   setWarmStart(ws_);
   //  ekk_fastDualSimplex(model);
+  itlimOrig_ = ekk_getImaxiter(model);
+  int itlim;
+  OsiSolverInterface::getIntParam(OsiMaxNumIterationHotStart, itlim);
+  ekk_setImaxiter(model, itlim);
   resolve();
+  ekk_setImaxiter(model, itlimOrig_);
 }
 
 void OsiOslSolverInterface::unmarkHotStart()

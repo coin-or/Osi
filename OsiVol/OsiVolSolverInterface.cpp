@@ -760,8 +760,11 @@ OsiVolSolverInterface::markHotStart()
 void
 OsiVolSolverInterface::solveFromHotStart()
 {
-  CoinDisjointCopyN(rowpriceHotStart_, getNumRows(), rowprice_);
-  resolve();
+   int itlimOrig = volprob_.parm.maxsgriters;
+   getIntParam(OsiMaxNumIterationHotStart, volprob_.parm.maxsgriters);
+   CoinDisjointCopyN(rowpriceHotStart_, getNumRows(), rowprice_);
+   resolve();
+   volprob_.parm.maxsgriters = itlimOrig;
 }
 
 void

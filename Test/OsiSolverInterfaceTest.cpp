@@ -931,16 +931,166 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     assert( eq( si2->getObjCoefficients()[5],  0.0) );
     assert( eq( si2->getObjCoefficients()[6],  0.0) );
     assert( eq( si2->getObjCoefficients()[7], -1.0) );
-
+    
     // Test getting and setting of objective offset
     double objOffset;
-    assert( si2->getDblParam(OsiObjOffset,objOffset) );
+    bool supported = si2->getDblParam(OsiObjOffset,objOffset);
+    assert( supported );
     if( !eq( objOffset, 3.21 ) )
       failureMessage(solverName,"getDblParam OsiObjOffset on cloned solverInterface");
     delete si2;
   }
+  // end of clone testing
   
-  
+  // Test apply cuts method
+  {      
+    OsiSolverInterface & im = *(exmip1Si->clone()); 
+    OsiCuts cuts;
+    
+    // Generate some cuts 
+    {
+      // Get number of rows and columns in model
+      int nr=im.getNumRows();
+      int nc=im.getNumCols();
+      assert( nr == 5 );
+      assert( nc == 8 );
+      
+      // Generate a valid row cut from thin air
+      int c;
+      {
+        int *inx = new int[nc];
+        for (c=0;c<nc;c++) inx[c]=c;
+        double *el = new double[nc];
+        for (c=0;c<nc;c++) el[c]=((double)c)*((double)c);
+        
+        OsiRowCut rc;
+        rc.setRow(nc,inx,el);
+        rc.setLb(-100.);
+        rc.setUb(100.);
+        rc.setEffectiveness(22);
+        
+        cuts.insert(rc);
+        delete[]el;
+        delete[]inx;
+      }
+      
+      // Generate valid col cut from thin air
+      {
+        const double * oslColLB = im.getColLower();
+        const double * oslColUB = im.getColUpper();
+        int *inx = new int[nc];
+        for (c=0;c<nc;c++) inx[c]=c;
+        double *lb = new double[nc];
+        double *ub = new double[nc];
+        for (c=0;c<nc;c++) lb[c]=oslColLB[c]+0.001;
+        for (c=0;c<nc;c++) ub[c]=oslColUB[c]-0.001;
+        
+        OsiColCut cc;
+        cc.setLbs(nc,inx,lb);
+        cc.setUbs(nc,inx,ub);
+        
+        cuts.insert(cc);
+        delete [] ub;
+        delete [] lb;
+        delete [] inx;
+      }
+      
+      {
+        // Generate a row and column cut which are ineffective
+        OsiRowCut * rcP= new OsiRowCut;
+        rcP->setEffectiveness(-1.);
+        cuts.insert(rcP);
+        assert(rcP==NULL);
+        
+        OsiColCut * ccP= new OsiColCut;
+        ccP->setEffectiveness(-12.);
+        cuts.insert(ccP);
+        assert(ccP==NULL);
+      }
+      {
+        //Generate inconsistent Row cut
+        OsiRowCut rc;
+        const int ne=1;
+        int inx[ne]={-10};
+        double el[ne]={2.5};
+        rc.setRow(ne,inx,el);
+        rc.setLb(3.);
+        rc.setUb(4.);
+        assert(!rc.consistent());
+        cuts.insert(rc);
+      }
+      {
+        //Generate inconsistent col cut
+        OsiColCut cc;
+        const int ne=1;
+        int inx[ne]={-10};
+        double el[ne]={2.5};
+        cc.setUbs(ne,inx,el);
+        assert(!cc.consistent());
+        cuts.insert(cc);
+      }
+      {
+        // Generate row cut which is inconsistent for model m
+        OsiRowCut rc;
+        const int ne=1;
+        int inx[ne]={10};
+        double el[ne]={2.5};
+        rc.setRow(ne,inx,el);
+        assert(rc.consistent());
+        assert(!rc.consistent(im));
+        cuts.insert(rc);
+      }
+      {
+        // Generate col cut which is inconsistent for model m
+        OsiColCut cc;
+        const int ne=1;
+        int inx[ne]={30};
+        double el[ne]={2.0};
+        cc.setLbs(ne,inx,el);
+        assert(cc.consistent());
+        assert(!cc.consistent(im));
+        cuts.insert(cc);
+      }
+      {
+        // Generate col cut which is infeasible
+        OsiColCut cc;
+        const int ne=1;
+        int inx[ne]={0};
+        double el[ne]={2.0};
+        cc.setUbs(ne,inx,el);
+        cc.setEffectiveness(1000.);
+        assert(cc.consistent());
+        assert(cc.consistent(im));
+        assert(cc.infeasible(im));
+        cuts.insert(cc);
+      }
+    }
+    assert(cuts.sizeRowCuts()==4);
+    assert(cuts.sizeColCuts()==5);
+
+    if ( glpkSolverInterface ) {
+      // Test for glpk since it does not return from this method call windows (and perhaps else where too).
+      failureMessage(solverName,"OsiSolverInterface::applyCuts method");
+    } 
+    else {  
+      OsiSolverInterface::ApplyCutsReturnCode rc = im.applyCuts(cuts);
+      assert( rc.getNumIneffective() == 2 );
+      assert( rc.getNumApplied() == 2 );
+      assert( rc.getNumInfeasible() == 1 );
+      assert( rc.getNumInconsistentWrtIntegerModel() == 2 );
+      assert( rc.getNumInconsistent() == 2 );
+      assert( cuts.sizeCuts() == rc.getNumIneffective() +
+        rc.getNumApplied() +
+        rc.getNumInfeasible() +
+        rc.getNumInconsistentWrtIntegerModel() +
+        rc.getNumInconsistent() );
+    }
+
+    delete &im;
+  }
+  // end of apply cut method testing
+    
+
   // Test setting solution
   if ( dylpSolverInterface ) {
      // Test for dylp since it does not support this function
@@ -1043,7 +1193,9 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     
     // Change data so column 2 & 3 are integerNonBinary
     fim.setColUpper(2,5.0);
+    assert( eq(fim.getColUpper()[2],5.0) );
     fim.setColUpper(3,6.0);
+    assert( eq(fim.getColUpper()[3],6.0) );
     assert( !fim.isBinary(0) );
     assert( !fim.isBinary(1) );
     if( fim.isBinary(2) )

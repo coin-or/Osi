@@ -1692,12 +1692,105 @@ OsiClpSolverInterface::setBasisStatus(const int* cstat, const int* rstat)
   assert (modelPtr_->solveType()==2);
   modelPtr_->createStatus();
   int i, n;
+  double * lower, * upper, * solution;
   n=modelPtr_->numberRows();
-  for (i=0;i<n;i++)
-    modelPtr_->setRowStatus(i,(ClpSimplex::Status) rstat[i]);
+  lower = modelPtr_->rowLower();
+  upper = modelPtr_->rowUpper();
+  solution = modelPtr_->primalRowSolution();
+  for (i=0;i<n;i++) {
+    int status = rstat[i];
+    if (status<0||status>3)
+      status = 3;
+    if (lower[i]<-1.0e50&&upper[i]>1.0e50&&status!=1)
+      status = 0; // set free if should be
+    else if (lower[i]<-1.0e50&&status==3)
+      status = 2; // can't be at lower bound
+    else if (upper[i]>1.0e50&&status==2)
+      status = 3; // can't be at upper bound
+    switch (status) {
+      // free or superbasic
+    case 0:
+      if (lower[i]<-1.0e50&&upper[i]>1.0e50) {
+	modelPtr_->setRowStatus(i,ClpSimplex::isFree);
+	if (fabs(solution[i])>1.0e20)
+	  solution[i]=0.0;
+      } else {
+	modelPtr_->setRowStatus(i,ClpSimplex::superBasic);
+	if (fabs(solution[i])>1.0e20)
+	  solution[i]=0.0;
+      }
+      break;
+    case 1:
+      // basic
+      modelPtr_->setRowStatus(i,ClpSimplex::basic);
+      break;
+    case 2:
+      // at upper bound
+      solution[i]=upper[i];
+      if (upper[i]>lower[i])
+	modelPtr_->setRowStatus(i,ClpSimplex::atUpperBound);
+      else
+	modelPtr_->setRowStatus(i,ClpSimplex::isFixed);
+      break;
+    case 3:
+      // at lower bound
+      solution[i]=lower[i];
+      if (upper[i]>lower[i])
+	modelPtr_->setRowStatus(i,ClpSimplex::atLowerBound);
+      else
+	modelPtr_->setRowStatus(i,ClpSimplex::isFixed);
+      break;
+    }
+  }
   n=modelPtr_->numberColumns();
-  for (i=0;i<n;i++)
-    modelPtr_->setColumnStatus(i,(ClpSimplex::Status) cstat[i]);
+  lower = modelPtr_->columnLower();
+  upper = modelPtr_->columnUpper();
+  solution = modelPtr_->primalColumnSolution();
+  for (i=0;i<n;i++) {
+    int status = cstat[i];
+    if (status<0||status>3)
+      status = 3;
+    if (lower[i]<-1.0e50&&upper[i]>1.0e50&&status!=1)
+      status = 0; // set free if should be
+    else if (lower[i]<-1.0e50&&status==3)
+      status = 2; // can't be at lower bound
+    else if (upper[i]>1.0e50&&status==2)
+      status = 3; // can't be at upper bound
+    switch (status) {
+      // free or superbasic
+    case 0:
+      if (lower[i]<-1.0e50&&upper[i]>1.0e50) {
+	modelPtr_->setColumnStatus(i,ClpSimplex::isFree);
+	if (fabs(solution[i])>1.0e20)
+	  solution[i]=0.0;
+      } else {
+	modelPtr_->setColumnStatus(i,ClpSimplex::superBasic);
+	if (fabs(solution[i])>1.0e20)
+	  solution[i]=0.0;
+      }
+      break;
+    case 1:
+      // basic
+      modelPtr_->setColumnStatus(i,ClpSimplex::basic);
+      break;
+    case 2:
+      // at upper bound
+      solution[i]=upper[i];
+      if (upper[i]>lower[i])
+	modelPtr_->setColumnStatus(i,ClpSimplex::atUpperBound);
+      else
+	modelPtr_->setColumnStatus(i,ClpSimplex::isFixed);
+      break;
+    case 3:
+      // at lower bound
+      solution[i]=lower[i];
+      if (upper[i]>lower[i])
+	modelPtr_->setColumnStatus(i,ClpSimplex::atLowerBound);
+      else
+	modelPtr_->setColumnStatus(i,ClpSimplex::isFixed);
+      break;
+    }
+  }
   modelPtr_->statusOfProblem();
   return 0;
 }

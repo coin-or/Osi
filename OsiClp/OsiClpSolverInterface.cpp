@@ -1681,6 +1681,35 @@ OsiClpSolverInterface::applyRowCuts(int numberCuts, const OsiRowCut * cuts)
   delete [] rowub;
 
 }
+/* Apply a collection of row cuts which are all effective.
+   applyCuts seems to do one at a time which seems inefficient.
+*/
+void 
+OsiClpSolverInterface::applyRowCuts(int numberCuts, const OsiRowCut ** cuts)
+{
+  int i;
+  if (!numberCuts)
+    return;
+
+  const CoinPackedVectorBase * * rows
+    =     new const CoinPackedVectorBase * [numberCuts];
+  double * rowlb = new double [numberCuts];
+  double * rowub = new double [numberCuts];
+  for (i=0;i<numberCuts;i++) {
+    rowlb[i] = cuts[i]->lb();
+    rowub[i] = cuts[i]->ub();
+    rows[i] = &cuts[i]->row();
+#ifdef TAKEOUT
+    if (rows[i]->getNumElements()==10||rows[i]->getNumElements()==15)
+      printf("ApplyCuts %d size %d\n",getNumRows()+i,rows[i]->getNumElements());
+#endif
+  }
+  addRows(numberCuts,rows,rowlb,rowub);
+  delete [] rows;
+  delete [] rowlb;
+  delete [] rowub;
+
+}
 
 //-----------------------------------------------------------------------------
 

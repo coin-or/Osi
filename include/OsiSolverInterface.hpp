@@ -791,6 +791,10 @@ public:
 	  Would be even more efficient to pass an array of pointers.
       */
       virtual void applyRowCuts(int numberCuts, const OsiRowCut * cuts);
+      /** Apply a collection of row cuts which are all effective.
+	  This is passed in as an array of pointers.
+      */
+      virtual void applyRowCuts(int numberCuts, const OsiRowCut ** cuts);
     //@}
 
   //---------------------------------------------------------------------------

@@ -361,7 +361,15 @@ OsiSolverInterface::applyRowCuts(int numberCuts, const OsiRowCut * cuts)
     applyRowCut(cuts[i]);
   }
 }
-
+// And alternatively
+void 
+OsiSolverInterface::applyRowCuts(int numberCuts, const OsiRowCut ** cuts)
+{
+  int i;
+  for (i=0;i<numberCuts;i++) {
+    applyRowCut(*cuts[i]);
+  }
+}
 //#############################################################################
 // Set/Get Application Data
 // This is a pointer that the application can store into and retrieve

@@ -533,6 +533,10 @@ public:
 	  applyCuts seems to do one at a time which seems inefficient.
       */
       virtual void applyRowCuts(int numberCuts, const OsiRowCut * cuts);
+      /** Apply a collection of row cuts which are all effective.
+	  This is passed in as an array of pointers.
+      */
+      virtual void applyRowCuts(int numberCuts, const OsiRowCut ** cuts);
     //@}
   //@}
 

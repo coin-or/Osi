@@ -72,6 +72,10 @@ void OsiOslSolverInterface::resolve()
 
   ekk_mergeBlocks(model, 1);
   ekk_setIiternum(model, 0);
+  if (!messageHandler()->logLevel())
+    ekk_messagesPrintOff(model,1,5000);
+  else if (messageHandler()->logLevel()==1)
+    ekk_messagePrintOff(model,317);
 #if 0
   ekk_dualSimplex(model); // *FIXME* : why not 0 (eitherSimplex)
 #else

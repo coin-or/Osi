@@ -109,10 +109,10 @@ install: libosi
 	@echo "Installing include files..."
 	@mkdir -p ${InstallDir}/include
 # *FIXME* : do we _really_ need all the headers?
-	@cp -u include/*.hpp ../Common/include/*.hpp ${InstallDir}/include
+	@${CP} include/*.hpp ../Common/include/*.hpp ${InstallDir}/include
 	@echo "Installing libraries..."
 	@mkdir -p ${InstallDir}/lib
-	@cp -u $(TARGETDIR)/libosi$(OptVersion)$(LIBEXT) ${InstallDir}/lib
+	@${CP} $(TARGETDIR)/libosi$(OptVersion)$(LIBEXT) ${InstallDir}/lib
 	@rm -f ${InstallDir}/lib/libosi$(LIBEXT)
 	@cd ${InstallDir}/lib; \
 		ln -s libosi$(OptVersion)$(LIBEXT) libosi$(LIBEXT)

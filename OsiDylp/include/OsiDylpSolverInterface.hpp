@@ -1,3 +1,4 @@
+#ifdef COIN_USE_DYLP
 #ifndef OsiDylpSolverInterface_H
 #define OsiDylpSolverInterface_H
 
@@ -15,7 +16,7 @@
 */
 
 /*
-  @(#)OsiDylpSolverInterface.hpp	1.5	11/02/02
+  %W%	%G%
 */
 
 #include <CoinPackedMatrix.hpp>
@@ -62,7 +63,8 @@ extern "C" {
 
 class OsiDylpSolverInterface: public OsiSolverInterface
 
-{ friend void OsiDylpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir) ;
+{ friend void OsiDylpSolverInterfaceUnitTest(const std::string &mpsDir,
+					     const std::string &netLibDir) ;
 
 /*
   Consult the COIN OSI documentation or relevant source code for details
@@ -101,16 +103,17 @@ public:
   int readMps(const char *filename, const char *extension = "mps") ;
 
   /*! \brief Write the problem into the specified file in MPS format. */
-    virtual void writeMps(const char *filename,
-			  const char *extension = "mps",
-			  double objSense=0.0) const;
+
+  void writeMps(const char *basename,
+		const char *extension = "mps",
+		double objsense = 0.0) const ;
 
   /*! \brief Write the problem into the specified file in MPS format. */
 
-  int writeMpsNative(const char *filename,
+  int writeMps(const char *filename,
 	       const char **rownames, const char **colnames,
 	       int formatType = 0, int numberAcross = 2,
-	       double objSense = 0.0) const ;
+	       double objsense = 0.0) const ;
 
   /*! \brief Load a problem description (OSI packed matrix, row sense,
 	  parameters unaffected).
@@ -277,6 +280,10 @@ public:
   /*! \brief Set the sense (min/max) of the objective */
 
   void setObjSense(double) ;
+
+  /*! \brief Set the value of the primal variables in the problem solution */
+
+  void setColSolution(const double*) ;
 
   /*! \brief Add a column (variable) to the problem */
 
@@ -453,10 +460,6 @@ public:
 
   void branchAndBound() ;
 
-  /*! \brief Set the value of the primal variables in the problem solution */
-
-  void setColSolution(const double*) ;
-
   /*! \brief Set the value of the dual variables in the problem solution */
 
   void setRowPrice(const double*) ;
@@ -567,6 +570,10 @@ private:
   \var string osi_probname
   \brief Problem name (from user or mps file).
 */
+/*!
+  \var string osi_solvername
+  \brief Solver name (dylp).
+*/
 
   double osi_dual_tolerance ;
   double osi_primal_tolerance ;
@@ -574,6 +581,7 @@ private:
   int osi_iterlim ;
   int osi_hotiterlim ;
   std::string osi_probname ;
+  std::string osi_solvername ;
 
 //@}
 
@@ -585,6 +593,7 @@ private:
 */
 //@{
 
+  mutable double _objval ;
   mutable double* _col_x ;
   mutable double* _col_obj ;
   mutable double* _col_cbar ;
@@ -605,6 +614,7 @@ private:
 //@{
   void construct_lpprob() ;
   void construct_options() ;
+  void construct_consys(int cols, int rows) ;
   void dylp_ioinit() ;
   void gen_rowparms(int rowcnt,
 		    double *rhs, double *rhslow, contyp_enum *ctyp,
@@ -626,7 +636,7 @@ private:
   void destruct_col_cache() ;
   void destruct_row_cache() ;
   void destruct_cache() ;
-  void destruct_problem() ;
+  void destruct_problem(bool preserve_interface) ;
   void detach_dylp() ;
 //@}
 
@@ -642,6 +652,8 @@ private:
     vartyp_enum vtypi,double vlbi, double vubi, double obji) ;
   void add_row(const CoinPackedVectorBase& osi_rowi, 
     char clazzi, contyp_enum ctypi, double rhsi, double rhslowi) ;
+  void worst_case_primal() ;
+  void calc_objval() ;
 
 //@}
 
@@ -670,9 +682,7 @@ private:
 */
   static basis_struct* copy_basis(const basis_struct* src) ;
   static void copy_basis(const basis_struct* src, basis_struct* dst) ;
-  static consys_struct* copy_consys(const consys_struct* src) ;
   static lpprob_struct* copy_lpprob(const lpprob_struct* src) ;
-  static void copy_consysmtx(const consys_struct* src, consys_struct* dst) ;
 //@}
 
 #ifndef _MSC_VER
@@ -870,6 +880,7 @@ class OsiDylpWarmStartBasis : public CoinWarmStartBasis
   OsiDylpSolverInterfaceTest.cpp
 */
 
-void OsiDylpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir) ;
+void OsiDylpSolverInterfaceUnitTest(const std::string & mpsDir) ;
 
 #endif // OsiDylpSolverInterface_H
+#endif // COIN_USE_DYLP

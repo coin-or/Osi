@@ -68,6 +68,11 @@ XprIncDir := NONE
 XprLibDir := PROBE
 XprLibName := libxosl.so libmp-opt.so
 
+# See if zlib there (should we go for bzlib as well?)
+ZlibIncDir := PROBE
+ZlibLibDir := PROBE
+ZlibLibName := libz.so libz.a
+
 ##############################################################################
 # You should not need to edit below this line.
 ##############################################################################
@@ -77,6 +82,7 @@ MakefileDir := ../Common/make
 
 include ${MakefileDir}/Makefile.coin
 include ${MakefileDir}/Makefile.detectSolver
+include ${MakefileDir}/Makefile.detectZlib
 
 ##############################################################################
 

@@ -129,12 +129,23 @@ OsiPackedMatrix::setDimensions(int newnumrows, int newnumcols)
     minorDim_ = newnumcols;
     numplus = newnumrows - numrows;
   }
+#if 0
   if (numplus > 0) {
     int * lengths = new int[numplus];
     CoinFillN(lengths, numplus, 1);
     resizeForAddingMajorVectors(numplus, lengths);
     delete[] lengths;
   }
+#else
+  if (numplus > 0) {
+    int* lengths = new int[numplus];
+    CoinFillN(lengths, numplus, 0); //1 in the original version
+    resizeForAddingMajorVectors(numplus, lengths);
+    delete[] lengths;
+    majorDim_ += numplus; //forgot to change majorDim_
+  }
+#endif
+
 }
 
 //-----------------------------------------------------------------------------

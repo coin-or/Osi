@@ -194,6 +194,34 @@ OsiSolverInterface::addCols(const int numcols,
     addCol(*cols[i], collb[i], colub[i], obj[i]);
   }
 }
+/* Add a column (primal variable) to the problem. */
+void 
+OsiSolverInterface::addCol(int numberElements, const int * rows, const double * elements,
+			   const double collb, const double colub,   
+			   const double obj) 
+{
+  CoinPackedVector column(numberElements, rows, elements);
+  addCol(column,collb,colub,obj);
+}
+/* Add a set of columns (primal variables) to the problem.
+   
+This default implementation simply makes repeated calls to addCol().
+*/
+void OsiSolverInterface::addCols(const int numcols,
+				 const int * columnStarts, const int * rows, const double * elements,
+				 const double* collb, const double* colub,   
+				 const double* obj)
+{
+  double infinity = getInfinity();
+  for (int i = 0; i < numcols; ++i) {
+    int start = columnStarts[i];
+    int number = columnStarts[i+1]-start;
+    assert (number>=0);
+    addCol(number, rows+start, elements+start, collb ? collb[i] : 0.0, 
+	   colub ? colub[i] : infinity, 
+	   obj ? obj[i] : 0.0);
+  }
+}
 //-----------------------------------------------------------------------------
 void
 OsiSolverInterface::addRows(const int numrows,

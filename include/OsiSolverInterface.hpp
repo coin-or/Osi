@@ -671,6 +671,19 @@ public:
 			   const CoinPackedVectorBase * const * cols,
 			   const double* collb, const double* colub,   
 			   const double* obj);
+      /** Add a column (primal variable) to the problem. */
+      virtual void addCol(int numberElements, const int * rows, const double * elements,
+			  const double collb, const double colub,   
+			  const double obj) ;
+      /** Add a set of columns (primal variables) to the problem.
+      
+	The default implementation simply makes repeated calls to
+	addCol().
+      */
+      virtual void addCols(const int numcols,
+			   const int * columnStarts, const int * rows, const double * elements,
+			   const double* collb, const double* colub,   
+			   const double* obj);
 #if 0
       /** */
       virtual void addCols(const CoinPackedMatrix& matrix,

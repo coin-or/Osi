@@ -2843,7 +2843,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     }
   }
 
-	delete si;
+  delete si;
       }
       // Test adding columns to NULL
       {
@@ -2886,6 +2886,50 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 
      }
   }
+	delete si;
+      }
+      // Test adding columns to NULL - alternative format
+      {
+	OsiSolverInterface *  si = emptySi->clone();
+	int i;
+
+	//Matrix
+	int row[]={0,1};
+	double col1E[]={4.0,7.0};
+	double col23E[]={7.0,4.0,5.0,5.0};
+	int row23E[]={0,1,0,1};
+	int start23E[]={0,2,4};
+	double ub23E[]={10.0,10.0};
+	//CoinPackedVector col1(2,row,col1E);
+	//CoinPackedVector col2(2,row,col2E);
+	//CoinPackedVector col3(2,row,col3E);
+
+	double objective[]={5.0,6.0,5.5};
+	{
+	  // Add empty rows
+	  for (i=0;i<2;i++) 
+	    si->addRow(CoinPackedVector(),2.0,100.0);
+	  
+	  // Add columns
+	  if ( volSolverInterface ) {
+	    // FIXME: this test could be done w/ the volume, but the rows must not
+	    // be ranged.
+	    failureMessage(solverName,"addCol add columns to null");
+	  }
+	  else {
+	    si->addCol(2,row,col1E,0.0,10.0,objective[0]);
+	    si->addCols(2,start23E,row23E,col23E,NULL,ub23E,objective+1);
+	    
+	    // solve
+	    si->initialSolve();
+	    
+	    CoinRelFltEq eq(1.0e-7) ;      
+	    double objValue = si->getObjValue();
+	    if ( !eq(objValue,2.0) )
+	      failureMessage(solverName,"getObjValue after adding empty rows and then cols.");
+	    
+	  }
+	}
 	delete si;
       }
     }

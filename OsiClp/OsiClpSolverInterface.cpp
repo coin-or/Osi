@@ -65,6 +65,7 @@ void OsiClpSolverInterface::initialSolve()
   basis_ = getBasis(&solver);
   lastAlgorithm_=2; // dual
 #else
+  setBasis(basis_,&solver);
   solver.primal();
   basis_ = getBasis(&solver);
   lastAlgorithm_=1; // primal
@@ -78,7 +79,6 @@ void OsiClpSolverInterface::initialSolve()
 //-----------------------------------------------------------------------------
 void OsiClpSolverInterface::resolve()
 {
-
   ClpSimplex solver;
   solver.borrowModel(*modelPtr_);
   // Set message handler to have same levels etc
@@ -316,6 +316,7 @@ void OsiClpSolverInterface::solveFromHotStart()
 {
   setWarmStart(ws_);
   resolve();
+  
 }
 
 void OsiClpSolverInterface::unmarkHotStart()
@@ -541,7 +542,16 @@ OsiClpSolverInterface::addCol(const CoinPackedVectorBase& vec,
   basis_.resize(modelPtr_->numberRows(),numberColumns+1);
   setColBounds(numberColumns,collb,colub);
   setObjCoeff(numberColumns,obj);
+  if (!modelPtr_->clpMatrix())
+    modelPtr_->createEmptyMatrix();
   modelPtr_->matrix()->appendCol(vec);
+  if (integerInformation_) {
+    char * temp = new char[numberColumns+1];
+    memcpy(temp,integerInformation_,numberColumns*sizeof(char));
+    delete [] integerInformation_;
+    integerInformation_ = temp;
+    integerInformation_[numberColumns]=0;
+  }
   freeCachedResults();
 }
 //-----------------------------------------------------------------------------
@@ -563,7 +573,17 @@ OsiClpSolverInterface::addCols(const int numcols,
     upper[iCol]= forceIntoRange(colub[iCol], -OsiClpInfinity, OsiClpInfinity);
     objective[iCol] = obj[iCol];
   }
+  if (!modelPtr_->clpMatrix())
+    modelPtr_->createEmptyMatrix();
   modelPtr_->matrix()->appendCols(numcols,cols);
+  if (integerInformation_) {
+    char * temp = new char[numberColumns+numcols];
+    memcpy(temp,integerInformation_,numberColumns*sizeof(char));
+    delete [] integerInformation_;
+    integerInformation_ = temp;
+    for (iCol = 0; iCol < numcols; iCol++) 
+      integerInformation_[numberColumns+iCol]=0;
+  }
   freeCachedResults();
 }
 //-----------------------------------------------------------------------------
@@ -583,6 +603,8 @@ OsiClpSolverInterface::addRow(const CoinPackedVectorBase& vec,
   modelPtr_->resize(numberRows+1,modelPtr_->numberColumns());
   basis_.resize(numberRows+1,modelPtr_->numberColumns());
   setRowBounds(numberRows,rowlb,rowub);
+  if (!modelPtr_->clpMatrix())
+    modelPtr_->createEmptyMatrix();
   modelPtr_->matrix()->appendRow(vec);
   freeCachedResults();
 }
@@ -598,6 +620,8 @@ OsiClpSolverInterface::addRow(const CoinPackedVectorBase& vec,
   double rowlb, rowub;
   convertSenseToBound(rowsen, rowrhs, rowrng, rowlb, rowub);
   setRowBounds(numberRows,rowlb,rowub);
+  if (!modelPtr_->clpMatrix())
+    modelPtr_->createEmptyMatrix();
   modelPtr_->matrix()->appendRow(vec);
   freeCachedResults();
 }
@@ -617,6 +641,8 @@ OsiClpSolverInterface::addRows(const int numrows,
     lower[iRow]= forceIntoRange(rowlb[iRow], -OsiClpInfinity, OsiClpInfinity);
     upper[iRow]= forceIntoRange(rowub[iRow], -OsiClpInfinity, OsiClpInfinity);
   }
+  if (!modelPtr_->clpMatrix())
+    modelPtr_->createEmptyMatrix();
   modelPtr_->matrix()->appendRows(numrows,rows);
   freeCachedResults();
 }
@@ -640,6 +666,8 @@ OsiClpSolverInterface::addRows(const int numrows,
     lower[iRow]= forceIntoRange(rowlb, -OsiClpInfinity, OsiClpInfinity);
     upper[iRow]= forceIntoRange(rowub, -OsiClpInfinity, OsiClpInfinity);
   }
+  if (!modelPtr_->clpMatrix())
+    modelPtr_->createEmptyMatrix();
   modelPtr_->matrix()->appendRows(numrows,rows);
   freeCachedResults();
 }
@@ -826,6 +854,7 @@ ws_(NULL),
 basis_(),  
 itlimOrig_(9999999),
 lastAlgorithm_(0),
+notOwned_(false),
 matrixByRow_(NULL),
 integerInformation_(NULL)
 {
@@ -860,6 +889,7 @@ ws_(NULL),
 basis_(),
 itlimOrig_(9999999),
 lastAlgorithm_(0),
+notOwned_(false),
 matrixByRow_(NULL),
 integerInformation_(NULL)
 {
@@ -890,15 +920,20 @@ ws_(NULL),
 basis_(),
 itlimOrig_(9999999),
 lastAlgorithm_(0),
+notOwned_(false),
 matrixByRow_(NULL),
 integerInformation_(NULL)
 {
   modelPtr_ = rhs;
-  if (rhs->integerInformation()) {
-    int numberColumns = modelPtr_->numberColumns();
-    integerInformation_ = new char[numberColumns];
-    memcpy(integerInformation_,rhs->integerInformation(),
-	   numberColumns*sizeof(char));
+  if (rhs) {
+    notOwned_=true;
+
+    if (rhs->integerInformation()) {
+      int numberColumns = modelPtr_->numberColumns();
+      integerInformation_ = new char[numberColumns];
+      memcpy(integerInformation_,rhs->integerInformation(),
+	     numberColumns*sizeof(char));
+    }
   }
   fillParamMaps();
 }
@@ -908,6 +943,7 @@ void
 OsiClpSolverInterface::releaseClp()
 {
   modelPtr_=NULL;
+  notOwned_=false;
 }
     
 
@@ -917,7 +953,8 @@ OsiClpSolverInterface::releaseClp()
 OsiClpSolverInterface::~OsiClpSolverInterface ()
 {
   freeCachedResults();
-  delete modelPtr_;
+  if (!notOwned_)
+    delete modelPtr_;
   delete ws_;
   delete [] integerInformation_;
 }
@@ -931,10 +968,12 @@ OsiClpSolverInterface::operator=(const OsiClpSolverInterface& rhs)
   if (this != &rhs) {    
     OsiSolverInterface::operator=(rhs);
     freeCachedResults();
-    delete modelPtr_;
+    if (!notOwned_)
+      delete modelPtr_;
     delete ws_;
     if ( rhs.modelPtr_  ) 
       modelPtr_ = new ClpSimplex(*rhs.modelPtr_);
+    notOwned_=false;
     
     if ( rhs.ws_ ) 
       ws_ = new CoinWarmStartBasis(*rhs.ws_);
@@ -962,6 +1001,8 @@ void
 OsiClpSolverInterface::applyRowCuts(int numberCuts, const OsiRowCut * cuts)
 {
   int i;
+  if (!numberCuts)
+    return;
 
   const CoinPackedVectorBase * * rows
     =     new const CoinPackedVectorBase * [numberCuts];

@@ -659,6 +659,9 @@ private:
 
      /// Last algorithm used
      int lastAlgorithm_;
+
+     /// To say if destructor should delete underlying model
+     bool notOwned_;
   
      /// Pointer to row-wise copy of problem matrix coefficients.
      mutable CoinPackedMatrix *matrixByRow_;  

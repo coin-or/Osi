@@ -2132,8 +2132,8 @@ void ODSI::writeMps (const char *basename, const char *extension,
     colnames[j] = consys_nme(consys,'v',idx(j),false,0) ;
 
   // Get multiplier for objective function - default 1.0
-  double * objective = new double[numcols];
-  memcpy(objective,getObjCoefficients(),numcols*sizeof(double));
+  double * objective = new double[n];
+  memcpy(objective,getObjCoefficients(),n*sizeof(double));
   if (objSense*getObjSense()<0.0) {
     for (int i = 0; i < n; ++i) 
       objective [i] = - objective[i];
@@ -2189,8 +2189,8 @@ int ODSI::writeMpsNative (const char *filename,
   for (j = 0 ; j < n ; j++) vartyp[j] = isInteger(j) ;
 
   // Get multiplier for objective function - default 1.0
-  double * objective = new double[numcols];
-  memcpy(objective,getObjCoefficients(),numcols*sizeof(double));
+  double * objective = new double[n];
+  memcpy(objective,getObjCoefficients(),n*sizeof(double));
   if (objSense*getObjSense()<0.0) {
     for (int i = 0; i < n; ++i) 
       objective [i] = - objective[i];

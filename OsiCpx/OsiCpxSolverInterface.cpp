@@ -960,50 +960,9 @@ double OsiCpxSolverInterface::getObjSense() const
 
 bool OsiCpxSolverInterface::isContinuous( int colNumber ) const
 {
-<<<<<<< OsiCpxSolverInterface.cpp
-  CPXLPptr lp = getMutableLpPtr();
-  int probType = CPXgetprobtype(env_, lp);
-  bool ctype;
-
-#if CPX_VERSION >= 800
-  if ( probType == CPXPROB_RELAXEDMILP || probType == CPXPROB_LP) {
-    int err = CPXchgprobtype(env_, lp, CPXPROB_MILP);
-    checkCPXerror( err, "CPXchgprobtype", "isContinuous" );
-  }
-#else
-  if ( probType == CPXPROB_RELAXED || probType == CPXPROB_LP) {
-    int err = CPXchgprobtype(env_, lp, CPXPROB_MIP);
-    checkCPXerror( err, "CPXchgprobtype", "isContinuous" );
-  }
-#endif
-
-  ctype = getCtype()[colNumber] == CPX_CONTINUOUS;
-=======
   debugMessage("OsiCpxSolverInterface::isContinuous(%d)\n", colNumber);
->>>>>>> 1.12
 
-<<<<<<< OsiCpxSolverInterface.cpp
-#if 0
-#if CPX_VERSION >= 800
-  if ( probType == CPXPROB_MILP ) {
-    int err = CPXchgprobtype(env_, lp, CPXPROB_RELAXEDMILP);
-    checkCPXerror( err, "CPXchgprobtype", "isContinuous" );
-  }
-#else
-  if ( probType == CPXPROB_MIP ) {
-    int err = CPXchgprobtype(env_, lp, CPXPROB_RELAXED);
-    checkCPXerror( err, "CPXchgprobtype", "isContinuous" );
-  }
-#endif
-#endif
-
-  int err = CPXchgprobtype( env_, lp, probType );
-  checkCPXerror( err, "CPXchgprobtype", "setInteger" );
-
-  return ctype;
-=======
   return getCtype()[colNumber] == CPX_CONTINUOUS;
->>>>>>> 1.12
 }
 
 //------------------------------------------------------------------
@@ -1611,32 +1570,6 @@ OsiCpxSolverInterface::setContinuous(int index)
 void
 OsiCpxSolverInterface::setInteger(int index)
 {
-<<<<<<< OsiCpxSolverInterface.cpp
-  CPXLPptr lp = getLpPtr( OsiCpxSolverInterface::FREECACHED_COLUMN );
-  int probType = CPXgetprobtype( env_, lp );
-  int err;
-  char type = 'I';
-#if CPX_VERSION >= 800
-  if( probType == CPXPROB_LP || probType == CPXPROB_RELAXEDMILP ) 
-     {
-	err = CPXchgprobtype( env_, lp, CPXPROB_MILP );
-	checkCPXerror( err, "CPXchgprobtype", "setInteger" );
-     }  
-#else
-  if( probType == CPXPROB_LP || probType == CPXPROB_RELAXEDMIP ) 
-     {
-	err = CPXchgprobtype( env_, lp, CPXPROB_MIP );
-	checkCPXerror( err, "CPXchgprobtype", "setInteger" );
-     }  
-#endif
-  if( getColLower()[index] == 0.0 && getColUpper()[index] == 1.0 )
-     type = 'B';
-  err = CPXchgctype( env_, lp, 1, &index, &type );
-  checkCPXerror( err, "CPXchgctype", "setInteger");
-
-  err = CPXchgprobtype( env_, lp, probType );
-  checkCPXerror( err, "CPXchgprobtype", "setInteger" );
-=======
   debugMessage("OsiCpxSolverInterface::setInteger(%d)\n", index);
 
   assert(coltype_ != NULL);
@@ -1654,7 +1587,6 @@ OsiCpxSolverInterface::setInteger(int index)
       err = CPXchgctype( env_, lp, 1, &index, &coltype_[index] );
       checkCPXerror( err, "CPXchgctype", "setInteger" );
     }
->>>>>>> 1.12
 }
 //-----------------------------------------------------------------------------
 void
@@ -1669,50 +1601,10 @@ OsiCpxSolverInterface::setContinuous(const int* indices, int len)
 void
 OsiCpxSolverInterface::setInteger(const int* indices, int len)
 {
-<<<<<<< OsiCpxSolverInterface.cpp
-  CPXLPptr lp = getLpPtr( OsiCpxSolverInterface::FREECACHED_COLUMN );
-  int probType = CPXgetprobtype( env_, lp );
-  int err;
-
-#if CPX_VERSION >= 800
-  if( probType == CPXPROB_LP || probType == CPXPROB_RELAXEDMILP ) 
-    {
-      err = CPXchgprobtype( env_, lp, CPXPROB_MILP );
-      checkCPXerror( err, "CPXchgprobtype", "setInteger" );
-    }  
-#else
-  if( probType == CPXPROB_LP || probType == CPXPROB_RELAXEDMIP ) 
-    {
-      err = CPXchgprobtype( env_, lp, CPXPROB_MIP );
-      checkCPXerror( err, "CPXchgprobtype", "setInteger" );
-    }  
-#endif
-=======
   debugMessage("OsiCpxSolverInterface::setInteger(%p, %d)\n", indices, len);
->>>>>>> 1.12
 
-<<<<<<< OsiCpxSolverInterface.cpp
-  char* type = new char[len];
-  CoinFillN( type, len, 'I' );
-  const double* clb = getColLower();
-  const double* cub = getColUpper();
-=======
->>>>>>> 1.12
   for( int i = 0; i < len; ++i )
-<<<<<<< OsiCpxSolverInterface.cpp
-    {
-      if( clb[indices[i]] == 0.0 && cub[indices[i]] == 1.0 )
-	type[i] = 'B';
-    }
-  err = CPXchgctype( env_, lp, len, const_cast<int*>(indices), type );
-  checkCPXerror( err, "CPXchgctype", "setInteger");
-  delete[] type;
-
-  err = CPXchgprobtype( env_, lp, probType );
-  checkCPXerror( err, "CPXchgprobtype", "setInteger" );
-=======
      setInteger(indices[i]);
->>>>>>> 1.12
 }
 //#############################################################################
 

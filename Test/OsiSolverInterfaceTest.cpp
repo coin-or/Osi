@@ -294,7 +294,7 @@ void OsiSolverInterfaceMpsUnitTest
   
   
   //Open the main loop to step through the MPS problems.
-  for (m = 32 ; m < mpsName.size() ; m++) { 
+  for (m = 0 ; m < mpsName.size() ; m++) { 
     std::cerr << "  processing mps file: " << mpsName[m] 
       << " (" << m+1 << " out of " << mpsName.size() << ")" << std::endl ;
     bool allSolversReadMpsFile = true;

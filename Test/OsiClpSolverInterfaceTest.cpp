@@ -14,6 +14,7 @@
 #include "OsiColCut.hpp"
 #include "CoinMessage.hpp"
 #include "ClpMessage.hpp"
+#include "ClpFactorization.hpp"
 
 //#############################################################################
 
@@ -818,6 +819,7 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     m.setObjSense(-1.0);
     m.getModelPtr()->messageHandler()->setLogLevel(4);
     m.initialSolve();
+    m.getModelPtr()->factorization()->maximumPivots(5);
     m.setObjSense(1.0);
     // enable special mode
     m.enableSimplexInterface(true);

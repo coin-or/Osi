@@ -783,6 +783,7 @@ protected:
       /** Special options
 	  1 try and keep work regions as much as possible
 	  2 do not use any perturbation
+	  4 allow exit before re-factorization
       */
       unsigned int specialOptions_;
   //@}

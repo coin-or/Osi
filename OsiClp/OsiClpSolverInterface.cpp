@@ -363,10 +363,13 @@ void OsiClpSolverInterface::resolve()
   int startFinishOptions;
   if((specialOptions_&1)==0) {
     startFinishOptions=0;
-    modelPtr_->setSpecialOptions(saveOptions|(64|1024)); // go as far as possible
+    modelPtr_->setSpecialOptions(saveOptions|(64|1024));
   } else {
     startFinishOptions=1+4;
-    modelPtr_->setSpecialOptions(saveOptions|(64|128|1024)); // go as far as possible
+    if((specialOptions_&4)==0) 
+      modelPtr_->setSpecialOptions(saveOptions|(64|128|512|1024|4096));
+    else
+      modelPtr_->setSpecialOptions(saveOptions|(64|128|512|1024|2048|4096));
   }
   //modelPtr_->setSolveType(1);
   // Set message handler to have same levels etc
@@ -462,6 +465,7 @@ void OsiClpSolverInterface::resolve()
       lastAlgorithm_=2; // dual
       // check if clp thought it was in a loop
       if (modelPtr_->status()==3&&modelPtr_->numberIterations()<modelPtr_->maximumIterations()) {
+	modelPtr_->setSpecialOptions(saveOptions);
 	// switch algorithm
 	//modelPtr_->messageHandler()->setLogLevel(63);
 	// Allow for catastrophe
@@ -479,7 +483,7 @@ void OsiClpSolverInterface::resolve()
 	  printf("in trouble - try all slack\n");
 	  CoinWarmStartBasis allSlack;
 	  setBasis(allSlack,modelPtr_);
-	  modelPtr_->primal();
+	  modelPtr_->dual();
 	  if (modelPtr_->status()==3&&
 	      modelPtr_->numberIterations()<modelPtr_->maximumIterations()) {
 	    if (modelPtr_->numberPrimalInfeasibilities()) {

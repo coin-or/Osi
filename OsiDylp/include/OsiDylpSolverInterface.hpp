@@ -12,12 +12,11 @@
     \brief Declaration of COIN OSI layer for dylp.
 
   This file contains the declaration of the class OsiDylpSolverInterface
-  (ODSI), an implementation of the COIN OSI layer for dylp, the lp solver
-  for the bonsaiG MILP code.
+  (ODSI), an implementation of the COIN OSI layer for the dylp LP solver.
 */
 
 /*
-  sccs: @(#)OsiDylpSolverInterface.hpp	1.11	06/22/04
+  sccs: @(#)OsiDylpSolverInterface.hpp	1.12	09/16/04
   cvs: $Id$
 */
 
@@ -26,6 +25,7 @@
 #include <CoinWarmStart.hpp>
 #include <CoinMessageHandler.hpp>
 #include <CoinMpsIO.hpp>
+#include <CoinPresolveMatrix.hpp>
 
 #define DYLP_INTERNAL
 extern "C" {
@@ -83,8 +83,7 @@ typedef enum { startCold = 1, startWarm, startHot } ODSI_start_enum ;
   Skirting the edges of the principle that changing the problem invalidates
   the solution, OsiDylp will maintain a valid basis across two common
   operations used in branch-and-cut: deletion of a loose constraint and
-  deletion of a nonbasic variable. This basis comes into existence with a call
-  to either of setWarmStart() or initialSolve(). Arguably the set of allowable
+  deletion of a nonbasic variable. Arguably the set of allowable
   modifications could be increased.
 
   <strong>Assignment</strong>
@@ -609,7 +608,7 @@ private:
 /*
   Private implementation state and helper functions. If you're contemplating
   using any of these, you should have a look at the code.
-  See OsiDylpSolverInterface.ccp for descriptions.
+  See OsiDylpSolverInterface.cpp for descriptions.
 */ 
 /*! \name Dylp data structures
 
@@ -629,7 +628,6 @@ private:
 
   static int reference_count ;
   static bool basis_ready ;
-  static bool recursive ;
   static OsiDylpSolverInterface *dylp_owner ;
 
 //@}
@@ -689,7 +687,7 @@ private:
 
   /*! \brief Array for info blocks associated with hints. */
 
-  void *info_[OsiLastHintParam] ;
+  mutable void *info_[OsiLastHintParam] ;
 
   /*! \brief Allow messages from CoinMpsIO package. */
 
@@ -766,6 +764,82 @@ private:
 
 //@}
 
+/*! \name Data for presolve
+
+  Data related to the use of the CoinPresolve capabilities (which see for
+  further information).
+*/
+//@{
+
+/*! \brief The presolve object
+
+  In more detail, #preObj_ is loaded with the original system. Presolve
+  transformations are applied to convert it to a presolved system.
+*/
+  CoinPresolveMatrix *preObj_ ;
+/*! \brief List of postsolve actions
+
+  The list of postsolve (reverse) transformations required to convert the
+  presolved system back to the original system. Built as presolve
+  transformations are applied.
+*/
+  const CoinPresolveAction *postActions_ ;
+/*! \brief The postsolve object
+
+  In more detail, #postObj_ is loaded with the presolved system and its
+  optimal basis. The postsolve transformations held by #postActions_ are
+  applied to convert back to the original system. For ODSI, our only interest
+  is the basis.
+*/
+  CoinPostsolveMatrix *postObj_ ;
+
+  /// Saved copy of original problem
+  consys_struct *savedConsys_ ;
+
+  /// Limit for iterations of the major presolve loop
+  int passLimit_ ;
+  /// true if presolve should consider integrality
+  bool keepIntegers_ ;
+//@}
+
+/*! \name Helper functions for presolve
+
+  Functions used to access the CoinPresolve capabilities. There are no public
+  functions associated with presolve --- the only control is the
+  OsiDoPresolveInInitial and OsiDoPresolveInResolve hints. The functions
+  declared here do the work. See OsiDylpPresolve.cpp for additional
+  explanation.
+*/
+//@{
+  /// Create and load a presolve object.
+  CoinPresolveMatrix *initialisePresolve(bool keepIntegers) ;
+
+  /// Perform presolve transformations
+  void doPresolve() ;
+
+  /// Decide whether presolve was effective enough to use
+  bool evalPresolve() ;
+
+  /// Save the original problem
+  void saveOriginalSys() ;
+
+  /// Load the presolved problem into the ODSI object
+  void installPresolve() ;
+
+  /// Create and load a postsolve object
+  CoinPostsolveMatrix *initialisePostsolve(CoinPresolveMatrix *&preObj) ;
+
+  /// Apply the postsolve transforms from #postActions_
+  void doPostsolve() ;
+
+  /// Reload the original constraint system with the postsolved basis
+  void installPostsolve() ;
+
+  /// Delete presolve information
+  void destruct_presolve() ;
+
+//@}
+
 /*! \name Helper functions for problem construction */
 
 //@{
@@ -784,7 +858,8 @@ private:
 	 const double* col_lower, const double* col_upper, const double* obj,
 	 const contyp_enum *ctyp, const double* rhs, const double* rhslow) ;
   void load_problem (const int colcnt, const int rowcnt,
-	 const int *start, const int *index, const double *value,
+	 const int *start, const int *lens,
+	 const int *index, const double *value,
 	 const double* col_lower, const double* col_upper, const double* obj,
 	 const contyp_enum *ctyp, const double* rhs, const double* rhslow) ;
 //@}

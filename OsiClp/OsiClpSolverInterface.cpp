@@ -1443,13 +1443,16 @@ OsiClpSolverInterface::getBasis(ClpSimplex * model) const
   basis.setSize(numberColumns,numberRows);
 
   if (model->statusExists()) {
+    int lookup[]={0,1,2,3,0,3};
     for (iRow=0;iRow<numberRows;iRow++) {
-      basis.setArtifStatus(iRow,
-			   (CoinWarmStartBasis::Status) model->getRowStatus(iRow));
+      int iStatus = model->getRowStatus(iRow);
+      iStatus = lookup[iStatus];
+      basis.setArtifStatus(iRow,(CoinWarmStartBasis::Status) iStatus);
     }
     for (iColumn=0;iColumn<numberColumns;iColumn++) {
-      basis.setStructStatus(iColumn,
-		       (CoinWarmStartBasis::Status) model->getColumnStatus(iColumn));
+      int iStatus = model->getColumnStatus(iColumn);
+      iStatus = lookup[iStatus];
+      basis.setStructStatus(iColumn,(CoinWarmStartBasis::Status) iStatus);
     }
   }
   //basis.print();
@@ -1661,11 +1664,12 @@ OsiClpSolverInterface::getBasisStatus(int* cstat, int* rstat)
   assert (modelPtr_->solveType()==2);
   int i, n;
   n=modelPtr_->numberRows();
-  for (i=0;i<n;i++)
-    rstat[i] = modelPtr_->getRowStatus(i);
+  int lookup[]={0,1,2,3,0,3};
+  for (i=0;i<n;i++) 
+    rstat[i] = lookup[modelPtr_->getRowStatus(i)];
   n=modelPtr_->numberColumns();
   for (i=0;i<n;i++)
-    cstat[i] = modelPtr_->getColumnStatus(i);
+    cstat[i] = lookup[modelPtr_->getColumnStatus(i)];
 }
 
 //Set the status of structural/artificial variables 

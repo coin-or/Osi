@@ -97,6 +97,16 @@ ifneq ($(filter COIN_libOsiMsk,$(CoinLibsDefined)),)
     Define  += ${OsiMskDefine} ${MskDefine} COIN_USE_MSK
     TESTSRC += OsiMskSolverInterfaceTest.cpp
 endif
+ifneq ($(filter COIN_libOsiCbc,$(CoinLibsDefined)),)
+    IncDir  += ${OsiCbcIncDir} ${CbcIncDir}
+    LibDir  += ${OsiCbcLibDir} ${CbcLibDir}
+    LibName += ${OsiCbcLibName} ${CbcLibName}
+#   and CGL
+    LibName += ${CglLibName}
+    Define  += ${OsiCbcDefine} ${CbcDefine} COIN_USE_CBC
+    TESTSRC += OsiCbcSolverInterfaceTest.cpp
+endif
+
 
 ##############################################################################
 

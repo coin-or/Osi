@@ -60,6 +60,9 @@
 #ifdef COIN_USE_FMP
 #include "OsiFmpSolverInterface.hpp"
 #endif
+#ifdef COIN_USE_CBC
+#include "OsiCbcSolverInterface.hpp"
+#endif
 #include "CoinFloatEqual.hpp"
 #include "CoinPackedVector.hpp"
 #include "CoinPackedMatrix.hpp"
@@ -458,22 +461,7 @@ bool test5VivianDeSmedt(OsiSolverInterface *s)
 	s->setObjSense(-1);
 
 	s->writeMps("test");
-/*
-  Clp problem here --- if the call to initialSolve() is changed to resolve(),
-  Clp comes up with the correct answer.
-
-  #ifdef COIN_USE_CLP
-    bool ClpSolverInterface = false ;
-    const OsiClpSolverInterface * si =
-      dynamic_cast<const OsiClpSolverInterface *>(s);
-    if ( si != NULL ) ClpSolverInterface = true;
-  #endif
-
-	if (ClpSolverInterface)
-	  s->resolve() ;
-	else
-*/
-	  s->initialSolve();
+        s->initialSolve();
 
 	ret = ret && !s->isProvenOptimal();
 	ret = ret && !s->isProvenPrimalInfeasible();

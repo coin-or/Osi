@@ -52,6 +52,9 @@
 #ifdef COIN_USE_MSK
 #include "OsiMskSolverInterface.hpp"
 #endif
+#ifdef COIN_USE_CBC
+#include "OsiCbcSolverInterface.hpp"
+#endif
 
 // Function Prototypes. Function definitions is in this file.
 void testingMessage( const char * const msg );
@@ -393,6 +396,28 @@ int main (int argc, const char *argv[])
     OsiSimplexInterfaceCommonUnitTest(&MskSi,mpsDir);
   }
 #endif
+#ifdef COIN_USE_CBC
+  {
+    OsiCbcSolverInterface cbcSi;
+    testingMessage( "Testing OsiRowCut with OsiCbcSolverInterface\n" );
+    OsiRowCutUnitTest(&cbcSi,mpsDir);
+  }
+  {
+    OsiCbcSolverInterface cbcSi;
+    testingMessage( "Testing OsiColCut with OsiCbcSolverInterface\n" );
+    OsiColCutUnitTest(&cbcSi,mpsDir);
+  }
+  {
+    OsiCbcSolverInterface cbcSi;
+    testingMessage( "Testing OsiRowCutDebugger with OsiCbcSolverInterface\n" );
+    OsiRowCutDebuggerUnitTest(&cbcSi,mpsDir);
+  }
+  {
+    OsiCbcSolverInterface cbcSi;
+    testingMessage( "Testing OsiSimplexInterface with OsiCbcSolverInterface\n" );
+    OsiSimplexInterfaceCommonUnitTest(&cbcSi,mpsDir);
+  }
+#endif
 
   testingMessage( "Testing OsiCuts\n" );
   OsiCutsUnitTest();
@@ -444,6 +469,10 @@ int main (int argc, const char *argv[])
 #ifdef COIN_USE_MSK
   testingMessage( "Testing OsiMskSolverInterface\n" );
   OsiMskSolverInterfaceUnitTest(mpsDir,netlibDir);
+#endif
+#ifdef COIN_USE_CBC
+  testingMessage( "Testing OsiCbcSolverInterface\n" );
+  OsiCbcSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
 #ifdef COIN_USE_SYM
@@ -500,6 +529,13 @@ int main (int argc, const char *argv[])
 #   if COIN_USE_MSK
     OsiSolverInterface * MskSi = new OsiMskSolverInterface;
     vecSi.push_back(MskSi);
+#endif
+#   if COIN_USE_CBC
+    OsiSolverInterface * cbcSi = new OsiCbcSolverInterface;
+    // Okay this is where John Forrest cheats by giving hints
+    cbcSi->setHintParam(OsiDoPresolveInInitial,true,OsiHintTry);
+    cbcSi->setHintParam(OsiDoReducePrint,true,OsiHintTry);
+    vecSi.push_back(cbcSi);
 #endif
 #   if COIN_USE_VOL
     OsiSolverInterface * volSi = new OsiVolSolverInterface;

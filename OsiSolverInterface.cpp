@@ -487,16 +487,16 @@ OsiSolverInterface::setInitialData()
 OsiSolverInterface::OsiSolverInterface (const OsiSolverInterface & rhs) :
   rowCutDebugger_(NULL),
   appData_(rhs.appData_),
-  ws_(NULL),
-  defaultHandler_(true)
+  ws_(NULL)
 {  
   if ( rhs.rowCutDebugger_!=NULL )
     rowCutDebugger_ = new OsiRowCutDebugger(*rhs.rowCutDebugger_);
   defaultHandler_ = rhs.defaultHandler_;
-  if (defaultHandler_)
+  if (defaultHandler_) {
     handler_ = new CoinMessageHandler(*rhs.handler_);
-  else
+  } else {
     handler_ = rhs.handler_;
+  }
   messages_ = CoinMessages(rhs.messages_);
   CoinDisjointCopyN(rhs.intParam_, OsiLastIntParam, intParam_);
   CoinDisjointCopyN(rhs.dblParam_, OsiLastDblParam, dblParam_);
@@ -542,14 +542,15 @@ OsiSolverInterface::operator=(const OsiSolverInterface& rhs)
     delete ws_;
     ws_ = NULL;
      if (defaultHandler_) {
-      delete handler_;
-      handler_ = NULL;
-    }
+       delete handler_;
+       handler_ = NULL;
+     }
     defaultHandler_ = rhs.defaultHandler_;
-    if (defaultHandler_)
+    if (defaultHandler_) {
       handler_ = new CoinMessageHandler(*rhs.handler_);
-    else
+    } else {
       handler_ = rhs.handler_;
+    }
  }
   return *this;
 }
@@ -703,15 +704,20 @@ void
 OsiSolverInterface::copyParameters(OsiSolverInterface & rhs)
 {
   appData_ = rhs.appData_;
+  delete rowCutDebugger_;
   if ( rhs.rowCutDebugger_!=NULL )
     rowCutDebugger_ = new OsiRowCutDebugger(*rhs.rowCutDebugger_);
   else
     rowCutDebugger_ = NULL;
+  if (defaultHandler_) {
+    delete handler_;
+  }
   defaultHandler_ = rhs.defaultHandler_;
-  if (defaultHandler_)
+  if (defaultHandler_) {
     handler_ = new CoinMessageHandler(*rhs.handler_);
-  else
+  } else {
     handler_ = rhs.handler_;
+  }
    CoinDisjointCopyN(rhs.intParam_, OsiLastIntParam, intParam_);
   CoinDisjointCopyN(rhs.dblParam_, OsiLastDblParam, dblParam_);
   CoinDisjointCopyN(rhs.strParam_, OsiLastStrParam, strParam_);

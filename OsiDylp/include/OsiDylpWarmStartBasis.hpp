@@ -97,6 +97,19 @@ class OsiDylpWarmStartBasis : public CoinWarmStartBasis
 
 //@}
 
+/*! \name Basis `diff' methods */
+//@{
+
+  /*! \brief Generate a `diff' that can convert oldBasis to this basis.  */
+
+  CoinWarmStartDiff *generateDiff (const CoinWarmStart *const oldCWS) const ;
+
+  /*! \brief Apply \p diff to this basis */
+
+  void applyDiff (const CoinWarmStartDiff *const cwsdDiff) ;
+
+//@}
+
 /*! \name Methods to modify the warm start object */
 //@{
 
@@ -181,6 +194,93 @@ class OsiDylpWarmStartBasis : public CoinWarmStartBasis
 //@}
 
 } ;
+
+
+
+/*! \class OsiDylpWarmStartBasisDiff
+    \brief A `diff' between two OsiDylpWarmStartBasis objects
+
+  This class exists in order to hide from the world the details of
+  calculating and representing a `diff' between two OsiDylpWarmStartBasis
+  objects. For convenience, assignment, cloning, and deletion are visible to
+  the world, and default and copy constructors are visible to derived classes.
+  Knowledge of the rest of this structure, and of generating and
+  applying diffs, is restricted to the functions
+  OsiDylpWarmStartBasis::generateDiff() and OsiDylpWarmStartBasis::applyDiff().
+
+  The actual data structure is a pair of unsigned int vectors, #diffNdxs_ and
+  #diffVals_, and a CoinWarmStartBasisDiff object.
+
+  \todo This is a pretty generic structure, and vector diff is a pretty generic
+	activity. We should be able to convert this to a template.
+
+  \todo Using unsigned int as the data type for the diff vectors might help
+	to contain the damage when this code is inevitably compiled for 64 bit
+	architectures. But the notion of int as 4 bytes is hardwired into
+	CoinWarmStartBasis, so changes are definitely required.
+*/
+
+class OsiDylpWarmStartBasisDiff : public CoinWarmStartBasisDiff
+{ public:
+
+  /*! \brief `Virtual constructor' */
+  virtual CoinWarmStartDiff *clone() const
+  { OsiDylpWarmStartBasisDiff *odwsbd =  new OsiDylpWarmStartBasisDiff(*this) ;
+    return (dynamic_cast<CoinWarmStartDiff *>(odwsbd)) ; }
+
+  /*! \brief Assignment */
+  virtual
+  OsiDylpWarmStartBasisDiff &operator= (const OsiDylpWarmStartBasisDiff &rhs) ;
+
+  /*! \brief Destructor */
+  virtual ~OsiDylpWarmStartBasisDiff()
+  { delete[] condiffNdxs_ ;
+    delete[] condiffVals_ ; }
+
+  private:
+
+  friend CoinWarmStartDiff *OsiDylpWarmStartBasis::generateDiff
+    (const CoinWarmStart *const oldCWS) const ;
+  friend void OsiDylpWarmStartBasis::applyDiff
+    (const CoinWarmStartDiff *const diff) ;
+
+  /*! \brief Standard constructor */
+  OsiDylpWarmStartBasisDiff (int sze, const unsigned int *const diffNdxs,
+			     const unsigned int *const diffVals,
+			     const CoinWarmStartBasisDiff *const cwsbd) ;
+  
+  /*! \brief Default constructor */
+  OsiDylpWarmStartBasisDiff ()
+    : CoinWarmStartBasisDiff(),
+      consze_(0),
+      condiffNdxs_(0),
+      condiffVals_(0)
+  { /* intentionally left blank */ } ;
+
+  /*! \brief Copy constructor
+  
+    For convenience when copying objects containing OsiDylpWarmStartBasisDiff
+    objects. But consider whether you should be using #clone() to retain
+    polymorphism.
+  */
+  OsiDylpWarmStartBasisDiff (const OsiDylpWarmStartBasisDiff &odwsbd) ;
+    
+  /* Data members */
+
+  /*! \brief Number of entries (and allocated capacity), in units of \c int. */
+  int consze_ ;
+
+  /*! \brief Array of diff indices for constraint status */
+
+  unsigned int *condiffNdxs_ ;
+
+  /*! \brief Array of diff values for constraint status */
+
+  unsigned int *condiffVals_ ;
+
+} ;
+
+
 
 #endif // OsiDylpWarmStartBasis_H
 #endif // COIN_USE_DYLP

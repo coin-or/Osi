@@ -59,9 +59,10 @@ using std::vector ;
 */
 
 #define STATPERBYTE 4
+#define STATALLOCUNIT sizeof(int)
 #define STATBYTES(zz_ns_zz) \
-  (((zz_ns_zz+sizeof(int)*STATPERBYTE-1)/(sizeof(int)*STATPERBYTE))* \
-   sizeof(int))
+  (((zz_ns_zz+STATALLOCUNIT*STATPERBYTE-1)/(STATALLOCUNIT*STATPERBYTE))* \
+   STATALLOCUNIT)
   
 
 /*! \defgroup ODWSBConstructorsDestructors ODWSB Constructors and Destructors
@@ -264,14 +265,20 @@ void ODWSB::resize (int numRows, int numCols)
     { memcpy(newStat,constraintStatus_,newsze) ; }
 /*
   If the new capacity is larger, copy the existing basis, then mark the
-  additional constraints as active.
+  additional constraints as active. We need to be a bit careful here, because
+  the allocated sizes are rounded out. The strategy is to (possibly) overlap
+  one byte, correcting it after initialization.
 */
     else
     { char byteActive = 0 ;
-      int i ;
+      int i,actualBytes ;
+      actualBytes = concnt/STATPERBYTE ;
       for (i = 0 ; i <= 3 ; i++) setStatus(&byteActive,i,CWSB::atLowerBound) ;
-      memcpy(newStat,constraintStatus_,oldsze*sizeof(char)) ;
-      memset(newStat+oldsze,byteActive,newsze-oldsze) ; }
+      memcpy(newStat,constraintStatus_,oldsze) ;
+      memset(newStat+actualBytes,byteActive,newsze-actualBytes) ;
+      for (i = 0 ; i < concnt%STATPERBYTE ; i++)
+	setStatus(newStat+actualBytes,i,
+		  getStatus(constraintStatus_+actualBytes,i)) ; }
 
     delete [] constraintStatus_ ;
     constraintStatus_ = newStat ; } }
@@ -348,6 +355,129 @@ int ODWSB::numberActiveConstraints () const
   
   return (actcnt) ; }
 
+/*! \defgroup BasisDiff Basis `diff' methods
+    \brief Methods to calculate and apply a `diff' between two bases.
+*/
+
+//@{
+
+/*!
+  The capabilities are limited by the CoinWarmStartBasis format: oldBasis can
+  be no larger than newBasis (the basis pointed to by \c this), and the
+  subset of newBasis covered by oldBasis is assumed to contain the identical
+  set of logical and structural variables, in order.
+
+  We use CWSB::generateDiff to deal with the status arrays for the logical and
+  structural variables, then add an additional vector for constraint status.
+*/
+CoinWarmStartDiff *ODWSB::generateDiff
+  (const CoinWarmStart *const oldCWS) const
+{
+/*
+  Make sure the parameter is an OsiDylpWarmStartBasis.
+*/
+  const OsiDylpWarmStartBasis *oldBasis =
+      dynamic_cast<const OsiDylpWarmStartBasis *>(oldCWS) ;
+  if (!oldBasis)
+  { throw CoinError("Old basis not OsiDylpWarmStartBasis.",
+		    "generateDiff","OsiDylpWarmStartBasis") ; }
+  const OsiDylpWarmStartBasis *newBasis = this ;
+/*
+  Make sure newBasis is equal or bigger than oldBasis. Calculate the worst case
+  number of diffs and allocate vectors to hold them.
+*/
+  const int oldArtifCnt = oldBasis->getNumArtificial() ;
+  const int newArtifCnt = newBasis->getNumArtificial() ;
+
+  assert(newArtifCnt >= oldArtifCnt) ;
+/*
+  Ok, we're good to go. Call CWSB::generateDiff to deal with the logical and
+  structural arrays.
+*/
+  const CoinWarmStartBasisDiff *cwsbDiff =
+    dynamic_cast<const CoinWarmStartBasisDiff *>(CWSB::generateDiff(oldCWS)) ;
+/*
+  Now generate diffs for the constraint array.
+*/
+
+  int sizeOldArtif = (oldArtifCnt+15)>>4 ;
+  int sizeNewArtif = (newArtifCnt+15)>>4 ;
+  int maxBasisLength = sizeNewArtif ;
+
+  unsigned int *diffNdx = new unsigned int [maxBasisLength]; 
+  unsigned int *diffVal = new unsigned int [maxBasisLength]; 
+/*
+  Scan the constraint status.
+  For the portion of the status arrays which overlap, create
+  diffs. Then add any additional status from newBasis.
+*/
+  const unsigned int *oldStatus =
+      reinterpret_cast<const unsigned int *>(oldBasis->getConstraintStatus()) ;
+  const unsigned int *newStatus = 
+      reinterpret_cast<const unsigned int *>(newBasis->getConstraintStatus()) ;
+  int numberChanged = 0 ;
+  int i ;
+  for (i = 0 ; i < sizeOldArtif ; i++)
+  { if (oldStatus[i] != newStatus[i])
+    { diffNdx[numberChanged] = i ;
+      diffVal[numberChanged++] = newStatus[i] ; } }
+  for ( ; i < sizeNewArtif ; i++)
+  { diffNdx[numberChanged] = i ;
+    diffVal[numberChanged++] = newStatus[i] ; }
+/*
+  Create the object of our desire.
+*/
+  OsiDylpWarmStartBasisDiff *diff =
+    new OsiDylpWarmStartBasisDiff(numberChanged,diffNdx,diffVal,cwsbDiff) ;
+/*
+  Clean up and return.
+*/
+  delete[] diffNdx ;
+  delete[] diffVal ;
+
+  return (dynamic_cast<CoinWarmStartDiff *>(diff)) ; }
+
+/*!
+   Update this basis by applying \p diff. It's assumed that the allocated
+   capacity of the basis is sufficiently large.
+
+   We use CWSB::applyDiff to deal with the logical and structural status
+   vectors, then apply the diffs for the constraint status vector.
+*/
+
+void ODWSB::applyDiff (const CoinWarmStartDiff *const cwsdDiff)
+{
+/*
+  Make sure we have an OsiDylpWarmStartBasisDiff
+*/
+  const OsiDylpWarmStartBasisDiff *diff =
+    dynamic_cast<const OsiDylpWarmStartBasisDiff *>(cwsdDiff) ;
+  if (!diff)
+  { throw CoinError("Diff not OsiDylpWarmStartBasisDiff.",
+		    "applyDiff","OsiDylpWarmStartBasis") ; }
+/*
+  Call CWSB::applyDiff to deal with the logical and structural status.
+*/
+  CWSB::applyDiff(cwsdDiff) ;
+/*
+  Now fix up the constraint status array. Application of the diff is by
+  straighforward replacement of words in the status array.
+*/
+  const int numberChanges = diff->consze_ ;
+  const unsigned int *diffNdxs = diff->condiffNdxs_ ;
+  const unsigned int *diffVals = diff->condiffVals_ ;
+  unsigned int *constraintStatus =
+      reinterpret_cast<unsigned int *>(this->getConstraintStatus()) ;
+
+  for (int i = 0 ; i < numberChanges ; i++)
+  { unsigned int diffNdx = diffNdxs[i] ;
+    unsigned int diffVal = diffVals[i] ;
+    constraintStatus[diffNdx] = diffVal ; }
+
+  return ; }
+
+//@}
+
 
 /*! \defgroup MiscUtil Miscellaneous Utilities
     \brief Miscellaneous utility functions
@@ -364,7 +494,7 @@ void ODWSB::print () const
 
 { char conlett[] = {'I','?','?','A'} ;
   char statlett[] = {'F','B','U','L'} ;
-  int i ;
+  int i,basic_logicals,basic_structurals ;
 
   std::cout << "ODWSB: " ;
   std::cout << getNumArtificial() << " constraints (" <<
@@ -374,16 +504,98 @@ void ODWSB::print () const
   std::cout << "Rows: " ;
   for (i = 0 ; i < getNumArtificial() ; i++)
   { std::cout << conlett[getConStatus(i)] ; }
-  std::cout << std::endl << "      " ;
+  std::cout << std::endl ;
+
+  std::cout << "      " ;
+  basic_logicals = 0 ;
   for (i = 0 ; i < getNumArtificial() ; i++)
-  { std::cout << statlett[getArtifStatus(i)] ; }
-
-  std::cout << std::endl << "Cols: " ;
+  { std::cout << statlett[getArtifStatus(i)] ;
+    if (getArtifStatus(i) == CWSB::basic) basic_logicals++ ; }
+  std::cout << std::endl ;
+  
+  std::cout << "Cols: " ;
+  basic_structurals = 0 ;
   for (i = 0 ; i < getNumStructural() ; i++)
-  { std::cout << statlett[getStructStatus(i)] ; }
+  { std::cout << statlett[getStructStatus(i)] ;
+    if (getStructStatus(i) == CWSB::basic) basic_structurals++ ; }
 
+  std::cout << std::endl << "	basic: ("
+	    << basic_structurals << " + " << basic_logicals << ")" ;
   std::cout << std::endl ;
   
   return ; }
 
+//@}
+
+
+
+
+/* Routines for OsiDylpWarmStartBasisDiff */
+
+/*
+  Constructor given constraint diff data and a pointer to a
+  CoinWarmStartBasisDiff object.
+*/
+OsiDylpWarmStartBasisDiff::OsiDylpWarmStartBasisDiff (int sze,
+  const unsigned int *const diffNdxs, const unsigned int *const diffVals,
+  const CoinWarmStartBasisDiff *const cwsbd)
+
+  : CoinWarmStartBasisDiff(*cwsbd),
+    consze_(sze),
+    condiffNdxs_(0),
+    condiffVals_(0)
+
+{ if (sze > 0)
+  { condiffNdxs_ = new unsigned int[sze] ;
+    memcpy(condiffNdxs_,diffNdxs,sze*sizeof(unsigned int)) ;
+    condiffVals_ = new unsigned int[sze] ;
+    memcpy(condiffVals_,diffVals,sze*sizeof(unsigned int)) ; }
+  
+  return ; }
+
+/*
+  Copy constructor
+*/
+OsiDylpWarmStartBasisDiff::OsiDylpWarmStartBasisDiff
+  (const OsiDylpWarmStartBasisDiff &odwsbd)
+  : CoinWarmStartBasisDiff(odwsbd),
+    consze_(odwsbd.consze_),
+    condiffNdxs_(0),
+    condiffVals_(0)
+{ if (odwsbd.consze_ > 0)
+  { condiffNdxs_ = new unsigned int[odwsbd.consze_] ;
+    memcpy(condiffNdxs_,odwsbd.condiffNdxs_,
+	   odwsbd.consze_*sizeof(unsigned int)) ;
+    condiffVals_ = new unsigned int[odwsbd.consze_] ;
+    memcpy(condiffVals_,odwsbd.condiffVals_,
+	   odwsbd.consze_*sizeof(unsigned int)) ; }
+  
+  return ; }
+
+/*
+  Assignment --- for convenience when assigning objects containing
+  CoinWarmStartBasisDiff objects.
+*/
+OsiDylpWarmStartBasisDiff&
+OsiDylpWarmStartBasisDiff::operator= (const OsiDylpWarmStartBasisDiff &rhs)
+
+{ if (this != &rhs)
+  { CoinWarmStartBasisDiff::operator=(rhs) ;
+    if (consze_ > 0)
+    { delete[] condiffNdxs_ ;
+      delete[] condiffVals_ ; }
+    consze_ = rhs.consze_ ;
+    if (consze_ > 0)
+    { condiffNdxs_ = new unsigned int[consze_] ;
+      memcpy(condiffNdxs_,rhs.condiffNdxs_,consze_*sizeof(unsigned int)) ;
+      condiffVals_ = new unsigned int[consze_] ;
+      memcpy(condiffVals_,rhs.condiffVals_,consze_*sizeof(unsigned int)) ; }
+    else
+    { condiffNdxs_ = 0 ;
+      condiffVals_ = 0 ; } }
+  
+  return (*this) ; }
+
+
 #endif // COIN_USE_DYLP
+

@@ -109,7 +109,7 @@
 #include "CoinPresolveMatrix.hpp"
 
 namespace {
-  char sccsid[] UNUSED = "@(#)OsiDylpPresolve.cpp	1.5	09/25/04" ;
+  char sccsid[] UNUSED = "@(#)OsiDylpPresolve.cpp	1.6	11/06/04" ;
   char cvsid[] UNUSED = "$Id$" ;
 }
 
@@ -157,30 +157,32 @@ namespace {	// Anonymous namespace for debug routines
 	  1<<8	check constraint lhs for NaN/Inf
 	  1<<9	check constraint lhs for accuracy, feasibility (row bounds)
 
-  These will likely grow in the future. Mstrix checks work only if PRESOLVE_CONSISTENCY
-  is defined. Solution checks work only if PRESOLVE_DEBUG is defined.
+  These will likely grow in the future. Mstrix checks work only if
+  PRESOLVE_CONSISTENCY is defined. Solution checks work only if PRESOLVE_DEBUG
+  is defined.
+
 */
-void check_and_tell (const CoinPresolveMatrix *preObj_,
+void check_and_tell (ioid chn, const CoinPresolveMatrix *preObj_,
 		     int chkMtx, int chkSol,
 		     const CoinPresolveAction *first,
 		     const CoinPresolveAction *&mark)
 
 { const CoinPresolveAction *current ;
 
-  printf("PRESOLVE: ") ;
+  outfmt(chn,true,"PRESOLVE: ") ;
   if (first == 0 && mark == 0)
-  { printf("checking prior to start.") ; }
+  { outfmt(chn,true,"checking prior to start.") ; }
   else
   if (first == mark)
-  { printf("no transforms since last check.") ; }
+  { outfmt(chn,true,"no transforms since last check.") ; }
   else
-  { printf("applied") ;
+  { outfmt(chn,true,"applied") ;
     for (current = first ;
 	 current != mark && current != 0 ;
 	 current = current->next)
-    { printf(" %s",current->name()) ; }
+    { outfmt(chn,true," %s",current->name()) ; }
     mark = first ; }
-  printf("\n") ;
+  outfmt(chn,true,"\n") ;
 
 # if !PRESOLVE_CONSISTENCY
   chkMtx = 0 ;
@@ -357,15 +359,17 @@ void ODSI::doPresolve ()
 
 # if PRESOLVE_DEBUG || PRESOLVE_CONSISTENCY
 /*
-  chkMtx and chkSol are magic numbers to control checks. See the documentation
-  with check_and_tell. chkMtx is nonfunctional unless PRESOLVE_CONSISTENCY is defined.
-  chkSol is nonfunctional unless PRESOLVE_DEBUG is defined.
+  chkMtx and chkSol are magic numbers to control checks. See the
+  documentation with check_and_tell. chkMtx is nonfunctional unless
+  PRESOLVE_CONSISTENCY is defined.  chkSol is nonfunctional unless
+  PRESOLVE_DEBUG is defined.
 */
   const CoinPresolveAction *dbgActionMark = 0 ;
   int chkMtx = 0x7f ;
   int chkSol = 0x00 ;
 
-  check_and_tell(preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
+  check_and_tell(local_logchn,
+		 preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
 # endif
 
 /*
@@ -375,7 +379,8 @@ void ODSI::doPresolve ()
 */
   postActions_ = make_fixed(preObj_,postActions_) ;
 # if PRESOLVE_DEBUG || PRESOLVE_CONSISTENCY
-  check_and_tell(preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
+  check_and_tell(local_logchn,
+		 preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
 # endif
 /*
   If we have integer variables, skip the presolve checks based on dual
@@ -411,7 +416,7 @@ void ODSI::doPresolve ()
     { const CoinPresolveAction *const lastAction = postActions_ ;
 
 #     ifdef PRESOLVE_DEBUG
-      printf("Starting major pass %d\n",currentPass) ;
+      outfmt(local_logchn,true,"Starting major pass %d\n",currentPass) ;
 #     endif
 
 /*
@@ -464,7 +469,8 @@ void ODSI::doPresolve ()
 		slack_doubleton_action::presolve(preObj_,
 						 postActions_,notFinished) ;
 #	    if PRESOLVE_DEBUG || PRESOLVE_CONSISTENCY
-	    check_and_tell(preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
+	    check_and_tell(local_logchn,
+			   preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
 #	    endif
 	  }
 	  if (preObj_->status() != feasibleStatus)
@@ -472,21 +478,24 @@ void ODSI::doPresolve ()
 	if (doubleton == true)
 	{ postActions_ = doubleton_action::presolve(preObj_,postActions_) ;
 #	  if PRESOLVE_DEBUG || PRESOLVE_CONSISTENCY
-	  check_and_tell(preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
+	  check_and_tell(local_logchn,
+			 preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
 #	  endif
 	  if (preObj_->status() != feasibleStatus)
 	    break ; }
 	if (tripleton == true)
 	{ postActions_ = tripleton_action::presolve(preObj_,postActions_) ;
 #	  if PRESOLVE_DEBUG || PRESOLVE_CONSISTENCY
-	  check_and_tell(preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
+	  check_and_tell(local_logchn,
+			 preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
 #	  endif
 	  if (preObj_->status() != feasibleStatus)
 	    break ; }
 	if (zerocost == true)
 	{ postActions_ = do_tighten_action::presolve(preObj_,postActions_) ;
 #	  if PRESOLVE_DEBUG || PRESOLVE_CONSISTENCY
-	  check_and_tell(preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
+	  check_and_tell(local_logchn,
+			 preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
 #	  endif
 	  if (preObj_->status() != feasibleStatus)
 	    break ; }
@@ -494,7 +503,8 @@ void ODSI::doPresolve ()
 	{ postActions_ =
 	      forcing_constraint_action::presolve(preObj_,postActions_) ;
 #	  if PRESOLVE_DEBUG || PRESOLVE_CONSISTENCY
-	  check_and_tell(preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
+	  check_and_tell(local_logchn,
+			 preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
 #	  endif
 	  if (preObj_->status() != feasibleStatus)
 	    break ; }
@@ -502,7 +512,8 @@ void ODSI::doPresolve ()
 	{ postActions_ =
 	      implied_free_action::presolve(preObj_,postActions_,fill_level) ;
 #	  if PRESOLVE_DEBUG || PRESOLVE_CONSISTENCY
-	  check_and_tell(preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
+	  check_and_tell(local_logchn,
+			 preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
 #	  endif
 	  if (preObj_->status() != feasibleStatus)
 	    break ; }
@@ -538,7 +549,8 @@ void ODSI::doPresolve ()
 	{ const CoinPresolveAction *const marker = postActions_ ;
 	  postActions_ = remove_dual_action::presolve(preObj_,postActions_) ;
 #	  if PRESOLVE_DEBUG || PRESOLVE_CONSISTENCY
-	  check_and_tell(preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
+	  check_and_tell(local_logchn,
+			 preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
 #	  endif
 	  if (preObj_->status() != feasibleStatus)
 	    break ;
@@ -548,7 +560,8 @@ void ODSI::doPresolve ()
 		implied_free_action::presolve(preObj_,
 					      postActions_,fill_level) ;
 #	    if PRESOLVE_DEBUG || PRESOLVE_CONSISTENCY
-	    check_and_tell(preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
+	    check_and_tell(local_logchn,
+			   preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
 #	    endif
 	    if (preObj_->status() != feasibleStatus)
 	      break ; }
@@ -560,14 +573,16 @@ void ODSI::doPresolve ()
       if (dupcol)
       { postActions_ = dupcol_action::presolve(preObj_,postActions_) ;
 #	if PRESOLVE_DEBUG || PRESOLVE_CONSISTENCY
-	check_and_tell(preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
+	check_and_tell(local_logchn,
+		       preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
 #	endif
 	if (preObj_->status() != feasibleStatus)
 	  break ; }
       if (duprow)
       { postActions_ = duprow_action::presolve(preObj_,postActions_) ;
 #	if PRESOLVE_DEBUG || PRESOLVE_CONSISTENCY
-	check_and_tell(preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
+	check_and_tell(local_logchn,
+		       preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
 #	endif
 	if (preObj_->status() != feasibleStatus)
 	  break ; }
@@ -595,16 +610,19 @@ void ODSI::doPresolve ()
   if (preObj_->status() == feasibleStatus)
   { postActions_ = drop_zero_coefficients(preObj_,postActions_) ;
 #   if PRESOLVE_DEBUG || PRESOLVE_CONSISTENCY
-    check_and_tell(preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
+    check_and_tell(local_logchn,
+	           preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
 #   endif
     postActions_ = drop_empty_cols_action::presolve(preObj_,postActions_) ;
 #   if PRESOLVE_DEBUG || PRESOLVE_CONSISTENCY
     chkMtx &= 0x2a ;
-    check_and_tell(preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
+    check_and_tell(local_logchn,
+		   preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
 #   endif
     postActions_ = drop_empty_rows_action::presolve(preObj_,postActions_) ;
 #   if PRESOLVE_DEBUG || PRESOLVE_CONSISTENCY
-    check_and_tell(preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
+    check_and_tell(local_logchn,
+		   preObj_,chkMtx,chkSol,postActions_,dbgActionMark) ;
 #   endif
     handler_->message(ODSI_PRESOL_STATS,messages_)
       << "After presolve"
@@ -634,23 +652,44 @@ void ODSI::doPresolve ()
 
 /*
   This routine has the responsibility of deciding whether presolve has done
-  enough to make it worth installing.
+  enough to make it worth installing. Or too much.
 
   For now, take the attitude that if we don't manage to eliminate any
-  constraints, then presolve likely wasn't worth the effort. And if we come
+  constraints, then presolve likely wasn't worth the effort. If we come
   back infeasible or unbounded, well, better let dylp check it on its own.
+
+  At the other end of the spectrum, a B&C code will often pass in a problem in
+  which a majority (or all) of the variables are fixed. Presolve may well
+  reduce the problem to 0x0. In this case, there's literally nothing to do.
 */
 
 bool ODSI::evalPresolve ()
 
 { int origCons = getNumRows() ;
   int presolCons = preObj_->getNumRows() ;
+  int presolVars = preObj_->getNumCols() ;
   int presolStatus = preObj_->status() ;
 
-  if (presolStatus != 0 || origCons <= presolCons)
+/*
+  Presolve returns infeasible or unbounded.
+*/
+  if (presolStatus != 0)
     return (false) ;
-  else
-    return (true) ; }
+/*
+  Presolve didn't manage to reduce the number of constraints.
+*/
+  if (origCons <= presolCons)
+    return (false) ;
+/*
+  Presolve worked all too well; the constraint system is 0x0. I don't think
+  it's possible for presolve to return 0xn (it should fix otherwise
+  unconstrained bounded variables at some bound or declare unboundedness).
+  But it never hurts to check.
+*/
+  if (presolCons == 0 && presolVars == 0)
+    return (false) ;
+
+  return (true) ; }
 
 
 
@@ -761,9 +800,6 @@ CoinPostsolveMatrix *ODSI::initialisePostsolve (CoinPresolveMatrix *&preObj)
   This routine is responsible for applying the list of postsolve actions
   in order to restore the original system. After each transform is applied,
   it's destroyed.
-
-  Debugging has been elided to make the structure a bit more clear. (Turns out
-  pretty much the entire routine was debugging.) See the notes with doPresolve.
 */
 
 void ODSI::doPostsolve ()

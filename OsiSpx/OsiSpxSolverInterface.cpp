@@ -510,12 +510,18 @@ int OsiSpxSolverInterface::getNumElements() const
 
 const double * OsiSpxSolverInterface::getColLower() const
 {
-  return spxsolver_.lower().get_const_ptr();
+  const double * retVal = NULL;
+  if ( getNumCols()!=0 ) 
+   retVal = spxsolver_.lower().get_const_ptr();
+  return retVal;
 }
 //------------------------------------------------------------------
 const double * OsiSpxSolverInterface::getColUpper() const
 {
-  return spxsolver_.upper().get_const_ptr();
+  const double * retVal = NULL;
+  if ( getNumCols()!=0 ) 
+   retVal = spxsolver_.upper().get_const_ptr();
+  return retVal;
 }
 //------------------------------------------------------------------
 const char * OsiSpxSolverInterface::getRowSense() const
@@ -566,22 +572,34 @@ const double * OsiSpxSolverInterface::getRowRange() const
 //------------------------------------------------------------------
 const double * OsiSpxSolverInterface::getRowLower() const
 {
-  return spxsolver_.lhs().get_const_ptr();
+  const double * retVal = NULL;
+  if ( getNumRows() != 0 )
+     retVal = spxsolver_.lhs().get_const_ptr();
+  return retVal;
 }
 //------------------------------------------------------------------
 const double * OsiSpxSolverInterface::getRowUpper() const
 {  
-  return spxsolver_.rhs().get_const_ptr();
+  const double * retVal = NULL;
+  if ( getNumRows() != 0 )
+     retVal = spxsolver_.rhs().get_const_ptr();
+  return retVal;
 }
 //------------------------------------------------------------------
 const double * OsiSpxSolverInterface::getObjCoefficients() const
 {
-  if( obj_ == NULL )
-    {
+  const double * retVal = NULL;
+  if( obj_ == NULL ) {
+    if ( getNumCols()!=0 ) {
       obj_ = new soplex::DVector( getNumCols() );
       spxsolver_.getObj( *obj_ );
+      retVal = obj_->get_const_ptr();
     }
-  return obj_->get_const_ptr();
+  }
+  else {
+    retVal = obj_->get_const_ptr();
+  }
+  return retVal;
 }
 //------------------------------------------------------------------
 double OsiSpxSolverInterface::getObjSense() const

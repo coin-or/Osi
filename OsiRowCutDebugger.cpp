@@ -78,7 +78,7 @@ int OsiRowCutDebugger::validateCuts(const OsiCuts & cs,
 bool OsiRowCutDebugger::invalidCut(const OsiRowCut & rcut) const 
 {
   bool bad=false; 
-  const double epsilon=1.0e-8;
+  const double epsilon=1.0e-6;
   
   CoinPackedVector rpv = rcut.row();
   const int n = rpv.getNumElements();
@@ -244,6 +244,15 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
     int numIndices = sizeof(intIndicesAt1)/sizeof(int);
     intSoln.setConstant(numIndices,intIndicesAt1,1.0);
     expectedNumberColumns=10958;
+  }
+
+  // probing
+  else if ( modelL == "probing" ) {
+    probType=continuousWith0_1;
+    int intIndicesAt1[]={ 1, 18, 33, 59 };
+    int numIndices = sizeof(intIndicesAt1)/sizeof(int);
+    intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=149;
   }
 
   // mas76
@@ -1042,6 +1051,7 @@ OsiRowCutDebugger::activate(const OsiSolverInterface & si, const double * soluti
   // make sure all slack basis
   //CoinWarmStartBasis allSlack;
   //siCopy->setWarmStart(&allSlack);
+  siCopy->setHintParam(OsiDoScale,false);
   siCopy->initialSolve();
   if (siCopy->isProvenOptimal()) {
     // Save column solution

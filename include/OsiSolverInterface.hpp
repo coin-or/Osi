@@ -310,10 +310,17 @@ public:
   //---------------------------------------------------------------------------
   /**@name Warm start methods */
   //@{
-    /// Get warm start information
+    /** Get warm start information.
+
+      If there is no valid solution, an empty warm start object (0 rows, 0
+      columns) wil be returned.
+    */
     virtual CoinWarmStart* getWarmStart() const = 0;
-    /** Set warm start information. Return true/false depending on whether
-	the warm start information was accepted or not. */
+
+    /** Set warm start information.
+    
+      Return true/false depending on whether the warm start information was
+      accepted or not. */
     virtual bool setWarmStart(const CoinWarmStart* warmstart) = 0;
   //@}
 
@@ -906,7 +913,7 @@ public:
 	then all cuts are checked to see that they do NOT cut
 	off the known optimal solution.  
     */
-    void activateRowCutDebugger (const char * modelName);
+    virtual void activateRowCutDebugger (const char * modelName);
 
     /** Get the row cut debugger.
 
@@ -988,6 +995,12 @@ protected:
     */
     void setInitialData();
   //@}
+
+  ///@name Protected member data
+  //@{
+    /// Pointer to row cut debugger object
+    OsiRowCutDebugger * rowCutDebugger_;
+  //@}
   
   //---------------------------------------------------------------------------
 
@@ -996,8 +1009,6 @@ private:
   //@{
     /// Pointer to user-defined data structure
     void * appData_;
-    /// Pointer to row cut debugger object
-    OsiRowCutDebugger * rowCutDebugger_;
     /// Array of integer parameters
     int intParam_[OsiLastIntParam];
     /// Array of double parameters

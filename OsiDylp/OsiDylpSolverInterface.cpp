@@ -1217,7 +1217,8 @@ void ODSI::gen_rowparms (int rowcnt,
 
 ODSI::OsiDylpSolverInterface ()
 
-  : options(0),
+  : OsiSolverInterface(),
+    options(0),
     tolerances(0),
     consys(0),
     lpprob(0),
@@ -1269,7 +1270,8 @@ ODSI::OsiDylpSolverInterface ()
 
 ODSI::OsiDylpSolverInterface (const OsiDylpSolverInterface& src)
 
-  : local_gtxecho(src.local_gtxecho),
+  : OsiSolverInterface(src),
+    local_gtxecho(src.local_gtxecho),
     lp_retval(src.lp_retval),
     obj_sense(src.obj_sense),
 

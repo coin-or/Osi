@@ -176,11 +176,33 @@ OsiCpxSolverInterface::setDblParam(OsiDblParam key, double value)
     case OsiPrimalTolerance:
       retval = ( CPXsetdblparam( env_, CPX_PARAM_EPRHS, value ) == 0 ); // ??? OsiPrimalTolerance == CPLEX Feasibility tolerance ???
       break;
+    case OsiObjOffset:
+      retval = OsiSolverInterface::setDblParam(key,value);
+      break;
     case OsiLastDblParam:
       retval = false;
       break;
     }
   return retval;
+}
+
+
+//-----------------------------------------------------------------------------
+
+bool
+OsiCpxSolverInterface::setStrParam(OsiStrParam key, const std::string & value)
+{
+  bool retval=false;
+  switch (key) {
+
+  case OsiProbName:
+    OsiSolverInterface::setStrParam(key,value);
+    return retval = true;
+
+  case OsiLastStrParam:
+    return false;
+  }
+  return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -231,11 +253,30 @@ OsiCpxSolverInterface::getDblParam(OsiDblParam key, double& value) const
     case OsiPrimalTolerance:
       retval = ( CPXgetdblparam( env_, CPX_PARAM_EPRHS, &value ) == 0 ); // ??? OsiPrimalTolerance == CPLEX Feasibility tolerance ???
       break;
+    case OsiObjOffset:
+      retval = OsiSolverInterface::getDblParam(key, value);
+      break;
     case OsiLastDblParam:
       retval = false;
       break;
     }
   return retval;
+}
+
+
+//-----------------------------------------------------------------------------
+
+bool
+OsiCpxSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
+{
+  switch (key) {
+  case OsiProbName:
+    OsiSolverInterface::getStrParam(key, value);
+    break;
+  case OsiLastStrParam:
+    return false;
+  }
+  return true;
 }
 
 //#############################################################################
@@ -697,7 +738,7 @@ bool OsiCpxSolverInterface::isContinuous( int colNumber ) const
 {
   CPXLPptr lp = getMutableLpPtr();
   int probType = CPXgetprobtype(env_, lp);
-  int ctype;
+  bool ctype;
 
   if ( probType == CPXPROB_RELAXED ) {
     int err = CPXchgprobtype(env_, lp, CPXPROB_MIP);
@@ -924,6 +965,12 @@ double OsiCpxSolverInterface::getObjValue() const
     else
       checkCPXerror( err, "CPXgetobjval", "getObjValue" );
   }
+
+  // Adjust objective function value by constant term in objective function
+  double objOffset;
+  getDblParam(OsiObjOffset,objOffset);
+  objval = objval - objOffset;
+
   return objval;
 }
 //------------------------------------------------------------------
@@ -1676,15 +1723,20 @@ OsiCpxSolverInterface::loadProblem(const int numcols, const int numrows,
 //-----------------------------------------------------------------------------
 // Read mps files
 //-----------------------------------------------------------------------------
-void OsiCpxSolverInterface::readMps( const char * filename,
+int OsiCpxSolverInterface::readMps( const char * filename,
 				     const char * extension )
 {
+#if 0
   std::string f(filename);
   std::string e(extension);
   std::string fullname = f + "." + e;
   int err = CPXreadcopyprob( env_, getLpPtr(), const_cast<char*>( fullname.c_str() ), NULL );
   checkCPXerror( err, "CPXreadcopyprob", "readMps" );
+#endif
+  // just call base class method
+  return OsiSolverInterface::readMps(filename,extension);
 }
+
 
 //-----------------------------------------------------------------------------
 // Write mps files
@@ -1979,9 +2031,15 @@ CPXLPptr OsiCpxSolverInterface::getMutableLpPtr() const
   if ( lp_ == NULL )
     {
       int err;
-      char pn[] = "OSI_CPLEX";
       assert(env_ != NULL);
+#if 0
+      //char pn[] = "OSI_CPLEX";
       lp_ = CPXcreateprob( env_, &err, pn );
+#else
+      std::string pn;
+      getStrParam(OsiProbName,pn);
+      lp_ = CPXcreateprob( env_, &err, const_cast<char*>(pn.c_str()) );
+#endif
       checkCPXerror( err, "CPXcreateprob", "getMutableLpPtr" );
       assert( lp_ != NULL ); 
     }

@@ -33,9 +33,22 @@ enum OsiDblParam {
   /** The maximum amount the primal constraints can be violated and still be
       considered feasible. */
   OsiPrimalTolerance,
+  /** Objective function constant. This the value of the constant term in
+      the objective function. */
+  OsiObjOffset,
   /** Just a marker, so that OsiSolverInterface can allocate a static sized
       array to store parameters. */
   OsiLastDblParam
+};
+
+
+enum OsiStrParam {
+  /** Name of the problem. This is the found on the Name card of
+      an mps file. */
+  OsiProbName = 0,
+  /** Just a marker, so that OsiSolverInterface can allocate a static sized
+      array to store parameters. */
+  OsiLastStrParam
 };
 
 #endif

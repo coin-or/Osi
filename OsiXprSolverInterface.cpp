@@ -132,13 +132,31 @@ OsiXprSolverInterface::setDblParam(OsiDblParam key, double value)
   case OsiPrimalTolerance:
     retval = false;	
     break;
+  case OsiObjOffset: 
+    return OsiSolverInterface::setDblParam(key, value);
   case OsiLastDblParam:
     retval = false;
     break;
   }
   return retval;
 }
+//-----------------------------------------------------------------------------
 
+bool
+OsiXprSolverInterface::setStrParam(OsiStrParam key, const std::string & value)
+{
+  bool retval=false;
+  switch (key) {
+
+  case OsiProbName:
+    OsiSolverInterface::setStrParam(key,value);
+    return retval = true;
+
+  case OsiLastStrParam:
+    return false;
+  }
+  return false;
+}
 //-----------------------------------------------------------------------------
 
 bool
@@ -148,7 +166,7 @@ OsiXprSolverInterface::getIntParam(OsiIntParam key, int& value) const
 
   switch (key) {
   case OsiMaxNumIteration:
-    retval = geticv(N_ITRLIM, &value);
+    retval = geticv(N_ITRLIM, &value)==1 ? true : false;
     break;
   case OsiMaxNumIterationHotStart:
     retval = false;
@@ -169,7 +187,7 @@ OsiXprSolverInterface::getDblParam(OsiDblParam key, double& value) const
 
   switch (key) {
   case OsiDualObjectiveLimit:
-    retval = getdcv(N_CUTOFF, &value);
+    retval = getdcv(N_CUTOFF, &value)==1 ? true : false;
     break;
   case OsiPrimalObjectiveLimit:
     retval = false;
@@ -180,6 +198,9 @@ OsiXprSolverInterface::getDblParam(OsiDblParam key, double& value) const
   case OsiPrimalTolerance:
     retval = false;
     break;
+  case OsiObjOffset:
+    retval = OsiSolverInterface::getDblParam(key, value);
+    break;
   case OsiLastDblParam:
     retval = false;
     break;
@@ -187,6 +208,20 @@ OsiXprSolverInterface::getDblParam(OsiDblParam key, double& value) const
   return retval;
 }
 
+//-----------------------------------------------------------------------------
+
+bool
+OsiXprSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
+{
+  switch (key) {
+  case OsiProbName:
+    OsiSolverInterface::getStrParam(key, value);
+    break;
+  case OsiLastStrParam:
+    return false;
+  }
+  return true;
+}
 //#############################################################################
 // Methods returning info on how the solution process terminated
 //#############################################################################
@@ -1769,6 +1804,7 @@ OsiXprSolverInterface::loadProblem(const OsiPackedMatrix& matrix,
     const_cast<double*>(m->getElements()),
     clb,
     cub );
+  setStrParam(OsiProbName,probName);
   
   if ( iret != 0 )
     getipv(N_ERRNO, &iret);
@@ -1969,6 +2005,7 @@ OsiXprSolverInterface::loadProblem(const int numcols, const int numrows,
     const_cast<double*>(value),
     clb,
     cub );
+  setStrParam(OsiProbName,probName);
   
   if ( iret != 0 )
     getipv(N_ERRNO, &iret);
@@ -1993,15 +2030,17 @@ OsiXprSolverInterface::loadProblem(const int numcols, const int numrows,
 }
 
 
+
 //-----------------------------------------------------------------------------
 // Read mps files
 //-----------------------------------------------------------------------------
 
-void
+int
 OsiXprSolverInterface::readMps(const char *filename, const char *extension) 
 {
   activateMe();
    
+#if 0
   if (getLogFilePtr()!=NULL) {
     fprintf(getLogFilePtr(),"{\n");
     fprintf(getLogFilePtr(),"  input(\"%s\");\n",filename);
@@ -2096,7 +2135,14 @@ OsiXprSolverInterface::readMps(const char *filename, const char *extension)
   char pname[256];      // Problem names can be 200 chars in XPRESS 12
   getprob(pname);
   xprProbname_ = pname;
+  return 0;
+#else
+  int retVal = OsiSolverInterface::readMps(filename,extension);
+  getStrParam(OsiProbName,xprProbname_);
+  return retVal;
+#endif
 }
+
 
 //-----------------------------------------------------------------------------
 // Write mps files

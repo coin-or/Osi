@@ -5,6 +5,8 @@
 #  pragma warning(disable:4786)
 #endif
 
+#include <iostream>
+
 #include "CoinHelperFunctions.hpp"
 #include "OsiWarmStart.hpp"
 #include "OsiSolverInterface.hpp"
@@ -321,6 +323,9 @@ OsiSolverInterface::OsiSolverInterface () :
   dblParam_[OsiPrimalObjectiveLimit] = DBL_MAX;
   dblParam_[OsiDualTolerance] = 1e-6;
   dblParam_[OsiPrimalTolerance] = 1e-6;
+  dblParam_[OsiObjOffset] = 0.0;
+
+  strParam_[OsiProbName] = "OsiDefaultName";
 }
 
 //-------------------------------------------------------------------
@@ -335,6 +340,7 @@ OsiSolverInterface::OsiSolverInterface (const OsiSolverInterface & source) :
     rowCutDebugger_ = new OsiRowCutDebugger(*source.rowCutDebugger_);
   CoinDisjointCopyN(source.intParam_, OsiLastIntParam, intParam_);
   CoinDisjointCopyN(source.dblParam_, OsiLastDblParam, dblParam_);
+  CoinDisjointCopyN(source.strParam_, OsiLastStrParam, strParam_);
 }
 
 //-------------------------------------------------------------------
@@ -364,6 +370,7 @@ OsiSolverInterface::operator=(const OsiSolverInterface& rhs)
       rowCutDebugger_ = NULL;
     CoinDisjointCopyN(rhs.intParam_, OsiLastIntParam, intParam_);
     CoinDisjointCopyN(rhs.dblParam_, OsiLastDblParam, dblParam_);
+    CoinDisjointCopyN(rhs.strParam_, OsiLastStrParam, strParam_);
     delete ws_;
     ws_ = NULL;
   }
@@ -374,17 +381,7 @@ OsiSolverInterface::operator=(const OsiSolverInterface& rhs)
 // Read mps files
 //-----------------------------------------------------------------------------
 
-// First version is default for solvers without readers
-
-void OsiSolverInterface::readMps(const char * filename,
-    const char * extension)
-{
-  readOsiMps( filename , extension );
-}
-
-// second version is deliberate call to Osi reader (not virtual)
-
-int OsiSolverInterface::readOsiMps(const char * filename,
+int OsiSolverInterface::readMps(const char * filename,
     const char * extension)
 {
   std::string f(filename);
@@ -404,6 +401,13 @@ int OsiSolverInterface::readOsiMps(const char * filename,
   std::cout <<m.getProblemName()<<" read with " << numberErrors <<
     " errors" <<std::endl;
   if (!numberErrors) {
+
+    // set objective function offest
+    setDblParam(OsiObjOffset,m.objectiveOffset());
+
+    // set problem name
+    setStrParam(OsiProbName,m.getProblemName());
+
     // no errors
     loadProblem(*m.getMatrixByCol(),m.getColLower(),m.getColUpper(),
 		m.getObjCoefficients(),m.getRowSense(),m.getRightHandSide(),

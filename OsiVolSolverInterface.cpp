@@ -567,10 +567,31 @@ OsiVolSolverInterface::setDblParam(OsiDblParam key, double value)
       return false;
     volprob_.parm.primal_abs_precision = value;
     break;
+  case OsiObjOffset: 
+    return OsiSolverInterface::setDblParam(key, value);
   case OsiLastDblParam:
     return false;
   }
   return true;
+}
+
+
+//-----------------------------------------------------------------------------
+
+bool
+OsiVolSolverInterface::setStrParam(OsiStrParam key, const std::string & value)
+{
+  bool retval=false;
+  switch (key) {
+
+  case OsiProbName:
+    OsiSolverInterface::setStrParam(key,value);
+    return retval = true;
+
+  case OsiLastStrParam:
+    return false;
+  }
+  return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -608,12 +629,30 @@ OsiVolSolverInterface::getDblParam(OsiDblParam key, double& value) const
   case OsiPrimalTolerance:
     value = volprob_.parm.primal_abs_precision; 
     break;
+  case OsiObjOffset:
+    OsiSolverInterface::getDblParam(key, value);
+    break;
   case OsiLastDblParam:
     return false;
   }
   return true;
 }
 
+
+//-----------------------------------------------------------------------------
+
+bool
+OsiVolSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
+{
+  switch (key) {
+  case OsiProbName:
+    OsiSolverInterface::getStrParam(key, value);
+    break;
+  case OsiLastStrParam:
+    return false;
+  }
+  return true;
+}
 //#############################################################################
 // Methods returning info on how the solution process terminated
 //#############################################################################

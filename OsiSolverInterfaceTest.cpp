@@ -98,7 +98,7 @@ OsiSolverInterfaceMpsUnitTest(
   mpsName.push_back("agg3");min.push_back(true);nRows.push_back(517);nCols.push_back(302);objValueTol.push_back(1.e-10);objValue.push_back(1.0312115935e+07);
   mpsName.push_back("bandm");min.push_back(true);nRows.push_back(306);nCols.push_back(472);objValueTol.push_back(1.e-10);objValue.push_back(-1.5862801845e+02);
   mpsName.push_back("beaconfd");min.push_back(true);nRows.push_back(174);nCols.push_back(262);objValueTol.push_back(1.e-10);objValue.push_back(3.3592485807e+04);
-  // CPLEX READ ERROR  mpsName.push_back("blend");min.push_back(true);nRows.push_back(75);nCols.push_back(83);objValueTol.push_back(1.e-10);objValue.push_back(-3.0812149846e+01);
+  mpsName.push_back("blend");min.push_back(true);nRows.push_back(75);nCols.push_back(83);objValueTol.push_back(1.e-10);objValue.push_back(-3.0812149846e+01);
   mpsName.push_back("bnl1");min.push_back(true);nRows.push_back(644);nCols.push_back(1175);objValueTol.push_back(1.e-10);objValue.push_back(1.9776295615E+03);
   mpsName.push_back("bnl2");min.push_back(true);nRows.push_back(2325);nCols.push_back(3489);objValueTol.push_back(1.e-10);objValue.push_back(1.8112365404e+03);
   mpsName.push_back("boeing1");min.push_back(true);nRows.push_back(/*351*/352);nCols.push_back(384);objValueTol.push_back(1.e-10);objValue.push_back(-3.3521356751e+02);
@@ -112,8 +112,8 @@ OsiSolverInterfaceMpsUnitTest(
   mpsName.push_back("d6cube");min.push_back(true);nRows.push_back(416);nCols.push_back(6184);objValueTol.push_back(1.e-10);objValue.push_back(3.1549166667e+02);
   mpsName.push_back("degen2");min.push_back(true);nRows.push_back(445);nCols.push_back(534);objValueTol.push_back(1.e-10);objValue.push_back(-1.4351780000e+03);
   mpsName.push_back("degen3");min.push_back(true);nRows.push_back(1504);nCols.push_back(1818);objValueTol.push_back(1.e-10);objValue.push_back(-9.8729400000e+02);
-  // CPLEX READ ERROR  mpsName.push_back("dfl001");min.push_back(true);nRows.push_back(6072);nCols.push_back(12230);objValueTol.push_back(1.e-5);objValue.push_back(1.1266396047E+07);
-  mpsName.push_back("e226");min.push_back(true);nRows.push_back(224);nCols.push_back(282);objValueTol.push_back(1.e-10);objValue.push_back(-1.8751929066e+01);
+  mpsName.push_back("dfl001");min.push_back(true);nRows.push_back(6072);nCols.push_back(12230);objValueTol.push_back(1.e-5);objValue.push_back(1.1266396047E+07);
+  mpsName.push_back("e226");min.push_back(true);nRows.push_back(224);nCols.push_back(282);objValueTol.push_back(1.e-10);objValue.push_back(-1.8751929066e+01+7.113); // The correct answer includes -7.113 term. This is a constant in the objective function. See line 1683 of the mps file.
   mpsName.push_back("etamacro");min.push_back(true);nRows.push_back(401);nCols.push_back(688);objValueTol.push_back(1.e-6);objValue.push_back(-7.5571521774e+02 );
   mpsName.push_back("fffff800");min.push_back(true);nRows.push_back(525);nCols.push_back(854);objValueTol.push_back(1.e-6);objValue.push_back(5.5567961165e+05);
   mpsName.push_back("finnis");min.push_back(true);nRows.push_back(498);nCols.push_back(614);objValueTol.push_back(1.e-6);objValue.push_back(1.7279096547e+05);
@@ -121,9 +121,9 @@ OsiSolverInterfaceMpsUnitTest(
   mpsName.push_back("fit1p");min.push_back(true);nRows.push_back(628);nCols.push_back(1677);objValueTol.push_back(1.e-10);objValue.push_back(9.1463780924e+03);
   mpsName.push_back("fit2d");min.push_back(true);nRows.push_back(26);nCols.push_back(10500);objValueTol.push_back(1.e-10);objValue.push_back(-6.8464293294e+04);
   mpsName.push_back("fit2p");min.push_back(true);nRows.push_back(3001);nCols.push_back(13525);objValueTol.push_back(1.e-9);objValue.push_back(6.8464293232e+04);
-  // CPLEX READ ERROR  mpsName.push_back("forplan");min.push_back(true);nRows.push_back(162);nCols.push_back(421);objValueTol.push_back(1.e-6);objValue.push_back(-6.6421873953e+02);
+  mpsName.push_back("forplan");min.push_back(true);nRows.push_back(162);nCols.push_back(421);objValueTol.push_back(1.e-6);objValue.push_back(-6.6421873953e+02);
   mpsName.push_back("ganges");min.push_back(true);nRows.push_back(1310);nCols.push_back(1681);objValueTol.push_back(1.e-5);objValue.push_back(-1.0958636356e+05);
-  // CPLEX READ ERROR  mpsName.push_back("gfrd-pnc");min.push_back(true);nRows.push_back(617);nCols.push_back(1092);objValueTol.push_back(1.e-10);objValue.push_back(6.9022359995e+06);
+  mpsName.push_back("gfrd-pnc");min.push_back(true);nRows.push_back(617);nCols.push_back(1092);objValueTol.push_back(1.e-10);objValue.push_back(6.9022359995e+06);
   mpsName.push_back("greenbea");min.push_back(true);nRows.push_back(2393);nCols.push_back(5405);objValueTol.push_back(1.e-10);objValue.push_back(/*-7.2462405908e+07*/-72555248.129846);
   mpsName.push_back("greenbeb");min.push_back(true);nRows.push_back(2393);nCols.push_back(5405);objValueTol.push_back(1.e-10);objValue.push_back(/*-4.3021476065e+06*/-4302260.2612066);
   mpsName.push_back("grow15");min.push_back(true);nRows.push_back(301);nCols.push_back(645);objValueTol.push_back(1.e-10);objValue.push_back(-1.0687094129e+08);
@@ -172,7 +172,7 @@ OsiSolverInterfaceMpsUnitTest(
   mpsName.push_back("ship08s");min.push_back(true);nRows.push_back(779);nCols.push_back(2387);objValueTol.push_back(1.e-10);objValue.push_back(1.9200982105e+06);
   mpsName.push_back("ship12l");min.push_back(true);nRows.push_back(1152);nCols.push_back(5427);objValueTol.push_back(1.e-10);objValue.push_back(1.4701879193e+06);
   mpsName.push_back("ship12s");min.push_back(true);nRows.push_back(1152);nCols.push_back(2763);objValueTol.push_back(1.e-10);objValue.push_back(1.4892361344e+06);
-  // CPLEX READ ERROR  mpsName.push_back("sierra");min.push_back(true);nRows.push_back(1228);nCols.push_back(2036);objValueTol.push_back(1.e-10);objValue.push_back(1.5394362184e+07);
+  mpsName.push_back("sierra");min.push_back(true);nRows.push_back(1228);nCols.push_back(2036);objValueTol.push_back(1.e-10);objValue.push_back(1.5394362184e+07);
   mpsName.push_back("stair");min.push_back(true);nRows.push_back(357);nCols.push_back(467);objValueTol.push_back(1.e-10);objValue.push_back(-2.5126695119e+02);
   mpsName.push_back("standata");min.push_back(true);nRows.push_back(360);nCols.push_back(1075);objValueTol.push_back(1.e-10);objValue.push_back(1.2576995000e+03);
   //mpsName.push_back("standgub");min.push_back(true);nRows.push_back(362);nCols.push_back(1184);objValueTol.push_back(1.e-10);objValue.push_back(1257.6995); 
@@ -378,7 +378,7 @@ OsiSolverInterfaceMpsUnitTest(
       {
         double soln = vecSiP[i]->getObjValue();       
         OsiRelFltEq eq(objValueTol[m]);
-        //std::cerr <<soln <<std::endl;
+        //std::cerr <<soln <<",  " <<objValue[m] <<std::endl;
         assert(eq(soln,objValue[m]));
       }
     }
@@ -492,7 +492,7 @@ static bool testDblParam(OsiSolverInterface * si, int k, double val)
   }
   return ret;
 }
-
+ 
 //#############################################################################
 //#############################################################################
 
@@ -522,7 +522,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     assert( si->getNumElements()==0 );
     assert( si->getColLower()==NULL );
     assert( si->getColUpper()==NULL );
-    assert( si->colsol()==NULL );
+    assert( si->getColSolution()==NULL );
     assert( si->getObjCoefficients()==NULL );
     assert( si->getRowRange()==NULL );
     assert( si->getRightHandSide()!=NULL );
@@ -653,6 +653,14 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     assert( eq( exmip1Si->getObjCoefficients()[5],  0.0) );
     assert( eq( exmip1Si->getObjCoefficients()[6],  0.0) );
     assert( eq( exmip1Si->getObjCoefficients()[7], -1.0) );
+
+    // Test getting and setting of objective offset
+    double objOffset;
+    assert( exmip1Si->getDblParam(OsiObjOffset,objOffset) );
+    assert( eq( objOffset, 0.0 ) );
+    assert( exmip1Si->setDblParam(OsiObjOffset, 3.21) );
+    assert( exmip1Si->getDblParam(OsiObjOffset,objOffset) );
+    assert( eq( objOffset, 3.21 ) );
   }
     
   // Test load and assign problem
@@ -686,6 +694,18 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 		       base->getColLower(),base->getColUpper(),
 		       base->getObjCoefficients(),
 		       base->getRowLower(),base->getRowUpper() );
+      {
+        double objOffset;
+        base->getDblParam(OsiObjOffset,objOffset);
+        si1->setDblParam(OsiObjOffset,objOffset);
+        si2->setDblParam(OsiObjOffset,objOffset);
+        si3->setDblParam(OsiObjOffset,objOffset);
+        si4->setDblParam(OsiObjOffset,objOffset);
+        si5->setDblParam(OsiObjOffset,objOffset);
+        si6->setDblParam(OsiObjOffset,objOffset);
+        si7->setDblParam(OsiObjOffset,objOffset);
+        si8->setDblParam(OsiObjOffset,objOffset);
+      }
         
       OsiPackedMatrix * pm = new OsiPackedMatrix(*base->getMatrixByCol());
       double * clb = new double[base->getNumCols()];

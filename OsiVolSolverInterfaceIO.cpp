@@ -365,65 +365,18 @@ OsiVolSolverInterface::loadProblem(const int numcols, const int numrows,
 
 //-----------------------------------------------------------------------
 
-void 
+
+int 
 OsiVolSolverInterface::readMps(const char *filename, const char *extension)
 {
-  OsiSolverInterface * si;
-#if   defined(COIN_USE_OSL)
-  si = new OsiOslSolverInterface;
-#elif defined(COIN_USE_XPR)
-  si = new OsiXprSolverInterface;
-#elif defined(COIN_USE_CPX)
-  si = new OsiCpxSolverInterface;
-#else 
-  throw CoinError("Sorry, the Volume Algorithm does not have an "
-		 "MPS Reader without compiling with "
-		 "COIN_USE_XPR, USE_COIN_CPX, and/or COIN_USE_OSL",
-		 "readMps", "OsiVolSolverInterface");
-#endif
   
-  si->readMps(filename,extension);
-  
-  // Convert Mps Reader's Solver Interface view of infinity
-  // OsiVolSolverInterface's view of infinity.
-  double mpsReaderInf = si->getInfinity();
-  double volInf = getInfinity();
-  
-  int nc = si->getNumCols();
-  double * cl = new double[nc];
-  double * cu = new double[nc];
-  double * ob = new double[nc];
-  
-  int nr = si->getNumRows();
-  double * rl = new double[nr];
-  double * ru = new double[nr];
-  
-  CoinDisjointCopyN(si->getColLower(),nc,cl);
-  CoinDisjointCopyN(si->getColUpper(),nc,cu);
-  CoinDisjointCopyN(si->getObjCoefficients(),nc,ob);
-  
-  CoinDisjointCopyN(si->getRowLower(),nr,rl);
-  CoinDisjointCopyN(si->getRowUpper(),nr,ru);
-  
-  int i;
-  for ( i=0; i<nc; i++ ) {
-    if ( cl[i] <= -mpsReaderInf ) cl[i] = -volInf;
-    if ( cu[i] >=  mpsReaderInf ) cu[i] =  volInf;
-  }
-  for ( i=0; i<nr; i++ ) {
-    if ( rl[i] <= -mpsReaderInf ) rl[i] = -volInf;
-    if ( ru[i] >=  mpsReaderInf ) ru[i] =  volInf;
-  }
-  
-  OsiPackedMatrix * pm = new OsiPackedMatrix(*(si->getMatrixByCol()));
-  
-  assignProblem(pm, cl, cu, ob, rl, ru);
-  
+  int retVal = OsiSolverInterface::readMps(filename,extension); 
+  int nc = getNumCols();
   continuous_= new bool[maxNumcols_];
   CoinFillN(continuous_,nc,true);
-  
-  delete si; 
+  return retVal;
 }
+
 
 //-----------------------------------------------------------------------
 

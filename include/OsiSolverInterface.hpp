@@ -175,6 +175,11 @@ public:
       dblParam_[key] = value;
       return true;
     }
+    // Set an double parameter
+    virtual bool setStrParam(OsiStrParam key, const std::string & value) {
+      strParam_[key] = value;
+      return true;
+    }
     // Get an integer parameter
     virtual bool getIntParam(OsiIntParam key, int& value) const {
       value = intParam_[key];
@@ -183,6 +188,11 @@ public:
     // Get an double parameter
     virtual bool getDblParam(OsiDblParam key, double& value) const {
       value = dblParam_[key];
+      return true;
+    }
+    // Get a string parameter
+    virtual bool getStrParam(OsiStrParam key, std::string& value) const {
+      value = strParam_[key];
       return true;
     }
   //@}
@@ -684,13 +694,9 @@ public:
 			     const char* rowsen, const double* rowrhs,   
 			     const double* rowrng) = 0;
 
-    /** Read an mps file from the given filename (defaults to Osi reader) */
-    virtual void readMps(const char *filename,
-			 const char *extension = "mps") ;
-
-    /** Read an mps file from the given filename using Osi reader - returns
+    /** Read an mps file from the given filename (defaults to Osi reader) - returns
 	number of errors (see OsiMpsReader class) */
-    int readOsiMps(const char *filename,
+    virtual int readMps(const char *filename,
 			 const char *extension = "mps") ;
 
     /** Write the problem into an mps file of the given filename */
@@ -799,6 +805,8 @@ private:
     int intParam_[OsiLastIntParam];
     /// Array of double parameters
     double dblParam_[OsiLastDblParam];
+    /// Array of string parameters
+    std::string strParam_[OsiLastDblParam];
 
     /* The warmstart information used for hotstarting in case the default
        hotstart implementation is used */

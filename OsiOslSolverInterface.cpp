@@ -167,11 +167,33 @@ OsiOslSolverInterface::setDblParam(OsiDblParam key, double value)
     retval = ekk_setRtolpinf(getMutableModelPtr(), value);
     return retval == 0;
 
+  case OsiObjOffset: 
+    retval = ekk_setRobjectiveOffset(getMutableModelPtr(), value);
+    return retval == 0;
+
   case OsiLastDblParam:
     return false;
   }
   return true;
 }
+
+//-----------------------------------------------------------------------------
+
+bool
+OsiOslSolverInterface::setStrParam(OsiStrParam key, const std::string & value)
+{
+  int retval;
+  switch (key) {
+  case OsiProbName:
+    retval = ekk_setCname(getMutableModelPtr(), value.c_str());
+    return retval == 0;
+
+  case OsiLastStrParam:
+    return false;
+  }
+  return false;
+}
+
 
 //-----------------------------------------------------------------------------
 
@@ -211,11 +233,30 @@ OsiOslSolverInterface::getDblParam(OsiDblParam key, double& value) const
   case OsiPrimalTolerance:
     value = ekk_getRtolpinf(getMutableModelPtr());
     break;
+  case OsiObjOffset:
+    value = ekk_getRobjectiveOffset(getMutableModelPtr());
+    break;
   case OsiLastDblParam:
     return false;
   }
   return true;
 }
+
+//-----------------------------------------------------------------------------
+
+bool
+OsiOslSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
+{
+  switch (key) {
+  case OsiProbName:
+    value = ekk_getCname(getMutableModelPtr());
+    break;
+  case OsiLastStrParam:
+    return false;
+  }
+  return true;
+}
+
 
 //#############################################################################
 // Methods returning info on how the solution process terminated
@@ -1295,28 +1336,7 @@ OsiOslSolverInterface::loadProblem(const int numcols, const int numrows,
    delete[] rowlb;
    delete[] rowub;
 }
-// *** Leave out OSL reader to test Osi one
-#ifndef COIN_TEST_OSI_READER
 
-//-----------------------------------------------------------------------------
-// Read mps files
-//-----------------------------------------------------------------------------
-
-void OsiOslSolverInterface::readMps(const char * filename,
-    const char * extension)
-{
-  std::string f(filename);
-  std::string e(extension);
-  std::string fullname;
-  if (e!="") {
-    fullname = f + "." + e;
-  } else {
-    // no extension so no trailing period
-    fullname = f;
-  }
-  ekk_importModel(getModelPtr(),fullname.c_str());
-}
-#endif
 //-----------------------------------------------------------------------------
 // Write mps files
 //-----------------------------------------------------------------------------

@@ -60,10 +60,14 @@ public:
     bool setIntParam(OsiIntParam key, int value);
     // Set an double parameter
     bool setDblParam(OsiDblParam key, double value);
+    // Set a string parameter
+    bool setStrParam(OsiStrParam key, const std::string & value);
     // Get an integer parameter
     bool getIntParam(OsiIntParam key, int& value) const;
     // Get an double parameter
     bool getDblParam(OsiDblParam key, double& value) const;
+    // Get a string parameter
+    bool getStrParam(OsiStrParam key, std::string& value) const;
   //@}
 
   //---------------------------------------------------------------------------
@@ -557,13 +561,6 @@ public:
 			     const double* obj,
 			     const char* rowsen, const double* rowrhs,   
 			     const double* rowrng);
-
-// *** Leave out OSL reader to test Osi one
-#ifndef COIN_TEST_OSI_READER
-    /** Read an mps file from the given filename */
-    virtual void readMps(const char *filename,
-			 const char *extension = "mps");
-#endif
 
     /** Write the problem into an mps file of the given filename */
     virtual void writeMps(const char *filename,

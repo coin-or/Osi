@@ -19,9 +19,6 @@
 #include "OsiSimplexInterface.hpp"
 #include "OsiRowCutDebugger.hpp"
 
-// #undef COIN_USE_CLP
-#undef COIN_USE_DYLP
-
 #ifdef COIN_USE_OSL
 #include "OsiOslSolverInterface.hpp"
 #endif

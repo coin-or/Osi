@@ -99,7 +99,7 @@ void OsiSymSolverInterfaceUnitTest( const std::string & mpsDir, const std::strin
   {    
     CoinRelFltEq eq;
     OsiSymSolverInterface m;
-    std::string fn = mpsDir+"exmip1";
+    std::string fn = mpsDir+"exmip1.mps";
     m.readMps(const_cast<char *>(fn.c_str()));
     int ad = 13579;
     m.setApplicationData(&ad);

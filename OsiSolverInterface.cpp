@@ -364,8 +364,25 @@ OsiSolverInterface::OsiSolverInterface () :
   appData_(NULL), 
   rowCutDebugger_(NULL),
   ws_(NULL),
+  handler_(NULL),
   defaultHandler_(true)
 {
+  setInitialData();
+}
+// Set data for default constructor
+void 
+OsiSolverInterface::setInitialData()
+{
+  delete rowCutDebugger_;
+  rowCutDebugger_ = NULL;
+  delete ws_;
+  ws_ = NULL;
+  if (defaultHandler_) {
+    delete handler_;
+    handler_ = NULL;
+  }
+  defaultHandler_=true;
+  appData_=NULL;
   intParam_[OsiMaxNumIteration] = 9999999;
   intParam_[OsiMaxNumIterationHotStart] = 9999999;
 
@@ -576,4 +593,12 @@ OsiSolverInterface::copyParameters(OsiSolverInterface & rhs)
   CoinDisjointCopyN(rhs.strParam_, OsiLastStrParam, strParam_);
   CoinDisjointCopyN(rhs.hintParam_, OsiLastHintParam, hintParam_);
   CoinDisjointCopyN(rhs.hintStrength_, OsiLastHintParam, hintStrength_);
+}
+// Resets as if default constructor
+void 
+OsiSolverInterface::reset()
+{
+  // Throw an exception
+  throw CoinError("Needs coding for this interface", "reset",
+		  "OsiSolverInterface");
 }

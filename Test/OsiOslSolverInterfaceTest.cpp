@@ -514,6 +514,14 @@ OsiOslSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       assert( oslClone->getNumCols() == m.getNumCols() );
       
       assert( *((int *)(oslClone->getApplicationData())) == ad );
+      // Test reset
+      siClone->reset();
+      assert( oslClone->rowsense_==NULL );
+      assert( oslClone->rhs_==NULL );
+      assert( oslClone->rowrange_==NULL );
+      assert( oslClone->matrixByRow_==NULL );
+      assert( oslClone->ws_==NULL);
+      assert( oslClone->itlimOrig_==9999999);
       delete siClone;
     }
    

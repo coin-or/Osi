@@ -1155,22 +1155,19 @@ ClpSimplex * OsiClpSolverInterface::getModelPtr() const
 OsiClpSolverInterface::OsiClpSolverInterface ()
 :
 OsiSolverInterface(),
+linearObjective_(NULL),
 rowsense_(NULL),
 rhs_(NULL),
 rowrange_(NULL),
 ws_(NULL),
 rowActivity_(NULL),
 columnActivity_(NULL),
-basis_(),  
-itlimOrig_(9999999),
-lastAlgorithm_(0),
-notOwned_(false),
 matrixByRow_(NULL),
 integerInformation_(NULL)
 {
-   modelPtr_ = new ClpSimplex();
-   linearObjective_ = NULL;
-   fillParamMaps();
+  modelPtr_=NULL;
+  notOwned_=false;
+  reset();
 }
 
 //-------------------------------------------------------------------
@@ -2002,5 +1999,29 @@ OsiClpSolverInterface::getBasics(int* index)
   assert (index);
   memcpy(index,modelPtr_->pivotVariable(),
 	 modelPtr_->numberRows()*sizeof(int));
+}
+// Resets as if default constructor
+void 
+OsiClpSolverInterface::reset()
+{
+  setInitialData(); // clear base class
+  freeCachedResults();
+  if (!notOwned_)
+    delete modelPtr_;
+  delete ws_;
+  delete [] rowActivity_;
+  delete [] columnActivity_;
+  delete [] integerInformation_;
+  rowActivity_ = NULL;
+  columnActivity_ = NULL;
+  integerInformation_ = NULL;
+  basis_ = CoinWarmStartBasis();
+  itlimOrig_=9999999;
+  lastAlgorithm_=0;
+  notOwned_=false;
+  modelPtr_ = new ClpSimplex();
+  delete linearObjective_;
+  linearObjective_ = NULL;
+  fillParamMaps();
 }
 

@@ -1453,7 +1453,7 @@ unsigned int OsiOslSolverInterface::getNumInstances()
 // Default Constructor 
 //-------------------------------------------------------------------
 OsiOslSolverInterface::OsiOslSolverInterface ()
-:
+  :
 OsiSolverInterface(),
 modelPtr_(NULL),
 rowsense_(NULL),
@@ -1688,3 +1688,11 @@ void OsiOslSolverInterface::extractSenseRhsRange() const
 }
 
 //#############################################################################
+// Resets as if default constructor
+void 
+OsiOslSolverInterface::reset()
+{
+  setInitialData(); // clear base class
+  gutsOfDestructor();
+  itlimOrig_=9999999;
+}

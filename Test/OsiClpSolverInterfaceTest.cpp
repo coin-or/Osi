@@ -74,6 +74,16 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       assert( im.getNumCols() == 0 ); 
       
       assert( im.getModelPtr()!=NULL );
+      // Test reset
+      im.reset();
+      assert( im.rowsense_==NULL );
+      assert( im.rhs_==NULL );
+      assert( im.rowrange_==NULL );
+      assert( im.matrixByRow_==NULL );
+      assert( im.ws_==NULL);
+      assert( im.itlimOrig_==9999999);
+      assert( im.lastAlgorithm_==0);
+      assert( im.integerInformation_==NULL);
     }
     
     // Test copy constructor and assignment operator

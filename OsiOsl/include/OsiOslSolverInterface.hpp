@@ -629,6 +629,9 @@ public:
   
     /// Destructor 
     virtual ~OsiOslSolverInterface ();
+
+    /// Resets as if default constructor
+    virtual void reset();
   //@}
 
 protected:

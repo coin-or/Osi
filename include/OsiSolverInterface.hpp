@@ -863,6 +863,9 @@ public:
   
     /// Destructor 
     virtual ~OsiSolverInterface ();
+
+    /// Resets as if default constructor
+    virtual void reset();
   //@}
 
   //---------------------------------------------------------------------------
@@ -893,6 +896,8 @@ protected:
     forceIntoRange(const T value, const T lower, const T upper) const {
       return value < lower ? lower : (value > upper ? upper : value);
     }
+    /// Set data for default constructor
+    void setInitialData();
   //@}
   
   //---------------------------------------------------------------------------

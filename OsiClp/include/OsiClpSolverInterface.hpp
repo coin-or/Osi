@@ -691,6 +691,9 @@ public:
     
     /// Destructor 
     virtual ~OsiClpSolverInterface ();
+
+    /// Resets as if default constructor
+    virtual void reset();
   //@}
 
   //---------------------------------------------------------------------------

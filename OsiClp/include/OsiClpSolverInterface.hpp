@@ -405,22 +405,15 @@ public:
       
       /** Set a single row lower bound<br>
     	  Use -DBL_MAX for -infinity. */
-      virtual void setRowLower( int elementIndex, double elementValue ) {
-	modelPtr_->rowLower()[elementIndex] = elementValue;
-      }
+      virtual void setRowLower( int elementIndex, double elementValue );
       
       /** Set a single row upper bound<br>
     	  Use DBL_MAX for infinity. */
-      virtual void setRowUpper( int elementIndex, double elementValue ) {
-	modelPtr_->rowUpper()[elementIndex] = elementValue;
-      }
+      virtual void setRowUpper( int elementIndex, double elementValue ) ;
     
       /** Set a single row lower and upper bound */
       virtual void setRowBounds( int elementIndex,
-    				 double lower, double upper ) {
-	modelPtr_->rowLower()[elementIndex] = lower;
-	modelPtr_->rowUpper()[elementIndex] = upper;
-      }
+    				 double lower, double upper ) ;
     
       /** Set the type of a single row<br> */
       virtual void setRowType(int index, char sense, double rightHandSide,

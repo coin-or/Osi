@@ -2106,7 +2106,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     OsiSolverInterface *s = emptySi->clone();
     double dEmpty = 0;
     int iEmpty = 0;
-    char cEmpty = '?';
+    //char cEmpty = '?';
     
     s->loadProblem(0, 0, &iEmpty, &iEmpty, &dEmpty, &dEmpty, &dEmpty, &dEmpty, &dEmpty, &dEmpty);
     double inf = s->getInfinity();

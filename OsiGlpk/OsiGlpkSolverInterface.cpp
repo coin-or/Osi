@@ -1794,7 +1794,8 @@ OsiGlpkSolverInterface::loadProblem(const int numcols, const int numrows,
   int *index_adj = new int[1+numelem];
   double *value_adj = new double[1+numelem];
 
-  for (int i=1; i <= numelem; i++)
+  int i;
+  for ( i=1; i <= numelem; i++)
     {
       index_adj[i] = index[i-1] + 1;
       value_adj[i] = value[i-1];
@@ -1812,7 +1813,6 @@ OsiGlpkSolverInterface::loadProblem(const int numcols, const int numrows,
 		       &(index_adj[start[j]]), &(value_adj[start[j]]) );
     }
 
-  int i;
   for( i = 0; i < numcols; i++ )
     {
       setColBounds( i, collb ? collb[i]:0.0, 

@@ -213,17 +213,20 @@ OsiXprSolverInterface::getDblParam(OsiDblParam key, double& value) const
 bool
 OsiXprSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
 {
+  bool retval = false;
   switch (key) {
   case OsiProbName:
     OsiSolverInterface::getStrParam(key, value);
+    retval = true;
     break;
   case OsiSolverName:
     value = "xpress";
+    retval = true;
     break;
   case OsiLastStrParam:
-    return false;
+    retval = false;
   }
-  return true;
+  return retval;
 }
 //#############################################################################
 // Methods returning info on how the solution process terminated

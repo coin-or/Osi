@@ -33,6 +33,20 @@ public:
   inline double effectiveness() const; 
   //@}
 
+  /**@name GloballyValid */
+  //@{
+  /// Set globallyValid
+  inline void setGloballyValid( bool trueFalse ) 
+  { globallyValid_=trueFalse;};
+  inline void setGloballyValid( ) 
+  { globallyValid_=true;};
+  inline void setNotGloballyValid( ) 
+  { globallyValid_=false;};
+  /// Get globallyValid
+  inline bool globallyValid() const
+  { return globallyValid_;};
+  //@}
+
   /**@name Debug stuff */
   //@{
     /// Print cuts in collection

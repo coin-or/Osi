@@ -160,12 +160,14 @@ void OsiClpSolverInterface::initialSolve()
     }
     model2->setPerturbation(savePerturbation);
     if (model2!=&solver) {
+      int numberIterations = model2->numberIterations();
       pinfo.postsolve(true);
     
       delete model2;
       //printf("Resolving from postsolved model\n");
       // later try without (1) and check duals before solve
       solver.primal(1);
+      solver.setNumberIterations(solver.numberIterations()+numberIterations);
     }
     lastAlgorithm_=1; // primal
     //if (solver.numberIterations())
@@ -336,11 +338,13 @@ void OsiClpSolverInterface::resolve()
       }
     }
     if (model2!=modelPtr_) {
+      int numberIterations = model2->numberIterations();
       pinfo.postsolve(true);
     
       delete model2;
       // later try without (1) and check duals before solve
       modelPtr_->primal(1);
+      modelPtr_->setNumberIterations(modelPtr_->numberIterations()+numberIterations);
       lastAlgorithm_=1; // primal
     }
     //if (modelPtr_->numberIterations())

@@ -938,6 +938,17 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     OsiClpSolverInterface model2;
     model2.loadFromCoinModel(build);
     model2.initialSolve();
+    // Save - should be continuous
+    model2.writeMps("continuous");
+    int * whichInteger = new int[numberColumns];
+    for (iColumn=0;iColumn<numberColumns;iColumn++) 
+      whichInteger[iColumn]=iColumn;
+    // mark as integer
+    model2.setInteger(whichInteger,numberColumns);
+    delete [] whichInteger;
+    // save - should be integer
+    model2.writeMps("integer");
+    
     // Now do with strings attached
     // Save build to show how to go over rows
     CoinModel saveBuild = build;

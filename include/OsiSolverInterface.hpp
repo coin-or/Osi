@@ -923,6 +923,11 @@ public:
   virtual int readMps(const char *filename, const char*extension,
 			int & numberSets, CoinSet ** & sets);
 
+    /** Read a problem in GMPL format from the given filenames.
+    
+        Will only work if glpk installed
+   */
+   virtual int readGMPL(const char *filename, const char * dataname=NULL);
     /** Write the problem in MPS format to the specified file.
 
       If objSense is non-zero, a value of -1.0 causes the problem to be

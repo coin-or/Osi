@@ -443,7 +443,8 @@ OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & n
       oslSi.setColLower( 3, 1.2345 );
       assert( eq(oslSi.getColLower()[3],1.2345) );
       
-      assert( !eq(cu[4],10.2345) );
+      // NO - cu has been refreshed assert( !eq(cu[4],10.2345) );
+      assert( !eq(oslSi.getColUpper()[4],10.2345) );
       oslSi.setColUpper( 4, 10.2345 );
       assert( eq(oslSi.getColUpper()[4],10.2345) );
 

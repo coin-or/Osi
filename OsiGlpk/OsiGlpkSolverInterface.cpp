@@ -1811,7 +1811,10 @@ OsiGlpkSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
 	// Could be in OsiSolverInterfaceImpl.
   // Actually, this could not.  I needed to add a glpk call below in case 
   // rows are present but have no nonzero coefficients.
-	freeCachedData( OsiGlpkSolverInterface::KEEPCACHED_NONE );
+  // JJF - If model exists then this adds! so I have added guts
+  gutsOfDestructor();
+  gutsOfConstructor();
+  //freeCachedData( OsiGlpkSolverInterface::KEEPCACHED_NONE );
 
 	double inf = getInfinity();
 
@@ -2164,13 +2167,63 @@ void OsiGlpkSolverInterface::applyColCut( const OsiColCut & cc )
 	const CoinPackedVector & lbs = cc.lbs();
 	const CoinPackedVector & ubs = cc.ubs();
 	int i;
-
+#if 0
+        // replaced (JJF) because colLb and colUb are invalidated by sets
 	for( i = 0; i < lbs.getNumElements(); ++i )
 		if( lbs.getElements()[i] > colLb[lbs.getIndices()[i]] )
 			setColLower( lbs.getIndices()[i], lbs.getElements()[i] );
 		for( i = 0; i < ubs.getNumElements(); ++i )
 			if( ubs.getElements()[i] < colUb[ubs.getIndices()[i]] )
 				setColUpper( ubs.getIndices()[i], ubs.getElements()[i] );
+#else
+	double inf = getInfinity();
+
+	int type;
+        // lower bounds
+	for( i = 0; i < lbs.getNumElements(); ++i ) {
+          int column = lbs.getIndices()[i];
+          double lower = lbs.getElements()[i];
+          double upper = colUb[column];
+          if( lower > colLb[column] ) {
+            // update cached version as well
+            collower_[column] = lower;
+            if( lower == upper )
+              type = LPX_FX;
+            else if( lower > -inf && upper < inf )
+              type = LPX_DB;
+            else if( lower > -inf )
+              type = LPX_LO;
+            else if( upper < inf)
+              type = LPX_UP;
+            else
+              type = LPX_FR;
+            
+            lpx_set_col_bnds( getMutableModelPtr(), column+1, type, lower, upper );
+          }
+        }
+        // lower bounds
+	for( i = 0; i < ubs.getNumElements(); ++i ) {
+          int column = ubs.getIndices()[i];
+          double upper = ubs.getElements()[i];
+          double lower = colLb[column];
+          if( upper < colUb[column] ) {
+            // update cached version as well
+            colupper_[column] = upper;
+            if( lower == upper )
+              type = LPX_FX;
+            else if( lower > -inf && upper < inf )
+              type = LPX_DB;
+            else if( lower > -inf )
+              type = LPX_LO;
+            else if( upper < inf)
+              type = LPX_UP;
+            else
+              type = LPX_FR;
+            
+            lpx_set_col_bnds( getMutableModelPtr(), column+1, type, lower, upper );
+          }
+        }
+#endif
 }
 
 //-----------------------------------------------------------------------------

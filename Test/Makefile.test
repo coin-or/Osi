@@ -109,6 +109,11 @@ IncDir +=  $(lapackIncDir)
 LibDir +=  $(lapackLibDir)
 LibName += $(lapackLibName)
 Define +=  $(lapackDefine)
+#add glpk again so it is after Coin
+ifneq ($(filter COIN_libOsiGlpk,$(CoinLibsDefined)),)
+    LibDir  += ${GlpkLibDir}
+    LibName += ${GlpkLibName}
+endif
 
 TESTSRC += OsiColCutTest.cpp
 TESTSRC += OsiCutsTest.cpp

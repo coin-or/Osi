@@ -893,7 +893,48 @@ int OsiSolverInterface::readMps(const char * filename,
   }
   return numberErrors;
 }
-/* Read a problem in MPS format from the given full filename.
+/* Read a problem in GMPL format from the given filenames.
+   
+Will only work if glpk installed
+*/
+int 
+OsiSolverInterface::readGMPL(const char *filename, const char * dataname)
+{
+  CoinMpsIO m;
+  m.setInfinity(getInfinity());
+  
+  int numberErrors = m.readGMPL(filename,dataname,false);
+  handler_->message(COIN_SOLVER_MPS,messages_)
+    <<m.getProblemName()<< numberErrors <<CoinMessageEol;
+  if (!numberErrors) {
+
+    // set objective function offest
+    setDblParam(OsiObjOffset,m.objectiveOffset());
+
+    // set problem name
+    setStrParam(OsiProbName,m.getProblemName());
+
+    // no errors
+    loadProblem(*m.getMatrixByCol(),m.getColLower(),m.getColUpper(),
+		m.getObjCoefficients(),m.getRowSense(),m.getRightHandSide(),
+		m.getRowRange());
+    const char * integer = m.integerColumns();
+    if (integer) {
+      int i,n=0;
+      int nCols=m.getNumCols();
+      int * index = new int [nCols];
+      for (i=0;i<nCols;i++) {
+	if (integer[i]) {
+	  index[n++]=i;
+	}
+      }
+      setInteger(index,n);
+      delete [] index;
+    }
+  }
+  return numberErrors;
+}
+ /* Read a problem in MPS format from the given full filename.
    
 This uses CoinMpsIO::readMps() to read
 the MPS file and returns the number of errors encountered.

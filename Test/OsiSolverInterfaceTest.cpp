@@ -578,9 +578,11 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   // Determine if this is the emptySi is an OsiVoSolverInterface
   bool volSolverInterface = false;
   {
+#ifdef COIN_USE_VOL
     const OsiVolSolverInterface * vsi =
       dynamic_cast<const OsiVolSolverInterface *>(emptySi);
     if ( vsi != NULL ) volSolverInterface = true;
+#endif
   }
 
   // Test that solverInterface knows about constants
@@ -1262,6 +1264,69 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 	  }
 	}
           
+	delete si;
+      }
+      // Test adding rows to NULL
+      {
+	OsiSolverInterface *  si = emptySi->clone();
+	int i;
+
+	//Matrix
+	int column[]={0,1,2};
+	double row1E[]={4.0,7.0,5.0};
+	double row2E[]={7.0,4.0,5.0};
+	CoinPackedVector row1(3,column,row1E);
+	CoinPackedVector row2(3,column,row2E);
+
+	double objective[]={5.0,6.0,5.5};
+
+	// Add empty columns
+	for (i=0;i<3;i++) 
+	  si->addCol(CoinPackedVector(),0.0,10.0,objective[i]);
+
+	// Add rows
+	si->addRow(row1,2.0,100.0);
+	si->addRow(row2,2.0,100.0);
+
+	// solve
+	si->initialSolve();
+
+        CoinRelFltEq eq(1.0e-7) ;
+	assert (eq(si->getObjValue(),2.0));
+	
+	delete si;
+      }
+      // Test adding columns to NULL
+      {
+	OsiSolverInterface *  si = emptySi->clone();
+	int i;
+
+	//Matrix
+	int row[]={0,1};
+	double col1E[]={4.0,7.0};
+	double col2E[]={7.0,4.0};
+	double col3E[]={5.0,5.0};
+	CoinPackedVector col1(2,row,col1E);
+	CoinPackedVector col2(2,row,col2E);
+	CoinPackedVector col3(2,row,col3E);
+
+	double objective[]={5.0,6.0,5.5};
+
+	// Add empty rows
+	for (i=0;i<2;i++) 
+	  si->addRow(CoinPackedVector(),2.0,100.0);
+
+	// Add columns
+	si->addCol(col1,0.0,10.0,objective[0]);
+	si->addCol(col2,0.0,10.0,objective[1]);
+	si->addCol(col3,0.0,10.0,objective[2]);
+
+	// solve
+	si->initialSolve();
+
+        CoinRelFltEq eq(1.0e-7) ;
+	assert (eq(si->getObjValue(),2.0));
+	
 	delete si;
       }
     }

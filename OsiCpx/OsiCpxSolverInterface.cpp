@@ -457,9 +457,10 @@ bool OsiCpxSolverInterface::isProvenOptimal() const
   int stat = CPXgetstat( env_, getMutableLpPtr() );
 
 #if CPX_VERSION >= 800
-  return ((probtypemip_ == false && 
-	  (stat == CPX_STAT_OPTIMAL || stat == CPX_STAT_OPTIMAL_INFEAS)) ||
-	  probtypemip_ == true && stat == CPXMIP_OPTIMAL);
+  return ((probtypemip_ == false &&
+          (stat == CPX_STAT_OPTIMAL || stat == CPX_STAT_OPTIMAL_INFEAS))
+	  || (probtypemip_ == true &&
+          (stat == CPXMIP_OPTIMAL || stat == CPXMIP_OPTIMAL_TOL)));
 #else
   return ((probtypemip_ == false && 
 	  (stat == CPX_OPTIMAL || stat == CPX_OPTIMAL_INFEAS)) ||

@@ -60,21 +60,32 @@ void OsiClpSolverInterface::initialSolve()
   solver.setPrimalTolerance(1.0e-8);
   ClpPrimalColumnSteepest steepP;
   solver.setPrimalColumnPivotAlgorithm(steepP);
-#if 0
-  solver.dual();
-  basis_ = getBasis(&solver);
-  lastAlgorithm_=2; // dual
-#else
+  /*
+    If basis then do primal (as user could do dual with resolve)
+    If not then see if dual feasible (and allow for gubs etc?)
+   */
+  bool doPrimal = (basis_.numberBasicStructurals()>0);
   setBasis(basis_,&solver);
-  solver.primal();
+  if (!doPrimal) {
+    // look further
+    if (solver.crash(1.0,0)>0)
+      doPrimal=true;
+  }
+  if (!doPrimal) {
+    //printf("doing dual\n");
+    solver.dual();
+    lastAlgorithm_=2; // dual
+  } else {
+    //printf("doing primal\n");
+    solver.primal();
+    lastAlgorithm_=1; // primal
+  }
   basis_ = getBasis(&solver);
-  lastAlgorithm_=1; // primal
-#endif
   //basis_.print();
   solver.returnModel(*modelPtr_);
   time1 = cpuTime()-time1;
   totalTime += time1;
-  std::cout<<time1<<" seconds - total "<<totalTime<<std::endl;
+  //std::cout<<time1<<" seconds - total "<<totalTime<<std::endl;
 }
 //-----------------------------------------------------------------------------
 void OsiClpSolverInterface::resolve()

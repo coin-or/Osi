@@ -294,17 +294,16 @@ public:
       virtual void setColUpper( int elementIndex, double elementValue );
       
       /** Set a single column lower and upper bound<br>
-    	  The default implementation just invokes setColLower() and
-    	  setColUpper() */
+    	  The default implementation just invokes <code>setColLower()</code> and
+    	  <code>setColUpper()</code> */
       virtual void setColBounds( int elementIndex,
     				 double lower, double upper );
     
       /** Set the bounds on a number of columns simultaneously<br>
-    	  The default implementation just invokes setColLower() and
-    	  setColUpper() over and over again.
-    	  @param indexFirst,indexLast pointers to the beginning and after the
-	         end of the array of the indices of the variables whose
-		 <em>either</em> bound changes
+    	  The default implementation just invokes <code>setCollower()</code> and
+    	  <code>setColupper()</code> over and over again.
+    	  @param <code>[indexfirst,indexLast]</code> contains the indices of
+    	         the constraints whose </em>either</em> bound changes
     	  @param boundList the new lower/upper bound pairs for the variables
       */
       virtual void setColSetBounds(const int* indexFirst,
@@ -320,8 +319,8 @@ public:
       virtual void setRowUpper( int elementIndex, double elementValue );
     
       /** Set a single row lower and upper bound<br>
-    	  The default implementation just invokes setRowLower() and
-    	  setRowUpper() */
+    	  The default implementation just invokes <code>setRowLower()</code> and
+    	  <code>setRowUpper()</code> */
       virtual void setRowBounds( int elementIndex,
     				 double lower, double upper );
     
@@ -330,11 +329,10 @@ public:
     			      double range);
     
       /** Set the bounds on a number of rows simultaneously<br>
-    	  The default implementation just invokes setRowLower() and
-    	  setRowUpper() over and over again.
-    	  @param indexFirst,indexLast pointers to the beginning and after the
-	         end of the array of the indices of the constraints whose
-		 <em>either</em> bound changes
+    	  The default implementation just invokes <code>setRowLower()</code> and
+    	  <code>setRowUpper()</code> over and over again.
+    	  @param <code>[indexfirst,indexLast]</code> contains the indices of
+    	         the constraints whose </em>either</em> bound changes
     	  @param boundList the new lower/upper bound pairs for the constraints
       */
       virtual void setRowSetBounds(const int* indexFirst,
@@ -342,11 +340,10 @@ public:
     				   const double* boundList);
     
       /** Set the type of a number of rows simultaneously<br>
-    	  The default implementation just invokes setRowType()
+    	  The default implementation just invokes <code>setRowType()</code> and
     	  over and over again.
-    	  @param indexFirst,indexLast pointers to the beginning and after the
-	         end of the array of the indices of the constraints whose
-		 <em>any</em> characteristics changes
+    	  @param <code>[indexfirst,indexLast]</code> contains the indices of
+    	         the constraints whose type changes
     	  @param senseList the new senses
     	  @param rhsList   the new right hand sides
     	  @param rangeList the new ranges
@@ -552,12 +549,12 @@ public:
 			 const char *extension = "mps");
 
     /** Write the problem into an mps file of the given filename.
-     If objSense is non zero then -1.0 forces the code to write a
-    maximization objective and +1.0 to write a minimization one.
-    If 0.0 then solver can do what it wants */
+	If objSense is non zero then -1.0 forces the code to write a
+	maximization objective and +1.0 to write a minimization one.
+	If 0.0 then solver can do what it wants */
     virtual void writeMps(const char *filename,
 			  const char *extension = "mps",
-			  double objSense=0.0) const;
+                          double objSense=0.0) const;
   //@}
 
   //---------------------------------------------------------------------------

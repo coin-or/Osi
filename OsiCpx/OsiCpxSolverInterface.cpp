@@ -1853,32 +1853,6 @@ void OsiCpxSolverInterface::writeMps( const char * filename,
   checkCPXerror( err, "CPXwriteprob", "writeMps" );
 }
 
-//-----------------------------------------------------------------------------
-// Write lp files
-//-----------------------------------------------------------------------------
-
-void OsiCpxSolverInterface::writeLp( const char * filename,
-				     const char * extension ) const
-{
-  char filetype[4] = "LP";
-  std::string f(filename);
-  std::string e(extension);
-  std::string fullname = f + "." + e;
-  int err = CPXwriteprob( env_, getMutableLpPtr(), const_cast<char*>( fullname.c_str() ), filetype );
-  checkCPXerror( err, "CPXwriteprob", "writeLp" );
-}
-
-//############################################################################
-// My functions
-//############################################################################
-
-double * OsiCpxSolverInterface::getSlacks()
-{
-	double *slacks= new double[getNumRows()];
-	CPXgetslack(env_,getLpPtr(),slacks,0,getNumRows()-1);
-	return slacks;
-}
-
 //#############################################################################
 // CPX specific public interfaces
 //#############################################################################

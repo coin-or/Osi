@@ -409,6 +409,28 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
     expectedNumberColumns=86;
   }
 
+  // pp08a
+  else if ( modelL == "pp08a" ) {
+    probType=continuousWith0_1;
+    int intIndicesAt1[]={
+      177 ,179 ,181 ,183 ,185 ,190 ,193 ,195 ,197 ,199 ,
+      202 ,204 ,206 ,208 ,216 ,220 ,222 ,229 ,235 };
+    int numIndices = sizeof(intIndicesAt1)/sizeof(int);
+    intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=240;
+  }
+
+  // pp08aCUTS
+  else if ( modelL == "pp08acuts" ) {
+    probType=continuousWith0_1;
+    int intIndicesAt1[]={
+      177 ,179 ,181 ,183 ,185 ,190 ,193 ,195 ,197 ,199 ,
+      202 ,204 ,206 ,208 ,216 ,220 ,222 ,229 ,235 };
+    int numIndices = sizeof(intIndicesAt1)/sizeof(int);
+    intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=240;
+  }
+
   // danoint
   else if ( modelL == "danoint" ) {
     probType=continuousWith0_1;
@@ -602,6 +624,18 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
     expectedNumberColumns=160;
   }
 
+  // misc06
+  else if ( modelL == "misc06" ) {
+    probType=continuousWith0_1;
+    int intIndicesAt1[]={
+      1557 ,1560 ,1561 ,1580 ,1585 ,1588 ,1589 ,1614 ,1615 ,1616 ,
+      1617 ,1626 ,1630 ,1631 ,1642 ,1643 ,1644 ,1645 ,1650 ,1654 ,
+      1658 ,1659 };
+    int numIndices = sizeof(intIndicesAt1)/sizeof(int);
+    intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=1808;
+  }
+
   // misc07
   else if ( modelL == "misc07" ) {
     probType=continuousWith0_1;
@@ -610,6 +644,15 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
     int numIndices = sizeof(intIndicesAt1)/sizeof(int);
     intSoln.setConstant(numIndices,intIndicesAt1,1.0);
     expectedNumberColumns=260;
+  }
+
+  // rgn
+  else if ( modelL == "rgn" ) {
+    probType=continuousWith0_1;
+    int intIndicesAt1[]={16 ,49 ,72 ,92 };
+    int numIndices = sizeof(intIndicesAt1)/sizeof(int);
+    intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=180;
   }
 
   // mitre
@@ -675,6 +718,61 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
     int vecLen = sizeof(intIndicesV)/sizeof(int);
     intSoln.setVector(vecLen,intIndicesV,intSolnV);
     expectedNumberColumns=870;
+  }
+
+  // noswot
+  else if ( modelL == "noswot" ) {
+    probType=generalMip;
+    int intIndicesV[]={};
+    double intSolnV[]={};
+    int vecLen = sizeof(intIndicesV)/sizeof(int);
+    intSoln.setVector(vecLen,intIndicesV,intSolnV);
+    expectedNumberColumns=128;
+  }
+
+
+  // qnet1
+  else if ( modelL == "qnet1" ) {
+    probType=generalMip;
+    int intIndicesV[]={
+      61 ,69 ,79 ,81 ,101 ,104 ,111 ,115 ,232 ,265 ,
+      267 ,268 ,269 ,285 ,398 ,412 ,546 ,547 ,556 ,642 ,
+      709 ,718 ,721 ,741 ,760 ,1073 ,1077 ,1084 ,1097 ,1100 ,
+      1104 ,1106 ,1109 ,1248 ,1259 ,1260 ,1263 ,1265 ,1273 ,1274 ,
+      1276 ,1286 ,1291 ,1302 ,1306 ,1307 ,1316 ,1350 ,1351 ,1363 ,
+      1366 ,1368 ,1371 ,1372 ,1380 ,1381 ,1385 ,1409 };
+    double intSolnV[]={
+      1. ,1. ,1. ,1. ,1. ,1. ,1. ,1. ,1. ,1. ,
+      1. ,1. ,1. ,1. ,1. ,1. ,1. ,1. ,1. ,1. ,
+      1. ,1. ,1. ,1. ,1. ,1. ,1. ,1. ,1. ,1. ,
+      1. ,1. ,1. ,1. ,2. ,1. ,1. ,1. ,1. ,3. ,
+      1. ,2. ,1. ,1. ,1. ,1. ,6. ,3. ,1. ,1. ,
+      5. ,2. ,1. ,2. ,2. ,1. ,2. ,1. };
+    int vecLen = sizeof(intIndicesV)/sizeof(int);
+    intSoln.setVector(vecLen,intIndicesV,intSolnV);
+    expectedNumberColumns=1541;
+  }
+
+  // qnet1_o (? marginally different from qnet1)
+  else if ( modelL == "qnet1_o" ) {
+    probType=generalMip;
+    int intIndicesV[]={
+      61 ,69 ,79 ,81 ,101 ,106 ,111 ,114 ,115 ,232 ,
+      266 ,267 ,268 ,269 ,277 ,285 ,398 ,412 ,546 ,547 ,
+      556 ,642 ,709 ,718 ,721 ,741 ,760 ,1073 ,1077 ,1084 ,
+      1097 ,1100 ,1104 ,1106 ,1109 ,1248 ,1259 ,1260 ,1263 ,1265 ,
+      1273 ,1274 ,1276 ,1286 ,1291 ,1302 ,1306 ,1307 ,1316 ,1350 ,
+      1351 ,1363 ,1366 ,1368 ,1371 ,1372 ,1380 ,1381 ,1385 ,1409 };
+    double intSolnV[]={
+      1. ,1. ,1. ,1. ,1. ,1. ,1. ,1. ,1. ,1. ,
+      1. ,1. ,1. ,1. ,1. ,1. ,1. ,1. ,1. ,1. ,
+      1. ,1. ,1. ,1. ,1. ,1. ,1. ,1. ,1. ,1. ,
+      1. ,1. ,1. ,1. ,1. ,1. ,2. ,1. ,1. ,1. ,
+      1. ,3. ,1. ,2. ,1. ,1. ,1. ,1. ,6. ,3. ,
+      1. ,1. ,5. ,2. ,1. ,2. ,2. ,1. ,2. ,1. };
+    int vecLen = sizeof(intIndicesV)/sizeof(int);
+    intSoln.setVector(vecLen,intIndicesV,intSolnV);
+    expectedNumberColumns=1541;
   }
 
   // gt2

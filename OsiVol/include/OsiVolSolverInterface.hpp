@@ -115,6 +115,14 @@ public:
   //---------------------------------------------------------------------------
   /**@name WarmStart related methods */
   //@{
+    /*! \brief Get an empty warm start object
+      
+      This routine returns an empty warm start object. Its purpose is
+      to provide a way to give a client a warm start object of the
+      appropriate type, which can resized and modified as desired.
+    */
+    virtual CoinWarmStart *getEmptyWarmStart () const ;
+
     /// Get warmstarting information
     virtual CoinWarmStart* getWarmStart() const;
     /** Set warmstarting information. Return true/false depending on whether

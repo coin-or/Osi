@@ -733,8 +733,8 @@ int OsiFactorization::updateColumn ( OsiIndexedVector * regionSparse,
 void
 OsiFactorization::goSparse ( )
 {
-  if (!sparseThreshold_)
-    sparseThreshold_=(numberRows_+9)/10;
+  if (!sparseThreshold_&&numberRows_>400)
+    sparseThreshold_=(numberRows_-300)/7;
   //sparseThreshold_=99999;
   // allow for stack, list, next and char map of mark
   int nRowIndex = (maximumRowsExtra_+sizeof(int)-1)/

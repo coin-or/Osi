@@ -76,7 +76,7 @@ void OsiOslSolverInterface::resolve()
 #if 0
   ekk_dualSimplex(model); // *FIXME* : why not 0 (eitherSimplex)
 #else
-  ekk_simplex(model, 0);
+  ekk_simplex(model, 256 + 32); // no presolve and no scaling
 #endif
 }
 //-----------------------------------------------------------------------------
@@ -289,20 +289,6 @@ bool OsiOslSolverInterface::isPrimalObjectiveLimitReached() const
      return maxmin > 0 ? (obj < limit) /*minim*/ : (obj > limit) /*maxim*/;
   }
   return false; // fake return
-}
-  EKKModel* model = getMutableModelPtr();
-  if (ekk_lastAlgorithm(model) == 2) // dual simplex
-    return false;
-
-  double limit = 0.0;
-  OsiSolverInterface::getDblParam(OsiPrimalObjectiveLimit, limit);
-  if (limit == DBL_MAX) {
-    // was not ever set
-    return false;
-  }
-  const double obj = ekk_getRobjvalue(model);
-  const double maxmin = ekk_getRmaxmin(model);
-  return maxmin > 0 ? (obj < limit) /*minim*/ : (obj > limit) /*maxim*/;
 }
 
 bool OsiOslSolverInterface::isDualObjectiveLimitReached() const

@@ -10,6 +10,7 @@
 #include <numeric>
 #include <cassert>
 #include <cstdio>
+#include <iostream>
 
 #include "CoinSort.hpp"
 #include "CoinHelperFunctions.hpp"
@@ -311,6 +312,23 @@ OsiPackedMatrix::deleteRows(const int numDel, const int * indDel)
 }
 
 //#############################################################################
+/* Replace the elements of a vector.  The indices remain the same.
+   At most the number specified will be replaced.
+   The index is between 0 and major dimension of matrix */
+void 
+OsiPackedMatrix::replaceVector(const int index,
+			       const int numReplace, 
+			       const double * newElements)
+{
+  if (index >= 0 && index < majorDim_) {
+    int length = (length_[index] < numReplace) ? length_[index] : numReplace;
+    CoinDisjointCopyN(newElements, length, element_ + start_[index]);
+  } else {
+#ifdef OSI_DEBUG
+    throw CoinError("bad index", "replaceVector", "OsiPackedMatrix");
+#endif
+  }
+}
 //#############################################################################
 
 void

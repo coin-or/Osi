@@ -205,6 +205,12 @@ public:
     void deleteCols(const int numDel, const int * indDel);
     /** Delete the rows whose indices are listed in <code>indDel</code>. */
     void deleteRows(const int numDel, const int * indDel);
+
+    /** Replace the elements of a vector.  The indices remain the same.
+	At most the number specified will be replaced.
+        The index is between 0 and major dimension of matrix */
+    void replaceVector(const int index,
+		       const int numReplace, const double * newElements);
   //@}
 
   //---------------------------------------------------------------------------

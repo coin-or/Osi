@@ -54,6 +54,17 @@ void OsiOslSolverInterface::initialSolve()
 {
   EKKModel* model = getMutableModelPtr();
   int rtcod;
+  // Switch off printing if asked to
+  bool takeHint;
+  OsiHintStrength strength;
+  bool gotHint = getHintParam(OsiDoReducePrint,takeHint,strength);
+  assert(gotHint);
+  if (strength!=OsiHintIgnore&&takeHint) {
+    if (!messageHandler()->logLevel())
+      ekk_messagesPrintOff(model,1,5999);
+    else if (messageHandler()->logLevel()==1)
+      ekk_messagePrintOff(model,317);
+  }
 #if 0
   ekk_crash(model,1); 
   rtcod=ekk_primalSimplex(model,1);
@@ -83,7 +94,7 @@ void OsiOslSolverInterface::resolve()
   assert(gotHint);
   if (strength!=OsiHintIgnore&&takeHint) {
     if (!messageHandler()->logLevel())
-      ekk_messagesPrintOff(model,1,5000);
+      ekk_messagesPrintOff(model,1,5999);
     else if (messageHandler()->logLevel()==1)
       ekk_messagePrintOff(model,317);
   }
@@ -990,7 +1001,11 @@ OsiOslSolverInterface::setRowSetTypes(const int* indexFirst,
   if (indexLast - indexFirst < numrows / 16) {
     // It's probably more effective to invoke setRowType() iteratively
     while (indexFirst != indexLast) {
-      setRowType(*indexFirst++, *senseList++, *rhsList++, *rangeList++);
+      if (rangeList){
+	setRowType(*indexFirst++, *senseList++, *rhsList++, *rangeList++);
+      } else {
+	setRowType(*indexFirst++, *senseList++, *rhsList++, 0);
+      }	
     }
   } else {
     // probably faster to set everything at once
@@ -1000,20 +1015,27 @@ OsiOslSolverInterface::setRowSetTypes(const int* indexFirst,
     const int len = indexLast - indexFirst;
     while (indexFirst != indexLast) {
       const int iRow= *indexFirst++;
-      convertSenseToBound(*senseList++, *rhsList++, *rangeList++,
-			  lower[iRow], upper[iRow]);
+      if (rangeList){
+	convertSenseToBound(*senseList++, *rhsList++, *rangeList++,
+			    lower[iRow], upper[iRow]);
+      } else {
+	convertSenseToBound(*senseList++, *rhsList++, 0,
+			    lower[iRow], upper[iRow]);
+      }
     }
     if (rowsense_ != NULL) {
       assert ((rhs_ != NULL) && (rowrange_ != NULL));
       indexFirst -= len;
       senseList -= len;
       rhsList -= len;
-      rangeList -= len;
+      if (rangeList)
+	rangeList -= len;
       while (indexFirst != indexLast) {
 	const int iRow=*indexFirst++;
 	rowsense_[iRow] = *senseList++;
 	rhs_[iRow] = *rhsList++;
-	rowrange_[iRow] = *rangeList++;
+	if (rangeList)
+	  rowrange_[iRow] = *rangeList++;
       }
     }
     ekk_setRowlower(model, lower);
@@ -1413,9 +1435,9 @@ EKKModel * OsiOslSolverInterface::getModelPtr()
 void OsiOslSolverInterface::incrementInstanceCounter()
 {
   if ( numInstances_ == 0 ) {
-    //ekk_messagesPrintOff(NULL ,1,2999);
     contextPtr_ = ekk_initializeContext();
     assert( contextPtr_ != NULL );    
+    ekk_messagesPrintOff(ekk_baseModel(contextPtr_), 1, 5999);
     //FILE *oslMesgFILE = fopen("osl.log","a+");    
     //ekk_setLogfileFilePointer(ekk_baseModel(contextPtr_),stderr );    
     //ekk_messagesPrintOn(NULL ,1,2999);

@@ -114,6 +114,9 @@ void OsiClpSolverInterface::initialSolve()
     // change from 200 (unless changed)
     if (model2->factorization()->maximumPivots()==200)
       model2->factorization()->maximumPivots(100+model2->numberRows()/50);
+    int savePerturbation = model2->perturbation();
+    if (savePerturbation==100)
+      model2->setPerturbation(50);
     if (!doPrimal) {
       // faster if bounds tightened
       //int numberInfeasibilities = model2->tightenPrimalBounds();
@@ -154,6 +157,7 @@ void OsiClpSolverInterface::initialSolve()
 	model2->dual();
       }
     }
+    model2->setPerturbation(savePerturbation);
     if (model2!=&solver) {
       pinfo.postsolve(true);
     

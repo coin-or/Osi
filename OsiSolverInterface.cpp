@@ -361,8 +361,8 @@ const OsiRowCutDebugger * OsiSolverInterface::getRowCutDebugger() const
 // Default Constructor 
 //-------------------------------------------------------------------
 OsiSolverInterface::OsiSolverInterface () :
-  appData_(NULL), 
   rowCutDebugger_(NULL),
+  appData_(NULL), 
   ws_(NULL),
   handler_(NULL),
   defaultHandler_(true)
@@ -409,8 +409,8 @@ OsiSolverInterface::setInitialData()
 // Copy constructor 
 //-------------------------------------------------------------------
 OsiSolverInterface::OsiSolverInterface (const OsiSolverInterface & rhs) :
-  appData_(rhs.appData_),
   rowCutDebugger_(NULL),
+  appData_(rhs.appData_),
   ws_(NULL),
   defaultHandler_(true)
 {  

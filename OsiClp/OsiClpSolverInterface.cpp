@@ -355,6 +355,8 @@ void OsiClpSolverInterface::resolve()
   if (saveSolveType==2) {
     disableSimplexInterface();
   }
+  int saveOptions = modelPtr_->specialOptions();
+  modelPtr_->setSpecialOptions(saveOptions|64); // go as far as possible
   //modelPtr_->setSolveType(1);
   // Set message handler to have same levels etc
   bool oldDefault;
@@ -486,6 +488,7 @@ void OsiClpSolverInterface::resolve()
     enableSimplexInterface(doingPrimal);
   }
   //modelPtr_->setSolveType(saveSolveType);
+  modelPtr_->setSpecialOptions(saveOptions); // restore
 #endif
 }
 #ifndef NDEBUG
@@ -1705,8 +1708,12 @@ OsiClpSolverInterface::readMps(const char *filename,
       info[i]=0;
     }
   }
-  if (numberIntegers)
+  if (numberIntegers) {
     modelPtr_->copyInIntegerInformation(info);
+    integerInformation_ = new char[numberColumns];
+    memcpy(integerInformation_,info,
+	   numberColumns*sizeof(char));
+  }
   delete [] info;
   return numberErrors;
 }

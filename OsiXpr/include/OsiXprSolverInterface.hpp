@@ -10,6 +10,7 @@
 
 #include "OsiSolverInterface.hpp"
 //#include "CoinPackedVector.hpp"
+#include "CoinWarmStartBasis.hpp"
 
 
 //#############################################################################

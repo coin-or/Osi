@@ -974,6 +974,95 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     delete &m1;
   }
 
+  // Test column type methods
+  if ( volSolverInterface ) {
+     // Test for vol since it does not support this function
+     failureMessage(solverName,"column type methods all report continuous");
+  }
+  else {
+    OsiSolverInterface & fim = *(emptySi->clone());
+    std::string fn = mpsDir+"exmip1";
+    fim.readMps(fn.c_str(),"mps");
+    // exmip1.mps has 2 integer variables with index 2 & 3
+    assert(  fim.isContinuous(0) );
+    assert(  fim.isContinuous(1) );
+    assert( !fim.isContinuous(2) );
+    assert( !fim.isContinuous(3) );
+    assert(  fim.isContinuous(4) );
+    
+    assert( !fim.isInteger(0) );
+    assert( !fim.isInteger(1) );
+    assert(  fim.isInteger(2) );
+    assert(  fim.isInteger(3) );
+    assert( !fim.isInteger(4) );
+    
+    assert( !fim.isBinary(0) );
+    assert( !fim.isBinary(1) );
+    assert(  fim.isBinary(2) );
+    assert(  fim.isBinary(3) );
+    assert( !fim.isBinary(4) );
+    
+    assert( !fim.isIntegerNonBinary(0) );
+    assert( !fim.isIntegerNonBinary(1) );
+    assert( !fim.isIntegerNonBinary(2) );
+    assert( !fim.isIntegerNonBinary(3) );
+    assert( !fim.isIntegerNonBinary(4) );
+    
+    // Test fractionalIndices
+    if ( dylpSolverInterface ) {
+      // Test for dylp since it does not support setting column solution
+      failureMessage(solverName,"getFractionalIndices");
+    }
+    else if ( glpkSolverInterface ) {
+      // Test for glpk since it does not support setting column solution
+      failureMessage(solverName,"getFractionalIndices");
+    }
+    else {
+      double sol[]={1.0, 2.0, 2.9, 3.0, 4.0};
+      fim.setColSolution(sol);
+      OsiVectorInt fi = fim.getFractionalIndices(1e-5);
+      assert( fi.size() == 1 );
+      assert( fi[0]==2 );
+      
+      // Set integer variables very close to integer values
+      sol[2]=5 + .00001/2.;
+      sol[3]=8 - .00001/2.;
+      fim.setColSolution(sol);
+      fi = fim.getFractionalIndices(1e-5);
+      assert( fi.size() == 0 );
+      
+      // Set integer variables close, but beyond tolerances
+      sol[2]=5 + .00001*2.;
+      sol[3]=8 - .00001*2.;
+      fim.setColSolution(sol);
+      fi = fim.getFractionalIndices(1e-5);
+      assert( fi.size() == 2 );
+      assert( fi[0]==2 );
+      assert( fi[1]==3 );
+    }
+    
+    // Change data so column 2 & 3 are integerNonBinary
+    fim.setColUpper(2,5.0);
+    fim.setColUpper(3,6.0);
+    assert( !fim.isBinary(0) );
+    assert( !fim.isBinary(1) );
+    if( fim.isBinary(2) )
+      failureMessage(solverName,"isBinary or setColUpper");
+    if( fim.isBinary(3) )
+      failureMessage(solverName,"isBinary or setColUpper");
+    assert( !fim.isBinary(4) );
+    
+    assert( !fim.isIntegerNonBinary(0) );
+    assert( !fim.isIntegerNonBinary(1) );
+    if( !fim.isIntegerNonBinary(2) )
+      failureMessage(solverName,"isIntegerNonBinary or setColUpper");
+    if( !fim.isIntegerNonBinary(3) )
+      failureMessage(solverName,"isIntegerNonBinary or setColUpper");
+    assert( !fim.isIntegerNonBinary(4) );
+    
+    delete &fim;
+  }
+
     
   // Test load and assign problem
   {   

@@ -988,6 +988,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
       // make sure all slack basis
       //CoinWarmStartBasis allSlack;
       //siCopy->setWarmStart(&allSlack);
+      siCopy->setHintParam(OsiDoScale,false);
       siCopy->initialSolve();
 #if 0
       for ( c=0; c<siCopy->getNumCols(); c++ ) {

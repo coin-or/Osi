@@ -53,11 +53,18 @@ public:
 
      Returns a basis status of the structural/artificial variables 
      At present as warm start i.e 0 free, 1 basic, 2 upper, 3 lower
+
+     NOTE  artificials are treated as +1 elements so for <= rhs
+     artificial will be at lower bound if constraint is tight
   */
   virtual void getBasisStatus(int* cstat, int* rstat) = 0;
 
   /** Set the status of structural/artificial variables and
-      factorize, update solution etc */
+      factorize, update solution etc 
+
+     NOTE  artificials are treated as +1 elements so for <= rhs
+     artificial will be at lower bound if constraint is tight
+  */
   virtual int setBasisStatus(const int* cstat, const int* rstat) = 0;
 
   /** Perform a pivot by substituting a colIn for colOut in the basis. 

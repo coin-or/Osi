@@ -1757,15 +1757,17 @@ OsiClpSolverInterface::getBasis(ClpSimplex * model) const
   basis.setSize(numberColumns,numberRows);
 
   if (model->statusExists()) {
-    int lookup[]={0,1,2,3,0,3};
+    // Flip slacks
+    int lookupA[]={0,1,3,2,0,2};
     for (iRow=0;iRow<numberRows;iRow++) {
       int iStatus = model->getRowStatus(iRow);
-      iStatus = lookup[iStatus];
+      iStatus = lookupA[iStatus];
       basis.setArtifStatus(iRow,(CoinWarmStartBasis::Status) iStatus);
     }
+    int lookupS[]={0,1,2,3,0,3};
     for (iColumn=0;iColumn<numberColumns;iColumn++) {
       int iStatus = model->getColumnStatus(iColumn);
-      iStatus = lookup[iStatus];
+      iStatus = lookupS[iStatus];
       basis.setStructStatus(iColumn,(CoinWarmStartBasis::Status) iStatus);
     }
   }
@@ -1794,9 +1796,12 @@ OsiClpSolverInterface::setBasis ( const CoinWarmStartBasis & basis,
   basis2.resize(numberRows,numberColumns);
   // move status
   model->createStatus();
+  // For rows lower and upper are flipped
   for (iRow=0;iRow<numberRows;iRow++) {
-    model->setRowStatus(iRow,
-		 (ClpSimplex::Status) basis2.getArtifStatus(iRow));
+    int stat = basis2.getArtifStatus(iRow);
+    if (stat>1)
+      stat = 5 - stat; // so 2->3 and 3->2
+    model->setRowStatus(iRow, (ClpSimplex::Status) stat);
   }
   for (iColumn=0;iColumn<numberColumns;iColumn++) {
     model->setColumnStatus(iColumn,
@@ -2151,12 +2156,14 @@ OsiClpSolverInterface::getBasisStatus(int* cstat, int* rstat)
 {
   int i, n;
   n=modelPtr_->numberRows();
-  int lookup[]={0,1,2,3,0,3};
+  // Flip slacks
+  int lookupA[]={0,1,3,2,0,2};
   for (i=0;i<n;i++) 
-    rstat[i] = lookup[modelPtr_->getRowStatus(i)];
+    rstat[i] = lookupA[modelPtr_->getRowStatus(i)];
   n=modelPtr_->numberColumns();
+  int lookupS[]={0,1,2,3,0,3};
   for (i=0;i<n;i++)
-    cstat[i] = lookup[modelPtr_->getColumnStatus(i)];
+    cstat[i] = lookupS[modelPtr_->getColumnStatus(i)];
 }
 
 //Set the status of structural/artificial variables 
@@ -2170,8 +2177,10 @@ OsiClpSolverInterface::setBasisStatus(const int* cstat, const int* rstat)
   lower = modelPtr_->rowLower();
   upper = modelPtr_->rowUpper();
   solution = modelPtr_->primalRowSolution();
+  // For rows lower and upper are flipped
+  int lookupA[]={0,1,3,2};
   for (i=0;i<n;i++) {
-    int status = rstat[i];
+    int status = lookupA[rstat[i]];
     if (status<0||status>3)
       status = 3;
     if (lower[i]<-1.0e50&&upper[i]>1.0e50&&status!=1)

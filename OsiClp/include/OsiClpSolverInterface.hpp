@@ -89,11 +89,24 @@ public:
 
      Returns a basis status of the structural/artificial variables 
      At present as warm start i.e 0 free, 1 basic, 2 upper, 3 lower
-  */
+ 
+     NOTE  artificials are treated as +1 elements so for <= rhs
+     artificial will be at lower bound if constraint is tight
+
+     This means that Clpsimplex flips artificials as it works
+     in terms of row activities
+ */
   virtual void getBasisStatus(int* cstat, int* rstat);
 
   /** Set the status of structural/artificial variables and
-      factorize, update solution etc */
+      factorize, update solution etc 
+
+     NOTE  artificials are treated as +1 elements so for <= rhs
+     artificial will be at lower bound if constraint is tight
+
+     This means that Clpsimplex flips artificials as it works
+     in terms of row activities
+  */
   virtual int setBasisStatus(const int* cstat, const int* rstat);
 
   /** Perform a pivot by substituting a colIn for colOut in the basis. 
@@ -750,10 +763,25 @@ protected:
 
     ///
     void fillParamMaps();
-    /// Warm start
+  /** Warm start
+
+     NOTE  artificials are treated as +1 elements so for <= rhs
+     artificial will be at lower bound if constraint is tight
+
+     This means that Clpsimplex flips artificials as it works
+     in terms of row activities
+  */
     CoinWarmStartBasis getBasis(ClpSimplex * model) const;
-    /// Sets up working basis as a copy of input
+  /** Sets up working basis as a copy of input
+  
+     NOTE  artificials are treated as +1 elements so for <= rhs
+     artificial will be at lower bound if constraint is tight
+
+     This means that Clpsimplex flips artificials as it works
+     in terms of row activities
+  */
     void setBasis( const CoinWarmStartBasis & basis, ClpSimplex * model);
+
   //@}
   
   /**@name Protected member data */

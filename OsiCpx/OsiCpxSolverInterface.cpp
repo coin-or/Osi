@@ -1204,7 +1204,8 @@ std::vector<double*> OsiCpxSolverInterface::getDualRays(int maxNumRays) const
    const int numcols = getNumCols();
    const int numrows = getNumRows();
    int* index = new int[CoinMax(numcols,numrows)];
-   for (int i = CoinMax(numcols,numrows)-1; i >= 0; --i) {
+   int i;
+   for ( i = CoinMax(numcols,numrows)-1; i >= 0; --i) {
       index[i] = i;
    }
    double* obj = new double[CoinMax(numcols,2*numrows)];
@@ -1221,7 +1222,7 @@ std::vector<double*> OsiCpxSolverInterface::getDualRays(int maxNumRays) const
    const CoinPackedVectorBase** cols =
       new const CoinPackedVectorBase*[2*numrows];
    int newcols = 0;
-   for (int i = 0; i < numrows; ++i) {
+   for (i = 0; i < numrows; ++i) {
       switch (sense[i]) {
       case 'L':
 	 cols[newcols++] =
@@ -1258,7 +1259,7 @@ std::vector<double*> OsiCpxSolverInterface::getDualRays(int maxNumRays) const
 
    const double* solverpi = getRowPrice();
    double* pi = new double[numrows];
-   for (int i = numrows - 1; i >= 0; --i) {
+   for ( i = numrows - 1; i >= 0; --i) {
       pi[i] = -solverpi[i];
    }
    return std::vector<double*>(1, pi);

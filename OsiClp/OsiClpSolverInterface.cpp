@@ -79,6 +79,11 @@ void OsiClpSolverInterface::initialSolve()
    */
   bool doPrimal = (basis_.numberBasicStructurals()>0);
   setBasis(basis_,&solver);
+  // Allow for specialOptions_==1+8 forcing saving factorization
+  int startFinishOptions=0;
+  if (specialOptions_==(1+8)) {
+    startFinishOptions =1+2+4; // allow re-use of factorization
+  }
 
   // sort out hints;
   // algorithm 0 whatever, -1 force dual, +1 force primal
@@ -136,7 +141,7 @@ void OsiClpSolverInterface::initialSolve()
       //       <<std::endl;
       // up dual bound for safety
       //model2->setDualBound(1.0e11);
-      model2->dual();
+      model2->dual(0);
       // check if clp thought it was in a loop
       if (model2->status()==3&&
 	  model2->numberIterations()<model2->maximumIterations()) {
@@ -146,7 +151,7 @@ void OsiClpSolverInterface::initialSolve()
     } else {
       // up infeasibility cost for safety
       //model2->setInfeasibilityCost(1.0e10);
-      model2->primal();
+      model2->primal(0);
       // check if clp thought it was in a loop
       if (model2->status()==3
 	  &&model2->numberIterations()<model2->maximumIterations()) {
@@ -178,22 +183,22 @@ void OsiClpSolverInterface::initialSolve()
       doPrimal=true;
     if (!doPrimal) {
       //printf("doing dual\n");
-      solver.dual();
+      solver.dual(0);
       lastAlgorithm_=2; // dual
       // check if clp thought it was in a loop
       if (solver.status()==3&&solver.numberIterations()<solver.maximumIterations()) {
 	// switch algorithm
-	solver.primal();
+	solver.primal(0);
 	lastAlgorithm_=1; // primal
       }
     } else {
       //printf("doing primal\n");
-      solver.primal();
+      solver.primal(0);
       lastAlgorithm_=1; // primal
       // check if clp thought it was in a loop
       if (solver.status()==3&&solver.numberIterations()<solver.maximumIterations()) {
 	// switch algorithm
-	solver.dual();
+	solver.dual(0);
 	lastAlgorithm_=2; // dual
       }
     }
@@ -209,6 +214,8 @@ void OsiClpSolverInterface::initialSolve()
     solver.setColumnScale(NULL);
   }
   solver.returnModel(*modelPtr_);
+  if (startFinishOptions)
+    modelPtr_->dual(0,startFinishOptions);
   if (saveSolveType==2) {
     enableSimplexInterface(doingPrimal);
   }

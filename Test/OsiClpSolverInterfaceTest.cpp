@@ -1079,7 +1079,7 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     
     m.initialSolve();
     // Repeated stuff only in resolve
-    m.resolve();
+    // m.resolve(); (now in both (just for (3,0))
     
     //check that the tableau matches wolsey (B-1 A)
     // slacks in second part of binvA

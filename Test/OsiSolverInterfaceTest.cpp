@@ -86,6 +86,16 @@ failureMessage(
   std::cerr <<messageText.c_str() <<std::endl;
 }
 
+static void
+failureMessage(
+               const OsiSolverInterface & si,
+               const std::string & message )
+{
+  std::string solverName;
+  si.getStrParam(OsiSolverName,solverName);
+  failureMessage(solverName,message);
+}
+
 //--------------------------------------------------------------------------
 // A helper function to compare the equivalence of two vectors 
 static bool
@@ -121,7 +131,185 @@ equivalentVectors(const OsiSolverInterface * si1,
 }
 
 //--------------------------------------------------------------------------
+bool test1VivianDeSmedt(OsiSolverInterface *s)
+{
+	bool ret = true;
 
+	double inf = s->getInfinity();
+
+	CoinPackedMatrix m;
+
+	m.transpose();
+
+	CoinPackedVector r0;
+	r0.insert(0, 2);
+	r0.insert(1, 1);
+	m.appendRow(r0);
+
+	CoinPackedVector r1;
+	r1.insert(0, 1);
+	r1.insert(1, 3);
+	m.appendRow(r1);
+
+	int numcol = 2;
+
+	double *obj = new double[numcol];
+	obj[0] = 3;
+	obj[1] = 1;
+
+	double *collb = new double[numcol];
+	collb[0] = 0;
+	collb[1] = 0;
+
+	double *colub = new double[numcol];
+	colub[0] = inf;
+	colub[1] = inf;
+
+	int numrow = 2;
+
+	double *rowlb = new double[numrow];
+	rowlb[0] = -inf;
+	rowlb[1] = -inf;
+
+	double *rowub = new double[numrow];
+	rowub[0] = 10;
+	rowub[1] = 15;
+
+	s->loadProblem(m, collb, colub, obj, rowlb, rowub);
+
+	delete [] obj;
+	delete [] collb;
+	delete [] colub;
+
+	delete [] rowlb;
+	delete [] rowub;
+
+	s->setObjSense(-1);
+
+	s->resolve();
+
+	ret = ret && s->isProvenOptimal();
+	ret = ret && !s->isProvenPrimalInfeasible();
+	ret = ret && !s->isProvenDualInfeasible();
+
+	const double solution1[] = {5, 0};
+	ret = ret && equivalentVectors(s,s,0.0001, s->getColSolution(), solution1, 2);
+
+	const double activity1[] = {10, 5};
+	ret = ret && equivalentVectors(s,s,0.0001, s->getRowActivity(), activity1, 2);
+
+	s->setObjCoeff(0, 1);
+	s->setObjCoeff(1, 1);
+
+	s->resolve();
+
+	ret = ret && s->isProvenOptimal();
+	ret = ret && !s->isProvenPrimalInfeasible();
+	ret = ret && !s->isProvenDualInfeasible();
+
+	const double solution2[] = {3, 4};
+	ret = ret && equivalentVectors(s,s,0.0001, s->getColSolution(), solution2, 2);
+
+	const double activity2[] = {10, 15};
+	ret = ret && equivalentVectors(s,s,0.0001, s->getRowActivity(), activity2, 2);
+
+	return ret;
+}
+
+//--------------------------------------------------------------------------
+bool test2VivianDeSmedt(OsiSolverInterface *s)
+{
+	bool ret = true;
+
+	double inf = s->getInfinity();
+
+	CoinPackedMatrix m;
+
+	m.transpose();
+
+	CoinPackedVector r0;
+	r0.insert(0, 2);
+	r0.insert(1, 1);
+	m.appendRow(r0);
+
+	CoinPackedVector r1;
+	r1.insert(0, 1);
+	r1.insert(1, 3);
+	m.appendRow(r1);
+
+	CoinPackedVector r2;
+	r2.insert(0, 1);
+	r2.insert(1, 1);
+	m.appendRow(r2);
+
+	int numcol = 2;
+
+	double *obj = new double[numcol];
+	obj[0] = 3;
+	obj[1] = 1;
+
+	double *collb = new double[numcol];
+	collb[0] = 0;
+	collb[1] = 0;
+
+	double *colub = new double[numcol];
+	colub[0] = inf;
+	colub[1] = inf;
+
+	int numrow = 3;
+
+	double *rowlb = new double[numrow];
+	rowlb[0] = -inf;
+	rowlb[1] = -inf;
+	rowlb[2] = 1;
+
+	double *rowub = new double[numrow];
+	rowub[0] = 10;
+	rowub[1] = 15;
+	rowub[2] = inf;
+
+	s->loadProblem(m, collb, colub, obj, rowlb, rowub);
+
+	delete [] obj;
+	delete [] collb;
+	delete [] colub;
+
+	delete [] rowlb;
+	delete [] rowub;
+
+	s->setObjSense(-1);
+
+	s->resolve();
+
+	ret = ret && s->isProvenOptimal();
+	ret = ret && !s->isProvenPrimalInfeasible();
+	ret = ret && !s->isProvenDualInfeasible();
+
+	const double solution1[] = {5, 0};
+	ret = ret && equivalentVectors(s,s,0.0001, s->getColSolution(), solution1, 2);
+
+	const double activity1[] = {10, 5, 5};
+	ret = ret && equivalentVectors(s,s,0.0001, s->getRowActivity(), activity1, 3);
+
+	s->setObjCoeff(0, 1);
+	s->setObjCoeff(1, 1);
+
+	s->resolve();
+
+	ret = ret && s->isProvenOptimal();
+	ret = ret && !s->isProvenPrimalInfeasible();
+	ret = ret && !s->isProvenDualInfeasible();
+
+	const double solution2[] = {3, 4};
+	ret = ret && equivalentVectors(s,s,0.0001, s->getColSolution(), solution2, 2);
+
+	const double activity2[] = {10, 15, 7};
+	ret = ret && equivalentVectors(s,s,0.0001, s->getRowActivity(), activity2, 3);
+
+  return ret;
+}
+
+//--------------------------------------------------------------------------
 
 /*! \brief Run solvers on NetLib problems.
 
@@ -2180,6 +2368,24 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     delete s;
   }
 
+  // Perform tests that are embodied in functions
+  if ( !volSolverInterface )
+  {
+    
+    typedef bool (*TestFunction)(OsiSolverInterface*);
+    std::vector<std::pair<TestFunction, const char*> > test_functions;
+    test_functions.push_back(std::pair<TestFunction, const char*>(&test1VivianDeSmedt, "test1VivianDeSmedt"));
+    test_functions.push_back(std::pair<TestFunction, const char*>(&test2VivianDeSmedt, "test2VivianDeSmedt"));
+    
+    int i;
+    for (i = 0; i < test_functions.size(); ++i) {	
+      OsiSolverInterface *s = emptySi->clone();;
+      bool test = test_functions[i].first(s);
+      if (!test)
+        failureMessage(*s, test_functions[i].second);
+      delete s;
+    }
+  }
   /*
     With this matrix we have a primal/dual infeas problem. Leaving the first
     row makes it primal feas, leaving the first col makes it dual feas.

@@ -306,5 +306,26 @@ OsiRowCutUnitTest(const OsiSolverInterface * baseSiP,
     assert( c1.consistent(*imP) );
     delete imP;
   }
+  {
+    //Test violation
+
+    double solution[]={1.0,1.0,1.0,2.0,2.0,2.0};
+    OsiRowCut cut;   
+    const int ne = 3;
+    int inx[ne] = { 3, 5, 4 };
+    double el[ne] = { 1., 1., 1. };
+    cut.setRow(ne,inx,el);
+    cut.setUb(5.);
+    assert( cut.violated(solution) );
+
+    cut.setLb(5.);
+    cut.setUb(10.);
+    assert( !cut.violated(solution) );
+
+    cut.setLb(6.1);
+    assert( cut.violated(solution) );
+
+
+  }
 }
 

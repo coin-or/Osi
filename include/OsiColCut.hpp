@@ -99,6 +99,11 @@ public:
 </ul>
   */
   inline virtual bool infeasible(const OsiSolverInterface &im) const;
+  /** Returns infeasibility of the cut with respect to solution 
+      passed in i.e. is positive if cuts off that solution.  
+      solution is getNumCols() long..
+  */
+  virtual double violated(const double * solution) const;
   //@}
   
   //----------------------------------------------------------------

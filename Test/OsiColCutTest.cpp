@@ -155,7 +155,7 @@ OsiColCutUnitTest(const OsiSolverInterface * baseSiP,
     }
   }
 
-  // internal consistency
+  // internal consistency 
   {
     const int ne = 1;
     int inx[ne] = { -3 };
@@ -265,5 +265,27 @@ OsiColCutUnitTest(const OsiSolverInterface * baseSiP,
     assert( !cut.infeasible(*imP) );
 
     delete imP;
+  }
+  {
+    //Test violation
+
+    double solution[]={1.0};
+    OsiColCut cut;
+    const int ne=1;
+    int inx[ne]={0};
+    double el[ne]={4.5};
+    cut.setLbs(ne,inx,el);
+    assert( cut.violated(solution) );
+
+    el[0]=0.25;
+    cut.setLbs(0,NULL,NULL);
+    cut.setUbs(ne,inx,el);
+    assert( cut.violated(solution) );
+    
+    el[0]=1.0;
+    cut.setLbs(ne,inx,el);
+    cut.setUbs(ne,inx,el); 
+    assert( !cut.violated(solution) );
+
   }
 }

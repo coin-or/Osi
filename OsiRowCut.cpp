@@ -87,6 +87,29 @@ bool OsiRowCut::infeasible(const OsiSolverInterface &im) const
 }
 
 #endif
+/* Returns infeasibility of the cut with respect to solution 
+    passed in i.e. is positive if cuts off that solution.  
+    solution is getNumCols() long..
+*/
+double 
+OsiRowCut::violated(const double * solution) const
+{
+  int i;
+  double sum = 0.0;
+  const int * column = row_.getIndices();
+  int number = row_.getNumElements();
+  const double * element = row_.getElements();
+  for ( i=0; i<number; i++ ) {
+    int colIndx = column[i];
+    sum += solution[colIndx]*element[i];
+  }
+  if (sum>ub_)
+    return sum-ub_;
+  else if (sum<lb_)
+    return lb_-sum;
+  else
+    return 0.0;
+}
 
 //-------------------------------------------------------------------
 // Row sense, rhs, range

@@ -141,6 +141,12 @@ public:
       problem.
   */
   inline virtual bool infeasible(const OsiSolverInterface &si) const=0;
+
+  /** Returns infeasibility of the cut with respect to solution 
+      passed in i.e. is positive if cuts off that solution.  
+      solution is getNumCols() long..
+  */
+  virtual double violated(const double * solution) const=0;
   //@}
 
 protected:

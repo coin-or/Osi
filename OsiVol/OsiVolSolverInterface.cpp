@@ -584,6 +584,8 @@ OsiVolSolverInterface::setStrParam(OsiStrParam key, const std::string & value)
 {
   bool retval=false;
   switch (key) {
+  case OsiSolverName:
+    return false;
 
   case OsiProbName:
     OsiSolverInterface::setStrParam(key,value);
@@ -648,14 +650,14 @@ OsiVolSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
   switch (key) {
   case OsiProbName:
     OsiSolverInterface::getStrParam(key, value);
-    break;
+    return true;
   case OsiSolverName:
     value = "vol";
-    break;
+    return true;
   case OsiLastStrParam:
     return false;
   }
-  return true;
+  return false;
 }
 //#############################################################################
 // Methods returning info on how the solution process terminated
@@ -1011,11 +1013,11 @@ OsiVolSolverInterface::addCols(const int numcols,
     CoinFillN(continuous_ + colnum, numcols, true);
     int c;
     for ( c=0; c<numcols; c++ ) {
-      if ( fabs(collb[colnum+c]) < fabs(colub[colnum+c]) ) {
-        colsol_[colnum+c] = collb[colnum+c];
+      if ( fabs(collb[c]) < fabs(colub[c]) ) {
+        colsol_[colnum+c] = collb[c];
       }
       else {
-        colsol_[colnum+c] = colub[colnum+c];
+        colsol_[colnum+c] = colub[c];
       }
     }
     //CoinFillN(colsol_     + colnum, numcols, 0.0);

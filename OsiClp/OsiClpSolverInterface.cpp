@@ -531,6 +531,32 @@ void OsiClpSolverInterface::resolve()
   modelPtr_->setSpecialOptions(saveOptions); // restore
 #endif
 }
+/* Sets up solver for repeated use by Osi interface.
+   The normal usage does things like keeping factorization around so can be used.
+   Will also do things like keep scaling and row copy of matrix if
+   matrix does not change.
+   adventure:
+   0 - safe stuff as above
+   1 - will take more risks - if it does not work then bug which will be fixed
+   2 - don't bother doing most extreme termination checks e.g. don't bother
+       re-factorizing if less than 20 iterations.
+  */
+void 
+OsiClpSolverInterface::setupForRepeatedUse(int senseOfAdventure)
+{
+  // First try
+  switch (senseOfAdventure) {
+  case 0:
+    specialOptions_=8;
+    break;
+  case 1:
+    specialOptions_=1+2+8;
+    break;
+  case 2:
+    specialOptions_=1+2+4+8;
+    break;
+  }
+}
 #ifndef NDEBUG
 // For errors to make sure print to screen
 // only called in debug mode

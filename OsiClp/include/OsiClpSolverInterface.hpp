@@ -61,6 +61,18 @@ public:
   ///Undo whatever setting changes the above method had to make
   virtual void disableSimplexInterface();
 
+  /** Sets up solver for repeated use by Osi interface.
+      The normal usage does things like keeping factorization around so can be used.
+      Will also do things like keep scaling and row copy of matrix if
+      matrix does not change.
+      adventure:
+      0 - safe stuff as above
+      1 - will take more risks - if it does not work then bug which will be fixed
+      2 - don't bother doing most extreme termination checks e.g. don't bother
+          re-factorizing if less than 20 iterations.
+  */
+  void setupForRepeatedUse(int senseOfAdventure=0);
+
   ///Returns true if a basis is available
   virtual bool basisIsAvailable() {return true;};
 

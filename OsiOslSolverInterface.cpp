@@ -1295,6 +1295,8 @@ OsiOslSolverInterface::loadProblem(const int numcols, const int numrows,
    delete[] rowlb;
    delete[] rowub;
 }
+// *** Leave out OSL reader to test Osi one
+#ifndef COIN_TEST_OSI_READER
 
 //-----------------------------------------------------------------------------
 // Read mps files
@@ -1314,9 +1316,9 @@ void OsiOslSolverInterface::readMps(const char * filename,
   }
   ekk_importModel(getModelPtr(),fullname.c_str());
 }
-
+#endif
 //-----------------------------------------------------------------------------
-// Read mps files
+// Write mps files
 //-----------------------------------------------------------------------------
 
 void OsiOslSolverInterface::writeMps(const char * filename,

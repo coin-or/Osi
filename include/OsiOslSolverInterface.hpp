@@ -558,9 +558,12 @@ public:
 			     const char* rowsen, const double* rowrhs,   
 			     const double* rowrng);
 
+// *** Leave out OSL reader to test Osi one
+#ifndef COIN_TEST_OSI_READER
     /** Read an mps file from the given filename */
     virtual void readMps(const char *filename,
 			 const char *extension = "mps");
+#endif
 
     /** Write the problem into an mps file of the given filename */
     virtual void writeMps(const char *filename,

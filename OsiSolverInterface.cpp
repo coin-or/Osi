@@ -369,3 +369,55 @@ OsiSolverInterface::operator=(const OsiSolverInterface& rhs)
   return *this;
 }
 
+//-----------------------------------------------------------------------------
+// Read mps files
+//-----------------------------------------------------------------------------
+
+// First version is default for solvers without readers
+
+void OsiSolverInterface::readMps(const char * filename,
+    const char * extension)
+{
+  readOsiMps( filename , extension );
+}
+
+// second version is deliberate call to Osi reader (not virtual)
+
+int OsiSolverInterface::readOsiMps(const char * filename,
+    const char * extension)
+{
+  std::string f(filename);
+  std::string e(extension);
+  std::string fullname;
+  if (e!="") {
+    fullname = f + "." + e;
+  } else {
+    // no extension so no trailing period
+    fullname = f;
+  }
+  OsiMpsReader m;
+  int numberErrors;
+  m.setInfinity(getInfinity());
+  
+  numberErrors = m.readMps(filename,extension);
+  if (!numberErrors) {
+    // no errors
+    loadProblem(*m.getMatrixByCol(),m.getColLower(),m.getColUpper(),
+		m.getObjCoefficients(),m.getRowSense(),m.getRightHandSide(),
+		m.getRowRange());
+    const char * integer = m.integer();
+    if (integer) {
+      int i,n=0;
+      int nCols=m.getNumCols();
+      int * index = new int [nCols];
+      for (i=0;i<nCols;i++) {
+	if (integer[i]) {
+	  index[n++]=i;
+	}
+      }
+      setInteger(index,n);
+      delete [] index;
+    }
+  }
+  return numberErrors;
+}

@@ -21,6 +21,9 @@
 #include "OsiSolverInterface.hpp"
 #include "OsiPackedMatrix.hpp"
 #include "OsiRowCutDebugger.hpp"
+#ifdef COIN_TEST_OSI_READER
+#include "OsiMpsReader.hpp"
+#endif
 #ifdef COIN_USE_OSL
 #include "OsiOslSolverInterface.hpp"
 #endif
@@ -134,6 +137,11 @@ int main (int argc, const char *argv[])
 
   testingMessage( "Testing OsiPackedMatrix\n" );
   OsiPackedMatrixUnitTest();
+
+#ifdef COIN_TEST_OSI_READER
+  testingMessage( "Testing OsiMpsReader\n" );
+  OsiMpsReaderUnitTest(mpsDir);
+#endif
 
 #ifdef COIN_USE_OSL  
   {

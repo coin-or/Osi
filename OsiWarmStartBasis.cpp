@@ -9,6 +9,7 @@
 
 #include "OsiWarmStartBasis.hpp"
 #include <cmath>
+#include <iostream>
 
 //#############################################################################
 
@@ -93,8 +94,8 @@ OsiWarmStartBasis::resize (int newNumberRows, int newNumberColumns)
     artificialStatus_ = array;
     for (i=numArtificial_;i<newNumberRows;i++) 
       setArtifStatus(i, basic);
+    numArtificial_ = newNumberRows;
   }
-
   if (newNumberColumns!=numStructural_) {
     nCharOld  = (numStructural_+3)>>2;
     nCharNew  = (newNumberColumns+3)>>2;
@@ -106,6 +107,7 @@ OsiWarmStartBasis::resize (int newNumberRows, int newNumberColumns)
     structuralStatus_ = array;
     for (i=numStructural_;i<newNumberColumns;i++) 
       setStructStatus(i, atLowerBound);
+    numStructural_ = newNumberColumns;
   }
 }
 // Deletes rows
@@ -126,16 +128,25 @@ OsiWarmStartBasis::deleteRows(int number, const int * which)
   int nCharNew  = (numArtificial_-numberDeleted+3)>>2;
   char * array = new char[nCharNew];
   int put=0;
+  int numberNotBasic=0;
   for (i=0;i<numArtificial_;i++) {
+    Status status = getArtifStatus(i);
     if (!deleted[i]) {
-      setArtifStatus(put, getArtifStatus(i));
+      setArtifStatus(put, status);
       put++;
+    } else if (status!=OsiWarmStartBasis::basic) {
+      numberNotBasic++;
     }
   }
   memcpy(array,artificialStatus_,nCharNew*sizeof(char));
   delete [] artificialStatus_;
   artificialStatus_ = array;
   delete [] deleted;
+  numArtificial_ -= numberDeleted;
+#ifdef OSI_DEBUG
+  if (numberNotBasic)
+    std::cout<<numberNotBasic<<" non basic artificials deleted"<<std::endl;
+#endif
 }
 // Deletes columns
 void 
@@ -155,14 +166,23 @@ OsiWarmStartBasis::deleteColumns(int number, const int * which)
   int nCharNew  = (numStructural_-numberDeleted+3)>>2;
   char * array = new char[nCharNew];
   int put=0;
+  int numberBasic=0;
   for (i=0;i<numStructural_;i++) {
+    Status status = getStructStatus(i);
     if (!deleted[i]) {
-      setStructStatus(put, getStructStatus(i));
+      setStructStatus(put, status);
       put++;
+    } else if (status==OsiWarmStartBasis::basic) {
+      numberBasic++;
     }
   }
   memcpy(array,structuralStatus_,nCharNew*sizeof(char));
   delete [] structuralStatus_;
   structuralStatus_ = array;
   delete [] deleted;
+  numStructural_ -= numberDeleted;
+#ifdef OSI_DEBUG
+  if (numberBasic)
+    std::cout<<numberBasic<<" basic structurals deleted"<<std::endl;
+#endif
 }

@@ -9,7 +9,7 @@
 #endif
 
 #include <string>
-#include <ekk_c_api.h>
+#include "ekk_c_api.h"
 
 #include "OsiSolverInterface.hpp"
 #include "CoinPackedMatrix.hpp"

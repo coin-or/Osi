@@ -751,7 +751,16 @@ void OsiClpSolverInterface::writeMps(const char * filename,
     fullname = f;
   }
   // Fall back on Osi version - without names
-  OsiSolverInterface::writeMps(fullname.c_str(), NULL, NULL,1);
+  OsiSolverInterface::writeMps(fullname.c_str(), NULL, NULL);
+}
+
+int 
+OsiClpSolverInterface::writeMps(const char *filename, 
+		  const char ** rowNames, const char ** columnNames,
+		  int formatType,int numberAcross) const 
+{
+  return OsiSolverInterface::writeMps(filename, rowNames, columnNames,
+			       formatType, numberAcross);
 }
 
 //#############################################################################

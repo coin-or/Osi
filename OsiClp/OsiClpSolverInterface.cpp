@@ -14,6 +14,7 @@
 #include "ClpFactorization.hpp"
 #include "ClpObjective.hpp"
 #include "ClpSimplex.hpp"
+#include "ClpNonLinearCost.hpp"
 #include "OsiClpSolverInterface.hpp"
 #include "OsiCuts.hpp"
 #include "OsiRowCut.hpp"
@@ -2281,6 +2282,9 @@ void OsiClpSolverInterface::setObjectiveAndRefresh(double* c)
   assert (modelPtr_->solveType()==2);
   int numberColumns = modelPtr_->numberColumns();
   memcpy(modelPtr_->objective(),c,numberColumns*sizeof(double));
+  if (modelPtr_->nonLinearCost()) {
+    modelPtr_->nonLinearCost()->refreshCosts(c);
+  }
   memcpy(modelPtr_->costRegion(),c,numberColumns*sizeof(double));
   modelPtr_->computeDuals(NULL);
 }

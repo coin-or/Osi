@@ -1089,6 +1089,128 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     m.setObjSense(-1.0);
     m.initialSolve();
   }
+  // Do parametrics on the objective by hand
+  {    
+    OsiClpSolverInterface m;
+    std::string fn = mpsDir+"p0033";
+    m.readMps(fn.c_str(),"mps");
+    ClpSimplex * simplex = m.getModelPtr();
+    simplex->messageHandler()->setLogLevel(4);
+    m.initialSolve();
+    simplex->factorization()->maximumPivots(5);
+    simplex->messageHandler()->setLogLevel(63);
+    m.setObjSense(1.0);
+    // enable special mode
+    m.enableSimplexInterface(true);
+    int numberIterations=0;
+    int numberColumns = m.getNumCols();
+    int numberRows = m.getNumRows();
+    double * changeCost = new double[numberColumns];
+    double * duals = new double [numberRows];
+    double * djs = new double [numberColumns];
+    // As getReducedGradient mucks about with innards of Clp get arrays to save
+    double * dualsNow = new double [numberRows];
+    double * djsNow = new double [numberColumns];
+   
+    const double * solution = m.getColSolution();
+    int i;
+    // Set up change cost
+    for (i=0;i<numberColumns;i++)
+      changeCost[i]=1.0+0.1*i;;
+    // Range of investigation
+    double totalChange=100.0;
+    double totalDone=0.0;
+    while (true) {
+      // Save current
+      // (would be more accurate to start from scratch)
+      memcpy(djsNow, m.getReducedCost(),numberColumns*sizeof(double));
+      memcpy(dualsNow,m.getRowPrice(),numberRows*sizeof(double));
+      // Get reduced gradient of changeCost
+      m.getReducedGradient(djs,duals,changeCost);
+      int colIn=9999;
+      int direction=1;
+      // We are going up to totalChange but we have done some
+      double best=totalChange-totalDone;
+      // find best ratio
+      // Should check basic - but should be okay on this problem
+      // We are cheating here as we know L rows
+      // Really should be using L and U status but I modified from previous example
+      for (i=0;i<numberRows;i++) {
+        if (simplex->getRowStatus(i)==ClpSimplex::basic) {
+          assert (fabs(dualsNow[i])<1.0e-4&&fabs(duals[i])<1.0e-4);
+        } else {
+          assert (dualsNow[i]<1.0e-4);
+          if (duals[i]>1.0e-8) {
+            if (dualsNow[i]+best*duals[i]>0.0) {
+              best = CoinMax(-dualsNow[i]/duals[i],0.0);
+              direction=-1;
+              colIn=-i-1;
+            }
+          }
+        }
+      }
+      for (i=0;i<numberColumns;i++) {
+        if (simplex->getColumnStatus(i)==ClpSimplex::basic) {
+          assert (fabs(djsNow[i])<1.0e-4&&fabs(djs[i])<1.0e-4);
+        } else {
+          if (solution[i]<1.0e-6) {
+            assert (djsNow[i]>-1.0e-4);
+            if (djs[i]<-1.0e-8) {
+              if (djsNow[i]+best*djs[i]<0.0) {
+                best = CoinMax(-djsNow[i]/djs[i],0.0);
+                direction=1;
+                colIn=i;
+              }
+            }
+          } else if (solution[i]>1.0-1.0e-6) {
+            assert (djsNow[i]<1.0e-4);
+            if (djs[i]>1.0e-8) {
+              if (djsNow[i]+best*djs[i]>0.0) {
+                best = CoinMax(-djsNow[i]/djs[i],0.0);
+                direction=-1;
+                colIn=i;
+              }
+            }
+          }
+	}
+      }
+      if (colIn==9999)
+	break; // should be optimal
+      // update objective - djs is spare array
+      const double * obj = m.getObjCoefficients();
+      for (i=0;i<numberColumns;i++) {
+        djs[i]=obj[i]+best*changeCost[i];
+      }
+      totalDone += best;
+      printf("Best change %g, total %g\n",best,totalDone);
+      m.setObjectiveAndRefresh(djs);
+      int colOut;
+      int outStatus;
+      double theta;
+      int returnCode=m.primalPivotResult(colIn,direction,colOut,outStatus,theta,NULL);
+      assert (!returnCode);
+      double objValue = m.getObjValue(); // printed one may not be accurate
+      printf("in %d out %d, direction %d theta %g, objvalue %g\n",
+	     colIn,colOut,outStatus,theta,objValue);
+      numberIterations++;
+    }
+    // update objective to totalChange- djs is spare array
+    const double * obj = m.getObjCoefficients();
+    double best = totalChange-totalDone;
+    for (i=0;i<numberColumns;i++) {
+      djs[i]=obj[i]+best*changeCost[i];
+    }
+    delete [] changeCost;
+    delete [] duals;
+    delete [] djs;
+    delete [] dualsNow;
+    delete [] djsNow;
+    // exit special mode
+    m.disableSimplexInterface();
+    simplex->messageHandler()->setLogLevel(4);
+    m.resolve();
+    assert (!m.getIterationCount());
+  }
   // Solve an lp when interface is on
   {    
     OsiClpSolverInterface m;
@@ -1140,8 +1262,7 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     double * binvA = (double*) malloc((n_cols+n_rows) * sizeof(double));
     
     printf("B-1 A");
-    int i;
-    for( i = 0; i < n_rows; i++){
+    for(int i = 0; i < n_rows; i++){
       m.getBInvARow(i, binvA,binvA+n_cols);
       printf("\nrow: %d -> ",i);
       for(int j=0; j < n_cols+n_rows; j++){
@@ -1150,7 +1271,7 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     }
     printf("\n");
     printf("And by column");
-    for( i = 0; i < n_cols+n_rows; i++){
+    for(int i = 0; i < n_cols+n_rows; i++){
       m.getBInvACol(i, binvA);
       printf("\ncolumn: %d -> ",i);
       for(int j=0; j < n_rows; j++){
@@ -1206,8 +1327,7 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     m.getBasics(pivots);
     
     printf("B-1 A");
-    int i;
-    for( i = 0; i < n_rows; i++){
+    for(int i = 0; i < n_rows; i++){
       m.getBInvARow(i, binvA,binvA+n_cols);
       printf("\nrow: %d (pivot %d) -> ",i,pivots[i]);
       for(int j=0; j < n_cols+n_rows; j++){
@@ -1216,7 +1336,7 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     }
     printf("\n");
     printf("And by column");
-    for( i = 0; i < n_cols+n_rows; i++){
+    for(int i = 0; i < n_cols+n_rows; i++){
       m.getBInvACol(i, binvA);
       printf("\ncolumn: %d -> ",i);
       for(int j=0; j < n_rows; j++){

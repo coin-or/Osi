@@ -57,7 +57,7 @@ OsiRowCutDebuggerUnitTest(const OsiSolverInterface * baseSiP,
 #if 0
     for (i=0;i<8;i++) {
       assert(type[i]==debugger->integerVariable_[i]);
-      std::cerr <<i <<values[i] <<" " <<debugger->optimalSolution_[i] <<std::endl;
+      std::cerr <<i  <<" " <<values[i] <<" " <<debugger->optimalSolution_[i] <<std::endl;
     }
 #endif
     

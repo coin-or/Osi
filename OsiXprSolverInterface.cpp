@@ -2087,7 +2087,7 @@ vartype_(NULL)
 // Clone
 //----------------------------------------------------------------
 OsiSolverInterface *
-OsiXprSolverInterface::clone() const
+OsiXprSolverInterface::clone(bool copyData) const
 {  
    return (new OsiXprSolverInterface(*this));
 }

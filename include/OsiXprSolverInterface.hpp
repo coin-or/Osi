@@ -568,7 +568,7 @@ public:
     OsiXprSolverInterface (int newrows = 50, int newnz = 100);
 
     /// Clone
-    virtual OsiSolverInterface * clone() const;
+    virtual OsiSolverInterface * clone(bool copyData = true) const;
 
     /// Copy constructor 
     OsiXprSolverInterface (const OsiXprSolverInterface &);

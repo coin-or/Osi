@@ -33,8 +33,8 @@ OslLibDir := PROBE
 OslLibName := libosl.so
 
 # Vol
-#VolIncDir := NONE
-VolIncDir := PROBE
+VolIncDir := NONE
+#VolIncDir := PROBE
 VolLibDir := PROBE
 VolLibName := libvol.so
 

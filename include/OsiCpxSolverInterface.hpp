@@ -600,7 +600,7 @@ public:
   OsiCpxSolverInterface(); 
   
   /// Clone
-  virtual OsiSolverInterface * clone() const;
+  virtual OsiSolverInterface * clone(bool copyData = true) const;
   
   /// Copy constructor 
   OsiCpxSolverInterface( const OsiCpxSolverInterface& );

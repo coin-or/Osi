@@ -1661,7 +1661,7 @@ OsiCpxSolverInterface::OsiCpxSolverInterface ()
 //----------------------------------------------------------------
 // Clone
 //----------------------------------------------------------------
-OsiSolverInterface * OsiCpxSolverInterface::clone() const
+OsiSolverInterface * OsiCpxSolverInterface::clone(bool copyData) const
 {
   return( new OsiCpxSolverInterface( *this ) );
 }

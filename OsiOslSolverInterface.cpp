@@ -1387,7 +1387,7 @@ matrixByColumn_(NULL)
 //-------------------------------------------------------------------
 // Clone
 //-------------------------------------------------------------------
-OsiSolverInterface * OsiOslSolverInterface::clone() const
+OsiSolverInterface * OsiOslSolverInterface::clone(bool CopyData) const
 {
   return (new OsiOslSolverInterface(*this));
 }

@@ -1580,8 +1580,10 @@ OsiVolSolverInterface::OsiVolSolverInterface () :
 //-----------------------------------------------------------------------
 
 OsiSolverInterface *
-OsiVolSolverInterface::clone() const {
-   return new OsiVolSolverInterface(*this);
+OsiVolSolverInterface::clone(bool copyData) const {
+  return copyData ?
+    new OsiVolSolverInterface(*this) :
+    new OsiVolSolverInterface();
 }
 
 //-----------------------------------------------------------------------

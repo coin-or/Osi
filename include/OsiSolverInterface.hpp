@@ -719,8 +719,8 @@ public:
     /// Default Constructor
     OsiSolverInterface(); 
     
-    /// Clone
-    virtual OsiSolverInterface * clone() const = 0;
+    /// Clone : FIXME: Document argument!!!
+    virtual OsiSolverInterface * clone(bool copyData = true) const = 0;
   
     /// Copy constructor 
     OsiSolverInterface(const OsiSolverInterface &);

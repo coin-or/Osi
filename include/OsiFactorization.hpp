@@ -580,10 +580,9 @@ protected:
   OsiBigIndex l = lengthL_;
 
   if ( l + numberInPivotColumn > lengthAreaL_ ) {
-    //need another area
-    std::cout << "code pivot 1" << std::endl;
-    //leave gap so starts will work
-    exit ( 99 );
+    //need more memory
+    std::cout << "more memory needed in middle of invert" << std::endl;
+    return false;
   }				
   //l+=currentAreaL_->elementByColumn-elementL;
   OsiBigIndex lSave = l;

@@ -544,8 +544,9 @@ OsiFactorization::getAreas ( int numberOfRows,
   if ( !areaFactor_ ) {
     areaFactor_ = 1.0;
   }
-  if ( areaFactor_ != 1.0 && (messageLevel_&1)) {
-    std::cout<<"Increasing factorization areas by "<<areaFactor_<<std::endl;
+  if ( areaFactor_ != 1.0 )
+    if ((messageLevel_&1)!=0) {
+      std::cout<<"Increasing factorization areas by "<<areaFactor_<<std::endl;
     lengthAreaU_ *= areaFactor_;
     lengthAreaL_ *= areaFactor_;
   }				

@@ -68,6 +68,8 @@ void OsiClpSolverInterface::initialSolve()
       solver.messageHandler()->setLogLevel(saveMessageLevel-1);
   }
   // scaling
+  // save initial state
+  const double * rowScale1 = solver.rowScale();
   if (modelPtr_->solveType()==1) {
     gotHint = (getHintParam(OsiDoScale,takeHint,strength));
     assert (gotHint);
@@ -212,6 +214,12 @@ void OsiClpSolverInterface::initialSolve()
   basis_ = getBasis(&solver);
   //basis_.print();
   solver.messageHandler()->setLogLevel(saveMessageLevel);
+  const double * rowScale2 = solver.rowScale();
+  if (!rowScale1&&rowScale2) {
+    // need to release memory
+    solver.setRowScale(NULL);
+    solver.setColumnScale(NULL);
+  }
   solver.returnModel(*modelPtr_);
   if (saveSolveType==2) {
     enableSimplexInterface(doingPrimal);

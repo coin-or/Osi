@@ -362,6 +362,8 @@ OsiClpSolverInterface::setDblParam(OsiDblParam key, double value)
    std::map<OsiDblParam, ClpDblParam>::const_iterator clpkey =
       dblParamMap_.find(key);
    if (clpkey != dblParamMap_.end() ) {
+     if (key==OsiDualObjectiveLimit||key==OsiPrimalObjectiveLimit)
+       value = modelPtr_->optimizationDirection()*value;
       return modelPtr_->setDblParam(clpkey->second, value);
    }
    return false;
@@ -402,7 +404,10 @@ OsiClpSolverInterface::getDblParam(OsiDblParam key, double& value) const
    std::map<OsiDblParam, ClpDblParam>::const_iterator clpkey =
       dblParamMap_.find(key);
    if (clpkey != dblParamMap_.end() ) {
-      return modelPtr_->getDblParam(clpkey->second, value);
+      bool condition =  modelPtr_->getDblParam(clpkey->second, value);
+      if (key==OsiDualObjectiveLimit||key==OsiPrimalObjectiveLimit)
+	value = modelPtr_->optimizationDirection()*value;
+      return condition;
    }
    return false;
 }
@@ -463,7 +468,7 @@ bool OsiClpSolverInterface::isProvenDualInfeasible() const
 bool OsiClpSolverInterface::isPrimalObjectiveLimitReached() const
 {
   double limit = 0.0;
-  getDblParam(OsiPrimalObjectiveLimit, limit);
+  modelPtr_->getDblParam(ClpPrimalObjectiveLimit, limit);
   if (limit > 1e30) {
     // was not ever set
     return false;
@@ -489,7 +494,7 @@ bool OsiClpSolverInterface::isDualObjectiveLimitReached() const
 {
 
   double limit = 0.0;
-  getDblParam(OsiDualObjectiveLimit, limit);
+  modelPtr_->getDblParam(ClpDualObjectiveLimit, limit);
   if (limit > 1e30) {
     // was not ever set
     return false;

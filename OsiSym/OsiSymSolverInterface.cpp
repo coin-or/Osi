@@ -336,7 +336,7 @@ bool OsiSymSolverInterface::setDblParam(OsiDblParam key, double value)
        return false;
 
     case OsiObjOffset:
-       env_->mip->obj_offset = value;
+       env_->mip->obj_offset = -value;
        return true;
        
     default:

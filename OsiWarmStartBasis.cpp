@@ -125,8 +125,6 @@ OsiWarmStartBasis::deleteRows(int number, const int * which)
   }
   int nCharNew  = (numArtificial_-numberDeleted+3)>>2;
   char * array = new char[nCharNew];
-  // zap all for clarity and zerofault etc
-  memset(array,0,nCharNew*sizeof(char));
   int put=0;
   for (i=0;i<numArtificial_;i++) {
     if (!deleted[i]) {
@@ -134,6 +132,7 @@ OsiWarmStartBasis::deleteRows(int number, const int * which)
       put++;
     }
   }
+  memcpy(array,artificialStatus_,nCharNew*sizeof(char));
   delete [] artificialStatus_;
   artificialStatus_ = array;
   delete [] deleted;
@@ -155,8 +154,6 @@ OsiWarmStartBasis::deleteColumns(int number, const int * which)
   }
   int nCharNew  = (numStructural_-numberDeleted+3)>>2;
   char * array = new char[nCharNew];
-  // zap all for clarity and zerofault etc
-  memset(array,0,nCharNew*sizeof(char));
   int put=0;
   for (i=0;i<numStructural_;i++) {
     if (!deleted[i]) {
@@ -164,6 +161,7 @@ OsiWarmStartBasis::deleteColumns(int number, const int * which)
       put++;
     }
   }
+  memcpy(array,structuralStatus_,nCharNew*sizeof(char));
   delete [] structuralStatus_;
   structuralStatus_ = array;
   delete [] deleted;

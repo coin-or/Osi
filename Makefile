@@ -5,6 +5,7 @@ LibType := SHARED
 # highest level of optimization the compiler supports. If want something in
 # between then specify the exact level you want, e.g., -O1 or -O2
 OptLevel := -O
+OptLevel := -g
 
 # The path to the root of the install directory structure.
 # include files will be installed in ${InstallDir}/include, libraries in 
@@ -54,6 +55,12 @@ OslLibName := libosl.so
 VolIncDir := PROBE
 VolLibDir := PROBE
 VolLibName := libvol.so
+
+# Clp
+#ClpIncDir := NONE
+ClpIncDir := PROBE
+ClpLibDir := PROBE
+ClpLibName := libclp.so
 
 # Xpr
 XprIncDir := NONE

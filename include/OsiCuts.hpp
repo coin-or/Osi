@@ -313,9 +313,8 @@ void OsiCuts::insert( OsiCut* & cPtr )
 //------------------------------------------------------------------- 
 void OsiCuts::sort() 
 {
-  OsiCutCompare comp;
-  std::sort(colCutPtrs_.begin(),colCutPtrs_.end(),comp); 
-  std::sort(rowCutPtrs_.begin(),rowCutPtrs_.end(),comp); 
+  std::sort(colCutPtrs_.begin(),colCutPtrs_.end(),OsiCutCompare()); 
+  std::sort(rowCutPtrs_.begin(),rowCutPtrs_.end(),OsiCutCompare()); 
 }
 
 

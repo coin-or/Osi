@@ -29,7 +29,7 @@
 #include "OsiDylpMessages.hpp"
 
 
-static char sccsid[] = "@(#)OsiDylpSolverInterfaceTest.cpp	1.9	06/22/04" ;
+static char sccsid[] = "@(#)OsiDylpSolverInterfaceTest.cpp	1.10	09/16/04" ;
 static char cvsid[] = "$Id$" ;
 
 
@@ -47,8 +47,7 @@ void test_starts (const std::string& mpsDir)
 { OsiDylpSolverInterface *osi = new OsiDylpSolverInterface ;
   OsiHintStrength strength ;
   bool sense ;
-  int info ;
-  void *p_info = &info ;
+  void *p_info ;
 
 /*
   Read in exmip1 and solve it.
@@ -153,7 +152,8 @@ void test_starts (const std::string& mpsDir)
   level |= 0x10 ;
   osi->setHintParam(OsiDoReducePrint,true,OsiForceDo,&level) ;
   osi->getHintParam(OsiDoReducePrint,sense,strength,p_info) ;
-  std::cout << "Verbosity now maxed at " << info << ".\n" ;
+  std::cout << "Verbosity now maxed at "
+	    << *reinterpret_cast<int *>(p_info) << ".\n" ;
 
   osi->readMps(exmpsfile.c_str(), "mps") ;
 
@@ -219,7 +219,8 @@ void test_starts (const std::string& mpsDir)
   level = 0 ;
   osi->setHintParam(OsiDoReducePrint,true,OsiForceDo,&level) ;
   osi->getHintParam(OsiDoReducePrint,sense,strength,p_info) ;
-  std::cout << "Verbosity now at " << info << ".\n" ;
+  std::cout << "Verbosity now at "
+	    << *reinterpret_cast<int *>(p_info) << ".\n" ;
 
   std::cout << "And back ..." ;
   osi->setObjSense(1.0) ;

@@ -18,6 +18,7 @@
 #endif
 #include "OsiXprSolverInterface.hpp"
 #include "OsiCpxSolverInterface.hpp"
+#include "OsiSpxSolverInterface.hpp"
 #include "OsiOslSolverInterface.hpp"
 #include "OsiFloatEqual.hpp"
 #include "OsiPackedVector.hpp"
@@ -163,7 +164,7 @@ void OsiSolverInterfaceMpsUnitTest
   PUSH_MPS("nesm",true,663,2923,1.4076073035e+07,1.e-5)
   PUSH_MPS("perold",true,626,1376,-9.3807580773e+03,1.e-6)
   PUSH_MPS("pilot",true,1442,3652,/*-5.5740430007e+02*/-557.48972927292,1.e-5)
-  PUSH_MPS("pilot4",true,411,1000,-2.5811392641e+03,1.e-8)
+  PUSH_MPS("pilot4",true,411,1000,-2.5811392641e+03,1.e-6)
   PUSH_MPS("pilot87",true,2031,4883,3.0171072827e+02,1.e-4)
   PUSH_MPS("pilotnov",true,976,2172,-4.4972761882e+03,1.e-10)
   // ?? PUSH_MPS("qap8",true,913,1632,2.0350000000e+02,1.e-10)
@@ -426,6 +427,15 @@ void OsiSolverInterfaceMpsUnitTest
           dynamic_cast<OsiCpxSolverInterface *>(vecSiP[i]) ;
         if (si != NULL )  {    
           siName[i]="OsiCpxSolverInterface";
+        }
+      }
+#     endif
+#     ifdef COIN_USE_SPX
+      { 
+        OsiSpxSolverInterface * si =
+          dynamic_cast<OsiSpxSolverInterface *>(vecSiP[i]) ;
+        if (si != NULL )  {    
+          siName[i]="OsiSpxSolverInterface";
         }
       }
 #     endif

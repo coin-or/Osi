@@ -1800,7 +1800,9 @@ void OsiCpxSolverInterface::incrementInstanceCounter()
       env_ = CPXopenCPLEXdevelop( &err );
       checkCPXerror( err, "CPXopenCPLEXdevelop", "incrementInstanceCounter" );
       assert( env_ != NULL );
+#ifndef NDEBUG
       CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_ON ); // for testing purposes
+#endif
       char logfileName[]="cplex.log";
       char filemode[]="a+";
       CPXFILEptr fp = CPXfopen( logfileName, filemode );

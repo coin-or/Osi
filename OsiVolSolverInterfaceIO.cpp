@@ -19,6 +19,9 @@
 #ifdef COIN_USE_CPX
 #include "OsiCpxSolverInterface.hpp"
 #endif
+#ifdef COIN_USE_SPX
+#include "OsiSpxSolverInterface.hpp"
+#endif
 
 //#############################################################################
 
@@ -391,10 +394,12 @@ OsiVolSolverInterface::writeMps(const char *filename,
   si = new OsiXprSolverInterface;
 #elif defined(COIN_USE_CPX)
   si = new OsiCpxSolverInterface;
+#elif defined(COIN_USE_SPX)
+  si = new OsiSpxSolverInterface;
 #else 
   throw CoinError("Sorry, the Volume Algorithm does not have an "
 		 "MPS Writer without compiling with "
-		 "COIN_USE_XPR, USE_COIN_CPX, and/or COIN_USE_OSL",
+		 "COIN_USE_XPR, USE_COIN_CPX, USE_COIN_SPX, and/or COIN_USE_OSL",
 		 "writeMps", "OsiVolSolverInterface");
 #endif
 
@@ -411,10 +416,12 @@ OsiVolSolverInterface::writeMps(const char *filename,
   si = new OsiXprSolverInterface;
 #elif defined(COIN_USE_CPX)
   si = new OsiCpxSolverInterface;
+#elif defined(COIN_USE_SPX)
+  si = new OsiSpxSolverInterface;
 #else 
   throw CoinError("Sorry, the Volume Algorithm does not have an "
 		 "MPS Writer without compiling with "
-		 "COIN_USE_XPR, USE_COIN_CPX, and/or COIN_USE_OSL",
+		 "COIN_USE_XPR, USE_COIN_CPX, USE_COIN_SPX, and/or COIN_USE_OSL",
 		 "writeMps", "OsiVolSolverInterface");
 #endif
   

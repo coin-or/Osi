@@ -33,6 +33,9 @@
 #ifdef COIN_USE_CPX
 #include "OsiCpxSolverInterface.hpp"
 #endif
+#ifdef COIN_USE_SPX
+#include "OsiSpxSolverInterface.hpp"
+#endif
 #ifdef COIN_USE_VOL
 #include "OsiVolSolverInterface.hpp"
 #endif
@@ -200,6 +203,24 @@ int main (int argc, const char *argv[])
   }
 #endif
 
+#ifdef COIN_USE_SPX
+  {
+    OsiSpxSolverInterface spxSi;
+    testingMessage( "Testing OsiRowCut with OsiSpxSolverInterface\n" );
+    OsiRowCutUnitTest(&spxSi,mpsDir);
+  }
+  {
+    OsiSpxSolverInterface spxSi;
+    testingMessage( "Testing OsiColCut with OsiSpxSolverInterface\n" );
+    OsiColCutUnitTest(&spxSi,mpsDir);
+  }
+  {
+    OsiSpxSolverInterface spxSi;
+    testingMessage( "Testing OsiRowCutDebugger with OsiSpxSolverInterface\n" );
+    OsiRowCutDebuggerUnitTest(&spxSi,mpsDir);
+  }
+#endif
+
 #ifdef COIN_USE_VOL
   {
     OsiVolSolverInterface volSi;
@@ -249,6 +270,11 @@ int main (int argc, const char *argv[])
   OsiCpxSolverInterfaceUnitTest(mpsDir);
 #endif
 
+#ifdef COIN_USE_SPX
+  testingMessage( "Testing OsiSpxSolverInterface\n" );
+  OsiSpxSolverInterfaceUnitTest(mpsDir);
+#endif
+
 #ifdef COIN_USE_VOL
   testingMessage( "Testing OsiVolSolverInterface\n" );
   OsiVolSolverInterfaceUnitTest(mpsDir);
@@ -274,6 +300,10 @@ int main (int argc, const char *argv[])
 #   if COIN_USE_CPX
     OsiSolverInterface * cpxSi = new OsiCpxSolverInterface;
     vecSi.push_back(cpxSi);
+#endif
+#   if COIN_USE_SPX
+    OsiSolverInterface * spxSi = new OsiSpxSolverInterface;
+    vecSi.push_back(spxSi);
 #endif
 #   if COIN_USE_VOL
     OsiSolverInterface * volSi = new OsiVolSolverInterface;

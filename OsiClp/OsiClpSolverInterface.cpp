@@ -959,6 +959,7 @@ OsiClpSolverInterface::setContinuous(int index)
 #endif
     integerInformation_[index]=0;
   }
+  modelPtr_->setContinuous(index);
 }
 //-----------------------------------------------------------------------------
 void
@@ -975,6 +976,7 @@ OsiClpSolverInterface::setInteger(int index)
   }
 #endif
   integerInformation_[index]=1;
+  modelPtr_->setInteger(index);
 }
 //-----------------------------------------------------------------------------
 void
@@ -993,6 +995,7 @@ OsiClpSolverInterface::setContinuous(const int* indices, int len)
       }
 #endif
       integerInformation_[colNumber]=0;
+      modelPtr_->setContinuous(colNumber);
     }
   }
 }
@@ -1016,6 +1019,7 @@ OsiClpSolverInterface::setInteger(const int* indices, int len)
     }
 #endif
     integerInformation_[colNumber]=1;
+    modelPtr_->setInteger(colNumber);
   }
 }
 //-----------------------------------------------------------------------------

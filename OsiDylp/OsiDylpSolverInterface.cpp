@@ -2,6 +2,8 @@
   Copyright (C) 2002, 2003, 2004.
   Lou Hafer, Stephen Tse, International Business Machines Corporation and
   others. All Rights Reserved.
+
+  This file is a portion of the COIN/OSI interface for dylp.
 */
 
 #ifdef COIN_USE_DYLP
@@ -169,10 +171,6 @@ const double CoinInfinity = DBL_MAX ;
 
 */
 
-namespace {
-  char sccsid[] = "@(#)OsiDylpSolverInterface.cpp	1.17	09/16/04" ;
-  char cvsid[] = "$Id$" ;
-}
 
 #include <string>
 #include <cassert>
@@ -185,6 +183,11 @@ namespace {
 #include "OsiDylpMessages.hpp"
 #include "OsiDylpWarmStartBasis.hpp"
 #include "OsiPresolve.hpp"
+
+namespace {
+  char sccsid[] UNUSED = "@(#)OsiDylpSolverInterface.cpp	1.18	09/25/04" ;
+  char cvsid[] UNUSED = "$Id$" ;
+}
 
 using std::string ;
 using std::vector ;
@@ -812,7 +815,7 @@ void ODSI::add_col (const CoinPackedVectorBase& coin_colj,
 /*
   Add the column.
 */
-  bool r = consys_addcol_pk(consys,vtypj,pk_colj,objj,vlbj,vubj) ;
+  bool r UNUSED = consys_addcol_pk(consys,vtypj,pk_colj,objj,vlbj,vubj) ;
   pkvec_free(pk_colj) ;
   assert(r) ;
 /*
@@ -856,7 +859,8 @@ void ODSI::add_row (const CoinPackedVectorBase &coin_rowi, char clazzi,
 /*
   Add the row.
 */
-  bool r = consys_addrow_pk(consys,clazzi,ctypi,pk_rowi,rhsi,rhslowi,0,0) ;
+  bool r UNUSED = consys_addrow_pk(consys,clazzi,ctypi,
+				   pk_rowi,rhsi,rhslowi,0,0) ;
   pkvec_free(pk_rowi) ;
   assert(r) ;
 /*
@@ -1105,7 +1109,7 @@ void ODSI::dylp_ioinit ()
 # else
   errinit(const_cast<char *>(errfile.c_str()),0,false) ;
 # endif
-  bool r1 = ioinit() ;
+  bool r1 UNUSED = ioinit() ;
   assert(r1) ;
 }
 
@@ -1174,7 +1178,8 @@ void ODSI::load_problem (const CoinMpsIO &mps)
 
   for (int i = 0 ; i < m ; i++)
   { rowi->nme = const_cast<char *>(mps.rowName(i)) ;
-    bool r = consys_addrow_pk(consys,'a',ctyp[i],rowi,rhs[i],rhslow[i],0,0) ;
+    bool r UNUSED = consys_addrow_pk(consys,'a',
+				     ctyp[i],rowi,rhs[i],rhslow[i],0,0) ;
     assert(r) ; }
   
   if (rowi) pkvec_free(rowi) ;
@@ -1219,8 +1224,8 @@ void ODSI::load_problem (const CoinMpsIO &mps)
   { const CoinShallowPackedVector coin_col = matrix2->getVector(j) ;
     packed_vector(coin_col,n,colj) ;
     colj->nme = const_cast<char *>(mps.columnName(j)) ;
-    bool r = consys_addcol_pk(consys,vtyp[j],colj,obj[j],
-			      col_lower[j],col_upper[j]) ;
+    bool r UNUSED = consys_addcol_pk(consys,vtyp[j],colj,obj[j],
+				     col_lower[j],col_upper[j]) ;
     assert(r) ; }
 
   pkvec_free(colj) ;
@@ -1290,7 +1295,8 @@ void ODSI::load_problem (const CoinPackedMatrix& matrix,
 
   for (int i = 0 ; i < m ; i++)
   { rowi->nme = 0 ;
-    bool r = consys_addrow_pk(consys,'a',ctyp[i],rowi,rhs[i],rhslow[i],0,0) ;
+    bool r UNUSED = consys_addrow_pk(consys,'a',
+				     ctyp[i],rowi,rhs[i],rhslow[i],0,0) ;
     assert(r) ; }
 
   if (rowi) pkvec_free(rowi) ;
@@ -1306,7 +1312,7 @@ void ODSI::load_problem (const CoinPackedMatrix& matrix,
     double vlbj = col_lower?col_lower[j]:0 ;
     double vubj = col_upper?col_upper[j]:odsiInfinity ;
     colj->nme = 0 ;
-    bool r = consys_addcol_pk(consys,vartypCON,colj,objj,vlbj,vubj) ;
+    bool r UNUSED = consys_addcol_pk(consys,vartypCON,colj,objj,vlbj,vubj) ;
     assert(r) ; }
 
   pkvec_free(colj) ;
@@ -1374,7 +1380,8 @@ void ODSI::load_problem (const int colcnt, const int rowcnt,
 
   for (int i = 0 ; i < rowcnt ; i++)
   { rowi->nme = 0 ;
-    bool r = consys_addrow_pk(consys,'a',ctyp[i],rowi,rhs[i],rhslow[i],0,0) ;
+    bool r UNUSED = consys_addrow_pk(consys,'a',
+				     ctyp[i],rowi,rhs[i],rhslow[i],0,0) ;
     assert(r) ;
   }
 
@@ -1401,7 +1408,7 @@ void ODSI::load_problem (const int colcnt, const int rowcnt,
     double vlbj = col_lower?col_lower[j]:0 ;
     double vubj = col_upper?col_upper[j]:odsiInfinity ;
     colj->nme = 0 ;
-    bool r = consys_addcol_pk(consys,vartypCON,colj,objj,vlbj,vubj) ;
+    bool r UNUSED = consys_addcol_pk(consys,vartypCON,colj,objj,vlbj,vubj) ;
     assert(r) ;
   }
 
@@ -1653,7 +1660,7 @@ ODSI::OsiDylpSolverInterface (const OsiDylpSolverInterface& src)
     keepIntegers_(src.keepIntegers_)
 
 { if (src.consys)
-  { bool r = consys_dupsys(src.consys,&consys,src.consys->parts) ;
+  { bool r UNUSED = consys_dupsys(src.consys,&consys,src.consys->parts) ;
     assert(r) ; }
   else
   { consys = 0 ; }
@@ -1716,7 +1723,7 @@ OsiDylpSolverInterface &ODSI::operator= (const OsiDylpSolverInterface &rhs)
     OSI::operator=(rhs) ;
 
     if (rhs.consys)
-    { bool r = consys_dupsys(rhs.consys,&consys,rhs.consys->parts) ;
+    { bool r UNUSED = consys_dupsys(rhs.consys,&consys,rhs.consys->parts) ;
       assert(r) ; }
     else
     { consys = 0 ; }
@@ -1978,8 +1985,8 @@ void ODSI::reset ()
 inline void ODSI::setContinuous (int j)
 
 { if (!consys->vtyp)
-  { bool r = consys_attach(consys,CONSYS_VTYP,sizeof(vartyp_enum),
-			   reinterpret_cast<void **>(&consys->vtyp)) ;
+  { bool r UNUSED = consys_attach(consys,CONSYS_VTYP,sizeof(vartyp_enum),
+				  reinterpret_cast<void **>(&consys->vtyp)) ;
     assert(r) ; }
 
   consys->vtyp[idx(j)] = vartypCON ; }
@@ -1988,8 +1995,8 @@ inline void ODSI::setContinuous (int j)
 inline void ODSI::setContinuous (const int* indices, int len)
 
 { if (!consys->vtyp)
-  { bool r = consys_attach(consys,CONSYS_VTYP,sizeof(vartyp_enum),
-			   reinterpret_cast<void **>(&consys->vtyp)) ;
+  { bool r UNUSED = consys_attach(consys,CONSYS_VTYP,sizeof(vartyp_enum),
+				  reinterpret_cast<void **>(&consys->vtyp)) ;
     assert(r) ; }
 
   for (int i = 0 ; i < len ; i++)
@@ -1999,8 +2006,8 @@ inline void ODSI::setContinuous (const int* indices, int len)
 inline void ODSI::setInteger (int j)
 
 { if (!consys->vtyp)
-  { bool r = consys_attach(consys,CONSYS_VTYP,sizeof(vartyp_enum),
-			   reinterpret_cast<void **>(&consys->vtyp)) ;
+  { bool r UNUSED = consys_attach(consys,CONSYS_VTYP,sizeof(vartyp_enum),
+				  reinterpret_cast<void **>(&consys->vtyp)) ;
     assert(r) ; }
 
   if (getColLower()[j] == 0.0 && getColUpper()[j] == 1.0)
@@ -2012,8 +2019,8 @@ inline void ODSI::setInteger (int j)
 inline void ODSI::setInteger (const int* indices, int len)
 
 { if (!consys->vtyp)
-  { bool r = consys_attach(consys,CONSYS_VTYP,sizeof(vartyp_enum),
-			   reinterpret_cast<void **>(&consys->vtyp)) ;
+  { bool r UNUSED = consys_attach(consys,CONSYS_VTYP,sizeof(vartyp_enum),
+				  reinterpret_cast<void **>(&consys->vtyp)) ;
     assert(r) ; }
 
   for (int i = 0 ; i < len ; i++) setInteger(indices[i]) ; }
@@ -2034,8 +2041,8 @@ inline void ODSI::setInteger (const int* indices, int len)
 inline void ODSI::setColLower (int i, double val)
 
 { if (!consys->vlb)
-  { bool r = consys_attach(consys,CONSYS_VLB,sizeof(double),
-			   reinterpret_cast<void **>(&consys->vlb)) ;
+  { bool r UNUSED = consys_attach(consys,CONSYS_VLB,sizeof(double),
+				  reinterpret_cast<void **>(&consys->vlb)) ;
     assert(r) ; }
 
   consys->vlb[idx(i)] = val ;
@@ -2055,8 +2062,8 @@ inline void ODSI::setColLower (int i, double val)
 inline void ODSI::setColUpper (int i, double val)
 
 { if (!consys->vub)
-  { bool r = consys_attach(consys,CONSYS_VUB,sizeof(double),
-			   reinterpret_cast<void **>(&consys->vub)) ;
+  { bool r UNUSED = consys_attach(consys,CONSYS_VUB,sizeof(double),
+				  reinterpret_cast<void **>(&consys->vub)) ;
     assert(r) ; }
 
   consys->vub[idx(i)] = val ;
@@ -2092,7 +2099,7 @@ void ODSI::setRowType (int i, char sense, double rhs, double range)
 void ODSI::setRowUpper (int i, double val)
 
 { int k = idx(i) ;
-  double clbi ;
+  double clbi = -odsiInfinity ;
 
   switch (consys->ctyp[k])
   { case contypEQ:
@@ -2217,7 +2224,7 @@ void ODSI::deleteRows (int count, const int* rows)
 
   for (int k = count-1 ; k >= 0 ; k--)
   { int i = idx(lclrows[k]) ;
-    bool r = consys_delrow_stable(consys,i) ;
+    bool r UNUSED = consys_delrow_stable(consys,i) ;
     assert(r) ; }
 /*
   Now, see if there's an active basis. If so, check that all the constraints
@@ -2351,7 +2358,7 @@ void ODSI::deleteCols (int count, const int* cols)
 
   for (int k = 0 ; k < count ; k++)
   { int j = idx(lclcols[k]) ;
-    bool r = consys_delcol(consys, j) ;
+    bool r UNUSED = consys_delcol(consys, j) ;
     assert(r) ; }
 /*
   Now, see if there's an active basis. If so, check that all the variables to
@@ -2460,9 +2467,9 @@ void ODSI::assert_same (double d1, double d2, bool exact)
 
   assert(!exact && finite(d1) && finite(d2)) ;
 
-  static const double epsilon = 1.e-10 ;
-  double tol = std::max(fabs(d1),fabs(d2))+1 ;
-  double diff = fabs(d1 - d2) ;
+  static const double epsilon UNUSED = 1.e-10 ;
+  double tol UNUSED = std::max(fabs(d1),fabs(d2))+1 ;
+  double diff UNUSED = fabs(d1 - d2) ;
 
   assert(diff <= tol*epsilon) ; }
 
@@ -2502,7 +2509,7 @@ void ODSI::assert_same (const basis_struct& b1, const basis_struct& b2,
   if (&b1 == &b2) return ;
   assert(b1.len == b2.len) ;
 
-  int size = b1.len*sizeof(basisel_struct) ;
+  int size UNUSED = b1.len*sizeof(basisel_struct) ;
   assert(memcmp(inv_vec<basisel_struct>(b1.el),
 		inv_vec<basisel_struct>(b2.el),size) == 0) ; }
 
@@ -2693,7 +2700,7 @@ void ODSI::assert_same (const OsiDylpSolverInterface& o1,
   use the COIN isEquivalent routine to check for equality.
 */
   const CoinPackedMatrix* m1 = o1.getMatrixByCol() ;
-  const CoinPackedMatrix* m2 = o2.getMatrixByCol() ;
+  const CoinPackedMatrix* m2 UNUSED = o2.getMatrixByCol() ;
   if (m1)
   { assert(m2 || m1->isEquivalent(*m2)) ; }
   else
@@ -3847,8 +3854,9 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
 void ODSI::initialSolve ()
 
 { CoinMessageHandler *hdl = messageHandler() ; 
-  flags save_ctlopts ;
-  bool save_finpurge_vars,save_finpurge_cons ;
+  flags save_ctlopts = 0 ;
+  bool save_finpurge_vars = false ;
+  bool save_finpurge_cons = false ;
 /*
   The minimum requirement is a constraint system. Options and tolerances should
   also be present --- they're established when the ODSI object is created.
@@ -5562,7 +5570,7 @@ void ODSI::dylp_controlfile (const char *name,
   { setmode (cmdchn, 'l') ;  
     main_lpopts = initialSolveOptions ;
     main_lptols = tolerances ;
-    bool r = (process_cmds(silent) != 0) ;
+    bool r UNUSED = (process_cmds(silent) != 0) ;
     (void) closefile(cmdchn) ;
     cmdchn = IOID_NOSTRM ;
     assert(r == cmdOK) ;

@@ -2,6 +2,8 @@
   Copyright (C) 2002, 2003, 2004.
   Lou Hafer, International Business Machines Corporation and others.
   All Rights Reserved.
+
+  This file is a portion of the COIN/OSI interface for dylp.
 */
 
 #ifdef COIN_USE_DYLP
@@ -38,15 +40,15 @@
   also purge tight constraints when the associated dual variable is zero.
 */
 
-namespace {
-  char sccsid[] = "@(#)OsiDylpWarmStartBasis.cpp	1.5	09/16/04" ;
-  char cvsid[] = "$Id$" ;
-}
-
 #include <vector>
 #include <cassert>
 #include <iostream>
 #include "OsiDylpWarmStartBasis.hpp"
+
+namespace {
+  char sccsid[] UNUSED = "@(#)OsiDylpWarmStartBasis.cpp	1.6	09/25/04" ;
+  char cvsid[] UNUSED = "$Id$" ;
+}
 
 using std::vector ;
 

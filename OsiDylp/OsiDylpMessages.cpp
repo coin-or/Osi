@@ -4,15 +4,17 @@
   Copyright (C) 2004.
   Lou Hafer, International Business Machines Corporation and others. All
   Rights Reserved.
-*/
 
-namespace {
-  char sccsid[] = "@(#)OsiDylpMessages.cpp	1.5	09/16/04" ;
-  char cvsid[] = "$Id$" ;
-}
+  This file is a portion of the COIN/OSI interface for dylp.
+*/
 
 #include "OsiDylpSolverInterface.hpp"
 #include "OsiDylpMessages.hpp"
+
+namespace {
+  char sccsid[] UNUSED = "@(#)OsiDylpMessages.cpp	1.6	09/25/04" ;
+  char cvsid[] UNUSED = "$Id$" ;
+}
 
 /* Cut name lengths for readability. */
 

@@ -2,6 +2,8 @@
   Copyright (C) 2002, 2003, 2004.
   Lou Hafer, International Business Machines Corporation and others.
   All Rights Reserved.
+
+  This file is a portion of the COIN/OSI interface for dylp.
 */
 
 #ifdef COIN_USE_DYLP
@@ -97,10 +99,6 @@
   originalColumns_ and originalRows_.
 */
 
-namespace {
-  char sccsid[] = "@(#)OsiDylpPresolve.cpp	1.4	09/16/04" ;
-  char cvsid[] = "$Id$" ;
-}
 
 //#define PRESOLVE_DEBUG 1
 //#define PRESOLVE_CONSISTENCY 1
@@ -109,6 +107,11 @@ namespace {
 #include <OsiDylpWarmStartBasis.hpp>
 #include "OsiDylpMessages.hpp"
 #include "CoinPresolveMatrix.hpp"
+
+namespace {
+  char sccsid[] UNUSED = "@(#)OsiDylpPresolve.cpp	1.5	09/25/04" ;
+  char cvsid[] UNUSED = "$Id$" ;
+}
 
 #include "CoinPresolveEmpty.hpp"
 #include "CoinPresolveFixed.hpp"

@@ -2,6 +2,8 @@
   Copyright (C) 2002, 2003, 2004.
   Lou Hafer, Stephen Tse, International Business Machines Corporation and
   others. All Rights Reserved.
+
+  This file is a portion of the COIN/OSI interface for dylp.
 */
 
 #ifdef COIN_USE_DYLP
@@ -28,9 +30,10 @@
 #include "OsiDylpWarmStartBasis.hpp"
 #include "OsiDylpMessages.hpp"
 
-
-static char sccsid[] = "@(#)OsiDylpSolverInterfaceTest.cpp	1.10	09/16/04" ;
-static char cvsid[] = "$Id$" ;
+namespace {
+  char sccsid[] UNUSED = "@(#)OsiDylpSolverInterfaceTest.cpp	1.11	09/25/04" ;
+  char cvsid[] UNUSED = "$Id$" ;
+}
 
 
 void test_starts (const std::string& mpsDir)

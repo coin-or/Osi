@@ -1,3 +1,12 @@
+// Copyright (C) 2002, International Business Machines
+// Corporation and others.  All Rights Reserved.
+
+/* 
+   Authors
+   
+   John Forrest
+
+ */
 #ifndef OsiFactorization_H
 #define OsiFactorization_H
 
@@ -6,8 +15,6 @@
 
 class OsiPackedMatrix;
 class OsiIndexedVector;
-//#define DEBUG_OSI 2
-//#define DEBUG 2
 /** This deals with Factorization and Updates
 
     This class started with a parallel simplex code I was writing in the

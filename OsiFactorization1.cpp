@@ -260,6 +260,8 @@ int OsiFactorization::factorize (
       if (rowIsBasic[i]>=0) {
 	if (pivotColumn_[numberBasic]>=0) 
 	  rowIsBasic[i]=pivotColumn_[numberBasic];
+	else 
+	  rowIsBasic[i]=-1;
 	numberBasic++;
       }
     }
@@ -267,6 +269,8 @@ int OsiFactorization::factorize (
       if (columnIsBasic[i]>=0) {
 	if (pivotColumn_[numberBasic]>=0) 
 	  columnIsBasic[i]=pivotColumn_[numberBasic];
+	 else 
+	  columnIsBasic[i]=-1;
 	numberBasic++;
       }
     }

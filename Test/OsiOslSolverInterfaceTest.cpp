@@ -256,10 +256,11 @@ OsiNodeSimple::OsiNodeSimple(OsiSolverInterface & model,
       for (i=0;i<STRONG_BRANCHING;i++) {
 	int iInt = chosen[i];
 	if (iInt>=0) {
-	  model.messageHandler()->message(COIN_BAB_STRONG,model.messages())
-	    <<i<<iInt<<downMovement[i]<<upMovement[i]
-	    <<solutionValue[i]
-	    <<CoinMessageEol;
+	  std::cout<<"Strong branching on "
+		   <<i<<""<<iInt<<" down "<<downMovement[i]
+		   <<" up "<<upMovement[i]
+		   <<" value "<<solutionValue[i]
+		   <<std::endl;
 	  bool better = false;
 	  if (min(upMovement[i],downMovement[i])>best) {
 	    // smaller is better
@@ -1148,14 +1149,6 @@ OsiOslSolverInterfaceUnitTest(const std::string & mpsDir)
       // pass handler to OSL
       ekk_setUserData(m.getModelPtr(),&messageHandler);
    }
-    CoinMessageHandler * handler = m.messageHandler();
-    CoinMessages messages = m.messages() ;
-    if (!iPass) {
-      // switch on strong branching  message
-      int oneMessage=7;
-      // we want to change models copy of messages
-      m.messagesPointer()->setDetailMessages(1,1,&oneMessage);
-    }
     // solve LP
     m.initialSolve();
     // setColBounds prints every time - don't even get to message handler
@@ -1179,8 +1172,8 @@ OsiOslSolverInterfaceUnitTest(const std::string & mpsDir)
 	  numberIntegers++;
       }
       if (!numberIntegers) {
-	handler->message(COIN_BAB_NOINT,messages)
-	  <<CoinMessageEol;
+	std::cout<<"No integer variables"
+	  <<std::endl;
 	return;
       }
       int * which = new int[numberIntegers]; // which variables are integer
@@ -1248,8 +1241,8 @@ OsiOslSolverInterfaceUnitTest(const std::string & mpsDir)
 	    }
 	  } else {
 	    // maximum iterations - exit
-	    handler->message(COIN_BAB_MAXITS,messages)
-	      <<CoinMessageEol;
+	    std::cout<<"Exiting on maximum iterations"
+	      <<std::endl;
 	  break;
 	  }
 	} else {
@@ -1257,16 +1250,17 @@ OsiOslSolverInterfaceUnitTest(const std::string & mpsDir)
 	  bestNode = node;
 	  // set cutoff (hard coded tolerance)
 	  m.setDblParam(OsiDualObjectiveLimit,bestNode.objectiveValue_-1.0e-5);
-	  handler->message(COIN_BAB_SOLUTION,messages)
-	    <<bestNode.objectiveValue_<<numberIterations
-	    <<numberNodes
-	    <<CoinMessageEol;
+	  std::cout<<"Integer solution of "
+		   <<bestNode.objectiveValue_
+		   <<" found after "<<numberIterations
+		   <<" iterations and "<<numberNodes<<" nodes"
+		   <<std::endl;
 	}
       }
-      handler->message(COIN_BAB_END,messages)
-	<<numberIterations
-	<<numberNodes
-	<<CoinMessageEol;
+      std::cout<<"Search took "
+	       <<numberIterations
+	       <<" iterations and "<<numberNodes<<" nodes"
+	       <<std::endl;
       if (bestNode.numberIntegers_) {
 	// we have a solution restore
 	// do bounds
@@ -1280,8 +1274,8 @@ OsiOslSolverInterfaceUnitTest(const std::string & mpsDir)
       }
       delete [] which;
     } else {
-      handler->message(COIN_BAB_INFEAS,messages)
-	<<CoinMessageEol;
+      std::cout<<"The LP relaxation is infeasible"
+	       <<std::endl;
       throw CoinError("The LP relaxation is infeasible or too expensive",
 		      "branchAndBound", "OsiClpSolverInterface");
     }

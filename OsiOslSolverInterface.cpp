@@ -314,7 +314,8 @@ bool OsiOslSolverInterface::isDualObjectiveLimitReached() const
 	return maxmin > 0 ? (obj > limit) /*minim*/ : (obj < limit) /*maxim*/;
      return false;
    case 2: // dual simplex
-     if (ekk_getIprobstat2(model) == 11) // over dual limit
+     if (ekk_getIprobstat(model) != 0 && ekk_getIprobstat2(model) == 11)
+	// over dual limit
 	return true;
      return maxmin > 0 ? (obj > limit) /*minim*/ : (obj < limit) /*maxim*/;
   }

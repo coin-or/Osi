@@ -2128,11 +2128,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     assert(cuts.sizeRowCuts()==4);
     assert(cuts.sizeColCuts()==5);
 
-    if ( glpkSolverInterface ) {
-      // Test for glpk since it does not return from this method call windows (and perhaps else where too).
-      failureMessage(solverName,"OsiSolverInterface::applyCuts method");
-    } 
-    else {  
+   {  
       OsiSolverInterface::ApplyCutsReturnCode rc = im.applyCuts(cuts);
       assert( rc.getNumIneffective() == 2 );
       assert( rc.getNumApplied() == 2 );
@@ -2153,11 +2149,6 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 
   // Test setting solution
 
-  if ( glpkSolverInterface ) {
-     // Test for glpk since it does not support this function
-     failureMessage(solverName,"setting solution is not yet implemented");
-  }
-  else 
   {
     OsiSolverInterface & m1 = *(exmip1Si->clone());
     int i;
@@ -2218,11 +2209,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     
     // Test fractionalIndices
 
-    if ( glpkSolverInterface ) {
-      // Test for glpk since it does not support setting column solution
-      failureMessage(solverName,"getFractionalIndices");
-    }
-    else {
+    {
       double sol[]={1.0, 2.0, 2.9, 3.0, 4.0};
       fim.setColSolution(sol);
       OsiVectorInt fi = fim.getFractionalIndices(1e-5);
@@ -3029,10 +3016,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   // Test case submitted by Vivian De Smedt (slightly modifed to work with
   // Vol Algorithm).
 
-  if ( glpkSolverInterface ) {
-    failureMessage(solverName,"Vivian De Smedt testcase problem on loadProblem call");
-  }
-  else {
+  {
     OsiSolverInterface *s = emptySi->clone();
     double dEmpty = 0;
     int iEmpty = 0;

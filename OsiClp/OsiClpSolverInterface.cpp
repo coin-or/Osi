@@ -94,6 +94,9 @@ void OsiClpSolverInterface::initialSolve()
   assert (gotHint);
   if (strength!=OsiHintIgnore)
     doCrash = takeHint ? 1 : -1;
+  // doPrimal set true if any structurals in basis so switch off crash
+  if (doPrimal)
+    doCrash = -1;
 	 
   // presolve
   gotHint = (getHintParam(OsiDoPresolveInInitial,takeHint,strength));
@@ -165,12 +168,11 @@ void OsiClpSolverInterface::initialSolve()
     //if (solver.numberIterations())
     //printf("****** iterated %d\n",solver.numberIterations());
   } else {
-    if (!doPrimal) {
-      if (doCrash>0)
-	solver.crash(1000.0,2);
-      else if (doCrash==0)
-	solver.crash(1000.0,0);
-    }
+    // do we want crash
+    if (doCrash>0)
+      solver.crash(1000.0,2);
+    else if (doCrash==0)
+      solver.crash(1000.0,0);
     if (algorithm<0)
       doPrimal=false;
     else if (algorithm>0)

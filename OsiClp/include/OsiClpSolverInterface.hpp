@@ -682,7 +682,7 @@ public:
     OsiClpSolverInterface (const OsiClpSolverInterface &);
     
     /// Borrow constructor - only delete one copy
-    OsiClpSolverInterface (ClpSimplex *);
+    OsiClpSolverInterface (ClpSimplex * rhs, bool reallyOwn=false);
 
     /// Releases so won't error
     void releaseClp();

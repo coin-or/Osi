@@ -57,10 +57,12 @@ void OsiClpSolverInterface::initialSolve()
   if (modelPtr_->solveType()==1) {
     gotHint = (getHintParam(OsiDoScale,takeHint,strength));
     assert (gotHint);
-    if (strength==OsiHintIgnore||takeHint)
-      solver.scaling(1);
-    else
+    if (strength==OsiHintIgnore||takeHint) {
+      if (!solver.scalingFlag())
+	solver.scaling(1);
+    } else {
       solver.scaling(0);
+    }
   } else {
     solver.scaling(0);
   }
@@ -247,7 +249,7 @@ void OsiClpSolverInterface::resolve()
     gotHint = (getHintParam(OsiDoScale,takeHint,strength));
     assert (gotHint);
     if (strength==OsiHintIgnore||takeHint)
-      solver.scaling(1);
+      solver.scaling(3);
     else
       solver.scaling(0);
   } else {
@@ -378,10 +380,12 @@ void OsiClpSolverInterface::resolve()
   if (modelPtr_->solveType()==1) {
     gotHint = (getHintParam(OsiDoScale,takeHint,strength));
     assert (gotHint);
-    if (strength==OsiHintIgnore||takeHint)
-      modelPtr_->scaling(1);
-    else
+    if (strength==OsiHintIgnore||takeHint) {
+      if (!modelPtr_->scalingFlag())
+	modelPtr_->scaling(3);
+    } else {
       modelPtr_->scaling(0);
+    }
   } else {
     modelPtr_->scaling(0);
   }
@@ -1369,7 +1373,8 @@ integerInformation_(NULL)
 }
 
 // Borrow constructor - only delete one copy
-OsiClpSolverInterface::OsiClpSolverInterface (ClpSimplex * rhs)
+OsiClpSolverInterface::OsiClpSolverInterface (ClpSimplex * rhs,
+					      bool reallyOwn)
 :
 OsiSolverInterface(),
 rowsense_(NULL),
@@ -1389,7 +1394,7 @@ specialOptions_(0)
   modelPtr_ = rhs;
   linearObjective_ = modelPtr_->objective();
   if (rhs) {
-    notOwned_=true;
+    notOwned_=!reallyOwn;
 
     if (rhs->integerInformation()) {
       int numberColumns = modelPtr_->numberColumns();
@@ -1710,9 +1715,6 @@ OsiClpSolverInterface::readMps(const char *filename,
   }
   if (numberIntegers) {
     modelPtr_->copyInIntegerInformation(info);
-    integerInformation_ = new char[numberColumns];
-    memcpy(integerInformation_,info,
-	   numberColumns*sizeof(char));
   }
   delete [] info;
   return numberErrors;

@@ -1583,7 +1583,6 @@ OsiCpxSolverInterface::setContinuous(int index)
 
   coltype_[index] = 'C';
 
-#if 0
   if ( probtypemip_ )
     {
       CPXLPptr lp = getMutableLpPtr();
@@ -1591,7 +1590,6 @@ OsiCpxSolverInterface::setContinuous(int index)
       err = CPXchgctype( env_, lp, 1, &index, &coltype_[index] );
       checkCPXerror( err, "CPXchgctype", "setContinuous" );
     }
-#endif
 }
 //-----------------------------------------------------------------------------
 void
@@ -1607,7 +1605,6 @@ OsiCpxSolverInterface::setInteger(int index)
   else
      coltype_[index] = 'I';
 
-#if 0
   if ( probtypemip_ )
     {
       CPXLPptr lp = getMutableLpPtr();
@@ -1615,7 +1612,6 @@ OsiCpxSolverInterface::setInteger(int index)
       err = CPXchgctype( env_, lp, 1, &index, &coltype_[index] );
       checkCPXerror( err, "CPXchgctype", "setInteger" );
     }
-#endif
 }
 //-----------------------------------------------------------------------------
 void

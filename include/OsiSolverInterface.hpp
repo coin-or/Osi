@@ -989,6 +989,12 @@ public:
     */
     virtual void activateRowCutDebugger (const char * modelName);
 
+    /** Activate debugger using full solution array.
+        Only integer values need to be correct.
+        Up to user to get it correct.
+        Sets up debugger if solution was valid.
+    */
+    virtual void activateRowCutDebugger( const double * solution);
     /** Get the row cut debugger.
 
 	If there is a row cut debugger object associated with

@@ -44,6 +44,12 @@ public:
       Returns true if debugger activated.
   */
   bool activate(const OsiSolverInterface & si, const char * model);
+  /** Activate debugger using full solution array.
+      Only integer values need to be correct.
+      Up to user to get it correct.
+      Returns true if debugger activated (i.e. solution was valid).
+  */
+  bool activate(const OsiSolverInterface & si, const double * solution);
   //@}
 
   /**@name Test if on Optimal Path */
@@ -71,12 +77,8 @@ public:
   */
   OsiRowCutDebugger (const OsiSolverInterface & si, const char * model);
 
-#if 0
-  // Constructor with integer solution
-  // Not implemented - would it be useful?
-  OsiRowCutDebugger (const OsiSolverInterface & si, int numberIntegers,
-		    const int * sequence, const int * values);
-#endif
+  // Constructor with full solution (only integers need be correct)
+  OsiRowCutDebugger (const OsiSolverInterface & si, const double * solution);
  
   /// Copy constructor 
   OsiRowCutDebugger (

@@ -15,6 +15,7 @@
 #include "CoinHelperFunctions.hpp"
 #include "CoinPackedVector.hpp"
 #include "CoinPackedMatrix.hpp"
+#include "CoinWarmStartBasis.hpp"
 
 #include "OsiRowCutDebugger.hpp"
 
@@ -828,6 +829,16 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
     intSoln.setConstant(numIndices,intIndicesAt1,1.0);
     expectedNumberColumns=378;
   }
+  // markshare1
+  else if ( modelL == "markshare1" ) {
+    probType=continuousWith0_1;
+    int intIndicesAt1[]=
+      {12 ,13 ,17 ,18 ,22 ,27 ,28 ,29 ,33 ,34 ,35 ,36 ,
+       39 ,42 ,43 ,44 ,46 ,47 ,49 ,51 ,52 ,53 ,54 ,55 ,59 };
+    int numIndices = sizeof(intIndicesAt1)/sizeof(int);
+    intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=62;
+  }
 
   // l152lav
   else if ( modelL == "l152lav" ) {
@@ -965,6 +976,9 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
         std::cerr <<"colupper[" <<c <<"]=" <<(si.colupper())[c] <<" " <<(siCopy->colupper())[c] <<std::endl;
       }
 #endif
+      // make sure all slack basis
+      //CoinWarmStartBasis allSlack;
+      //siCopy->setWarmStart(&allSlack);
       siCopy->initialSolve();
 #if 0
       for ( c=0; c<siCopy->getNumCols(); c++ ) {
@@ -973,7 +987,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
       OsiRelFltEq eq;
       assert( eq(siCopy->getObjValue(),3.2368421052632));
 #endif
-      
+      assert (siCopy->isProvenOptimal());
       // Save column solution
       CoinCopyN(siCopy->getColSolution(),numberColumns_,optimalSolution_);
 
@@ -982,6 +996,65 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
   }
  
   //if (integerVariable_!=NULL) si.rowCutDebugger_=this;
+
+  return (integerVariable_!=NULL);
+}
+/* Activate debugger using full solution array.
+   Up to user to get it correct.
+   Returns true if debugger activated (i.e. solution was valid).
+*/
+bool 
+OsiRowCutDebugger::activate(const OsiSolverInterface & si, const double * solution)
+{
+  int i;
+  //get rid of any arrays
+  delete [] integerVariable_;
+  delete [] optimalSolution_;
+  OsiSolverInterface * siCopy = si.clone();
+  numberColumns_ = siCopy->getNumCols();;
+  integerVariable_= new bool[numberColumns_];
+  optimalSolution_=new double[numberColumns_];
+  
+  // Loop once for each column looking for integer variables
+  for (i=0;i<numberColumns_;i++) {
+    
+    // Is the this an integer variable?
+    if(siCopy->isInteger(i)) {
+      
+      // integer variable found
+      integerVariable_[i]=true;
+      
+      // Determine optimal solution value for integer i
+      // from values saved in intSoln and probType.
+      double soln=solution[i];
+      // Set bounds in copyied problem to fix variable to its solution     
+      siCopy->setColUpper(i,soln);
+      siCopy->setColLower(i,soln);
+      
+    } else {
+      // this is not an integer variable
+      integerVariable_[i]=false;
+    }
+  }
+  
+  // All integers have been fixed at optimal value.
+  // Now solve to get continuous values
+  // make sure all slack basis
+  //CoinWarmStartBasis allSlack;
+  //siCopy->setWarmStart(&allSlack);
+  siCopy->initialSolve();
+  if (siCopy->isProvenOptimal()) {
+    // Save column solution
+    CoinCopyN(siCopy->getColSolution(),numberColumns_,optimalSolution_);
+  } else {
+    // bad solution
+    delete [] integerVariable_;
+    delete [] optimalSolution_;
+    integerVariable_=NULL;
+    optimalSolution_=NULL;
+  }
+  
+  delete siCopy;
 
   return (integerVariable_!=NULL);
 }
@@ -1010,6 +1083,15 @@ OsiRowCutDebugger::OsiRowCutDebugger (
   optimalSolution_(NULL)
 {
   activate(si,model);
+}
+// Constructor with full solution (only integers need be correct)
+OsiRowCutDebugger::OsiRowCutDebugger (const OsiSolverInterface & si, 
+                                      const double * solution)
+: numberColumns_(0),
+  integerVariable_(NULL),
+  optimalSolution_(NULL)
+{
+  activate(si,solution);
 }
 
 //-------------------------------------------------------------------

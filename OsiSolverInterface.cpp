@@ -465,7 +465,15 @@ void OsiSolverInterface::activateRowCutDebugger (const char * modelName)
   delete rowCutDebugger_;
   rowCutDebugger_ = new OsiRowCutDebugger(*this,modelName);
 }
-
+/* Activate debugger using full solution array.
+   Only integer values need to be correct.
+   Up to user to get it correct.
+*/
+void OsiSolverInterface::activateRowCutDebugger (const double * solution)
+{
+  delete rowCutDebugger_;
+  rowCutDebugger_ = new OsiRowCutDebugger(*this,solution);
+}
 //-------------------------------------------------------------------
 // Get Row Cut Debugger<br>
 // If there is a row cut debugger object associated with

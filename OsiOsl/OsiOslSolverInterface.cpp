@@ -75,7 +75,8 @@ void OsiOslSolverInterface::resolve()
   // Switch off printing if asked to
   bool takeHint;
   OsiHintStrength strength;
-  assert(getHintParam(OsiDoReducePrint,takeHint,strength));
+  bool gotHint = getHintParam(OsiDoReducePrint,takeHint,strength);
+  assert(gotHint);
   if (strength!=OsiHintIgnore&&takeHint) {
     if (!messageHandler()->logLevel())
       ekk_messagesPrintOff(model,1,5000);

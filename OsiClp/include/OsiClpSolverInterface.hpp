@@ -664,6 +664,10 @@ private:
      /** A pointer to the warmstart information to be used in the hotstarts.
 	 This is NOT efficient and more thought should be given to it... */
      mutable CoinWarmStartBasis* ws_;
+     /** also save row and column information for hot starts
+      only used in hotstarts so can be casual */
+     mutable double * rowActivity_;
+     mutable double * columnActivity_;
      /** Warmstart information to be used in resolves. */
      CoinWarmStartBasis basis_;
      /** The original iteration limit before hotstarts started. */

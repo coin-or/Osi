@@ -335,19 +335,32 @@ bool OsiClpSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
 
 void OsiClpSolverInterface::markHotStart()
 {
-  // *TEST*
   delete ws_;
   ws_ = dynamic_cast<CoinWarmStartBasis*>(getWarmStart());
   modelPtr_->getIntParam(ClpMaxNumIteration,itlimOrig_);
   int itlim;
-  OsiSolverInterface::getIntParam(OsiMaxNumIterationHotStart, itlim);
+  modelPtr_->getIntParam(ClpMaxNumIterationHotStart, itlim);
   modelPtr_->setIntParam(ClpMaxNumIteration,itlim);
+  int numberRows = modelPtr_->numberRows();
+  rowActivity_= new double[numberRows];
+  memcpy(rowActivity_,modelPtr_->primalRowSolution(),
+	 numberRows*sizeof(double));
+  int numberColumns = modelPtr_->numberColumns();
+  columnActivity_= new double[numberColumns];
+  memcpy(columnActivity_,modelPtr_->primalColumnSolution(),
+	 numberColumns*sizeof(double));
 
 }
 
 void OsiClpSolverInterface::solveFromHotStart()
 {
   setWarmStart(ws_);
+  int numberRows = modelPtr_->numberRows();
+  memcpy(modelPtr_->primalRowSolution(),
+	 rowActivity_,numberRows*sizeof(double));
+  int numberColumns = modelPtr_->numberColumns();
+  memcpy(modelPtr_->primalColumnSolution(),columnActivity_,
+	 numberColumns*sizeof(double));
   resolve();
   
 }
@@ -358,6 +371,10 @@ void OsiClpSolverInterface::unmarkHotStart()
   modelPtr_->setIntParam(ClpMaxNumIteration,itlimOrig_);
   delete ws_;
   ws_ = NULL;
+  delete [] rowActivity_;
+  delete [] columnActivity_;
+  rowActivity_=NULL;
+  columnActivity_=NULL;
 }
 
 //#############################################################################
@@ -884,6 +901,8 @@ rowsense_(NULL),
 rhs_(NULL),
 rowrange_(NULL),
 ws_(NULL),
+rowActivity_(NULL),
+columnActivity_(NULL),
 basis_(),  
 itlimOrig_(9999999),
 lastAlgorithm_(0),
@@ -919,6 +938,8 @@ rowsense_(NULL),
 rhs_(NULL),
 rowrange_(NULL),
 ws_(NULL),
+rowActivity_(NULL),
+columnActivity_(NULL),
 basis_(),
 itlimOrig_(9999999),
 lastAlgorithm_(0),
@@ -950,6 +971,8 @@ rowsense_(NULL),
 rhs_(NULL),
 rowrange_(NULL),
 ws_(NULL),
+rowActivity_(NULL),
+columnActivity_(NULL),
 basis_(),
 itlimOrig_(9999999),
 lastAlgorithm_(0),
@@ -989,6 +1012,8 @@ OsiClpSolverInterface::~OsiClpSolverInterface ()
   if (!notOwned_)
     delete modelPtr_;
   delete ws_;
+  delete [] rowActivity_;
+  delete [] columnActivity_;
   delete [] integerInformation_;
 }
 
@@ -1010,6 +1035,10 @@ OsiClpSolverInterface::operator=(const OsiClpSolverInterface& rhs)
     
     if ( rhs.ws_ ) 
       ws_ = new CoinWarmStartBasis(*rhs.ws_);
+    delete [] rowActivity_;
+    delete [] columnActivity_;
+    rowActivity_=NULL;
+    columnActivity_=NULL;
     basis_ = rhs.basis_;
     intParamMap_ = rhs.intParamMap_;
     dblParamMap_ = rhs.dblParamMap_;

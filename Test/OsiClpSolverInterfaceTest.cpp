@@ -12,7 +12,7 @@
 #include "OsiCuts.hpp"
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
-#include "OsiOsiMessage.hpp"
+#include "CoinMessage.hpp"
 #include "ClpMessage.hpp"
 
 //#############################################################################
@@ -21,14 +21,14 @@
 #undef NDEBUG
 #endif
 class OsiClpMessageTest :
-   public OsiMessageHandler {
+   public CoinMessageHandler {
 
 public:
   virtual int print() ;
   OsiClpMessageTest();
 };
 
-OsiClpMessageTest::OsiClpMessageTest() : OsiMessageHandler()
+OsiClpMessageTest::OsiClpMessageTest() : CoinMessageHandler()
 {
 }
 int
@@ -38,7 +38,7 @@ OsiClpMessageTest::print()
     std::cout<<"This is not actually an advertisement by Dash Associates - just my feeble attempt to test message handling and language - JJHF"<<std::endl;
   else if (currentMessage().externalNumber()==5&&currentSource()=="Osi") 
     std::cout<<"End of search trapped"<<std::endl;
-  return OsiMessageHandler::print();
+  return CoinMessageHandler::print();
 }
 
 //--------------------------------------------------------------------------
@@ -62,7 +62,7 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir)
   
   
   {    
-    OsiRelFltEq eq;
+    CoinRelFltEq eq;
     OsiClpSolverInterface m;
     std::string fn = mpsDir+"exmip1";
     m.readMps(fn.c_str(),"mps");
@@ -403,11 +403,11 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir)
     // Test matrixByRow method
     { 
       const OsiClpSolverInterface si(m);
-      const OsiPackedMatrix * smP = si.getMatrixByRow();
+      const CoinPackedMatrix * smP = si.getMatrixByRow();
       // LL:      const OsiClpPackedMatrix * osmP = dynamic_cast<const OsiClpPackedMatrix*>(smP);
       // LL: assert( osmP!=NULL );
       
-      OsiRelFltEq eq;
+      CoinRelFltEq eq;
       const double * ev = smP->getElements();
       assert( eq(ev[0],   3.0) );
       assert( eq(ev[1],   1.0) );
@@ -456,11 +456,11 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir)
     {
   
       const OsiClpSolverInterface si(m);
-      const OsiPackedMatrix * smP = si.getMatrixByCol();
+      const CoinPackedMatrix * smP = si.getMatrixByCol();
       // LL:      const OsiClpPackedMatrix * osmP = dynamic_cast<const OsiClpPackedMatrix*>(smP);
       // LL: assert( osmP!=NULL );
       
-      OsiRelFltEq eq;
+      CoinRelFltEq eq;
       const double * ev = smP->getElements();
       assert( eq(ev[0],   3.0) );
       assert( eq(ev[1],   5.6) );
@@ -548,7 +548,7 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir)
         assert( eq(siC1rr[3],5.0-1.8) );
         assert( eq(siC1rr[4],15.0-3.0) );
         
-        const OsiPackedMatrix * siC1mbr = siC1.getMatrixByRow();
+        const CoinPackedMatrix * siC1mbr = siC1.getMatrixByRow();
         assert( siC1mbr != NULL );
         
         const double * ev = siC1mbr->getElements();
@@ -670,7 +670,7 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir)
       assert( eq(lhsrr[4],15.0-3.0) );
       assert( eq(lhsrr[5],0.0) );      
       
-      const OsiPackedMatrix * lhsmbr = lhs.getMatrixByRow();
+      const CoinPackedMatrix * lhsmbr = lhs.getMatrixByRow();
       assert( lhsmbr != NULL );       
       const double * ev = lhsmbr->getElements();
       assert( eq(ev[0],   3.0) );
@@ -726,12 +726,12 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir)
     std::string fn = mpsDir+"p0033";
     m.readMps(fn.c_str(),"mps");
     std::cout<<"Testing languages and derived message handler"<<std::endl;
-    m.setLanguage(OsiMessages::uk_en);
+    m.setLanguage(CoinMessages::uk_en);
     // derived message handler
     OsiClpMessageTest messageHandler;
     // Vanilla one but to FILE ptr
 
-    OsiMessageHandler defaultHandler(stderr);
+    CoinMessageHandler defaultHandler(stderr);
     
     /* This is a bit of a mess - or it could be a feature.  Osi and
        Clp can be using different message handlers.  On reflection I
@@ -740,7 +740,7 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir)
     m.getModelPtr()->passInMessageHandler(&messageHandler);
     
     m.initialSolve();
-    m.setLanguage(OsiMessages::us_en);
+    m.setLanguage(CoinMessages::us_en);
     // now put Clp messages to stderr and trap end of search
     m.getModelPtr()->passInMessageHandler(&defaultHandler);
 

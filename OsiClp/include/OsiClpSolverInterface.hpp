@@ -6,11 +6,12 @@
 
 #include <string>
 #include <cfloat>
+#include <map>
 
-#include "OsiSolverInterface.hpp"
-#include "OsiPackedMatrix.hpp"
 #include "ClpModel.hpp"
-#include "OsiWarmStartBasis.hpp"
+#include "CoinPackedMatrix.hpp"
+#include "OsiSolverInterface.hpp"
+#include "CoinWarmStartBasis.hpp"
 
 class OsiRowCut;
 
@@ -101,10 +102,10 @@ public:
   /**@name WarmStart related methods */
   //@{
     /// Get warmstarting information
-    virtual OsiWarmStart* getWarmStart() const;
+    virtual CoinWarmStart* getWarmStart() const;
     /** Set warmstarting information. Return true/false depending on whether
 	the warmstart information was accepted or not. */
-    virtual bool setWarmStart(const OsiWarmStart* warmstart);
+    virtual bool setWarmStart(const CoinWarmStart* warmstart);
   //@}
 
   //---------------------------------------------------------------------------
@@ -205,10 +206,10 @@ public:
   
   
       /// Get pointer to row-wise copy of matrix
-      virtual const OsiPackedMatrix * getMatrixByRow() const;
+      virtual const CoinPackedMatrix * getMatrixByRow() const;
   
       /// Get pointer to column-wise copy of matrix
-      virtual const OsiPackedMatrix * getMatrixByCol() const;
+      virtual const CoinPackedMatrix * getMatrixByCol() const;
   
       /// Get solver's value for infinity
       virtual double getInfinity() const { return OsiClpInfinity; }
@@ -412,31 +413,31 @@ public:
        continuous variable. */
     //@{
       /** */
-      virtual void addCol(const OsiPackedVectorBase& vec,
+      virtual void addCol(const CoinPackedVectorBase& vec,
     			     const double collb, const double colub,   
     			     const double obj);
       /** */
       virtual void addCols(const int numcols,
-			   const OsiPackedVectorBase * const * cols,
+			   const CoinPackedVectorBase * const * cols,
 			   const double* collb, const double* colub,   
 			   const double* obj);
       /** */
       virtual void deleteCols(const int num, const int * colIndices);
     
       /** */
-      virtual void addRow(const OsiPackedVectorBase& vec,
+      virtual void addRow(const CoinPackedVectorBase& vec,
     			  const double rowlb, const double rowub);
       /** */
-      virtual void addRow(const OsiPackedVectorBase& vec,
+      virtual void addRow(const CoinPackedVectorBase& vec,
     			  const char rowsen, const double rowrhs,   
     			  const double rowrng);
       /** */
       virtual void addRows(const int numrows,
-			   const OsiPackedVectorBase * const * rows,
+			   const CoinPackedVectorBase * const * rows,
 			   const double* rowlb, const double* rowub);
       /** */
       virtual void addRows(const int numrows,
-			   const OsiPackedVectorBase * const * rows,
+			   const CoinPackedVectorBase * const * rows,
     			   const char* rowsen, const double* rowrhs,   
     			   const double* rowrng);
       /** */
@@ -467,7 +468,7 @@ public:
 	  <li> <code>obj</code>: all variables have 0 objective coefficient
         </ul>
     */
-    virtual void loadProblem(const OsiPackedMatrix& matrix,
+    virtual void loadProblem(const CoinPackedMatrix& matrix,
 			     const double* collb, const double* colub,   
 			     const double* obj,
 			     const double* rowlb, const double* rowub);
@@ -479,7 +480,7 @@ public:
         freed using the C++ <code>delete</code> and <code>delete[]</code>
         functions. 
     */
-    virtual void assignProblem(OsiPackedMatrix*& matrix,
+    virtual void assignProblem(CoinPackedMatrix*& matrix,
     			     double*& collb, double*& colub, double*& obj,
     			     double*& rowlb, double*& rowub);
     			    
@@ -495,7 +496,7 @@ public:
           <li> <code>rowrng</code>: 0 for the ranged rows
         </ul>
     */
-    virtual void loadProblem(const OsiPackedMatrix& matrix,
+    virtual void loadProblem(const CoinPackedMatrix& matrix,
     			   const double* collb, const double* colub,
     			   const double* obj,
     			   const char* rowsen, const double* rowrhs,   
@@ -508,7 +509,7 @@ public:
         freed using the C++ <code>delete</code> and <code>delete[]</code>
         functions. 
     */
-    virtual void assignProblem(OsiPackedMatrix*& matrix,
+    virtual void assignProblem(CoinPackedMatrix*& matrix,
     			     double*& collb, double*& colub, double*& obj,
     			     char*& rowsen, double*& rowrhs,
     			     double*& rowrng);
@@ -558,8 +559,8 @@ public:
    If not then you could use underlying model pointer */
   //@{
   /// Set language
-  void newLanguage(OsiMessages::Language language);
-  void setLanguage(OsiMessages::Language language)
+  void newLanguage(CoinMessages::Language language);
+  void setLanguage(CoinMessages::Language language)
   {newLanguage(language);};
   //@}
   //---------------------------------------------------------------------------
@@ -621,6 +622,9 @@ private:
 
     /// A method that fills up the rowsense_, rhs_ and rowrange_ arrays
     void extractSenseRhsRange() const;
+
+    ///
+    void fillParamMaps();
   //@}
   
   /**@name Private member data */
@@ -643,9 +647,9 @@ private:
 
      /** A pointer to the warmstart information to be used in the hotstarts.
 	 This is NOT efficient and more thought should be given to it... */
-     mutable OsiWarmStartBasis* ws_;
+     mutable CoinWarmStartBasis* ws_;
      /** Warmstart information to be used in resolves. */
-     OsiWarmStartBasis basis_;
+     CoinWarmStartBasis basis_;
      /** The original iteration limit before hotstarts started. */
      int itlimOrig_;
 
@@ -653,10 +657,14 @@ private:
      int lastAlgorithm_;
   
      /// Pointer to row-wise copy of problem matrix coefficients.
-     mutable OsiPackedMatrix *matrixByRow_;  
+     mutable CoinPackedMatrix *matrixByRow_;  
 
      /// Pointer to integer information
      char * integerInformation_;
+
+     std::map<OsiIntParam, ClpIntParam> intParamMap_;
+     std::map<OsiDblParam, ClpDblParam> dblParamMap_;
+     std::map<OsiStrParam, ClpStrParam> strParamMap_;
   //@}
 };
 

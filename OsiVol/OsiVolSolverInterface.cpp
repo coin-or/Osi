@@ -9,9 +9,10 @@
 #include <numeric>
 #include <cassert>
 
-#include "OsiWarmStartDual.hpp"
-#include "OsiVolSolverInterface.hpp"
 #include "CoinHelperFunctions.hpp"
+#include "CoinWarmStartDual.hpp"
+
+#include "OsiVolSolverInterface.hpp"
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
 
@@ -77,7 +78,7 @@ OsiVolSolverInterface::compute_rc_(const double* u, double* rc) const
 //#############################################################################
 
 bool
-OsiVolSolverInterface::test_zero_one_minusone_(const OsiPackedMatrix& m) const
+OsiVolSolverInterface::test_zero_one_minusone_(const CoinPackedMatrix& m) const
 {
   const int vecnum = m.getMajorDim();
   const double* elem = m.getElements();
@@ -98,7 +99,7 @@ OsiVolSolverInterface::test_zero_one_minusone_(const OsiPackedMatrix& m) const
 //-----------------------------------------------------------------------------
 
 OsiVolSolverInterface::OsiVolMatrixOneMinusOne_::
-OsiVolMatrixOneMinusOne_(const OsiPackedMatrix& m) {
+OsiVolMatrixOneMinusOne_(const CoinPackedMatrix& m) {
   const int major = m.getMajorDim();
   const double* elem = m.getElements();
   const int* ind = m.getIndices();
@@ -713,19 +714,19 @@ OsiVolSolverInterface::isIterationLimitReached() const
 // WarmStart related methods
 //#############################################################################
 
-OsiWarmStart*
+CoinWarmStart*
 OsiVolSolverInterface::getWarmStart() const
 {
-  return new OsiWarmStartDual(getNumRows(), rowprice_);
+  return new CoinWarmStartDual(getNumRows(), rowprice_);
 }
 
 //-----------------------------------------------------------------------------
 
 bool
-OsiVolSolverInterface::setWarmStart(const OsiWarmStart* warmstart)
+OsiVolSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
 {
-  const OsiWarmStartDual* ws =
-    dynamic_cast<const OsiWarmStartDual*>(warmstart);
+  const CoinWarmStartDual* ws =
+    dynamic_cast<const CoinWarmStartDual*>(warmstart);
 
   if (! ws)
     return false;
@@ -780,7 +781,7 @@ OsiVolSolverInterface::isContinuous(int colNumber) const
 
 //-----------------------------------------------------------------------------
 
-const OsiPackedMatrix *
+const CoinPackedMatrix *
 OsiVolSolverInterface::getMatrixByRow() const {
    updateRowMatrix_();
    return &rowMatrix_;
@@ -788,7 +789,7 @@ OsiVolSolverInterface::getMatrixByRow() const {
 
 //-----------------------------------------------------------------------
 
-const OsiPackedMatrix *
+const CoinPackedMatrix *
 OsiVolSolverInterface::getMatrixByCol() const {
    updateColMatrix_();
    return &colMatrix_;
@@ -968,7 +969,7 @@ OsiVolSolverInterface::setRowPrice(const double *rowprice)
 //#############################################################################
 
 void 
-OsiVolSolverInterface::addCol(const OsiPackedVectorBase& vec,
+OsiVolSolverInterface::addCol(const CoinPackedVectorBase& vec,
 			      const double collb, const double colub,   
 			      const double obj)
 {
@@ -990,7 +991,7 @@ OsiVolSolverInterface::addCol(const OsiPackedVectorBase& vec,
 
 void 
 OsiVolSolverInterface::addCols(const int numcols,
-			       const OsiPackedVectorBase * const * cols,
+			       const CoinPackedVectorBase * const * cols,
 			       const double* collb, const double* colub,   
 			       const double* obj)
 {
@@ -1045,7 +1046,7 @@ OsiVolSolverInterface::deleteCols(const int num, const int * columnIndices)
 //-----------------------------------------------------------------------------
 
 void 
-OsiVolSolverInterface::addRow(const OsiPackedVectorBase& vec,
+OsiVolSolverInterface::addRow(const CoinPackedVectorBase& vec,
 			      const double rowlb, const double rowub)
 {
   const int rownum = getNumRows();
@@ -1065,7 +1066,7 @@ OsiVolSolverInterface::addRow(const OsiPackedVectorBase& vec,
 //-----------------------------------------------------------------------------
 
 void 
-OsiVolSolverInterface::addRow(const OsiPackedVectorBase& vec,
+OsiVolSolverInterface::addRow(const CoinPackedVectorBase& vec,
 			      const char rowsen, const double rowrhs,   
 			      const double rowrng)
 {
@@ -1088,7 +1089,7 @@ OsiVolSolverInterface::addRow(const OsiPackedVectorBase& vec,
 
 void 
 OsiVolSolverInterface::addRows(const int numrows,
-			       const OsiPackedVectorBase * const * rows,
+			       const CoinPackedVectorBase * const * rows,
 			       const double* rowlb, const double* rowub)
 {
   if (numrows > 0) {
@@ -1113,7 +1114,7 @@ OsiVolSolverInterface::addRows(const int numrows,
 
 void 
 OsiVolSolverInterface::addRows(const int numrows,
-			       const OsiPackedVectorBase * const * rows,
+			       const CoinPackedVectorBase * const * rows,
 			       const char* rowsen, const double* rowrhs,   
 			       const double* rowrng)
 {

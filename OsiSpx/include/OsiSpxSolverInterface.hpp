@@ -89,10 +89,10 @@ public:
   /**@name WarmStart related methods */
   //@{
     /// Get warmstarting information
-    virtual OsiWarmStart* getWarmStart() const;
+    virtual CoinWarmStart* getWarmStart() const;
     /** Set warmstarting information. Return true/false depending on whether
 	the warmstart information was accepted or not. */
-    virtual bool setWarmStart(const OsiWarmStart* warmstart);
+    virtual bool setWarmStart(const CoinWarmStart* warmstart);
   //@}
 
   //---------------------------------------------------------------------------
@@ -204,10 +204,10 @@ public:
 #endif
   
       /// Get pointer to row-wise copy of matrix
-      virtual const OsiPackedMatrix * getMatrixByRow() const;
+      virtual const CoinPackedMatrix * getMatrixByRow() const;
   
       /// Get pointer to column-wise copy of matrix
-      virtual const OsiPackedMatrix * getMatrixByCol() const;
+      virtual const CoinPackedMatrix * getMatrixByCol() const;
   
       /// Get solver's value for infinity
       virtual double getInfinity() const;
@@ -405,14 +405,14 @@ public:
        continuous variable. */
     //@{
       /** */
-      virtual void addCol(const OsiPackedVectorBase& vec,
+      virtual void addCol(const CoinPackedVectorBase& vec,
 			  const double collb, const double colub,   
 			  const double obj);
 
 #if 0 // we are using the default implementation of OsiSolverInterface
       /** */
       virtual void addCols(const int numcols,
-			   const OsiPackedVectorBase * const * cols,
+			   const CoinPackedVectorBase * const * cols,
 			   const double* collb, const double* colub,   
 			   const double* obj);
 #endif
@@ -421,21 +421,21 @@ public:
       virtual void deleteCols(const int num, const int * colIndices);
     
       /** */
-      virtual void addRow(const OsiPackedVectorBase& vec,
+      virtual void addRow(const CoinPackedVectorBase& vec,
     			  const double rowlb, const double rowub);
       /** */
-      virtual void addRow(const OsiPackedVectorBase& vec,
+      virtual void addRow(const CoinPackedVectorBase& vec,
     			  const char rowsen, const double rowrhs,   
     			  const double rowrng);
 
 #if 0 // we are using the default implementation of OsiSolverInterface
       /** */
       virtual void addRows(const int numrows,
-			   const OsiPackedVectorBase * const * rows,
+			   const CoinPackedVectorBase * const * rows,
 			   const double* rowlb, const double* rowub);
       /** */
       virtual void addRows(const int numrows,
-			   const OsiPackedVectorBase * const * rows,
+			   const CoinPackedVectorBase * const * rows,
     			   const char* rowsen, const double* rowrhs,   
     			   const double* rowrng);
 #endif
@@ -487,7 +487,7 @@ public:
 	  <li> <code>obj</code>: all variables have 0 objective coefficient
         </ul>
     */
-    virtual void loadProblem(const OsiPackedMatrix& matrix,
+    virtual void loadProblem(const CoinPackedMatrix& matrix,
 			     const double* collb, const double* colub,   
 			     const double* obj,
 			     const double* rowlb, const double* rowub);
@@ -499,7 +499,7 @@ public:
 	freed using the C++ <code>delete</code> and <code>delete[]</code>
 	functions. 
     */
-    virtual void assignProblem(OsiPackedMatrix*& matrix,
+    virtual void assignProblem(CoinPackedMatrix*& matrix,
 			       double*& collb, double*& colub, double*& obj,
 			       double*& rowlb, double*& rowub);
 
@@ -515,7 +515,7 @@ public:
           <li> <code>rowrng</code>: 0 for the ranged rows
         </ul>
     */
-    virtual void loadProblem(const OsiPackedMatrix& matrix,
+    virtual void loadProblem(const CoinPackedMatrix& matrix,
 			     const double* collb, const double* colub,
 			     const double* obj,
 			     const char* rowsen, const double* rowrhs,   
@@ -528,7 +528,7 @@ public:
 	freed using the C++ <code>delete</code> and <code>delete[]</code>
 	functions. 
     */
-    virtual void assignProblem(OsiPackedMatrix*& matrix,
+    virtual void assignProblem(CoinPackedMatrix*& matrix,
 			       double*& collb, double*& colub, double*& obj,
 			       char*& rowsen, double*& rowrhs,
 			       double*& rowrng);
@@ -689,10 +689,10 @@ private:
   mutable soplex::DVector *rowact_;
 
   /// Pointer to row-wise copy of problem matrix coefficients.
-  mutable OsiPackedMatrix *matrixByRow_;  
+  mutable CoinPackedMatrix *matrixByRow_;  
   
   /// Pointer to row-wise copy of problem matrix coefficients.
-  mutable OsiPackedMatrix *matrixByCol_;  
+  mutable CoinPackedMatrix *matrixByCol_;  
   //@}
   //@}
 };

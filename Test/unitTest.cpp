@@ -10,25 +10,18 @@
 #include <cassert>
 #include <iostream>
 
-#include "CoinError.hpp"
-#include "CoinHelperFunctions.hpp"
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
 #include "OsiCuts.hpp"
+#include "CoinHelperFunctions.hpp"
 #include "CoinSort.hpp"
-#include "OsiShallowPackedVector.hpp"
-#include "OsiPackedVector.hpp"
-#include "OsiIndexedVector.hpp"
 #include "OsiSolverInterface.hpp"
-#include "OsiPackedMatrix.hpp"
 #include "OsiRowCutDebugger.hpp"
-#include "OsiMpsReader.hpp"
 #ifdef COIN_USE_OSL
 #include "OsiOslSolverInterface.hpp"
 #endif
 #ifdef COIN_USE_XPR
 #include "OsiXprSolverInterface.hpp"
-//#include <xpresso.h>
 #endif
 #ifdef COIN_USE_CPX
 #include "OsiCpxSolverInterface.hpp"
@@ -128,29 +121,6 @@ int main (int argc, const char *argv[])
     netlibDir=parms["-netlibDir"] + dirsep;
   else 
     netlibDir = dirsep == '/' ? "../Mps/Netlib/" : "..\\Mps\\Netlib\\";
-
-  // *FIXME* : these tests should be written... 
-  //  testingMessage( "Testing CoinHelperFunctions\n" );
-  //  CoinHelperFunctionsUnitTest();
-  //  testingMessage( "Testing CoinSort\n" );
-  //  tripleCompareUnitTest();
-  //  testingMessage( "Testing CoinError\n" );
-  //  CoinErrorUnitTest();
-
-  testingMessage( "Testing OsiShallowPackedVector\n" );
-  OsiShallowPackedVectorUnitTest();
-
-  testingMessage( "Testing OsiPackedVector\n" );
-  OsiPackedVectorUnitTest();
-
-  testingMessage( "Testing OsiIndexedVector\n" );
-  OsiIndexedVectorUnitTest();
-
-  testingMessage( "Testing OsiPackedMatrix\n" );
-  OsiPackedMatrixUnitTest();
-
-  testingMessage( "Testing OsiMpsReader\n" );
-  OsiMpsReaderUnitTest(mpsDir);
 
 #ifdef COIN_USE_OSL  
   {

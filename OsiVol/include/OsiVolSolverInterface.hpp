@@ -6,9 +6,11 @@
 
 #include <string>
 
-#include "OsiSolverInterface.hpp"
-#include "OsiPackedMatrix.hpp"
 #include "VolVolume.hpp"
+
+#include "CoinPackedMatrix.hpp"
+
+#include "OsiSolverInterface.hpp"
 
 static const double OsiVolInfinity = 1.0e31;
 
@@ -39,7 +41,7 @@ private:
     int * minusLength_;
 
   public:
-    OsiVolMatrixOneMinusOne_(const OsiPackedMatrix& m);
+    OsiVolMatrixOneMinusOne_(const CoinPackedMatrix& m);
     ~OsiVolMatrixOneMinusOne_();
     void timesMajor(const double* x, double* y) const;
   };
@@ -114,10 +116,10 @@ public:
   /**@name WarmStart related methods */
   //@{
     /// Get warmstarting information
-    virtual OsiWarmStart* getWarmStart() const;
+    virtual CoinWarmStart* getWarmStart() const;
     /** Set warmstarting information. Return true/false depending on whether
 	the warmstart information was accepted or not. */
-    virtual bool setWarmStart(const OsiWarmStart* warmstart);
+    virtual bool setWarmStart(const CoinWarmStart* warmstart);
   //@}
 
   //---------------------------------------------------------------------------
@@ -235,10 +237,10 @@ public:
 #endif
   
       /// Get pointer to row-wise copy of matrix
-      virtual const OsiPackedMatrix * getMatrixByRow() const;
+      virtual const CoinPackedMatrix * getMatrixByRow() const;
   
       /// Get pointer to column-wise copy of matrix
-      virtual const OsiPackedMatrix * getMatrixByCol() const;
+      virtual const CoinPackedMatrix * getMatrixByCol() const;
   
       /// Get solver's value for infinity
       virtual double getInfinity() const { return OsiVolInfinity; }
@@ -457,17 +459,17 @@ public:
        continuous variable. */
     //@{
       /** */
-      virtual void addCol(const OsiPackedVectorBase& vec,
+      virtual void addCol(const CoinPackedVectorBase& vec,
     			     const double collb, const double colub,   
     			     const double obj);
       /** */
       virtual void addCols(const int numcols,
-			   const OsiPackedVectorBase * const * cols,
+			   const CoinPackedVectorBase * const * cols,
 			   const double* collb, const double* colub,   
 			   const double* obj);
 #if 0
       /** */
-      virtual void addCols(const OsiPackedMatrix& matrix,
+      virtual void addCols(const CoinPackedMatrix& matrix,
 			   const double* collb, const double* colub,   
 			   const double* obj);
 #endif
@@ -475,27 +477,27 @@ public:
       virtual void deleteCols(const int num, const int * colIndices);
     
       /** */
-      virtual void addRow(const OsiPackedVectorBase& vec,
+      virtual void addRow(const CoinPackedVectorBase& vec,
     			  const double rowlb, const double rowub);
       /** */
-      virtual void addRow(const OsiPackedVectorBase& vec,
+      virtual void addRow(const CoinPackedVectorBase& vec,
     			  const char rowsen, const double rowrhs,   
     			  const double rowrng);
       /** */
       virtual void addRows(const int numrows,
-			   const OsiPackedVectorBase * const * rows,
+			   const CoinPackedVectorBase * const * rows,
 			   const double* rowlb, const double* rowub);
       /** */
       virtual void addRows(const int numrows,
-			   const OsiPackedVectorBase * const * rows,
+			   const CoinPackedVectorBase * const * rows,
     			   const char* rowsen, const double* rowrhs,   
     			   const double* rowrng);
 #if 0
       /** */
-      virtual void addRows(const OsiPackedMatrix& matrix,
+      virtual void addRows(const CoinPackedMatrix& matrix,
     			   const double* rowlb, const double* rowub);
       /** */
-      virtual void addRows(const OsiPackedMatrix& matrix,
+      virtual void addRows(const CoinPackedMatrix& matrix,
     			   const char* rowsen, const double* rowrhs,   
     			   const double* rowrng);
 #endif
@@ -556,7 +558,7 @@ public:
 	  <li> <code>obj</code>: all variables have 0 objective coefficient
         </ul>
     */
-    virtual void loadProblem(const OsiPackedMatrix& matrix,
+    virtual void loadProblem(const CoinPackedMatrix& matrix,
 			     const double* collb, const double* colub,   
 			     const double* obj,
 			     const double* rowlb, const double* rowub);
@@ -568,7 +570,7 @@ public:
         freed using the C++ <code>delete</code> and <code>delete[]</code>
         functions. 
     */
-    virtual void assignProblem(OsiPackedMatrix*& matrix,
+    virtual void assignProblem(CoinPackedMatrix*& matrix,
     			     double*& collb, double*& colub, double*& obj,
     			     double*& rowlb, double*& rowub);
     			    
@@ -584,7 +586,7 @@ public:
           <li> <code>rowrng</code>: 0 for the ranged rows
         </ul>
     */
-    virtual void loadProblem(const OsiPackedMatrix& matrix,
+    virtual void loadProblem(const CoinPackedMatrix& matrix,
     			   const double* collb, const double* colub,
     			   const double* obj,
     			   const char* rowsen, const double* rowrhs,   
@@ -597,7 +599,7 @@ public:
         freed using the C++ <code>delete</code> and <code>delete[]</code>
         functions. 
     */
-    virtual void assignProblem(OsiPackedMatrix*& matrix,
+    virtual void assignProblem(CoinPackedMatrix*& matrix,
     			     double*& collb, double*& colub, double*& obj,
     			     char*& rowsen, double*& rowrhs,
     			     double*& rowrng);
@@ -728,7 +730,7 @@ private:
     void convertSensesToBounds_();
 
     /** test whether the given matrix is 0/1/-1 entries only. */
-    bool test_zero_one_minusone_(const OsiPackedMatrix& m) const;
+    bool test_zero_one_minusone_(const CoinPackedMatrix& m) const;
   //@}
 
   //---------------------------------------------------------------------------
@@ -742,11 +744,11 @@ private:
     /// A flag indicating whether the row ordered matrix is up-to-date
     mutable bool rowMatrixCurrent_;
     /// The problem matrix in a row ordered form
-    mutable OsiPackedMatrix rowMatrix_;
+    mutable CoinPackedMatrix rowMatrix_;
     /// A flag indicating whether the column ordered matrix is up-to-date
     mutable bool colMatrixCurrent_;
     /// The problem matrix in a column ordered form
-    mutable OsiPackedMatrix colMatrix_;
+    mutable CoinPackedMatrix colMatrix_;
   //@}
 
   //---------------------------------------------------------------------------

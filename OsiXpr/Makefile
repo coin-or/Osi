@@ -15,17 +15,19 @@ LIBSRC += OsiXprSolverInterface.cpp
 # You should not need to edit below this line.
 ##############################################################################
 # The location of the customized Makefiles
-export MakefileDir := $(CoinDir)/Common/make
+export CoinDir := $(shell cd ../..; pwd)
+export MakefileDir := $(CoinDir)/Makefiles
 include ${MakefileDir}/Makefile.coin
 include ${MakefileDir}/Makefile.location
 
-OsiIncDir := $(CoinDir)/include
-OsiLibDir := $(CoinDir)/lib
-
-export ExtraIncDir := ${XprIncDir} ${OsiIncDir}
-export ExtraLibDir := ${XprLibDir} ${OsiLibDir}
-export ExtraLibName := ${XprLibName} ${OsiLibName}
-export ExtraDefine := ${XprDefine}
+export ExtraIncDir  := \
+    ${XprIncDir}  ${OsiIncDir}  ${CoinIncDir}  ${zlibIncDir}  ${bzlibIncDir} 
+export ExtraLibDir  := \
+    ${XprLibDir}  ${OsiLibDir}  ${CoinLibDir}  ${zlibLibDir}  ${bzlibLibDir} 
+export ExtraLibName := \
+    ${XprLibName} ${OsiLibName} ${CoinLibName} ${zlibLibName} ${bzlibLibName}
+export ExtraDefine  := \
+    ${XprDefine}  ${OsiDefine}  ${CoinDefine}  ${zlibDefine}  ${bzlibDefine} 
 
 export LibType OptLevel LIBNAME LIBSRC
 

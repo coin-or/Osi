@@ -112,7 +112,7 @@ OsiColCutUnitTest(const OsiSolverInterface * baseSiP,
     const int ne2 = 2;
     int inx2[ne2]={ 1, 3 };
     double el2[ne2]= { 1.2, 3.4 };
-    OsiPackedVector v1,v2;
+    CoinPackedVector v1,v2;
     v1.setVector(ne1,inx1,el1);
     v2.setVector(ne2,inx2,el2);
     

@@ -3,9 +3,7 @@
 #ifndef OsiCut_H
 #define OsiCut_H
 
-
 #include "OsiCollections.hpp"
-#include "OsiPackedVector.hpp"
 #include "OsiSolverInterface.hpp"
 
 /** Base Class for cut.

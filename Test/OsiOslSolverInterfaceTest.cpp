@@ -12,7 +12,7 @@
 #include "OsiCuts.hpp"
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
-#include "OsiOsiMessage.hpp"
+#include "CoinMessage.hpp"
 
 // below needed for pathetic branch and bound code
 #include <vector>
@@ -44,7 +44,7 @@ public:
   
   // Public data
   // Basis (should use tree, but not as wasteful as bounds!)
-  OsiWarmStartBasis basis_;
+  CoinWarmStartBasis basis_;
   // Objective value
   double objectiveValue_;
   // Branching variable (0 is first integer)
@@ -63,7 +63,7 @@ public:
 
 
 OsiNodeSimple::OsiNodeSimple() :
-  basis_(OsiWarmStartBasis()),
+  basis_(CoinWarmStartBasis()),
   objectiveValue_(1.0e100),
   variable_(-100),
   way_(-1),
@@ -76,11 +76,11 @@ OsiNodeSimple::OsiNodeSimple() :
 OsiNodeSimple::OsiNodeSimple(OsiSolverInterface & model,
 		 int numberIntegers, int * integer)
 {
-  const OsiWarmStartBasis* ws =
-    dynamic_cast<const OsiWarmStartBasis*>(model.getWarmStart());
+  const CoinWarmStartBasis* ws =
+    dynamic_cast<const CoinWarmStartBasis*>(model.getWarmStart());
 
   assert (ws!=NULL); // make sure not volume
-  basis_ = OsiWarmStartBasis(*ws);
+  basis_ = CoinWarmStartBasis(*ws);
   variable_=-1;
   way_=-1;
   numberIntegers_=numberIntegers;
@@ -256,10 +256,10 @@ OsiNodeSimple::OsiNodeSimple(OsiSolverInterface & model,
       for (i=0;i<STRONG_BRANCHING;i++) {
 	int iInt = chosen[i];
 	if (iInt>=0) {
-	  model.messageHandler()->message(OSI_BAB_STRONG,model.messages())
+	  model.messageHandler()->message(COIN_BAB_STRONG,model.messages())
 	    <<i<<iInt<<downMovement[i]<<upMovement[i]
 	    <<solutionValue[i]
-	    <<OsiMessageEol;
+	    <<CoinMessageEol;
 	  bool better = false;
 	  if (min(upMovement[i],downMovement[i])>best) {
 	    // smaller is better
@@ -354,7 +354,7 @@ typedef std::vector<OsiNodeSimple>    OsiVectorNode;
 #undef NDEBUG
 #endif
 class OsiOslMessageTest :
-   public OsiMessageHandler {
+   public CoinMessageHandler {
 
 public:
   virtual int print() ;
@@ -368,7 +368,7 @@ OsiOslMessageTest::print()
     if (currentMessage().externalNumber()==1) { 
       numberOptimal++;
       if (numberOptimal%100==0)
-	return OsiMessageHandler::print(); // print
+	return CoinMessageHandler::print(); // print
     } else if (currentMessage().externalNumber()==3000) { 
       numberInfeasible++;
     }
@@ -378,7 +378,7 @@ OsiOslMessageTest::print()
 	       <<numberOptimal<<" optimal Lp's, "
 	       <<numberInfeasible
 	       <<" infeasible (including strong branching)"<<std::endl;
-    return OsiMessageHandler::print();
+    return CoinMessageHandler::print();
   }
   return 0;
 }
@@ -401,7 +401,7 @@ extern "C" void trapMessages(EKKModel * model, int  msgno, int nreal,
   }
   if (i>=0) {
     mainPart[i+1]='\0';
-    OsiMessageHandler * handler =  (OsiMessageHandler *) ekk_userData(model);
+    CoinMessageHandler * handler =  (CoinMessageHandler *) ekk_userData(model);
     handler->message(msgno,"Osl",mainPart,severity);
     for (i=0;i<nreal;i++) 
       *handler<<rvec[i];
@@ -439,7 +439,7 @@ OsiOslSolverInterfaceUnitTest(const std::string & mpsDir)
 
   
   {    
-    OsiRelFltEq eq;
+    CoinRelFltEq eq;
     OsiOslSolverInterface m;
     assert( OsiOslSolverInterface::getNumInstances()==1 );
     std::string fn = mpsDir+"exmip1";
@@ -803,11 +803,11 @@ OsiOslSolverInterfaceUnitTest(const std::string & mpsDir)
     // Test matrixByRow method
     { 
       const OsiOslSolverInterface si(m);
-      const OsiPackedMatrix * smP = si.getMatrixByRow();
+      const CoinPackedMatrix * smP = si.getMatrixByRow();
       // LL:      const OsiOslPackedMatrix * osmP = dynamic_cast<const OsiOslPackedMatrix*>(smP);
       // LL: assert( osmP!=NULL );
       
-      OsiRelFltEq eq;
+      CoinRelFltEq eq;
       const double * ev = smP->getElements();
       assert( eq(ev[0],   3.0) );
       assert( eq(ev[1],   1.0) );
@@ -856,11 +856,11 @@ OsiOslSolverInterfaceUnitTest(const std::string & mpsDir)
     {
   
       const OsiOslSolverInterface si(m);
-      const OsiPackedMatrix * smP = si.getMatrixByCol();
+      const CoinPackedMatrix * smP = si.getMatrixByCol();
       // LL:      const OsiOslPackedMatrix * osmP = dynamic_cast<const OsiOslPackedMatrix*>(smP);
       // LL: assert( osmP!=NULL );
       
-      OsiRelFltEq eq;
+      CoinRelFltEq eq;
       const double * ev = smP->getElements();
       assert( eq(ev[0],   3.0) );
       assert( eq(ev[1],   5.6) );
@@ -948,7 +948,7 @@ OsiOslSolverInterfaceUnitTest(const std::string & mpsDir)
         assert( eq(siC1rr[3],5.0-1.8) );
         assert( eq(siC1rr[4],15.0-3.0) );
         
-        const OsiPackedMatrix * siC1mbr = siC1.getMatrixByRow();
+        const CoinPackedMatrix * siC1mbr = siC1.getMatrixByRow();
         assert( siC1mbr != NULL );
         
         const double * ev = siC1mbr->getElements();
@@ -1070,7 +1070,7 @@ OsiOslSolverInterfaceUnitTest(const std::string & mpsDir)
       assert( eq(lhsrr[4],15.0-3.0) );
       assert( eq(lhsrr[5],0.0) );      
       
-      const OsiPackedMatrix * lhsmbr = lhs.getMatrixByRow();
+      const CoinPackedMatrix * lhsmbr = lhs.getMatrixByRow();
       assert( lhsmbr != NULL );       
       const double * ev = lhsmbr->getElements();
       assert( eq(ev[0],   3.0) );
@@ -1148,8 +1148,8 @@ OsiOslSolverInterfaceUnitTest(const std::string & mpsDir)
       // pass handler to OSL
       ekk_setUserData(m.getModelPtr(),&messageHandler);
    }
-    OsiMessageHandler * handler = m.messageHandler();
-    OsiMessages messages = m.messages() ;
+    CoinMessageHandler * handler = m.messageHandler();
+    CoinMessages messages = m.messages() ;
     if (!iPass) {
       // switch on strong branching  message
       int oneMessage=7;
@@ -1179,8 +1179,8 @@ OsiOslSolverInterfaceUnitTest(const std::string & mpsDir)
 	  numberIntegers++;
       }
       if (!numberIntegers) {
-	handler->message(OSI_BAB_NOINT,messages)
-	  <<OsiMessageEol;
+	handler->message(COIN_BAB_NOINT,messages)
+	  <<CoinMessageEol;
 	return;
       }
       int * which = new int[numberIntegers]; // which variables are integer
@@ -1248,8 +1248,8 @@ OsiOslSolverInterfaceUnitTest(const std::string & mpsDir)
 	    }
 	  } else {
 	    // maximum iterations - exit
-	    handler->message(OSI_BAB_MAXITS,messages)
-	      <<OsiMessageEol;
+	    handler->message(COIN_BAB_MAXITS,messages)
+	      <<CoinMessageEol;
 	  break;
 	  }
 	} else {
@@ -1257,16 +1257,16 @@ OsiOslSolverInterfaceUnitTest(const std::string & mpsDir)
 	  bestNode = node;
 	  // set cutoff (hard coded tolerance)
 	  m.setDblParam(OsiDualObjectiveLimit,bestNode.objectiveValue_-1.0e-5);
-	  handler->message(OSI_BAB_SOLUTION,messages)
+	  handler->message(COIN_BAB_SOLUTION,messages)
 	    <<bestNode.objectiveValue_<<numberIterations
 	    <<numberNodes
-	    <<OsiMessageEol;
+	    <<CoinMessageEol;
 	}
       }
-      handler->message(OSI_BAB_END,messages)
+      handler->message(COIN_BAB_END,messages)
 	<<numberIterations
 	<<numberNodes
-	<<OsiMessageEol;
+	<<CoinMessageEol;
       if (bestNode.numberIntegers_) {
 	// we have a solution restore
 	// do bounds
@@ -1280,8 +1280,8 @@ OsiOslSolverInterfaceUnitTest(const std::string & mpsDir)
       }
       delete [] which;
     } else {
-      handler->message(OSI_BAB_INFEAS,messages)
-	<<OsiMessageEol;
+      handler->message(COIN_BAB_INFEAS,messages)
+	<<CoinMessageEol;
       throw CoinError("The LP relaxation is infeasible or too expensive",
 		      "branchAndBound", "OsiClpSolverInterface");
     }

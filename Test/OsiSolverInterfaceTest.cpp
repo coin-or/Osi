@@ -33,9 +33,9 @@
 #ifdef COIN_USE_CLP
 #include "OsiClpSolverInterface.hpp"
 #endif
-#include "OsiFloatEqual.hpp"
-#include "OsiPackedVector.hpp"
-#include "OsiPackedMatrix.hpp"
+#include "CoinFloatEqual.hpp"
+#include "CoinPackedVector.hpp"
+#include "CoinPackedMatrix.hpp"
 #include "OsiRowCut.hpp"
 #include "OsiCuts.hpp"
 
@@ -43,11 +43,11 @@
 #undef NDEBUG
 #endif
 
-#include  <time.h>
+#include <time.h>
 #include <sys/times.h>
 #include <sys/resource.h>
 #include <unistd.h>
-static double totalTime=0.0;
+
 static double cpuTime()
 {
   double cpu_temp;
@@ -76,7 +76,7 @@ equivalentVectors(const OsiSolverInterface * si1,
 		  int size)
 {
   bool retVal = true;
-  OsiRelFltEq eq(tol);
+  CoinRelFltEq eq(tol);
   int i;
   for ( i=0; i<size; i++ ) {
     
@@ -264,7 +264,8 @@ void OsiSolverInterfaceMpsUnitTest
   std::vector<std::string> siName;
   std::vector<int> numProbSolved;
   std::vector<double> timeTaken;
-  for ( i=0; i<vecSiP.size(); i++ ) {
+  const int vecsize = vecSiP.size();
+  for ( i=0; i<vecsize; i++ ) {
     siName.push_back("");
     numProbSolved.push_back(0);
     timeTaken.push_back(0.0);
@@ -301,7 +302,7 @@ void OsiSolverInterfaceMpsUnitTest
   If we have multiple solvers, compare the representations.
 */
     for (i = vecSiP.size()-1 ; i > 0 ; --i)
-    { OsiPackedVector vim1,vi ;
+    { CoinPackedVector vim1,vi ;
       
       // Compare col lowerbounds
       assert(
@@ -368,18 +369,18 @@ void OsiSolverInterfaceMpsUnitTest
       assert( vecSiP[i-1]->getNumElements() == vecSiP[i]->getNumElements() ) ;
       
       // Compare constraint matrix
-      { const OsiPackedMatrix * rmm1=vecSiP[i-1]->getMatrixByRow() ;
-        const OsiPackedMatrix * rm  =vecSiP[i  ]->getMatrixByRow() ;
+      { const CoinPackedMatrix * rmm1=vecSiP[i-1]->getMatrixByRow() ;
+        const CoinPackedMatrix * rm  =vecSiP[i  ]->getMatrixByRow() ;
         assert( rmm1->isEquivalent(*rm) ) ;
         
-        const OsiPackedMatrix * cmm1=vecSiP[i-1]->getMatrixByCol() ;
-        const OsiPackedMatrix * cm  =vecSiP[i  ]->getMatrixByCol() ;
+        const CoinPackedMatrix * cmm1=vecSiP[i-1]->getMatrixByCol() ;
+        const CoinPackedMatrix * cm  =vecSiP[i  ]->getMatrixByCol() ;
         assert( cmm1->isEquivalent(*cm) ) ; } }
 /*
   If we have multiple solvers, compare the variable type information
 */
     for (i = vecSiP.size()-1 ; i > 0 ; --i)
-    { OsiPackedVector vim1,vi ;
+    { CoinPackedVector vim1,vi ;
       int c ;
       
       { OsiVectorInt sm1 = vecSiP[i-1]->getFractionalIndices() ;
@@ -501,7 +502,7 @@ void OsiSolverInterfaceMpsUnitTest
       double timeOfSolution = cpuTime()-startTime;
       if (vecSiP[i]->isProvenOptimal()) { 
         double soln = vecSiP[i]->getObjValue();       
-        OsiRelFltEq eq(objValueTol[m]) ;
+        CoinRelFltEq eq(objValueTol[m]) ;
         if (eq(soln,objValue[m])) { 
           std::cerr 
 	    <<siName[i]<<" "
@@ -533,7 +534,8 @@ void OsiSolverInterfaceMpsUnitTest
     for (i = vecSiP.size()-1 ; i >= 0 ; --i) delete vecSiP[i] ;
   }
 
-  for ( i=0; i<siName.size(); i++ ) {
+  const int siName_size = siName.size();
+  for ( i=0; i<siName_size; i++ ) {
     std::cerr 
       <<siName[i] 
       <<" solved " 
@@ -587,7 +589,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 {
   
   int i;
-  OsiRelFltEq eq;
+  CoinRelFltEq eq;
   std::string fn = mpsDir+"exmip1";
   OsiSolverInterface * exmip1Si = emptySi->clone(); 
   exmip1Si->readMps(fn.c_str(),"mps");
@@ -641,7 +643,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     assert( eq(exmip1Sirr[3],5.0-1.8) );
     assert( eq(exmip1Sirr[4],15.0-3.0) );
     
-    OsiPackedMatrix pm;
+    CoinPackedMatrix pm;
     pm.setExtraGap(0.0);
     pm.setExtraMajor(0.0);
     pm = *exmip1Si->getMatrixByRow();
@@ -791,7 +793,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
         si7->setDblParam(OsiObjOffset,objOffset);
         si8->setDblParam(OsiObjOffset,objOffset);
       }
-      OsiPackedMatrix * pm = new OsiPackedMatrix(*base->getMatrixByCol());
+      CoinPackedMatrix * pm = new CoinPackedMatrix(*base->getMatrixByCol());
       double * clb = new double[base->getNumCols()];
       std::copy(base->getColLower(),
 		base->getColLower()+base->getNumCols(),clb);
@@ -815,7 +817,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       assert(rlb==NULL);
       assert(rub==NULL);
         
-      pm = new OsiPackedMatrix(*base->getMatrixByRow());
+      pm = new CoinPackedMatrix(*base->getMatrixByRow());
       clb = new double[base->getNumCols()];
       std::copy(base->getColLower(),
 		base->getColLower()+base->getNumCols(),clb);
@@ -839,7 +841,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       assert(rlb==NULL);
       assert(rub==NULL);      
         
-      pm = new OsiPackedMatrix(*base->getMatrixByCol());
+      pm = new CoinPackedMatrix(*base->getMatrixByCol());
       clb = new double[base->getNumCols()];
       std::copy(base->getColLower(),
 		base->getColLower()+base->getNumCols(),clb);
@@ -867,7 +869,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       assert(rhs==NULL);
       assert(rng==NULL);
         
-      pm = new OsiPackedMatrix(*base->getMatrixByCol());
+      pm = new CoinPackedMatrix(*base->getMatrixByCol());
       clb = new double[base->getNumCols()];
       std::copy(base->getColLower(),
 		base->getColLower()+base->getNumCols(),clb);
@@ -897,7 +899,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
      
         
       // Create an indices vector        
-      OsiPackedVector basePv,pv;
+      CoinPackedVector basePv,pv;
       assert(base->getNumCols()<10);
       assert(base->getNumRows()<10);
       int indices[10];
@@ -945,11 +947,23 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 	si1->writeMps("test.out",NULL,NULL);
 	si1->writeMps("test2","out");
 	si2->readMps("test.out","");
-	si1->initialSolve();
-	si2->initialSolve();
-        double soln = si1->getObjValue();       
-        OsiRelFltEq eq(1.0e-8) ;
-        assert( eq(soln,si2->getObjValue()));       
+	bool solved = true;
+	try {
+	   si1->initialSolve();
+	}
+	catch (CoinError e) {
+	   if (e.className() != "OsiVolSolverInterface") {
+	      printf("Couldn't solve initial LP in testing WriteMps\n");
+	      abort();
+	   }
+	   solved = false;
+	}
+	if (solved) {
+	   si2->initialSolve();
+	   double soln = si1->getObjValue();       
+	   CoinRelFltEq eq(1.0e-8) ;
+	   assert( eq(soln,si2->getObjValue()));       
+	}
 	delete si1;
 	delete si2;
       }
@@ -1263,10 +1277,10 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 		    exmip1Si->getRightHandSide(),
 		    exmip1Si->getRowRange() );
 
-    OsiPackedMatrix pm1 = *(si->getMatrixByRow());
+    CoinPackedMatrix pm1 = *(si->getMatrixByRow());
 
     // Get a row of the matrix to make a cut
-    OsiPackedVector pv =exmip1Si->getMatrixByRow()->getVector(1);
+    CoinPackedVector pv =exmip1Si->getMatrixByRow()->getVector(1);
     pv.setElement(0,3.14*pv.getElements()[0]);
 
     OsiRowCut rc;
@@ -1279,7 +1293,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 
     si->applyCuts(cuts);
       
-    OsiPackedMatrix pm2 = *(si->getMatrixByRow());
+    CoinPackedMatrix pm2 = *(si->getMatrixByRow());
 
     assert(pm1.getNumRows()==pm2.getNumRows()-1);
     int i;
@@ -1302,10 +1316,10 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 		    exmip1Si->getRowLower(),
 		    exmip1Si->getRowUpper() );
 
-    OsiPackedMatrix pm1 = *(si->getMatrixByCol());
+    CoinPackedMatrix pm1 = *(si->getMatrixByCol());
 
     // Get a row of the matrix to make a cut
-    OsiPackedVector pv =exmip1Si->getMatrixByRow()->getVector(1);
+    CoinPackedVector pv =exmip1Si->getMatrixByRow()->getVector(1);
     pv.setElement(0,3.14*pv.getElements()[0]);
 
     OsiRowCut rc;
@@ -1318,15 +1332,15 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 
     si->applyCuts(cuts);
       
-    OsiPackedMatrix pm2 = *(si->getMatrixByCol());
+    CoinPackedMatrix pm2 = *(si->getMatrixByCol());
 
     assert( pm1.isColOrdered() );
     assert( pm2.isColOrdered() );
     assert( pm1.getNumRows()==pm2.getNumRows()-1 );
 
-    OsiPackedMatrix pm1ByRow;
+    CoinPackedMatrix pm1ByRow;
     pm1ByRow.reverseOrderedCopyOf(pm1);
-    OsiPackedMatrix pm2ByRow;
+    CoinPackedMatrix pm2ByRow;
     pm2ByRow.reverseOrderedCopyOf(pm2);
 
     assert( !pm1ByRow.isColOrdered() );

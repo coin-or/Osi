@@ -19,9 +19,9 @@
   %W%	%G%
 */
 
-#include <OsiPackedMatrix.hpp>
+#include <CoinPackedMatrix.hpp>
 #include <OsiSolverInterface.hpp>
-#include <OsiWarmStart.hpp>
+#include <CoinWarmStart.hpp>
 
 #define DYLP_INTERNAL
 extern "C" {
@@ -104,13 +104,13 @@ public:
   /*! \brief Load a problem description (OSI packed matrix, row sense,
 	  parameters unaffected).
   */
-  void loadProblem(const OsiPackedMatrix&, const double *, const double *, 
+  void loadProblem(const CoinPackedMatrix&, const double *, const double *, 
     const double *, const char *, const double *, const double*) ;
 
   /*! \brief Load a problem description (OSI packed matrix, row bounds,
 	  parameters unaffected).
   */
-  void loadProblem(const OsiPackedMatrix&, const double *, const double *,
+  void loadProblem(const CoinPackedMatrix&, const double *, const double *,
     const double *, const double *, const double*) ;
   
   /*! \brief Load a problem description (standard column-major packed
@@ -132,13 +132,13 @@ public:
   /*! \brief Load a problem description (OSI packed matrix, row sense,
 	  parameters destroyed).
   */
-  void assignProblem(OsiPackedMatrix*&, double*&, double*&, double*&, 
+  void assignProblem(CoinPackedMatrix*&, double*&, double*&, double*&, 
     char*&, double*&, double*&) ;
 
   /*! \brief Load a problem description (OSI packed matrix, row bounds,
 	  parameters destroyed).
   */
-  void assignProblem(OsiPackedMatrix*&, double*&, double*&, 
+  void assignProblem(CoinPackedMatrix*&, double*&, double*&, 
     double*&, double*&, double*&) ;
 
 //@}
@@ -213,11 +213,11 @@ public:
 
   /*! \brief Get a pointer to a row-major copy of the constraint matrix */
 
-  const OsiPackedMatrix* getMatrixByRow() const ;
+  const CoinPackedMatrix* getMatrixByRow() const ;
 
   /*! \brief Get a pointer to a column-major copy of the constraint matrix */
 
-  const OsiPackedMatrix* getMatrixByCol() const ;
+  const CoinPackedMatrix* getMatrixByCol() const ;
 //@}
 
 /*! \name Methods to modify the problem */
@@ -269,7 +269,7 @@ public:
 
   /*! \brief Add a column (variable) to the problem */
 
-  void addCol(const OsiPackedVectorBase&,
+  void addCol(const CoinPackedVectorBase&,
 	      const double, const double, const double) ;
 
   /*! \brief Remove column(s) (variable(s)) from the problem */
@@ -278,11 +278,11 @@ public:
 
   /*! \brief Add a row (constraint) to the problem */
 
-  void addRow(const OsiPackedVectorBase&, const double, const double) ;
+  void addRow(const CoinPackedVectorBase&, const double, const double) ;
 
   /*! \brief Add a row (constraint) to the problem */
 
-  void addRow(const OsiPackedVectorBase&,
+  void addRow(const CoinPackedVectorBase&,
 	      const char, const double, const double) ;
 
   /*! \brief Delete row(s) (constraint(s)) from the problem */
@@ -307,11 +307,11 @@ public:
 
   /*! \brief Build a warm start object for the current lp solution. */
 
-  OsiWarmStart* getWarmStart() const ;
+  CoinWarmStart* getWarmStart() const ;
 
   /*! \brief Apply a warm start object. */
 
-  bool setWarmStart(const OsiWarmStart*) ;
+  bool setWarmStart(const CoinWarmStart*) ;
 
   /*! \brief Call dylp to reoptimize (warm or hot start). */
 
@@ -588,8 +588,8 @@ private:
   mutable double* _row_rhs ;
   mutable char* _row_sense ;
   mutable double* _row_upper ;
-  mutable OsiPackedMatrix* _matrix_by_row ;
-  mutable OsiPackedMatrix* _matrix_by_col ;
+  mutable CoinPackedMatrix* _matrix_by_row ;
+  mutable CoinPackedMatrix* _matrix_by_col ;
 
 //@}
 
@@ -605,7 +605,7 @@ private:
   void gen_rowparms(int rowcnt,
 	       double *rhs, double *rhslow, contyp_enum *ctyp,
 	       const char *sense, const double *rhsin, const double *range) ;
-  void load_problem(const OsiPackedMatrix& matrix,
+  void load_problem(const CoinPackedMatrix& matrix,
 	 const double* col_lower, const double* col_upper, const double* obj,
 	 const contyp_enum *ctyp, const double* rhs, const double* rhslow) ;
   void load_problem (const int colcnt, const int rowcnt,
@@ -631,9 +631,9 @@ private:
 */
 //@{
   
-  void add_col(const OsiPackedVectorBase& osi_coli,
+  void add_col(const CoinPackedVectorBase& osi_coli,
     vartyp_enum vtypi,double vlbi, double vubi, double obji) ;
-  void add_row(const OsiPackedVectorBase& osi_rowi, 
+  void add_row(const CoinPackedVectorBase& osi_rowi, 
     char clazzi, contyp_enum ctypi, double rhsi, double rhslowi) ;
 
 //@}
@@ -719,15 +719,15 @@ private:
   This derived class is necessary because dylp does not always work with the
   full constraint system. The warm start object needs to contain a list of
   the active constraints in addition to the status information included in
-  OsiWarmStartBasis.
+  CoinWarmStartBasis.
 
-  Constraint status is coded using the OsiWarmStartBasis::Status codes. Active
+  Constraint status is coded using the CoinWarmStartBasis::Status codes. Active
   constraints are coded as atUpperBound or atLowerBound, inactive as isFree.
 */
 
-#include "OsiWarmStartBasis.hpp"
+#include "CoinWarmStartBasis.hpp"
 
-class OsiDylpWarmStartBasis : public OsiWarmStartBasis
+class OsiDylpWarmStartBasis : public CoinWarmStartBasis
 
 { public:
 
@@ -749,7 +749,7 @@ class OsiDylpWarmStartBasis : public OsiWarmStartBasis
   Status getConStatus (int i) const
 
   { const int st = (constraintStatus_[i>>2] >> ((i&3)<<1)) & 3 ;
-    return (static_cast<OsiWarmStartBasis::Status>(st)) ; }
+    return (static_cast<CoinWarmStartBasis::Status>(st)) ; }
 
   /*! \brief Set the status of a single constraint */
 
@@ -768,7 +768,7 @@ class OsiDylpWarmStartBasis : public OsiWarmStartBasis
 
   OsiDylpWarmStartBasis ()
 
-    : OsiWarmStartBasis(),
+    : CoinWarmStartBasis(),
       numConstraints_(0),
       constraintStatus_(0)
 
@@ -779,7 +779,7 @@ class OsiDylpWarmStartBasis : public OsiWarmStartBasis
 
   OsiDylpWarmStartBasis (const OsiDylpWarmStartBasis &ws)
 
-    : OsiWarmStartBasis(ws),
+    : CoinWarmStartBasis(ws),
       numConstraints_(ws.numConstraints_),
       constraintStatus_(0)
 
@@ -793,7 +793,7 @@ class OsiDylpWarmStartBasis : public OsiWarmStartBasis
   OsiDylpWarmStartBasis
   (int ns, int na, const char *sStat, const char *aStat, const char *cStat)
 
-    : OsiWarmStartBasis(ns,na,sStat,aStat),
+    : CoinWarmStartBasis(ns,na,sStat,aStat),
       numConstraints_(na),
       constraintStatus_(0)
 
@@ -812,7 +812,7 @@ class OsiDylpWarmStartBasis : public OsiWarmStartBasis
 
   void setSize (int ns, int na)
 
-  { OsiWarmStartBasis::setSize(ns,na) ;
+  { CoinWarmStartBasis::setSize(ns,na) ;
     delete[] constraintStatus_ ;
     constraintStatus_ = new char[(na+3)/4] ;
     CoinFillN(constraintStatus_,(na+3)/4,(char)0) ;
@@ -824,7 +824,7 @@ class OsiDylpWarmStartBasis : public OsiWarmStartBasis
   void assignBasisStatus
   (int ns, int na, char *&sStat, char *&aStat, char *&cStat)
 
-  { OsiWarmStartBasis::assignBasisStatus(ns,na,sStat,sStat) ;
+  { CoinWarmStartBasis::assignBasisStatus(ns,na,sStat,sStat) ;
     delete[] constraintStatus_ ;
     numConstraints_ = na ;
     constraintStatus_ = cStat ;
@@ -836,7 +836,7 @@ class OsiDylpWarmStartBasis : public OsiWarmStartBasis
   OsiDylpWarmStartBasis& operator= (const OsiDylpWarmStartBasis &rhs)
 
   { if (this != &rhs)
-    { OsiWarmStartBasis::operator= (rhs) ;
+    { CoinWarmStartBasis::operator= (rhs) ;
       delete[] constraintStatus_ ;
       constraintStatus_ = new char[(numConstraints_+3)/4] ;
       numConstraints_ = rhs.numConstraints_ ;

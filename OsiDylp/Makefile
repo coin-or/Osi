@@ -15,17 +15,19 @@ LIBSRC += OsiDylpSolverInterface.cpp
 # You should not need to edit below this line.
 ##############################################################################
 # The location of the customized Makefiles
-export MakefileDir := $(CoinDir)/Common/make
+export CoinDir := $(shell cd ../..; pwd)
+export MakefileDir := $(CoinDir)/Makefiles
 include ${MakefileDir}/Makefile.coin
 include ${MakefileDir}/Makefile.location
 
-OsiIncDir := $(CoinDir)/include
-OsiLibDir := $(CoinDir)/lib
-
-export ExtraIncDir := ${DylpIncDir} ${OsiIncDir}
-export ExtraLibDir := ${DylpLibDir} ${OsiLibDir}
-export ExtraLibName := ${DylpLibName} ${OsiLibName}
-export ExtraDefine := ${DylpDefine}
+export ExtraIncDir  := \
+    ${DylpIncDir}  ${OsiIncDir}  ${CoinIncDir}  ${zlibIncDir}  ${bzlibIncDir} 
+export ExtraLibDir  := \
+    ${DylpLibDir}  ${OsiLibDir}  ${CoinLibDir}  ${zlibLibDir}  ${bzlibLibDir} 
+export ExtraLibName := \
+    ${DylpLibName} ${OsiLibName} ${CoinLibName} ${zlibLibName} ${bzlibLibName}
+export ExtraDefine  := \
+    ${DylpDefine}  ${OsiDefine}  ${CoinDefine}  ${zlibDefine}  ${bzlibDefine} 
 
 export LibType OptLevel LIBNAME LIBSRC
 

@@ -79,7 +79,7 @@ static char sccsid[] = "%W%	%G%" ;
 #include <OsiColCut.hpp>
 #include <OsiRowCut.hpp>
 #include "OsiDylpSolverInterface.hpp"
-#include "OsiWarmStartBasis.hpp"
+#include "CoinWarmStartBasis.hpp"
 
 using std::string ;
 using std::vector ;
@@ -768,7 +768,7 @@ ODSI::gen_rowiparms (contyp_enum* ctypi, double* rhsi, double* rhslowi,
   form.
 */
 
-void ODSI::add_col (const OsiPackedVectorBase& osi_coli,
+void ODSI::add_col (const CoinPackedVectorBase& osi_coli,
 		    vartyp_enum vtypi, double vlbi, double vubi, double obji)
 
 { pkvec_struct *pk_coli = packed_vector(osi_coli,getNumRows()) ;
@@ -787,7 +787,7 @@ void ODSI::add_col (const OsiPackedVectorBase& osi_coli,
   The remaining parameters are expected to be in the correct dylp form.
 */
 
-void ODSI::add_row (const OsiPackedVectorBase& osi_rowi, char clazzi,
+void ODSI::add_row (const CoinPackedVectorBase& osi_rowi, char clazzi,
 		    contyp_enum ctypi, double rhsi, double rhslowi)
 
 { pkvec_struct *pk_rowi = packed_vector(osi_rowi,getNumCols()) ;
@@ -901,7 +901,7 @@ void ODSI::dylp_ioinit ()
   and tolerances are reattached or initialised from defaults.
 */
 
-void ODSI::load_problem (const OsiPackedMatrix& matrix,
+void ODSI::load_problem (const CoinPackedMatrix& matrix,
 	   const double* col_lower, const double* col_upper, const double* obj,
 	   const contyp_enum *ctyp, const double* rhs, const double* rhslow)
 
@@ -952,7 +952,7 @@ void ODSI::load_problem (const OsiPackedMatrix& matrix,
 /*
   Second loop. Insert the coefficients by column.
 */
-  OsiPackedMatrix matrix2 = matrix ;
+  CoinPackedMatrix matrix2 = matrix ;
   if (!matrix2.isColOrdered()) matrix2.reverseOrdering() ;
 
   for (int j = 0 ; j < colcnt ; j++)
@@ -1311,9 +1311,9 @@ ODSI::OsiDylpSolverInterface (const OsiDylpSolverInterface& src)
   CLONE_VEC(double,src._row_upper,_row_upper,row_count) ;
 
   if (src._matrix_by_row) 
-    _matrix_by_row = new OsiPackedMatrix(*src._matrix_by_row) ;
+    _matrix_by_row = new CoinPackedMatrix(*src._matrix_by_row) ;
   if (src._matrix_by_col) 
-    _matrix_by_col = new OsiPackedMatrix(*src._matrix_by_col) ;
+    _matrix_by_col = new CoinPackedMatrix(*src._matrix_by_col) ;
 
   reference_count++ ;
 
@@ -1576,7 +1576,7 @@ void ODSI::setRowLower (int i, double val)
   A call to this routine destroys all cached values.
 */
 
-inline void ODSI::addRow (const OsiPackedVectorBase& row,
+inline void ODSI::addRow (const CoinPackedVectorBase& row,
 			  double lower, double upper)
 
 { contyp_enum ctypi ;
@@ -1595,7 +1595,7 @@ inline void ODSI::addRow (const OsiPackedVectorBase& row,
   A call to this routine destroys all cached values.
 */
 
-inline void ODSI::addRow (const OsiPackedVectorBase& osi_rowi, 
+inline void ODSI::addRow (const CoinPackedVectorBase& osi_rowi, 
 			  char sense, double rhs, double range)
 
 { contyp_enum ctypi ;
@@ -1680,7 +1680,7 @@ void ODSI::setObjSense (double val)
   A call to this routine destroys all cached values.
 */
 
-inline void ODSI::addCol (const OsiPackedVectorBase& osi_coli,
+inline void ODSI::addCol (const CoinPackedVectorBase& osi_coli,
 			  double vlbi, double vubi, double obji)
 
 { add_col(osi_coli,vartypCON,vlbi,vubi,obji) ; }
@@ -1697,8 +1697,8 @@ void ODSI::applyColCut (const OsiColCut& cut)
 
 { const double* old_lower = getColLower() ;
   const double* old_upper = getColUpper() ;
-  const OsiPackedVector& new_lower = cut.lbs() ;
-  const OsiPackedVector& new_upper = cut.ubs() ;
+  const CoinPackedVector& new_lower = cut.lbs() ;
+  const CoinPackedVector& new_upper = cut.ubs() ;
 
   int i ;
   int n1 = new_lower.getNumElements() ;
@@ -1934,7 +1934,7 @@ void ODSI::assert_same (const lpprob_struct& l1, const lpprob_struct& l2,
 /*! \brief Verify copy of an ODSI object.
 
   Verify equivalence by checking each component in turn. Rely on the
-  OsiPackedMatrix equivalence check to verify equivalence of the cached
+  CoinPackedMatrix equivalence check to verify equivalence of the cached
   copies.
 */
 
@@ -1947,8 +1947,8 @@ void ODSI::assert_same (const OsiDylpSolverInterface& o1,
 
   assert(!o1.lpprob || o1.consys == o1.lpprob->consys) ;
   assert(!o2.lpprob || o2.consys == o2.lpprob->consys) ;
-  const OsiPackedMatrix* m1 = o1.getMatrixByCol() ;
-  const OsiPackedMatrix* m2 = o2.getMatrixByCol() ;
+  const CoinPackedMatrix* m1 = o1.getMatrixByCol() ;
+  const CoinPackedMatrix* m2 = o2.getMatrixByCol() ;
   assert(!m1 || m1->isEquivalent(*m2)) ;
 
   assert_same(*o1.options, *o2.options, true) ;
@@ -2089,7 +2089,7 @@ int ODSI::readMps (const char* filename, const char* extension)
 */
 
 inline void
-ODSI::assignProblem (OsiPackedMatrix*& matrix,
+ODSI::assignProblem (CoinPackedMatrix*& matrix,
 		     double*& col_lower, double*& col_upper, double*& obj, 
 		     double*& row_lower, double*& row_upper)
 
@@ -2111,7 +2111,7 @@ ODSI::assignProblem (OsiPackedMatrix*& matrix,
 */
 
 inline void
-ODSI::assignProblem (OsiPackedMatrix*& matrix, 
+ODSI::assignProblem (CoinPackedMatrix*& matrix, 
 		     double*& lower, double*& upper, double*& obj, 
 		     char*& sense, double*& rhs, double*& range)
 
@@ -2133,7 +2133,7 @@ ODSI::assignProblem (OsiPackedMatrix*& matrix,
 */
 
 inline void ODSI::loadProblem
-(const OsiPackedMatrix& matrix,
+(const CoinPackedMatrix& matrix,
  const double* col_lower, const double* col_upper, const double* obj,
  const double* row_lower, const double* row_upper)
 
@@ -2157,7 +2157,7 @@ inline void ODSI::loadProblem
 */
 
 inline void ODSI::loadProblem
-(const OsiPackedMatrix& matrix, 
+(const CoinPackedMatrix& matrix, 
  const double* col_lower, const double* col_upper, const double* obj,
  const char* sense, const double* rhsin, const double* range)
 
@@ -2908,12 +2908,12 @@ inline double ODSI::getObjSense () const
   OSI matrix which is created if it doesn't already exist.
 */
 
-const OsiPackedMatrix* ODSI::getMatrixByRow () const
+const CoinPackedMatrix* ODSI::getMatrixByRow () const
 
 { if (!consys) return 0 ;
   if (_matrix_by_row) return _matrix_by_row ;
 
-  _matrix_by_row = new OsiPackedMatrix ;
+  _matrix_by_row = new CoinPackedMatrix ;
   _matrix_by_row->reverseOrderedCopyOf(*getMatrixByCol()) ;
 
   return _matrix_by_row ; }
@@ -2934,7 +2934,7 @@ const OsiPackedMatrix* ODSI::getMatrixByRow () const
   A debatable decision.
 */
 
-const OsiPackedMatrix* ODSI::getMatrixByCol () const
+const CoinPackedMatrix* ODSI::getMatrixByCol () const
 
 { if (!consys) return 0 ;
   if (_matrix_by_col) return _matrix_by_col ;
@@ -2951,7 +2951,7 @@ const OsiPackedMatrix* ODSI::getMatrixByCol () const
   int* len = new int[col_count] ;
   double* values = new double[coeff_count] ;
   int* indices = new int[coeff_count] ;
-  OsiPackedMatrix* matrix = new OsiPackedMatrix ;
+  CoinPackedMatrix* matrix = new CoinPackedMatrix ;
 /*
   Scan out the coefficients from the consys_struct column by column.
 */
@@ -3259,16 +3259,16 @@ void ODSI::writeMps (const char *, const char*) const
   \link OsiDylpSolverInterface::resolve ODSI::resolve \endlink.
 
   The convention in OSI is that warm start objects derive from the base class
-  OsiWarmStart. If you're using only getWarmStart and setWarmStart, that's
+  CoinWarmStart. If you're using only getWarmStart and setWarmStart, that's
   really all you need to know.
   
   The dylp warm start object OsiDylpWarmStartBasis derives from
-  OsiWarmStartBasis, which in turn derives from OsiWarmStart. A new derived
+  CoinWarmStartBasis, which in turn derives from CoinWarmStart. A new derived
   class is needed because dylp does not always work with the full constraint
   system. This means the warm start object must specify the active
   constraints.  For ease of use, constraint status handled just like variable
   status. There's an array, one entry per constraint, coded as
-  OsiWarmStartBasis::Status.  Inactive constraints have status isFree, active
+  CoinWarmStartBasis::Status.  Inactive constraints have status isFree, active
   constraints use atLowerBound.
 */
 //@{
@@ -3278,7 +3278,7 @@ void ODSI::writeMps (const char *, const char*) const
   and status information returned as a matter of course by the dylp solver.
 */
 
-OsiWarmStart* ODSI::getWarmStart () const
+CoinWarmStart* ODSI::getWarmStart () const
 
 /*
   This routine constructs a OsiDylpWarmStartBasis structure from the basis
@@ -3310,17 +3310,17 @@ OsiWarmStart* ODSI::getWarmStart () const
 */
   for (k = 1 ; k <= basis->len ; k++)
   { i = inv(basis->el[k].cndx) ; 
-    setStatus(conStatus,i,OsiWarmStartBasis::atLowerBound) ;
+    setStatus(conStatus,i,CoinWarmStartBasis::atLowerBound) ;
     j = basis->el[k].vndx ;
     if (j < 0)
     { j = inv(-j) ;
-      setStatus(artifStatus,j,OsiWarmStartBasis::basic) ; }
+      setStatus(artifStatus,j,CoinWarmStartBasis::basic) ; }
     else
     { j = inv(j) ;
-      setStatus(strucStatus,j,OsiWarmStartBasis::basic) ; } }
+      setStatus(strucStatus,j,CoinWarmStartBasis::basic) ; } }
 /*
   Now scan the status vector and record the status of nonbasic structural
-  variables. Some information is lost here --- OsiWarmStartBasis::Status
+  variables. Some information is lost here --- CoinWarmStartBasis::Status
   doesn't encode NBFX.
 */
   for (j = 1 ; j <= consys->varcnt ; j++)
@@ -3329,13 +3329,13 @@ OsiWarmStart* ODSI::getWarmStart () const
     { switch (statj)
       { case vstatNBLB:
 	case vstatNBFX:
-	{ setStatus(strucStatus,inv(j), OsiWarmStartBasis::atLowerBound) ;
+	{ setStatus(strucStatus,inv(j), CoinWarmStartBasis::atLowerBound) ;
 	  break ; }
 	case vstatNBUB:
-	{ setStatus(strucStatus,inv(j), OsiWarmStartBasis::atUpperBound) ;
+	{ setStatus(strucStatus,inv(j), CoinWarmStartBasis::atUpperBound) ;
 	  break ; }
 	case vstatNBFR:
-	{ setStatus(strucStatus,inv(j), OsiWarmStartBasis::isFree) ;
+	{ setStatus(strucStatus,inv(j), CoinWarmStartBasis::isFree) ;
 	  break ; }
 	default:
 	{ delete wsb ;
@@ -3351,10 +3351,10 @@ OsiWarmStart* ODSI::getWarmStart () const
   \link OsiDylpSolverInterface::resolve ODSI::resolve \endlink.
 */
 
-bool ODSI::setWarmStart (const OsiWarmStart *ws)
+bool ODSI::setWarmStart (const CoinWarmStart *ws)
 
 { int i,j,k ;
-  OsiWarmStartBasis::Status osi_stati ;
+  CoinWarmStartBasis::Status osi_stati ;
 
   assert(lpprob && options && consys && consys->vlb && consys->vub) ;
 /*
@@ -3397,7 +3397,7 @@ bool ODSI::setWarmStart (const OsiWarmStart *ws)
   int actcons = 0 ;
   for (i = 1 ; i <= concnt ; i++)
   { osi_stati = getStatus(conStatus,inv(i)) ;
-    if (osi_stati == OsiWarmStartBasis::atLowerBound)
+    if (osi_stati == CoinWarmStartBasis::atLowerBound)
     { actcons++ ;
       basis.el[actcons].cndx = i ;
       basis.el[actcons].vndx = 0 ; } }
@@ -3412,22 +3412,22 @@ bool ODSI::setWarmStart (const OsiWarmStart *ws)
   for (j = 1 ; j <= varcnt ; j++)
   { osi_stati = getStatus(strucStatus,inv(j)) ;
     switch (osi_stati)
-    { case OsiWarmStartBasis::basic:
+    { case CoinWarmStartBasis::basic:
       { k++ ;
 	assert(k <= actcons) ;
 	basis.el[k].vndx = j ;
 	status[j] = (flags) (-k) ;
 	break ; }
-      case OsiWarmStartBasis::atLowerBound:
+      case CoinWarmStartBasis::atLowerBound:
       { if (consys->vlb[j] == consys->vub[j])
 	{ status[j] = vstatNBFX ; }
 	else
 	{ status[j] = vstatNBLB ; }
 	break ; }
-      case OsiWarmStartBasis::atUpperBound:
+      case CoinWarmStartBasis::atUpperBound:
       { status[j] = vstatNBUB ;
 	break ; }
-      case OsiWarmStartBasis::isFree:
+      case CoinWarmStartBasis::isFree:
       { status[j] = vstatNBFR ;
 	break ; } } }
 /*
@@ -3437,7 +3437,7 @@ bool ODSI::setWarmStart (const OsiWarmStart *ws)
 */
   for (i = 1 ; i <= concnt ; i++)
   { osi_stati = getStatus(artifStatus,inv(i)) ;
-    if (osi_stati == OsiWarmStartBasis::basic)
+    if (osi_stati == CoinWarmStartBasis::basic)
     { k++ ;
       assert(k <= actcons) ;
       basis.el[k].vndx = -i ; } }

@@ -15,17 +15,19 @@ LIBSRC += OsiCpxSolverInterface.cpp
 # You should not need to edit below this line.
 ##############################################################################
 # The location of the customized Makefiles
-export MakefileDir := $(CoinDir)/Common/make
+export CoinDir := $(shell cd ../..; pwd)
+export MakefileDir := $(CoinDir)/Makefiles
 include ${MakefileDir}/Makefile.coin
 include ${MakefileDir}/Makefile.location
 
-OsiIncDir := $(CoinDir)/include
-OsiLibDir := $(CoinDir)/lib
-
-export ExtraIncDir := ${CpxIncDir} ${OsiIncDir}
-export ExtraLibDir := ${CpxLibDir} ${OsiLibDir}
-export ExtraLibName := ${CpxLibName} ${OsiLibName}
-export ExtraDefine := ${CpxDefine}
+export ExtraIncDir  := \
+    ${CpxIncDir}  ${OsiIncDir}  ${CoinIncDir}  ${zlibIncDir}  ${bzlibIncDir} 
+export ExtraLibDir  := \
+    ${CpxLibDir}  ${OsiLibDir}  ${CoinLibDir}  ${zlibLibDir}  ${bzlibLibDir} 
+export ExtraLibName := \
+    ${CpxLibName} ${OsiLibName} ${CoinLibName} ${zlibLibName} ${bzlibLibName}
+export ExtraDefine  := \
+    ${CpxDefine}  ${OsiDefine}  ${CoinDefine}  ${zlibDefine}  ${bzlibDefine} 
 
 export LibType OptLevel LIBNAME LIBSRC
 

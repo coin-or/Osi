@@ -7,20 +7,8 @@
 #endif
 
 #include "CoinHelperFunctions.hpp"
+#include "CoinMpsIO.hpp"
 #include "OsiVolSolverInterface.hpp"
-
-#ifdef COIN_USE_OSL
-#include "OsiOslSolverInterface.hpp"
-#endif
-#ifdef COIN_USE_XPR
-#include "OsiXprSolverInterface.hpp"
-#endif
-#ifdef COIN_USE_CPX
-#include "OsiCpxSolverInterface.hpp"
-#endif
-#ifdef COIN_USE_SPX
-#include "OsiSpxSolverInterface.hpp"
-#endif
 
 //#############################################################################
 
@@ -111,7 +99,7 @@ OsiVolSolverInterface::initFromClbCubObj(const int colnum,
 //#############################################################################
 
 void
-OsiVolSolverInterface::loadProblem(const OsiPackedMatrix& matrix,
+OsiVolSolverInterface::loadProblem(const CoinPackedMatrix& matrix,
 				   const double* collb, const double* colub,   
 				   const double* obj,
 				   const double* rowlb, const double* rowub)
@@ -147,7 +135,7 @@ OsiVolSolverInterface::loadProblem(const OsiPackedMatrix& matrix,
 //-----------------------------------------------------------------------
 
 void
-OsiVolSolverInterface::assignProblem(OsiPackedMatrix*& matrix,
+OsiVolSolverInterface::assignProblem(CoinPackedMatrix*& matrix,
 				     double*& collb, double*& colub,
 				     double*& obj,
 				     double*& rowlb, double*& rowub)
@@ -214,7 +202,7 @@ OsiVolSolverInterface::assignProblem(OsiPackedMatrix*& matrix,
 //-----------------------------------------------------------------------
 
 void
-OsiVolSolverInterface::loadProblem(const OsiPackedMatrix& matrix,
+OsiVolSolverInterface::loadProblem(const CoinPackedMatrix& matrix,
 				   const double* collb, const double* colub,
 				   const double* obj,
 				   const char* rowsen, const double* rowrhs,   
@@ -247,7 +235,7 @@ OsiVolSolverInterface::loadProblem(const OsiPackedMatrix& matrix,
 //-----------------------------------------------------------------------
 
 void
-OsiVolSolverInterface::assignProblem(OsiPackedMatrix*& matrix,
+OsiVolSolverInterface::assignProblem(CoinPackedMatrix*& matrix,
 				     double*& collb, double*& colub,
 				     double*& obj,
 				     char*& rowsen, double*& rowrhs,
@@ -371,12 +359,17 @@ OsiVolSolverInterface::loadProblem(const int numcols, const int numrows,
 int 
 OsiVolSolverInterface::readMps(const char *filename, const char *extension)
 {
-  
-  int retVal = OsiSolverInterface::readMps(filename,extension); 
-  int nc = getNumCols();
-  continuous_= new bool[maxNumcols_];
-  CoinFillN(continuous_,nc,true);
-  return retVal;
+   CoinMpsIO reader;
+   reader.setInfinity(getInfinity());
+   int retVal = reader.readMps(filename, extension);
+   loadProblem(*reader.getMatrixByCol(),
+	       reader.getColLower(), reader.getColUpper(),
+	       reader.getObjCoefficients(),
+	       reader.getRowLower(), reader.getRowUpper());
+   int nc = getNumCols();
+   continuous_= new bool[maxNumcols_];
+   CoinFillN(continuous_, nc, true);
+   return retVal;
 }
 
 
@@ -386,47 +379,13 @@ void
 OsiVolSolverInterface::writeMps(const char *filename,
 				const char *extension) const
 {
-  OsiSolverInterface * si;
-#if   defined(COIN_USE_OSL)
-  si = new OsiOslSolverInterface;
-#elif defined(COIN_USE_XPR)
-  si = new OsiXprSolverInterface;
-#elif defined(COIN_USE_CPX)
-  si = new OsiCpxSolverInterface;
-#elif defined(COIN_USE_SPX)
-  si = new OsiSpxSolverInterface;
-#else 
-  throw CoinError("Sorry, the Volume Algorithm does not have an "
-		 "MPS Writer without compiling with "
-		 "COIN_USE_XPR, USE_COIN_CPX, USE_COIN_SPX, and/or COIN_USE_OSL",
-		 "writeMps", "OsiVolSolverInterface");
-#endif
-
-  si->loadProblem(*getMatrixByCol(), getColLower(), getColUpper(),
-		  getObjCoefficients(), getRowLower(), getRowUpper());
-  char fname[1000];
-  sprintf(fname, "%s__col", filename);
-  si->writeMps(fname, extension);
-  delete si;
-
-#if   defined(COIN_USE_OSL)
-  si = new OsiOslSolverInterface;
-#elif defined(COIN_USE_XPR)
-  si = new OsiXprSolverInterface;
-#elif defined(COIN_USE_CPX)
-  si = new OsiCpxSolverInterface;
-#elif defined(COIN_USE_SPX)
-  si = new OsiSpxSolverInterface;
-#else 
-  throw CoinError("Sorry, the Volume Algorithm does not have an "
-		 "MPS Writer without compiling with "
-		 "COIN_USE_XPR, USE_COIN_CPX, USE_COIN_SPX, and/or COIN_USE_OSL",
-		 "writeMps", "OsiVolSolverInterface");
-#endif
-  
-  si->loadProblem(*getMatrixByRow(), getColLower(), getColUpper(),
-		  getObjCoefficients(), getRowLower(), getRowUpper());
-  sprintf(fname, "%s__row", filename);
-  si->writeMps(fname, extension);
-  delete si;
+   CoinMpsIO writer;
+   writer.setMpsData(*getMatrixByCol(), getInfinity(),
+		     getColLower(), getColUpper(),
+		     getObjCoefficients(), (const char*) 0 /*integrality*/,
+		     getRowLower(), getRowUpper(),
+		     (const char**) 0 /*colnam*/, (const char**) 0 /*rownam*/);
+   std::string fname = filename;
+   fname += extension;
+   writer.writeMps(fname.c_str());
 }

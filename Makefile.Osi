@@ -4,14 +4,9 @@ LibType := SHARED
 # Select optimization (-O or -g). -O will be automatically bumped up to the 
 # highest level of optimization the compiler supports. If want something in
 # between then specify the exact level you want, e.g., -O1 or -O2
-OptLevel := -O
+OptLevel := -g
 
-# Set whether you have zlib/bzlib installed and if so whether you want
-# the MpsReader to be able to read compressed files.
-export zlibDefine := COIN_USE_ZLIB
-# export bzlibDefine := COIN_USE_BZLIB
-
-# Look at the ${CoinDir}/Common/make/Makefile.location file and edit
+# Look at the ${CoinDir}/Makefiles/Makefile.location file and edit
 # the location of the various libraries
 
 ##############################################################################
@@ -28,47 +23,19 @@ LIBSRC += OsiRowCut.cpp
 LIBSRC += OsiRowCutDebugger.cpp
 LIBSRC += OsiCuts.cpp
 
-LIBSRC += OsiFactorization1.cpp
-LIBSRC += OsiFactorization2.cpp
-LIBSRC += OsiFactorization3.cpp
-LIBSRC += OsiFactorization4.cpp
-
-LIBSRC += OsiPackedVectorBase.cpp
-LIBSRC += OsiPackedVector.cpp
-LIBSRC += OsiShallowPackedVector.cpp
-LIBSRC += OsiIndexedVector.cpp
-
-LIBSRC += OsiMessageHandler.cpp
-LIBSRC += OsiMpsReader.cpp
-LIBSRC += OsiOsiMessage.cpp
-LIBSRC += OsiPackedMatrix.cpp
 LIBSRC += OsiSolverInterface.cpp
-LIBSRC += OsiWarmStartBasis.cpp
 
 ##############################################################################
 # The location of the customized Makefiles
-export MakefileDir := $(CoinDir)/Common/make
+export CoinDir = $(shell cd ..; pwd)
+export MakefileDir := $(CoinDir)/Makefiles
 include ${MakefileDir}/Makefile.coin
 include ${MakefileDir}/Makefile.location
 
-export ExtraIncDir  :=
-export ExtraLibDir  :=
-export ExtraLibName :=
-export ExtraDefine  :=
-
-ifeq ($(findstring COIN_USE_ZLIB,$zlibDefine),COIN_USE_ZLIB)
-    export ExtraIncDir  += ${zlibIncDir} ${bzlibIncDir}
-    export ExtraLibDir  += ${zlibLibDir} ${bzlibLibDir}
-    export ExtraLibName += ${zlibLibName} ${bzlibLibName}
-    export ExtraDefine  += ${zlibDefine} ${bzlibDefine}
-endif
-
-ifeq ($(findstring COIN_USE_BZLIB,$bzlibDefine),COIN_USE_BZLIB)
-    export ExtraIncDir  += ${bzlibIncDir}
-    export ExtraLibDir  += ${bzlibLibDir}
-    export ExtraLibName += ${bzlibLibName}
-    export ExtraDefine  += ${bzlibDefine}
-endif
+export ExtraIncDir  := ${CoinIncDir} ${zlibIncDir} ${bzlibIncDir}
+export ExtraLibDir  := ${CoinLibDir} ${zlibLibDir} ${bzlibLibDir}
+export ExtraLibName := ${CoinLibName} ${zlibLibName} ${bzlibLibName}
+export ExtraDefine  := ${CoinDefine} ${zlibDefine} ${bzlibDefine}
 
 export LibType OptLevel LIBNAME LIBSRC
 
@@ -82,6 +49,3 @@ default: install
 
 install clean doc library: % :
 	$(MAKE) -f ${MakefileDir}/Makefile.lib $*
-
-libosi:
-	$(MAKE) -f ${MakefileDir}/Makefile.lib library

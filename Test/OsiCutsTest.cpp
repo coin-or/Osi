@@ -17,7 +17,7 @@
 void
 OsiCutsUnitTest()
 {
-  OsiRelFltEq eq;
+  CoinRelFltEq eq;
   // Test default constructor
   {
     OsiCuts r;

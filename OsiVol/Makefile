@@ -4,7 +4,7 @@ LibType := SHARED
 # Select optimization (-O or -g). -O will be automatically bumped up to the 
 # highest level of optimization the compiler supports. If want something in
 # between then specify the exact level you want, e.g., -O1 or -O2
-OptLevel := -O
+OptLevel := -g
 
 LIBNAME := OsiVol
 
@@ -15,36 +15,22 @@ LIBSRC += OsiVolSolverInterfaceIO.cpp
 ##############################################################################
 # You should not need to edit below this line.
 ##############################################################################
-
 # The location of the customized Makefiles
-export MakefileDir := $(CoinDir)/Common/make
+export CoinDir := $(shell cd ../..; pwd)
+export MakefileDir := $(CoinDir)/Makefiles
 include ${MakefileDir}/Makefile.coin
 include ${MakefileDir}/Makefile.location
 
-OsiIncDir := $(CoinDir)/include
-OsiLibDir := $(CoinDir)/lib
-
-export ExtraIncDir := ${VolIncDir} ${OsiIncDir}
-export ExtraLibDir := ${VolLibDir} ${OsiLibDir}
-export ExtraLibName := ${VolLibName} ${OsiLibName}
-export ExtraDefine := ${VolDefine}
+export ExtraIncDir  := \
+    ${VolIncDir}  ${OsiIncDir}  ${CoinIncDir}  ${zlibIncDir}  ${bzlibIncDir} 
+export ExtraLibDir  := \
+    ${VolLibDir}  ${OsiLibDir}  ${CoinLibDir}  ${zlibLibDir}  ${bzlibLibDir} 
+export ExtraLibName := \
+    ${VolLibName} ${OsiLibName} ${CoinLibName} ${zlibLibName} ${bzlibLibName}
+export ExtraDefine  := \
+    ${VolDefine}  ${OsiDefine}  ${CoinDefine}  ${zlibDefine}  ${bzlibDefine} 
 
 export LibType OptLevel LIBNAME LIBSRC
-
-# Until there's an OsiMpsWriter class we need to play this hocus-pocus
-
-ifeq ($(findstring libOsiOsl,${SOLVERLIBS}),libOsiOsl)
-    ExtraDefine += COIN_USE_OSL
-endif
-ifeq ($(findstring libOsiCpx,${SOLVERLIBS}),libOsiCpx)
-    ExtraDefine += COIN_USE_CPX
-endif
-ifeq ($(findstring libOsiXpr,${SOLVERLIBS}),libOsiXpr)
-    ExtraDefine += COIN_USE_XPR
-endif
-ifeq ($(findstring libOsiSpx,${SOLVERLIBS}),libOsiSpx)
-    ExtraDefine += COIN_USE_SPX
-endif
 
 ###############################################################################
 

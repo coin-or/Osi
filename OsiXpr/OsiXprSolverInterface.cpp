@@ -23,9 +23,9 @@
 #include "CoinHelperFunctions.hpp"
 #include "OsiCuts.hpp"
 #include "OsiColCut.hpp"
-#include "OsiPackedMatrix.hpp"
+#include "CoinPackedMatrix.hpp"
 #include "OsiRowCut.hpp"
-#include "OsiWarmStartBasis.hpp"
+#include "CoinWarmStartBasis.hpp"
 
 // Let Xpress have its own definition of range again
 #define range rangeTemp
@@ -310,7 +310,7 @@ bool OsiXprSolverInterface::isIterationLimitReached() const
 // WarmStart related methods
 //#############################################################################
 
-OsiWarmStart* OsiXprSolverInterface::getWarmStart() const
+CoinWarmStart* OsiXprSolverInterface::getWarmStart() const
 {
   activateMe();
 
@@ -319,7 +319,7 @@ OsiWarmStart* OsiXprSolverInterface::getWarmStart() const
   getipv(N_PSTAT, &pstat);
   if ( pstat != 7 ) return NULL;
 
-  OsiWarmStartBasis *ws = NULL;
+  CoinWarmStartBasis *ws = NULL;
   int numcols = getNumCols();
   int numrows = getNumRows();
   const double *lb = getColLower();
@@ -332,19 +332,19 @@ OsiWarmStart* OsiXprSolverInterface::getWarmStart() const
   if ( retstat == 0 ) {
     int i;
 
-    ws = new OsiWarmStartBasis;
+    ws = new CoinWarmStartBasis;
     ws->setSize( numcols, numrows );
       
     for( i = 0;  i < numrows;  i++ ) {
       switch( rstatus[i] ) {
       case 0:
-	ws->setArtifStatus(i, OsiWarmStartBasis::atLowerBound);
+	ws->setArtifStatus(i, CoinWarmStartBasis::atLowerBound);
 	break;
       case 1:
-	ws->setArtifStatus(i, OsiWarmStartBasis::basic);
+	ws->setArtifStatus(i, CoinWarmStartBasis::basic);
 	break;
       case 2:
-	ws->setArtifStatus(i, OsiWarmStartBasis::atUpperBound);
+	ws->setArtifStatus(i, CoinWarmStartBasis::atUpperBound);
 	break;
       default:  // unknown row status
 	delete ws;
@@ -357,15 +357,15 @@ OsiWarmStart* OsiXprSolverInterface::getWarmStart() const
       switch( cstatus[i] ) {
       case 0:
 	if ( lb[i] <= -infty )
-	  ws->setStructStatus(i, OsiWarmStartBasis::isFree);
+	  ws->setStructStatus(i, CoinWarmStartBasis::isFree);
 	else
-	  ws->setStructStatus(i, OsiWarmStartBasis::atLowerBound);
+	  ws->setStructStatus(i, CoinWarmStartBasis::atLowerBound);
 	break;
       case 1:
-	ws->setStructStatus( i, OsiWarmStartBasis::basic );
+	ws->setStructStatus( i, CoinWarmStartBasis::basic );
 	break;
       case 2:
-	ws->setStructStatus( i, OsiWarmStartBasis::atUpperBound );
+	ws->setStructStatus( i, CoinWarmStartBasis::atUpperBound );
 	break;
       default:  // unknown column status
 	delete ws;
@@ -384,9 +384,9 @@ OsiWarmStart* OsiXprSolverInterface::getWarmStart() const
 
 //-----------------------------------------------------------------------------
 
-bool OsiXprSolverInterface::setWarmStart(const OsiWarmStart* warmstart)
+bool OsiXprSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
 {
-  const OsiWarmStartBasis* ws = dynamic_cast<const OsiWarmStartBasis*>(warmstart);
+  const CoinWarmStartBasis* ws = dynamic_cast<const CoinWarmStartBasis*>(warmstart);
 
   if ( !ws ) return false;
 
@@ -406,13 +406,13 @@ bool OsiXprSolverInterface::setWarmStart(const OsiWarmStart* warmstart)
 
   for ( i = 0;  i < numrows;  i++ ) {
     switch( ws->getArtifStatus(i) ) {
-    case OsiWarmStartBasis::atLowerBound:
+    case CoinWarmStartBasis::atLowerBound:
       rstatus[i] = 0;
       break;
-    case OsiWarmStartBasis::basic:
+    case CoinWarmStartBasis::basic:
       rstatus[i] = 1;
       break;
-    case OsiWarmStartBasis::atUpperBound:
+    case CoinWarmStartBasis::atUpperBound:
       rstatus[i] = 2;
       break;
     default:  // unknown row status
@@ -423,14 +423,14 @@ bool OsiXprSolverInterface::setWarmStart(const OsiWarmStart* warmstart)
 
   for( i = 0;  i < numcols;  i++ ) {
     switch( ws->getStructStatus(i) ) {
-    case OsiWarmStartBasis::atLowerBound: 
-    case OsiWarmStartBasis::isFree:
+    case CoinWarmStartBasis::atLowerBound: 
+    case CoinWarmStartBasis::isFree:
       cstatus[i] = 0;
       break;
-    case OsiWarmStartBasis::basic:
+    case CoinWarmStartBasis::basic:
       cstatus[i] = 1;
       break;
-    case OsiWarmStartBasis::atUpperBound:
+    case CoinWarmStartBasis::atUpperBound:
       cstatus[i] = 2;
       break;
     default:  // unknown row status
@@ -816,7 +816,7 @@ OsiXprSolverInterface::isFreeBinary( int colNumber ) const
 // Row and column copies of the matrix ...
 //------------------------------------------------------------------
 
-const OsiPackedMatrix *
+const CoinPackedMatrix *
 OsiXprSolverInterface::getMatrixByRow() const
 {
   if ( matrixByRow_ == NULL ) {
@@ -851,12 +851,12 @@ OsiXprSolverInterface::getMatrixByRow() const
 
       std::adjacent_difference(start + 1, start + (nrows+1), length);
       
-      matrixByRow_ = new OsiPackedMatrix();
+      matrixByRow_ = new CoinPackedMatrix();
       matrixByRow_->assignMatrix(false /* not column ordered */,
 				 ncols, nrows, nelems,
 				 element, index, start, length);
     } else {
-      matrixByRow_ = new OsiPackedMatrix();
+      matrixByRow_ = new CoinPackedMatrix();
       matrixByRow_->reverseOrdering();
     }
   }
@@ -865,11 +865,11 @@ OsiXprSolverInterface::getMatrixByRow() const
 } 
 
 //-----------------------------------------------------------------------------
-const OsiPackedMatrix *
+const CoinPackedMatrix *
 OsiXprSolverInterface::getMatrixByCol() const
 {
    if ( matrixByCol_ == NULL ) {
-      matrixByCol_ = new OsiPackedMatrix(*getMatrixByRow());
+      matrixByCol_ = new CoinPackedMatrix(*getMatrixByRow());
       matrixByCol_->reverseOrdering();
    }
 
@@ -1478,7 +1478,7 @@ OsiXprSolverInterface::setRowPrice(const double *rowprice)
 //#############################################################################
 
 void 
-OsiXprSolverInterface::addCol(const OsiPackedVectorBase& vec,
+OsiXprSolverInterface::addCol(const CoinPackedVectorBase& vec,
 			      const double collb, const double colub,   
 			      const double obj)
 {
@@ -1500,7 +1500,7 @@ OsiXprSolverInterface::addCol(const OsiPackedVectorBase& vec,
 //-----------------------------------------------------------------------------
 void 
 OsiXprSolverInterface::addCols(const int numcols,
-			       const OsiPackedVectorBase * const * cols,
+			       const CoinPackedVectorBase * const * cols,
 			       const double* collb, const double* colub,   
 			       const double* obj)
 {
@@ -1520,7 +1520,7 @@ OsiXprSolverInterface::deleteCols(const int num, const int *columnIndices)
 }
 //-----------------------------------------------------------------------------
 void 
-OsiXprSolverInterface::addRow(const OsiPackedVectorBase& vec,
+OsiXprSolverInterface::addRow(const CoinPackedVectorBase& vec,
 			      const double rowlb, const double rowub)
 {
   // activateMe(); -- will be invoked
@@ -1534,7 +1534,7 @@ OsiXprSolverInterface::addRow(const OsiPackedVectorBase& vec,
 }
 //-----------------------------------------------------------------------------
 void 
-OsiXprSolverInterface::addRow(const OsiPackedVectorBase& vec,
+OsiXprSolverInterface::addRow(const CoinPackedVectorBase& vec,
 			      const char rowsen, const double rowrhs,   
 			      const double rowrng)
 {
@@ -1552,7 +1552,7 @@ OsiXprSolverInterface::addRow(const OsiPackedVectorBase& vec,
 //-----------------------------------------------------------------------------
 void 
 OsiXprSolverInterface::addRows(const int numrows,
-			       const OsiPackedVectorBase * const * rows,
+			       const CoinPackedVectorBase * const * rows,
 			       const double* rowlb, const double* rowub)
 {
   // *FIXME* : must write the method -LL
@@ -1562,7 +1562,7 @@ OsiXprSolverInterface::addRows(const int numrows,
 //-----------------------------------------------------------------------------
 void 
 OsiXprSolverInterface::addRows(const int numrows,
-			       const OsiPackedVectorBase * const * rows,
+			       const CoinPackedVectorBase * const * rows,
 			       const char* rowsen, const double* rowrhs,   
 			       const double* rowrng)
 {
@@ -1585,7 +1585,7 @@ OsiXprSolverInterface::deleteRows(const int num, const int * rowIndices)
 //#############################################################################
 
 void
-OsiXprSolverInterface::loadProblem(const OsiPackedMatrix& matrix,
+OsiXprSolverInterface::loadProblem(const CoinPackedMatrix& matrix,
 				   const double* collb, const double* colub,   
 				   const double* obj,
 				   const double* rowlb, const double* rowub)
@@ -1656,7 +1656,7 @@ OsiXprSolverInterface::loadProblem(const OsiPackedMatrix& matrix,
 //-----------------------------------------------------------------------------
 
 void
-OsiXprSolverInterface::assignProblem(OsiPackedMatrix*& matrix,
+OsiXprSolverInterface::assignProblem(CoinPackedMatrix*& matrix,
 				     double*& collb, double*& colub,
 				     double*& obj,
 				     double*& rowlb, double*& rowub)
@@ -1675,7 +1675,7 @@ OsiXprSolverInterface::assignProblem(OsiPackedMatrix*& matrix,
 // #define OSIXPR_ADD_OBJ_ROW
 
 void
-OsiXprSolverInterface::loadProblem(const OsiPackedMatrix& matrix,
+OsiXprSolverInterface::loadProblem(const CoinPackedMatrix& matrix,
                                    const double* collb, const double* colub,
                                    const double* obj,
                                    const char* rowsen, const double* rowrhs,   
@@ -1714,13 +1714,13 @@ OsiXprSolverInterface::loadProblem(const OsiPackedMatrix& matrix,
   }
   
   bool freeMatrixRequired = false;
-  OsiPackedMatrix * m = NULL;
+  CoinPackedMatrix * m = NULL;
   if ( !matrix.isColOrdered() ) {
-    m = new OsiPackedMatrix();
+    m = new CoinPackedMatrix();
     m->reverseOrderedCopyOf(matrix);
     freeMatrixRequired = true;
   } else {
-    m = const_cast<OsiPackedMatrix *>(&matrix);
+    m = const_cast<CoinPackedMatrix *>(&matrix);
   }
   
   // Generate a problem name
@@ -1834,7 +1834,7 @@ OsiXprSolverInterface::loadProblem(const OsiPackedMatrix& matrix,
 //-----------------------------------------------------------------------------
 
 void
-OsiXprSolverInterface::assignProblem(OsiPackedMatrix*& matrix,
+OsiXprSolverInterface::assignProblem(CoinPackedMatrix*& matrix,
 				     double*& collb, double*& colub,
 				     double*& obj,
 				     char*& rowsen, double*& rowrhs,
@@ -2401,8 +2401,8 @@ OsiXprSolverInterface::applyColCut( const OsiColCut & cc )
 
    const double  *collower = getColLower();
    const double  *colupper = getColUpper();
-   const OsiPackedVector & lbs = cc.lbs();
-   const OsiPackedVector & ubs = cc.ubs();
+   const CoinPackedVector & lbs = cc.lbs();
+   const CoinPackedVector & ubs = cc.ubs();
 
    int     *index = new int   [lbs.getNumElements() + ubs.getNumElements()];
    char    *btype = new char  [lbs.getNumElements() + ubs.getNumElements()];
@@ -2456,7 +2456,7 @@ OsiXprSolverInterface::applyRowCut( const OsiRowCut & rowCut )
 {
    activateMe();
 
-   const   OsiPackedVector & row=rowCut.row();
+   const   CoinPackedVector & row=rowCut.row();
    int     start[2] = {0, row.getNumElements()};
    char    sense = rowCut.sense();
    double  rhs   = rowCut.rhs();

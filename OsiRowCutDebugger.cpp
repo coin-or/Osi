@@ -13,8 +13,9 @@
 #include <iostream>
 
 #include "CoinHelperFunctions.hpp"
-#include "OsiPackedVector.hpp"
-#include "OsiPackedMatrix.hpp"
+#include "CoinPackedVector.hpp"
+#include "CoinPackedMatrix.hpp"
+
 #include "OsiRowCutDebugger.hpp"
 
 /* If we are on the path to the optimal integer solution then
@@ -35,7 +36,7 @@ int OsiRowCutDebugger::validateCuts(const OsiCuts & cs,
   for (i=first; i<nRowCuts; i++){
     
     OsiRowCut rcut = cs.rowCut(i);
-    OsiPackedVector rpv = rcut.row();
+    CoinPackedVector rpv = rcut.row();
     const int n = rpv.getNumElements();
     const int * indices = rpv.getIndices();
     const double * elements = rpv.getElements();
@@ -78,7 +79,7 @@ bool OsiRowCutDebugger::invalidCut(const OsiRowCut & rcut) const
   bool bad=false; 
   const double epsilon=1.0e-8;
   
-  OsiPackedVector rpv = rcut.row();
+  CoinPackedVector rpv = rcut.row();
   const int n = rpv.getNumElements();
   const int * indices = rpv.getIndices();
   const double * elements = rpv.getElements();
@@ -172,7 +173,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
   }
 
 
-  OsiPackedVector intSoln;
+  CoinPackedVector intSoln;
   probType = undefined;
 
   //--------------------------------------------------------

@@ -7,21 +7,20 @@
 
 #include <cassert>
 
-#include "OsiClpSolverInterface.hpp"
-#include "ClpDualRowSteepest.hpp"
-#include "ClpPrimalColumnSteepest.hpp"
-#include "CoinHelperFunctions.hpp"
-#include "ClpSimplex.hpp"
-#include "OsiCuts.hpp"
-#include "OsiRowCut.hpp"
-#include "OsiColCut.hpp"
-#include "OsiOsiMessage.hpp"
-
-
-#include  <time.h>
+#include <time.h>
 #include <sys/times.h>
 #include <sys/resource.h>
 #include <unistd.h>
+
+#include "CoinHelperFunctions.hpp"
+#include "ClpDualRowSteepest.hpp"
+#include "ClpPrimalColumnSteepest.hpp"
+#include "ClpSimplex.hpp"
+#include "OsiClpSolverInterface.hpp"
+#include "OsiCuts.hpp"
+#include "OsiRowCut.hpp"
+#include "OsiColCut.hpp"
+
 static double totalTime=0.0;
 static double cpuTime()
 {
@@ -97,7 +96,12 @@ void OsiClpSolverInterface::resolve()
 bool
 OsiClpSolverInterface::setIntParam(OsiIntParam key, int value)
 {
-  return modelPtr_->setIntParam(key,value);
+   std::map<OsiIntParam, ClpIntParam>::const_iterator clpkey =
+      intParamMap_.find(key);
+   if (clpkey->second != ClpLastIntParam) {
+      return modelPtr_->setIntParam(clpkey->second, value);
+   }
+   return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -105,7 +109,12 @@ OsiClpSolverInterface::setIntParam(OsiIntParam key, int value)
 bool
 OsiClpSolverInterface::setDblParam(OsiDblParam key, double value)
 {
-  return modelPtr_->setDblParam(key,value);
+   std::map<OsiDblParam, ClpDblParam>::const_iterator clpkey =
+      dblParamMap_.find(key);
+   if (clpkey->second != ClpLastDblParam) {
+      return modelPtr_->setDblParam(clpkey->second, value);
+   }
+   return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -113,7 +122,12 @@ OsiClpSolverInterface::setDblParam(OsiDblParam key, double value)
 bool
 OsiClpSolverInterface::setStrParam(OsiStrParam key, const std::string & value)
 {
-  return modelPtr_->setStrParam(key,value);
+   std::map<OsiStrParam, ClpStrParam>::const_iterator clpkey =
+      strParamMap_.find(key);
+   if (clpkey->second != ClpLastStrParam) {
+      return modelPtr_->setStrParam(clpkey->second, value);
+   }
+   return false;
 }
 
 
@@ -122,7 +136,12 @@ OsiClpSolverInterface::setStrParam(OsiStrParam key, const std::string & value)
 bool
 OsiClpSolverInterface::getIntParam(OsiIntParam key, int& value) const 
 {
-  return modelPtr_->getIntParam(key,value);
+   std::map<OsiIntParam, ClpIntParam>::const_iterator clpkey =
+      intParamMap_.find(key);
+   if (clpkey->second != ClpLastIntParam) {
+      return modelPtr_->getIntParam(clpkey->second, value);
+   }
+   return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -130,7 +149,12 @@ OsiClpSolverInterface::getIntParam(OsiIntParam key, int& value) const
 bool
 OsiClpSolverInterface::getDblParam(OsiDblParam key, double& value) const
 {
-  return modelPtr_->getDblParam(key,value);
+   std::map<OsiDblParam, ClpDblParam>::const_iterator clpkey =
+      dblParamMap_.find(key);
+   if (clpkey->second != ClpLastDblParam) {
+      return modelPtr_->getDblParam(clpkey->second, value);
+   }
+   return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -138,7 +162,12 @@ OsiClpSolverInterface::getDblParam(OsiDblParam key, double& value) const
 bool
 OsiClpSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
 {
-  return modelPtr_->getStrParam(key,value);
+   std::map<OsiStrParam, ClpStrParam>::const_iterator clpkey =
+      strParamMap_.find(key);
+   if (clpkey->second != ClpLastStrParam) {
+      return modelPtr_->getStrParam(clpkey->second, value);
+   }
+   return false;
 }
 
 
@@ -241,23 +270,23 @@ bool OsiClpSolverInterface::isIterationLimitReached() const
 // WarmStart related methods
 //#############################################################################
 
-OsiWarmStart* OsiClpSolverInterface::getWarmStart() const
+CoinWarmStart* OsiClpSolverInterface::getWarmStart() const
 {
 
-  return new OsiWarmStartBasis(basis_);
+  return new CoinWarmStartBasis(basis_);
 }
 
 //-----------------------------------------------------------------------------
 
-bool OsiClpSolverInterface::setWarmStart(const OsiWarmStart* warmstart)
+bool OsiClpSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
 {
 
-  const OsiWarmStartBasis* ws =
-    dynamic_cast<const OsiWarmStartBasis*>(warmstart);
+  const CoinWarmStartBasis* ws =
+    dynamic_cast<const CoinWarmStartBasis*>(warmstart);
 
   if (! ws)
     return false;
-  basis_ = OsiWarmStartBasis(*ws);
+  basis_ = CoinWarmStartBasis(*ws);
   return true;
 
 }
@@ -270,11 +299,11 @@ void OsiClpSolverInterface::markHotStart()
 {
   // *TEST*
   delete ws_;
-  ws_ = dynamic_cast<OsiWarmStartBasis*>(getWarmStart());
-  modelPtr_->getIntParam(OsiMaxNumIteration,itlimOrig_);
+  ws_ = dynamic_cast<CoinWarmStartBasis*>(getWarmStart());
+  modelPtr_->getIntParam(ClpMaxNumIteration,itlimOrig_);
   int itlim;
   OsiSolverInterface::getIntParam(OsiMaxNumIterationHotStart, itlim);
-  modelPtr_->setIntParam(OsiMaxNumIteration,itlim);
+  modelPtr_->setIntParam(ClpMaxNumIteration,itlim);
 
 }
 
@@ -287,7 +316,7 @@ void OsiClpSolverInterface::solveFromHotStart()
 void OsiClpSolverInterface::unmarkHotStart()
 {
 
-  modelPtr_->setIntParam(OsiMaxNumIteration,itlimOrig_);
+  modelPtr_->setIntParam(ClpMaxNumIteration,itlimOrig_);
   delete ws_;
   ws_ = NULL;
 }
@@ -328,14 +357,14 @@ bool OsiClpSolverInterface::isContinuous(int colNumber) const
 //------------------------------------------------------------------
 // Row and column copies of the matrix ...
 //------------------------------------------------------------------
-const OsiPackedMatrix * OsiClpSolverInterface::getMatrixByRow() const
+const CoinPackedMatrix * OsiClpSolverInterface::getMatrixByRow() const
 {
   if ( matrixByRow_ == NULL ) {
-    matrixByRow_ = new OsiPackedMatrix(); 
+    matrixByRow_ = new CoinPackedMatrix(); 
     matrixByRow_->reverseOrderedCopyOf(*modelPtr_->matrix());
     matrixByRow_->removeGaps();
 #if 0
-    OsiPackedMatrix back;
+    CoinPackedMatrix back;
     std::cout<<"start check"<<std::endl;
     back.reverseOrderedCopyOf(*matrixByRow_);
     modelPtr_->matrix()->isEquivalent2(back);
@@ -345,7 +374,7 @@ const OsiPackedMatrix * OsiClpSolverInterface::getMatrixByRow() const
   return matrixByRow_;
 }
 
-const OsiPackedMatrix * OsiClpSolverInterface::getMatrixByCol() const
+const CoinPackedMatrix * OsiClpSolverInterface::getMatrixByCol() const
 {
   return modelPtr_->matrix();
 }
@@ -498,7 +527,7 @@ void OsiClpSolverInterface::setRowPrice(const double * rs)
 // Problem modifying methods (matrix)
 //#############################################################################
 void 
-OsiClpSolverInterface::addCol(const OsiPackedVectorBase& vec,
+OsiClpSolverInterface::addCol(const CoinPackedVectorBase& vec,
 			      const double collb, const double colub,   
 			      const double obj)
 {
@@ -513,7 +542,7 @@ OsiClpSolverInterface::addCol(const OsiPackedVectorBase& vec,
 //-----------------------------------------------------------------------------
 void 
 OsiClpSolverInterface::addCols(const int numcols,
-			       const OsiPackedVectorBase * const * cols,
+			       const CoinPackedVectorBase * const * cols,
 			       const double* collb, const double* colub,   
 			       const double* obj)
 {
@@ -542,7 +571,7 @@ OsiClpSolverInterface::deleteCols(const int num, const int * columnIndices)
 }
 //-----------------------------------------------------------------------------
 void 
-OsiClpSolverInterface::addRow(const OsiPackedVectorBase& vec,
+OsiClpSolverInterface::addRow(const CoinPackedVectorBase& vec,
 			      const double rowlb, const double rowub)
 {
   int numberRows = modelPtr_->numberRows();
@@ -554,7 +583,7 @@ OsiClpSolverInterface::addRow(const OsiPackedVectorBase& vec,
 }
 //-----------------------------------------------------------------------------
 void 
-OsiClpSolverInterface::addRow(const OsiPackedVectorBase& vec,
+OsiClpSolverInterface::addRow(const CoinPackedVectorBase& vec,
 			      const char rowsen, const double rowrhs,   
 			      const double rowrng)
 {
@@ -570,7 +599,7 @@ OsiClpSolverInterface::addRow(const OsiPackedVectorBase& vec,
 //-----------------------------------------------------------------------------
 void 
 OsiClpSolverInterface::addRows(const int numrows,
-			       const OsiPackedVectorBase * const * rows,
+			       const CoinPackedVectorBase * const * rows,
 			       const double* rowlb, const double* rowub)
 {
   int numberRows = modelPtr_->numberRows();
@@ -589,7 +618,7 @@ OsiClpSolverInterface::addRows(const int numrows,
 //-----------------------------------------------------------------------------
 void 
 OsiClpSolverInterface::addRows(const int numrows,
-			       const OsiPackedVectorBase * const * rows,
+			       const CoinPackedVectorBase * const * rows,
 			       const char* rowsen, const double* rowrhs,   
 			       const double* rowrng)
 {
@@ -623,7 +652,7 @@ OsiClpSolverInterface::deleteRows(const int num, const int * rowIndices)
 //#############################################################################
 
 void
-OsiClpSolverInterface::loadProblem(const OsiPackedMatrix& matrix,
+OsiClpSolverInterface::loadProblem(const CoinPackedMatrix& matrix,
 				   const double* collb, const double* colub,   
 				   const double* obj,
 				   const double* rowlb, const double* rowub)
@@ -636,7 +665,7 @@ OsiClpSolverInterface::loadProblem(const OsiPackedMatrix& matrix,
 //-----------------------------------------------------------------------------
 
 void
-OsiClpSolverInterface::assignProblem(OsiPackedMatrix*& matrix,
+OsiClpSolverInterface::assignProblem(CoinPackedMatrix*& matrix,
 				     double*& collb, double*& colub,
 				     double*& obj,
 				     double*& rowlb, double*& rowub)
@@ -654,7 +683,7 @@ OsiClpSolverInterface::assignProblem(OsiPackedMatrix*& matrix,
 //-----------------------------------------------------------------------------
 
 void
-OsiClpSolverInterface::loadProblem(const OsiPackedMatrix& matrix,
+OsiClpSolverInterface::loadProblem(const CoinPackedMatrix& matrix,
 				   const double* collb, const double* colub,
 				   const double* obj,
 				   const char* rowsen, const double* rowrhs,   
@@ -677,7 +706,7 @@ OsiClpSolverInterface::loadProblem(const OsiPackedMatrix& matrix,
 //-----------------------------------------------------------------------------
 
 void
-OsiClpSolverInterface::assignProblem(OsiPackedMatrix*& matrix,
+OsiClpSolverInterface::assignProblem(CoinPackedMatrix*& matrix,
 				     double*& collb, double*& colub,
 				     double*& obj,
 				     char*& rowsen, double*& rowrhs,
@@ -795,7 +824,8 @@ lastAlgorithm_(0),
 matrixByRow_(NULL),
 integerInformation_(NULL)
 {
-  modelPtr_ = new ClpModel();
+   modelPtr_ = new ClpModel();
+   fillParamMaps();
 }
 
 //-------------------------------------------------------------------
@@ -833,7 +863,7 @@ integerInformation_(NULL)
   else
     modelPtr_ = new ClpModel();
   if ( rhs.ws_ ) 
-    ws_ = new OsiWarmStartBasis(*rhs.ws_);
+    ws_ = new CoinWarmStartBasis(*rhs.ws_);
   basis_ = rhs.basis_;
   if (rhs.integerInformation_) {
     int numberColumns = modelPtr_->numberColumns();
@@ -841,6 +871,7 @@ integerInformation_(NULL)
     memcpy(integerInformation_,rhs.integerInformation_,
 	   numberColumns*sizeof(char));
   }
+  fillParamMaps();
 }
 
 // Borrow constructor - only delete one copy
@@ -864,6 +895,7 @@ integerInformation_(NULL)
     memcpy(integerInformation_,rhs->integerInformation(),
 	   numberColumns*sizeof(char));
   }
+  fillParamMaps();
 }
     
 // Releases so won't error
@@ -900,8 +932,11 @@ OsiClpSolverInterface::operator=(const OsiClpSolverInterface& rhs)
       modelPtr_ = new ClpModel(*rhs.modelPtr_);
     
     if ( rhs.ws_ ) 
-      ws_ = new OsiWarmStartBasis(*rhs.ws_);
+      ws_ = new CoinWarmStartBasis(*rhs.ws_);
     basis_ = rhs.basis_;
+    intParamMap_ = rhs.intParamMap_;
+    dblParamMap_ = rhs.dblParamMap_;
+    strParamMap_ = rhs.strParamMap_;
   }
   return *this;
 }
@@ -912,7 +947,7 @@ OsiClpSolverInterface::operator=(const OsiClpSolverInterface& rhs)
 
 void OsiClpSolverInterface::applyRowCut( const OsiRowCut & rowCut )
 {
-  const OsiPackedVector & row=rowCut.row();
+  const CoinPackedVector & row=rowCut.row();
   addRow(row ,  rowCut.lb(),rowCut.ub());
 }
 /* Apply a collection of row cuts which are all effective.
@@ -925,8 +960,8 @@ OsiClpSolverInterface::applyRowCuts(int numberCuts, const OsiRowCut * cuts)
 #if 0
   //****** Ask JP or Laci how to get this to work
   //Why no test case for addRows?
-  const OsiPackedVectorBase *const * rows
-    =     new OsiPackedVectorBase * [numberCuts];
+  const CoinPackedVectorBase *const * rows
+    =     new CoinPackedVectorBase * [numberCuts];
   double * rowlb = new double [numberCuts];
   double * rowub = new double [numberCuts];
   for (i=0;i<numberCuts;i++) {
@@ -951,8 +986,8 @@ void OsiClpSolverInterface::applyColCut( const OsiColCut & cc )
 {
   double * lower = modelPtr_->columnLower();
   double * upper = modelPtr_->columnUpper();
-  const OsiPackedVector & lbs = cc.lbs();
-  const OsiPackedVector & ubs = cc.ubs();
+  const CoinPackedVector & lbs = cc.lbs();
+  const CoinPackedVector & ubs = cc.ubs();
   int i;
 
   for ( i=0; i<lbs.getNumElements(); i++ ) {
@@ -1014,9 +1049,27 @@ void OsiClpSolverInterface::extractSenseRhsRange() const
 }
 // Set language
 void 
-OsiClpSolverInterface::newLanguage(OsiMessages::Language language)
+OsiClpSolverInterface::newLanguage(CoinMessages::Language language)
 {
   modelPtr_->newLanguage(language);
   OsiSolverInterface::newLanguage(language);
 }
 //#############################################################################
+
+void
+OsiClpSolverInterface::fillParamMaps()
+{
+   intParamMap_[OsiMaxNumIteration]         = ClpMaxNumIteration;
+   intParamMap_[OsiMaxNumIterationHotStart] = ClpMaxNumIterationHotStart;
+   intParamMap_[OsiLastIntParam]            = ClpLastIntParam;
+
+   dblParamMap_[OsiDualObjectiveLimit]   = ClpDualObjectiveLimit;
+   dblParamMap_[OsiPrimalObjectiveLimit] = ClpPrimalObjectiveLimit;
+   dblParamMap_[OsiDualTolerance]        = ClpDualTolerance;
+   dblParamMap_[OsiPrimalTolerance]      = ClpPrimalTolerance;
+   dblParamMap_[OsiObjOffset]            = ClpObjOffset;
+   dblParamMap_[OsiLastDblParam]         = ClpLastDblParam;
+
+   strParamMap_[OsiProbName]     = ClpProbName;
+   strParamMap_[OsiLastStrParam] = ClpLastStrParam;
+}

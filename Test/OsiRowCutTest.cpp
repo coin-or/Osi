@@ -9,7 +9,7 @@
 #include <cfloat>
 
 #include "OsiRowCut.hpp"
-#include "OsiFloatEqual.hpp"
+#include "CoinFloatEqual.hpp"
 
 #ifdef NDEBUG
 #undef NDEBUG
@@ -21,7 +21,7 @@ OsiRowCutUnitTest(const OsiSolverInterface * baseSiP,
 		  const std::string & mpsDir )
 {
 
-  OsiRelFltEq eq;
+  CoinRelFltEq eq;
 
   // Test default constructor
   {
@@ -161,7 +161,7 @@ OsiRowCutUnitTest(const OsiSolverInterface * baseSiP,
 
   // Test setting row with packed vector
   {
-    OsiPackedVector r;
+    CoinPackedVector r;
     r.setVector(ne,inx,el);
 
     OsiRowCut rc;
@@ -172,7 +172,7 @@ OsiRowCutUnitTest(const OsiSolverInterface * baseSiP,
 
   // Test operator==
   {
-    OsiPackedVector r;
+    CoinPackedVector r;
     r.setVector(ne,inx,el);
 
     OsiRowCut rc;

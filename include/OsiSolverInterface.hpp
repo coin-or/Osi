@@ -6,17 +6,18 @@
 #include <string>
 #include <vector>
 
+#include "CoinMessageHandler.hpp"
+#include "CoinPackedVectorBase.hpp"
+
 #include "OsiCollections.hpp"
-#include "OsiPackedVectorBase.hpp"
-
 #include "OsiSolverParameters.hpp"
-#include "OsiMessageHandler.hpp"
 
-class OsiPackedMatrix;
+class CoinPackedMatrix;
+class CoinWarmStart;
+
 class OsiCuts;
 class OsiRowCut;
 class OsiRowCutDebugger;
-class OsiWarmStart;
 
 //#############################################################################
 
@@ -222,10 +223,10 @@ public:
   /**@name WarmStart related methods */
   //@{
     /// Get warmstarting information
-    virtual OsiWarmStart* getWarmStart() const = 0;
+    virtual CoinWarmStart* getWarmStart() const = 0;
     /** Set warmstarting information. Return true/false depending on whether
 	the warmstart information was accepted or not. */
-    virtual bool setWarmStart(const OsiWarmStart* warmstart) = 0;
+    virtual bool setWarmStart(const CoinWarmStart* warmstart) = 0;
   //@}
 
   //---------------------------------------------------------------------------
@@ -345,10 +346,10 @@ public:
       virtual bool isFreeBinary(int colIndex) const; 
     
       /// Get pointer to row-wise copy of matrix
-      virtual const OsiPackedMatrix * getMatrixByRow() const = 0;
+      virtual const CoinPackedMatrix * getMatrixByRow() const = 0;
   
       /// Get pointer to column-wise copy of matrix
-      virtual const OsiPackedMatrix * getMatrixByCol() const = 0;
+      virtual const CoinPackedMatrix * getMatrixByCol() const = 0;
   
       /// Get solver's value for infinity
       virtual double getInfinity() const = 0;
@@ -544,17 +545,17 @@ public:
        continuous variable. */
     //@{
       /** */
-      virtual void addCol(const OsiPackedVectorBase& vec,
+      virtual void addCol(const CoinPackedVectorBase& vec,
 			  const double collb, const double colub,   
 			  const double obj) = 0;
       /** */
       virtual void addCols(const int numcols,
-			   const OsiPackedVectorBase * const * cols,
+			   const CoinPackedVectorBase * const * cols,
 			   const double* collb, const double* colub,   
 			   const double* obj);
 #if 0
       /** */
-      virtual void addCols(const OsiPackedMatrix& matrix,
+      virtual void addCols(const CoinPackedMatrix& matrix,
 			   const double* collb, const double* colub,   
 			   const double* obj);
 #endif
@@ -562,27 +563,27 @@ public:
       virtual void deleteCols(const int num, const int * colIndices) = 0;
     
       /** */
-      virtual void addRow(const OsiPackedVectorBase& vec,
+      virtual void addRow(const CoinPackedVectorBase& vec,
     			  const double rowlb, const double rowub) = 0;
       /** */
-      virtual void addRow(const OsiPackedVectorBase& vec,
+      virtual void addRow(const CoinPackedVectorBase& vec,
     			  const char rowsen, const double rowrhs,   
     			  const double rowrng) = 0;
       /** */
       virtual void addRows(const int numrows,
-			   const OsiPackedVectorBase * const * rows,
+			   const CoinPackedVectorBase * const * rows,
 			   const double* rowlb, const double* rowub);
       /** */
       virtual void addRows(const int numrows,
-			   const OsiPackedVectorBase * const * rows,
+			   const CoinPackedVectorBase * const * rows,
     			   const char* rowsen, const double* rowrhs,   
     			   const double* rowrng);
 #if 0
       /** */
-      virtual void addRows(const OsiPackedMatrix& matrix,
+      virtual void addRows(const CoinPackedMatrix& matrix,
     			   const double* rowlb, const double* rowub);
       /** */
-      virtual void addRows(const OsiPackedMatrix& matrix,
+      virtual void addRows(const CoinPackedMatrix& matrix,
     			   const char* rowsen, const double* rowrhs,   
     			   const double* rowrng);
 #endif
@@ -636,7 +637,7 @@ public:
 	  <li> <code>obj</code>: all variables have 0 objective coefficient
         </ul>
     */
-    virtual void loadProblem(const OsiPackedMatrix& matrix,
+    virtual void loadProblem(const CoinPackedMatrix& matrix,
 			     const double* collb, const double* colub,   
 			     const double* obj,
 			     const double* rowlb, const double* rowub) = 0;
@@ -648,7 +649,7 @@ public:
 	freed using the C++ <code>delete</code> and <code>delete[]</code>
 	functions. 
     */
-    virtual void assignProblem(OsiPackedMatrix*& matrix,
+    virtual void assignProblem(CoinPackedMatrix*& matrix,
 			       double*& collb, double*& colub, double*& obj,
 			       double*& rowlb, double*& rowub) = 0;
 
@@ -664,7 +665,7 @@ public:
           <li> <code>rowrng</code>: 0 for the ranged rows
         </ul>
     */
-    virtual void loadProblem(const OsiPackedMatrix& matrix,
+    virtual void loadProblem(const CoinPackedMatrix& matrix,
 			     const double* collb, const double* colub,
 			     const double* obj,
 			     const char* rowsen, const double* rowrhs,   
@@ -677,7 +678,7 @@ public:
 	freed using the C++ <code>delete</code> and <code>delete[]</code>
 	functions. 
     */
-    virtual void assignProblem(OsiPackedMatrix*& matrix,
+    virtual void assignProblem(CoinPackedMatrix*& matrix,
 			       double*& collb, double*& colub, double*& obj,
 			       char*& rowsen, double*& rowrhs,
 			       double*& rowrng) = 0;
@@ -742,19 +743,19 @@ public:
   /**@name Message handling */
   //@{
   /// Pass in Message handler (not deleted at end)
-  void passInMessageHandler(OsiMessageHandler * handler);
+  void passInMessageHandler(CoinMessageHandler * handler);
   /// Set language
-  void newLanguage(OsiMessages::Language language);
-  void setLanguage(OsiMessages::Language language)
+  void newLanguage(CoinMessages::Language language);
+  void setLanguage(CoinMessages::Language language)
   {newLanguage(language);};
   /// Return handler
-  OsiMessageHandler * messageHandler() const
+  CoinMessageHandler * messageHandler() const
   {return handler_;};
   /// Return messages
-  OsiMessages messages() 
+  CoinMessages messages() 
   {return messages_;};
   /// Return pointer to messages
-  OsiMessages * messagesPointer() 
+  CoinMessages * messagesPointer() 
   {return &messages_;};
   //@}
   //---------------------------------------------------------------------------
@@ -847,15 +848,15 @@ private:
 
     /* The warmstart information used for hotstarting in case the default
        hotstart implementation is used */
-    OsiWarmStart* ws_;
+    CoinWarmStart* ws_;
   /// Why not just make useful stuff protected
 protected:
    /// Message handler
-  OsiMessageHandler * handler_;
+  CoinMessageHandler * handler_;
   /// Flag to say if default handler (so delete)
   bool defaultHandler_;
   /// Messages
-  OsiMessages messages_;
+  CoinMessages messages_;
  //@}
 };
 

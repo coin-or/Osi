@@ -4,18 +4,9 @@
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
 #endif
-//#include <cstdlib>
-//#include <cstdio>
-#include <cassert>
-//#include <cmath>
-//#include <cfloat>
-//#include <string>
-//#include <iostream>
 
-//#include "OsiFloatEqual.hpp"
-//#include "CoinHelperFunctions.hpp"
-//#include "OsiPackedVector.hpp"
-//#include "OsiPackedMatrix.hpp"
+#include <cassert>
+
 #include "OsiRowCutDebugger.hpp"
 
 #ifdef NDEBUG
@@ -29,7 +20,7 @@ OsiRowCutDebuggerUnitTest(const OsiSolverInterface * baseSiP,
 			  const std::string & mpsDir )
 {
   
-  OsiRelFltEq eq;
+  CoinRelFltEq eq;
   
   // Test default constructor
   {
@@ -61,7 +52,7 @@ OsiRowCutDebuggerUnitTest(const OsiSolverInterface * baseSiP,
     
     const bool type[]={0,0,1,1,0,0,0,0};
     const double values[]= {2.5, 0, 1, 1, 0.5, 3, 0, 0.26315789473684253};
-    OsiPackedVector objCoefs(8,imP->getObjCoefficients());
+    CoinPackedVector objCoefs(8,imP->getObjCoefficients());
    
 #if 0
     for (i=0;i<8;i++) {

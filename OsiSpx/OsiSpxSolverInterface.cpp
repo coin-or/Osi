@@ -24,8 +24,8 @@
 #include "OsiSpxSolverInterface.hpp"
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
-#include "OsiPackedMatrix.hpp"
-#include "OsiWarmStartBasis.hpp"
+#include "CoinPackedMatrix.hpp"
+#include "CoinWarmStartBasis.hpp"
 
 //#############################################################################
 // A couple of helper functions
@@ -49,7 +49,7 @@ inline void freeCacheChar( char*& ptr )
     }
 }
 
-inline void freeCacheMatrix( OsiPackedMatrix*& ptr )
+inline void freeCacheMatrix( CoinPackedMatrix*& ptr )
 {
   if( ptr != NULL )
     {
@@ -280,14 +280,14 @@ bool OsiSpxSolverInterface::isIterationLimitReached() const
 // WarmStart related methods
 //#############################################################################
 
-OsiWarmStart* OsiSpxSolverInterface::getWarmStart() const
+CoinWarmStart* OsiSpxSolverInterface::getWarmStart() const
 {
-  OsiWarmStartBasis* ws = NULL;
+  CoinWarmStartBasis* ws = NULL;
   int numcols = getNumCols();
   int numrows = getNumRows();
   int i;
 
-  ws = new OsiWarmStartBasis();
+  ws = new CoinWarmStartBasis();
   ws->setSize( numcols, numrows );
 
   for( i = 0; i < numrows; ++i )
@@ -295,17 +295,17 @@ OsiWarmStart* OsiSpxSolverInterface::getWarmStart() const
       switch( spxsolver_.getBasisRowStatus( i ) )
 	{
 	case soplex::SoPlex::BASIC:
-	  ws->setArtifStatus( i, OsiWarmStartBasis::basic );
+	  ws->setArtifStatus( i, CoinWarmStartBasis::basic );
 	  break;	  
 	case soplex::SoPlex::FIXED:
 	case soplex::SoPlex::ON_LOWER:
-	  ws->setArtifStatus( i, OsiWarmStartBasis::atLowerBound );
+	  ws->setArtifStatus( i, CoinWarmStartBasis::atLowerBound );
 	  break;
 	case soplex::SoPlex::ON_UPPER:
-	  ws->setArtifStatus( i, OsiWarmStartBasis::atUpperBound );
+	  ws->setArtifStatus( i, CoinWarmStartBasis::atUpperBound );
 	  break;
 	case soplex::SoPlex::ZERO:
-	  ws->setArtifStatus( i, OsiWarmStartBasis::isFree );
+	  ws->setArtifStatus( i, CoinWarmStartBasis::isFree );
 	  break;
 	default:
 	  throwSPXerror( "invalid row status", "getWarmStart" );
@@ -318,17 +318,17 @@ OsiWarmStart* OsiSpxSolverInterface::getWarmStart() const
       switch( spxsolver_.getBasisColStatus( i ) )
 	{
 	case soplex::SoPlex::BASIC:
-	  ws->setStructStatus( i, OsiWarmStartBasis::basic );
+	  ws->setStructStatus( i, CoinWarmStartBasis::basic );
 	  break;	  
 	case soplex::SoPlex::FIXED:
 	case soplex::SoPlex::ON_LOWER:
-	  ws->setStructStatus( i, OsiWarmStartBasis::atLowerBound );
+	  ws->setStructStatus( i, CoinWarmStartBasis::atLowerBound );
 	  break;
 	case soplex::SoPlex::ON_UPPER:
-	  ws->setStructStatus( i, OsiWarmStartBasis::atUpperBound );
+	  ws->setStructStatus( i, CoinWarmStartBasis::atUpperBound );
 	  break;
 	case soplex::SoPlex::ZERO:
-	  ws->setStructStatus( i, OsiWarmStartBasis::isFree );
+	  ws->setStructStatus( i, CoinWarmStartBasis::isFree );
 	  break;
 	default:
 	  throwSPXerror( "invalid column status", "getWarmStart" );
@@ -341,9 +341,9 @@ OsiWarmStart* OsiSpxSolverInterface::getWarmStart() const
 
 //-----------------------------------------------------------------------------
 
-bool OsiSpxSolverInterface::setWarmStart(const OsiWarmStart* warmstart)
+bool OsiSpxSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
 {
-  const OsiWarmStartBasis* ws = dynamic_cast<const OsiWarmStartBasis*>(warmstart);
+  const CoinWarmStartBasis* ws = dynamic_cast<const CoinWarmStartBasis*>(warmstart);
   int numcols, numrows, i;
   soplex::SoPlex::VarStatus *cstat, *rstat;
   bool retval = false;
@@ -364,16 +364,16 @@ bool OsiSpxSolverInterface::setWarmStart(const OsiWarmStart* warmstart)
     {
       switch( ws->getArtifStatus( i ) )
 	{
-	case OsiWarmStartBasis::basic:
+	case CoinWarmStartBasis::basic:
 	  rstat[i] = soplex::SoPlex::BASIC;
 	  break;
-	case OsiWarmStartBasis::atLowerBound:
+	case CoinWarmStartBasis::atLowerBound:
 	  rstat[i] = soplex::SoPlex::ON_LOWER;
 	  break;
-	case OsiWarmStartBasis::atUpperBound:
+	case CoinWarmStartBasis::atUpperBound:
 	  rstat[i] = soplex::SoPlex::ON_UPPER;
 	  break;
-	case OsiWarmStartBasis::isFree:
+	case CoinWarmStartBasis::isFree:
 	  rstat[i] = soplex::SoPlex::ZERO;
 	  break;
 	default:  // unknown row status
@@ -385,16 +385,16 @@ bool OsiSpxSolverInterface::setWarmStart(const OsiWarmStart* warmstart)
     {
       switch( ws->getStructStatus( i ) )
 	{
-	case OsiWarmStartBasis::basic:
+	case CoinWarmStartBasis::basic:
 	  cstat[i] = soplex::SoPlex::BASIC;
 	  break;
-	case OsiWarmStartBasis::atLowerBound:
+	case CoinWarmStartBasis::atLowerBound:
 	  cstat[i] = soplex::SoPlex::ON_LOWER;
 	  break;
-	case OsiWarmStartBasis::atUpperBound:
+	case CoinWarmStartBasis::atUpperBound:
 	  cstat[i] = soplex::SoPlex::ON_UPPER;
 	  break;
-	case OsiWarmStartBasis::isFree:
+	case CoinWarmStartBasis::isFree:
 	  cstat[i] = soplex::SoPlex::ZERO;
 	  break;
 	default:  // unknown column status
@@ -586,7 +586,7 @@ bool OsiSpxSolverInterface::isContinuous( int colNumber ) const
 // Row and column copies of the matrix ...
 //------------------------------------------------------------------
 
-const OsiPackedMatrix * OsiSpxSolverInterface::getMatrixByRow() const
+const CoinPackedMatrix * OsiSpxSolverInterface::getMatrixByRow() const
 {
   if( matrixByRow_ == NULL )
     {
@@ -615,7 +615,7 @@ const OsiPackedMatrix * OsiSpxSolverInterface::getMatrixByRow() const
       starts[nrows] = elem;
       assert( elem == nelems );
 
-      matrixByRow_ = new OsiPackedMatrix();
+      matrixByRow_ = new CoinPackedMatrix();
       matrixByRow_->assignMatrix( false /* not column ordered */,
 				  ncols, nrows, nelems,
 				  elements, indices, starts, len );      
@@ -625,7 +625,7 @@ const OsiPackedMatrix * OsiSpxSolverInterface::getMatrixByRow() const
 
 //------------------------------------------------------------------
 
-const OsiPackedMatrix * OsiSpxSolverInterface::getMatrixByCol() const
+const CoinPackedMatrix * OsiSpxSolverInterface::getMatrixByCol() const
 {
   if( matrixByCol_ == NULL )
     {
@@ -654,7 +654,7 @@ const OsiPackedMatrix * OsiSpxSolverInterface::getMatrixByCol() const
       starts[ncols] = elem;
       assert( elem == nelems );
 
-      matrixByCol_ = new OsiPackedMatrix();
+      matrixByCol_ = new CoinPackedMatrix();
       matrixByCol_->assignMatrix( true /* column ordered */,
 				  nrows, ncols, nelems,
 				  elements, indices, starts, len );      
@@ -935,7 +935,7 @@ void OsiSpxSolverInterface::setRowPrice(const double * rs)
 // Problem modifying methods (matrix)
 //#############################################################################
 void 
-OsiSpxSolverInterface::addCol(const OsiPackedVectorBase& vec,
+OsiSpxSolverInterface::addCol(const CoinPackedVectorBase& vec,
 			      const double collb, const double colub,   
 			      const double obj)
 {
@@ -954,7 +954,7 @@ OsiSpxSolverInterface::deleteCols(const int num, const int * columnIndices)
 }
 //-----------------------------------------------------------------------------
 void 
-OsiSpxSolverInterface::addRow(const OsiPackedVectorBase& vec,
+OsiSpxSolverInterface::addRow(const CoinPackedVectorBase& vec,
 			      const double rowlb, const double rowub)
 {
   soplex::DSVector rowvec;
@@ -965,7 +965,7 @@ OsiSpxSolverInterface::addRow(const OsiPackedVectorBase& vec,
 }
 //-----------------------------------------------------------------------------
 void 
-OsiSpxSolverInterface::addRow(const OsiPackedVectorBase& vec,
+OsiSpxSolverInterface::addRow(const CoinPackedVectorBase& vec,
 			      const char rowsen, const double rowrhs,   
 			      const double rowrng)
 {
@@ -987,7 +987,7 @@ OsiSpxSolverInterface::deleteRows(const int num, const int * rowIndices)
 //#############################################################################
 
 void
-OsiSpxSolverInterface::loadProblem( const OsiPackedMatrix& matrix,
+OsiSpxSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
 				    const double* collb, const double* colub,
 				    const double* obj,
 				    const double* rowlb, const double* rowub )
@@ -1115,7 +1115,7 @@ OsiSpxSolverInterface::loadProblem( const OsiPackedMatrix& matrix,
 //-----------------------------------------------------------------------------
 
 void
-OsiSpxSolverInterface::assignProblem( OsiPackedMatrix*& matrix,
+OsiSpxSolverInterface::assignProblem( CoinPackedMatrix*& matrix,
 				      double*& collb, double*& colub,
 				      double*& obj,
 				      double*& rowlb, double*& rowub )
@@ -1132,7 +1132,7 @@ OsiSpxSolverInterface::assignProblem( OsiPackedMatrix*& matrix,
 //-----------------------------------------------------------------------------
 
 void
-OsiSpxSolverInterface::loadProblem( const OsiPackedMatrix& matrix,
+OsiSpxSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
 				    const double* collb, const double* colub,
 				    const double* obj,
 				    const char* rowsen, const double* rowrhs,
@@ -1186,7 +1186,7 @@ OsiSpxSolverInterface::loadProblem( const OsiPackedMatrix& matrix,
 //-----------------------------------------------------------------------------
 
 void
-OsiSpxSolverInterface::assignProblem( OsiPackedMatrix*& matrix,
+OsiSpxSolverInterface::assignProblem( CoinPackedMatrix*& matrix,
 				      double*& collb, double*& colub,
 				      double*& obj,
 				      char*& rowsen, double*& rowrhs,
@@ -1413,8 +1413,8 @@ void OsiSpxSolverInterface::applyColCut( const OsiColCut & cc )
 {
   const double * soplexColLB = getColLower();
   const double * soplexColUB = getColUpper();
-  const OsiPackedVector & lbs = cc.lbs();
-  const OsiPackedVector & ubs = cc.ubs();
+  const CoinPackedVector & lbs = cc.lbs();
+  const CoinPackedVector & ubs = cc.ubs();
   int i;
 
   for( i = 0; i < lbs.getNumElements(); ++i ) 

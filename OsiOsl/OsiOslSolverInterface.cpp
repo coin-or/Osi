@@ -8,7 +8,7 @@
 
 #include <cassert>
 
-#include "OsiPackedMatrix.hpp"
+#include "CoinPackedMatrix.hpp"
 #include "OsiOslSolverInterface.hpp"
 #include "OsiCuts.hpp"
 #include "OsiRowCut.hpp"
@@ -19,10 +19,10 @@
 // gap-free matrix.
 //#############################################################################
 
-static const OsiPackedMatrix *
-toColumnOrderedGapFree(const OsiPackedMatrix& matrix)
+static const CoinPackedMatrix *
+toColumnOrderedGapFree(const CoinPackedMatrix& matrix)
 {
-   OsiPackedMatrix * m = 0;
+   CoinPackedMatrix * m = 0;
    if (matrix.isColOrdered()) {
       const int * start = matrix.getVectorStarts();
       const int * length = matrix.getVectorLengths();
@@ -32,14 +32,14 @@ toColumnOrderedGapFree(const OsiPackedMatrix& matrix)
 	    break;
       if (i >= 0) {
 	 // got to get rid of the gaps
-	 m = new OsiPackedMatrix();
+	 m = new CoinPackedMatrix();
 	 m->setExtraGap(0.0);
 	 m->setExtraMajor(0.0);
 	 m->operator=(matrix);
       }
    } else {
       // must create a column ordered copy without gaps
-      m = new OsiPackedMatrix();
+      m = new CoinPackedMatrix();
       m->setExtraGap(0.0);
       m->setExtraMajor(0.0);
       m->reverseOrderedCopyOf(matrix);
@@ -374,14 +374,14 @@ bool OsiOslSolverInterface::isIterationLimitReached() const
 // WarmStart related methods
 //#############################################################################
 
-OsiWarmStart* OsiOslSolverInterface::getWarmStart() const
+CoinWarmStart* OsiOslSolverInterface::getWarmStart() const
 {
   // *TEST*
   EKKModel* model = getMutableModelPtr();
   const int numcols = getNumCols();
   const int numrows = getNumRows();
 
-  OsiWarmStartBasis* ws = new OsiWarmStartBasis;
+  CoinWarmStartBasis* ws = new CoinWarmStartBasis;
   ws->setSize(numcols, numrows);
 
   int i;
@@ -390,14 +390,14 @@ OsiWarmStart* OsiOslSolverInterface::getWarmStart() const
     switch (ekk_rowStatus(model, i)) {
     case -2:
     case -1:
-      ws->setArtifStatus(i, OsiWarmStartBasis::atLowerBound);
+      ws->setArtifStatus(i, CoinWarmStartBasis::atLowerBound);
       break;
     case  0:
-      ws->setArtifStatus(i, OsiWarmStartBasis::basic);
+      ws->setArtifStatus(i, CoinWarmStartBasis::basic);
       break;
     case  1:
     case  2:
-      ws->setArtifStatus(i, OsiWarmStartBasis::atUpperBound);
+      ws->setArtifStatus(i, CoinWarmStartBasis::atUpperBound);
       break;
     }
   }
@@ -406,14 +406,14 @@ OsiWarmStart* OsiOslSolverInterface::getWarmStart() const
     switch (ekk_columnStatus(model, i)) {
     case -2:
     case -1:
-      ws->setStructStatus(i, OsiWarmStartBasis::atLowerBound);
+      ws->setStructStatus(i, CoinWarmStartBasis::atLowerBound);
       break;
     case  0:
-      ws->setStructStatus(i, OsiWarmStartBasis::basic);
+      ws->setStructStatus(i, CoinWarmStartBasis::basic);
       break;
     case  1: 
     case  2:
-      ws->setStructStatus(i, OsiWarmStartBasis::atUpperBound);
+      ws->setStructStatus(i, CoinWarmStartBasis::atUpperBound);
       break;
     }
   }
@@ -423,11 +423,11 @@ OsiWarmStart* OsiOslSolverInterface::getWarmStart() const
 
 //-----------------------------------------------------------------------------
 
-bool OsiOslSolverInterface::setWarmStart(const OsiWarmStart* warmstart)
+bool OsiOslSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
 {
   // *TEST*
-  const OsiWarmStartBasis* ws =
-    dynamic_cast<const OsiWarmStartBasis*>(warmstart);
+  const CoinWarmStartBasis* ws =
+    dynamic_cast<const CoinWarmStartBasis*>(warmstart);
 
   if (! ws)
     return false;
@@ -448,16 +448,16 @@ bool OsiOslSolverInterface::setWarmStart(const OsiWarmStart* warmstart)
 
   for (i = 0; i < numrows; ++i) {
     switch (ws->getArtifStatus(i)) {
-    case OsiWarmStartBasis::atUpperBound:
+    case CoinWarmStartBasis::atUpperBound:
       atUpper[numUpper++] = i;
       break;
-    case OsiWarmStartBasis::atLowerBound:
+    case CoinWarmStartBasis::atLowerBound:
       atLower[numLower++] = i;
       break;
-    case OsiWarmStartBasis::basic:
+    case CoinWarmStartBasis::basic:
       basic[numBasic++] = i;
       break;
-    case OsiWarmStartBasis::isFree: // superbasic
+    case CoinWarmStartBasis::isFree: // superbasic
       basic[numBasic++] = i;
       break;
     }
@@ -474,16 +474,16 @@ bool OsiOslSolverInterface::setWarmStart(const OsiWarmStart* warmstart)
   numBasic = 0;
   for (i = 0; i < numcols; ++i) {
     switch (ws->getStructStatus(i)) {
-    case OsiWarmStartBasis::atUpperBound:
+    case CoinWarmStartBasis::atUpperBound:
       atUpper[numUpper++] = i;
       break;
-    case OsiWarmStartBasis::atLowerBound:
+    case CoinWarmStartBasis::atLowerBound:
       atLower[numLower++] = i;
       break;
-    case OsiWarmStartBasis::basic:
+    case CoinWarmStartBasis::basic:
       basic[numBasic++] = i;
       break;
-    case OsiWarmStartBasis::isFree: // superbasic
+    case CoinWarmStartBasis::isFree: // superbasic
       basic[numBasic++] = i;
       break;
     }
@@ -516,7 +516,7 @@ void OsiOslSolverInterface::markHotStart()
   // *TEST*
   EKKModel* model = getMutableModelPtr();
   delete ws_;
-  ws_ = dynamic_cast<OsiWarmStartBasis*>(getWarmStart());
+  ws_ = dynamic_cast<CoinWarmStartBasis*>(getWarmStart());
   itlimOrig_ = ekk_getImaxiter(model);
   int itlim;
   OsiSolverInterface::getIntParam(OsiMaxNumIterationHotStart, itlim);
@@ -673,12 +673,12 @@ bool OsiOslSolverInterface::isFreeBinary(
 //------------------------------------------------------------------
 // Row and column copies of the matrix ...
 //------------------------------------------------------------------
-const OsiPackedMatrix * OsiOslSolverInterface::getMatrixByRow() const
+const CoinPackedMatrix * OsiOslSolverInterface::getMatrixByRow() const
 {
   if ( matrixByRow_ == NULL ) {
     EKKMatrixCopy rowCopy;
     ekk_createRowCopy(getMutableModelPtr(), &rowCopy);
-    matrixByRow_ = new OsiPackedMatrix();
+    matrixByRow_ = new CoinPackedMatrix();
     matrixByRow_->copyOf(false /* not column ordered */,
 			 getNumCols(), getNumRows(), getNumElements(),
 			 rowCopy.element, rowCopy.index, rowCopy.start,
@@ -690,12 +690,12 @@ const OsiPackedMatrix * OsiOslSolverInterface::getMatrixByRow() const
   return matrixByRow_;
 }
 //------------------------------------------------------------------
-const OsiPackedMatrix * OsiOslSolverInterface::getMatrixByCol() const
+const CoinPackedMatrix * OsiOslSolverInterface::getMatrixByCol() const
 {
   if ( matrixByColumn_ == NULL ) {
     EKKMatrixCopy colCopy;
     ekk_createColumnCopy(getMutableModelPtr(), &colCopy);
-    matrixByColumn_ = new OsiPackedMatrix();
+    matrixByColumn_ = new CoinPackedMatrix();
     matrixByColumn_->copyOf(true /* column ordered */,
 			    getNumRows(), getNumCols(), getNumElements(),
 			    colCopy.element, colCopy.index, colCopy.start,
@@ -1073,7 +1073,7 @@ void OsiOslSolverInterface::setRowPrice(const double * rs)
 // Problem modifying methods (matrix)
 //#############################################################################
 void 
-OsiOslSolverInterface::addCol(const OsiPackedVectorBase& vec,
+OsiOslSolverInterface::addCol(const CoinPackedVectorBase& vec,
 			      const double collb, const double colub,   
 			      const double obj)
 {
@@ -1084,7 +1084,7 @@ OsiOslSolverInterface::addCol(const OsiPackedVectorBase& vec,
 //-----------------------------------------------------------------------------
 void 
 OsiOslSolverInterface::addCols(const int numcols,
-			       const OsiPackedVectorBase * const * cols,
+			       const CoinPackedVectorBase * const * cols,
 			       const double* collb, const double* colub,   
 			       const double* obj)
 {
@@ -1101,7 +1101,7 @@ OsiOslSolverInterface::addCols(const int numcols,
   nz = 0;
   start[0] = 0;
   for (i = 0; i < numcols; ++i) {
-    const OsiPackedVectorBase* col = cols[i];
+    const CoinPackedVectorBase* col = cols[i];
     const int len = col->getNumElements();
     CoinDisjointCopyN(col->getIndices(), len, index+nz);
     CoinDisjointCopyN(col->getElements(), len, elem+nz);
@@ -1123,7 +1123,7 @@ OsiOslSolverInterface::deleteCols(const int num, const int * columnIndices)
 }
 //-----------------------------------------------------------------------------
 void 
-OsiOslSolverInterface::addRow(const OsiPackedVectorBase& vec,
+OsiOslSolverInterface::addRow(const CoinPackedVectorBase& vec,
 			      const double rowlb, const double rowub)
 {
   // *TEST*
@@ -1132,7 +1132,7 @@ OsiOslSolverInterface::addRow(const OsiPackedVectorBase& vec,
 }
 //-----------------------------------------------------------------------------
 void 
-OsiOslSolverInterface::addRow(const OsiPackedVectorBase& vec,
+OsiOslSolverInterface::addRow(const CoinPackedVectorBase& vec,
 			      const char rowsen, const double rowrhs,   
 			      const double rowrng)
 {
@@ -1145,7 +1145,7 @@ OsiOslSolverInterface::addRow(const OsiPackedVectorBase& vec,
 //-----------------------------------------------------------------------------
 void 
 OsiOslSolverInterface::addRows(const int numrows,
-			       const OsiPackedVectorBase * const * rows,
+			       const CoinPackedVectorBase * const * rows,
 			       const double* rowlb, const double* rowub)
 {
   // *TEST*
@@ -1161,7 +1161,7 @@ OsiOslSolverInterface::addRows(const int numrows,
   nz = 0;
   start[0] = 0;
   for (i = 0; i < numrows; ++i) {
-    const OsiPackedVectorBase* row = rows[i];
+    const CoinPackedVectorBase* row = rows[i];
     const int len = row->getNumElements();
     CoinDisjointCopyN(row->getIndices(), len, index+nz);
     CoinDisjointCopyN(row->getElements(), len, elem+nz);
@@ -1176,7 +1176,7 @@ OsiOslSolverInterface::addRows(const int numrows,
 //-----------------------------------------------------------------------------
 void 
 OsiOslSolverInterface::addRows(const int numrows,
-			       const OsiPackedVectorBase * const * rows,
+			       const CoinPackedVectorBase * const * rows,
 			       const char* rowsen, const double* rowrhs,   
 			       const double* rowrng)
 {
@@ -1196,7 +1196,7 @@ OsiOslSolverInterface::addRows(const int numrows,
   start[0] = 0;
   for (i = 0; i < numrows; ++i) {
     convertSenseToBound(rowsen[i], rowrhs[i], rowrng[i], rowlb[i], rowub[i]);
-    const OsiPackedVectorBase* row = rows[i];
+    const CoinPackedVectorBase* row = rows[i];
     const int len = row->getNumElements();
     CoinDisjointCopyN(row->getIndices(), len, index+nz);
     CoinDisjointCopyN(row->getElements(), len, elem+nz);
@@ -1223,12 +1223,12 @@ OsiOslSolverInterface::deleteRows(const int num, const int * rowIndices)
 //#############################################################################
 
 void
-OsiOslSolverInterface::loadProblem(const OsiPackedMatrix& matrix,
+OsiOslSolverInterface::loadProblem(const CoinPackedMatrix& matrix,
 				   const double* collb, const double* colub,   
 				   const double* obj,
 				   const double* rowlb, const double* rowub)
 {
-   const OsiPackedMatrix * m = toColumnOrderedGapFree(matrix);
+   const CoinPackedMatrix * m = toColumnOrderedGapFree(matrix);
    loadProblem(m->getNumCols(), m->getNumRows(),
 	       m->getVectorStarts(), m->getIndices(), m->getElements(),
 	       collb, colub, obj, rowlb, rowub);
@@ -1239,7 +1239,7 @@ OsiOslSolverInterface::loadProblem(const OsiPackedMatrix& matrix,
 //-----------------------------------------------------------------------------
 
 void
-OsiOslSolverInterface::assignProblem(OsiPackedMatrix*& matrix,
+OsiOslSolverInterface::assignProblem(CoinPackedMatrix*& matrix,
 				     double*& collb, double*& colub,
 				     double*& obj,
 				     double*& rowlb, double*& rowub)
@@ -1256,13 +1256,13 @@ OsiOslSolverInterface::assignProblem(OsiPackedMatrix*& matrix,
 //-----------------------------------------------------------------------------
 
 void
-OsiOslSolverInterface::loadProblem(const OsiPackedMatrix& matrix,
+OsiOslSolverInterface::loadProblem(const CoinPackedMatrix& matrix,
 				   const double* collb, const double* colub,
 				   const double* obj,
 				   const char* rowsen, const double* rowrhs,   
 				   const double* rowrng)
 {
-   const OsiPackedMatrix * m = toColumnOrderedGapFree(matrix);
+   const CoinPackedMatrix * m = toColumnOrderedGapFree(matrix);
    loadProblem(m->getNumCols(), m->getNumRows(),
 	       m->getVectorStarts(), m->getIndices(), m->getElements(),
 	       collb, colub, obj, rowsen, rowrhs, rowrng);
@@ -1273,7 +1273,7 @@ OsiOslSolverInterface::loadProblem(const OsiPackedMatrix& matrix,
 //-----------------------------------------------------------------------------
 
 void
-OsiOslSolverInterface::assignProblem(OsiPackedMatrix*& matrix,
+OsiOslSolverInterface::assignProblem(CoinPackedMatrix*& matrix,
 				     double*& collb, double*& colub,
 				     double*& obj,
 				     char*& rowsen, double*& rowrhs,
@@ -1519,7 +1519,7 @@ OsiOslSolverInterface::operator=(const OsiOslSolverInterface& rhs)
 void OsiOslSolverInterface::applyRowCut( const OsiRowCut & rowCut )
 {
   EKKModel * m = getModelPtr();
-  const OsiPackedVector & row=rowCut.row();
+  const CoinPackedVector & row=rowCut.row();
   ekk_addOneRow(m, rowCut.lb(),rowCut.ub(),
 		row.getNumElements(),row.getIndices(),row.getElements() ); 
 }
@@ -1531,8 +1531,8 @@ void OsiOslSolverInterface::applyColCut( const OsiColCut & cc )
   EKKModel * m = getModelPtr();
   const double * oslColLB = ekk_collower(m);
   const double * oslColUB = ekk_colupper(m);
-  const OsiPackedVector & lbs = cc.lbs();
-  const OsiPackedVector & ubs = cc.ubs();
+  const CoinPackedVector & lbs = cc.lbs();
+  const CoinPackedVector & ubs = cc.ubs();
   int i;
 
   for ( i=0; i<lbs.getNumElements(); i++ ) {

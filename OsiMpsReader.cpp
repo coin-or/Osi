@@ -1438,6 +1438,8 @@ int OsiMpsReader::readMps()
 	    up = lo + fabs ( up2 );
 	  }
 	  break;
+	default:
+	  abort();
 	}
 	rowlower_[irow] = lo;
 	rowupper_[irow] = up;

@@ -3,19 +3,7 @@
 
 #include <cassert>
 
-#if 1
 #include "CoinTime.hpp"
-#else
-#include <time.h>
-#if defined(_MSC_VER)
-// Turn off compiler warning about long names
-#  pragma warning(disable:4786)
-#else
-#include <sys/times.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#endif
-#endif
 
 #include "CoinHelperFunctions.hpp"
 #include "CoinIndexedVector.hpp"
@@ -30,7 +18,7 @@
 #include "OsiCuts.hpp"
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
-#include "Presolve.hpp"
+#include "ClpPresolve.hpp"
 
 static double totalTime=0.0;
 //  static double cpuTime()
@@ -116,7 +104,7 @@ void OsiClpSolverInterface::initialSolve()
   gotHint = (getHintParam(OsiDoPresolveInInitial,takeHint,strength));
   assert (gotHint);
   if (strength!=OsiHintIgnore&&takeHint) {
-    Presolve pinfo;
+    ClpPresolve pinfo;
     ClpSimplex * model2 = pinfo.presolvedModel(solver,1.0e-8);
     if (!model2) {
       // problem found to be infeasible - whats best?
@@ -267,7 +255,7 @@ void OsiClpSolverInterface::resolve()
   gotHint = (getHintParam(OsiDoPresolveInResolve,takeHint,strength));
   assert (gotHint);
   if (strength!=OsiHintIgnore&&takeHint) {
-    Presolve pinfo;
+    ClpPresolve pinfo;
     ClpSimplex * model2 = pinfo.presolvedModel(solver,1.0e-8);
     if (!model2) {
       // problem found to be infeasible - whats best?
@@ -475,7 +463,7 @@ bool OsiClpSolverInterface::isPrimalObjectiveLimitReached() const
   }
    
   const double obj = modelPtr_->objectiveValue();
-  const int maxmin = modelPtr_->optimizationDirection();
+  int maxmin = (int) modelPtr_->optimizationDirection();
 
   switch (lastAlgorithm_) {
    case 0: // no simplex was needed
@@ -501,7 +489,7 @@ bool OsiClpSolverInterface::isDualObjectiveLimitReached() const
   }
    
   const double obj = modelPtr_->objectiveValue();
-  const int maxmin = modelPtr_->optimizationDirection();
+  int maxmin = (int) modelPtr_->optimizationDirection();
 
   switch (lastAlgorithm_) {
    case 0: // no simplex was needed

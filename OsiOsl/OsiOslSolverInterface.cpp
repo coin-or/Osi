@@ -549,7 +549,7 @@ bool OsiOslSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
 void OsiOslSolverInterface::markHotStart()
 {
   // *TEST*
-  EKKModel* model = getMutableModelPtr();
+  //EKKModel* model = getMutableModelPtr();
   delete ws_;
   ws_ = dynamic_cast<CoinWarmStartBasis*>(getWarmStart());
   //  ekk_startFastDualSimplex(model, itlim);

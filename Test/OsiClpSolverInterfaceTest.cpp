@@ -7,6 +7,9 @@
 #endif
   
 #include <cassert>
+//#include <cstdlib>
+//#include <cstdio>
+//#include <iostream>
 
 #include "OsiClpSolverInterface.hpp"
 #include "OsiCuts.hpp"
@@ -819,6 +822,27 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     objValue = m.getObjValue();
     assert( eq(objValue,2520.57) );
 
+  }
+  // Test matt
+  if (fopen("../Clp/matt.mps","r")) {    
+    OsiClpSolverInterface m;
+    m.readMps("../Clp/matt","mps");
+    m.setHintParam(OsiDoPresolveInResolve, true, OsiHintDo);
+    m.resolve();
+    
+    std::vector<double *> rays = m.getDualRays(1);
+    std::cout << "Dual Ray: " << std::endl;
+    for(int i = 0; i < m.getNumRows(); i++){
+      if(fabs(rays[0][i]) > 0.00001)
+	std::cout << i << " : " << rays[0][i] << std::endl;
+    }
+    
+    std::cout << "isProvenOptimal = " << m.isProvenOptimal() << std::endl;
+    std::cout << "isProvenPrimalInfeasible = " << m.isProvenPrimalInfeasible()
+	 << std::endl;
+    
+    delete [] rays[0];
+    
   }
 
   // Solve an lp by hand

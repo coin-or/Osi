@@ -111,7 +111,6 @@ void OsiGlpkSolverInterfaceUnitTest( const std::string & mpsDir, const std::stri
       assert( colCopy->getMajorDim() == 8 );
       assert( colCopy->getNumRows() == 5 );
       assert( colCopy->getMinorDim() == 5 );
-	  const int * lengths = colCopy->getVectorLengths();
       assert( colCopy->getVectorLengths()[7] == 2 );
       CoinPackedMatrix revColCopy;
       revColCopy.reverseOrderedCopyOf(*colCopy);

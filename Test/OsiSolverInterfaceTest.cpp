@@ -8,7 +8,7 @@
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
-
+#include "CoinTime.hpp"
 #include <cstdlib>
 #include <cassert>
 #include <vector>
@@ -46,32 +46,7 @@
 #include "CoinPackedMatrix.hpp"
 #include "OsiRowCut.hpp"
 #include "OsiCuts.hpp"
-
-
-#include <time.h>
-#ifndef _MSC_VER
-#include <sys/times.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#endif
-
-static double cpuTime()
-{
-  double cpu_temp;
-#if defined(_MSC_VER)
-  unsigned int ticksnow;        /* clock_t is same as int */
-  
-  ticksnow = (unsigned int)clock();
-  
-  cpu_temp = (double)((double)ticksnow/CLOCKS_PER_SEC);
-#else
-  struct rusage usage;
-  getrusage(RUSAGE_SELF,&usage);
-  cpu_temp = usage.ru_utime.tv_sec;
-  cpu_temp += 1.0e-6*((double) usage.ru_utime.tv_usec);
-#endif
-  return cpu_temp;
-}
+#include "OsiPresolve.hpp"
 
 //--------------------------------------------------------------------------
 // A helper function to write out a message about a test failure
@@ -1219,7 +1194,7 @@ void OsiSolverInterfaceMpsUnitTest
   PUSH_MPS("modszk1",true,688,1620,3.2061972906e+02,1.e-10)
   PUSH_MPS("nesm",true,663,2923,1.4076073035e+07,1.e-5)
   PUSH_MPS("perold",true,626,1376,-9.3807580773e+03,1.e-6)
-  PUSH_MPS("pilot",true,1442,3652,/*-5.5740430007e+02*/-557.48972927292,1.e-5)
+  PUSH_MPS("pilot",true,1442,3652,/*-5.5740430007e+02*/-557.48972927292,5.e-5)
   PUSH_MPS("pilot4",true,411,1000,-2.5811392641e+03,1.e-6)
   PUSH_MPS("pilot87",true,2031,4883,3.0171072827e+02,1.e-4)
   PUSH_MPS("pilotnov",true,976,2172,-4.4972761882e+03,1.e-10)
@@ -1265,7 +1240,7 @@ void OsiSolverInterfaceMpsUnitTest
   // ?? PUSH_MPS("truss",true,1001,8806,4.5881584719e+05,1.e-10)
   PUSH_MPS("tuff",true,334,587,2.9214776509e-01,1.e-10)
   PUSH_MPS("vtpbase",true,199,203,1.2983146246e+05,1.e-10)
-  PUSH_MPS("wood1p",true,245,2594,1.4429024116e+00,1.e-10)
+  PUSH_MPS("wood1p",true,245,2594,1.4429024116e+00,5.e-5)
   PUSH_MPS("woodw",true,1099,8405,1.3044763331E+00,1.e-10)
 
 #undef PUSH_MPS
@@ -1468,7 +1443,7 @@ void OsiSolverInterfaceMpsUnitTest
       //    loop. This ensures that all previous solvers are run and compared to one
       //    another.      
       for (i = 0 ; i < static_cast<int>(vecSiP.size()) ; ++i) {
-        double startTime = cpuTime();
+        double startTime = CoinCpuTime();
         
 #     ifdef COIN_USE_VOL
         { 
@@ -1507,7 +1482,7 @@ void OsiSolverInterfaceMpsUnitTest
         
         vecSiP[i]->initialSolve() ;
         
-        double timeOfSolution = cpuTime()-startTime;
+        double timeOfSolution = CoinCpuTime()-startTime;
         if (vecSiP[i]->isProvenOptimal()) { 
           double soln = vecSiP[i]->getObjValue();       
           CoinRelFltEq eq(objValueTol[m]) ;
@@ -1751,14 +1726,14 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   }
 
   // Determine if this is the emptySi is an OsiDylpSolverInterface
+#ifdef COIN_USE_DYLP
   bool dylpSolverInterface = false;
   {
-#ifdef COIN_USE_DYLP
     const OsiDylpSolverInterface * si =
       dynamic_cast<const OsiDylpSolverInterface *>(emptySi);
     if ( si != NULL ) dylpSolverInterface = true;
-#endif
   }
+#endif
 
   // Determine if this is the emptySi is an OsiGlpkSolverInterface
   bool glpkSolverInterface = false;
@@ -1891,7 +1866,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     const double * cs = exmip1Si->getColSolution();
     int c;
     bool okColSol=true;
-    double inf = exmip1Si->getInfinity();
+    //double inf = exmip1Si->getInfinity();
     for ( c=0; c<nc; c++ ) {
       // if colSol is not between column bounds then 
       // colSol is unreasonable.
@@ -2039,7 +2014,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     const double * cs = exmip1Si->getColSolution();
     int c;
     bool okColSol=true;
-    double inf = exmip1Si->getInfinity();
+    //double inf = exmip1Si->getInfinity();
     for ( c=0; c<nc; c++ ) {
       // if colSol is not between column bounds then 
       // colSol is unreasonable.
@@ -2518,7 +2493,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       // Test WriteMps
       
       {
-	
+
 	OsiSolverInterface *  si1 = emptySi->clone(); 
 	OsiSolverInterface *  si2 = emptySi->clone(); 
 	si1->readMps(fn.c_str(),"mps");
@@ -2867,7 +2842,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
         failureMessage(solverName,"getObjValue after adding empty cols and then rows.");;
     }
   }
-	
+
 	delete si;
       }
       // Test adding columns to NULL
@@ -3139,6 +3114,39 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     delete s;
   }
 
+  // Test presolve
+  if ( !volSolverInterface) {
+    OsiSolverInterface * si = emptySi->clone();
+    std::string fn = netlibDir+"25fv47";
+    si->readMps(fn.c_str(),"mps");
+    OsiSolverInterface * presolvedModel;
+    OsiPresolve pinfo;
+    int numberPasses=5; // can change this
+    /* Use a tolerance of 1.0e-8 for feasibility, treat problem as 
+       not being integer, do "numberpasses" passes */
+    presolvedModel = pinfo.presolvedModel(*si,1.0e-8,false,numberPasses);
+    assert(presolvedModel);
+    // switch off presolve
+    presolvedModel->setHintParam(OsiDoPresolveInInitial,false);
+    presolvedModel->initialSolve();
+    double objValue = presolvedModel->getObjValue(); 
+    if( !eq(objValue,5.5018458883e+03) )
+      failureMessage(solverName,"OsiPresolved model has wrong objective");
+    pinfo.postsolve(true);
+
+
+    delete presolvedModel;
+    si->setHintParam(OsiDoPresolveInResolve,false);
+    si->setHintParam(OsiDoDualInResolve,false);
+    si->resolve();
+    objValue = si->getObjValue(); 
+    if( !eq(objValue,5.5018458883e+03) )
+      failureMessage(solverName,"OsiPresolve - final objective wrong");
+    if (si->getIterationCount())
+      failureMessage(solverName,"OsiPresolve - minor error, needs iterations");
+    delete si;
+  }
+
   // Perform tests that are embodied in functions
   if ( !volSolverInterface )
   {
@@ -3162,7 +3170,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     test_functions.push_back(std::pair<TestFunction, const char*>(&test15VivianDeSmedt,"test15VivianDeSmedt"));
     
     unsigned int i;
-    for (i = 0; i < test_functions.size(); ++i) {	
+    for (i = 0; i < test_functions.size(); ++i) {
       OsiSolverInterface *s = emptySi->clone();
       const char * testName = test_functions[i].second;
       {

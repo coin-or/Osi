@@ -1,4 +1,4 @@
-//  LAST EDIT: Sun 25 Aug 2002 by Brady Hunsaker
+//  LAST EDIT: Tues 29 Apr 2003 by Brady Hunsaker
 //-----------------------------------------------------------------------------
 // name:     OSI Interface for GLPK
 // author:   Vivian DE Smedt
@@ -9,7 +9,7 @@
 // comments: please scan this file for '???' and read the comments
 //-----------------------------------------------------------------------------
 // Copyright (C) 2001, 2002 Vivian De Smedt
-// Copyright (C) 2002 Braden Hunsaker 
+// Copyright (C) 2002, 2003 Braden Hunsaker 
 // All Rights Reserved.
 //
 // More Comments:
@@ -361,8 +361,11 @@ OsiGlpkSolverInterface::getDblParam( OsiDblParam key, double& value ) const
 bool
 OsiGlpkSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
 {
-	bool retval = false;
+  //	bool retval = false;
   switch (key) {
+  case OsiProbName:
+    OsiSolverInterface::getStrParam(key, value);
+    break;
   case OsiSolverName:
     value = "glpk";
     break;
@@ -1053,16 +1056,47 @@ const double * OsiGlpkSolverInterface::getColSolution() const
 			colsol_ = new double[numcols];
 			redcost_ = new double[numcols];
 		}
-		int j;
-		for( j = 0; j < numcols; j++ )
-		{
-			int status;
-			double val;
-			double dualVal;
-			lpx_get_col_info( model, j+1, &status, &val, &dualVal);
-			colsol_[j] = val;
-			redcost_[j] = dualVal;
-		}
+
+		// Function calls differ if last solve was b&b or simplex
+		if (bbWasLast_ == 0)  // simplex/continuous solution
+		  {
+		    // Note: if the problem has not been solved, GLPK
+		    //  returns 0, but OSI requires something
+		    //  within bounds
+		    if (lpx_get_status( model ) == LPX_UNDEF)
+		      {
+			// Make sure bounds are in cache.
+			// this really handles upper bds too
+			getColLower();  
+			// now collower_ and colupper_ hold the bounds
+			int j;
+			for( j = 0; j < numcols; j++ )
+			  {
+			    colsol_[j] = (collower_[j] > 0) ? collower_[j]:0;
+			    if (colupper_[j] < colsol_[j]) 
+			      colsol_[j] = colupper_[j];
+			  }
+		      }
+		    else  // this is what will usually be executed
+		      {
+			int j;
+			for( j = 0; j < numcols; j++ )
+			  {
+			    int status;
+			    double val;
+			    double dualVal;
+			    lpx_get_col_info( model, j+1, &status, &val, &dualVal);
+			    colsol_[j] = val;
+			    redcost_[j] = dualVal;
+			  }
+		      }
+		  }
+		else   // b&b/integer solution
+		  {
+		    int j;
+		    for( j = 0; j < numcols; j++ )
+		      colsol_[j] = lpx_get_mip_col( model, j+1);
+		  }
 	}
 	return colsol_;
 }
@@ -1101,16 +1135,28 @@ const double * OsiGlpkSolverInterface::getRowActivity() const
 			rowact_ = new double[numrows];
 			rowsol_ = new double[numrows];
 		}
-		int i;
-		for( i = 0; i < numrows; i++ )
-		{
+
+		// Function calls differ if last solve was b&b or simplex
+		if (bbWasLast_ == 0)  // simplex/continuous solution
+		  {
+		    int i;
+		    for( i = 0; i < numrows; i++ )
+		      {
 			int status;
 			double val;
 			double dualVal;
 			lpx_get_row_info( model, i+1, &status, &val, &dualVal);
 			rowact_[i] = val;
 			rowsol_[i] = dualVal;
-		}
+		      }
+		  }
+		else  // last call was b&b mip solution
+		  {
+		    int i;
+		    for( i = 0; i < numrows; i++ )
+		      rowact_[i] = lpx_get_mip_row( model, i+1);
+		    rowsol_[i] = 0;  // no dual values for mip
+		  }
 	}
 	return rowact_;
 #else
@@ -1489,6 +1535,10 @@ void OsiGlpkSolverInterface::setObjSense(double s)
 void OsiGlpkSolverInterface::setColSolution(const double * cs)
 {
 	// ??? not yet implemented.
+        // This could be implemented by changing colsol_ and not telling
+        // GLPK, but that doesn't seem useful.  I think it's better to 
+        // just leave it unsupported.  Apparently this routine is mainly
+        // for interior point solvers.
 	throw CoinError("method is not yet implemented", "setColSolution", "OsiGlpkSolverInterface");
 }
 
@@ -1509,6 +1559,9 @@ OsiGlpkSolverInterface::addCol(const CoinPackedVectorBase& vec,
 			       const double collb, const double colub,
 			       const double obj)
 {
+  // Note: GLPK expects only non-zero coefficients will be given in 
+  //   lpx_set_mat_col and will abort if there are any zeros.  So any
+  //   zeros must be removed prior to calling lpx_set_mat_col.
         LPX *model = getMutableModelPtr();
 	freeCachedData(OsiGlpkSolverInterface::KEEPCACHED_ROW);
 
@@ -1518,6 +1571,7 @@ OsiGlpkSolverInterface::addCol(const CoinPackedVectorBase& vec,
 	setObjCoeff( numcols-1, obj );
 	int i;
 	// For GLPK, we don't want the arrays to start at 0
+	// We also need to weed out any 0.0 coefficients
 	const int *indices = vec.getIndices();
 	const double *elements = vec.getElements();
 	int numrows = getNumRows();
@@ -1525,17 +1579,22 @@ OsiGlpkSolverInterface::addCol(const CoinPackedVectorBase& vec,
 	int *indices_adj = new int[1+vec.getNumElements()];
 	double *elements_adj = new double[1+vec.getNumElements()];
 
+	int count = 0;
 	for( i = 0; i < vec.getNumElements(); i++ ) {
+	  if (elements[i] != 0.0)
+	    {
 		if ( indices[i]+1 > numrows ) {
 			lpx_add_rows( model, indices[i]+1 - numrows );
 			numrows = indices[i]+1;
 			// ??? could do this more efficiently with a single call based on the max
 		}
+		count++;
 		// GLPK arrays start at 1
-		indices_adj[i+1] = indices[i] + 1;
-		elements_adj[i+1] = elements[i];
+		indices_adj[count] = indices[i] + 1;
+		elements_adj[count] = elements[i];
+	    }
 	}
-	lpx_set_mat_col( model, numcols, vec.getNumElements(), indices_adj, elements_adj );
+	lpx_set_mat_col( model, numcols, count, indices_adj, elements_adj );
 	delete [] indices_adj;
 	delete [] elements_adj;
 }
@@ -1577,6 +1636,10 @@ void
 OsiGlpkSolverInterface::addRow(const CoinPackedVectorBase& vec,
 							   const double rowlb, const double rowub)
 {
+  // Note: GLPK expects only non-zero coefficients will be given in 
+  //   lpx_set_mat_row and will abort if there are any zeros.  So any
+  //   zeros must be removed prior to calling lpx_set_mat_row.
+
         LPX *model = getMutableModelPtr();
 	freeCachedData( OsiGlpkSolverInterface::KEEPCACHED_COLUMN );
 
@@ -1589,19 +1652,25 @@ OsiGlpkSolverInterface::addRow(const CoinPackedVectorBase& vec,
 	int numcols = getNumCols();
 
 	// For GLPK, we don't want the arrays to start at 0
+	// Also, we need to weed out any 0.0 elements
 	int *indices_adj = new int[1+vec.getNumElements()];
 	double *elements_adj = new double[1+vec.getNumElements()];
 
+	int count = 0;
 	for( i = 0; i < vec.getNumElements(); i++ ) {
+	  if ( elements[i] != 0.0 )
+	    {
 		if ( indices[i]+1 > numcols ) {
 		  // ??? Could do this more efficiently with a single call
 			lpx_add_cols( model, indices[i]+1 - numcols );
 			numcols = indices[i]+1;
 		}
-		elements_adj[i+1] = elements[i];
-		indices_adj[i+1] = indices[i] + 1;
+		count++;
+		elements_adj[count] = elements[i];
+		indices_adj[count] = indices[i] + 1;
+	    }
 	}
-	lpx_set_mat_row( model, numrows, vec.getNumElements(), indices_adj, elements_adj );
+	lpx_set_mat_row( model, numrows, count, indices_adj, elements_adj );
 	delete [] indices_adj;
 	delete [] elements_adj;
 }
@@ -1817,8 +1886,11 @@ OsiGlpkSolverInterface::loadProblem(const int numcols, const int numrows,
   LPX *model = getMutableModelPtr();
   double inf = getInfinity();
 
-  lpx_add_cols( model, numcols );
-  lpx_add_rows( model, numrows );
+  // Can't send 0 to lpx_add_xxx
+  if (numcols > 0)
+    lpx_add_cols( model, numcols );
+  if (numrows > 0)
+    lpx_add_rows( model, numrows );
 
   // How many elements?
   int numelem = start[ numrows ];

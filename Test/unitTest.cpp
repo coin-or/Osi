@@ -40,6 +40,9 @@
 #ifdef COIN_USE_GLPK
 #include "OsiGlpkSolverInterface.hpp"
 #endif
+#ifdef COIN_USE_FMP
+#include "OsiFmpSolverInterface.hpp"
+#endif
 #ifdef COIN_USE_CLP
 #include "OsiClpSolverInterface.hpp"
 #endif
@@ -345,6 +348,11 @@ int main (int argc, const char *argv[])
   OsiGlpkSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
   
+#ifdef COIN_USE_FMP
+  testingMessage( "Testing OsiFmpSolverInterface\n" );
+  OsiFmpSolverInterfaceUnitTest(mpsDir,netlibDir);
+#endif
+  
 #ifdef COIN_USE_CLP
   testingMessage( "Testing OsiClpSolverInterface\n" );
   OsiClpSolverInterfaceUnitTest(mpsDir,netlibDir);
@@ -383,6 +391,10 @@ int main (int argc, const char *argv[])
 #   if COIN_USE_GLPK
     OsiSolverInterface * glpkSi = new OsiGlpkSolverInterface;
     vecSi.push_back(glpkSi);
+#endif
+#   if COIN_USE_FMP
+    OsiSolverInterface * fmpSi = new OsiFmpSolverInterface;
+    vecSi.push_back(fmpSi);
 #endif
 #   if COIN_USE_VOL
     OsiSolverInterface * volSi = new OsiVolSolverInterface;

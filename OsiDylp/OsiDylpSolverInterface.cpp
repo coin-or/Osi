@@ -3830,7 +3830,7 @@ vector<double*> ODSI::getDualRays (int) const
 { throw CoinError("Unimplemented method.",
 		  "getDualRays","OsiDylpSolverInterface") ;
 
-  return (0) ; }
+  return (vector<double*>(0)) ; }
 
 
 /*!
@@ -3843,7 +3843,7 @@ vector<double*> ODSI::getPrimalRays (int) const
 { throw CoinError("Unimplemented method.",
 		  "getPrimalRays","OsiDylpSolverInterface") ;
 
-  return (0) ; }
+  return (vector<double*>(0)) ; }
 
 
 /*!

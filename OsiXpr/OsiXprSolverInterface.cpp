@@ -10,6 +10,10 @@
 #include <numeric>
 #include <strstream>
 
+#ifdef _WIN32
+#define DLL
+#endif
+
 #define __ANSIC_
 #include <xpresso.h>
 #undef  __ANSIC_

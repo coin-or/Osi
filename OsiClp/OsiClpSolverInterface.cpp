@@ -75,10 +75,22 @@ void OsiClpSolverInterface::initialSolve()
     //printf("doing dual\n");
     solver.dual();
     lastAlgorithm_=2; // dual
+    // check if clp thought it was in a loop
+    if (solver.status()==3&&solver.numberIterations()<solver.maximumIterations()) {
+      // switch algorithm
+      solver.primal();
+      lastAlgorithm_=1; // primal
+    }
   } else {
     //printf("doing primal\n");
     solver.primal();
     lastAlgorithm_=1; // primal
+    // check if clp thought it was in a loop
+    if (solver.status()==3&&solver.numberIterations()<solver.maximumIterations()) {
+      // switch algorithm
+      solver.dual();
+      lastAlgorithm_=2; // dual
+    }
   }
   basis_ = getBasis(&solver);
   //basis_.print();
@@ -102,9 +114,15 @@ void OsiClpSolverInterface::resolve()
   solver.setDualRowPivotAlgorithm(steep);
   //solver.saveModel("save.bad");
   solver.dual();
+  lastAlgorithm_=2; // dual
+  // check if clp thought it was in a loop
+  if (solver.status()==3&&solver.numberIterations()<solver.maximumIterations()) {
+    // switch algorithm
+    solver.primal();
+    lastAlgorithm_=1; // primal
+  }
   basis_ = getBasis(&solver);
   //basis_.print();
-  lastAlgorithm_=2; // dual
   solver.returnModel(*modelPtr_);
 }
 
@@ -1027,6 +1045,10 @@ OsiClpSolverInterface::applyRowCuts(int numberCuts, const OsiRowCut * cuts)
     rowlb[i] = cuts[i].lb();
     rowub[i] = cuts[i].ub();
     rows[i] = &cuts[i].row();
+#ifdef TAKEOUT
+    if (rows[i]->getNumElements()==10||rows[i]->getNumElements()==15)
+      printf("ApplyCuts %d size %d\n",getNumRows()+i,rows[i]->getNumElements());
+#endif
   }
   addRows(numberCuts,rows,rowlb,rowub);
   delete [] rows;

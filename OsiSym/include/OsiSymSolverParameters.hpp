@@ -41,7 +41,8 @@ enum OsiSymIntParam {
    OsiSymGenerateCglProbingCuts,
    OsiSymGenerateCglFlowAndCoverCuts,
    OsiSymGenerateCglRoundingCuts,
-   OsiSymGenerateCglLiftAndProjectCuts
+   OsiSymGenerateCglLiftAndProjectCuts,
+   OsiSymGenerateCglCliqueCuts
 };
 
 enum OsiSymDblParam {

@@ -133,6 +133,22 @@ void OsiFactorization::gutsOfInitialize(int type)
     // always switch off sparse
     sparseThreshold_=0;
     sparse_=NULL;
+    // we need to get 1 element arrays for any with length n+1 !!
+    startColumnL_ = new OsiBigIndex [ 1 ];
+    startColumnR_ = new OsiBigIndex [ 1 ];
+    startRowU_ = new OsiBigIndex [ 1 ];
+    numberInRow_ = new int [ 1 ];
+    nextRow_ = new int [ 1 ];
+    lastRow_ = new int [ 1 ];
+    pivotRegion_ = new double [ 1 ];
+    permuteBack_ = new int [ 1 ];
+    permute_ = new int [ 1 ];
+    pivotColumnBack_ = new int [ 1 ];
+    startColumnU_ = new OsiBigIndex [ 1 ];
+    numberInColumn_ = new int [ 1 ];
+    pivotColumn_ = new int [ 1 ];
+    nextColumn_ = new int [ 1 ];
+    lastColumn_ = new int [ 1 ];
   }
 }
 //Part of LP
@@ -445,7 +461,7 @@ int OsiFactorization::factorize (
 
   return status_;
 }
-/* Two part version for maximum flexibility
+/* Two part version for flexibility
    This part creates arrays for user to fill.
    maximumL is guessed maximum size of L part of
    final factorization, maximumU of U part.  These are multiplied by
@@ -455,8 +471,6 @@ int
 OsiFactorization::factorizePart1 ( int numberOfRows,
 				   int numberOfColumns,
 				   OsiBigIndex numberOfElements,
-				   OsiBigIndex maximumL,
-				   OsiBigIndex maximumU,
 				   int * indicesRow[],
 				   int * indicesColumn[],
 				   double * elements[],
@@ -484,8 +498,9 @@ OsiFactorization::factorizePart1 ( int numberOfRows,
    to say thrown out.
    returns 0 -okay, -1 singular, -99 memory */
 int 
-OsiFactorization::factorizePart2 (int permutation[])
+OsiFactorization::factorizePart2 (int permutation[],int exactNumberElements)
 {
+  lengthU_ = exactNumberElements;
   preProcess ( 0 );
   factor (  );
   //say which column is pivoting on which row

@@ -226,14 +226,54 @@ OsiFactorization::updateColumnL ( OsiIndexedVector * regionSparse) const
     } 
   }
 }
+int OsiFactorization::checkPivot(double saveFromU,
+				 double oldPivot) const
+{
+  int status;
+  if ( fabs ( saveFromU ) > 1.0e-7 ) {
+    double checkTolerance;
+    
+    if ( numberRowsExtra_ < numberRows_ + 2 ) {
+      checkTolerance = 1.0e-5;
+    } else if ( numberRowsExtra_ < numberRows_ + 10 ) {
+      checkTolerance = 1.0e-6;
+    } else if ( numberRowsExtra_ < numberRows_ + 50 ) {
+      checkTolerance = 1.0e-8;
+    } else {
+      checkTolerance = 1.0e-10;
+    }       
+    if ( fabs ( 1.0 - fabs ( saveFromU / oldPivot ) ) < checkTolerance ) {
+      status = 0;
+    } else {
+#if DEBUG_OSI
+      cout << oldPivot << " " << saveFromU << endl;
+#endif
+      if ( fabs ( fabs ( oldPivot ) - fabs ( saveFromU ) ) < 1.0e-12 ||
+        fabs ( 1.0 - fabs ( saveFromU / oldPivot ) ) < 1.0e-8 ) {
+        status = 1;
+      } else {
+        status = 2;
+      }       
+    }       
+  } else {
+    //error
+    status = 2;
+#if DEBUG_OSI
+    cout << saveFromU / oldPivot << " " << saveFromU << endl;
+#endif
+  } 
+  return status;
+}
 
 //  replaceColumn.  Replaces one Column to basis
 //      returns 0=OK, 1=Probably OK, 2=singular, 3=no room
-int
+
+int               
 OsiFactorization::replaceColumn ( int pivotRow,
                                  double pivotCheck,
                                  int numberOfElements,
-                                 int indicesRow[], double elements[] )
+				  int indicesRow[], double elements[],
+				  bool checkBeforeModifying)
 {
   OsiIndexedVector *region = new OsiIndexedVector;
   region->reserve(numberRowsExtra_ );
@@ -261,7 +301,8 @@ OsiFactorization::replaceColumn ( int pivotRow,
 int
 OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
                                  int pivotRow,
-                                 double pivotCheck )
+				  double pivotCheck ,
+				  bool checkBeforeModifying)
 {
   OsiBigIndex *startColumn;
   int *indexRow;
@@ -281,18 +322,17 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
   } else {
     realPivotRow = pivotColumn_[pivotRow];
   }
-  
   //zeroed out region
   double *region = regionSparse->denseVector (  );
   
   element = elementU_;
   //take out old pivot column
-  OsiBigIndex start = startColumnU_[realPivotRow];
   
-  OsiBigIndex end = start + numberInColumn_[realPivotRow];
   
   totalElements_ -= numberInColumn_[realPivotRow];
   double oldPivot = pivotRegion_[realPivotRow];
+  // for accuracy check
+  pivotCheck = pivotCheck / oldPivot;
 #if DEBUG>1
   int checkNumber=1000000;
   //if (numberL_) checkNumber=-1;
@@ -308,13 +348,15 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
 #endif
   pivotRegion_[realPivotRow] = 0.0;
   OsiBigIndex i;
-  
-  for ( i = start; i < end ; i ++ ) {
-    element[i] = 0.0;
-  }       
+
+  OsiBigIndex saveEnd = startColumnU_[realPivotRow]
+                         + numberInColumn_[realPivotRow];
+  // not necessary at present - but take no cahnces for future
   numberInColumn_[realPivotRow] = 0;
   //get entries in row (pivot not stored)
   OsiBigIndex *startRow = startRowU_;
+  OsiBigIndex start;
+  OsiBigIndex end;
   
   start = startRow[realPivotRow];
   end = start + numberInRow_[realPivotRow];
@@ -327,22 +369,82 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
   if (numberR_>=checkNumber) 
     printf("Before btranu\n");
 #endif
-  for ( i = start; i < end ; i ++ ) {
-    int iColumn = indexColumn[i];
-    OsiBigIndex j = convertRowToColumn[i];
-    
-    region[iColumn] = element[j];
+  if (!checkBeforeModifying) {
+    for ( i = start; i < end ; i ++ ) {
+      int iColumn = indexColumn[i];
+      OsiBigIndex j = convertRowToColumn[i];
+      
+      region[iColumn] = element[j];
 #if DEBUG>1
-    if (numberR_>=checkNumber) 
-      printf("%d %g\n",iColumn,region[iColumn]);
+      if (numberR_>=checkNumber) 
+	printf("%d %g\n",iColumn,region[iColumn]);
 #endif
-    element[j] = 0.0;
-    regionIndex[numberNonZero++] = iColumn;
+      element[j] = 0.0;
+      regionIndex[numberNonZero++] = iColumn;
+    }
+  } else {
+    for ( i = start; i < end ; i ++ ) {
+      int iColumn = indexColumn[i];
+      OsiBigIndex j = convertRowToColumn[i];
+      
+      region[iColumn] = element[j];
+#if DEBUG>1
+      if (numberR_>=checkNumber) 
+	printf("%d %g\n",iColumn,region[iColumn]);
+#endif
+      regionIndex[numberNonZero++] = iColumn;
+    }
   }       
   //do BTRAN - finding first one to use
   regionSparse->setNumElements ( numberNonZero );
   updateColumnTransposeU ( regionSparse );
   numberNonZero = regionSparse->getNumElements (  );
+
+  double saveFromU = 0.0;
+
+  OsiBigIndex startU = startColumnU_[numberColumnsExtra_];
+  int *indexU = &indexRowU_[startU];
+  double *elementU = &elementU_[startU];
+  
+
+  // Do accuracy test here if caller is paranoid
+  if (checkBeforeModifying) {
+    double tolerance = zeroTolerance_;
+    int number = numberInColumn_[numberColumnsExtra_];
+  
+    for ( i = 0; i < number; i++ ) {
+      int iRow = indexU[i];
+      if ( fabs ( elementU[i] ) > tolerance ) {
+	if ( iRow != realPivotRow ) {
+	  saveFromU = saveFromU - elementU[i] * region[iRow];
+	} else {
+	  saveFromU += elementU[i];
+	}       
+      }       
+    }       
+    //check accuracy
+    int status = checkPivot(saveFromU,pivotCheck);
+    if (status) {
+      // restore some things
+      pivotRegion_[realPivotRow] = oldPivot;
+      number = saveEnd-startColumnU_[realPivotRow];
+      totalElements_ += number;
+      numberInColumn_[realPivotRow]=number;
+      regionSparse->clear();
+      return status;
+    } else {
+      // do what we would have done by now
+      for ( i = start; i < end ; i ++ ) {
+	OsiBigIndex j = convertRowToColumn[i];
+	element[j] = 0.0;
+      }
+    }
+  }
+  // Now zero out column of U
+  //take out old pivot column
+  for ( i = startColumnU_[realPivotRow]; i < saveEnd ; i ++ ) {
+    element[i] = 0.0;
+  }       
   //zero out pivot Row (before or after?)
   //add to R
   startColumn = startColumnR_;
@@ -391,39 +493,29 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
   permuteBack_[numberRowsExtra_] = -1;
   //and for safety
   permute_[numberRowsExtra_ + 1] = 0;
-  // temp
+
   pivotColumn_[pivotRow] = numberRowsExtra_;
   pivotColumnBack_[numberRowsExtra_] = pivotRow;
   startColumn = startColumnU_;
   indexRow = indexRowU_;
   element = elementU_;
-  //number=numberU_;
+
   numberU_++;
-  OsiBigIndex startU = startColumn[numberColumnsExtra_];
-  int *indexU = &indexRow[startU];
-  double *elementU = &element[startU];
-  
   number = numberInColumn_[numberColumnsExtra_];
-  if (number>1000) {
-    int last = indexU[number-1];
-    indexU[number-1]=indexU[0];
-    indexU[0]=last;
-    double dlast = elementU[number-1];
-    elementU[number-1]=elementU[0];
-    elementU[0]=dlast;
-  }
+
   totalElements_ += number;
   lengthU_ += number;
   if ( lengthU_ >= lengthAreaU_ ) {
     //not enough room
     regionSparse->clear();
     return 3;
-  }       
-  double saveFromU = 0.0;
+  }
+       
+  saveFromU = 0.0;
   
   //put in pivot
   //add row counts
-  //could count dense int temp=0;
+
   double tolerance = zeroTolerance_;
   
 #if DEBUG>1
@@ -471,10 +563,10 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
   startRow[numberRowsExtra_] = startRow[maximumRowsExtra_];
   numberInRow_[numberRowsExtra_] = 0;
   //check accuracy
-  oldPivot = pivotCheck / oldPivot;
-  int status;
+  int status = checkPivot(saveFromU,pivotCheck);
+
+  if (status!=2) {
   
-  if ( fabs ( saveFromU ) > 1.0e-7 ) {
     double pivotValue = 1.0 / saveFromU;
     
     pivotRegion_[numberRowsExtra_] = pivotValue;
@@ -482,40 +574,10 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
     for ( i = 0; i < number; i++ ) {
       elementU[i] *= pivotValue;
     }       
-    double checkTolerance;
-    
-    if ( numberRowsExtra_ < numberRows_ + 2 ) {
-      checkTolerance = 1.0e-5;
-    } else if ( numberRowsExtra_ < numberRows_ + 10 ) {
-      checkTolerance = 1.0e-6;
-    } else if ( numberRowsExtra_ < numberRows_ + 50 ) {
-      checkTolerance = 1.0e-8;
-    } else {
-      checkTolerance = 1.0e-10;
-    }       
-    if ( fabs ( 1.0 - fabs ( saveFromU / oldPivot ) ) < checkTolerance ) {
-      status = 0;
-      numberRowsExtra_++;
-      numberColumnsExtra_++;
-      numberGoodU_++;
-      numberPivots_++;
-    } else {
-#if DEBUG_OSI
-      cout << oldPivot << " " << saveFromU << endl;
-#endif
-      if ( fabs ( fabs ( oldPivot ) - fabs ( saveFromU ) ) < 1.0e-12 ||
-        fabs ( 1.0 - fabs ( saveFromU / oldPivot ) ) < 1.0e-8 ) {
-        status = 2;
-      } else {
-        status = 1;
-      }       
-    }       
-  } else {
-    //error
-    status = 1;
-#if DEBUG_OSI
-    cout << saveFromU / oldPivot << " " << saveFromU << endl;
-#endif
+    numberRowsExtra_++;
+    numberColumnsExtra_++;
+    numberGoodU_++;
+    numberPivots_++;
   }       
   if ( numberRowsExtra_ > numberRows_ + 50 ) {
     OsiBigIndex extra = factorElements_ >> 1;
@@ -531,7 +593,7 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
     }       
     OsiBigIndex added = totalElements_ - factorElements_;
     
-    if ( added > extra && added > ( factorElements_ ) << 1 ) {
+    if ( added > extra && added > ( factorElements_ ) << 1 && !status ) {
       status = 3;
       if ( messageLevel_ & 4 ) {
         std::cout << "Factorization has "<< totalElements_

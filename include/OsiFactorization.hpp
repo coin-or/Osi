@@ -5,7 +5,8 @@
 
 class OsiPackedMatrix;
 class OsiIndexedVector;
-
+//#define DEBUG_OSI 2
+//#define DEBUG 2
 /** This deals with Factorization and Updates
 
     This class started with a parallel simplex code I was writing in the
@@ -61,9 +62,9 @@ public:
   Actually does factorization.
   Arrays passed in have non negative value to say basic.
   If status is okay, basic variables have pivot row - this is only needed
-  if increasingRows_ >1
-  If status is singular, then basic variables have +1 and ones thrown out have -INT_MAX
-  to say thrown out.
+  if increasingRows_ >1.
+  If status is singular, then basic variables have pivot row
+  and ones thrown out have -1
   returns 0 -okay, -1 singular, -2 too many in basis, -99 memory */
   int factorize ( const OsiPackedMatrix & matrix, 
 		  int rowIsBasic[], int columnIsBasic[] , 
@@ -84,8 +85,8 @@ public:
   bit of memory.
   If status okay, permutation has pivot rows - this is only needed
   if increasingRows_ >1 (if not then 0,1,2..
-  If status is singular, then basic variables have +1 and ones thrown out have -INT_MAX
-  to say thrown out.
+  If status is singular, then basic variables have pivot row
+  and ones thrown out have -1
   returns 0 -okay, -1 singular, -99 memory */
   int factorize ( int numberRows,
 		  int numberColumns,
@@ -98,15 +99,11 @@ public:
 		  double areaFactor = 0.0);
   /** Two part version for maximum flexibility
       This part creates arrays for user to fill.
-      maximumL is guessed maximum size of L part of
-      final factorization, maximumU of U part.  These are multiplied by
-      areaFactor which can be computed by user or internally.  
+      estimateNumberElements is safe estimate of number
       returns 0 -okay, -99 memory */
   int factorizePart1 ( int numberRows,
 		       int numberColumns,
-		       OsiBigIndex numberElements,
-		       OsiBigIndex maximumL,
-		       OsiBigIndex maximumU,
+		       OsiBigIndex estimateNumberElements,
 		       int * indicesRow[],
 		       int * indicesColumn[],
 		       double * elements[],
@@ -115,10 +112,10 @@ public:
       Arrays belong to factorization and were returned by part 1
       If status okay, permutation has pivot rows - this is only needed
       if increasingRows_ >1 (if not then 0,1,2..
-      If status is singular, then basic variables have +1 and ones thrown out have -INT_MAX
-      to say thrown out.
+      If status is singular, then basic variables have pivot row
+      and ones thrown out have -1
       returns 0 -okay, -1 singular, -99 memory */
-  int factorizePart2 (int permutation[]);
+  int factorizePart2 (int permutation[],int exactNumberElements);
   //@}
 
   /**@name general stuff such as permutation or status */
@@ -243,18 +240,28 @@ public:
   //@{
 
   /** Replaces one Column in basis,
+      If checkBeforeModifying is true will do all accuracy checks
+      before modifying factorization.  Whether to set this depends on
+      speed considerations.  You could just do this on first iteration
+      after factorization and thereafter re-factorize
       returns 0=OK, 1=Probably OK, 2=singular, 3=no room */
   int replaceColumn ( int pivotRow,
-			 double pivotCheck,
-			 int numberElements,
-			 int index[], double array[] );
+		      double pivotCheck,
+		      int numberElements,
+		      int index[], double array[] ,
+		      bool checkBeforeModifying=false);
 
   /** Replaces one Column to basis,
    returns 0=OK, 1=Probably OK, 2=singular, 3=no room
+      If checkBeforeModifying is true will do all accuracy checks
+      before modifying factorization.  Whether to set this depends on
+      speed considerations.  You could just do this on first iteration
+      after factorization and thereafter re-factorize
    partial update already in U */
   int replaceColumn ( OsiIndexedVector * regionSparse,
-			 int pivotRow,
-			 double pivotCheck );
+		      int pivotRow,
+		      double pivotCheck ,
+		      bool checkBeforeModifying=false);
   /// Throws away incoming column (I am not sure really needed)
   void throwAwayColumn (  );
   //@}
@@ -482,6 +489,9 @@ private:
   /// Updates part of column transpose (BTRANL)
   void updateColumnTransposeL ( OsiIndexedVector * region ) const;
 
+  /** Returns accuracy status of replaceColumn
+      returns 0=OK, 1=Probably OK, 2=singular */
+  int checkPivot(double saveFromU, double oldPivot) const;
   /// The real work of constructors etc
   void gutsOfDestructor();
   /// 1 bit - tolerances etc, 2 rest (could be more granular)

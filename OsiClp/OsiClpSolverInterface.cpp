@@ -2192,3 +2192,11 @@ OsiClpSolverInterface::reset()
   fillParamMaps();
 }
 
+
+// Invoke solver's built-in enumeration algorithm
+void 
+OsiClpSolverInterface::branchAndBound() {
+  throw CoinError("Sorry, Clp doesn't implement B&B.  This is because the original Simple Branch and Bound\n\
+code has been much developed and moved to Sbb.  If you want a native Branch and Bound code use Sbb",
+		  "branchAndBound", "OsiClpSolverInterface");
+};

@@ -47,10 +47,7 @@ public:
     virtual void resolve();
 
     /// Invoke solver's built-in enumeration algorithm
-    virtual void branchAndBound() {
-      throw CoinError("Sorry, Clp doesn't implement B&B",
-		     "branchAndBound", "OsiClpSolverInterface");
-    };
+    virtual void branchAndBound();
   //@}
 
   ///@name OsiSimplexInterface methods 

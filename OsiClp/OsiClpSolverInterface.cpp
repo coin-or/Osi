@@ -2093,9 +2093,9 @@ void OsiClpSolverInterface::setObjectiveAndRefresh(double* c)
   modelPtr_->computeDuals(NULL);
 }
 
-//Get a row of the tableau
+//Get a row of the tableau (slack part in slack if not NULL)
 void 
-OsiClpSolverInterface::getBInvARow(int row, double* z)
+OsiClpSolverInterface::getBInvARow(int row, double* z, double * slack)
 {
   assert (modelPtr_->solveType()==2);
   ClpFactorization * factorization = modelPtr_->factorization();
@@ -2115,6 +2115,16 @@ OsiClpSolverInterface::getBInvARow(int row, double* z)
 			    rowArray1,columnArray1,columnArray0);
   memcpy(z,columnArray0->denseVector(),
 	 modelPtr_->numberColumns()*sizeof(double));
+  if (slack) {
+    int n = modelPtr_->numberRows();
+    double * array = rowArray1->denseVector();
+    for (int i=0;i<n;i++) {
+      // clp stores slacks as -1.0
+      slack[i] = - array[i];
+    }
+    //memcpy(slack,rowArray1->denseVector(),
+    //   modelPtr_->numberRows()*sizeof(double));
+  }
   // don't need to clear everything always, but doesn't cost
   rowArray0->clear();
   rowArray1->clear();

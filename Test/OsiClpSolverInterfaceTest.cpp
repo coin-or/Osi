@@ -973,13 +973,14 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     m.initialSolve();
     
     //check that the tableau matches wolsey (B-1 A)
-    double * binvA = (double*) malloc(n_cols * sizeof(double));
+    // slacks in second part of binvA
+    double * binvA = (double*) malloc((n_cols+n_rows) * sizeof(double));
     
     printf("B-1 A");
     for(int i = 0; i < n_rows; i++){
-      m.getBInvARow(i, binvA);
+      m.getBInvARow(i, binvA,binvA+n_cols);
       printf("\nrow: %d -> ",i);
-      for(int j=0; j < n_cols; j++){
+      for(int j=0; j < n_cols+n_rows; j++){
 	printf("%g, ", binvA[j]);
       }
     }

@@ -120,8 +120,8 @@ public:
       reduced costs are properly updated  */
   virtual void setObjectiveAndRefresh(double* c);
 
-  ///Get a row of the tableau
-  virtual void getBInvARow(int row, double* z);
+  ///Get a row of the tableau (slack part in slack if not NULL)
+  virtual void getBInvARow(int row, double* z, double * slack=NULL);
 
   ///Get a row of the basis inverse
   virtual void getBInvRow(int row, double* z);

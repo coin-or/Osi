@@ -49,15 +49,6 @@ void test_starts (const std::string& mpsDir)
   void *info ;
 
 /*
-  Create an empty warm start object and try to set it. The create should
-  succeed, the set should fail.
-*/
-  { std::cout << "Checking behaviour for empty warm start object.\n" ;
-    CoinWarmStart *ws = osi->getWarmStart() ;
-    assert(ws) ;
-    assert(!osi->setWarmStart(ws)) ;
-    delete ws ; }
-/*
   Read in exmip1 and solve it.
 */
   std::cout << "Boosting verbosity.\n" ;
@@ -74,7 +65,7 @@ void test_starts (const std::string& mpsDir)
   std::cout << "And the answer is " << val << ".\n" ;
   assert(fabs(val - 3.23) < 0.01) ;
 /*
-  Grab a warm start object.
+  Grab a warm start object for later use.
 */
   std::cout << "Getting a warm start object ... \n" ;
   CoinWarmStart *ws = osi->getWarmStart() ;
@@ -112,6 +103,30 @@ void test_starts (const std::string& mpsDir)
 	default:
 	{ break ; } } } }
 /*
+  Back to our regular programming. Create an empty warm start object and
+  set it as the warm start. Then call resolve(). The call to setWarmStart
+  should remove the warm start information in the solver, and the call to
+  resolve() should throw.
+*/
+  { std::cout << "Checking behaviour for empty warm start object.\n" ;
+    std::cout << "Acquiring ... " ;
+    CoinWarmStart *ws = osi->getEmptyWarmStart() ;
+    assert(ws) ;
+    std::cout << "setting ... " ;
+    assert(osi->setWarmStart(ws)) ;
+    std::cout << "calling resolve (throw expected) ... " ;
+    bool throwSeen = false ;
+    try
+    { osi->resolve() ; }
+    catch (CoinError &ce)
+    { std::cout << "\n" << ce.methodName() << ":" << ce.message() ;
+      throwSeen = true ; }
+    if (throwSeen)
+    { std::cout << "\n caught ... success!\n" ; }
+    else
+    { std::cout << " no throw! ... FAILURE!" ; }
+    delete ws ; }
+/*
   Back to our regular programming.
 */
   std::cout << "Discarding current ODSI object ... \n" ;
@@ -133,6 +148,7 @@ void test_starts (const std::string& mpsDir)
   ws_clone = 0 ;
 
   int level = 5 ;
+  level |= 0x10 ;
   osi->setHintParam(OsiDoReducePrint,true,OsiForceDo,&level) ;
   osi->getHintParam(OsiDoReducePrint,sense,strength,info) ;
   std::cout << "Verbosity now maxed at " << *static_cast<int *>(info) << ".\n" ;
@@ -148,8 +164,9 @@ void test_starts (const std::string& mpsDir)
   int pivots = osi->getIterationCount() ;
   std::cout << "\nAnd the answer is " << val << " after " <<
 	       pivots << " pivots.\n" ;
+  std::cout << "(Expecting 3.23684 with 0 <= pivots <= 1.)\n" ;
   delete ws ;
-  assert(fabs(val - 3.23) < 0.01 && pivots == 0) ;
+  assert(fabs(val - 3.23) < 0.01 && pivots <= 1) ;
 
   osi->setHintParam(OsiDoReducePrint,true,OsiForceDo) ;
   std::cout << "Reducing verbosity.\n" ;
@@ -159,7 +176,8 @@ void test_starts (const std::string& mpsDir)
   osi->markHotStart() ;
   osi->solveFromHotStart() ;
   val = osi->getObjValue() ;
-  std::cout << "\nAnd the answer is " << val << ".\n" ;
+  std::cout << "\nAnd the answer is " << val
+	    << " (expecting " << 4.5 << ").\n" ;
 /*
   Brief interruption for an idiot check again: are the signs of the reduced
   costs correct in the solution, given maximisation?
@@ -206,7 +224,8 @@ void test_starts (const std::string& mpsDir)
   std::cout << "Attempting hot start ..." ;
   osi->solveFromHotStart() ;
   val = osi->getObjValue() ;
-  std::cout << "\nAnd the answer is " << val << ".\n" ;
+  std::cout << "\nAnd the answer is " << val
+	    << " (expecting " << 3.23684 << ").\n" ;
   assert(fabs(val - 3.23) < 0.01) ;
 
   delete osi ;

@@ -32,6 +32,11 @@ extern "C" {
 #include "dylp.h"
 }
 
+/*! \brief Enum to specify cold/warm/hot start */
+
+typedef enum { startCold = 1, startWarm, startHot } ODSI_start_enum ;
+
+
 /*! \class OsiDylpSolverInterface
     \brief COIN OSI layer for dylp
 
@@ -48,7 +53,31 @@ extern "C" {
   a data structure, or it can be built incrementally. When building a
   constraint system incrementally, keep in mind that you must create a row
   or column (addRow or addCol, respectively) before you can adjust other
-  properties (row or column bounds, objective, variable values, etc.)
+  properties (row or column bounds, objective, variable values, <i>etc</i>.)
+
+  <strong>Existence of a Solution</strong>:
+  For proper operation, OSI requires that a SI maintain a basic primal solution
+  at all times after a problem has been loaded.
+
+  <p>
+  When a problem is loaded, ODSI generates a basic primal solution (primal
+  variable values and a matching basis).
+  The solution is not necessarily primal or dual feasible.
+  In terms of the objective function, this solution is pessimistic, but
+  not necessarily worst-case.
+  ODSI does not generate matching values for the dual variables (row prices).
+
+  <p>
+  Any successful call to dylp (<i>i.e.</i>, a call that results in an optimal,
+  infeasible, or unbounded result) will replace the existing solution with
+  the result of the call to dylp.
+
+  <p>
+  It is possible to specify initial values for the primal and dual variables
+  using setColSolution() and setRowPrice(). To specify an initial basis,
+  see the documentation for the CoinWarmStartBasis and OsiDylpWarmStartBasis
+  classes. When these functions are used, it is the responsibility of the
+  client to ensure validity and consistency.
 
   <strong>Maintenance of an LP Basis</strong>
   Skirting the edges of the principle that changing the problem invalidates
@@ -118,6 +147,13 @@ public:
   /*! \brief Read a problem description in MPS format from a file.  */
 
   int readMps(const char *filename, const char *extension = "mps") ;
+
+  /*! \brief Read a problem description in MPS format from a file, including
+	     SOS information.
+  */
+
+  int readMps(const char *filename, const char *extension,
+	      int &numberSets, CoinSet **&sets) ;
 
   /*! \brief Write the problem into the specified file in MPS format. */
 
@@ -304,6 +340,10 @@ public:
 
   void setRowPrice(const double*) ;
 
+  /* For overload resolution with OSI::addCol functions. */
+
+  using OsiSolverInterface::addCol ;
+
   /*! \brief Add a column (variable) to the problem */
 
   void addCol(const CoinPackedVectorBase &vec,
@@ -312,6 +352,10 @@ public:
   /*! \brief Remove column(s) (variable(s)) from the problem */
 
   void deleteCols(const int num, const int *colIndices) ;
+
+  /* For overload resolution with OSI::addCol functions. */
+
+  using OsiSolverInterface::addRow ;
 
   /*! \brief Add a row (constraint) to the problem */
 
@@ -514,6 +558,14 @@ public:
 
   void dylp_logfile(const char* name, bool echo = false) ;
 
+  /*! \brief Establish an output (solution and/or statistics) file */
+
+  void dylp_outfile(const char* name) ;
+
+  /*! \brief Print the solution and/or statistics to the output file. */
+
+  void dylp_printsoln(bool wantSoln, bool wantStats) ;
+
   /*! \brief Set the language for messages */
 
   void setOsiDylpMessages(CoinMessages::Language local_language) ;
@@ -577,6 +629,7 @@ private:
 
   static int reference_count ;
   static bool basis_ready ;
+  static bool recursive ;
   static OsiDylpSolverInterface *dylp_owner ;
 
 //@}
@@ -588,13 +641,24 @@ private:
 */
 //@{
 
+  /*! \brief Output (solution and/or statistics) file for this ODSI instance */
+
+  ioid local_outchn ;
+
   /*! \brief Log file for this ODSI instance */
 
   ioid local_logchn ;
 
-  /*! \brief Log echo control for this ODSI instance */
+  /*! \brief Controls output of log information to stdout
+	     during initialSolve()
+  */
 
   bool initial_gtxecho ;
+
+  /*! \brief Controls output of log information to stdout
+	     during resolve() and solveFromHotStart()
+  */
+
   bool resolve_gtxecho ;
 
   /*! \brief Result of last call to solver for this ODSI instance */
@@ -607,6 +671,10 @@ private:
   */
 
   double obj_sense ;
+
+  /*! \brief The value of infinity */
+
+  double odsiInfinity ;
 
   /*! \brief Solver name (dylp).  */
 
@@ -624,13 +692,21 @@ private:
 
   CoinWarmStart *hotstart_fallback ;
 
-  /*! \brief Current basis */
+  /*! \brief Current basis
+  
+    Set with each successful return from the solver (where successful means a
+    result of optimal, infeasible, or unbounded), or by an explicit call to
+    #setWarmStart() with a valid basis. Note that calling #setWarmStart() with
+    an empty basis or a null parameter is taken as a request to delete
+    activeBasis.
+  */
 
   CoinWarmStart *activeBasis ;
 
   /*! \brief Current basis is modified
 
-    True if active_basis has been modified since the last call to dylp.
+    True if #activeBasis exists and has been modified since the last call
+    to dylp.
   */
   bool activeIsModified ;
 
@@ -684,6 +760,13 @@ private:
 	 const contyp_enum *ctyp, const double* rhs, const double* rhslow) ;
 //@}
 
+/*! \name Helper functions for invoking dylp */
+//@{
+  /*! \brief Common core method to invoke dylp */
+
+  lpret_enum do_lp (ODSI_start_enum start) ;
+//@}
+
 /*! \name Destructor helpers */
 //@{
   void destruct_col_cache() ;
@@ -705,22 +788,22 @@ private:
     vartyp_enum vtypi,double vlbi, double vubi, double obji) ;
   void add_row(const CoinPackedVectorBase& coin_rowi, 
     char clazzi, contyp_enum ctypi, double rhsi, double rhslowi) ;
-  void worst_case_primal() ;
   void calc_objval() ;
+  contyp_enum bound_to_type(double lower, double upper) ;
+  void gen_rowiparms(contyp_enum* ctypi, double* rhsi, double* rhslowi, 
+			    char sensei, double rhsini, double rangei) ;
+  void gen_rowiparms(contyp_enum* ctypi, double* rhsi, double* rhslowi, 
+			    double rowlbi, double rowubi) ;
   void unimp_hint(bool dylpSense, bool hintSense,
 		 OsiHintStrength hintStrength, const char *msgString) ;
+  void pessimal_primal() ;
 
 //@}
 
 /*! \name Helper functions for problem modification */
 //@{
-  static contyp_enum bound_to_type(double lower, double upper) ;
   static contyp_enum sense_to_type(char type) ;
   static char type_to_sense(contyp_enum type) ;
-  static void gen_rowiparms(contyp_enum* ctypi, double* rhsi, double* rhslowi, 
-			    char sensei, double rhsini, double rangei) ;
-  static void gen_rowiparms(contyp_enum* ctypi, double* rhsi, double* rhslowi, 
-			    double rowlbi, double rowubi) ;
 //@}
 
 /*! \name Copy helpers

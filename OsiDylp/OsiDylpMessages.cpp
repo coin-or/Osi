@@ -7,7 +7,7 @@
 */
 
 namespace {
-  char sccsid[] = "%W%	%G%" ;
+  char sccsid[] = "@(#)OsiDylpMessages.cpp	1.3	03/18/04" ;
   char cvsid[] = "$Id$" ;
 }
 
@@ -34,6 +34,12 @@ namespace {
       message is printed; CoinMessageHandler associates higher numbers with
       increased verbosity.  The format string can be null, if you want to
       build the whole thing on the fly.
+
+      Severity, as of March, 2004:
+	  0 - 2999	informational
+       3000 - 5999	warnings
+       6000 - 8999	non-fatal errors
+       9000 -	 	fatal errors
 
     * Load the messages into the CoinMessage object. This involves repeated
       creation of a CoinOneMessage object, which is then loaded into the
@@ -84,8 +90,10 @@ static MsgDefn us_en_defns[] = {
   { ODSI_EMPTYODWSB, 6101, 1, "Empty warm start basis object." },
   { ODSI_NOTODWSB, 6102, 1,
     "The warm start basis object is not an OsiDylpWarmStartBasis object." },
-  { ODSI_ODWSBBADSIZE, 6101, 1,
+  { ODSI_ODWSBBADSIZE, 6103, 1,
     "Basis size %d x %d does not match constraint system size %d x %d." },
+  {ODSI_ODWSBBADSTATUS, 6104, 1,
+    "Flipping %s (%d) from %s to %s; lack of finite bound." },
   { ODSI_DUMMY_END, 999999, 0, "" }
 } ;
 

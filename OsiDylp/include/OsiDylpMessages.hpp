@@ -9,7 +9,7 @@
 */
 
 /*
-  sccs: %W%     %G%
+  sccs: @(#)OsiDylpMessages.hpp	1.3     03/18/04
   cvs: $Id$
 */
 
@@ -23,6 +23,7 @@ typedef enum { ODSI_TEST_MSG,
 	       ODSI_EMPTYODWSB,
 	       ODSI_NOTODWSB,
 	       ODSI_ODWSBBADSIZE,
+	       ODSI_ODWSBBADSTATUS,
 	       ODSI_DUMMY_END } OsiDylpMessageID_enum ;
 
 

@@ -39,7 +39,7 @@
 */
 
 namespace {
-  char sccsid[] = "%W%	%G%" ;
+  char sccsid[] = "@(#)OsiDylpWarmStartBasis.cpp	1.3	03/18/04" ;
   char cvsid[] = "$Id$" ;
 }
 
@@ -95,9 +95,12 @@ ODWSB::OsiDylpWarmStartBasis (const OsiDylpWarmStartBasis &ws)
     phase_(ws.phase_),
     constraintStatus_(0)
 
-{ int constatsze = STATBYTES(getNumArtificial()) ;
-  constraintStatus_ = new char[constatsze] ;
-  memcpy(constraintStatus_,ws.constraintStatus_,constatsze) ; }
+{ if (ws.constraintStatus_)
+  { int constatsze = STATBYTES(getNumArtificial()) ;
+    constraintStatus_ = new char[constatsze] ;
+    memcpy(constraintStatus_,ws.constraintStatus_,constatsze) ; }
+  
+  return ; }
 
 
 /*!
@@ -154,9 +157,12 @@ OsiDylpWarmStartBasis& ODWSB::operator= (const OsiDylpWarmStartBasis &rhs)
   { CWSB::operator=(rhs) ;
     phase_ = rhs.phase_ ;
     delete[] constraintStatus_ ;
-    int constatsze = STATBYTES(getNumArtificial()) ;
-    constraintStatus_ = new char[constatsze] ;
-    memcpy(constraintStatus_,rhs.constraintStatus_,constatsze) ; }
+    if (rhs.constraintStatus_)
+    { int constatsze = STATBYTES(getNumArtificial()) ;
+      constraintStatus_ = new char[constatsze] ;
+      memcpy(constraintStatus_,rhs.constraintStatus_,constatsze) ; }
+    else
+    { constraintStatus_ = 0 ; } }
   
   return *this ; }
 
@@ -233,10 +239,16 @@ void ODWSB::setSize (int ns, int na)
 { CWSB::setSize(ns,na) ;
   phase_ = dyINV ;
   delete[] constraintStatus_ ;
-  int constatsze = STATBYTES(na) ;
-  constraintStatus_ = new char[constatsze] ;
-  assert(((int) CWSB::isFree == 0)) ;
-  memset(constraintStatus_,0,constatsze) ; }
+  if (na > 0)
+  { int constatsze = STATBYTES(na) ;
+    constraintStatus_ = new char[constatsze] ;
+    char byteActive = 0 ;
+    for (int i = 0 ; i <= 3 ; i++) setStatus(&byteActive,i,CWSB::atLowerBound) ;
+    memset(constraintStatus_,byteActive,constatsze) ; }
+  else
+  { constraintStatus_ = 0 ; }
+  
+  return ; }
 
 /*!
   This routine sets the capacity of the warm start object.
@@ -246,11 +258,19 @@ void ODWSB::setSize (int ns, int na)
   variables are given the status nonbasic at lower bound, additional artificial
   variables are given the status basic, and additional constraints
   are given the status active.
+
+  We need to allow for the possibility that the client will create an empty
+  basis and then resize() it, rather than using setSize().
 */
 
 void ODWSB::resize (int numRows, int numCols)
 
 { int concnt = getNumArtificial() ;
+  int varcnt = getNumStructural() ;
+
+  if (concnt == 0 && varcnt == 0) setSize(numCols,numRows) ;
+
+  assert(constraintStatus_) ;
   
   CWSB::resize(numRows,numCols) ;
 
@@ -281,7 +301,9 @@ void ODWSB::resize (int numRows, int numCols)
 		  getStatus(constraintStatus_+actualBytes,i)) ; }
 
     delete [] constraintStatus_ ;
-    constraintStatus_ = newStat ; } }
+    constraintStatus_ = newStat ; }
+  
+  return ; }
 
 
 /*!

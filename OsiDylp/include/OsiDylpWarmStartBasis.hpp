@@ -13,7 +13,7 @@
 */
 
 /*
-  sccs: %W%	%G%
+  sccs: @(#)OsiDylpWarmStartBasis.hpp	1.3	03/18/04
   cvs: $Id$
 */
 
@@ -187,9 +187,9 @@ class OsiDylpWarmStartBasis : public CoinWarmStartBasis
 /*! \name Constraint status private data members */
 //@{
 
-  dyphase_enum phase_ ;		///> dylp phase
+  dyphase_enum phase_ ;		///< dylp phase
 
-  char *constraintStatus_ ;	///> vector of constraint status information
+  char *constraintStatus_ ;	///< vector of constraint status information
 
 //@}
 

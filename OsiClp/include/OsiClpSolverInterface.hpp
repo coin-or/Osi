@@ -8,7 +8,7 @@
 #include <cfloat>
 #include <map>
 
-#include "ClpModel.hpp"
+#include "ClpSimplex.hpp"
 #include "CoinPackedMatrix.hpp"
 #include "OsiSolverInterface.hpp"
 #include "CoinWarmStartBasis.hpp"
@@ -568,7 +568,7 @@ public:
   /**@name Clp specific public interfaces */
   //@{
     /// Get pointer to Clp model
-  ClpModel * getModelPtr() const ;
+  ClpSimplex * getModelPtr() const ;
   //@}
 
   //---------------------------------------------------------------------------
@@ -585,7 +585,7 @@ public:
     OsiClpSolverInterface (const OsiClpSolverInterface &);
     
     /// Borrow constructor - only delete one copy
-    OsiClpSolverInterface (ClpModel *);
+    OsiClpSolverInterface (ClpSimplex *);
 
     /// Releases so won't error
     void releaseClp();
@@ -625,12 +625,16 @@ private:
 
     ///
     void fillParamMaps();
+    /// Warm start
+    CoinWarmStartBasis getBasis() const;
+    /// Sets up working basis as a copy of input
+    void setBasis( const CoinWarmStartBasis & basis);
   //@}
   
   /**@name Private member data */
   //@{
      /// Clp model represented by this class instance
-     mutable ClpModel * modelPtr_;
+     mutable ClpSimplex * modelPtr_;
 
     /**@name Cached information derived from the OSL model */
     //@{

@@ -61,11 +61,11 @@ void OsiClpSolverInterface::initialSolve()
   solver.setPrimalColumnPivotAlgorithm(steepP);
 #if 0
   solver.dual();
-  basis_ = solver.getBasis();
+  basis_ = getBasis();
   lastAlgorithm_=2; // dual
 #else
   solver.primal();
-  basis_ = solver.getBasis();
+  basis_ = getBasis();
   lastAlgorithm_=1; // primal
 #endif
   solver.returnModel(*modelPtr_);
@@ -81,14 +81,14 @@ void OsiClpSolverInterface::resolve()
   solver.borrowModel(*modelPtr_);
   // Set message handler to have same levels etc
   solver.passInMessageHandler(handler_);
-  solver.setBasis(basis_);
+  setBasis(basis_);
   solver.scaling();
 
   ClpDualRowSteepest steep;
   solver.setDualRowPivotAlgorithm(steep);
   //solver.saveModel("save.bad");
   solver.dual();
-  basis_ = solver.getBasis();
+  basis_ = getBasis();
   lastAlgorithm_=2; // dual
   solver.returnModel(*modelPtr_);
 }
@@ -797,7 +797,7 @@ OsiClpSolverInterface::writeMps(const char *filename,
 // CLP specific public interfaces
 //#############################################################################
 
-ClpModel * OsiClpSolverInterface::getModelPtr() const
+ClpSimplex * OsiClpSolverInterface::getModelPtr() const
 {
   freeCachedResults();
   return modelPtr_;
@@ -825,7 +825,7 @@ lastAlgorithm_(0),
 matrixByRow_(NULL),
 integerInformation_(NULL)
 {
-   modelPtr_ = new ClpModel();
+   modelPtr_ = new ClpSimplex();
    fillParamMaps();
 }
 
@@ -860,9 +860,9 @@ matrixByRow_(NULL),
 integerInformation_(NULL)
 {
   if ( rhs.modelPtr_  ) 
-    modelPtr_ = new ClpModel(*rhs.modelPtr_);
+    modelPtr_ = new ClpSimplex(*rhs.modelPtr_);
   else
-    modelPtr_ = new ClpModel();
+    modelPtr_ = new ClpSimplex();
   if ( rhs.ws_ ) 
     ws_ = new CoinWarmStartBasis(*rhs.ws_);
   basis_ = rhs.basis_;
@@ -876,7 +876,7 @@ integerInformation_(NULL)
 }
 
 // Borrow constructor - only delete one copy
-OsiClpSolverInterface::OsiClpSolverInterface (ClpModel * rhs)
+OsiClpSolverInterface::OsiClpSolverInterface (ClpSimplex * rhs)
 :
 OsiSolverInterface(),
 rowsense_(NULL),
@@ -930,7 +930,7 @@ OsiClpSolverInterface::operator=(const OsiClpSolverInterface& rhs)
     delete modelPtr_;
     delete ws_;
     if ( rhs.modelPtr_  ) 
-      modelPtr_ = new ClpModel(*rhs.modelPtr_);
+      modelPtr_ = new ClpSimplex(*rhs.modelPtr_);
     
     if ( rhs.ws_ ) 
       ws_ = new CoinWarmStartBasis(*rhs.ws_);
@@ -1067,4 +1067,55 @@ OsiClpSolverInterface::fillParamMaps()
 
    strParamMap_[OsiProbName]     = ClpProbName;
    strParamMap_[OsiLastStrParam] = ClpLastStrParam;
+}
+// Warm start
+CoinWarmStartBasis
+OsiClpSolverInterface::getBasis() const
+{
+  int iRow,iColumn;
+  int numberRows = modelPtr_->numberRows();
+  int numberColumns = modelPtr_->numberColumns();
+  CoinWarmStartBasis basis;
+  basis.setSize(numberColumns,numberRows);
+
+  if (modelPtr_->statusExists()) {
+    for (iRow=0;iRow<numberRows;iRow++) {
+      basis.setArtifStatus(iRow,
+			   (CoinWarmStartBasis::Status) modelPtr_->getRowStatus(iRow));
+    }
+    for (iColumn=0;iColumn<numberColumns;iColumn++) {
+      basis.setStructStatus(iColumn,
+		       (CoinWarmStartBasis::Status) modelPtr_->getColumnStatus(iColumn));
+    }
+  }
+  return basis;
+}
+// Sets up basis
+void 
+OsiClpSolverInterface::setBasis ( const CoinWarmStartBasis & basis)
+{
+  // transform basis to status arrays
+  int iRow,iColumn;
+  int numberRows = modelPtr_->numberRows();
+  int numberColumns = modelPtr_->numberColumns();
+  if (!modelPtr_->statusExists()) {
+    /*
+      get status arrays
+      ClpBasis would seem to have overheads and we will need
+      extra bits anyway.
+    */
+    modelPtr_->createStatus();
+  }
+  CoinWarmStartBasis basis2 = basis;
+  // resize if necessary
+  basis2.resize(numberRows,numberColumns);
+  // move status
+  for (iRow=0;iRow<numberRows;iRow++) {
+    modelPtr_->setRowStatus(iRow,
+		 (ClpSimplex::Status) basis2.getArtifStatus(iRow));
+  }
+  for (iColumn=0;iColumn<numberColumns;iColumn++) {
+    modelPtr_->setColumnStatus(iColumn,
+		    (ClpSimplex::Status) basis2.getStructStatus(iColumn));
+  }
 }

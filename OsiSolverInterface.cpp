@@ -64,6 +64,12 @@ OsiSolverInterface::getFractionalIndices(const double etol) const
    return frac;
 }
 
+
+int OsiSolverInterface::getNumElements() const
+{
+  return getMatrixByRow()->getNumElements();
+}
+
 //#############################################################################
 // Methods for determining the type of column variable.
 // The method isContinuous() is presently implemented in the derived classes.

@@ -560,7 +560,17 @@ OsiSolverInterface::newLanguage(CoinMessages::Language language)
 void 
 OsiSolverInterface::copyParameters(OsiSolverInterface & rhs)
 {
-  CoinDisjointCopyN(rhs.intParam_, OsiLastIntParam, intParam_);
+  appData_ = rhs.appData_;
+  if ( rhs.rowCutDebugger_!=NULL )
+    rowCutDebugger_ = new OsiRowCutDebugger(*rhs.rowCutDebugger_);
+  else
+    rowCutDebugger_ = NULL;
+  defaultHandler_ = rhs.defaultHandler_;
+  if (defaultHandler_)
+    handler_ = new CoinMessageHandler(*rhs.handler_);
+  else
+    handler_ = rhs.handler_;
+   CoinDisjointCopyN(rhs.intParam_, OsiLastIntParam, intParam_);
   CoinDisjointCopyN(rhs.dblParam_, OsiLastDblParam, dblParam_);
   CoinDisjointCopyN(rhs.strParam_, OsiLastStrParam, strParam_);
   CoinDisjointCopyN(rhs.hintParam_, OsiLastHintParam, hintParam_);

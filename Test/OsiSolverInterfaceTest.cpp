@@ -454,6 +454,15 @@ void OsiSolverInterfaceMpsUnitTest
         }
       }
 #     endif
+#     ifdef COIN_USE_GLPK
+      { 
+        OsiGlpkSolverInterface * si =
+          dynamic_cast<OsiGlpkSolverInterface *>(vecSiP[i]) ;
+        if (si != NULL )  {    
+          siName[i]="OsiGlpkSolverInterface";
+        }
+      }
+#     endif
 #     ifdef COIN_USE_XPR
       { 
         OsiXprSolverInterface * si =

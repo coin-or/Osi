@@ -70,6 +70,7 @@ public:
       1 - will take more risks - if it does not work then bug which will be fixed
       2 - don't bother doing most extreme termination checks e.g. don't bother
           re-factorizing if less than 20 iterations.
+      3 - Actually safer than 1 (mainly just keeps factorization)
 
       printOut - -1 always skip round common messages instead of doing some work
                   0 skip if normal defaults
@@ -810,7 +811,7 @@ protected:
 	  1 try and keep work regions as much as possible
 	  2 do not use any perturbation
 	  4 allow exit before re-factorization
-          8 try and re-use factorization 
+          8 try and re-use factorization if no cuts
       */
       int specialOptions_;
   //@}

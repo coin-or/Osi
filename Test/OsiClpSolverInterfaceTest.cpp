@@ -1032,8 +1032,82 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       }
     }
     printf("\n");
+    printf("And by column");
+    for(int i = 0; i < n_cols+n_rows; i++){
+      m.getBInvACol(i, binvA);
+      printf("\ncolumn: %d -> ",i);
+      for(int j=0; j < n_rows; j++){
+	printf("%g, ", binvA[j]);
+      }
+    }
+    printf("\n");
     m.disableSimplexInterface();
     free(binvA);
+  }
+  // Check tableau stuff when simplex interface is off
+  {    
+    OsiClpSolverInterface m;
+    /* 
+       Wolsey : Page 130
+       max 4x1 -  x2
+       7x1 - 2x2    <= 14
+       x2    <= 3
+       2x1 - 2x2    <= 3
+       x1 in Z+, x2 >= 0
+    */
+    
+    double inf_ = m.getInfinity();
+    int n_cols = 2;
+    int n_rows = 3;
+    
+    double obj[2] = {-4.0, 1.0};
+    double collb[2] = {0.0, 0.0};
+    double colub[2] = {inf_, inf_};
+    double rowlb[3] = {-inf_, -inf_, -inf_};
+    double rowub[3] = {14.0, 3.0, 3.0};
+    
+    int rowIndices[5] =  {0,     2,    0,    1,    2};
+    int colIndices[5] =  {0,     0,    1,    1,    1};
+    double elements[5] = {7.0, 2.0, -2.0,  1.0, -2.0};
+    CoinPackedMatrix M(true, rowIndices, colIndices, elements, 5);
+    
+    m.loadProblem(M, collb, colub, obj, rowlb, rowub);
+    // Test with scaling
+    m.setHintParam(OsiDoScale,true);
+    // Tell code to keep factorization
+    m.setupForRepeatedUse(3,0);
+    
+    m.initialSolve();
+    // Repeated stuff only in resolve
+    m.resolve();
+    
+    //check that the tableau matches wolsey (B-1 A)
+    // slacks in second part of binvA
+    double * binvA = (double*) malloc((n_cols+n_rows) * sizeof(double));
+    // and getBasics
+    int * pivots = new int[n_rows];
+    m.getBasics(pivots);
+    
+    printf("B-1 A");
+    for(int i = 0; i < n_rows; i++){
+      m.getBInvARow(i, binvA,binvA+n_cols);
+      printf("\nrow: %d (pivot %d) -> ",i,pivots[i]);
+      for(int j=0; j < n_cols+n_rows; j++){
+	printf("%g, ", binvA[j]);
+      }
+    }
+    printf("\n");
+    printf("And by column");
+    for(int i = 0; i < n_cols+n_rows; i++){
+      m.getBInvACol(i, binvA);
+      printf("\ncolumn: %d -> ",i);
+      for(int j=0; j < n_rows; j++){
+	printf("%g, ", binvA[j]);
+      }
+    }
+    printf("\n");
+    free(binvA);
+    delete [] pivots;
   }
   // Do common solverInterface testing 
   {

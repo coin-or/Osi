@@ -543,6 +543,7 @@ void OsiClpSolverInterface::resolve()
    1 - will take more risks - if it does not work then bug which will be fixed
    2 - don't bother doing most extreme termination checks e.g. don't bother
        re-factorizing if less than 20 iterations.
+   3 - Actually safer than 1 (mainly just keeps factorization)
 
    printOut - -1 always skip round common messages instead of doing some work
                0 skip if normal defaults
@@ -561,6 +562,9 @@ OsiClpSolverInterface::setupForRepeatedUse(int senseOfAdventure, int printOut)
     break;
   case 2:
     specialOptions_=1+2+4+8;
+    break;
+  case 3:
+    specialOptions_=1+8;
     break;
   }
   bool stopPrinting=false;
@@ -2383,8 +2387,7 @@ OsiClpSolverInterface::getBInvARow(int row, double* z, double * slack)
     indexError(row,"getBInvARow");
   }
 #endif
-  assert (modelPtr_->solveType()==2||(specialOptions_&8)!=0);
-  ClpFactorization * factorization = modelPtr_->factorization();
+  assert (modelPtr_->solveType()==2||(specialOptions_&1)!=0);
   CoinIndexedVector * rowArray0 = modelPtr_->rowArray(0);
   CoinIndexedVector * rowArray1 = modelPtr_->rowArray(1);
   CoinIndexedVector * columnArray0 = modelPtr_->columnArray(0);
@@ -2393,23 +2396,49 @@ OsiClpSolverInterface::getBInvARow(int row, double* z, double * slack)
   rowArray1->clear();
   columnArray0->clear();
   columnArray1->clear();
-  // put +1 in row
-  rowArray1->insert(row,1.0);
-  factorization->updateColumnTranspose(rowArray0,rowArray1);
+  int numberRows = modelPtr_->numberRows();
+  int numberColumns = modelPtr_->numberColumns();
+  // put +1 in row 
+  // But swap if pivot variable was slack as clp stores slack as -1.0
+  const int * pivotVariable = modelPtr_->pivotVariable();
+  const double * rowScale = modelPtr_->rowScale();
+  const double * columnScale = modelPtr_->columnScale();
+  int pivot = pivotVariable[row];
+  double value;
+  // And if scaled then adjust
+  if (!rowScale) {
+    if (pivot<numberColumns)
+      value = 1.0;
+    else
+      value = -1.0;
+  } else {
+    if (pivot<numberColumns)
+      value = columnScale[pivot];
+    else
+      value = -1.0/rowScale[pivot-numberColumns];
+  }
+  rowArray1->insert(row,value);
+  modelPtr_->factorization()->updateColumnTranspose(rowArray0,rowArray1);
   // put row of tableau in rowArray1 and columnArray0
   modelPtr_->clpMatrix()->transposeTimes(modelPtr_,1.0,
-			    rowArray1,columnArray1,columnArray0);
-  memcpy(z,columnArray0->denseVector(),
-	 modelPtr_->numberColumns()*sizeof(double));
+                                         rowArray1,columnArray1,columnArray0);
+  if (!rowScale) {
+    memcpy(z,columnArray0->denseVector(),
+           numberColumns*sizeof(double));
+  } else {
+    double * array = columnArray0->denseVector();
+    for (int i=0;i<numberColumns;i++)
+      z[i] = array[i]/columnScale[i];
+  }
   if (slack) {
-    int n = modelPtr_->numberRows();
-    double * array = rowArray1->denseVector();
-    for (int i=0;i<n;i++) {
-      // clp stores slacks as -1.0  (Does not seem to matter - basics should be 1.0)
-      slack[i] =  array[i];
+    if (!rowScale) {
+      memcpy(slack,rowArray1->denseVector(),
+             numberRows*sizeof(double));
+    } else {
+      double * array = rowArray1->denseVector();
+      for (int i=0;i<numberRows;i++)
+        slack[i] = array[i]*rowScale[i];
     }
-    //memcpy(slack,rowArray1->denseVector(),
-    //   modelPtr_->numberRows()*sizeof(double));
   }
   // don't need to clear everything always, but doesn't cost
   rowArray0->clear();
@@ -2429,14 +2458,17 @@ OsiClpSolverInterface::getBInvRow(int row, double* z)
     indexError(row,"getBInvRow");
   }
 #endif
-  assert (modelPtr_->solveType()==2||(specialOptions_&8)!=0);
+  assert (modelPtr_->solveType()==2||(specialOptions_&1)!=0);
   ClpFactorization * factorization = modelPtr_->factorization();
   CoinIndexedVector * rowArray0 = modelPtr_->rowArray(0);
   CoinIndexedVector * rowArray1 = modelPtr_->rowArray(1);
   rowArray0->clear();
   rowArray1->clear();
   // put +1 in row
-  rowArray1->insert(row,1.0);
+  // But swap if pivot variable was slack as clp stores slack as -1.0
+  double value = (modelPtr_->pivotVariable()[row]<modelPtr_->numberColumns()) ? 1.0 : -1.0;
+  // What about scaling ?
+  rowArray1->insert(row,value);
   factorization->updateColumnTranspose(rowArray0,rowArray1);
   memcpy(z,rowArray1->denseVector(),modelPtr_->numberRows()*sizeof(double));
   rowArray1->clear();
@@ -2446,8 +2478,7 @@ OsiClpSolverInterface::getBInvRow(int row, double* z)
 void 
 OsiClpSolverInterface::getBInvACol(int col, double* vec)
 {
-  assert (modelPtr_->solveType()==2||(specialOptions_&8)!=0);
-  ClpFactorization * factorization = modelPtr_->factorization();
+  assert (modelPtr_->solveType()==2||(specialOptions_&1)!=0);
   CoinIndexedVector * rowArray0 = modelPtr_->rowArray(0);
   CoinIndexedVector * rowArray1 = modelPtr_->rowArray(1);
   rowArray0->clear();
@@ -2459,17 +2490,50 @@ OsiClpSolverInterface::getBInvACol(int col, double* vec)
     indexError(col,"getBInvACol");
   }
 #endif
-  modelPtr_->unpack(rowArray1,col);
-  factorization->updateColumn(rowArray0,rowArray1,false);
-  // swap signs if slack
   int numberRows = modelPtr_->numberRows();
-  if (col<modelPtr_->numberColumns()) {
-    memcpy(vec,rowArray1->denseVector(),
-           numberRows*sizeof(double));
+  int numberColumns = modelPtr_->numberColumns();
+  const int * pivotVariable = modelPtr_->pivotVariable();
+  const double * rowScale = modelPtr_->rowScale();
+  const double * columnScale = modelPtr_->columnScale();
+  if (!rowScale) {
+    if (col<numberColumns) {
+      modelPtr_->unpack(rowArray1,col);
+    } else {
+      rowArray1->insert(col-numberColumns,1.0);
+    }
   } else {
-    double * array = rowArray1->denseVector();
-    for (int i=0;i<numberRows;i++)
-      vec[i] = - array[i];
+    if (col<numberColumns) {
+      modelPtr_->unpack(rowArray1,col);
+      double multiplier = 1.0/columnScale[col];
+      int number = rowArray1->getNumElements();
+      int * index = rowArray1->getIndices();
+      double * array = rowArray1->denseVector();
+      for (int i=0;i<number;i++) {
+	int iRow = index[i];
+	// make sure not packed
+	assert (array[iRow]);
+	array[iRow] *= multiplier;
+      }
+    } else {
+      rowArray1->insert(col-numberColumns,rowScale[col-numberColumns]);
+    }
+  }
+  modelPtr_->factorization()->updateColumn(rowArray0,rowArray1,false);
+  // But swap if pivot variable was slack as clp stores slack as -1.0
+  double * array = rowArray1->denseVector();
+  if (!rowScale) {
+    for (int i=0;i<numberRows;i++) {
+      double multiplier = (pivotVariable[i]<numberColumns) ? 1.0 : -1.0;
+      vec[i] = multiplier * array[i];
+    }
+  } else {
+    for (int i=0;i<numberRows;i++) {
+      int pivot = pivotVariable[i];
+      if (pivot<numberColumns)
+	vec[i] = array[i] * columnScale[pivot];
+      else
+	vec[i] = - array[i] / rowScale[pivot-numberColumns];
+    }
   }
   rowArray1->clear();
 }
@@ -2478,7 +2542,7 @@ OsiClpSolverInterface::getBInvACol(int col, double* vec)
 void 
 OsiClpSolverInterface::getBInvCol(int col, double* vec)
 {
-  assert (modelPtr_->solveType()==2||(specialOptions_&8)!=0);
+  assert (modelPtr_->solveType()==2||(specialOptions_&1)!=0);
   ClpFactorization * factorization = modelPtr_->factorization();
   CoinIndexedVector * rowArray0 = modelPtr_->rowArray(0);
   CoinIndexedVector * rowArray1 = modelPtr_->rowArray(1);
@@ -2504,7 +2568,7 @@ OsiClpSolverInterface::getBInvCol(int col, double* vec)
 void 
 OsiClpSolverInterface::getBasics(int* index)
 {
-  assert (modelPtr_->solveType()==2||(specialOptions_&8)!=0);
+  assert (modelPtr_->solveType()==2||(specialOptions_&1)!=0);
   assert (index);
   assert (modelPtr_->pivotVariable());
   memcpy(index,modelPtr_->pivotVariable(),

@@ -126,7 +126,7 @@ void OsiClpSolverInterface::initialSolve()
       if (doCrash>0)
 	crashResult =  (solver.crash(1000.0,1)>0);
       else if (doCrash==0&&algorithm>0)
-      crashResult =  (solver.crash(1000.0,1)>0);
+	crashResult =  (solver.crash(1000.0,1)>0);
       doPrimal=crashResult;
     }
     if (algorithm<0)
@@ -520,6 +520,8 @@ bool OsiClpSolverInterface::isIterationLimitReached() const
 //#############################################################################
 // WarmStart related methods
 //#############################################################################
+CoinWarmStart *OsiClpSolverInterface::getEmptyWarmStart () const
+  { return (dynamic_cast<CoinWarmStart *>(new CoinWarmStartBasis())) ; }
 
 CoinWarmStart* OsiClpSolverInterface::getWarmStart() const
 {

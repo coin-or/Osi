@@ -202,8 +202,7 @@ public:
     appropriate type, which can resized and modified as desired.
   */
 
-  inline CoinWarmStart *getEmptyWarmStart () const
-  { return (dynamic_cast<CoinWarmStart *>(new CoinWarmStartBasis())) ; }
+  virtual CoinWarmStart *getEmptyWarmStart () const;
 
     /// Get warmstarting information
     virtual CoinWarmStart* getWarmStart() const;

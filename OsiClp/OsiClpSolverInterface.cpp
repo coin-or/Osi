@@ -290,7 +290,7 @@ bool OsiClpSolverInterface::isDualObjectiveLimitReached() const
 	return maxmin > 0 ? (obj > limit) /*minim*/ : (obj < limit) /*maxim*/;
      return false;
    case 2: // dual simplex
-     if (modelPtr_->status() != 0 )
+     if (modelPtr_->status() != 0 && modelPtr_->status() != 3)
 	// over dual limit
 	return true;
      return maxmin > 0 ? (obj > limit) /*minim*/ : (obj < limit) /*maxim*/;

@@ -940,6 +940,51 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     m.enableSimplexInterface(true);
     m.initialSolve();
   }
+  // Check tableau stuff when simplex interface is on
+  {    
+    OsiClpSolverInterface m;
+    /* 
+       Wolsey : Page 130
+       max 4x1 -  x2
+       7x1 - 2x2    <= 14
+       x2    <= 3
+       2x1 - 2x2    <= 3
+       x1 in Z+, x2 >= 0
+    */
+    
+    double inf_ = m.getInfinity();
+    int n_cols = 2;
+    int n_rows = 3;
+    
+    double obj[2] = {-4.0, 1.0};
+    double collb[2] = {0.0, 0.0};
+    double colub[2] = {inf_, inf_};
+    double rowlb[3] = {-inf_, -inf_, -inf_};
+    double rowub[3] = {14.0, 3.0, 3.0};
+    
+    int rowIndices[5] =  {0,     2,    0,    1,    2};
+    int colIndices[5] =  {0,     0,    1,    1,    1};
+    double elements[5] = {7.0, 2.0, -2.0,  1.0, -2.0};
+    CoinPackedMatrix M(true, rowIndices, colIndices, elements, 5);
+    
+    m.loadProblem(M, collb, colub, obj, rowlb, rowub);
+    m.enableSimplexInterface(true);
+    
+    m.initialSolve();
+    
+    //check that the tableau matches wolsey (B-1 A)
+    double * binvA = (double*) malloc(n_cols * sizeof(double));
+    
+    printf("B-1 A");
+    for(int i = 0; i < n_rows; i++){
+      m.getBInvARow(i, binvA);
+      printf("\nrow: %d -> ",i);
+      for(int j=0; j < n_cols; j++){
+	printf("%g, ", binvA[j]);
+      }
+    }
+    printf("\n");
+  }
   // Do common solverInterface testing 
   {
     OsiClpSolverInterface m;

@@ -49,7 +49,11 @@ void OsiClpSolverInterface::initialSolve()
   solver.borrowModel(*modelPtr_);
   // Treat as if user simplex not enabled
   int saveSolveType=solver.solveType();
-  solver.setSolveType(1);
+  bool doingPrimal = solver.algorithm()>0;
+  if (saveSolveType==2) {
+    disableSimplexInterface();
+    solver.setSolveType(1);
+  }
   // Set message handler to have same levels etc
   solver.passInMessageHandler(handler_);
   // set reasonable defaults
@@ -208,8 +212,10 @@ void OsiClpSolverInterface::initialSolve()
   basis_ = getBasis(&solver);
   //basis_.print();
   solver.messageHandler()->setLogLevel(saveMessageLevel);
-  solver.setSolveType(saveSolveType);
   solver.returnModel(*modelPtr_);
+  if (saveSolveType==2) {
+    enableSimplexInterface(doingPrimal);
+  }
   time1 = CoinCpuTime()-time1;
   totalTime += time1;
   //std::cout<<time1<<" seconds - total "<<totalTime<<std::endl;
@@ -223,7 +229,11 @@ void OsiClpSolverInterface::resolve()
   ClpSimplex solver;
   solver.borrowModel(*modelPtr_);
   int saveSolveType=solver.solveType();
-  solver.setSolveType(1);
+  bool doingPrimal = solver.algorithm()>0;
+  if (saveSolveType==2) {
+    disableSimplexInterface();
+    solver.setSolveType(1);
+  }
   // Set message handler to have same levels etc
   solver.passInMessageHandler(handler_);
   //basis_.print();
@@ -341,11 +351,18 @@ void OsiClpSolverInterface::resolve()
   basis_ = getBasis(&solver);
   //basis_.print();
   solver.messageHandler()->setLogLevel(saveMessageLevel);
-  solver.setSolveType(saveSolveType);
   solver.returnModel(*modelPtr_);
+  if (saveSolveType==2) {
+    enableSimplexInterface(doingPrimal);
+  }
+  //solver.setSolveType(saveSolveType);
 #else
   int saveSolveType=modelPtr_->solveType();
-  modelPtr_->setSolveType(1);
+  bool doingPrimal = modelPtr_->algorithm()>0;
+  if (saveSolveType==2) {
+    disableSimplexInterface();
+  }
+  //modelPtr_->setSolveType(1);
   // Set message handler to have same levels etc
   modelPtr_->passInMessageHandler(handler_);
   //basis_.print();
@@ -463,7 +480,10 @@ void OsiClpSolverInterface::resolve()
   basis_ = getBasis(modelPtr_);
   //basis_.print();
   modelPtr_->messageHandler()->setLogLevel(saveMessageLevel);
-  modelPtr_->setSolveType(saveSolveType);
+  if (saveSolveType==2) {
+    enableSimplexInterface(doingPrimal);
+  }
+  //modelPtr_->setSolveType(saveSolveType);
 #endif
 }
 
@@ -1824,6 +1844,7 @@ OsiClpSolverInterface::disableSimplexInterface()
   modelPtr_->finish();
   modelPtr_->restoreData(saveData_);
   basis_ = getBasis(modelPtr_);
+  modelPtr_->setSolveType(1);
 }
 /* The following two methods may be replaced by the
    methods of OsiSolverInterface using OsiWarmStartBasis if:
@@ -2091,7 +2112,7 @@ OsiClpSolverInterface::getBInvARow(int row, double* z)
   factorization->updateColumnTranspose(rowArray0,rowArray1);
   // put row of tableau in rowArray1 and columnArray0
   modelPtr_->clpMatrix()->transposeTimes(modelPtr_,1.0,
-			    rowArray0,columnArray1,columnArray0);
+			    rowArray1,columnArray1,columnArray0);
   memcpy(z,columnArray0->denseVector(),
 	 modelPtr_->numberColumns()*sizeof(double));
   // don't need to clear everything always, but doesn't cost

@@ -35,6 +35,9 @@
 #ifdef COIN_USE_DYLP
 #include "OsiDylpSolverInterface.hpp"
 #endif
+#ifdef COIN_USE_GLPK
+#include "OsiGlpkSolverInterface.hpp"
+#endif
 #ifdef COIN_USE_CLP
 #include "OsiClpSolverInterface.hpp"
 #endif
@@ -225,6 +228,24 @@ int main (int argc, const char *argv[])
   }
 #endif
 
+#ifdef COIN_USE_GLPK
+  {
+    OsiGlpkSolverInterface glpkSi;
+    testingMessage( "Testing OsiRowCut with OsiGlpkSolverInterface\n" );
+    OsiRowCutUnitTest(&glpkSi,mpsDir);
+  }
+  {
+    OsiGlpkSolverInterface glpkSi;
+    testingMessage( "Testing OsiColCut with OsiGlpkSolverInterface\n" );
+    OsiColCutUnitTest(&glpkSi,mpsDir);
+  }
+  {
+    OsiGlpkSolverInterface glpkSi;
+    testingMessage( "Testing OsiRowCutDebugger with OsiGlpkSolverInterface\n" );
+    OsiRowCutDebuggerUnitTest(&glpkSi,mpsDir);
+  }
+#endif
+
 #ifdef COIN_USE_CLP  
   {
     OsiClpSolverInterface clpSi;
@@ -276,6 +297,11 @@ int main (int argc, const char *argv[])
   OsiDylpSolverInterfaceUnitTest(mpsDir);
 #endif
   
+#ifdef COIN_USE_GLPK
+  testingMessage( "Testing OsiGlpkSolverInterface\n" );
+  OsiGlpkSolverInterfaceUnitTest(mpsDir);
+#endif
+  
 #ifdef COIN_USE_CLP
   testingMessage( "Testing OsiClpSolverInterface\n" );
   OsiClpSolverInterfaceUnitTest(mpsDir);
@@ -308,6 +334,10 @@ int main (int argc, const char *argv[])
 #   if COIN_USE_DYLP
     OsiSolverInterface * dylpSi = new OsiDylpSolverInterface;
     vecSi.push_back(dylpSi);
+#endif
+#   if COIN_USE_GLPK
+    OsiSolverInterface * glpkSi = new OsiGlpkSolverInterface;
+    vecSi.push_back(glpkSi);
 #endif
 #   if COIN_USE_VOL
     OsiSolverInterface * volSi = new OsiVolSolverInterface;

@@ -42,6 +42,14 @@ ifneq ($(filter COIN_libOsiDylp,$(CoinLibsDefined)),)
     TESTSRC += OsiDylpSolverInterfaceTest.cpp
 endif
 
+ifneq ($(filter COIN_libOsiGlpk,$(CoinLibsDefined)),)
+    IncDir  += ${OsiGlpkIncDir} ${GlpkIncDir}
+    LibDir  += ${OsiGlpkLibDir} ${GlpkLibDir}
+    LibName += ${OsiGlpkLibName} ${GlpkLibName}
+    Define  += ${OsiGlpkDefine} ${GlpkDefine} COIN_USE_GLPK
+    TESTSRC += OsiGlpkSolverInterfaceTest.cpp
+endif
+
 ifneq ($(filter COIN_libOsiOsl,$(CoinLibsDefined)),)
     IncDir  += ${OsiOslIncDir} ${OslIncDir}
     LibDir  += ${OsiOslLibDir} ${OslLibDir}

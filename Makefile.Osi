@@ -47,6 +47,10 @@ export LibType OptLevel LIBNAME LIBSRC
 
 default: install
 
-install clean doc library: % :
+install doc library: % :
 	(cd ../Coin && ${MAKE} install)
 	$(MAKE) -f ${MakefileDir}/Makefile.lib $*
+clean :
+	@rm -rf Junk
+	@rm -rf $(UNAME)
+	@rm -rf dep

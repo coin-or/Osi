@@ -16,7 +16,10 @@
 #include "OsiVolSolverInterface.hpp"
 #endif
 #ifdef COIN_USE_DYLP
-#  include "OsiDylpSolverInterface.hpp"
+#include "OsiDylpSolverInterface.hpp"
+#endif
+#ifdef COIN_USE_GLPK
+#include "OsiGlpkSolverInterface.hpp"
 #endif
 #ifdef COIN_USE_XPR
 #include "OsiXprSolverInterface.hpp"
@@ -1383,23 +1386,28 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       if (exists)
 	assert(si->getIntParam(static_cast<OsiIntParam>(i), ival));
     }
-    for (i = 0; i < OsiLastDblParam; ++i) {
-      const bool exists = si->getDblParam(static_cast<OsiDblParam>(i), dval);
-      // existence and test should result in the same
-      assert(!exists ^ testDblParam(si, i, -1e50));
-      assert(!exists ^ testDblParam(si, i, -1e10));
-      assert(!exists ^ testDblParam(si, i, -1));
-      assert(!exists ^ testDblParam(si, i, -1e-4));
-      assert(!exists ^ testDblParam(si, i, -1e-15));
-      assert(!exists ^ testDblParam(si, i, 1e50));
-      assert(!exists ^ testDblParam(si, i, 1e10));
-      assert(!exists ^ testDblParam(si, i, 1));
-      assert(!exists ^ testDblParam(si, i, 1e-4));
-      assert(!exists ^ testDblParam(si, i, 1e-15));
-      if (exists)
-	assert(si->setDblParam(static_cast<OsiDblParam>(i), dval));
-	
+#ifdef COIN_USE_GLPK
+    if (!dynamic_cast<OsiGlpkSolverInterface*>(si)) {
+#endif
+      for (i = 0; i < OsiLastDblParam; ++i) {
+	const bool exists = si->getDblParam(static_cast<OsiDblParam>(i), dval);
+	// existence and test should result in the same
+	assert(!exists ^ testDblParam(si, i, -1e50));
+	assert(!exists ^ testDblParam(si, i, -1e10));
+	assert(!exists ^ testDblParam(si, i, -1));
+	assert(!exists ^ testDblParam(si, i, -1e-4));
+	assert(!exists ^ testDblParam(si, i, -1e-15));
+	assert(!exists ^ testDblParam(si, i, 1e50));
+	assert(!exists ^ testDblParam(si, i, 1e10));
+	assert(!exists ^ testDblParam(si, i, 1));
+	assert(!exists ^ testDblParam(si, i, 1e-4));
+	assert(!exists ^ testDblParam(si, i, 1e-15));
+	if (exists)
+	  assert(si->setDblParam(static_cast<OsiDblParam>(i), dval));
+      }
+#ifdef COIN_USE_GLPK
     }
+#endif
     delete si;
   }
 

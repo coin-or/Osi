@@ -135,8 +135,11 @@ int main (int argc, const char *argv[])
   testingMessage( "Testing OsiPackedVector\n" );
   OsiPackedVectorUnitTest();
 
-  //testingMessage( "Testing OsiPackedMatrix\n" );
-  //OsiPackedMatrixUnitTest();
+  // until I fix bug
+#ifndef COIN_TEST_OSI_READER
+  testingMessage( "Testing OsiPackedMatrix\n" );
+  OsiPackedMatrixUnitTest();
+#endif
 
 #ifdef COIN_TEST_OSI_READER
   testingMessage( "Testing OsiMpsReader\n" );

@@ -12,6 +12,9 @@ const bool True = true;
 const bool False = false;
 
 #include <math.h>
+#include <string>
+#include <stdio.h>
+#include <iostream.h>
 
 /// The following lengths are in decreasing order (for 64 bit etc)
 /// Large enough to contain element index

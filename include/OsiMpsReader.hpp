@@ -3,17 +3,7 @@
 #ifndef OsiMpsReader_H
 #define OsiMpsReader_H
 
-#include <string>
-#include <vector>
-
-#include "OsiCollections.hpp"
-#include "OsiPackedVectorBase.hpp"
 #include "OsiPackedMatrix.hpp"
-
-#include <stdio.h>
-#include <iostream.h>
-#include <string>
-#include <cassert>
 
 //#############################################################################
 

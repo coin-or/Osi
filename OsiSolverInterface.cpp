@@ -658,7 +658,7 @@ OsiSolverInterface::writeMpsNative(const char *filename,
 		     getColLower(), getColUpper(),
 		     objective, hasInteger ? integrality : 0,
 		     getRowLower(), getRowUpper(),
-		     (const char **)0, (const char **)0);
+		     columnNames,rowNames);
    delete [] objective;
    delete[] integrality;
    return writer.writeMps(filename, 1 /*gzip it*/, formatType, numberAcross);

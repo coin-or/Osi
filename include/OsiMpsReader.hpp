@@ -135,8 +135,8 @@ public:
     void setFileName(const char * name);
     /// Get file name
     const char * getFileName() const;
-    /// Test if current file exists
-    const bool fileExists() const;
+    /// Test if current file exists and readable
+    const bool fileReadable() const;
     // Could later allow for file pointers and positioning
     /// Sets default upper bound for integer variables
     void setDefaultBound(int value);
@@ -163,8 +163,8 @@ public:
 
   /**@name Things not in OsiSolverInterface */
   //@{
-    /// if integer
-    const char * integer() const;
+    /// array saying if each variable integer
+    const char * integerColumns() const;
     /// names - returns NULL if out of range
     const char * rowName(int index) const;
     const char * columnName(int index) const;
@@ -173,7 +173,8 @@ public:
       and > numberRows for dropped free rows */
     int rowIndex(const char * name) const;
     int columnIndex(const char * name) const;
-
+  /** objective offset - this is RHS entry for objective row */
+  double objectiveOffset() const;
   //@}
 
 
@@ -276,9 +277,11 @@ private:
      int numberRows_;
      int numberColumns_;
      int numberElements_;
-      /// Upper bound when no bounds for integers
-      int defaultBound_; 
-  double infinity_;
+     /// Upper bound when no bounds for integers
+     int defaultBound_; 
+     double infinity_;
+     /// offset for objective function (i.e. rhs of OBJ row)
+     double objectiveOffset_;
     //@}
   //@}
 

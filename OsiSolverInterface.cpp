@@ -406,7 +406,7 @@ int OsiSolverInterface::readOsiMps(const char * filename,
     loadProblem(*m.getMatrixByCol(),m.getColLower(),m.getColUpper(),
 		m.getObjCoefficients(),m.getRowSense(),m.getRightHandSide(),
 		m.getRowRange());
-    const char * integer = m.integer();
+    const char * integer = m.integerColumns();
     if (integer) {
       int i,n=0;
       int nCols=m.getNumCols();

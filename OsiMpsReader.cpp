@@ -14,7 +14,7 @@ const bool False = false;
 #include <math.h>
 #include <string>
 #include <stdio.h>
-#include <iostream.h>
+#include <iostream>
 
 /// The following lengths are in decreasing order (for 64 bit etc)
 /// Large enough to contain element index
@@ -846,7 +846,7 @@ void OsiMpsReader::setInfinity(double value)
   if ( value >= 1.020 ) {
     infinity_ = value;
   } else {
-    std::cout << "Illegal value for infinity of " << value << endl;
+    std::cout << "Illegal value for infinity of " << value << std::endl;
   }
 
 }
@@ -861,8 +861,8 @@ const char * OsiMpsReader::getFileName() const
 {
   return fileName_;
 }
-// Test if current file exists
-const bool OsiMpsReader::fileExists() const
+// Test if current file exists and readable
+const bool OsiMpsReader::fileReadable() const
 {
   // I am opening it to make sure not odd
   FILE *fp;
@@ -878,6 +878,11 @@ const bool OsiMpsReader::fileExists() const
     return true;
   }
 }
+/** objective offset - this is RHS entry for objective row */
+double OsiMpsReader::objectiveOffset() const
+{
+  return objectiveOffset_;
+}
 #define MAX_INTEGER 1000000
 // Sets default upper bound for integer variables
 void OsiMpsReader::setDefaultBound(int value)
@@ -885,7 +890,7 @@ void OsiMpsReader::setDefaultBound(int value)
   if ( value >= 1 && value <=MAX_INTEGER ) {
     defaultBound_ = value;
   } else {
-    std::cout << "Illegal default integer bound of " << value << endl;
+    std::cout << "Illegal default integer bound of " << value << std::endl;
   }
 }
 // gets default upper bound for integer variables
@@ -923,7 +928,7 @@ int OsiMpsReader::readMps()
     fp = stdin;
   }
   if (!fp) {
-    std::cout << "Unable to open file " << fileName_ << endl;
+    std::cout << "Unable to open file " << fileName_ << std::endl;
     return -1;
   }
   OSIRowIndex numberRows;
@@ -938,13 +943,13 @@ int OsiMpsReader::readMps()
     strcpy ( name, mpsfile.columnName (  ) );
   } else if ( mpsfile.whichSection (  ) == OSI_UNKNOWN_SECTION ) {
     std::cout << "Unknown image " << mpsfile.
-      card (  ) << " at line 1 of file" << fileName_ << endl;
+      card (  ) << " at line 1 of file" << fileName_ << std::endl;
     return -2;
   } else if ( mpsfile.whichSection (  ) != OSI_EOF_SECTION ) {
     strcpy ( name, mpsfile.card (  ) );
     ifmps = false;
   } else {
-    std::cout << "EOF on file" << fileName_ << endl;
+    std::cout << "EOF on file" << fileName_ << std::endl;
     return -3;
   }
   double *rowlower;
@@ -955,7 +960,7 @@ int OsiMpsReader::readMps()
   OSIElementIndex *start;
   OSIRowIndex *row;
   double *element;
-  double objectiveOffset = 0.0;
+  objectiveOffset_ = 0.0;
 
   int numberErrors = 0;
   int i;
@@ -1023,9 +1028,9 @@ int OsiMpsReader::readMps()
 	numberErrors++;
 	if ( numberErrors < 100 ) {
 	  std::cout << "Bad image at card " << mpsfile.
-	    cardNumber (  ) << " " << mpsfile.card (  ) << endl;
+	    cardNumber (  ) << " " << mpsfile.card (  ) << std::endl;
 	} else if (numberErrors > 100000) {
-	  std::cout << "Returning as too many errors"<< endl;
+	  std::cout << "Returning as too many errors"<< std::endl;
 	  return numberErrors;
 	}
       }
@@ -1146,9 +1151,9 @@ int OsiMpsReader::readMps()
 		if ( numberErrors < 100 ) {
 		  std::cout << "Duplicate objective at card " <<
 		    mpsfile.cardNumber (  )
-		    << " " << mpsfile.card (  ) << endl;
+		    << " " << mpsfile.card (  ) << std::endl;
 		} else if (numberErrors > 100000) {
-		  std::cout << "Returning as too many errors"<< endl;
+		  std::cout << "Returning as too many errors"<< std::endl;
 		  return numberErrors;
 		}
 	      } else {
@@ -1166,9 +1171,9 @@ int OsiMpsReader::readMps()
 		if ( numberErrors < 100 ) {
 		  std::cout << "Duplicate row at card " << mpsfile.
 		    cardNumber (  ) << " " << mpsfile.
-		    card (  ) << " " << mpsfile.rowName (  ) << endl;
+		    card (  ) << " " << mpsfile.rowName (  ) << std::endl;
 		} else if (numberErrors > 100000) {
-		  std::cout << "Returning as too many errors"<< endl;
+		  std::cout << "Returning as too many errors"<< std::endl;
 		  return numberErrors;
 		}
 	      } else {
@@ -1183,9 +1188,9 @@ int OsiMpsReader::readMps()
 	    if ( numberErrors < 100 ) {
 	      std::cout << "No match for row at card " << mpsfile.
 		cardNumber (  ) << " " << mpsfile.card (  ) << " " << mpsfile.
-		rowName (  ) << endl;
+		rowName (  ) << std::endl;
 	    } else if (numberErrors > 100000) {
-	      std::cout << "Returning as too many errors"<< endl;
+	      std::cout << "Returning as too many errors"<< std::endl;
 	      return numberErrors;
 	    }
 	  }
@@ -1201,16 +1206,16 @@ int OsiMpsReader::readMps()
       case OSI_S2_COLUMN:
       case OSI_S3_COLUMN:
       case OSI_SOSEND:
-	std::cout << "** code sos etc later" << endl;
+	std::cout << "** code sos etc later" << std::endl;
 	abort (  );
 	break;
       default:
 	numberErrors++;
 	if ( numberErrors < 100 ) {
 	  std::cout << "Bad image at card " << mpsfile.
-	    cardNumber (  ) << " " << mpsfile.card (  ) << endl;
+	    cardNumber (  ) << " " << mpsfile.card (  ) << std::endl;
 	} else if (numberErrors > 100000) {
-	  std::cout << "Returning as too many errors"<< endl;
+	  std::cout << "Returning as too many errors"<< std::endl;
 	  return numberErrors;
 	}
       }
@@ -1273,24 +1278,24 @@ int OsiMpsReader::readMps()
 	      if ( numberErrors < 100 ) {
 		std::cout << "Duplicate objective at card " <<
 		  mpsfile.cardNumber (  )
-		  << " " << mpsfile.card (  ) << endl;
+		  << " " << mpsfile.card (  ) << std::endl;
 	      } else if (numberErrors > 100000) {
-		std::cout << "Returning as too many errors"<< endl;
+		std::cout << "Returning as too many errors"<< std::endl;
 		return numberErrors;
 	      }
 	    } else {
 	      objUsed = true;
 	    }
-	    objectiveOffset += value;
+	    objectiveOffset_ += value;
 	  } else if ( irow < numberRows ) {
 	    if ( rowlower[irow] != -infinity_ ) {
 	      numberErrors++;
 	      if ( numberErrors < 100 ) {
 		std::cout << "Duplicate row at card " << mpsfile.
 		  cardNumber (  ) << " " << mpsfile.
-		  card (  ) << " " << mpsfile.rowName (  ) << endl;
+		  card (  ) << " " << mpsfile.rowName (  ) << std::endl;
 	      } else if (numberErrors > 100000) {
-		std::cout << "Returning as too many errors"<< endl;
+		std::cout << "Returning as too many errors"<< std::endl;
 		return numberErrors;
 	      }
 	    } else {
@@ -1302,9 +1307,9 @@ int OsiMpsReader::readMps()
 	  if ( numberErrors < 100 ) {
 	    std::cout << "No match for row at card " << mpsfile.
 	      cardNumber (  ) << " " << mpsfile.card (  ) << " " << mpsfile.
-	      rowName (  ) << endl;
+	      rowName (  ) << std::endl;
 	  } else if (numberErrors > 100000) {
-	    std::cout << "Returning as too many errors"<< endl;
+	    std::cout << "Returning as too many errors"<< std::endl;
 	    return numberErrors;
 	  }
 	}
@@ -1313,9 +1318,9 @@ int OsiMpsReader::readMps()
 	numberErrors++;
 	if ( numberErrors < 100 ) {
 	  std::cout << "Bad image at card " << mpsfile.
-	    cardNumber (  ) << " " << mpsfile.card (  ) << endl;
+	    cardNumber (  ) << " " << mpsfile.card (  ) << std::endl;
 	} else if (numberErrors > 100000) {
-	  std::cout << "Returning as too many errors"<< endl;
+	  std::cout << "Returning as too many errors"<< std::endl;
 	  return numberErrors;
 	}
       }
@@ -1352,9 +1357,9 @@ int OsiMpsReader::readMps()
 	      if ( numberErrors < 100 ) {
 		std::cout << "Duplicate objective at card " <<
 		  mpsfile.cardNumber (  )
-		  << " " << mpsfile.card (  ) << endl;
+		  << " " << mpsfile.card (  ) << std::endl;
 	      } else if (numberErrors > 100000) {
-		std::cout << "Returning as too many errors"<< endl;
+		std::cout << "Returning as too many errors"<< std::endl;
 		return numberErrors;
 	      }
 	    } else {
@@ -1363,9 +1368,9 @@ int OsiMpsReader::readMps()
 		if ( numberErrors < 100 ) {
 		  std::cout << "Duplicate row at card " << mpsfile.
 		    cardNumber (  ) << " " << mpsfile.
-		    card (  ) << " " << mpsfile.rowName (  ) << endl;
+		    card (  ) << " " << mpsfile.rowName (  ) << std::endl;
 		} else if (numberErrors > 100000) {
-		  std::cout << "Returning as too many errors"<< endl;
+		  std::cout << "Returning as too many errors"<< std::endl;
 		  return numberErrors;
 		}
 	      } else {
@@ -1377,9 +1382,9 @@ int OsiMpsReader::readMps()
 	    if ( numberErrors < 100 ) {
 	      std::cout << "No match for row at card " << mpsfile.
 		cardNumber (  ) << " " << mpsfile.card (  ) << " " << mpsfile.
-		rowName (  ) << endl;
+		rowName (  ) << std::endl;
 	    } else if (numberErrors > 100000) {
-	      std::cout << "Returning as too many errors"<< endl;
+	      std::cout << "Returning as too many errors"<< std::endl;
 	      return numberErrors;
 	    }
 	  }
@@ -1388,9 +1393,9 @@ int OsiMpsReader::readMps()
 	  numberErrors++;
 	  if ( numberErrors < 100 ) {
 	    std::cout << "Bad image at card " << mpsfile.
-	      cardNumber (  ) << " " << mpsfile.card (  ) << endl;
+	      cardNumber (  ) << " " << mpsfile.card (  ) << std::endl;
 	  } else if (numberErrors > 100000) {
-	    std::cout << "Returning as too many errors"<< endl;
+	    std::cout << "Returning as too many errors"<< std::endl;
 	    return numberErrors;
 	  }
 	}
@@ -1620,9 +1625,9 @@ int OsiMpsReader::readMps()
 	    numberErrors++;
 	    if ( numberErrors < 100 ) {
 	      std::cout << "Bad image at card " << mpsfile.
-		cardNumber (  ) << " " << mpsfile.card (  ) << endl;
+		cardNumber (  ) << " " << mpsfile.card (  ) << std::endl;
 	    } else if (numberErrors > 100000) {
-	      std::cout << "Returning as too many errors"<< endl;
+	      std::cout << "Returning as too many errors"<< std::endl;
 	      return numberErrors;
 	    }
 	  }
@@ -1631,27 +1636,15 @@ int OsiMpsReader::readMps()
 	  if ( numberErrors < 100 ) {
 	    std::cout << "No match for column at card " << mpsfile.
 	      cardNumber (  ) << " " << mpsfile.card (  ) << " " << mpsfile.
-	      rowName (  ) << endl;
+	      rowName (  ) << std::endl;
 	  } else if (numberErrors > 100000) {
-	    std::cout << "Returning as too many errors"<< endl;
+	    std::cout << "Returning as too many errors"<< std::endl;
 	    return numberErrors;
 	  }
 	}
       }
       stopHash ( 1 );
     }
-    free ( columnType );
-#if 0
-    // get rid of column names !
-    {
-      OSIColumnIndex icolumn;
-
-      for ( icolumn = 0; icolumn < numberColumns; icolumn++ ) {
-	free ( columnName[icolumn] );
-      }
-      free ( columnName );
-    }
-#endif
     // clean up integers
     if ( !numberIntegers ) {
       delete[]integerType_;
@@ -1670,6 +1663,7 @@ int OsiMpsReader::readMps()
 	}
       }
     }
+    free ( columnType );
     assert ( mpsfile.whichSection (  ) == OSI_ENDATA_SECTION );
   } else {
     fscanf ( fp, "%d %d %d\n", &numberRows, &numberColumns, &numberElements );
@@ -1726,7 +1720,7 @@ int OsiMpsReader::readMps()
   numberColumns_ = numberColumns;
   numberElements_ = numberElements;
   std::cout<<"Problem has " << numberRows_ << " rows, " << numberColumns_
-	   << " columns and " << numberElements_ << " elements" <<endl;
+	   << " columns and " << numberElements_ << " elements" <<std::endl;
   fclose ( fp );
   return numberErrors;
 }
@@ -1949,7 +1943,7 @@ bool OsiMpsReader::isInteger(int columnNumber) const
   return false;
 }
 // if integer
-const char * OsiMpsReader::integer() const
+const char * OsiMpsReader::integerColumns() const
 {
   return integerType_;
 }
@@ -2073,7 +2067,8 @@ numberRows_(0),
 numberColumns_(0),
 numberElements_(0),
 defaultBound_(1),
-infinity_(DBL_MAX)
+infinity_(DBL_MAX),
+objectiveOffset_(0.0)
 {
   numberHash_[0]=0;
   hash_[0]=NULL;
@@ -2105,7 +2100,8 @@ numberRows_(0),
 numberColumns_(0),
 numberElements_(0),
 defaultBound_(1),
-infinity_(DBL_MAX)
+infinity_(DBL_MAX),
+objectiveOffset_(0.0)
 {
   numberHash_[0]=0;
   hash_[0]=NULL;
@@ -2151,6 +2147,7 @@ void OsiMpsReader::gutsOfCopy(const OsiMpsReader & rhs)
   numberHash_[1]=rhs.numberHash_[1];
   defaultBound_=rhs.defaultBound_;
   infinity_=rhs.infinity_;
+  objectiveOffset_=rhs.objectiveOffset_;
   int section;
   for (section=0;section<2;section++) {
     if (numberHash_[section]) {

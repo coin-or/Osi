@@ -99,7 +99,7 @@ OsiCpxSolverInterface::switchToLP( void )
 
      int err = CPXchgprobtype( env_, lp, CPXPROB_LP );
      checkCPXerror( err, "CPXchgprobtype", "switchToLP" );
-     probtypemip_ = FALSE;
+     probtypemip_ = false;
   }
 }
 
@@ -131,7 +131,7 @@ OsiCpxSolverInterface::switchToMIP( void )
      checkCPXerror( err, "CPXchgctype", "switchToMIP" );
 
      delete[] cindarray;
-     probtypemip_ = TRUE;
+     probtypemip_ = true;
   }
 }
 

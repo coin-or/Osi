@@ -15,8 +15,11 @@
 #include "CoinWarmStartBasis.hpp"
 
 class OsiRowCut;
-
+#ifndef COIN_DBL_MAX
 static const double OsiClpInfinity = DBL_MAX;
+#else
+static const double OsiClpInfinity = COIN_DBL_MAX;
+#endif
 
 //#############################################################################
 
@@ -728,7 +731,8 @@ private:
   //@{
      /// Clp model represented by this class instance
      mutable ClpSimplex * modelPtr_;
-
+     /// Linear objective - just points to ClpModel
+     double * linearObjective_;
     /**@name Cached information derived from the OSL model */
     //@{
       /// Pointer to dense vector of row sense indicators

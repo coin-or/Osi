@@ -20,6 +20,7 @@
 #include "ClpDualRowDantzig.hpp"
 #include "ClpPrimalColumnDantzig.hpp"
 #include "ClpFactorization.hpp"
+#include "ClpObjective.hpp"
 #include "ClpSimplex.hpp"
 #include "OsiClpSolverInterface.hpp"
 #include "OsiCuts.hpp"
@@ -822,6 +823,7 @@ OsiClpSolverInterface::addCol(const CoinPackedVectorBase& vec,
 {
   int numberColumns = modelPtr_->numberColumns();
   modelPtr_->resize(modelPtr_->numberRows(),numberColumns+1);
+  linearObjective_ = modelPtr_->objective();
   basis_.resize(modelPtr_->numberRows(),numberColumns+1);
   setColBounds(numberColumns,collb,colub);
   setObjCoeff(numberColumns,obj);
@@ -846,6 +848,7 @@ OsiClpSolverInterface::addCols(const int numcols,
 {
   int numberColumns = modelPtr_->numberColumns();
   modelPtr_->resize(modelPtr_->numberRows(),numberColumns+numcols);
+  linearObjective_ = modelPtr_->objective();
   basis_.resize(modelPtr_->numberRows(),numberColumns+numcols);
   double * lower = modelPtr_->columnLower()+numberColumns;
   double * upper = modelPtr_->columnUpper()+numberColumns;
@@ -875,6 +878,7 @@ OsiClpSolverInterface::deleteCols(const int num, const int * columnIndices)
 {
   modelPtr_->deleteColumns(num,columnIndices);
   basis_.deleteColumns(num,columnIndices);
+  linearObjective_ = modelPtr_->objective();
   freeCachedResults();
 }
 //-----------------------------------------------------------------------------
@@ -974,6 +978,7 @@ OsiClpSolverInterface::loadProblem(const CoinPackedMatrix& matrix,
 				   const double* rowlb, const double* rowub)
 {
   modelPtr_->loadProblem(matrix, collb, colub, obj, rowlb, rowub);
+  linearObjective_ = modelPtr_->objective();
   freeCachedResults();
 
 }
@@ -987,6 +992,7 @@ OsiClpSolverInterface::assignProblem(CoinPackedMatrix*& matrix,
 				     double*& rowlb, double*& rowub)
 {
    modelPtr_->loadProblem(*matrix, collb, colub, obj, rowlb, rowub);
+   linearObjective_ = modelPtr_->objective();
    freeCachedResults();
    delete matrix;   matrix = NULL;
    delete[] collb;  collb = NULL;
@@ -1014,6 +1020,7 @@ OsiClpSolverInterface::loadProblem(const CoinPackedMatrix& matrix,
       convertSenseToBound(rowsen[i],rowrhs[i],rowrng[i],rowlb[i],rowub[i]);
    }
    modelPtr_->loadProblem(matrix, collb, colub, obj, rowlb, rowub);
+   linearObjective_ = modelPtr_->objective();
    freeCachedResults();
    delete [] rowlb;
    delete [] rowub;
@@ -1029,6 +1036,7 @@ OsiClpSolverInterface::assignProblem(CoinPackedMatrix*& matrix,
 				     double*& rowrng)
 {
    loadProblem(*matrix, collb, colub, obj, rowsen, rowrhs, rowrng);
+   linearObjective_ = modelPtr_->objective();
    delete matrix;   matrix = NULL;
    delete[] collb;  collb = NULL;
    delete[] colub;  colub = NULL;
@@ -1051,6 +1059,7 @@ OsiClpSolverInterface::loadProblem(const int numcols, const int numrows,
   modelPtr_->loadProblem(numcols, numrows, start,  index,
 	    value, collb, colub, obj,
 	    rowlb,  rowub);
+  linearObjective_ = modelPtr_->objective();
   freeCachedResults();
 }
 //-----------------------------------------------------------------------------
@@ -1074,6 +1083,7 @@ OsiClpSolverInterface::loadProblem(const int numcols, const int numrows,
    modelPtr_->loadProblem(numcols, numrows, start,  index,
 	     value, collb, colub, obj,
 	     rowlb,  rowub);
+   linearObjective_ = modelPtr_->objective();
    freeCachedResults();
    delete[] rowlb;
    delete[] rowub;
@@ -1146,6 +1156,7 @@ matrixByRow_(NULL),
 integerInformation_(NULL)
 {
    modelPtr_ = new ClpSimplex();
+   linearObjective_ = NULL;
    fillParamMaps();
 }
 
@@ -1186,6 +1197,7 @@ integerInformation_(NULL)
     modelPtr_ = new ClpSimplex(*rhs.modelPtr_);
   else
     modelPtr_ = new ClpSimplex();
+  linearObjective_ = modelPtr_->objective();
   if ( rhs.ws_ ) 
     ws_ = new CoinWarmStartBasis(*rhs.ws_);
   basis_ = rhs.basis_;
@@ -1218,6 +1230,7 @@ matrixByRow_(NULL),
 integerInformation_(NULL)
 {
   modelPtr_ = rhs;
+  linearObjective_ = modelPtr_->objective();
   if (rhs) {
     notOwned_=true;
 
@@ -1269,6 +1282,7 @@ OsiClpSolverInterface::operator=(const OsiClpSolverInterface& rhs)
     if ( rhs.modelPtr_  ) 
       modelPtr_ = new ClpSimplex(*rhs.modelPtr_);
     notOwned_=false;
+    linearObjective_ = modelPtr_->objective();
     
     if ( rhs.ws_ ) 
       ws_ = new CoinWarmStartBasis(*rhs.ws_);
@@ -1550,7 +1564,7 @@ OsiClpSolverInterface::getRowActivity() const
 void 
 OsiClpSolverInterface::setObjCoeff( int elementIndex, double elementValue )
 {
-  modelPtr_->objective()[elementIndex] = elementValue;
+  linearObjective_[elementIndex] = elementValue;
   if (modelPtr_->solveType()==2) {
     // simplex interface
     modelPtr_->costRegion(1)[elementIndex] = elementValue;

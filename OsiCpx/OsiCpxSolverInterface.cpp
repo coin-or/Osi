@@ -1217,7 +1217,7 @@ void OsiCpxSolverInterface::setColSetBounds(const int* indexFirst,
    }
    int err = CPXchgbds( env_,
 			getLpPtr(OsiCpxSolverInterface::FREECACHED_COLUMN),
-			2*cnt, ind, c, boundList );
+			2*cnt, ind, c, const_cast<double*>(boundList) );
    checkCPXerror( err, "CPXchgbds", "setColSetBounds" );
    delete[] ind;
    delete[] c;
@@ -1349,10 +1349,10 @@ OsiCpxSolverInterface::setRowSetTypes(const int* indexFirst,
    }
    int err;
    err = CPXchgsense(env_, getLpPtr(OsiCpxSolverInterface::FREECACHED_ROW),
-		     cnt, indexFirst, sense);
+		     cnt, const_cast<int*>(indexFirst), sense);
    checkCPXerror( err, "CPXchgsense", "setRowSetTypes" );
    err = CPXchgrhs(env_, getLpPtr(OsiCpxSolverInterface::FREECACHED_ROW),
-		   cnt, indexFirst, rhs);
+		   cnt, const_cast<int*>(indexFirst), rhs);
    checkCPXerror( err, "CPXchgrhs", "setRowSetTypes" );
    err = CPXchgrngval(env_, getLpPtr(OsiCpxSolverInterface::FREECACHED_ROW),
 		      rangecnt, rangeind, range);

@@ -1073,10 +1073,69 @@ int OsiCpxSolverInterface::getIterationCount() const
 //------------------------------------------------------------------
 std::vector<double*> OsiCpxSolverInterface::getDualRays(int maxNumRays) const
 {
-  // *FIXME* : must write the method -LL
-  throw CoinError("method is not yet written", "getDualRays",
-		 "OsiCpxSolverInterface");
-  return std::vector<double*>();
+   OsiCpxSolverInterface solver(*this);
+
+   const int numcols = getNumCols();
+   const int numrows = getNumRows();
+   int* index = new int[CoinMax(numcols,numrows)];
+   for (int i = CoinMax(numcols,numrows)-1; i >= 0; --i) {
+      index[i] = i;
+   }
+   double* obj = new double[CoinMax(numcols,2*numrows)];
+   CoinFillN(obj, numcols, 0.0);
+   solver.setObjCoeffSet(index, index+numcols, obj);
+
+   double* clb = new double[2*numrows];
+   double* cub = new double[2*numrows];
+
+   const double plusone = 1.0;
+   const double minusone = -1.0;
+   const char* sense = getRowSense();
+
+   const CoinPackedVectorBase** cols =
+      new const CoinPackedVectorBase*[2*numrows];
+   int newcols = 0;
+   for (int i = 0; i < numrows; ++i) {
+      switch (sense[i]) {
+      case 'L':
+	 cols[newcols++] =
+	    new CoinShallowPackedVector(1, &index[i], &minusone, false);
+	 break;
+      case 'G':
+	 cols[newcols++] =
+	    new CoinShallowPackedVector(1, &index[i], &plusone, false);
+	 break;
+      case 'R':
+	 cols[newcols++] =
+	    new CoinShallowPackedVector(1, &index[i], &minusone, false);
+	 cols[newcols++] =
+	    new CoinShallowPackedVector(1, &index[i], &plusone, false);
+	 break;
+      case 'N':
+	 break;
+      }
+   }
+
+   CoinFillN(obj, newcols, 1.0);
+   CoinFillN(clb, newcols, 0.0);
+   CoinFillN(cub, newcols, getInfinity());
+
+   solver.addCols(newcols, cols, clb, cub, obj+numcols);
+   delete[] index;
+   delete[] cols;
+   delete[] clb;
+   delete[] cub;
+   delete[] obj;
+
+   solver.setObjSense(1.0); // minimize
+   solver.initialSolve();
+
+   const double* solverpi = getRowPrice();
+   double* pi = new double[numrows];
+   for (int i = numrows - 1; i >= 0; --i) {
+      pi[i] = -solverpi[i];
+   }
+   return std::vector<double*>(1, pi);
 }
 //------------------------------------------------------------------
 std::vector<double*> OsiCpxSolverInterface::getPrimalRays(int maxNumRays) const

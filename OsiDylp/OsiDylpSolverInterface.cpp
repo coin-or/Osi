@@ -105,10 +105,10 @@ namespace {
 #include <cassert>
 #include <OsiColCut.hpp>
 #include <OsiRowCut.hpp>
+#include <OsiRowCutDebugger.hpp>
 #include "OsiDylpSolverInterface.hpp"
 #include "OsiDylpMessages.hpp"
-#include "CoinWarmStartBasis.hpp"
-#include "CoinMpsIO.hpp"
+#include "OsiDylpWarmStartBasis.hpp"
 
 using std::string ;
 using std::vector ;
@@ -207,7 +207,7 @@ bool cmdecho = false,
   \brief Variables controlling persistent dylp subsystems
 
   These variables are used to control initialisation and shutdown of the i/o
-  and basis maintenance subsystems.
+  and basis maintenance subsystems, and to track the state of the dylp solver.
   
   The i/o subsystem is initialised when the first ODSI object is created
   (constructors, reference_count == 1), and shut down when the last ODSI
@@ -967,6 +967,136 @@ void ODSI::dylp_ioinit ()
 
 /*! \brief Load a problem description
 
+  This routine expects a CoinMpsIO object, and proceeds to extract the
+  information from the object. This permits problem, constraint, and
+  variable names to be passed in to dylp, which makes for much friendlier
+  output.
+
+  The routine is built on load_problem(matrix,sense/rhs/range), so the
+  first thing it does is unpack the expected operands from the CoinMpsIO
+  object.
+
+  The next action is to destroy the existing problem. Existing options and
+  tolerances settings are not affected.
+
+  The routine then builds an empty consys_struct of the proper size with a
+  call to construct_consys. The main body of the routine fills the constraint
+  matrix in two loops. In the first, calls to consys_addrow_pk insert empty
+  constraints and establish the constraint type, rhs, and (optional) range.
+  Then calls to consys_addcol_pk insert the variables, along with their
+  bounds and objective coefficient.
+
+  Finally, a primal solution is invented, and the objective is set accordingly.
+*/
+
+void ODSI::load_problem (const CoinMpsIO &mps)
+
+{ int n = mps.getNumCols() ;
+  int m = mps.getNumRows() ;
+/*
+  Unpack the operands from the CoinMpsIO object.
+*/
+  const CoinPackedMatrix matrix = *mps.getMatrixByCol() ;
+  const double* col_lower = mps.getColLower() ;
+  const double* col_upper = mps.getColUpper() ;
+  const double* obj = mps.getObjCoefficients() ;
+  const char *sense = mps.getRowSense() ;
+  const double* rhsin = mps.getRightHandSide() ;
+  const double* range = mps.getRowRange() ;
+
+  double *rhs = new double[m] ;
+  double *rhslow = new double[m] ; 
+  contyp_enum *ctyp = new contyp_enum[m] ;
+
+  gen_rowparms(m,rhs,rhslow,ctyp,sense,rhsin,range) ;
+/*
+  Free the existing problem structures, preserving options and tolerances
+  and resetting statistics.
+*/
+  destruct_problem(true) ;
+/*
+  Create an empty consys_struct. Load the constraint system name, objective
+  name, and objective offset.
+*/
+  construct_consys(n,m) ;
+  setStrParam(OsiProbName,mps.getProblemName()) ;
+  if (consys->objnme) strfree(consys->objnme) ;
+  consys->objnme = stralloc(mps.getObjectiveName()) ;
+  setDblParam(OsiObjOffset,mps.objectiveOffset()) ;
+/*
+  First loop: Insert empty constraints into the new constraint system.
+*/
+  pkvec_struct* rowi = pkvec_new(0) ;
+  assert(rowi) ;
+
+  for (int i = 0 ; i < m ; i++)
+  { rowi->nme = const_cast<char *>(mps.rowName(i)) ;
+    bool r = consys_addrow_pk(consys,'a',ctyp[i],rowi,rhs[i],rhslow[i],0,0) ;
+    assert(r) ; }
+  
+  if (rowi) pkvec_free(rowi) ;
+  delete[] rhs ;
+  delete[] rhslow ;
+  delete[] ctyp ;
+/*
+  Take a moment and set up a vector of variable types. It's a bit of a pain
+  that CoinMpsIO doesn't distinguish binary from general integer, but we can
+  do it here by checking bounds. The test is drawn from OSI::isBinary and
+  will include variables fixed at 0 or 1.
+*/
+  const char *const intvars = mps.integerColumns() ;
+  vartyp_enum *const vtyp = new vartyp_enum[n] ;
+  if (intvars)
+  { for (int j = 0 ; j < n ; j++)
+    { if (intvars[j])
+      { if ((col_lower[j] == 0.0 || col_lower[j] == 1.0) &&
+	    (col_upper[j] == 0.0 || col_upper[j] == 1.0))
+	{ vtyp[j] = vartypBIN ; }
+	else
+	{ vtyp[j] = vartypINT ; } }
+      else
+      { vtyp[j] = vartypCON ; } } }
+  else
+  { for (int j = 0 ; j < n ; j++) vtyp[j] = vartypCON ; }
+/*
+  Second loop. Insert the coefficients by column. If we need to create a
+  column-ordered copy, take advantage and cache it.  The size of colj is a
+  gross overestimate, but it saves the trouble of constantly reallocating it.
+*/
+  const CoinPackedMatrix *matrix2 ;
+  if (matrix.isColOrdered())
+  { matrix2 = &matrix ; }
+  else
+  { _matrix_by_col = new CoinPackedMatrix ;
+    _matrix_by_col->reverseOrderedCopyOf(matrix) ;
+    matrix2 = _matrix_by_col ; }
+  
+  pkvec_struct* colj = pkvec_new(n) ;
+
+  for (int j = 0 ; j < n ; j++)
+  { const CoinShallowPackedVector coin_col = matrix2->getVector(j) ;
+    packed_vector(coin_col,n,colj) ;
+    colj->nme = const_cast<char *>(mps.columnName(j)) ;
+    bool r = consys_addcol_pk(consys,vtyp[j],colj,obj[j],
+			      col_lower[j],col_upper[j]) ;
+    assert(r) ; }
+
+  pkvec_free(colj) ;
+  delete[] vtyp ;
+  assert(matrix2->isEquivalent(*getMatrixByCol())) ;
+
+/*
+  Finish up. Establish a primal solution and an objective. The primal solution
+  is `worst-case', in the sense that it's constructed by setting each primal
+  variable to the bound that maximises the objective.
+*/
+  worst_case_primal() ;
+  calc_objval() ;
+
+  return ; }
+
+/*! \brief Load a problem description
+
   This routine expects a constraint system described in terms of an OSI
   packed matrix and dylp constraint type (ctyp) and right-hand-side (rhs,
   rhslow) vectors.
@@ -1277,7 +1407,9 @@ ODSI::OsiDylpSolverInterface ()
 
     solvername("dylp"),
     mps_debug(0),
+    hotstart_fallback(0),
 
+    _objval(0),
     _col_x(0),
     _col_obj(0),
     _col_cbar(0),
@@ -1333,7 +1465,9 @@ ODSI::OsiDylpSolverInterface (const OsiDylpSolverInterface& src)
 
     solvername(src.solvername),
     mps_debug(src.mps_debug),
+    hotstart_fallback(0),	// do not copy hot start information
   
+    _objval(src._objval),
     _matrix_by_row(0),
     _matrix_by_col(0)
 
@@ -1453,6 +1587,10 @@ void ODSI::destruct_problem (bool preserve_interface)
   if (consys)
   { consys_free(consys) ;
     consys = 0 ; }
+ 
+  if (hotstart_fallback)
+  { delete hotstart_fallback ;
+    hotstart_fallback = 0 ; }
 
   destruct_cache() ;
 
@@ -1484,12 +1622,17 @@ void ODSI::destruct_problem (bool preserve_interface)
   instance is destroyed or another instance needs to use dylp, the current
   instance must be detached. Setting lpctlONLYFREE and phase == dyDONE tells
   dylp the call is solely to free data structures.
+
+  Note that we need to take care not to change the lpprob control flags
+  (other than lpctlDYVALID, which will be cleared by dylp), as this could be
+  a temporary detach and the lpprob will be used again by its owner.
 */
 
 void ODSI::detach_dylp ()
 
 { assert(dylp_owner == this && lpprob && lpprob->consys) ;
   assert(flgon(lpprob->ctlopts,lpctlDYVALID)) ;
+  flags save_flags = getflg(lpprob->ctlopts,lpctlNOFREE|lpctlONLYFREE) ;
   clrflg(lpprob->ctlopts,lpctlNOFREE) ;
   setflg(lpprob->ctlopts,lpctlONLYFREE) ;
   lpprob->phase = dyDONE ;
@@ -1498,6 +1641,8 @@ void ODSI::detach_dylp ()
   not look.
 */
   dylp(lpprob,initialSolveOptions,tolerances,statistics) ;
+  clrflg(lpprob->ctlopts,lpctlONLYFREE) ;
+  setflg(lpprob->ctlopts,save_flags) ;
   dylp_owner = 0 ; }
 
 //@}
@@ -1563,7 +1708,7 @@ void ODSI::reset ()
   initial_gtxecho = false ;
   resolve_gtxecho = false ;
   lp_retval = lpINV ;
-  obj_sense = 1.0 ;
+  setObjSense(1.0) ;
   mps_debug = false ;
   construct_options() ;
   setOsiDylpMessages(CoinMessages::us_en) ;
@@ -1625,6 +1770,17 @@ inline void ODSI::setInteger (const int* indices, int len)
   for (int i = 0 ; i < len ; i++) setInteger(indices[i]) ; }
 
 
+/*!
+  If the variable is binary, and the new bound is not 0 or 1, the type of the
+  variable is automatically converted to general integer. If the variable is
+  integer, and the new bound is not, the type of the variable is converted to
+  continuous.
+
+  Other conversions are too ambiguous --- suppose a general integer variable
+  were temporarily bounded between 0 and 1. Should the type really be
+  converted from general integer to binary? Similarly, bounding a continuous
+  variable to an integer range should not cause it to become integer.
+*/
 
 inline void ODSI::setColLower (int i, double val)
 
@@ -1635,9 +1791,18 @@ inline void ODSI::setColLower (int i, double val)
 
   consys->vlb[idx(i)] = val ;
   if (lpprob) setflg(lpprob->ctlopts,lpctlLBNDCHG) ;
-  if (isInteger(i)) setInteger(i) ; }
 
+  if (isInteger(i))
+  { if (floor(val) != val)
+      setContinuous(i) ;
+    else
+    if (isBinary(i) && !(val == 0.0 || val == 1.0))
+      setInteger(i) ; } }
 
+/*!
+  See the comments with setColLower re. automatic variable type conversions.
+  In short, binary to general integer is the only one that will occur.
+*/
 inline void ODSI::setColUpper (int i, double val)
 
 { if (!consys->vub)
@@ -1647,7 +1812,13 @@ inline void ODSI::setColUpper (int i, double val)
 
   consys->vub[idx(i)] = val ;
   if (lpprob) setflg(lpprob->ctlopts,lpctlUBNDCHG) ;
-  if (isInteger(i)) setInteger(i) ; }
+
+  if (isInteger(i))
+  { if (floor(val) != val)
+      setContinuous(i) ;
+    else
+    if (isBinary(i) && !(val == 0.0 || val == 1.0))
+      setInteger(i) ; } }
 
 
 /*!
@@ -1775,12 +1946,23 @@ void ODSI::applyRowCut (const OsiRowCut &cut)
 
 /*!
   A call to this routine destroys all cached values.
+
+  To make this work properly (in the absence of a more efficient routine
+  implemented in the consys package), the trick is to sort the indices
+  from smallest to largest, and delete in reverse order. It has the
+  added advantage of being marginally more efficient.
 */
 
 void ODSI::deleteRows (int count, const int* rows)
 
-{ for (int k = 0 ; k < count ; k++)
-  { int i = idx(rows[k]) ;
+{ if (count <= 0) return ;
+
+  vector<int> lclrows = vector<int>(&rows[0],&rows[count]) ;
+
+  if (count > 1) std::sort(lclrows.begin(),lclrows.end()) ;
+
+  for (int k = count-1 ; k >= 0 ; k--)
+  { int i = idx(lclrows[k]) ;
     bool r = consys_delrow_stable(consys,i) ;
     assert(r) ; }
   if (resolveOptions) resolveOptions->forcecold = true ;
@@ -1797,7 +1979,7 @@ void ODSI::setObjCoeff (int j, double objj)
 
 { if (j >= getNumCols()) return ;
 
-  consys->obj[idx(j)] = obj_sense*objj ;
+  consys->obj[idx(j)] = getObjSense()*objj ;
   if (_col_obj) _col_obj[j] = objj ;
   if (lpprob) setflg(lpprob->ctlopts,lpctlOBJCHG) ;
   calc_objval() ; }
@@ -1873,12 +2055,23 @@ void ODSI::applyColCut (const OsiColCut &cut)
 
 /*!
   A call to this routine destroys all cached values.
+
+  To make this work properly (in the absence of a more efficient routine
+  implemented in the consys package), the trick is to sort the indices
+  from largest to smallest, and delete in the same order. It has the
+  added advantage of being marginally more efficient.
 */
 
 void ODSI::deleteCols (int count, const int* cols)
 
-{ for (int i = 0 ; i < count ; i++)
-  { int j = idx(cols[i]) ;
+{ if (count <= 0) return ;
+
+  vector<int> lclcols = vector<int>(&cols[0],&cols[count]) ;
+
+  if (count > 1) std::sort(lclcols.begin(),lclcols.end()) ;
+
+  for (int i = 0 ; i < count ; i++)
+  { int j = idx(lclcols[i]) ;
     bool r = consys_delcol(consys, j) ;
     assert(r) ; }
   if (resolveOptions) resolveOptions->forcecold = true ;
@@ -2057,12 +2250,12 @@ void ODSI::assert_same (const consys_struct& c1, const consys_struct& c2,
   assert(c1.intvcnt == c2.intvcnt) ;
   assert(c1.binvcnt == c2.binvcnt) ;
   assert(c1.maxcollen == c2.maxcollen) ;
-  assert(c1.maxcolndx == c2.maxcolndx) ;
+  assert(!exact || (c1.maxcolndx == c2.maxcolndx)) ;
   assert(c1.concnt == c2.concnt) ;
   assert(c1.archccnt == c2.archccnt) ;
   assert(c1.cutccnt == c2.cutccnt) ;
   assert(c1.maxrowlen == c2.maxrowlen) ;
-  assert(c1.maxrowndx == c2.maxrowndx) ;
+  assert(!exact || (c1.maxrowndx == c2.maxrowndx)) ;
   assert(c1.objndx == c2.objndx) ;
   assert(c1.xzndx == c2.xzndx) ;
 /*
@@ -2300,7 +2493,7 @@ std::string ODSI::make_filename (const char *filename,
    loadProblem and assignProblem consider all variables to be continuous.
    assignProblem destroys its arguments; loadProblem leaves them unchanged.
 
-   The readMps, writeMps, and writeMpsNative routines extend the default OSI
+   The readMps and writeMps routines extend the default OSI
    behaviour by allowing for multiple extensions on file names. They apply
    the following rule: any specified extension is added to the specified
    filename, with the exception that if the extension already exists, it is
@@ -2369,47 +2562,13 @@ int ODSI::readMps (const char* basename, const char* ext)
     << filename << "read" << errcnt << CoinMessageEol ;
   if (errcnt != 0) return (errcnt) ;
 /*
-  Transfer the major data vectors into a consys_struct and build a worst
-  case solution.
+  Load the problem and build a worst-case solution. To take full advantage
+  of information in the MPS file, it's easiest to pass the mps object to
+  load_problem.
 */
-  loadProblem(*mps.getMatrixByCol(),mps.getColLower(),mps.getColUpper(),
-	       mps.getObjCoefficients(),mps.getRowSense(),
-	       mps.getRightHandSide(),mps.getRowRange()) ;
+  load_problem(mps) ;
 /*
-  All those little bits and pieces. First, the problem and objective names.
-  Then acquire any constant component for the objective.
-*/
-  setStrParam(OsiProbName,mps.getProblemName()) ;
-  if (consys->objnme) strfree(consys->objnme) ;
-  consys->objnme = stralloc(mps.getObjectiveName()) ;
-  setDblParam(OsiObjOffset,mps.objectiveOffset()) ;
-/*
-  Next, the integer variables. It's a bit of a pain that CoinMpsIO doesn't
-  distinguish binary from general integer, but we can do it here by checking
-  bounds. The test is drawn from OSI::isBinary and sucks in variables fixed
-  at 0 or 1. There's a separate routine, OSI::isFreeBinary, which excludes
-  variables fixed at 0 or 1.
-*/
-  const char *const intvars = mps.integerColumns() ;
-  if (intvars)
-  { int j ;
-    int n = mps.getNumCols() ;
-    vartyp_enum *const vtyp = consys->vtyp ;
-    const double *const vlb = mps.getColLower() ;
-    const double *const vub = mps.getColUpper() ;
-
-    for (j = 0 ; j < n ; j++)
-    { if (intvars[j])
-      { if ((vlb[j] == 0.0 || vlb[j] == 1.0) &&
-	    (vub[j] == 0.0 || vub[j] == 1.0))
-	{ vtyp[idx(j)] = vartypBIN ;
-	  consys->binvcnt++ ; }
-	else
-	{ vtyp[idx(j)] = vartypINT ;
-	  consys->intvcnt++ ; } } } }
-
-/*
-  Success!
+  Done!
 */
   return (0) ; }
 
@@ -2705,6 +2864,10 @@ bool ODSI::setDblParam (OsiDblParam key, double value)
   on the ratio of osi and dylp tolerances. This is, at best, imperfect, as it
   doesn't take into account dylp's internal scaling. Nor can it, really, as
   this information isn't guaranteed to be valid.
+
+  Support for Osi[Dual,Primal]ObjectiveLimit is a facade at the moment. The
+  values are stored, and used by is[Dual,Primal]ObjectiveLimitReached, but
+  dylp knows nothing of them.
 */
 { if (key == OsiLastDblParam) return (false) ;
 
@@ -2721,8 +2884,7 @@ bool ODSI::setDblParam (OsiDblParam key, double value)
     { break ; }
     case OsiDualObjectiveLimit:
     case OsiPrimalObjectiveLimit:
-    { retval = false ;
-      break ; }
+    { break ; }
     default:
     { retval = false ;
       break ; } }
@@ -2733,7 +2895,7 @@ bool ODSI::setDblParam (OsiDblParam key, double value)
 bool ODSI::getDblParam (OsiDblParam key, double& value) const
 /*
   This simply duplicates OSI::getDblParam. I've kept it here until I decide
-  what to do with the unsupported parameters Osi[Primal,Dual]ObjectiveLimit.
+  what to do with the parameters Osi[Primal,Dual]ObjectiveLimit.
 */
 { if (key == OsiLastDblParam) return (false) ;
 
@@ -2747,8 +2909,7 @@ bool ODSI::getDblParam (OsiDblParam key, double& value) const
       break ; }
     case OsiDualObjectiveLimit:
     case OsiPrimalObjectiveLimit:
-    { OSI::getDblParam(key,value) ;
-      retval = false ;
+    { retval = OSI::getDblParam(key,value) ;
       break ; }
     default:
     { OSI::getDblParam(key,value) ;
@@ -2865,7 +3026,7 @@ void ODSI::unimp_hint (bool dylpSense, bool hintSense,
 
 { if (dylpSense != hintSense)
   { std::string message("Dylp ") ;
-    if (dylpSense = true)
+    if (dylpSense == true)
     { message += "cannot disable " ; }
     else
     { message += "does not support " ; }
@@ -3090,7 +3251,7 @@ void ODSI::initialSolve ()
   lp_retval = dylp_dolp(lpprob,initialSolveOptions,tolerances,statistics) ;
   if (flgon(lpprob->ctlopts,lpctlDYVALID))
   { dylp_owner = this ;
-    _objval = obj_sense*lpprob->obj ; }
+    _objval = getObjSense()*lpprob->obj ; }
   destruct_row_cache() ;
   destruct_col_cache() ;
 
@@ -3266,7 +3427,7 @@ const double* ODSI::getRowPrice () const
 
     for (int k = 1 ; k <= basis->len ; k++)
     { int i = inv(basis->el[k].cndx) ;
-      _row_price[i] = lpprob->y[k]*obj_sense ; } }
+      _row_price[i] = lpprob->y[k]*getObjSense() ; } }
 
   return (_row_price) ; }
 
@@ -3522,7 +3683,7 @@ inline const double* ODSI::getObjCoefficients () const
   _col_obj = new double[n] ;
   double *obj_0base = INV_VEC(double,consys->obj) ;
 
-  if (obj_sense < 0)
+  if (getObjSense() < 0)
   { std::transform(obj_0base,obj_0base+n,_col_obj,std::negate<double>()) ; }
   else
   { COPY_VEC(double,obj_0base,_col_obj,n) ; }
@@ -3789,35 +3950,47 @@ const double* ODSI::getRightHandSide () const
 
 
 /*!
-  Effectively unsupportable in dylp, due to the use of the dynamic simplex
-  algorithm. Alternating addition/deletion of constraints and variables
-  means that the objective does not change monotonically.
+  These functions are supported in dylp only when it's operating in the full
+  constraint system mode.  Otherwise, the alternating addition and deletion of
+  constraints and variables by the dynamic simplex algorithm means that the
+  objective does not change monotonically.
+
+  Right now, they're just a facade, until I train dylp to recognize the
+  limits.
 */
 
 bool ODSI::isDualObjectiveLimitReached () const
 
-{ throw CoinError("Unsupported: Objective does not change monotonically "
-		  "in a dynamic simplex algorithm.",
-		  "isDualObjectiveLimitReached",
-		  "OsiDylpSolverInterface") ;
+{ double objlim ;
+  double objval = getObjValue() ;
 
-  return false ; }
+  getDblParam(OsiDualObjectiveLimit,objlim) ;
+  objlim *= getObjSense() ;
+
+  if (getObjSense() > 0)
+    return (objval > objlim) ;
+  else
+    return (objval < objlim) ; }
 
 
 /*!
-  Effectively unsupportable. See
+  Partially supported. See
   \link OsiDylpSolverInterface::isDualObjectiveLimitReached
 	ODSI:isDualObjectiveLimitReached\endlink.
 */
 
 bool ODSI::isPrimalObjectiveLimitReached () const
 
-{ throw CoinError("Unsupported: Objective does not change monotonically "
-		  "in a dynamic simplex algorithm.",
-		  "isPrimalObjectiveLimitReached",
-		  "OsiDylpSolverInterface") ;
+{ double objlim ;
+  double objval = getObjValue() ;
 
-  return false ; }
+  getDblParam(OsiDualObjectiveLimit,objlim) ;
+  objlim *= getObjSense() ;
+
+  if (getObjSense() > 0)
+    return (objval < objlim) ;
+  else
+    return (objval > objlim) ; }
 
 
 /*!
@@ -3871,7 +4044,10 @@ void ODSI::branchAndBound ()
 
   The \link OsiDylpSolverInterface::getWarmStart ODSI::getWarmStart \endlink
   routine simply copies the information into an OsiDylpWarmStartBasis object.
-  This can be done after any call to a solver routine.
+  This can be done after any call to a solver routine. getWarmStart will return
+  an empty warm start object if no solution exists; this is occasionally useful
+  in contexts where a basis will be generated from scratch or where it's
+  necessary to establish the type of warm start object for later use.
 
   The \link OsiDylpSolverInterface::setWarmStart ODSI::setWarmStart \endlink
   routine rebuilds the required basis and status information from the
@@ -3881,45 +4057,43 @@ void ODSI::branchAndBound ()
 
   The convention in OSI is that warm start objects derive from the base class
   CoinWarmStart. If you're using only getWarmStart and setWarmStart, that's
-  really all you need to know.
-  
-  The dylp warm start object OsiDylpWarmStartBasis derives from
-  CoinWarmStartBasis, which in turn derives from CoinWarmStart. A new derived
-  class is needed because dylp does not always work with the full constraint
-  system. This means the warm start object must specify the active
-  constraints.  For ease of use, constraint status is handled just like
-  variable status. There's an array, one entry per constraint, coded as
-  CoinWarmStartBasis::Status.  Inactive constraints have status isFree, active
-  constraints use atLowerBound.
+  really all you need to know. For additional details, see the documentation
+  for the OsiDylpWarmStartBasis class.
 */
 //@{
 
 /*!
   This routine constructs an OsiDylpWarmStartBasis structure from the basis
-  and status information returned as a matter of course by the dylp solver.
+  and status information returned by the dylp solver. If no valid solution
+  exists, an empty warm start object is returned.
 */
 
 CoinWarmStart* ODSI::getWarmStart () const
 
 /*
-  This routine constructs a OsiDylpWarmStartBasis structure from the basis
+  This routine constructs an OsiDylpWarmStartBasis structure from the basis
   returned by dylp.
 
   Dylp takes the atttitude that in so far as it is possible, logicals should
   be invisible outside the solver. The status of nonbasic logicals is not
-  reported, nor does dylp expect to receive it.
+  reported, nor does dylp expect to receive it. For completeness, however,
+  getWarmStart will synthesize status information for nonbasic logicals.
 */
 
 { int i,j,k ;
   flags statj ;
 
-  if (!lpprob) return (0) ;
 /*
-  Create and size an OsiDylpWarmStartBasis object. setSize initialises all
-  status entries to isFree. Then grab pointers to the status vectors and the
-  dylp basis vector.
+  Create an empty ODWSB object. If no solution exists, we can return
+  immediately.
 */
   OsiDylpWarmStartBasis *wsb = new OsiDylpWarmStartBasis ;
+  assert(wsb) ;
+  if (!lpprob) return (wsb) ;
+/*
+  Size the ODWSB object. setSize initialises all status entries to isFree.
+  Then grab pointers to the status vectors and the dylp basis vector.
+*/
   wsb->setSize(consys->varcnt,consys->concnt) ;
 
   char *const strucStatus = wsb->getStructuralStatus() ;
@@ -3945,6 +4119,23 @@ CoinWarmStart* ODSI::getWarmStart () const
     else
     { j = inv(j) ;
       setStatus(strucStatus,j,CoinWarmStartBasis::basic) ; } }
+/*
+  Next, scan the conStatus array. For each inactive (loose => isFree)
+  constraint, indicate that the logical is basic. For active (tight =>
+  atLowerBound) constraints, if the corresponding logical isn't already
+  marked as basic, use the value of the dual to select one of atLowerBound
+  (negative dual) or (for range constraints) atUpperBound (positive dual).
+*/
+  const double *y = getRowPrice() ;
+  for (i = 0 ; i < consys->concnt ; i++)
+  { if (getStatus(conStatus,i) == CoinWarmStartBasis::isFree)
+    { setStatus(artifStatus,i,CoinWarmStartBasis::basic) ; }
+    else
+    if (getStatus(artifStatus,i) == CoinWarmStartBasis::isFree)
+    { if (y[i] > 0)
+      { setStatus(artifStatus,i,CoinWarmStartBasis::atUpperBound) ; }
+      else
+      { setStatus(artifStatus,i,CoinWarmStartBasis::atLowerBound) ; } } }
 /*
   Now scan the status vector and record the status of nonbasic structural
   variables. Some information is lost here --- CoinWarmStartBasis::Status
@@ -3973,9 +4164,10 @@ CoinWarmStart* ODSI::getWarmStart () const
 
 /*!
   This routine installs the basis snapshot from an OsiDylpWarmStartBasis
-  structure and sets ODSI options so that dylp will attempt a warm start on
+  object and sets ODSI options so that dylp will attempt a warm start on
   the next call to
   \link OsiDylpSolverInterface::resolve ODSI::resolve \endlink.
+  An empty warm start object will not be accepted and will return false.
 */
 
 bool ODSI::setWarmStart (const CoinWarmStart *ws)
@@ -3984,32 +4176,41 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
   CoinWarmStartBasis::Status osi_stati ;
 
 /*
-  Use a dynamic cast to make sure we have an OsiDylpWarmStartBasis.
+  Use a dynamic cast to make sure we have an OsiDylpWarmStartBasis. Then check
+  for an empty basis.
 */
   const OsiDylpWarmStartBasis *wsb =
 			dynamic_cast<const OsiDylpWarmStartBasis *>(ws) ;
-  if (!wsb) return (false) ;
-
+  if (!wsb)
+  { handler_->message(ODSI_NOTODWSB,messages_) ;
+    return (false) ; }
+  int varcnt = wsb->getNumStructural() ;
+  int concnt = wsb->getNumArtificial() ;
+  if (!(varcnt > 0 && concnt > 0))
+  { handler_->message(ODSI_EMPTYODWSB,messages_) ;
+    return (false) ; }
 /*
   Do we have an lpprob structure yet? If not, construct one.
 */
+  assert(consys && consys->vlb && consys->vub) ;
   if (!lpprob) construct_lpprob() ;
-
-  assert(resolveOptions && consys && consys->vlb && consys->vub) ;
+  assert(resolveOptions) ;
 
 /*
   Extract the info in the warm start object --- size and status vectors.  The
   number of variables and constraints in the warm start object should match
-  the full size of the constraint system.
+  the full size of the constraint system. Note that getWarmStart can create
+  an empty ODWSB object (see comments with getWarmStart).
 
   Create a dylp basis_struct and status vector of sufficient size to hold the
   information in the OsiDylpWarmStartBasis. This space may well be freed or
   realloc'd by dylp, so use standard calloc to acquire it.  We'll only use as
   much of the basis as is needed for the active constraints.
 */
-  int varcnt = wsb->getNumStructural() ;
-  int concnt = wsb->getNumArtificial() ;
-  assert(varcnt == getNumCols() && concnt == getNumRows()) ;
+  if (!(varcnt == getNumCols() && concnt == getNumRows()))
+  { handler_->message(ODSI_ODWSBBADSIZE,messages_) <<
+      concnt << varcnt << getNumRows() << getNumCols() ;
+    return (false) ; }
 
   const char *const strucStatus = wsb->getStructuralStatus() ;
   const char *const artifStatus = wsb->getArtificialStatus() ;
@@ -4170,7 +4371,7 @@ void ODSI::resolve ()
   lp_retval = dylp_dolp(lpprob,resolveOptions,tolerances,statistics) ;  
   if (flgon(lpprob->ctlopts,lpctlDYVALID))
   { dylp_owner = this ;
-    _objval = obj_sense*lpprob->obj ; }
+    _objval = getObjSense()*lpprob->obj ; }
 
   destruct_col_cache() ;
   destruct_row_cache() ; }
@@ -4182,28 +4383,33 @@ void ODSI::resolve ()
 /*! \defgroup HotStartMethods Hot Start Methods
     \brief Methods for solving an LP from a hot start.
 
-  In the absence of instructions to the contrary, dylp will always go for a
-  hot start. The obligation of the caller is simply to insure that dylp's
-  internal static data structures are intact from the previous call to the
-  solver. In the context of OSI, this means no intervening calls to the
-  solver by any ODSI object.
+  The restrictions on problem modification outlined in the OSI documentation
+  are somewhat relaxed in dylp: you can change upper or lower bounds on
+  variables, upper or lower bounds on constraints, or objective function
+  coefficients. No changes to the coefficient matrix are allowed --- for
+  this, you need to drop back to a warm start. Philosophically, the guiding
+  principle is to avoid the need to refactor the basis before resuming
+  pivoting.
 
-  The restrictions outlined in the OSI documentation are somewhat relaxed in
-  dylp: you can change upper or lower bounds on variables, upper or lower
-  bounds on constraints, or objective function coefficients. No changes to
-  the coefficient matrix are allowed --- for this, you need to drop back to
-  a warm start.
+  To dylp, a hot start is simply a resumption of pivoting under the
+  assumption that the data structures left from the previous call are
+  unchanged, modulo the modifications permitted in the previous paragraph.
+  There is no native hot start object.  This is not sufficient to provide the
+  semantics required of markHotStart() and solveFromHotStart(). In
+  particular, if several ODSI objects are sharing the dylp solver, they will
+  interfere with one another.
 
-  There is, however, no hot start object, and the semantics of a hot start
-  for dylp are probably not quite as you would expect (or as implied by the
-  OSI specification). dylp simply assumes that its data structures are intact
-  and resumes pivoting after making any necessary adjustments for allowable
-  changes.  If you want the ability to repeatedly reset the solver to a
-  particular basis, you need to use a warm start.
+  To hide this behaviour from the client, ODSI provides a fall back method
+  along the lines described in the OSI documentation. markHotStart() captures
+  a warm start object. If a hot start is possible, according to dylp's notion
+  of hot start, this object will not be used.  If solveFromHotStart()
+  determines that intervening use of the solver by some other ODSI object has
+  made it impossible to perform a hot start for this object, it will
+  automatically fall back to a warm start using the object captured by
+  markHotStart().
 
-  Philosophically, a hot start tries to avoid having to refactor the basis
-  as part of the restart. Resetting to a particular basis or changing the
-  coefficient matrix would force a refactor before pivoting could resume.
+  unmarkHotStart() simply deletes the warm start object captured by
+  markHotStart().
 */
 //@{
 
@@ -4215,77 +4421,149 @@ void ODSI::resolve ()
 */
 
 inline void ODSI::markHotStart ()
+{ 
 /*
-  We should check that dylp has valid data structures, but there's no
-  provision to return failure ... Otherwise, all we do is turn off the
-  forcecold and forcewarm options.
+  If we're attempting this, then it should be true that this OSI object
+  owns the solver, has successfully solved an lp, and has left dylp's data
+  structures intact.
 */
-
-{ assert(lpprob && resolveOptions) ;
-
+  assert(dylp_owner == this) ;
+  assert(lpprob && resolveOptions) ;
   assert(flgon(lpprob->ctlopts,lpctlDYVALID)) ;
-
+/*
+  Turn off the forcecold and forcewarm options, allowing a hot start.
+*/
   resolveOptions->forcecold = false ;
   resolveOptions->forcewarm = false ;
+/*
+  Capture a warm start object, in case some other ODSI object uses the solver
+  between hot starts by this ODSI object.
+*/
+  if (hotstart_fallback) delete hotstart_fallback ;
+  hotstart_fallback = getWarmStart() ;
 
   return ; }
 
 /*!
-  This routine simply calls the solver. For dylp's model of hot start, that's
-  all that's required.
+  Usually, this routine simply calls the solver. For dylp's model of hot
+  start, that's all that's required. If some other ODSI object has grabbed
+  the solver in the meantime, fall back to a warm start using the object
+  captured by markHotStart().
 */
 
 void ODSI::solveFromHotStart ()
-/*
-  This routine simply calls the solver, after making sure that the forcecold
-  and forcewarm options are turned off. If we're going for a hot start, the
-  basis should be ready.
 
+{ 
+/*
+  If some other ODSI object has used the solver, then fall back to a warm
+  start. Throw an error if there's no warm start object to fall back on.
+  (The throw message lies a little, for the benefit of users who haven't
+  checked the details of the code.)
+*/
+
+  if (dylp_owner != this)
+  { if (hotstart_fallback && setWarmStart(hotstart_fallback))
+    { resolve() ; }
+    else
+    { throw CoinError("Hot start failed --- invalid/missing hot start object.",
+		      "solveFromHotStart","OsiDylpSolverInterface") ; } }
+/*
+  If no other ODSI object has used the solver, all we need to do is
+  make sure forcecold and forcewarm are off. The basis should be ready.
   Note that dylp does need to know what's changed: any of bounds, rhs &
-  rhslow, or objective. The various routines that make these changes should
+  rhslow, or objective. The various routines that make these changes
   set the flags.
 */
+  else
+  { int tmp_iterlim = -1 ;
+    int hotlim ;
 
-{ int tmp_iterlim = -1 ;
-  int hotlim ;
+    assert(lpprob && lpprob->basis && lpprob->status && basis_ready &&
+	   consys && resolveOptions && tolerances && statistics) ;
 
-  assert(lpprob && lpprob->basis && lpprob->status && basis_ready &&
-	 consys && resolveOptions && tolerances && statistics) ;
-
-  if (isactive(local_logchn)) logchn = local_logchn ;
-  gtxecho = resolve_gtxecho ;
+    if (isactive(local_logchn)) logchn = local_logchn ;
+    gtxecho = resolve_gtxecho ;
 /*
-  This is overly cautious, but the only practical solution. dylp actually
-  expects the user to set the proper phase after tweaking the problem. That's
-  not practical in ODSI --- exposing this to the client would violate the
-  generic nature of the interface.
+  Setting the phase to dyPRIMAL1 is overly cautious, but the only practical
+  solution (dylp expects the client to set this, but exposing this would
+  violates the generic OSI interface). In any event, dylp will sort it out.
 */
-  lpprob->phase = dyPRIMAL1 ;
-  resolveOptions->forcecold = false ;
-  resolveOptions->forcewarm = false ;
-  getIntParam(OsiMaxNumIterationHotStart,hotlim) ;
-  if (hotlim > 0)
-  { tmp_iterlim = resolveOptions->iterlim ;
-    resolveOptions->iterlim = (hotlim/3 > 0)?hotlim/3:1 ; }
+    lpprob->phase = dyPRIMAL1 ;
+    resolveOptions->forcecold = false ;
+    resolveOptions->forcewarm = false ;
+    getIntParam(OsiMaxNumIterationHotStart,hotlim) ;
+    if (hotlim > 0)
+    { tmp_iterlim = resolveOptions->iterlim ;
+      resolveOptions->iterlim = (hotlim/3 > 0)?hotlim/3:1 ; }
 
-  lp_retval = dylp_dolp(lpprob,resolveOptions,tolerances,statistics) ;
-  _objval = obj_sense*lpprob->obj ;
+    lp_retval = dylp_dolp(lpprob,resolveOptions,tolerances,statistics) ;
+    _objval = getObjSense()*lpprob->obj ;
 
-  if (tmp_iterlim > 0) resolveOptions->iterlim = tmp_iterlim ;
+    if (tmp_iterlim > 0) resolveOptions->iterlim = tmp_iterlim ;
 
-  destruct_col_cache() ;
-  destruct_row_cache() ; }
+    destruct_col_cache() ;
+    destruct_row_cache() ; }
+
+  return ; }
 
 
 inline void ODSI::unmarkHotStart ()
 /*
-  I can't think of anything to do here. There's no point in forcing one of
-  the other start modes.
+  Nothing to do here but to destroy the fall back warm start object.
 */
 
-{ return ; }
+{ if (hotstart_fallback)
+  { delete hotstart_fallback ;
+    hotstart_fallback = 0 ; }
+
+  return ; }
 
 //@} // HotStartMethods
+
+
+
+/*! \defgroup DebugMethods Debugging Methods */
+//@{
+
+/*!
+  Because dylp retains information in the solver, the current solver state
+  may need to be preserved around the activation of the row cut debugger.
+  The problem arises because the row cut debugger clones the solver object
+  and uses it to solve an lp; this destroys the retained state and transfers
+  ownership of the solver to the clone. To preserve the solver state around
+  debugger activation, we need to create a warm start object and then restore
+  it after activating the debugger.
+
+  activateRowCutDebugger tries to make an informed guess as to whether to
+  preserve state. The condition is that some object owns the solver (not
+  necessarily this object) and that the lpprob for that object exists and
+  indicates preserved state in the solver. This is conservative --- it's more
+  likely that the previous owner is no longer interested but was never
+  detached.
+
+  It's also conservative in the sense that unless the row cut debugger
+  recognizes the model, it won't activate.
+*/
+
+void ODSI::activateRowCutDebugger (const char * modelName)
+
+{ delete rowCutDebugger_ ;
+
+  if (dylp_owner && dylp_owner->lpprob &&
+      flgon(dylp_owner->lpprob->ctlopts,lpctlDYVALID))
+  { CoinWarmStart *ws = dylp_owner->getWarmStart() ;
+    ODSI *prev_owner = dylp_owner ;
+    prev_owner->detach_dylp() ;
+    rowCutDebugger_ = new OsiRowCutDebugger(*this,modelName) ;
+    prev_owner->setWarmStart(ws) ;
+    prev_owner->resolve() ;
+    delete ws ; }
+  else
+  { rowCutDebugger_ = new OsiRowCutDebugger(*this,modelName) ; }
+
+  return ; }
+
+//@} // DebugMethods
 
 
 

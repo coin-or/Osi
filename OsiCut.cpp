@@ -12,7 +12,8 @@
 //-------------------------------------------------------------------
 OsiCut::OsiCut ()
 :
-effectiveness_(0.)
+  effectiveness_(0.),
+  globallyValid_(false)
 //timesUsed_(0),
 //timesTested_(0)
 {
@@ -24,7 +25,8 @@ effectiveness_(0.)
 OsiCut::OsiCut (
                   const OsiCut & source)
 :
-effectiveness_(source.effectiveness_)
+  effectiveness_(source.effectiveness_),
+  globallyValid_(source.globallyValid_)
 //timesUsed_(source.timesUsed_),
 //timesTested_(source.timesTested_)
 {  
@@ -55,6 +57,7 @@ OsiCut::operator=(const OsiCut& rhs)
 {
   if (this != &rhs) {
     effectiveness_=rhs.effectiveness_;
+    globallyValid_ = rhs.globallyValid_;
     //timesUsed_=rhs.timesUsed_;
     //timesTested_=rhs.timesTested_;
   }

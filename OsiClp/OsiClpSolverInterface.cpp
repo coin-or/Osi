@@ -276,6 +276,18 @@ void OsiClpSolverInterface::resolve()
 	// switch algorithm
 	solver.primal();
 	lastAlgorithm_=1; // primal
+	if (solver.status()==3&&
+	    solver.numberIterations()<solver.maximumIterations()) {
+	  printf("in trouble - try all slack\n");
+	  CoinWarmStartBasis allSlack;
+	  setBasis(allSlack,&solver);
+	  solver.primal();
+	  if (solver.status()==3&&
+	      solver.numberIterations()<solver.maximumIterations()) {
+	    printf("Real real trouble - treat as infeasible\n");
+	    solver.setProblemStatus(1);
+	  }
+	}
       }
     } else {
       //printf("doing primal\n");
@@ -1142,6 +1154,7 @@ integerInformation_(NULL)
 	   numberColumns*sizeof(char));
   }
   fillParamMaps();
+  messageHandler()->setLogLevel(rhs.messageHandler()->logLevel());
 }
 
 // Borrow constructor - only delete one copy
@@ -1224,6 +1237,7 @@ OsiClpSolverInterface::operator=(const OsiClpSolverInterface& rhs)
     intParamMap_ = rhs.intParamMap_;
     dblParamMap_ = rhs.dblParamMap_;
     strParamMap_ = rhs.strParamMap_;
+    messageHandler()->setLogLevel(rhs.messageHandler()->logLevel());
   }
   return *this;
 }

@@ -9,14 +9,14 @@
 #ifdef _MSC_VER
 
 /* Turn off compiler warning about long names */
-#  pragma warning(disable:4786)
+# pragma warning(disable:4786)
 
 /*
   MS C++ doesn't want to cope with this set of templates. Since they're just
   paranoid checks, it's easiest to simply disable them.
 */
 
-#  define assert_same
+# define assert_same
 
 /*
   In general, templates do not seem to be a strong point for MS C++. To get
@@ -28,6 +28,22 @@
 */
 
 #endif
+
+/*
+  Right now, there's no way to ask (or set) the value that COIN uses for
+  infinity. Portions of COIN code depend on having a finite infinity ---
+  specifically, DBL_MAX --- and this is hardwired into the code. This
+  definition tries to anticipate the future, when one can inquire.
+
+  Dylp can work with both finite infinity (DBL_MAX) and infinite infinity (IEEE
+  infinity).
+  
+  The value of ODSI::odsiInfinity is initialised to CoinInfinity, and dylp
+  is told to use odsiInfinity as its internal value for infinity.
+*/
+
+#include<cfloat>
+const double CoinInfinity = DBL_MAX ;
 
 /* Cut name lengths for readability. */
 
@@ -51,7 +67,7 @@
   OsiDylpSolverInterface object in OsiDylpSolverInterface.hpp, implementors
   should be aware of the following:
 
-  <strong>Problem Structures</strong>
+  <strong>Problem Structures</strong>:
   Within dylp, a constraint system is held in a row- and column-linked
   structure called a \c consys_struct. The lp problem (constraint system plus
   additional problem information --- primal and dual variables, basis, status,
@@ -63,20 +79,36 @@
   return the results.
   The structures OsiDylpSolverInterface::initialSolveOptions,
   OsiDylpSolverInterface::resolveOptions, OsiDylpSolverInterface::tolerances,
-  and OsiDylpSolverInterface::statistics respectively hold control parameters,
-  tolerances, and collect statistics.
+  and OsiDylpSolverInterface::statistics respectively hold control parameters
+  tolerances, and statistics collected as the problem is solved.
 
   <strong>Options and Tolerances</strong>:
-  These structures (#initialSolveOptions, #resolveOptions, #tolerances,
-  #statistics) are created and initialised by the ODSI constructor
-  so they're valid from the moment the ODSI object is created. Option and
-  tolerance settings are preserved when a new problem is loaded or assigned.
-  The reset() method will reset them to their defaults.
+  The \c initialSolveOptions, \c resolveOptions, and \c tolerances structures
+  are created and initialised by the ODSI constructor, so they're valid from
+  the moment the ODSI object is created. Option and tolerance settings are
+  preserved when a new problem is loaded or assigned.  The
+  OsiDylpSolverInterface::reset() method will reset them to their defaults.
 
   When a call is made to the solver, a local copy of the options and
-  tolerances is made, then tweaked with a call to dy_checkdefaults. This
-  partially subverts attempts to set tolerances using dylp_controlfile() or
-  any of the various ODSI parameter set methods.
+  tolerances is made, then tweaked with a call to \c dy_checkdefaults. This
+  partially subverts attempts to set tolerances using
+  OsiDylpSolverInterface::dylp_controlfile() or any of the various ODSI
+  parameter set methods.
+
+  <strong>Statistics Collection</strong>:
+  Dylp can collect detailed statistics on its performance. In order to do so,
+  both OsiDylpSolverInterface and the dylp library must be built with the
+  compile-time symbol \c DYLP_STATISTICS defined.  The dylp library makefile
+  is set up to define \c DYLP_STATISTICS for the debug and fast builds only;
+  check there if, for example, you want to collect statistics in an optimized
+  build.
+
+  Statistics are collected on a per-call basis only; there is no facility to
+  accumulate statistics over multiple calls to dylp. The statistics structure
+  must also be sized to the problem. For these reasons, its creation is
+  delayed until the actual call to the solver. Any existing statistics
+  structure is deleted before the new one is created. Statistics structures are
+  not copied at assignment or cloning.
 
   <strong>Constraint System Existence</strong>:
   An invariant in the interface is that if
@@ -87,7 +119,7 @@
   and upper and lower bounds (vub, vlb), and constraint type (ctyp) and
   right-hand side (rhs, rhslow).
 
-  <strong>LP Problem Existence</strong>
+  <strong>LP Problem Existence</strong>:
   The LP problem structure is not created until it's needed. A valid LP
   problem structure will exist after the first call to the solver
   (OsiDylpSolverInterface::initialSolve) or after a warm start object
@@ -100,6 +132,11 @@
   to avoid repeated expensive conversions in the interface. All cache
   variables are prefixed with underscore (_col*, _row*, _matrix*).  In
   general, modifying the problem causes the cache to be invalidated.
+
+  Most cached values are <i>not</i> replicated when an ODSI is cloned or
+  assigned. The exceptions are #_col_x, #_row_price, and #_objval, which must
+  be copied because the functions #setColSolution() and #setRowPrice() use
+  them directly to hold the values specified by the client.
 
   <strong>Index Base</strong>:
   OsiSolverInterface indexes variables and constraints from 0 (the standard
@@ -123,9 +160,9 @@
   given to the solver.  Dylp expects that any grooming of the constraint
   system will be done before it's called, and furthermore expects that this
   grooming will include conversion of >= constraints to <= constraints.  The
-  solution here is to do this grooming in a wrapper, dylp.c:dylp_dolp.
-  dylp_dolp only implements the conversion from >= to <=, which is
-  reversible. dylp can tolerate empty constraints.  dylp_dolp also embodies a
+  solution here is to do this grooming in a wrapper, do_lp.
+  do_lp only implements the conversion from >= to <=, which is
+  reversible. dylp can tolerate empty constraints.  do_lp also embodies a
   rudimentary strategy that attempts to recover from numerical inaccuracy by
   refactoring the basis more often (on the premise that this will reduce
   numerical inaccuracy in calculations involving the basis inverse).
@@ -145,6 +182,7 @@ namespace {
 #include "OsiDylpSolverInterface.hpp"
 #include "OsiDylpMessages.hpp"
 #include "OsiDylpWarmStartBasis.hpp"
+#include "OsiPresolve.hpp"
 
 using std::string ;
 using std::vector ;
@@ -154,18 +192,6 @@ extern "C"
 {
 
 #include "bonsai.h"
-
-/*
-  Dylp uses HUGE_VAL for infinity; generally this seems to resolve to IEEE
-  infinity but if it doesn't, you'll need to have a look at vector.h for the
-  appropriate compile-time symbol definition. A macro seems to be necessary
-  here because I can't figure out how to call ODSI.getInfinity() from inside
-  a static member function without explicitly passing in the value of `this'
-  from the context of the call. That seems like overkill.
-*/
-
-#define DYLP_INFINITY HUGE_VAL
-
 
 #ifndef ERRMSGDIR
 # define ERRMSGDIR "."
@@ -187,6 +213,7 @@ extern char *stralloc(const char *str) ;
 extern void strfree(const char *str) ;
 
 }
+
 
 /*!
   \defgroup DylpIO dylp i/o control variables
@@ -265,6 +292,11 @@ bool cmdecho = false,
     Initialisation of the basis data structures is delayed until the user
     actually attempts to solve an lp.
 */
+/*! \var bool OsiDylpSolverInterface::recursive
+    \brief Indicates a recursive invocation is active.
+
+    Used to limit recursion during presolve.
+*/
 /*! \var OsiDylpSolverInterface *OsiDylpSolverInterface::dylp_owner
     \brief ODSI instance controlling dylp
 
@@ -275,6 +307,7 @@ bool cmdecho = false,
 
 int ODSI::reference_count = 0 ;
 bool ODSI::basis_ready = false ;
+bool ODSI::recursive = false ;
 ODSI *ODSI::dylp_owner = 0 ;
 
 //@}
@@ -627,26 +660,15 @@ inline void ODSI::destruct_cache ()
 */
 //@{
 
-/*! \brief Determine dylp constraint type from constraint bounds.
-
-  Unfortunately, the world outside ODSI/dylp has an annoying tendency to use
-  DBL_MAX for infinity, instead of true IEEE infinity. DBL_MAX looks like a
-  (large but) finite value when compared to IEEE infinity, and that'll result
-  in bound_to_type concluding it's looking at a range constraint. Hence the
-  check against DBL_MAX here, instead of DYLP_INFINITY. This is the central
-  point to catch this.
-*/
+/*! \brief Determine dylp constraint type from constraint bounds. */
 
 inline contyp_enum ODSI::bound_to_type (double lower, double upper)
 
 { 
 
-# include <cfloat>
-  double inf = DBL_MAX ;
-
   if (upper == lower) return contypEQ ;
-  bool finite_low = (lower > -inf) ;
-  bool finite_up = (upper < inf) ;
+  bool finite_low = (lower > -odsiInfinity) ;
+  bool finite_up = (upper < odsiInfinity) ;
   if (finite_low && finite_up) return contypRNG ;
   if (finite_low) return contypGE ;
   if (finite_up) return contypLE ;
@@ -827,17 +849,22 @@ void ODSI::add_row (const CoinPackedVectorBase &coin_rowi, char clazzi,
   destruct_cache() ; }
 
 
-/*! \brief Establish a worst-case primal solution.
+/*! \brief Establish a pessimistic primal solution.
 
-  This routine sets up a `worst case' primal solution, so that the objective
-  reported before invoking the solver will be a worst case bound. Each primal
-  variable is set to the bound which gives the worst objective value.
+  This routine sets up a pessimistic basic primal solution. The logicals are
+  assigned to the basis, and the architecturals are set to the (finite) bound
+  that produces the worst objective function value. We can't claim this is
+  a worst-case bound on the objective because we're restricted to choosing a
+  finite bound for the nonbasic variables, if one exists.
+
+  Feasibility (with respect to the architectural constraints) is not even on
+  the radar.
 
   The interface design guarantees that if a consys_struct exists, then
   the objective and bounds vectors are already attached to it.
 */
 
-void ODSI::worst_case_primal ()
+void ODSI::pessimal_primal ()
 
 { 
 
@@ -847,25 +874,66 @@ void ODSI::worst_case_primal ()
   int n = getNumCols() ;
   if (n == 0) return ;
   assert(consys && consys->obj && consys->vub && consys->vlb) ;
+  int m = getNumRows() ;
 
   double *obj = consys->obj ;
   double *vlb = consys->vlb ;
   double *vub = consys->vub ;
+
+  double lbj,ubj,xj ;
+  CoinWarmStartBasis::Status statj ;
 /*
-  We have columns. Allocate a cached primal solution vector, if it doesn't
-  already exist.
+  We have columns. Replace or allocate the cached primal solution vector.
 */
-  if (!_col_x) _col_x = new double[n] ;
+  if (_col_x) delete[] _col_x ;
+  _col_x = new double[n] ;
+/*
+  Create a basis of the appropriate size.
+*/
+  OsiDylpWarmStartBasis *pessbasis =
+    dynamic_cast<OsiDylpWarmStartBasis *>(getEmptyWarmStart()) ;
+  pessbasis->setSize(n,m) ;
 /*
   Walk the objective vector, taking values for variables from the appropriate
   bounds vector. The objective attached to consys is always a minimisation
   objective.
 */
   for (int j = 1 ; j <= n ; j++)
-  { if (obj[j] > 0)
-    { _col_x[inv(j)] = vub[j] ; }
+  { lbj = vlb[j] ;
+    ubj = vub[j] ;
+    if (lbj > -odsiInfinity && ubj < odsiInfinity)
+    { if (obj[j] > 0)
+      { xj = ubj ;
+	statj = CoinWarmStartBasis::atUpperBound ; }
+      else
+      { xj = lbj ;
+	statj = CoinWarmStartBasis::atLowerBound ; } }
     else
-    { _col_x[inv(j)] = vlb[j] ; } }
+    if (lbj > -odsiInfinity)
+    { xj = lbj ;
+      statj = CoinWarmStartBasis::atLowerBound ; }
+    else
+    if (ubj < odsiInfinity)
+    { xj = ubj ;
+      statj = CoinWarmStartBasis::atLowerBound ; }
+    else
+    { xj = 0 ;
+      statj = CoinWarmStartBasis::isFree ; }
+    _col_x[inv(j)] = xj ;
+    pessbasis->setStructStatus(inv(j),statj) ; }
+/*
+  Set the logicals (aka artificials) to be basic and mark all constraints as
+  active.
+*/
+  for (int i = 1 ; i <= m ; i++)
+  { pessbasis->setArtifStatus(inv(i),CoinWarmStartBasis::basic) ;
+    pessbasis->setConStatus(inv(i),CoinWarmStartBasis::atLowerBound) ; }
+/*
+  Set pessbasis to be the active basis and return.
+*/
+  delete activeBasis ;
+  activeIsModified = true ;
+  activeBasis = pessbasis ;
   
   return ; }
 
@@ -931,8 +999,7 @@ inline void ODSI::construct_lpprob ()
   return ; }
 
 
-/*! \brief Construct and initialize default options, tolerances, and
-	   statistics structures
+/*! \brief Construct and initialize default options and tolerances.
 */
 
 inline void ODSI::construct_options ()
@@ -947,6 +1014,7 @@ inline void ODSI::construct_options ()
   delete tolerances ;
   tolerances = new lptols_struct ;
   dy_defaults(&initialSolveOptions,&tolerances) ;
+  tolerances->inf = odsiInfinity ;
   delete resolveOptions ;
   CLONE(lpopts_struct,initialSolveOptions,resolveOptions);
   dy_setprintopts(0,initialSolveOptions) ;
@@ -963,13 +1031,8 @@ inline void ODSI::construct_options ()
   initialSolveOptions->fullsys = true ;
   resolveOptions->forcecold = false ;
   resolveOptions->fullsys = false ;
-/*
-  Acquire and clear a statistics structure.
-*/
-  delete statistics ;
-  statistics = new lpstats_struct ;
-  memset(statistics,0,sizeof(lpstats_struct)) ;
-}
+
+  return ; }
 
 /*! \brief Construct an empty constraint system of the specified size.
 
@@ -1000,7 +1063,7 @@ void ODSI::construct_consys (int cols, int rows)
   The first parameter to consys is the constraint system name, which is
   never conveniently available in the OSI frame.
 */
-  consys = consys_create(0,parts,opts,rows,cols) ;
+  consys = consys_create(0,parts,opts,rows,cols,odsiInfinity) ;
   assert(consys) ;
 
   return ; }
@@ -1016,7 +1079,7 @@ void ODSI::dylp_ioinit ()
 
 { if (reference_count > 1) return ;
 
-  std::string errfile = std::string(ERRMSGDIR)+std::string("/bonsaierrs.txt") ;
+  string errfile = string(ERRMSGDIR)+string("/bonsaierrs.txt") ;
 # ifndef NDEBUG
   errinit(const_cast<char *>(errfile.c_str()),0,true) ;
 # else
@@ -1071,8 +1134,7 @@ void ODSI::load_problem (const CoinMpsIO &mps)
 
   gen_rowparms(m,rhs,rhslow,ctyp,sense,rhsin,range) ;
 /*
-  Free the existing problem structures, preserving options and tolerances
-  and resetting statistics.
+  Free the existing problem structures, preserving options and tolerances.
 */
   destruct_problem(true) ;
 /*
@@ -1147,11 +1209,9 @@ void ODSI::load_problem (const CoinMpsIO &mps)
   assert(matrix2->isEquivalent(*getMatrixByCol())) ;
 
 /*
-  Finish up. Establish a primal solution and an objective. The primal solution
-  is `worst-case', in the sense that it's constructed by setting each primal
-  variable to the bound that maximises the objective.
+  Construct a pessimal solution and we're done.
 */
-  worst_case_primal() ;
+  pessimal_primal() ;
   calc_objval() ;
 
   return ; }
@@ -1181,8 +1241,7 @@ void ODSI::load_problem (const CoinPackedMatrix& matrix,
 
 { 
 /*
-  Free the existing problem structures, preserving options and tolerances
-  and resetting statistics.
+  Free the existing problem structures, preserving options and tolerances.
 */
   destruct_problem(true) ;
 /*
@@ -1225,20 +1284,17 @@ void ODSI::load_problem (const CoinPackedMatrix& matrix,
     packed_vector(coin_col,n,colj) ;
     double objj = obj?obj[j]:0 ;
     double vlbj = col_lower?col_lower[j]:0 ;
-    double vubj = col_upper?col_upper[j]:DYLP_INFINITY ;
+    double vubj = col_upper?col_upper[j]:odsiInfinity ;
     colj->nme = 0 ;
     bool r = consys_addcol_pk(consys,vartypCON,colj,objj,vlbj,vubj) ;
     assert(r) ; }
 
   pkvec_free(colj) ;
   assert(matrix2->isEquivalent(*getMatrixByCol())) ;
-
 /*
-  Finish up. Establish a primal solution and an objective. The primal solution
-  is `worst-case', in the sense that it's constructed by setting each primal
-  variable to the bound that maximises the objective.
+  Construct a pessimal solution and we're done.
 */
-  worst_case_primal() ;
+  pessimal_primal() ;
   calc_objval() ;
 
   return ; }
@@ -1277,8 +1333,7 @@ void ODSI::load_problem (const int colcnt, const int rowcnt,
 
 { 
 /*
-  Free the existing problem structures, preserving options and tolerances
-  and resetting statistics.
+  Free the existing problem structures, preserving options and tolerances.
 */
   destruct_problem(true) ;
 /*
@@ -1320,7 +1375,7 @@ void ODSI::load_problem (const int colcnt, const int rowcnt,
   
     double objj = obj?obj[j]:0 ;
     double vlbj = col_lower?col_lower[j]:0 ;
-    double vubj = col_upper?col_upper[j]:DYLP_INFINITY ;
+    double vubj = col_upper?col_upper[j]:odsiInfinity ;
     colj->nme = 0 ;
     bool r = consys_addcol_pk(consys,vartypCON,colj,objj,vlbj,vubj) ;
     assert(r) ;
@@ -1328,11 +1383,11 @@ void ODSI::load_problem (const int colcnt, const int rowcnt,
 
   if (colj) pkvec_free(colj) ;
 /*
-  Finish up. Establish a primal solution and an objective.
+  Construct a pessimal solution and we're done.
 */
-  worst_case_primal() ;
+  pessimal_primal() ;
   calc_objval() ;
-  
+
   return ; }
 
 
@@ -1348,12 +1403,11 @@ void ODSI::gen_rowparms (int rowcnt,
 			 double *rhs, double *rhslow, contyp_enum *ctyp,
 			 const double *rowlb, const double *rowub)
 
-{ double inf = DYLP_INFINITY ;
-  double rowlbi,rowubi ;
+{ double rowlbi,rowubi ;
 
   for (int i = 0 ; i < rowcnt ; i++)
-  { rowlbi = rowlb?rowlb[i]:-inf ;
-    rowubi = rowub?rowub[i]:inf ;
+  { rowlbi = rowlb?rowlb[i]:-odsiInfinity ;
+    rowubi = rowub?rowub[i]:odsiInfinity ;
     ctyp[i] = bound_to_type(rowlbi,rowubi) ;
 
     switch (ctyp[i])
@@ -1371,8 +1425,8 @@ void ODSI::gen_rowparms (int rowcnt,
 	rhslow[i] = rowlbi ;
 	break ; }
       case contypNB:
-      { rhs[i] = inf ;
-	rhslow[i] = -inf ;
+      { rhs[i] = odsiInfinity ;
+	rhslow[i] = -odsiInfinity ;
 	break ; }
       default:
       { assert(0) ; } } }
@@ -1460,11 +1514,13 @@ ODSI::OsiDylpSolverInterface ()
     lpprob(0),
     statistics(0),
 
+    local_outchn(IOID_NOSTRM),
     local_logchn(IOID_NOSTRM),
     initial_gtxecho(false),
     resolve_gtxecho(false),
     lp_retval(lpINV),
     obj_sense(1.0),
+    odsiInfinity(CoinInfinity),
 
     solvername("dylp"),
     mps_debug(0),
@@ -1508,23 +1564,29 @@ ODSI::OsiDylpSolverInterface ()
   if (reference_count == 1)
   { dylp_ioinit() ;
     CoinRelFltEq eq ;
-    assert(eq(DYLP_INFINITY, DYLP_INFINITY)) ; }
+    assert(eq(odsiInfinity, odsiInfinity)) ; }
   
   return ; }
 
 
 /*!
-  A true copy --- no data structures are shared with the original. Cached
-  information is also replicated.
+  A true copy --- no data structures are shared with the original. The
+  statistics structure and hot start information are not copied. The copy
+  does not inherit open files from the original. Cached information is
+  not replicated.
 */
 
 ODSI::OsiDylpSolverInterface (const OsiDylpSolverInterface& src)
 
   : OsiSolverInterface(src),
+    statistics(0),		// do not copy statistics
+    local_outchn(IOID_NOSTRM),  // do not copy open file descriptors
+    local_logchn(IOID_NOSTRM),
     initial_gtxecho(src.initial_gtxecho),
     resolve_gtxecho(src.resolve_gtxecho),
     lp_retval(src.lp_retval),
     obj_sense(src.obj_sense),
+    odsiInfinity(src.odsiInfinity),
 
     solvername(src.solvername),
     mps_debug(src.mps_debug),
@@ -1533,6 +1595,16 @@ ODSI::OsiDylpSolverInterface (const OsiDylpSolverInterface& src)
     activeIsModified(false),
   
     _objval(src._objval),
+    _col_x(0),
+    _col_obj(0),
+    _col_cbar(0),
+    _row_lhs(0),
+    _row_lower(0),
+    _row_price(0),
+    _row_range(0),
+    _row_rhs(0),
+    _row_sense(0),
+    _row_upper(0),
     _matrix_by_row(0),
     _matrix_by_col(0)
 
@@ -1549,38 +1621,16 @@ ODSI::OsiDylpSolverInterface (const OsiDylpSolverInterface& src)
 
   CLONE(lpopts_struct,src.initialSolveOptions,initialSolveOptions) ;
   CLONE(lpopts_struct,src.resolveOptions,resolveOptions) ;
-  CLONE(lpstats_struct,src.statistics,statistics) ;
   CLONE(lptols_struct,src.tolerances,tolerances) ;
-
-  if (src.local_logchn != IOID_NOSTRM)
-  { local_logchn = openfile(idtopath(src.local_logchn),
-			    const_cast<char *>("w")) ; }
-  else
-  { local_logchn = IOID_NOSTRM ; }
-  assert(local_logchn == src.local_logchn) ;
 
   if (src.activeBasis)
   { activeBasis = src.activeBasis->clone() ;
     activeIsModified = src.activeIsModified ; }
 
-  int col_count = src.getNumCols() ;
-  int row_count = src.getNumRows() ;
-
-  CLONE_VEC(double,src._col_x,_col_x,col_count) ;
-  CLONE_VEC(double,src._col_obj,_col_obj,col_count) ;
-  CLONE_VEC(double,src._col_cbar,_col_cbar,col_count) ;
-  CLONE_VEC(double,src._row_lhs,_row_lhs,row_count) ;
-  CLONE_VEC(double,src._row_lower,_row_lower,row_count) ;
-  CLONE_VEC(double,src._row_price,_row_price,row_count) ;
-  CLONE_VEC(double,src._row_range,_row_range,row_count) ;
-  CLONE_VEC(double,src._row_rhs,_row_rhs,row_count) ;
-  CLONE_VEC(char,src._row_sense,_row_sense,row_count) ;
-  CLONE_VEC(double,src._row_upper,_row_upper,row_count) ;
-
-  if (src._matrix_by_row) 
-    _matrix_by_row = new CoinPackedMatrix(*src._matrix_by_row) ;
-  if (src._matrix_by_col) 
-    _matrix_by_col = new CoinPackedMatrix(*src._matrix_by_col) ;
+  int n = getNumCols() ;
+  int m = getNumRows() ;
+  CLONE_VEC(double,src._col_x,_col_x,n) ;
+  CLONE_VEC(double,src._row_price,_row_price,m) ;
 
   COPY_VEC(void *,&src.info_[0],&info_[0],OsiLastHintParam) ;
 
@@ -1609,8 +1659,9 @@ inline OsiSolverInterface* ODSI::clone (bool copyData) const
 /*! Assignment operator.
 
   Much as for the copy constructor, except that we trash the contents of the
-  lhs object before we start. As with the copy constructor, hot start
-  information is not copied.
+  lhs object before we start. As with copy, statistics and hot start
+  information are not copied over to the assignment target, nor does it inherit
+  open files or terminal echo settings. Cached information is not replicated.
 */
 
 OsiDylpSolverInterface &ODSI::operator= (const OsiDylpSolverInterface &rhs)
@@ -1633,38 +1684,35 @@ OsiDylpSolverInterface &ODSI::operator= (const OsiDylpSolverInterface &rhs)
 
     CLONE(lpopts_struct,rhs.initialSolveOptions,initialSolveOptions) ;
     CLONE(lpopts_struct,rhs.resolveOptions,resolveOptions) ;
-    CLONE(lpstats_struct,rhs.statistics,statistics) ;
     CLONE(lptols_struct,rhs.tolerances,tolerances) ;
 
-    if (rhs.local_logchn != IOID_NOSTRM)
-    { local_logchn = openfile(idtopath(rhs.local_logchn),
-			      const_cast<char *>("w")) ; }
-    else
-    { local_logchn = IOID_NOSTRM ; }
-    assert(local_logchn == rhs.local_logchn) ;
+    lp_retval = rhs.lp_retval ;
+    obj_sense = rhs.obj_sense ;
+    odsiInfinity = rhs.odsiInfinity ;
+    mps_debug = rhs.mps_debug ;
 
     if (rhs.activeBasis)
     { activeBasis = rhs.activeBasis->clone() ;
       activeIsModified = rhs.activeIsModified ; }
 
-    int col_count = rhs.getNumCols() ;
-    int row_count = rhs.getNumRows() ;
+    _objval = rhs._objval ;
+    _col_x = 0 ;
+    _col_obj = 0 ;
+    _col_cbar = 0 ;
+    _row_lhs = 0 ;
+    _row_lower = 0 ;
+    _row_price = 0 ;
+    _row_range = 0 ;
+    _row_rhs = 0 ;
+    _row_sense = 0 ;
+    _row_upper = 0 ;
+    _matrix_by_row = 0 ;
+    _matrix_by_col = 0 ;
 
-    CLONE_VEC(double,rhs._col_x,_col_x,col_count) ;
-    CLONE_VEC(double,rhs._col_obj,_col_obj,col_count) ;
-    CLONE_VEC(double,rhs._col_cbar,_col_cbar,col_count) ;
-    CLONE_VEC(double,rhs._row_lhs,_row_lhs,row_count) ;
-    CLONE_VEC(double,rhs._row_lower,_row_lower,row_count) ;
-    CLONE_VEC(double,rhs._row_price,_row_price,row_count) ;
-    CLONE_VEC(double,rhs._row_range,_row_range,row_count) ;
-    CLONE_VEC(double,rhs._row_rhs,_row_rhs,row_count) ;
-    CLONE_VEC(char,rhs._row_sense,_row_sense,row_count) ;
-    CLONE_VEC(double,rhs._row_upper,_row_upper,row_count) ;
-
-    if (rhs._matrix_by_row) 
-      _matrix_by_row = new CoinPackedMatrix(*rhs._matrix_by_row) ;
-    if (rhs._matrix_by_col) 
-      _matrix_by_col = new CoinPackedMatrix(*rhs._matrix_by_col) ;
+    int n = getNumCols() ;
+    int m = getNumRows() ;
+    COPY_VEC(double,rhs._col_x,_col_x,n) ;
+    COPY_VEC(double,rhs._row_price,_row_price,m) ;
 
     COPY_VEC(void *,&rhs.info_[0],&info_[0],OsiLastHintParam) ;
 
@@ -1702,8 +1750,7 @@ OsiDylpSolverInterface &ODSI::operator= (const OsiDylpSolverInterface &rhs)
   called, it's possible that the interface contains only a constraint system.
 
   If the base ODSI object will be retained, set preserve_interface to true.
-  This will retain the current options and tolerance settings, and reinitialise
-  the statistics structure.
+  This will retain the current options and tolerance settings.
 */
 
 void ODSI::destruct_problem (bool preserve_interface)
@@ -1749,13 +1796,9 @@ void ODSI::destruct_problem (bool preserve_interface)
     if (tolerances)
     { delete tolerances ;
       tolerances = 0 ; } }
-  
-  if (statistics)
-  { if (preserve_interface == true)
-    { memset(statistics,0,sizeof(lpstats_struct)) ; }
-    else
-    { delete statistics ;
-      statistics = 0 ; } }
+# ifdef DYLP_STATISTICS
+  if (statistics) dy_freestats(&statistics) ;
+# endif
   
   return ; }
 
@@ -1805,11 +1848,11 @@ ODSI::~OsiDylpSolverInterface ()
 {
 /*
   Destroy the problem-specific structures used by dylp, and close the log
-  file, if open.
+  and output files, if open.
 */
   destruct_problem(false) ;
-  if (local_logchn != IOID_INV && local_logchn != IOID_NOSTRM)
-    (void) closefile(local_logchn) ;
+  if (isactive(local_logchn)) (void) closefile(local_logchn) ;
+  if (isactive(local_outchn)) (void) closefile(local_outchn) ;
 
   reference_count-- ;
   if (reference_count == 0)
@@ -1837,9 +1880,12 @@ void ODSI::reset ()
   file, if open.
 */
   destruct_problem(false) ;
-  if (local_logchn != IOID_INV && local_logchn != IOID_NOSTRM)
+  if (isactive(local_logchn))
   { (void) closefile(local_logchn) ;
     local_logchn = IOID_NOSTRM ; }
+  if (isactive(local_outchn))
+  { (void) closefile(local_outchn) ;
+    local_outchn = IOID_NOSTRM ; }
 /*
   That takes care of cleaning out the ODSI object. Call setInitialData to
   reset the underlying OSI object.
@@ -2000,7 +2046,7 @@ void ODSI::setRowUpper (int i, double val)
       break ; }
     case contypLE:
     case contypNB:
-    { clbi = -DYLP_INFINITY ;
+    { clbi = -odsiInfinity ;
       break ; }
     default:
     { assert(false) ; } }
@@ -2023,7 +2069,7 @@ void ODSI::setRowLower (int i, double val)
   contyp_enum ctypi = consys->ctyp[k] ;
 
   if (ctypi == contypGE || ctypi == contypNB)
-    cubi = DYLP_INFINITY ;
+    cubi = odsiInfinity ;
   else
     cubi = consys->rhs[k] ;
 
@@ -2136,8 +2182,7 @@ void ODSI::deleteRows (int count, const int* rows)
     else
     { delete activeBasis ;
       activeBasis = 0 ;
-      activeIsModified = false ;
-      resolveOptions->forcecold = true ; } }
+      activeIsModified = false ; } }
 
   destruct_cache() ; }
 
@@ -2193,7 +2238,6 @@ inline void ODSI::addCol (const CoinPackedVectorBase& coin_col,
 			  double vlb, double vub, double obj)
 
 { add_col(coin_col,vartypCON,vlb,vub,obj) ; }
-
 
 /*!
   Perhaps better named `applyColCuts', as an OsiColCut object can contain
@@ -2272,8 +2316,7 @@ void ODSI::deleteCols (int count, const int* cols)
     else
     { delete activeBasis ;
       activeBasis = 0 ;
-      activeIsModified = false ;
-      resolveOptions->forcecold = true ; } }
+      activeIsModified = false ; } }
 
   destruct_cache() ; }
 
@@ -2531,9 +2574,11 @@ void ODSI::assert_same (const lpprob_struct& l1, const lpprob_struct& l2,
 
 /*! \brief Verify copy of an ODSI object.
 
-  Verify equivalence by checking each component in turn. Rely on the
-  CoinPackedMatrix equivalence check to verify equivalence of the cached
-  copies.
+  Verify equivalence by checking each component in turn.
+
+  Note that statistics, hot start information, and cached data are never
+  copied when an ODSI object is cloned or assigned, and open file descriptors
+  are not inherited.
 */
 
 void ODSI::assert_same (const OsiDylpSolverInterface& o1,
@@ -2554,19 +2599,18 @@ void ODSI::assert_same (const OsiDylpSolverInterface& o1,
 /*
   Test the rest of the simple data fields.
 */
-  assert(o1.local_logchn == o2.local_logchn) ;
   assert(o1.initial_gtxecho == o2.initial_gtxecho) ;
   assert(o1.resolve_gtxecho == o2.resolve_gtxecho) ;
   assert(o1.lp_retval == o2.lp_retval) ;
   assert(o1.obj_sense == o2.obj_sense) ;
+  assert(o1.odsiInfinity == o2.odsiInfinity) ;
   assert(o1.solvername == o2.solvername) ;
   assert(o1.mps_debug == o2.mps_debug) ;
 /*
-  Options, tolerances, and statistics should be byte-for-byte identical.
+  Options and tolerances should be byte-for-byte identical.
 */
   assert_same(*o1.initialSolveOptions, *o2.initialSolveOptions, true) ;
   assert_same(*o1.resolveOptions, *o2.resolveOptions, true) ;
-  assert_same(*o1.statistics, *o2.statistics, true) ;
   assert_same(*o1.tolerances, *o2.tolerances, true) ;
 /*
   The info_ array. The best we can do here is entry by entry equality.
@@ -2643,11 +2687,11 @@ lptols_struct* main_lptols ;     // just for cmdint.c::process_cmds
   added, respectively.
 */
 
-std::string ODSI::make_filename (const char *filename,
-				 const char *ext1, const char *ext2)
+string ODSI::make_filename (const char *filename,
+			    const char *ext1, const char *ext2)
 
-{ std::string basename(filename) ;
-  std::string ext1str(ext1), ext2str(ext2) ;
+{ string basename(filename) ;
+  string ext1str(ext1), ext2str(ext2) ;
 
 /*
   Extensions must start with ".", so fix if necessary.
@@ -2748,13 +2792,13 @@ int ODSI::readMps (const char* basename, const char* ext)
 /*
   See if there's an associated .spc file and read it first, if present.
 */
-  std::string filename = make_filename(basename,ext,"spc") ;
+  string filename = make_filename(basename,ext,"spc") ;
   dylp_controlfile(filename.c_str(),true,false) ;
 /*
   Make sure the MPS reader has the same idea of infinity as dylp, then
   attempt to read the MPS file.
 */
-  mps.setInfinity(DYLP_INFINITY) ;
+  mps.setInfinity(odsiInfinity) ;
   filename = make_filename(basename,ext,ext) ;
   errcnt = mps.readMps(filename.c_str(),0) ;
   handler_->message(ODSI_MPSFILEIO,messages_)
@@ -2771,6 +2815,68 @@ int ODSI::readMps (const char* basename, const char* ext)
 */
   return (0) ; }
 
+/*!
+  Read a problem definition in MPS format, including SOS information.
+
+  Functionality is as for readMps(const char*,const char*), with the added
+  feature that any special ordered sets (SOS) defined in the MPS file are
+  returned through the \p numberSets and \p set parameters.
+*/
+
+int ODSI::readMps (const char* basename, const char* ext,
+		   int &numberSets, CoinSet **&sets)
+
+/*
+  This routine uses the COIN MPS input code, which allows me to sidestep
+  the issues that dylp's MPS reader has when confronted with an MPS file
+  that requires fixed-field processing or contains a constant objective
+  function offset. Note the extension in parameters to return SOS sets
+  defined in the MPS file.
+
+  Parameters:
+    basename:	base name for mps file
+    ext:	file extension; defaults to "mps"
+    numberSets:	the number of SOS sets
+    sets:	pointer to array of SOS sets
+
+  Returns: -1 if the MPS file could not be opened, otherwise the number of
+	   errors encountered while reading the file.
+*/
+
+{ int errcnt ;
+  CoinMpsIO mps ;
+  CoinMessageHandler *mps_handler = mps.messageHandler() ;
+
+  if (mps_debug)
+  { mps_handler->setLogLevel(handler_->logLevel()) ; }
+  else
+  { mps_handler->setLogLevel(0) ; }
+
+/*
+  See if there's an associated .spc file and read it first, if present.
+*/
+  string filename = make_filename(basename,ext,"spc") ;
+  dylp_controlfile(filename.c_str(),true,false) ;
+/*
+  Make sure the MPS reader has the same idea of infinity as dylp, then
+  attempt to read the MPS file.
+*/
+  mps.setInfinity(odsiInfinity) ;
+  filename = make_filename(basename,ext,ext) ;
+  errcnt = mps.readMps(filename.c_str(),0,numberSets,sets) ;
+  handler_->message(ODSI_MPSFILEIO,messages_)
+    << filename << "read" << errcnt << CoinMessageEol ;
+  if (errcnt != 0) return (errcnt) ;
+/*
+  Load the problem and build a worst-case solution. To take full advantage
+  of information in the MPS file, it's easiest to pass the mps object to
+  load_problem.
+*/
+  load_problem(mps) ;
+/*
+  Done!
+*/
+  return (0) ; }
 
 /*!
   Write a problem to the file basename.ext in MPS format.
@@ -2818,7 +2924,7 @@ void ODSI::writeMps (const char *basename,
   for (j = 0 ; j < n ; j++)
     colnames[j] = consys_nme(consys,'v',idx(j),false,0) ;
 
-  mps.setMpsData(*getMatrixByRow(),DYLP_INFINITY,
+  mps.setMpsData(*getMatrixByRow(),odsiInfinity,
 		 getColLower(),getColUpper(),outputobj,vartyp,
 		 getRowLower(),getRowUpper(),colnames,rownames) ;
 /*
@@ -2992,6 +3098,7 @@ ODSI::loadProblem (const int colcnt, const int rowcnt,
 
 
 /*! \defgroup SolverParms Methods to Set/Get Solver Parameters
+    \brief Methods to set and retrive solver parameters.
 
   Dylp supports a limited set of the OSI parameters. Specifically,
   <dl>
@@ -3050,7 +3157,7 @@ ODSI::loadProblem (const int colcnt, const int rowcnt,
 
 //@{
 
-inline double ODSI::getInfinity () const { return DYLP_INFINITY ; }
+inline double ODSI::getInfinity () const { return odsiInfinity ; }
 
 
 bool ODSI::setDblParam (OsiDblParam key, double value)
@@ -3166,7 +3273,7 @@ inline bool ODSI::getIntParam (OsiIntParam key, int& value) const
   return (retval) ; }
 
 
-bool ODSI::setStrParam (OsiStrParam key, const std::string& value)
+bool ODSI::setStrParam (OsiStrParam key, const string& value)
 /*
   Set string paramaters. Note that OsiSolverName is, by definition, a
   constant. You can set it all you like, however :-).
@@ -3192,7 +3299,7 @@ bool ODSI::setStrParam (OsiStrParam key, const std::string& value)
   
   return (retval) ; }
 
-bool ODSI::getStrParam (OsiStrParam key, std::string& value) const
+bool ODSI::getStrParam (OsiStrParam key, string& value) const
 /*
   This mostly duplicates OSI::getStrParam. It enforces the notion that you
   can't set the solver name, which the default OSI routine does not.
@@ -3227,7 +3334,7 @@ void ODSI::unimp_hint (bool dylpSense, bool hintSense,
 		       OsiHintStrength hintStrength, const char *msgString)
 
 { if (dylpSense != hintSense)
-  { std::string message("Dylp ") ;
+  { string message("Dylp ") ;
     if (dylpSense == true)
     { message += "cannot disable " ; }
     else
@@ -3288,11 +3395,14 @@ bool ODSI::setHintParam (OsiHintParam key, bool sense,
   switch (key)
   {
 /*
-  Dylp has no presolve capabilities.
+  No native presolve.
 */
     case OsiDoPresolveInInitial:
+    { unimp_hint(false,sense,strength,"presolve for initialSolve") ;
+      retval = true ;
+      break ; }
     case OsiDoPresolveInResolve:
-    { unimp_hint(false,sense,strength,"presolve") ;
+    { unimp_hint(false,sense,strength,"presolve for resolve") ;
       retval = true ;
       break ; }
 /*
@@ -3340,6 +3450,7 @@ bool ODSI::setHintParam (OsiHintParam key, bool sense,
   of 2 (8, 16, 32, etc.) left to trigger specific classes of debugging
   printout. These must be set using info. Currently:
     0x08	CoinMpsIO messages
+    0x10	Echo to terminal
 */
     case OsiDoReducePrint:
     { int verbosity = messageHandler()->logLevel() ;
@@ -3357,12 +3468,12 @@ bool ODSI::setHintParam (OsiHintParam key, bool sense,
 
       dy_setprintopts(0,initialSolveOptions) ;
       dy_setprintopts(0,resolveOptions) ;
-      if (verbosity == 0)
-      { initial_gtxecho = false ;
-	resolve_gtxecho = false ; }
-      else
+      if (verbosity&0x10)
       { initial_gtxecho = true ;
 	resolve_gtxecho = true ; }
+      else
+      { initial_gtxecho = false ;
+	resolve_gtxecho = false ; }
       messageHandler()->setLogLevel(verbosity) ;
       dy_setprintopts((verbosity&0x7),initialSolveOptions) ;
       dy_setprintopts((verbosity&0x7),resolveOptions) ;
@@ -3399,6 +3510,207 @@ inline bool ODSI::getHintParam (OsiHintParam key, bool &sense,
 
 
 //@} // SolverParms
+
+
+
+/*! \defgroup LPCommonMethods Common Solver Invocation Methods
+    \brief Common core methods for invoking dylp
+*/
+//@{
+
+lpret_enum ODSI::do_lp (ODSI_start_enum start)
+
+/*
+  This routine handles the job of running an lp and making a few attempts at
+  recovery from errors. Ultimately, it's looking for one of lpOPTIMAL,
+  lpINFEAS, or lpUNBOUNDED. In the event we turn up anything else, the
+  strategy is to keep trying, forcing a cold start and gradually increasing
+  the refactorisation frequency.
+
+  dylp expects that >= constraint have been converted to <= constraints
+  before it ever sees the system. So we do it here, and then flip back
+  afterwards, because OSI (particularly the unitTest) isn't tolerant of the
+  solver rearranging the constraint system.
+
+  Note that the routines which dump the solution and statistics in human
+  readable form also make use of the constraint system. They won't be put off
+  by converting between >= and <=, but they'll be very lost if the constraint
+  system they see has a different number of constraints or variables than the
+  constraint system dylp was using.
+
+  Parameter:
+    start:	specifies cold, warm, or hot start
+  
+  Returns: whatever it gets from dylp
+*/
+
+{ int retries,ndx,cndx,flips ;
+  basis_struct *basis ;
+  lpret_enum lpret ;
+  lpopts_struct lcl_opts ;
+  lptols_struct lcl_tols ;
+  flags persistent_flags ;
+  const char *rtnnme = "do_lp" ;
+
+  bool *flipped ;
+
+# ifndef NDEBUG
+  int print = 1 ;
+# endif
+
+/*
+  Set up options and tolerances, make sure the phase isn't dyDONE, and
+  reinitialise the statistics if we're collecting them.
+*/
+  lcl_tols = *tolerances ;
+  switch (start)
+  { case startCold:
+    { lcl_opts = *initialSolveOptions ;
+      break ; }
+    case startWarm:
+    { lcl_opts = *resolveOptions ;
+      assert(lcl_opts.forcecold == false) ;
+      break ; }
+    case startHot:
+    { lcl_opts = *resolveOptions ;
+      assert(lcl_opts.forcecold == false) ;
+      lcl_opts.forcewarm = false ;
+      break ; } }
+  dy_checkdefaults(consys,&lcl_opts,&lcl_tols) ;
+  lpprob->phase = dyINV ;
+
+# ifdef DYLP_STATISTICS
+  if (statistics) dy_freestats(&statistics) ;
+  dy_initstats(&statistics,lpprob->consys) ;
+# endif
+
+  retries = 0 ;
+/*
+  Skim off any persistent flags that we may need to reset after a failure.
+  (Output requests, etc.)
+*/
+  persistent_flags = getflg(lpprob->ctlopts,lpctlACTVARSOUT) ;
+
+/*
+  Step through the constraints and replace ax >= b constraints with (-a)x <=
+  -b constraints. consys_mulrow will take care of the necessary
+  modifications. Normally this would be handled in mpsin, along with the
+  deletion of empty constraints, but the OSI test suite isn't tolerant of
+  changing the sense of constraints, let alone removing a few. Arguably a
+  good thing.
+*/
+  flipped = (bool *) CALLOC(lpprob->consys->concnt+1,sizeof(bool)) ;
+  flips = 0 ;
+  for (ndx = lpprob->consys->concnt ; ndx > 0 ; ndx--)
+  { if (lpprob->consys->ctyp[ndx] == contypGE)
+    { if (consys_mulrow(lpprob->consys,ndx,-1) == FALSE)
+      { errmsg(112,rtnnme,lpprob->consys->nme,"scalar multiply","row",
+	       consys_nme(lpprob->consys,'c',ndx,FALSE,NULL),ndx) ;
+	FREE(flipped) ;
+	return (lpFATAL) ; }
+      flipped[ndx] = TRUE ;
+      flips++ ; } }
+
+/*
+  Take an initial run at doing the lp as it comes in. If this doesn't work,
+  we'll try harder. After the initial shot at the lp, we can clear the vector
+  change flags (they're only relevant to a hot start).
+*/
+  lpret = dylp(lpprob,&lcl_opts,&lcl_tols,statistics) ;
+# ifndef NDEBUG
+  if (print >= 1)
+  { if (lpret == lpOPTIMAL || lpret == lpINFEAS || lpret == lpUNBOUNDED)
+    { outfmt(logchn,gtxecho,"\n  success, status %s",
+	     dy_prtlpret(lpprob->lpret)) ; }
+    else
+    { outfmt(logchn,gtxecho,"\n  failed, status %s",
+	     dy_prtlpret(lpprob->lpret)) ; } }
+# endif
+  clrflg(lpprob->ctlopts,lpctlUBNDCHG|lpctlLBNDCHG|lpctlRHSCHG|lpctlOBJCHG) ;
+
+/*
+  Did it work? If not, get down to trying to recover. The algorithm is
+  to first try a cold start, then proceed to halve the refactor frequency.
+  
+  Since a cold start rebuilds all dylp data structures from scratch, we don't
+  need to worry about the various *CHG flags. And if we're about to retry,
+  dylp freed the data structure regardless of the NOFREE flag.
+*/
+  if (!(lpret == lpOPTIMAL || lpret == lpINFEAS || lpret == lpUNBOUNDED))
+  { if (lcl_opts.forcecold == TRUE) lcl_opts.factor /= 2 ;
+    lcl_opts.forcecold = TRUE ;   
+/*
+  We're ready. Open a loop that'll call dylp, doing a cold start on each
+  lp and halving the refactor frequency with each call. Don't forget to
+  reset the persistent flags.
+*/
+    for ( ; lcl_opts.factor >= 10 ; lcl_opts.factor /= 2)
+    { retries++ ;
+#     ifndef NDEBUG
+      if (print >= 1)
+      { outfmt(logchn,gtxecho,".\n    retry %d: refactor = %d ...",
+	       retries,lcl_opts.factor) ; }
+#     endif
+      setflg(lpprob->ctlopts,persistent_flags) ;
+      lpprob->phase = dyINV ;
+      lpret = dylp(lpprob,&lcl_opts,&lcl_tols,statistics) ;
+
+      if (lpret == lpOPTIMAL || lpret == lpINFEAS || lpret == lpUNBOUNDED)
+      {
+#       ifndef NDEBUG
+	if (print >= 1)
+	{ outfmt(logchn,gtxecho,"\n  success, status %s",
+		 dy_prtlpret(lpprob->lpret)) ; }
+#       endif
+	break ; }
+#     ifndef NDEBUG
+      else
+      { if (print >= 1)
+	{ outfmt(logchn,gtxecho,"\n  failed, status %s",
+		 dy_prtlpret(lpprob->lpret)) ; } }
+#     endif
+    } }
+/*
+  Time to undo any constraint flips. We also have to tweak the corresponding
+  duals --- flipping the sign of a row in the basis corresponds to flipping the
+  sign of a column in the basis inverse, which means that the sign of the
+  corresponding dual is flipped. This requires a little care --- if we're in
+  dynamic mode, some constraints may be inactive.
+*/
+  if (flips > 0)
+  { for (ndx = lpprob->consys->concnt ; ndx > 0 ; ndx--)
+    { if (flipped[ndx] == TRUE)
+      { if (consys_mulrow(lpprob->consys,ndx,-1) == FALSE)
+	{ errmsg(112,rtnnme,lpprob->consys->nme,"scalar multiply","row",
+		 consys_nme(lpprob->consys,'c',ndx,FALSE,NULL),ndx) ;
+	  FREE(flipped) ;
+	  return (lpFATAL) ; } } }
+    if (lpprob->y != NULL)
+    { basis = lpprob->basis ;
+      for (ndx = 0 ; ndx < basis->len ; ndx++)
+      { cndx = basis->el[ndx].cndx ;
+	if (flipped[cndx] == TRUE) lpprob->y[ndx] = -lpprob->y[ndx] ; } } }
+  FREE(flipped) ;
+/*
+  That's it, we've done our best. Do a little printing and return.
+*/
+# ifndef NDEBUG
+  if (print >= 1)
+  { if (lpprob->lpret == lpOPTIMAL)
+      outfmt(logchn,gtxecho,"; objective %.8g",lpprob->obj) ;
+    else
+    if (lpprob->lpret == lpINFEAS)
+      outfmt(logchn,gtxecho,"; infeasibility %.4g",lpprob->obj) ;
+    if (lpprob->phase == dyDONE)
+      outfmt(logchn,gtxecho," after %d pivots",lpprob->iters) ;
+    outchr(logchn,gtxecho,'.') ;
+    flushio(logchn,gtxecho) ; }
+# endif
+
+  return (lpret) ; }
+
+//@} // LPCommonMethods
+
 
 
 
@@ -3441,19 +3753,18 @@ void ODSI::initialSolve ()
     dy_initbasis(count,initialSolveOptions->factor,0) ;
     basis_ready = true ; }
 /*
-  Does some other ODSI object own the solver? If so, detach it.
+  Does some other ODSI object own the solver? If so, detach it. This surely
+  means that we no longer have retained data structures.
 */
-  if (dylp_owner != 0 && dylp_owner != this) dylp_owner->detach_dylp() ;
+  if (dylp_owner != 0 && dylp_owner != this)
+  { dylp_owner->detach_dylp() ;
+    clrflg(lpprob->ctlopts,lpctlDYVALID) ; }
 /*
-  Choose options appropriate for the initial solution of the lp and go to it.
+  Establish logging and echo values, and invoke the solver.
 */
-  lpopts_struct lclopts = *initialSolveOptions ;
-  lptols_struct lcltols = *tolerances ;
-  dy_checkdefaults(consys,&lclopts,&lcltols) ;
   if (isactive(local_logchn)) logchn = local_logchn ;
   gtxecho = initial_gtxecho ;
-  lpprob->phase = dyINV ;
-  lp_retval = dylp_dolp(lpprob,&lclopts,&lcltols,statistics) ;
+  lp_retval = do_lp(startCold) ;
   if (!(lp_retval == lpOPTIMAL || lp_retval == lpINFEAS ||
 	lp_retval == lpUNBOUNDED))
   { throw CoinError("Call to dylp failed.",
@@ -3533,15 +3844,19 @@ inline bool ODSI::isProvenDualInfeasible () const
   problems (accuracy check or singular basis), stalling, unexpected loss of
   feasibility, inability to allocate space, or other fatal internal error.
 */
+/*
+  As implemented here, we simply look for the standard codes that indicate
+  optimality, unboundedness, or infeasibility. Anything else qualifies as
+  abandoned.
+*/
 
 inline bool ODSI::isAbandoned () const
 
-{ if (lp_retval == lpACCCHK || lp_retval == lpSINGULAR ||
-      lp_retval == lpSTALLED || lp_retval == lpNOSPACE ||
-      lp_retval == lpLOSTFEAS || lp_retval == lpPUNT || lp_retval == lpFATAL)
-    return (true) ;
+{ if (lp_retval == lpOPTIMAL || lp_retval == lpUNBOUNDED ||
+      lp_retval == lpINFEAS)
+    return (false) ;
   else
-    return (false) ; }
+    return (true) ; }
 
 
 //@} // SolverTerm
@@ -3586,11 +3901,18 @@ inline double ODSI::getObjValue () const
 
 const double* ODSI::getColSolution () const
 /*
-  We could have a cached solution, either supplied by the client or a
-  previous solution from dylp. If not, we have to build one.  Dylp returns a
-  vector x of basic variables, in basis order, and a status vector. To
-  assemble a complete primal solution, it's necessary to construct one vector
-  that merges the two sources. The result is cached.
+  There are three possible sources of a primal solution: a call to dylp, a call
+  to pessimal_primal(), or specified by the client (setColSolution).
+
+  If we have a cached solution in _col_x, we'll use it. setColSolution writes
+  the solution directly into _col_x, as does pessimal_primal().
+  
+  If an lpprob exists, then we have a solution from dylp.  Calls to the
+  solver will invalidate cached data, including _col_x, but will not
+  regenerate it, hence we may need to do that here.  Dylp returns a vector x
+  of basic variables, in basis order, and a status vector. To assemble a
+  complete primal solution, it's necessary to construct one vector that
+  merges the two sources. The result is cached.
 
   NOTE the caution above about superbasic (vstatSB) variables. Nonbasic free
   variables (vstatNBFR) occur under the same termination conditions, but are
@@ -3600,7 +3922,8 @@ const double* ODSI::getColSolution () const
   prior to v3 doesn't even have <limits>, and the local v3 installation's
   <limits> points to another, non-existent header.
 */
-{ if (_col_x) return _col_x ;
+{ if (_col_x)
+  { return _col_x ; }
 
   if (lpprob)
   { assert(lpprob->status && lpprob->x) ;
@@ -3631,7 +3954,7 @@ const double* ODSI::getColSolution () const
 	  { _col_x[j] = 0 ;
 	    break ; }
 	  case vstatSB:
-	  { _col_x[j] = -DYLP_INFINITY ;
+	  { _col_x[j] = -odsiInfinity ;
 	    break ; } } } } }
 
   return (_col_x) ; }
@@ -3644,8 +3967,15 @@ const double* ODSI::getColSolution () const
 
 const double* ODSI::getRowPrice () const
 /*
-  Dylp reports dual variables in basis order, so we need to write a vector
-  with the duals dropped into position by row index.
+  There are two possible sources of duals: a call to the solver, or the
+  client (setRowPrice).
+
+  If we have a cached solution in _row_price, we'll use it.  setRowPrice
+  writes the duals directly into _row_price.
+
+  If an lpprob exists, we have a solution from dylp.  Dylp reports dual
+  variables in basis order, so we need to write a vector with the duals
+  dropped into position by row index.
 */
 
 { if (_row_price) return (_row_price) ;
@@ -3697,19 +4027,33 @@ const double *ODSI::getRowActivity () const
     memset(_row_lhs,0,m*sizeof(double)) ;
 /*
   Walk the primal solution vector, adding in the contribution from non-zero
-  variables.
+  variables. Take care that we don't scale infinity (sigh ... I hate this
+  finite infinity business).
 */
     pkvec_struct *aj = pkvec_new(m) ;
     for (int j = 0 ; j < consys->varcnt ; j++)
-    { if (x[j] != 0)
+    { double xj = x[j] ;
+      if (xj != 0)
       { bool r = consys_getcol_pk(consys,idx(j),&aj) ;
 	if (!r)
 	{ delete[] _row_lhs ;
 	  if (aj) pkvec_free(aj) ;
 	  return (0) ; }
-	for (int l = 0 ; l < aj->cnt ; l++)
-	{ int i = inv(aj->coeffs[l].ndx) ;
-	  _row_lhs[i] += x[j]*aj->coeffs[l].val ; } } }
+	if (fabs(xj) >= odsiInfinity)
+	{ for (int l = 0 ; l < aj->cnt ; l++)
+	  { int i = inv(aj->coeffs[l].ndx) ;
+	    if (fabs(_row_lhs[i]) < odsiInfinity)
+	    { double aij = aj->coeffs[l].val ;
+	      if (aij < 0)
+	      { _row_lhs[i] = -xj ; }
+	      else
+	      if (aij > 0)
+	      { _row_lhs[i] = xj ; } } } }
+	else
+	{ for (int l = 0 ; l < aj->cnt ; l++)
+	  { int i = inv(aj->coeffs[l].ndx) ;
+	    if (fabs(_row_lhs[i]) < odsiInfinity)
+	    { _row_lhs[i] += xj*aj->coeffs[l].val ; } } } } }
     if (aj) pkvec_free(aj) ;
 /*
   Groom the vector to eliminate tiny values.
@@ -4039,7 +4383,7 @@ const double* ODSI::getRowLower () const
 	break ; }
       case contypLE:
       case contypNB:
-      { lower[i] = -DYLP_INFINITY ;
+      { lower[i] = -odsiInfinity ;
 	break ; }
       default:
       { assert(0) ; } } }
@@ -4068,7 +4412,7 @@ const double* ODSI::getRowUpper () const
 
   for (int i = 0 ; i < n ; i++)
   { if (consys->ctyp[idx(i)] == contypGE || consys->ctyp[idx(i)] == contypNB)
-      upper[i] = DYLP_INFINITY ;
+      upper[i] = odsiInfinity ;
     else
       upper[i] = consys->rhs[idx(i)] ; }
 
@@ -4323,7 +4667,7 @@ CoinWarmStart* ODSI::getWarmStart () const
   getWarmStart will synthesize status information for nonbasic logicals.
 */
 
-{ int i,j,k ;
+{ int i,j,k,m,n ;
   flags statj ;
 
 /*
@@ -4338,10 +4682,15 @@ CoinWarmStart* ODSI::getWarmStart () const
   assert(wsb) ;
   if (!lpprob) return (wsb) ;
 /*
-  Size the ODWSB object. setSize initialises all status entries to isFree.
-  Then grab pointers to the status vectors and the dylp basis vector.
+  Size the ODWSB object, then grab pointers to the status vectors and the
+  dylp basis vector.  setSize initialises structural and logical status
+  vectors to isFree, but constraint status entries are initialised to
+  indicate active (atLowerBound), for the benefit of the world at large.
+  We'll need to fix that below.
 */
-  wsb->setSize(consys->varcnt,consys->concnt) ;
+  m = consys->concnt ;
+  n = consys->varcnt ;
+  wsb->setSize(n,m) ;
 
   char *const strucStatus = wsb->getStructuralStatus() ;
   char *const artifStatus = wsb->getArtificialStatus() ;
@@ -4353,9 +4702,12 @@ CoinWarmStart* ODSI::getWarmStart () const
   else
     wsb->setPhase(dyPRIMAL1) ;
 /*
-  Walk the basis and mark the active constraints and basic variables. Basic
-  logical variables are entered as the negative of the constraint index.
+  Clear the constraint status vector to isFree, then walk the basis and mark
+  the active constraints and basic variables. Basic logical variables are
+  entered as the negative of the constraint index.
 */
+  for (i = 0 ; i < m ; i++)
+  { setStatus(conStatus,i,CoinWarmStartBasis::isFree) ; }
   for (k = 1 ; k <= basis->len ; k++)
   { i = inv(basis->el[k].cndx) ; 
     setStatus(conStatus,i,CoinWarmStartBasis::atLowerBound) ;
@@ -4374,7 +4726,7 @@ CoinWarmStart* ODSI::getWarmStart () const
   (negative dual) or (for range constraints) atUpperBound (positive dual).
 */
   const double *y = getRowPrice() ;
-  for (i = 0 ; i < consys->concnt ; i++)
+  for (i = 0 ; i < m ; i++)
   { if (getStatus(conStatus,i) == CoinWarmStartBasis::isFree)
     { setStatus(artifStatus,i,CoinWarmStartBasis::basic) ; }
     else
@@ -4388,7 +4740,7 @@ CoinWarmStart* ODSI::getWarmStart () const
   variables. Some information is lost here --- CoinWarmStartBasis::Status
   doesn't encode NBFX.
 */
-  for (j = 1 ; j <= consys->varcnt ; j++)
+  for (j = 1 ; j <= n ; j++)
   { statj = lpprob->status[j] ;
     if (((int) statj) > 0)
     { switch (statj)
@@ -4411,10 +4763,18 @@ CoinWarmStart* ODSI::getWarmStart () const
 
 /*!
   This routine installs the basis snapshot from an OsiDylpWarmStartBasis
-  object and sets ODSI options so that dylp will attempt a warm start on
-  the next call to
-  \link OsiDylpSolverInterface::resolve ODSI::resolve \endlink.
-  An empty warm start object will not be accepted and will return false.
+  object and sets ODSI options so that dylp will attempt a warm start on the
+  next call to \link OsiDylpSolverInterface::resolve ODSI::resolve \endlink.
+  A basis with 0 rows and 0 columns, or a null parameter, is taken as a
+  request to delete the existing warm start information held in activeBasis.
+
+  Note that the size (rows x columns) of the CoinWarmSTart information should
+  match the size of the constraint system. The final basis built for dylp can
+  be smaller, as inactive constraints will not be included. A basis with 0
+  active constraints is legal. (In fact, fairly common. When a B&C code fixes
+  all integer variables to confirm or regenerate a solution, a problem with
+  only integer variables may have all variables fixed and no tight
+  architectural constraints.)
 */
 
 bool ODSI::setWarmStart (const CoinWarmStart *ws)
@@ -4423,8 +4783,16 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
   CoinWarmStartBasis::Status osi_statlogi,osi_statconi,osi_statvarj ;
 
 /*
+  A null parameter says delete the current active basis and return.
+*/
+  if (!ws)
+  { delete activeBasis ;
+    activeBasis = 0 ;
+    activeIsModified = false ;
+    return (true) ; }
+/*
   Use a dynamic cast to make sure we have an OsiDylpWarmStartBasis. Then check
-  for an empty basis.
+  the size --- 0 x 0 is just a request to remove the active basis.
 */
   const OsiDylpWarmStartBasis *wsb =
 			dynamic_cast<const OsiDylpWarmStartBasis *>(ws) ;
@@ -4433,9 +4801,11 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
     return (false) ; }
   int varcnt = wsb->getNumStructural() ;
   int concnt = wsb->getNumArtificial() ;
-  if (!(varcnt > 0 && concnt > 0))
-  { handler_->message(ODSI_EMPTYODWSB,messages_) ;
-    return (false) ; }
+  if (varcnt == 0 && concnt == 0)
+  { delete activeBasis ;
+    activeBasis = 0 ;
+    activeIsModified = false ;
+    return (true) ; }
 /*
   Do we have an lpprob structure yet? If not, construct one.
 */
@@ -4501,13 +4871,36 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
 	status[j] = (flags) (-k) ;
 	break ; }
       case CoinWarmStartBasis::atLowerBound:
-      { if (consys->vlb[j] == consys->vub[j])
-	{ status[j] = vstatNBFX ; }
+      { if (consys->vlb[j] > -odsiInfinity)
+	{ if (consys->vlb[j] == consys->vub[j])
+	  { status[j] = vstatNBFX ; }
+	  else
+	  { status[j] = vstatNBLB ; } }
 	else
-	{ status[j] = vstatNBLB ; }
+	{ if (consys->vub[j] < odsiInfinity)
+	  { status[j] = vstatNBUB ; }
+	  else
+	  { status[j] = vstatNBFR ; }
+	  handler_->message(ODSI_ODWSBBADSTATUS,messages_)
+	    << consys_nme(consys,'v',j,false,0) << j
+	    << dy_prtvstat(vstatNBLB) << dy_prtvstat(status[j])
+	    << CoinMessageEol ; }
 	break ; }
       case CoinWarmStartBasis::atUpperBound:
-      { status[j] = vstatNBUB ;
+      { if (consys->vub[j] < odsiInfinity)
+	{ if (consys->vlb[j] == consys->vub[j])
+	  { status[j] = vstatNBFX ; }
+	  else
+	  { status[j] = vstatNBUB ; } }
+	else
+	{ if (consys->vlb[j] > -odsiInfinity)
+	  { status[j] = vstatNBLB ; }
+	  else
+	  { status[j] = vstatNBFR ; }
+	  handler_->message(ODSI_ODWSBBADSTATUS,messages_)
+	    << consys_nme(consys,'v',j,false,0) << j
+	    << dy_prtvstat(vstatNBUB) << dy_prtvstat(status[j])
+	    << CoinMessageEol ; }
 	break ; }
       case CoinWarmStartBasis::isFree:
       { status[j] = vstatNBFR ;
@@ -4589,7 +4982,7 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
   One last thing --- make a copy of wsb to be the active basis (that is, unless
   wsb is the active basis, and we're simply installing it in lpprob).
 */
-  if (wsb != static_cast<const CoinWarmStart *>(activeBasis) )
+  if (wsb != static_cast<const CoinWarmStart*>(activeBasis))
   { delete activeBasis ;
     activeBasis = wsb->clone() ;
     activeIsModified = false ; }
@@ -4613,9 +5006,15 @@ void ODSI::resolve ()
   an unmodified active basis, dylp should be able to manage a hot start.
 */
 { assert(lpprob && lpprob->basis && lpprob->status && consys &&
-	 resolveOptions && tolerances && statistics) ;
+	 resolveOptions && tolerances) ;
 
-  if (dylp_owner != 0 && dylp_owner != this) dylp_owner->detach_dylp() ;
+/*
+  Does some other ODSI object own the solver? If so, detach it. This surely
+  means that we no longer have retained data structures.
+*/
+  if (dylp_owner != 0 && dylp_owner != this)
+  { dylp_owner->detach_dylp() ;
+    clrflg(lpprob->ctlopts,lpctlDYVALID) ; }
 /*
   Is the basis package initialised?
 */
@@ -4632,30 +5031,33 @@ void ODSI::resolve ()
     * The solver has been used by some other ODSI object since the last
       call by this object. In this case, we've just done a detach_dylp()
       and dylp_owner will be null. Again, we need to install activeBasis.
-  If we have an active basis, install it. If that fails, remove activeBasis.
+  If we have an active basis, install it and force dylp to warm start. If the
+  installation fails, remove activeBasis and throw.
 */
+  if (!activeBasis)
+  { throw CoinError("Warm start failed --- empty active basis.",
+		    "resolve","OsiDylpSolverInterface") ; }
+  else
   if (activeBasis && (activeIsModified == true || dylp_owner == 0))
   { if (setWarmStart(activeBasis) == false)
-    { throw CoinError("Warm start failed --- invalid active basis.",
+    { delete activeBasis ;
+      activeBasis = 0 ;
+      activeIsModified = false ;
+      
+      throw CoinError("Warm start failed --- invalid active basis.",
 		      "resolve","OsiDylpSolverInterface") ; }
-    delete activeBasis ;
-    activeBasis = 0 ;
-    activeIsModified = false ;
     resolveOptions->forcewarm = true ; }
 /*
   Choose options appropriate for reoptimising and go to it. Phase is not
   crucial here --- dylp will sort it out as it starts.
 */
-  lpopts_struct lclopts = *resolveOptions ;
-  lptols_struct lcltols = *tolerances ;
-  dy_checkdefaults(consys,&lclopts,&lcltols) ;
-  assert(lclopts.forcecold == false) ;
+  assert(resolveOptions->forcecold == false) ;
   if (isactive(local_logchn)) logchn = local_logchn ;
   gtxecho = resolve_gtxecho ;
   dyphase_enum phase = lpprob->phase ;
   if (!(phase == dyPRIMAL1 || phase == dyPRIMAL2 || phase == dyDUAL))
     lpprob->phase = dyINV ;
-  lp_retval = dylp_dolp(lpprob,&lclopts,&lcltols,statistics) ;
+  lp_retval = do_lp(startWarm) ;
   if (!(lp_retval == lpOPTIMAL || lp_retval == lpINFEAS ||
 	lp_retval == lpUNBOUNDED))
   { throw CoinError("Call to dylp failed.",
@@ -4797,27 +5199,21 @@ void ODSI::solveFromHotStart ()
     int hotlim ;
 
     assert(lpprob && lpprob->basis && lpprob->status && basis_ready &&
-	   consys && resolveOptions && tolerances && statistics) ;
+	   consys && resolveOptions && tolerances) ;
 
     if (isactive(local_logchn)) logchn = local_logchn ;
     gtxecho = resolve_gtxecho ;
 /*
-  Setting the phase to dyPRIMAL1 is overly cautious, but the only practical
-  solution (dylp expects the client to set this, but exposing this would
-  violates the generic OSI interface). In any event, dylp will sort it out.
+  Phase can be anything except dyDONE, which will cause dylp to free data
+  structures and return.
 */
-    lpopts_struct lclopts = *resolveOptions ;
-    lptols_struct lcltols = *tolerances ;
-    dy_checkdefaults(consys,&lclopts,&lcltols) ;
-    lpprob->phase = dyPRIMAL1 ;
-    assert(lclopts.forcecold == false) ;
-    lclopts.forcewarm = false ;
+    lpprob->phase = dyINV ;
     getIntParam(OsiMaxNumIterationHotStart,hotlim) ;
     if (hotlim > 0)
     { tmp_iterlim = resolveOptions->iterlim ;
       resolveOptions->iterlim = (hotlim/3 > 0)?hotlim/3:1 ; }
 
-    lp_retval = dylp_dolp(lpprob,&lclopts,&lcltols,statistics) ;
+    lp_retval = do_lp(startHot) ;
     if (!(lp_retval == lpOPTIMAL || lp_retval == lpINFEAS ||
 	  lp_retval == lpUNBOUNDED))
     { throw CoinError("Call to dylp failed.",
@@ -4935,13 +5331,14 @@ void ODSI::dylp_controlfile (const char *name,
 
 { if (name == 0 || *name == 0) return ;
   string mode = (mustexist)?"r":"q" ;
-  cmdchn = openfile(const_cast<char *>(name),const_cast<char *>(mode.c_str())) ;
+  cmdchn = openfile(name,mode.c_str()) ;
   if (!(cmdchn == IOID_INV || cmdchn == IOID_NOSTRM))
   { setmode (cmdchn, 'l') ;  
     main_lpopts = initialSolveOptions ;
     main_lptols = tolerances ;
     bool r = (process_cmds(silent) != 0) ;
     (void) closefile(cmdchn) ;
+    cmdchn = IOID_NOSTRM ;
     assert(r == cmdOK) ;
 /*
   Copy user settings into resolveOptions, except for forcecold and fullsys.
@@ -4955,24 +5352,58 @@ void ODSI::dylp_controlfile (const char *name,
 
   return ; }
   
-
 /*!
   Establish a log (.log) file.
 
   \param name file name
-  \param silent true to echo log messages to the terminal
+  \param echo true to echo log messages to the terminal
 */
 
 void ODSI::dylp_logfile (const char *name, bool echo)
 
 { if (name == 0 || *name == 0) return ;
 
-  string log = make_filename(name,".mps",".log") ;
-  local_logchn = openfile(const_cast<char *>(log.c_str()),
-			  const_cast<char *>("w")) ;
-  if (local_logchn == IOID_INV) local_logchn = IOID_NOSTRM ;
+  string lognme = make_filename(name,".mps",".log") ;
+  local_logchn = openfile(lognme.c_str(),"w") ;
+  if (local_logchn == IOID_INV)
+  { local_logchn = IOID_NOSTRM ; }
+  else
+  { (void) chgerrlog(lognme.c_str(),true) ; }
   initial_gtxecho = echo ;
-  resolve_gtxecho = echo ; }
+  resolve_gtxecho = echo ;
+
+  return ; }
+
+/*!
+  Establish an output (.out) file.
+
+  \param name file name
+*/
+
+void ODSI::dylp_outfile (const char *name)
+
+{ if (name == 0 || *name == 0) return ;
+
+  string outnme = make_filename(name,".mps",".out") ;
+  local_outchn = openfile(outnme.c_str(),"w") ;
+  if (local_outchn == IOID_INV) local_outchn = IOID_NOSTRM ;
+  
+  return ; }
+
+/*!
+  Print the solution and/or statistics to the output file.
+
+  \param wantSoln true to print the lp solution
+  \param wantStats true to print execution statistics for the lp
+*/
+
+void ODSI::dylp_printsoln (bool wantSoln, bool wantStats)
+
+{ if (isactive(local_outchn))
+  { if (wantStats) dy_dumpstats(local_outchn,FALSE,statistics,consys) ;
+    if (wantSoln) dy_dumpcompact(local_outchn,FALSE,lpprob,FALSE) ; }
+
+  return ; }
 
 //@} // DylpMethods
 

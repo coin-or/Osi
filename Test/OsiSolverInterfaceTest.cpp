@@ -47,9 +47,11 @@
 #endif
 
 #include <time.h>
+#ifndef _MSC_VER
 #include <sys/times.h>
 #include <sys/resource.h>
 #include <unistd.h>
+#endif
 
 static double cpuTime()
 {

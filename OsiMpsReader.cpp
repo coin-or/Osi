@@ -1622,7 +1622,7 @@ int OsiMpsReader::readMps()
     }
     // clean up integers
     if ( !numberIntegers ) {
-      delete[]integerType_;
+      free(integerType_);
       integerType_ = NULL;
     } else {
       OSIColumnIndex icolumn;
@@ -2184,6 +2184,7 @@ void OsiMpsReader::freeAll()
   free(colupper_);
   free(objective_);
   free(integerType_);
+  free(fileName_);
   free(names_[0]);
   free(names_[1]);
   rowlower_=NULL;
@@ -2192,6 +2193,7 @@ void OsiMpsReader::freeAll()
   colupper_=NULL;
   objective_=NULL;
   integerType_=NULL;
+  fileName_=NULL;
   names_[0]=NULL;
   names_[1]=NULL;
 }

@@ -525,7 +525,7 @@ OsiSolverInterface::writeMpsNative(const char *filename,
    // Get multiplier for objective function - default 1.0
    double * objective = new double[numcols];
    memcpy(objective,getObjCoefficients(),numcols*sizeof(double));
-   if (objSense<0.0) {
+   if (objSense*getObjSense()<0.0) {
      for (int i = 0; i < numcols; ++i) 
        objective [i] = - objective[i];
    }

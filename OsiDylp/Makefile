@@ -11,6 +11,7 @@ LIBNAME := OsiDylp
 
 LIBSRC :=
 LIBSRC += OsiDylpMessages.cpp \
+	  OsiDylpPresolve.cpp \
 	  OsiDylpSolverInterface.cpp \
 	  OsiDylpWarmStartBasis.cpp
 
@@ -46,6 +47,10 @@ InstallDir := $(CoinDir)
 .DELETE_ON_ERROR:
 
 .PHONY: default install libosi library clean doc
+
+# Define this to get an mps dump of problem when dylp fails
+
+# CXXFLAGS += -DDYLP_POSTMORTEM
 
 default: install
 

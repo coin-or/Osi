@@ -48,7 +48,7 @@ OsiPackedVector::operator=(const OsiPackedVectorBase & rhs)
 }
 
 //#############################################################################
-
+#if 0
 void
 OsiPackedVector::assignVector(int size, int*& inds, double*& elems,
 			      bool testForDuplicateIndex)
@@ -69,6 +69,34 @@ OsiPackedVector::assignVector(int size, int*& inds, double*& elems,
       throw CoinError("duplicate index", "assignVector", "OsiPackedVector");
    }
 }
+#else
+void
+OsiPackedVector::assignVector(int size, int*& inds, double*& elems,
+                              bool testForDuplicateIndex)
+{
+  clear();
+  // Allocate storage
+  if ( size != 0 ) {
+		  //reserve(size); //This is a BUG!!!
+    nElements_ = size;
+    if (indices_ != NULL) delete[] indices_;
+    indices_ = inds;    inds = NULL;
+    if (elements_ != NULL) delete[] elements_;
+    elements_ = elems;  elems = NULL;
+    if (origIndices_ != NULL) delete[] origIndices_;
+    origIndices_ = new int[size];
+    CoinIotaN(origIndices_, size, 0);
+    capacity_ = size;
+  }
+  try {    
+    OsiPackedVectorBase::setTestForDuplicateIndex(testForDuplicateIndex);
+  }
+  catch (CoinError e) {
+    throw CoinError("duplicate index", "assignVector",
+      "OsiPackedVector");
+  }
+}
+#endif
 
 //#############################################################################
 

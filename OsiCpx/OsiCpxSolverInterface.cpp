@@ -59,7 +59,8 @@ inline void freeCacheMatrix( CoinPackedMatrix*& ptr )
     }
 }
 
-inline void checkCPXerror( int err, std::string cpxfuncname, std::string osimethod )
+static inline void
+checkCPXerror( int err, std::string cpxfuncname, std::string osimethod )
 {
   if( err != 0 )
     {
@@ -1760,7 +1761,9 @@ OsiCpxSolverInterface::loadProblem(const int numcols, const int numrows,
   double * rhs = new double[nr];
   char * sen = new char[nr];
   
-  std::adjacent_difference(start, start + (nc+1), len);
+  for (i = 0; i < nc; ++i) {
+    len[i] = start[i+1] - start[i];
+  }
 
   if ( collb != NULL )
     CoinDisjointCopyN(collb, nc, clb);

@@ -39,11 +39,6 @@ public:
     /// Invoke solver's built-in enumeration algorithm
     virtual void branchAndBound();
   //@}
-#if 1
-    /** Read an mps file from the given filename */
-    virtual int readMps(const char *filename,
-			 const char *extension = "mps");
-#endif
   
   //---------------------------------------------------------------------------
   /**@name Parameter set/get methods
@@ -566,6 +561,11 @@ public:
 			     const double* obj,
 			     const char* rowsen, const double* rowrhs,   
 			     const double* rowrng);
+
+    /** Read an mps file from the given filename -
+	returns number of errors (see OsiMpsReader class) */
+    virtual int readMps(const char *filename,
+			const char *extension = "mps");
 
     /** Write the problem into an mps file of the given filename */
     virtual void writeMps(const char *filename,

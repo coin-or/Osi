@@ -1338,6 +1338,16 @@ OsiOslSolverInterface::loadProblem(const int numcols, const int numrows,
 }
 
 //-----------------------------------------------------------------------------
+// Read mps files
+//-----------------------------------------------------------------------------
+
+int OsiOslSolverInterface::readMps(const char *filename,
+				   const char *extension)
+{
+   return OsiSolverInterface::readMps(filename, extension);
+}
+
+//-----------------------------------------------------------------------------
 // Write mps files
 //-----------------------------------------------------------------------------
 

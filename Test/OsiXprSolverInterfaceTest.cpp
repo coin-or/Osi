@@ -20,7 +20,7 @@
 #include "OsiCuts.hpp"
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
-#include "OsiPackedMatrix.hpp"
+#include "CoinPackedMatrix.hpp"
 
 #ifdef NDEBUG
 #undef NDEBUG
@@ -72,7 +72,7 @@ OsiXprSolverInterfaceUnitTest(const std::string & mpsDir)
   assert( OsiXprSolverInterface::getNumInstances() == 0 );
 
   {
-    OsiRelFltEq eq;
+    CoinRelFltEq eq;
     OsiXprSolverInterface m;
     assert( OsiXprSolverInterface::getNumInstances() == 1 );
     std::string fn = mpsDir+"exmip1";
@@ -441,9 +441,9 @@ OsiXprSolverInterfaceUnitTest(const std::string & mpsDir)
     // Test matrixByRow method
     { 
       const OsiXprSolverInterface si(m);
-      const OsiPackedMatrix * smP = si.getMatrixByRow();
+      const CoinPackedMatrix * smP = si.getMatrixByRow();
       
-      OsiRelFltEq eq;
+      CoinRelFltEq eq;
       const double * ev = smP->getElements();
 
       assert( eq(ev[0],   3.0) );
@@ -528,7 +528,7 @@ OsiXprSolverInterfaceUnitTest(const std::string & mpsDir)
         assert( eq(siC1rr[3], 5.0 - 1.8) );
         assert( eq(siC1rr[4], 15.0 - 3.0) );
 	
-        const OsiPackedMatrix * siC1mbr = siC1.getMatrixByRow();
+        const CoinPackedMatrix * siC1mbr = siC1.getMatrixByRow();
         assert( siC1mbr != NULL );
         
 	const double * ev = siC1mbr->getElements();
@@ -651,7 +651,7 @@ OsiXprSolverInterfaceUnitTest(const std::string & mpsDir)
       assert( eq(lhsrr[4], 15.0 - 3.0) );
       assert( eq(lhsrr[5], 0.0) );
       
-      const OsiPackedMatrix * lhsmbr = lhs.getMatrixByRow();
+      const CoinPackedMatrix * lhsmbr = lhs.getMatrixByRow();
       assert( lhsmbr != NULL );
         
       const double * ev = lhsmbr->getElements();
@@ -756,7 +756,7 @@ OsiXprSolverInterfaceUnitTest(const std::string & mpsDir)
       for (i=0; i<10; i++) indices[i]=i;
 
       // Test collower
-      OsiPackedVector basePv,pv;
+      CoinPackedVector basePv,pv;
       basePv.setVector(base.getNumCols(),indices,base.getColLower());
       pv.setVector( si1.getNumCols(),indices, si1.getColLower());
       assert(basePv.isEquivalent(pv));

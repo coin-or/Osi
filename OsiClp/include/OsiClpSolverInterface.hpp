@@ -870,6 +870,7 @@ protected:
 	  2 do not use any perturbation
 	  4 allow exit before re-factorization
           8 try and re-use factorization if no cuts
+         16 use standard strong branching rather than clp's
       */
       int specialOptions_;
   //@}

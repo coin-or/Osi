@@ -5,7 +5,7 @@
 #ifndef _OsiOslSolverInterface_hpp_
 #define _OsiOslSolverInterface_hpp_
 
-#if defined(__MINGW32__) && !defined(OSLMSDLL)
+#if (defined(__MINGW32__) || defined(__CYGWIN32__)) && !defined(OSLMSDLL)
 #  define OSLMSDLL
 #endif
 

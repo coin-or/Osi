@@ -129,7 +129,7 @@ LDFLAGS += $(call ifprefix,$(SHLINKPREFIX),$(LIBDIRS))
 LDFLAGS += $(patsubst lib%,-l%,$(basename $(LIBS)))
 #LDFLAGS += -lefence
 #if DENSE and using given libraries
-LDFLAGS += -llapack -lblas -lg2c
+#LDFLAGS += -llapack -lblas -lg2c
 
 ###############################################################################
 

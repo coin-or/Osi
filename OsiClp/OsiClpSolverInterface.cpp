@@ -123,7 +123,7 @@ void OsiClpSolverInterface::initialSolve()
       // look further
       bool crashResult=false;
       if (doCrash>0)
-	crashResult =  (solver.crash(1000.0,2)>0);
+	crashResult =  (solver.crash(1000.0,0)>0);
       else if (doCrash==0)
 	crashResult =  (solver.crash(1000.0,0)>0);
       doPrimal=crashResult;

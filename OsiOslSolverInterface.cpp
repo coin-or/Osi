@@ -267,7 +267,7 @@ bool OsiOslSolverInterface::isPrimalObjectiveLimitReached() const
 {
   // *TEST*
   double limit = 0.0;
-  OsiSolverInterface::getDblParam(OsiPrimalObjectiveLimit, limit);
+  getDblParam(OsiPrimalObjectiveLimit, limit);
   if (limit > 1e30) {
     // was not ever set
     return false;
@@ -295,7 +295,7 @@ bool OsiOslSolverInterface::isDualObjectiveLimitReached() const
 {
   // *TEST*
   double limit = 0.0;
-  OsiSolverInterface::getDblParam(OsiDualObjectiveLimit, limit);
+  getDblParam(OsiDualObjectiveLimit, limit);
   if (limit > 1e30) {
     // was not ever set
     return false;

@@ -939,6 +939,40 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       failureMessage(solverName,"getDblParam OsiObjOffset on cloned solverInterface");
     delete si2;
   }
+  
+  
+  // Test setting solution
+  if ( dylpSolverInterface ) {
+     // Test for dylp since it does not support this function
+     failureMessage(solverName,"setting solution is unsupported");
+  }
+  else if ( glpkSolverInterface ) {
+     // Test for glpk since it does not support this function
+     failureMessage(solverName,"setting solution is not yet implemented");
+  }
+  else 
+  {
+    OsiSolverInterface & m1 = *(exmip1Si->clone());
+    int i;
+    
+    double * cs = new double[m1.getNumCols()];
+    for ( i = 0;  i < m1.getNumCols();  i++ ) 
+      cs[i] = i + .5;
+    m1.setColSolution(cs);
+    for ( i = 0;  i < m1.getNumCols();  i++ ) 
+      assert(m1.getColSolution()[i] == i + .5);
+    
+    double * rs = new double[m1.getNumRows()];
+    for ( i = 0;  i < m1.getNumRows();  i++ ) 
+      rs[i] = i - .5;
+    m1.setRowPrice(rs);
+    for ( i = 0;  i < m1.getNumRows();  i++ ) 
+      assert(m1.getRowPrice()[i] == i - .5);
+    
+    delete [] cs;
+    delete [] rs;
+    delete &m1;
+  }
 
     
   // Test load and assign problem

@@ -523,29 +523,6 @@ OsiOslSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       assert( eq(si.getInfinity(),OSL_INFINITY));
     }     
     
-    // Test setting solution
-    {
-      OsiOslSolverInterface m1(m);
-      int i;
-
-      double * cs = new double[m1.getNumCols()];
-      for ( i = 0;  i < m1.getNumCols();  i++ ) 
-        cs[i] = i + .5;
-      m1.setColSolution(cs);
-      for ( i = 0;  i < m1.getNumCols();  i++ ) 
-        assert(m1.getColSolution()[i] == i + .5);
-      
-      double * rs = new double[m1.getNumRows()];
-      for ( i = 0;  i < m1.getNumRows();  i++ ) 
-        rs[i] = i - .5;
-      m1.setRowPrice(rs);
-      for ( i = 0;  i < m1.getNumRows();  i++ ) 
-        assert(m1.getRowPrice()[i] == i - .5);
-
-      delete [] cs;
-      delete [] rs;
-    }
-    
     
     // Test fraction Indices
     {

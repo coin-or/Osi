@@ -108,13 +108,6 @@ public:
 		const char *extension = "mps",
 		double objsense = 0.0) const ;
 
-  /*! \brief Write the problem into the specified file in MPS format. */
-
-  int writeMps(const char *filename,
-	       const char **rownames, const char **colnames,
-	       int formatType = 0, int numberAcross = 2,
-	       double objsense = 0.0) const ;
-
   /*! \brief Load a problem description (OSI packed matrix, row sense,
 	  parameters unaffected).
   */
@@ -399,6 +392,11 @@ public:
 
   bool setStrParam(OsiStrParam key, const std::string& value) ;
 
+  /*! \brief Set an OSI hint */
+
+  bool setHintParam(OsiHintParam key, bool sense = true,
+		    OsiHintStrength strength = OsiHintTry, void *info = 0) ;
+
   /*! \brief Get an OSI integer parameter */
 
   bool getIntParam(OsiIntParam key, int& value) const ;
@@ -410,6 +408,11 @@ public:
   /*! \brief Get an OSI string parameter */
 
   bool getStrParam(OsiStrParam key, std::string& value) const ;
+
+  /*! \brief Get an OSI hint */
+
+  bool getHintParam(OsiHintParam key, bool &sense,
+		    OsiHintStrength &strength, void *&info) const ;
 
 //@}
 
@@ -482,19 +485,19 @@ public:
 //@}
 
 /*
-  These two structures contain dylp control parameters and tolerances. Leave
+  These structures contain dylp control options and tolerances. Leave
   them visible to the public for the nonce, until a better programmatic
-  interface is available.
+  interface is available. Initialized by the constructor.
 */
 
-  lpopts_struct* options ;
+  lpopts_struct *initialSolveOptions,*resolveOptions ;
   lptols_struct* tolerances ;
 
 private:
 
 /*
   Private implementation state and helper functions. If you're contemplating
-  using these, you should have a look at the code.
+  using any of these, you should have a look at the code.
   See OsiDylpSolverInterface.ccp for descriptions.
 */ 
   consys_struct* consys ;
@@ -511,7 +514,7 @@ private:
 //@}
 
 
-/*! \name Dylp instance control variables
+/*! \name Solver instance control variables
 
   These variables track the state of individual ODSI instances.
 */
@@ -536,54 +539,16 @@ private:
 
   double obj_sense ;
 
-//@}
+  /*! \brief Solver name (dylp).  */
 
+  const std::string solvername ;
 
-/*! \name OSI parameters
+  /*! \brief Array for info blocks associated with hints. */
 
-  These variables support the implementation of the parameters defined in the
-  OSI solver interface.
-*/
-//@{
-/*!
-  \var double osi_dual_tolerance
-  \brief Value of the OsiDualTolerance parameter
-*/
-/*!
-  \var double osi_primal_tolerance
-  \brief Value of the OsiPrimalTolerance parameter
-*/
-/*!
-  \var double osi_obj_offset
-  \brief Value of the OsiObjOffset parameter
-*/
-/*!
-  \var int osi_iterlim
-  \brief Limit for total simplex iterations.
-*/
-/*!
-  \var int osi_hotiterlim
-  \brief Limit for total simplex iterations for an lp initiated from
-	 solveFromHotStart.
-*/
-/*!
-  \var string osi_probname
-  \brief Problem name (from user or mps file).
-*/
-/*!
-  \var string osi_solvername
-  \brief Solver name (dylp).
-*/
-
-  double osi_dual_tolerance ;
-  double osi_primal_tolerance ;
-  double osi_obj_offset ;
-  int osi_iterlim ;
-  int osi_hotiterlim ;
-  std::string osi_probname ;
-  std::string osi_solvername ;
+  void *info_[OsiLastHintParam] ;
 
 //@}
+
 
 
 /*! \name Cached problem information
@@ -648,12 +613,14 @@ private:
 */
 //@{
   
-  void add_col(const CoinPackedVectorBase& osi_coli,
+  void add_col(const CoinPackedVectorBase& coin_coli,
     vartyp_enum vtypi,double vlbi, double vubi, double obji) ;
-  void add_row(const CoinPackedVectorBase& osi_rowi, 
+  void add_row(const CoinPackedVectorBase& coin_rowi, 
     char clazzi, contyp_enum ctypi, double rhsi, double rhslowi) ;
   void worst_case_primal() ;
   void calc_objval() ;
+  bool unimpHint(bool dylpSense, bool hintSense,
+		 OsiHintStrength hintStrength, const char *msgString) ;
 
 //@}
 
@@ -722,8 +689,8 @@ private:
 
 /*! \name File i/o helper routines */
 //@{
-  static std::string make_filename(const std::string filename, 
-			    const char *ext1, const char *ext2) ;
+  static std::string make_filename(const char *filename, 
+				   const char *ext1, const char *ext2) ;
 //@}
 
 } ;

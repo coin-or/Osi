@@ -245,6 +245,8 @@ protected:
    //@{
    /** Default constructor. */
    OsiPackedVectorBase();
+
+public:
    /** Destructor */
    virtual ~OsiPackedVectorBase();
    //@}

@@ -228,6 +228,20 @@ OsiSpxSolverInterface::getDblParam(OsiDblParam key, double& value) const
   return retval;
 }
 
+bool
+OsiSpxSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
+{
+	bool retval = false;
+  switch (key) {
+  case OsiSolverName:
+    value = "soplex";
+    break;
+  case OsiLastStrParam:
+    return false;
+  }
+  return true;
+}
+
 //#############################################################################
 // Methods returning info on how the solution process terminated
 //#############################################################################
@@ -476,7 +490,18 @@ int OsiSpxSolverInterface::getNumRows() const
 }
 int OsiSpxSolverInterface::getNumElements() const
 {
+#if 0
   return spxsolver_.nNzos();
+#else   
+  int retVal = 0;
+  int nrows  = getNumRows();
+  int row;
+  for( row = 0; row < nrows; ++row ) {
+    const soplex::SVector& rowvec = spxsolver_.rowVector( row );
+    retVal += rowvec.size();
+  }
+  return retVal;
+#endif
 }
 
 //------------------------------------------------------------------

@@ -64,6 +64,8 @@ public:
     bool getIntParam(OsiIntParam key, int& value) const;
     // Get an double parameter
     bool getDblParam(OsiDblParam key, double& value) const;
+    // Get a string parameter
+    bool getStrParam(OsiStrParam key, std::string& value) const;
   //@}
 
   //---------------------------------------------------------------------------

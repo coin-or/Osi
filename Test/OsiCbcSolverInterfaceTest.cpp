@@ -918,7 +918,8 @@ OsiCbcSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
   {    
     OsiOslSolverInterface mmm;
     OsiCbcSolverInterface mm(&mmm);
-    OsiCbcSolverInterface m(&mm);
+    CbcStrategyNull strategy;
+    OsiCbcSolverInterface m(&mm,&strategy);
     std::string fn = mpsDir+"p0033";
     m.readMps(fn.c_str(),"mps");
     //m.initialSolve();

@@ -175,7 +175,7 @@ public:
       dblParam_[key] = value;
       return true;
     }
-    // Set an double parameter
+    // Set an string parameter
     virtual bool setStrParam(OsiStrParam key, const std::string & value) {
       strParam_[key] = value;
       return true;
@@ -806,7 +806,7 @@ private:
     /// Array of double parameters
     double dblParam_[OsiLastDblParam];
     /// Array of string parameters
-    std::string strParam_[OsiLastDblParam];
+    std::string strParam_[OsiLastStrParam];
 
     /* The warmstart information used for hotstarting in case the default
        hotstart implementation is used */
@@ -836,7 +836,7 @@ OsiSolverInterfaceMpsUnitTest(
    const std::string & mpsDir);
 
 //#############################################################################
-/** A quick inlined function to convert from lb/ub stryle constraint
+/** A quick inlined function to convert from lb/ub style constraint
     definition to sense/rhs/range style */
 inline void
 OsiSolverInterface::convertBoundToSense(const double lower, const double upper,
@@ -870,7 +870,7 @@ OsiSolverInterface::convertBoundToSense(const double lower, const double upper,
 }
 
 //-----------------------------------------------------------------------------
-/** A quick inlined function to convert from sense/rhs/range stryle constraint
+/** A quick inlined function to convert from sense/rhs/range style constraint
     definition to lb/ub style */
 inline void
 OsiSolverInterface::convertSenseToBound(const char sense, const double right,

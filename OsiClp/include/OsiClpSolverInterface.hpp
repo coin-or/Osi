@@ -238,7 +238,14 @@ public:
       { return modelPtr_->primalRowSolution(); }
   
       /// Get objective function value
-      virtual double getObjValue() const { return modelPtr_->objectiveValue(); }
+      virtual double getObjValue() const {
+#     if 0
+        // This does not pass unitTest when getObjValue is called before solve.
+        return modelPtr_->objectiveValue();
+#     else
+        return OsiSolverInterface::getObjValue();
+#     endif
+      }
   
       /** Get how many iterations it took to solve the problem (whatever
 	  "iteration" mean to the solver. */

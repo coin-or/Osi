@@ -205,6 +205,24 @@ OsiSolverInterface::addRows(const int numrows,
   }
 }
 
+
+//#############################################################################
+// Implement getObjValue in a simple way that the derived solver interfaces
+// can use if the choose.
+//#############################################################################
+double OsiSolverInterface::getObjValue() const
+{
+  int nc = getNumCols();
+  const double * objCoef = getObjCoefficients();
+  const double * colSol  = getColSolution();
+  double objOffset=0.0;
+  getDblParam(OsiObjOffset,objOffset);
+  
+  // Compute dot product of objCoef and colSol and then adjust by offset
+  double retVal = CoinPackedVector(nc,objCoef).dotProduct(colSol)-objOffset;
+  return retVal;
+}
+
 //#############################################################################
 // Apply Cuts
 //#############################################################################

@@ -1148,6 +1148,11 @@ const double * OsiGlpkSolverInterface::getRowActivity() const
 
 double OsiGlpkSolverInterface::getObjValue() const
 {
+#if 0
+  This implementation does not pass unitTest, when getObjValue
+  is called prior to solving the problem.
+  The base class implementation passes unitTest.
+
         LPX *model = getMutableModelPtr();
 	assert( lpx_get_status( model ) != LPX_UNDEF );
   
@@ -1163,6 +1168,9 @@ double OsiGlpkSolverInterface::getObjValue() const
   double retVal = obj - 2.0*objOffset;
 
 	return retVal;
+#else
+  return OsiSolverInterface::getObjValue();
+#endif
 }
 
 //-----------------------------------------------------------------------------

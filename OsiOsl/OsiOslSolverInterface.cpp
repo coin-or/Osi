@@ -746,7 +746,13 @@ const double * OsiOslSolverInterface::getRowActivity() const
 //------------------------------------------------------------------
 double OsiOslSolverInterface::getObjValue() const
 {
+#if 0
+  // This does not pass unitTest if getObjValue is called
+  // before solving.
   return ekk_getRobjvalue(getMutableModelPtr());
+#else
+  return OsiSolverInterface::getObjValue();
+#endif
 }
 //------------------------------------------------------------------
 int OsiOslSolverInterface::getIterationCount() const

@@ -388,7 +388,8 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       oslSi.setColUpper( 4, 10.2345 );
       assert( eq(oslSi.getColUpper()[4],10.2345) );
 
-      assert( eq(oslSi.getObjValue(),0.0) );
+      double objValue = oslSi.getObjValue();
+      assert( eq(objValue,3.5) );
 
       assert( eq( oslSi.getObjCoefficients()[0],  1.0) );
       assert( eq( oslSi.getObjCoefficients()[1],  0.0) );

@@ -262,7 +262,14 @@ public:
       virtual const double * getRowActivity() const { return lhs_; }
   
       /// Get objective function value
-      virtual double getObjValue() const { return lagrangeanCost_; }
+      virtual double getObjValue() const { 
+#if 0
+        // This does not pass unitTest if getObjValue is called before solve
+        return lagrangeanCost_;
+#else
+        return OsiSolverInterface::getObjValue();
+#endif
+      }
   
       /** Get how many iterations it took to solve the problem (whatever
 	  "iteration" mean to the solver. */

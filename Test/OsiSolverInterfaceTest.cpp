@@ -824,14 +824,24 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     if( !okColSol )
       failureMessage(solverName,"getColSolution before solve");
     
-    assert( eq( exmip1Si->getObjCoefficients()[0],  1.0) );
-    assert( eq( exmip1Si->getObjCoefficients()[1],  0.0) );
-    assert( eq( exmip1Si->getObjCoefficients()[2],  0.0) );
-    assert( eq( exmip1Si->getObjCoefficients()[3],  0.0) );
-    assert( eq( exmip1Si->getObjCoefficients()[4],  2.0) );
-    assert( eq( exmip1Si->getObjCoefficients()[5],  0.0) );
-    assert( eq( exmip1Si->getObjCoefficients()[6],  0.0) );
-    assert( eq( exmip1Si->getObjCoefficients()[7], -1.0) );
+    // Test value of objective function coefficients
+    const double * objCoef = exmip1Si->getObjCoefficients();
+    assert( eq( objCoef[0],  1.0) );
+    assert( eq( objCoef[1],  0.0) );
+    assert( eq( objCoef[2],  0.0) );
+    assert( eq( objCoef[3],  0.0) );
+    assert( eq( objCoef[4],  2.0) );
+    assert( eq( objCoef[5],  0.0) );
+    assert( eq( objCoef[6],  0.0) );
+    assert( eq( objCoef[7], -1.0) );
+
+    // Test that objective value is correct
+    double correctObjValue = CoinPackedVector(nc,objCoef).dotProduct(cs);
+    double siObjValue = exmip1Si->getObjValue();
+    if( !eq(correctObjValue,siObjValue) )
+      failureMessage(solverName,"getObjValue before solve");
+
+
   }
   
   

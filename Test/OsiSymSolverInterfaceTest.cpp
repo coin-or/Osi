@@ -100,7 +100,7 @@ void OsiSymSolverInterfaceUnitTest( const std::string & mpsDir, const std::strin
     CoinRelFltEq eq;
     OsiSymSolverInterface m;
     std::string fn = mpsDir+"exmip1";
-    m.readMps(fn.c_str(),"mps");
+    m.readMps(const_cast<char *>(fn.c_str()));
     int ad = 13579;
     m.setApplicationData(&ad);
     assert( *((int *)(m.getApplicationData())) == ad );
@@ -215,7 +215,7 @@ void OsiSymSolverInterfaceUnitTest( const std::string & mpsDir, const std::strin
     {
       OsiSymSolverInterface fim;
       std::string fn = mpsDir+"exmip1";
-      fim.readMps(fn.c_str(),"mps");
+      fim.readMps(const_cast<char *>(fn.c_str()));
       //fim.setModelPtr(m);
       // exmip1.mps has 2 integer variables with index 2 & 3
       assert(  fim.isContinuous(0) );

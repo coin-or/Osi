@@ -1085,20 +1085,21 @@ void OsiClpSolverInterface::extractSenseRhsRange() const
   if (rowsense_ == NULL) {
     // all three must be NULL
     assert ((rhs_ == NULL) && (rowrange_ == NULL));
-
-
+    
     int nr=modelPtr_->numberRows();
-    rowsense_ = new char[nr];
-    rhs_ = new double[nr];
-    rowrange_ = new double[nr];
-    std::fill(rowrange_,rowrange_+nr,0.0);
-
-    const double * lb = modelPtr_->rowLower();
-    const double * ub = modelPtr_->rowUpper();
-
-    int i;
-    for ( i=0; i<nr; i++ ) {
-      convertBoundToSense(lb[i], ub[i], rowsense_[i], rhs_[i], rowrange_[i]);
+    if ( nr!=0 ) {
+      rowsense_ = new char[nr];
+      rhs_ = new double[nr];
+      rowrange_ = new double[nr];
+      std::fill(rowrange_,rowrange_+nr,0.0);
+      
+      const double * lb = modelPtr_->rowLower();
+      const double * ub = modelPtr_->rowUpper();
+      
+      int i;
+      for ( i=0; i<nr; i++ ) {
+        convertBoundToSense(lb[i], ub[i], rowsense_[i], rhs_[i], rowrange_[i]);
+      }
     }
   }
 }

@@ -19,7 +19,6 @@
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
 #include "ClpPresolve.hpp"
-
 static double totalTime=0.0;
 
 //#############################################################################
@@ -479,6 +478,7 @@ void OsiClpSolverInterface::resolve()
   //modelPtr_->setSolveType(saveSolveType);
 #endif
 }
+#ifndef NDEBUG
 // For errors to make sure print to screen
 // only called in debug mode
 static void indexError(int index,
@@ -487,6 +487,7 @@ static void indexError(int index,
   std::cerr<<"Illegal index "<<index<<" in OsiClpSolverInterface::"<<methodName<<std::endl;
   throw CoinError("Illegal index",methodName,"OsiClpSolverInterface");
 }
+#endif
 //#############################################################################
 // Parameter related methods
 //#############################################################################
@@ -1004,8 +1005,8 @@ OsiClpSolverInterface::setContinuous(const int* indices, int len)
 #endif
     int i;
     for (i=0; i<len;i++) {
-#ifndef NDEBUG
       int colNumber = indices[i];
+#ifndef NDEBUG
       if (colNumber<0||colNumber>=n) {
 	indexError(colNumber,"setContinuous");
       }
@@ -1027,8 +1028,8 @@ OsiClpSolverInterface::setInteger(const int* indices, int len)
 #endif
   int i;
   for (i=0; i<len;i++) {
-#ifndef NDEBUG
     int colNumber = indices[i];
+#ifndef NDEBUG
     if (colNumber<0||colNumber>=n) {
       indexError(colNumber,"setInteger");
     }

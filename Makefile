@@ -2,7 +2,7 @@
 
 SOLVERLIBS :=
 SOLVERLIBS += libOsiOsl
-SOLVERLIBS += libOsiVol
+#SOLVERLIBS += libOsiVol
 SOLVERLIBS += libOsiClp
 # SOLVERLIBS += libOsiCpx
 # SOLVERLIBS += libOsiSpx

@@ -14,6 +14,7 @@
 
 class OsiPackedMatrix;
 class OsiCuts;
+class OsiRowCut;
 class OsiRowCutDebugger;
 class OsiWarmStart;
 
@@ -612,6 +613,11 @@ public:
       */
       virtual ApplyCutsReturnCode applyCuts(const OsiCuts & cs,
     					    double effectivenessLb = 0.0);
+      /** Apply a collection of row cuts which are all effective.
+	  applyCuts seems to do one at a time which seems inefficient.
+	  Would be even more efficient to pass an array of pointers.
+      */
+      virtual void applyRowCuts(int numberCuts, const OsiRowCut * cuts);
     //@}
   //@}
 

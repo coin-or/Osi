@@ -26,7 +26,7 @@ OsiFactorization::factorSparse (  )
     larger = numberColumns_;
   } else {
     larger = numberRows_;
-  }				
+  }
   //do slacks first
   int pivotColumn;
   for ( pivotColumn = 0; pivotColumn < lastColumnInBlock;
@@ -45,9 +45,9 @@ OsiFactorization::factorSparse (  )
 	}
 	pivotColumn_[numberGoodU_] = pivotColumn;
 	numberGoodU_++;
-      }				
-    }				
-  }				
+      }
+    }
+  }
   numberSlacks_ = numberGoodU_;
   while ( count <= biggerDimension_ ) {
     OsiBigIndex minimumCount = INT_MAX;
@@ -72,7 +72,7 @@ OsiFactorization::factorSparse (  )
 #if OSI_DEBUG
 	    if ( numberInColumn_[iColumn] != count ) {
 	      abort (  );
-	    }			
+	    }
 #endif
 	    OsiBigIndex start = startColumnU_[iColumn];
 	    int iRow = indexRow[start];
@@ -86,13 +86,13 @@ OsiFactorization::factorSparse (  )
 	    break;
 	  } else {
 	    look = nextCount_[look];
-	  }			
+	  }
 	}			/* endwhile */
 	if ( !stopping ) {
 	  //back to singletons
 	  look = firstCount_[1];
-	}			
-      }				
+	}
+      }
       int *nextCount = nextCount_;
       int *numberInRow = numberInRow_;
       int *numberInColumn = numberInColumn_;
@@ -109,7 +109,7 @@ OsiFactorization::factorSparse (  )
 #if OSI_DEBUG
 	  if ( numberInRow[iRow] != count ) {
 	    abort (  );
-	  }			
+	  }
 #endif
 	  look = nextCount[look];
 	  bool rejected = false;
@@ -136,7 +136,7 @@ OsiFactorization::factorSparse (  )
 
 		if ( where >= end_debug ) {
 		  abort (  );
-		}		
+		}
 	      }
 #endif
 	      double value = element[where];
@@ -153,31 +153,31 @@ OsiFactorization::factorSparse (  )
 		  stopping = true;
 		  look = -1;
 		  break;
-		}		
+		}
 	      } else if ( pivotRow == -1 ) {
 		rejected = true;
-	      }			
-	    }			
-	  }			
+	      }
+	    }
+	  }
 	  trials++;
 	  if ( trials >= numberTrials && pivotRow >= 0 ) {
 	    stopping = true;
 	    look = -1;
 	    break;
-	  }			
+	  }
 	  if ( rejected ) {
 	    //take out for moment
 	    //eligible when row changes
 	    deleteLink ( iRow );
 	    addLink ( iRow, biggerDimension_ + 1 );
-	  }			
+	  }
 	} else {
 	  int iColumn = look - numberRows;
 
 #if OSI_DEBUG
 	  if ( numberInColumn[iColumn] != count ) {
 	    abort (  );
-	  }			
+	  }
 #endif
 	  look = nextCount[look];
 	  OsiBigIndex start = startColumn[iColumn];
@@ -205,17 +205,17 @@ OsiFactorization::factorSparse (  )
 		  stopping = true;
 		  look = -1;
 		  break;
-		}		
-	      }			
-	    }			
-	  }			
+		}
+	      }
+	    }
+	  }
 	  trials++;
 	  if ( trials >= numberTrials && pivotRow >= 0 ) {
 	    stopping = true;
 	    look = -1;
 	    break;
-	  }			
-	}			
+	  }
+	}
       }				/* endwhile */
       //end of this - onto next
       if ( !stopping ) {
@@ -224,7 +224,7 @@ OsiFactorization::factorSparse (  )
 	  look = firstCount_[count];
 	} else {
 	  stopping = true;
-	}			
+	}
       } else {
 	if ( pivotRow >= 0 ) {
 	  int numberDoRow = numberInRow_[pivotRow] - 1;
@@ -242,7 +242,7 @@ OsiFactorization::factorSparse (  )
 		if ( increment & 15 ) {
 		  increment = increment & ( ~15 );
 		  increment += 16;
-		}		
+		}
 		int increment2 =
 
 		  ( increment + OSIFACTORIZATION_BITS_PER_INT - 1 ) >> OSIFACTORIZATION_SHIFT_PER_INT;
@@ -252,7 +252,7 @@ OsiFactorization::factorSparse (  )
 		  workSize = size;
 		  delete []  workArea2 ;
 		  workArea2 = ( unsigned int * ) new int [ workSize ];
-		}		
+		}
 		bool goodPivot;
 
 		if ( larger < 32766 ) {
@@ -269,7 +269,7 @@ OsiFactorization::factorSparse (  )
 				      workArea, workArea2, increment,
 				      increment2, ( int * ) markRow_ ,
 				      INT_MAX);
-		}		
+		}
 		if ( !goodPivot ) {
 		  return -99;
 		}
@@ -277,21 +277,21 @@ OsiFactorization::factorSparse (  )
 		if ( !pivotOneOtherRow ( pivotRow, pivotColumn ) ) {
 		  return -99;
 		}
-	      }			
+	      }
 	    } else {
 	      if ( !pivotRowSingleton ( pivotRow, pivotColumn ) ) {
 		return -99;
 	      }
-	    }			
+	    }
 	  } else {
 	    if ( !pivotColumnSingleton ( pivotRow, pivotColumn ) ) {
 	      return -99;
 	    }
-	  }			
+	  }
 	  pivotColumn_[numberGoodU_] = pivotColumn;
 	  numberGoodU_++;
-	}			
-      }				
+	}
+      }
     }				/* endwhile */
 #if OSI_DEBUG==2
     checkConsistency (  );

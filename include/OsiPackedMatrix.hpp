@@ -237,7 +237,7 @@ public:
     /** Copy method. This method makes an exact replica of the argument,
         including the extra space parameters. */
     void copyOf(const OsiPackedMatrix& rhs);
-    /** Copy the arguments to the matrix. If <code>len<code> is a NULL pointer
+    /** Copy the arguments to the matrix. If <code>len</code> is a NULL pointer
         then the matrix is assumed to have no gaps in it and <code>len</code>
         will be created accordingly. */
     void copyOf(const bool colordered,

@@ -17,11 +17,14 @@ void
 OsiWarmStartBasis::setSize(int ns, int na) {
   delete[] structuralStatus_;
   delete[] artificialStatus_;
-  structuralStatus_ = new char[(ns + 3) / 4];
-  artificialStatus_ = new char[(na + 3) / 4];
+  // Round all so arrays multiple of 4
+  int nint = (ns+15) >> 4;
+  structuralStatus_ = new char[4*nint];
   // CoinFillN was used here - I am sure memset will be cleaner for char
-  memset (structuralStatus_, 0, ((ns + 3) / 4) * sizeof(char));
-  memset (artificialStatus_, 0, ((na + 3) / 4) * sizeof(char));
+  memset (structuralStatus_, 0, (4*nint) * sizeof(char));
+  nint = (na+15) >> 4;
+  artificialStatus_ = new char[4*nint];
+  memset (artificialStatus_, 0, (4*nint) * sizeof(char));
   numArtificial_ = na;
   numStructural_ = ns;
 }
@@ -42,21 +45,33 @@ OsiWarmStartBasis::OsiWarmStartBasis(int ns, int na,
 				     const char* sStat, const char* aStat) :
   numStructural_(ns), numArtificial_(na),
   structuralStatus_(NULL), artificialStatus_(NULL) {
-  structuralStatus_ = new char[(ns + 3) / 4];
-  artificialStatus_ = new char[(na + 3) / 4];
+  // Round all so arrays multiple of 4
+  int nint = (ns+15) >> 4;
+  structuralStatus_ = new char[4*nint];
+  structuralStatus_[4*nint-3]=0;
+  structuralStatus_[4*nint-2]=0;
+  structuralStatus_[4*nint-1]=0;
   memcpy (structuralStatus_, sStat, ((ns + 3) / 4) * sizeof(char));
+  nint = (na+15) >> 4;
+  artificialStatus_ = new char[4*nint];
+  artificialStatus_[4*nint-3]=0;
+  artificialStatus_[4*nint-2]=0;
+  artificialStatus_[4*nint-1]=0;
   memcpy (artificialStatus_, aStat, ((na + 3) / 4) * sizeof(char));
 }
 
 OsiWarmStartBasis::OsiWarmStartBasis(const OsiWarmStartBasis& ws) :
   numStructural_(ws.numStructural_), numArtificial_(ws.numArtificial_),
   structuralStatus_(NULL), artificialStatus_(NULL) {
-  structuralStatus_ = new char[(numStructural_ + 3) / 4];
-  artificialStatus_ = new char[(numArtificial_ + 3) / 4];
+  // Round all so arrays multiple of 4
+  int nint = (numStructural_+15) >> 4;
+  structuralStatus_ = new char[4*nint];
   memcpy (structuralStatus_, ws.structuralStatus_, 
-	  ((numStructural_ + 3) / 4) * sizeof(char));
+	  (4*nint) * sizeof(char));
+  nint = (numArtificial_+15) >> 4;
+  artificialStatus_ = new char[4*nint];
   memcpy (artificialStatus_, ws.artificialStatus_, 
-	  ((numArtificial_ + 3) / 4) * sizeof(char));
+	  (4*nint) * sizeof(char));
 }
 
 OsiWarmStartBasis& 
@@ -67,12 +82,15 @@ OsiWarmStartBasis::operator=(const OsiWarmStartBasis& rhs)
     numArtificial_=rhs.numArtificial_;
     delete [] structuralStatus_;
     delete [] artificialStatus_;
-    structuralStatus_ = new char[(numStructural_ + 3) / 4];
-    artificialStatus_ = new char[(numArtificial_ + 3) / 4];
+    // Round all so arrays multiple of 4
+    int nint = (numStructural_+15) >> 4;
+    structuralStatus_ = new char[4*nint];
     memcpy (structuralStatus_, rhs.structuralStatus_, 
-	    ((numStructural_ + 3) / 4) * sizeof(char));
+	    (4*nint) * sizeof(char));
+    nint = (numArtificial_+15) >> 4;
+    artificialStatus_ = new char[4*nint];
     memcpy (artificialStatus_, rhs.artificialStatus_, 
-	    ((numArtificial_ + 3) / 4) * sizeof(char));
+	  (4*nint) * sizeof(char));
   }
   return *this;
 }
@@ -84,8 +102,8 @@ OsiWarmStartBasis::resize (int newNumberRows, int newNumberColumns)
   char * array;
   int i , nCharNew, nCharOld;
   if (newNumberRows!=numArtificial_) {
-    nCharOld  = (numArtificial_+3)>>2;
-    nCharNew  = (newNumberRows+3)>>2;
+    nCharOld  = 4*((numArtificial_+15)>>4);
+    nCharNew  = 4*((newNumberRows+15)>>4);
     array = new char[nCharNew];
     // zap all for clarity and zerofault etc
     memset(array,0,nCharNew*sizeof(char));
@@ -97,8 +115,8 @@ OsiWarmStartBasis::resize (int newNumberRows, int newNumberColumns)
     numArtificial_ = newNumberRows;
   }
   if (newNumberColumns!=numStructural_) {
-    nCharOld  = (numStructural_+3)>>2;
-    nCharNew  = (newNumberColumns+3)>>2;
+    nCharOld  = 4*((numStructural_+15)>>4);
+    nCharNew  = 4*((newNumberColumns+15)>>4);
     array = new char[nCharNew];
     // zap all for clarity and zerofault etc
     memset(array,0,nCharNew*sizeof(char));
@@ -125,7 +143,7 @@ OsiWarmStartBasis::deleteRows(int number, const int * which)
       deleted[j]=1;
     }
   }
-  int nCharNew  = (numArtificial_-numberDeleted+3)>>2;
+  int nCharNew  = 4*((numArtificial_-numberDeleted+15)>>4);
   char * array = new char[nCharNew];
   int put=0;
   int numberNotBasic=0;
@@ -163,7 +181,7 @@ OsiWarmStartBasis::deleteColumns(int number, const int * which)
       deleted[j]=1;
     }
   }
-  int nCharNew  = (numStructural_-numberDeleted+3)>>2;
+  int nCharNew  = 4*((numStructural_-numberDeleted+3)>>4);
   char * array = new char[nCharNew];
   int put=0;
   int numberBasic=0;

@@ -248,7 +248,7 @@ int OsiFactorization::factorize (
   }
   if ( numberBasic > numberRows ) {
     return -2; // say too many in basis
-  }				
+  }
   numberElements = 3 * numberBasic + 3 * numberElements + 10000;
   getAreas ( numberRows, numberBasic, numberElements,
 	     2 * numberElements );
@@ -503,23 +503,23 @@ OsiFactorization::show_self (  ) const
       << " " << pivotRowL_[i]
       << " " << pivotColumn_[i]
       << " " << pivotRegion_[i] << std::endl;
-  }				
+  }
   for ( i = 0; i < numberRows_; i++ ) {
     std::cout << "u " << i << " " << numberInColumn_[i] << std::endl;
     int j;
     for ( j = startColumnU_[i]; j < startColumnU_[i] + numberInColumn_[i];
 	  j++ ) {
       std::cout << indexRowU_[j] << " " << elementU_[j] << std::endl;
-    }				
-  }				
+    }
+  }
   for ( i = 0; i < numberRows_; i++ ) {
     std::cout << "l " << i << " " << startColumnL_[i + 1] -
       startColumnL_[i] << std::endl;
     int j;
     for ( j = startColumnL_[i]; j < startColumnL_[i + 1]; j++ ) {
       std::cout << indexRowL_[j] << " " << elementL_[j] << std::endl;
-    }				
-  }				
+    }
+  }
 
 }
 
@@ -549,7 +549,7 @@ OsiFactorization::getAreas ( int numberOfRows,
       std::cout<<"Increasing factorization areas by "<<areaFactor_<<std::endl;
     lengthAreaU_ *= areaFactor_;
     lengthAreaL_ *= areaFactor_;
-  }				
+  }
   elementU_ = new double [ lengthAreaU_ ];
   indexRowU_ = new int [ lengthAreaU_ ];
   indexColumnU_ = new int [ lengthAreaU_ ];
@@ -604,7 +604,7 @@ OsiFactorization::getAreas ( int numberOfRows,
       biggerDimension_ = numberRows_;
     } else {
       biggerDimension_ = numberColumns_;
-    }				
+    }
     firstCount_ = new int [ biggerDimension_ + 2 ];
     nextCount_ = new int [ numberRows_ + numberColumns_ ];
     lastCount_ = new int [ numberRows_ + numberColumns_ ];
@@ -621,7 +621,7 @@ OsiFactorization::getAreas ( int numberOfRows,
     memset(firstCount_,'g', 2 *sizeof(int));
 #endif
     biggerDimension_ = 0;
-  }				
+  }
 }
 
 //  preProcess.  PreProcesses raw triplet data
@@ -655,7 +655,7 @@ OsiFactorization::preProcess ( int state,
 
 	numberInRow[iRow]++;
 	numberInColumn[iColumn]++;
-      }				
+      }
     }
   case -1:			//sort
   case 1:			//sort
@@ -668,7 +668,7 @@ OsiFactorization::preProcess ( int state,
 	//position after end of Column
 	i += numberInColumn[iColumn];
 	startColumn[iColumn] = i;
-      }				
+      }
       for ( k = numberElements - 1; k >= 0; k-- ) {
 	int iColumn = indexColumn[k];
 
@@ -694,10 +694,10 @@ OsiFactorization::preProcess ( int state,
 	      iRow = iRowSave;
 	    } else {
 	      break;
-	    }			
+	    }
 	  }			/* endwhile */
-	}			
-      }				
+	}
+      }
     }
   case 2:			//move largest in column to beginning
     //and do row part
@@ -709,7 +709,7 @@ OsiFactorization::preProcess ( int state,
       for ( iRow = 0; iRow < numberRows; iRow++ ) {
 	startRow[iRow] = i;
 	i += numberInRow[iRow];
-      }				
+      }
       CoinFillN ( numberInRow, numberRows , 0);
       int iColumn;
       for ( iColumn = 0; iColumn < numberColumns; iColumn++ ) {
@@ -737,14 +737,14 @@ OsiFactorization::preProcess ( int state,
 	    if ( valueAbs > valueLargest ) {
 	      valueLargest = valueAbs;
 	      largest = k;
-	    }			
-	  }			
+	    }
+	  }
 	  indexRow[first] = indexRow[largest];
 	  element[first] = element[largest];
 	  indexRow[largest] = iRowSave;
 	  element[largest] = valueSave;
-	}			
-      }				
+	}
+      }
     }
   case 3:			//links and initialize pivots
     {
@@ -765,7 +765,7 @@ OsiFactorization::preProcess ( int state,
 	int number = numberInRow[iRow];
 
 	addLink ( iRow, number );
-      }				
+      }
       lastRow[maximumRowsExtra_] = numberRows - 1;
       nextRow[maximumRowsExtra_] = 0;
       lastRow[0] = maximumRowsExtra_;
@@ -778,7 +778,7 @@ OsiFactorization::preProcess ( int state,
 	int number = numberInColumn[iColumn];
 
 	addLink ( iColumn + numberRows, number );
-      }				
+      }
       lastColumn[maximumColumnsExtra_] = numberColumns - 1;
       nextColumn[maximumColumnsExtra_] = 0;
       lastColumn[0] = maximumColumnsExtra_;
@@ -800,16 +800,16 @@ OsiFactorization::factor (  )
     {
       if ( numberGoodU_ < numberRows_ ) {
 	int i, k;
-	
+
 	int * swap = permute_;
 	permute_ = nextRow_;
 	nextRow_ = swap;
 	for ( i = 0; i < numberRows_; i++ ) {
 	  lastRow_[i] = -1;
-	}			
+	}
 	for ( i = 0; i < numberColumns_; i++ ) {
 	  lastColumn_[i] = -1;
-	}			
+	}
 	for ( i = 0; i < numberGoodU_; i++ ) {
 	  int goodRow = pivotRowL_[i];	//valid pivot row
 	  int goodColumn = pivotColumn_[i];
@@ -827,16 +827,16 @@ OsiFactorization::factor (  )
 	    //std::cout << i << " " <<permute_[i] << std::endl;
 	  } else {
 	    k++;
-	  }			
-	}			
+	  }
+	}
 	for ( i = 0; i < numberColumns_; i++ ) {
 	  pivotColumn_[i] = lastColumn_[i];
-	}			
+	}
 	if ((messageLevel_&1)!=0) 
 	  std::cout <<"Factorization has "<<numberRows_-k
 		    <<" singularities"<<std::endl;
 	status_ = -1;
-      }				
+      }
     }
     break;
   default:
@@ -854,7 +854,7 @@ OsiFactorization::factor (  )
       areaFactor_ *= 1.1;
     }
     cleanup (  );
-  }				
+  }
   return status_;
 }
 
@@ -879,7 +879,7 @@ OsiFactorization::pivotRowSingleton ( int pivotRow,
   {
     if ( pivotRowPosition >= endColumn ) {
       abort (  );
-    }				
+    }
   }
 #endif
   //store column in L, compress in U and take column out
@@ -890,7 +890,7 @@ OsiFactorization::pivotRowSingleton ( int pivotRow,
     if ((messageLevel_&1)!=0) 
       std::cout << "more memory needed in middle of invert" << std::endl;
     return false;
-  }				
+  }
   pivotRowL_[numberGoodL_] = pivotRow;
   startColumnL_[numberGoodL_] = l;	//for luck and first time
   numberGoodL_++;
@@ -920,14 +920,14 @@ OsiFactorization::pivotRowSingleton ( int pivotRow,
 #if OSI_DEBUG
     if ( where >= end ) {
       abort (  );
-    }				
+    }
 #endif
     indexColumnU_[where] = indexColumnU_[end - 1];
     numberInRow--;
     numberInRow_[iRow] = numberInRow;
     deleteLink ( iRow );
     addLink ( iRow, numberInRow );
-  }				
+  }
   for ( i = pivotRowPosition + 1; i < endColumn; i++ ) {
     int iRow = indexRowU_[i];
 
@@ -946,14 +946,14 @@ OsiFactorization::pivotRowSingleton ( int pivotRow,
 #if OSI_DEBUG
     if ( where >= end ) {
       abort (  );
-    }				
+    }
 #endif
     indexColumnU_[where] = indexColumnU_[end - 1];
     numberInRow--;
     numberInRow_[iRow] = numberInRow;
     deleteLink ( iRow );
     addLink ( iRow, numberInRow );
-  }				
+  }
   numberInColumn_[pivotColumn] = 0;
   //modify linked list for pivots
   numberInRow_[pivotRow] = 0;
@@ -987,8 +987,8 @@ OsiFactorization::pivotColumnSingleton ( int pivotRow,
 
     if ( iColumn != pivotColumn ) {
       saveColumn_[put++] = iColumn;
-    }				
-  }				
+    }
+  }
   //take out this bit of indexColumnU
   int next = nextRow_[pivotRow];
   int last = lastRow_[pivotRow];
@@ -1029,7 +1029,7 @@ OsiFactorization::pivotColumnSingleton ( int pivotRow,
 	    numberInColumn_[iColumn];
 	  if ( pivot >= end_debug ) {
 	    abort (  );
-	  }			
+	  }
 	}
 #endif
 	if ( pivot != start ) {
@@ -1059,20 +1059,20 @@ OsiFactorization::pivotColumnSingleton ( int pivotRow,
 	    if ( valueAbs > valueLargest ) {
 	      valueLargest = valueAbs;
 	      largest = k;
-	    }			
-	  }			
+	    }
+	  }
 	  indexRowU_[start + 1] = indexRowU_[largest];
 	  elementU_[start + 1] = elementU_[largest];
 	  indexRowU_[largest] = iRowSave;
 	  elementU_[largest] = valueSave;
-	}			
-      }				
+	}
+      }
       //clean up counts
       numberInColumn_[iColumn]--;
       numberInColumnPlus_[iColumn]++;
       startColumnU_[iColumn]++;
-    }				
-  }				
+    }
+  }
   //modify linked list for pivots
   deleteLink ( pivotRow );
   deleteLink ( pivotColumn + numberRows_ );
@@ -1119,13 +1119,13 @@ OsiFactorization::getColumnSpace ( int iColumn,
 	get = -startColumnU_[iColumn];
 	getEnd = get + numberInColumn_[iColumn];
 	startColumnU_[iColumn] = -put;
-      }				
+      }
       OsiBigIndex i;
       for ( i = get; i < getEnd; i++ ) {
 	indexRowU_[put] = indexRowU_[i];
 	elementU_[put] = elementU_[i];
 	put++;
-      }				
+      }
       iColumn = nextColumn_[iColumn];
       numberCompressions_++;
     }				/* endwhile */
@@ -1133,15 +1133,15 @@ OsiFactorization::getColumnSpace ( int iColumn,
     space = lengthAreaU_ - put;
     if ( extraNeeded == INT_MAX >> 1 ) {
       return true;
-    }				
+    }
     if ( space < extraNeeded + number + 2 ) {
       //need more space
       //if we can allocate bigger then do so and copy
       //if not then return so code can start again
       status_ = -99;
       return false;
-    }				
-  }				
+    }
+  }
   OsiBigIndex put = startColumnU_[maximumColumnsExtra_];
   int next = nextColumn_[iColumn];
   int last = lastColumn_[iColumn];
@@ -1170,7 +1170,7 @@ OsiFactorization::getColumnSpace ( int iColumn,
 	element[put] = element[get];
 	indexRow[put] = indexRow[get];
 	i = 1;
-      }				
+      }
       for ( ; i < number; i += 2 ) {
 	double value0 = element[get + i];
 	double value1 = element[get + i + 1];
@@ -1181,11 +1181,11 @@ OsiFactorization::getColumnSpace ( int iColumn,
 	element[put + i + 1] = value1;
 	indexRow[put + i] = index0;
 	indexRow[put + i + 1] = index1;
-      }				
+      }
     } else {
       CoinDisjointCopyN ( &indexRowU_[get], number, &indexRowU_[put] );
       CoinDisjointCopyN ( &elementU_[get], number, &elementU_[put] );
-    }				
+    }
     put += number;
     get += number;
     //add 4 for luck
@@ -1194,7 +1194,7 @@ OsiFactorization::getColumnSpace ( int iColumn,
     //take off space
     startColumnU_[maximumColumnsExtra_] = startColumnU_[last] +
       numberInColumn_[last];
-  }				
+  }
   return true;
 }
 
@@ -1223,7 +1223,7 @@ OsiFactorization::getRowSpace ( int iRow,
       for ( i = get; i < getEnd; i++ ) {
 	indexColumnU_[put] = indexColumnU_[i];
 	put++;
-      }				
+      }
       iRow = nextRow_[iRow];
       numberCompressions_++;
     }				/* endwhile */
@@ -1235,8 +1235,8 @@ OsiFactorization::getRowSpace ( int iRow,
       //if not then return so code can start again
       status_ = -99;
       return false;;
-    }				
-  }				
+    }
+  }
   OsiBigIndex put = startRowU_[maximumRowsExtra_];
   int next = nextRow_[iRow];
   int last = lastRow_[iRow];
@@ -1302,7 +1302,7 @@ OsiFactorization::cleanup (  )
     int iRow = permute_[i];
 
     permuteBack_[iRow] = i;
-  }				
+  }
   //redo nextRow_
   int extraSpace = maximumPivots_;
 
@@ -1316,7 +1316,7 @@ OsiFactorization::cleanup (  )
     startColumnU_[i] = start;
     //full list
     numberInColumnPlus_[i] = 0;
-  }				
+  }
   int numberU = 0;
 
   pivotColumnBack_ = new int [ maximumRowsExtra_ + 1 ];
@@ -1334,11 +1334,11 @@ OsiFactorization::cleanup (  )
 	  numberInColumnPlus_[iColumn] = numberU;
 	} else {
 	  numberInColumnPlus_[iColumn] = -1;	//already in correct place
-	}			
+	}
 	numberU++;
-      }				
-    }				
-  }				
+      }
+    }
+  }
   for ( i = 0; i < numberColumns_; i++ ) {
     int number = numberInColumn_[i];	//always 0?
     int where = numberInColumnPlus_[i];
@@ -1359,7 +1359,7 @@ OsiFactorization::cleanup (  )
       where = whereNext;
       start = startNext;
     }				/* endwhile */
-  }				
+  }
   //sort - using indexColumn
   CoinFillN ( indexColumnU_, lastU, -1 );
   OsiBigIndex k = 0;
@@ -1376,8 +1376,8 @@ OsiFactorization::cleanup (  )
     OsiBigIndex j;
     for ( j = start; j < end; j++ ) {
       indexColumnU[j] = k++;
-    }				
-  }				
+    }
+  }
   for ( i = 0; i < numberRows_; i++ ) {
     OsiBigIndex start = startColumn[i];
     OsiBigIndex end = start + numberInColumn[i];
@@ -1400,13 +1400,13 @@ OsiFactorization::cleanup (  )
 	iRow = iRowNext;
 	element = elementNext;
       }				/* endwhile */
-    }				
-  }				
+    }
+  }
   k = 0;
   for ( i = 0; i < numberRows_; i++ ) {
     startColumnU_[i] = k;
     k += numberInColumn_[i];
-  }				
+  }
   delete []  numberInColumnPlus_ ;
   numberInColumnPlus_ = 0;
   numberU_ = numberU;
@@ -1417,8 +1417,8 @@ OsiFactorization::cleanup (  )
     if ( permute_[i] < 0 ) {
       std::cout << i << std::endl;
       abort (  );
-    }				
-  }				
+    }
+  }
 #endif
   for ( i = numberSlacks_; i < numberU; i++ ) {
     OsiBigIndex start = startColumnU_[i];
@@ -1433,9 +1433,9 @@ OsiFactorization::cleanup (  )
 	iRow = permute_[iRow];
 	indexRowU_[j] = iRow;
 	numberInRow_[iRow]++;
-      }		
-    }				
-  }				
+      }
+    }
+  }
   //space for cross reference
   convertRowToColumnU_ = new OsiBigIndex [ lengthAreaU_ ];
   OsiBigIndex *convertRowToColumn = convertRowToColumnU_;
@@ -1446,7 +1446,7 @@ OsiFactorization::cleanup (  )
   for ( iRow = 0; iRow < numberRows_; iRow++ ) {
     startRow[iRow] = j;
     j += numberInRow_[iRow];
-  }				
+  }
   OsiBigIndex numberInU = j;
 
   CoinFillN ( numberInRow_, numberRows_ , 0);
@@ -1477,12 +1477,12 @@ OsiFactorization::cleanup (  )
       convertRowToColumn[k] = j;
       //multiply by pivot
       elementU_[j] *= pivotValue;
-    }				
-  }				
+    }
+  }
   for ( j = 0; j < numberRows_; j++ ) {
     lastRow_[j] = j - 1;
     nextRow_[j] = j + 1;
-  }				
+  }
   nextRow_[numberRows_ - 1] = maximumRowsExtra_;
   lastRow_[maximumRowsExtra_] = numberRows_ - 1;
   nextRow_[maximumRowsExtra_] = 0;
@@ -1509,9 +1509,9 @@ OsiFactorization::cleanup (  )
 
 	iRow = permute_[iRow];
 	indexRowL_[j] = iRow;
-      }				
-    }				
-  }				
+      }
+    }
+  }
   baseL_ = firstReal;
   numberL_ = numberGoodL_ - firstReal;
   factorElements_ = totalElements_;
@@ -1533,7 +1533,7 @@ OsiFactorization::cleanup (  )
   needed = needed * 2 * maximumPivots_;
   if ( needed < 2 * numberRows_ ) {
     needed = 2 * numberRows_;
-  }				
+  }
   if ( space >= needed ) {
     lengthR_ = 0;
     lengthAreaR_ = space;
@@ -1551,8 +1551,8 @@ OsiFactorization::cleanup (  )
       areaFactor_ *= 1.1;
     } else {
       areaFactor_ = 1.1;
-    }				
-  }				
+    }
+  }
   numberR_ = 0;
 }
 
@@ -1580,15 +1580,15 @@ OsiFactorization::checkConsistency (  )
 	  if ( indexRowU_[k] == iRow ) {
 	    found = true;
 	    break;
-	  }			
-	}			
+	  }
+	}
 	if ( !found ) {
 	  bad = true;
 	  std::cout << "row " << iRow << " column " << iColumn << " Rows" << std::endl;
-	}			
-      }				
-    }				
-  }				
+	}
+      }
+    }
+  }
   int iColumn;
   for ( iColumn = 0; iColumn < numberColumns_; iColumn++ ) {
     if ( numberInColumn_[iColumn] ) {
@@ -1607,19 +1607,19 @@ OsiFactorization::checkConsistency (  )
 	  if ( indexColumnU_[k] == iColumn ) {
 	    found = true;
 	    break;
-	  }			
-	}			
+	  }
+	}
 	if ( !found ) {
 	  bad = true;
 	  std::cout << "row " << iRow << " column " << iColumn << " Columns" <<
 	    std::endl;
-	}			
-      }				
-    }				
-  }				
+	}
+      }
+    }
+  }
   if ( bad ) {
     abort (  );
-  }				
+  }
 }
   //  pivotOneOtherRow.  When just one other row so faster
 bool 
@@ -1648,7 +1648,7 @@ OsiFactorization::pivotOneOtherRow ( int pivotRow,
     if ((messageLevel_&1)!=0) 
       std::cout << "more memory needed in middle of invert" << std::endl;
     return false;
-  }				
+  }
   //l+=currentAreaL_->elementByColumn-elementL_;
   //OsiBigIndex lSave=l;
   pivotRowL_[numberGoodL_] = pivotRow;
@@ -1668,7 +1668,7 @@ OsiFactorization::pivotOneOtherRow ( int pivotRow,
     pivotElement = elementU_[startColumn + 1];
     otherMultiplier = elementU_[startColumn];
     otherRow = indexRowU_[startColumn];
-  }				
+  }
   int numberSave = numberInRow_[otherRow];
   double pivotMultiplier = 1.0 / pivotElement;
 
@@ -1688,7 +1688,7 @@ OsiFactorization::pivotOneOtherRow ( int pivotRow,
 #if OSI_DEBUG
   if ( where >= end ) {
     abort (  );
-  }				
+  }
 #endif
   end--;
   indexColumnU_[where] = indexColumnU_[end];
@@ -1747,11 +1747,11 @@ OsiFactorization::pivotOneOtherRow ( int pivotRow,
 	      } else {
 		otherElement = value;
 		foundOther = true;
-	      }			
+	      }
 	    } else {
 	      thisPivotValue = value;
-	    }			
-	  }			
+	    }
+	  }
 	} else {
 	  otherElement = value;
 	  foundOther = true;
@@ -1779,13 +1779,13 @@ OsiFactorization::pivotOneOtherRow ( int pivotRow,
 	      if ( absValue > largest ) {
 		largest = absValue;
 		positionLargest = put;
-	      }			
+	      }
 	      put++;
 	    } else {
 	      thisPivotValue = value;
-	    }			
-	  }			
-	}			
+	    }
+	  }
+	}
       } else {
 	//need to find largest
 	largest = 0.0;
@@ -1812,14 +1812,14 @@ OsiFactorization::pivotOneOtherRow ( int pivotRow,
 	    if ( absValue > largest ) {
 	      largest = absValue;
 	      positionLargest = put;
-	    }			
+	    }
 	    put++;
 	  } else {
 	    otherElement = value;
 	    foundOther = true;
-	  }			
-	}			
-      }				
+	  }
+	}
+      }
       //slot in pivot
       elementU_[startColumn] = thisPivotValue;
       indexRowU_[startColumn] = pivotRow;
@@ -1851,14 +1851,14 @@ OsiFactorization::pivotOneOtherRow ( int pivotRow,
 	      positionLargest + startColumnU_[iColumn] - startColumn;
 	    startColumn = startColumnU_[iColumn];
 	    put = startColumn + number;
-	  }			
-	}			
+	  }
+	}
 	elementU_[put] = otherElement;
 	indexRowU_[put] = otherRow;
 	if ( absValue > largest ) {
 	  largest = absValue;
 	  positionLargest = put;
-	}			
+	}
 	put++;
       } else {
 	if ( foundOther ) {
@@ -1872,12 +1872,12 @@ OsiFactorization::pivotOneOtherRow ( int pivotRow,
 #if OSI_DEBUG
 	  if ( where >= end ) {
 	    abort (  );
-	  }			
+	  }
 #endif
 	  end--;
 	  indexColumnU_[where] = indexColumnU_[end];
-	}			
-      }				
+	}
+      }
       numberInColumn_[iColumn] = put - startColumn;
       //move largest
       if ( positionLargest >= 0 ) {
@@ -1887,15 +1887,15 @@ OsiFactorization::pivotOneOtherRow ( int pivotRow,
 	indexRowU_[positionLargest] = indexRowU_[startColumn];
 	elementU_[startColumn] = value;
 	indexRowU_[startColumn] = iRow;
-      }				
+      }
       //linked list for column
       if ( nextCount_[iColumn + numberRows_] != -2 ) {
 	//modify linked list
 	deleteLink ( iColumn + numberRows_ );
 	addLink ( iColumn + numberRows_, numberInColumn_[iColumn] );
-      }				
-    }				
-  }				
+      }
+    }
+  }
   //get space for row list
   next = nextRow_[otherRow];
   OsiBigIndex space;
@@ -1910,16 +1910,16 @@ OsiFactorization::pivotOneOtherRow ( int pivotRow,
       return false;
     }
     end = startRowU_[otherRow] + end - start;
-  }				
+  }
   // do linked lists and update counts
   numberInRow_[otherRow] = number;
   if ( number != numberSave ) {
     deleteLink ( otherRow );
     addLink ( otherRow, number );
-  }				
+  }
   for ( j = 0; j < numberAdded; j++ ) {
     indexColumnU_[end++] = saveColumn_[j];
-  }				
+  }
   //modify linked list for pivots
   deleteLink ( pivotRow );
   deleteLink ( pivotColumn + numberRows_ );

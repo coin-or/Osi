@@ -702,7 +702,7 @@ OsiFactorization::updateColumnTranspose ( OsiIndexedVector * regionSparse,
 	iRow = j;
 	region[iRow] = value;
 	regionIndex[numberNonZero++] = iRow;
-      }				
+      }
     }
   } else {
     for ( j = 0; j < numberRows_; j ++ ) {
@@ -712,7 +712,7 @@ OsiFactorization::updateColumnTranspose ( OsiIndexedVector * regionSparse,
 	iRow = pivotColumn_[j];
 	region[iRow] = value;
 	regionIndex[numberNonZero++] = iRow;
-      }				
+      }
     }
   }
   regionSparse->setNumElements ( numberNonZero );

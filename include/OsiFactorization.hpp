@@ -452,10 +452,10 @@ protected:
       int count = -last - 2;
 
       firstCount_[count] = next;
-    }				
+    }
     if ( next >= 0 ) {
       lastCount_[next] = last;
-    }				
+    }
     nextCount_[index] = -2;
     lastCount_[index] = -2;
     return;
@@ -549,8 +549,8 @@ protected:
 	put++;
       } else {
 	pivotColumnPosition = i;
-      }				
-    }				
+      }
+    }
   } else {
     OsiBigIndex i;
 
@@ -559,14 +559,14 @@ protected:
 
       saveColumn[put] = iColumn;
       put++;
-    }				
+    }
     for ( i = pivotColumnPosition + 1; i < endRow; i++ ) {
       int iColumn = indexColumnU[i];
 
       saveColumn[put] = iColumn;
       put++;
-    }				
-  }				
+    }
+  }
   //take out this bit of indexColumnU
   int next = nextRow[pivotRow];
   int last = lastRow[pivotRow];
@@ -583,7 +583,7 @@ protected:
     //need more memory
     std::cout << "more memory needed in middle of invert" << std::endl;
     return false;
-  }				
+  }
   //l+=currentAreaL_->elementByColumn-elementL;
   OsiBigIndex lSave = l;
 
@@ -613,14 +613,14 @@ protected:
 #if DEBUG_OSI
 	if ( where >= end ) {
 	  abort (  );
-	}			
+	}
 #endif
 	indexColumnU[where] = indexColumnU[end - 1];
 	numberInRow[iRow]--;
       } else {
 	pivotRowPosition = i;
-      }				
-    }				
+      }
+    }
   } else {
     OsiBigIndex i;
 
@@ -642,11 +642,11 @@ protected:
 #if DEBUG_OSI
       if ( where >= end ) {
 	abort (  );
-      }				
+      }
 #endif
       indexColumnU[where] = indexColumnU[end - 1];
       numberInRow[iRow]--;
-    }				
+    }
     for ( i = pivotRowPosition + 1; i < endColumn; i++ ) {
       int iRow = indexRowU[i];
 
@@ -665,12 +665,12 @@ protected:
 #if DEBUG_OSI
       if ( where >= end ) {
 	abort (  );
-      }				
+      }
 #endif
       indexColumnU[where] = indexColumnU[end - 1];
       numberInRow[iRow]--;
-    }				
-  }				
+    }
+  }
   markRow[pivotRow] = largeInteger;
   //compress pivot column (move pivot to front including saved)
   double pivotElement = elementU[pivotRowPosition];
@@ -687,13 +687,13 @@ protected:
 
   for ( j = 0; j < numberInPivotColumn; j++ ) {
     multipliersL[j] = pivotMultiplier * multipliersL[j];
-  }				
+  }
   //zero out fill
   OsiBigIndex iErase;
   for ( iErase = 0; iErase < increment2 * numberInPivotRow;
 	iErase++ ) {
     workArea2[iErase] = 0;
-  }				
+  }
   OsiBigIndex added = numberInPivotRow * numberInPivotColumn;
   unsigned int *temp2 = workArea2;
 
@@ -733,8 +733,8 @@ protected:
 	added--;
       } else {
 	thisPivotValue = value;
-      }				
-    }				
+      }
+    }
     OsiBigIndex i;
     for ( i = startColumn + 1; i < endColumn; i++ ) {
       iRow = indexRowU[i];
@@ -751,8 +751,8 @@ protected:
 	  if ( absValue > largest ) {
 	    largest = absValue;
 	    positionLargest = put;
-	  }			
-	}			
+	  }
+	}
 	put++;
       } else if ( mark != largeInteger ) {
 	//will be updated
@@ -764,14 +764,14 @@ protected:
 	added--;
       } else {
 	thisPivotValue = value;
-      }				
-    }				
+      }
+    }
     //slot in pivot
     elementU[put] = elementU[startColumn];
     indexRowU[put] = indexRowU[startColumn];
     if ( positionLargest == startColumn ) {
       positionLargest = put;	//follow if was largest
-    }				
+    }
     put++;
     elementU[startColumn] = thisPivotValue;
     indexRowU[startColumn] = pivotRow;
@@ -790,12 +790,12 @@ protected:
       //getColumnSpace also moves fixed part
       if ( !getColumnSpace ( iColumn, numberInPivotColumn ) ) {
 	return false;
-      }				
+      }
       //redo starts
       positionLargest = positionLargest + startColumnU[iColumn] - startColumn;
       startColumn = startColumnU[iColumn];
       put = startColumn + numberInColumn[iColumn];
-    }				
+    }
     double tolerance = zeroTolerance_;
 
     for ( j = 0; j < numberInPivotColumn; j++ ) {
@@ -809,7 +809,7 @@ protected:
 	if ( absValue > largest ) {
 	  largest = absValue;
 	  positionLargest = put;
-	}			
+	}
 	put++;
       } else {
 	work[j] = 0.0;
@@ -830,7 +830,7 @@ protected:
 #if DEBUG_OSI
 	  if ( where >= end ) {
 	    abort (  );
-	  }			
+	  }
 #endif
 	  indexColumnU[where] = indexColumnU[end - 1];
 	  numberInRow[iRow]--;
@@ -840,9 +840,9 @@ protected:
 	  int bit = j & OSIFACTORIZATION_MASK_PER_INT;
 
 	  temp2[word] = temp2[word] | ( 1 << bit );	//say already in counts
-	}			
-      }				
-    }				
+	}
+      }
+    }
     numberInColumn[iColumn] = put - startColumn;
     //move largest
     if ( positionLargest >= 0 ) {
@@ -852,15 +852,15 @@ protected:
       indexRowU[positionLargest] = indexRowU[startColumn];
       elementU[startColumn] = value;
       indexRowU[startColumn] = iRow;
-    }				
+    }
     //linked list for column
     if ( nextCount_[iColumn + numberRows_] != -2 ) {
       //modify linked list
       deleteLink ( iColumn + numberRows_ );
       addLink ( iColumn + numberRows_, numberInColumn[iColumn] );
-    }				
+    }
     temp2 += increment2;
-  }				
+  }
   //get space for row list
   unsigned int *putBase = workArea2;
   int bigLoops = numberInPivotColumn >> OSIFACTORIZATION_SHIFT_PER_INT;
@@ -884,7 +884,7 @@ protected:
 	putThis += increment2;
 	test = 1 - ( ( test >> bit ) & 1 );
 	number += test;
-      }				
+      }
       int next = nextRow[iRow];
       OsiBigIndex space;
 
@@ -894,7 +894,7 @@ protected:
 	if ( !getRowSpace ( iRow, number ) ) {
 	  return false;
 	}
-      }				
+      }
       // now do
       putThis = putBase;
       next = nextRow[iRow];
@@ -910,7 +910,7 @@ protected:
 	test = 1 - ( ( test >> bit ) & 1 );
 	indexColumnU[end] = saveColumn[jColumn];
 	end += test;
-      }				
+      }
       //put back next one in case zapped
       indexColumnU[startRowU[next]] = saveIndex;
       markRow[iRow] = -1;
@@ -918,7 +918,7 @@ protected:
       numberInRow[iRow] = number;
       deleteLink ( iRow );
       addLink ( iRow, number );
-    }				
+    }
     putBase++;
   }				/* endwhile */
   int bit;
@@ -937,7 +937,7 @@ protected:
       putThis += increment2;
       test = 1 - ( ( test >> bit ) & 1 );
       number += test;
-    }				
+    }
     int next = nextRow[iRow];
     OsiBigIndex space;
 
@@ -947,7 +947,7 @@ protected:
       if ( !getRowSpace ( iRow, number ) ) {
 	return false;
       }
-    }				
+    }
     // now do
     putThis = putBase;
     next = nextRow[iRow];
@@ -966,14 +966,14 @@ protected:
 
       indexColumnU[end] = saveColumn[jColumn];
       end += test;
-    }				
+    }
     indexColumnU[startRowU[next]] = saveIndex;
     markRow[iRow] = -1;
     number = end - startRowU[iRow];
     numberInRow[iRow] = number;
     deleteLink ( iRow );
     addLink ( iRow, number );
-  }				
+  }
   markRow[pivotRow] = -1;
   //modify linked list for pivots
   deleteLink ( pivotRow );

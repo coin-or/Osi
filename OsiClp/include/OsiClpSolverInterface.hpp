@@ -12,6 +12,8 @@
 #include "ClpModel.hpp"
 #include "OsiWarmStartBasis.hpp"
 
+class OsiRowCut;
+
 static const double OsiClpInfinity = DBL_MAX;
 
 //#############################################################################
@@ -40,7 +42,10 @@ public:
     virtual void resolve();
 
     /// Invoke solver's built-in enumeration algorithm
-    virtual void branchAndBound();
+    virtual void branchAndBound() {
+      throw CoinError("Sorry, Clp doesn't implement B&B",
+		     "branchAndBound", "OsiClpSolverInterface");
+    };
   //@}
 
   //---------------------------------------------------------------------------
@@ -438,31 +443,10 @@ public:
       virtual void deleteRows(const int num, const int * rowIndices);
     
       //-----------------------------------------------------------------------
-#if 0
-      /** Apply a collection of cuts.<br>
-    	  Only cuts which have an <code>effectiveness >= effectivenessLb</code>
-    	  are applied.
-    	  <ul>
-    	    <li> ReturnCode.numberIneffective() -- number of cuts which were
-                 not applied because they had an
-    	         <code>effectiveness < effectivenessLb</code>
-    	    <li> ReturnCode.numberInconsistent() -- number of invalid cuts
-    	    <li> ReturnCode.numberInconsistentWrtIntegerModel() -- number of
-                 cuts that are invalid with respect to this integer model
-            <li> ReturnCode.numberInfeasible() -- number of cuts that would
-    	         make this integer model infeasible
-            <li> ReturnCode.numberApplied() -- number of integer cuts which
-    	         were applied to the integer model
-            <li> cs.size() == numberIneffective() +
-                              numberInconsistent() +
-    			      numberInconsistentWrtIntegerModel() +
-    			      numberInfeasible() +
-    			      nubmerApplied()
-          </ul>
+      /** Apply a collection of row cuts which are all effective.
+	  applyCuts seems to do one at a time which seems inefficient.
       */
-      virtual ApplyCutsReturnCode applyCuts(const OsiCuts & cs,
-    					    double effectivenessLb = 0.0);
-#endif
+      virtual void applyRowCuts(int numberCuts, const OsiRowCut * cuts);
     //@}
   //@}
 
@@ -587,6 +571,12 @@ public:
     
     /// Copy constructor 
     OsiClpSolverInterface (const OsiClpSolverInterface &);
+    
+    /// Borrow constructor - only delete one copy
+    OsiClpSolverInterface (ClpModel *);
+
+    /// Releases so won't error
+    void releaseClp();
     
     /// Assignment operator 
     OsiClpSolverInterface & operator=(const OsiClpSolverInterface& rhs);

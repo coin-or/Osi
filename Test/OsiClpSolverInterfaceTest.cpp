@@ -720,6 +720,7 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir)
   }
 
   // Solve an integer problem 
+#if 0
   {    
     OsiClpSolverInterface m;
     std::string fn = mpsDir+"p0033";
@@ -749,7 +750,7 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir)
     m.resolve();
     //m.getObjValue();
   }
-
+#endif
   // Do common solverInterface testing 
   {
     OsiClpSolverInterface m;

@@ -254,6 +254,18 @@ OsiSolverInterface::applyCuts( const OsiCuts & cs, double effectivenessLb )
   
   return retVal;
 }
+/* Apply a collection of row cuts which are all effective.
+   applyCuts seems to do one at a time which seems inefficient.
+   The default does slowly, but solvers can override.
+*/
+void 
+OsiSolverInterface::applyRowCuts(int numberCuts, const OsiRowCut * cuts)
+{
+  int i;
+  for (i=0;i<numberCuts;i++) {
+    applyRowCut(cuts[i]);
+  }
+}
 
 //#############################################################################
 // Set/Get Application Data
@@ -348,7 +360,6 @@ OsiSolverInterface::OsiSolverInterface (const OsiSolverInterface & rhs) :
     handler_ = new OsiMessageHandler(*rhs.handler_);
   else
     handler_ = rhs.handler_;
-  handler_ = new OsiMessageHandler(*rhs.handler_);
   messages_ = OsiOsiMessage();
   CoinDisjointCopyN(rhs.intParam_, OsiLastIntParam, intParam_);
   CoinDisjointCopyN(rhs.dblParam_, OsiLastDblParam, dblParam_);

@@ -20,7 +20,7 @@ TESTSRC :=
 ifeq ($(findstring libOsiClp,${SOLVERLIBS}),libOsiClp)
     IncDir += ${ClpIncDir}
     LibDir += ${ClpLibDir}
-    LibName += ${ClpLibName} libOsiClp.so
+    LibName += ${ClpLibName} libOsiClp.so 
     Define += COIN_USE_CLP
     TESTSRC += OsiClpSolverInterfaceTest.cpp
 endif

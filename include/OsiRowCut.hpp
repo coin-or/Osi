@@ -271,7 +271,7 @@ public:
   OsiRowCut2 ( const OsiRowCut2 &);  
   
   /// Clone
-  virtual OsiRowCut2 * clone() const;
+  virtual OsiRowCut * clone() const;
   
   /// Default Constructor 
   OsiRowCut2 (int row=-1);

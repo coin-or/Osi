@@ -248,7 +248,7 @@ whichRow_(source.whichRow_)
 //----------------------------------------------------------------
 // Clone
 //----------------------------------------------------------------
-OsiRowCut2 * OsiRowCut2::clone() const
+OsiRowCut * OsiRowCut2::clone() const
 {  return (new OsiRowCut2(*this));}
 
 

@@ -46,7 +46,7 @@
 #include "OsiDylpWarmStartBasis.hpp"
 
 namespace {
-  char sccsid[] UNUSED = "@(#)OsiDylpWarmStartBasis.cpp	1.6	09/25/04" ;
+  char sccsid[] UNUSED = "@(#)OsiDylpWarmStartBasis.cpp	1.7	11/06/04" ;
   char cvsid[] UNUSED = "$Id$" ;
 }
 
@@ -487,6 +487,7 @@ CoinWarmStartDiff *ODWSB::generateDiff
 */
   delete[] diffNdx ;
   delete[] diffVal ;
+  delete cwsbDiff ;
 
   return (dynamic_cast<CoinWarmStartDiff *>(diff)) ; }
 

@@ -2066,7 +2066,8 @@ OsiClpSolverInterface::setBasisStatus(const int* cstat, const int* rstat)
       break;
     }
   }
-  modelPtr_->statusOfProblem();
+  // say first time
+  modelPtr_->statusOfProblem(true);
   return 0;
 }
 

@@ -245,6 +245,15 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
     expectedNumberColumns=10958;
   }
 
+  // mas76
+  else if ( modelL == "mas76" ) {
+    probType=continuousWith0_1;
+    int intIndicesAt1[]={ 4,11,13,18,42,46,48,52,85,93,114,119,123,128,147}; 
+    int numIndices = sizeof(intIndicesAt1)/sizeof(int);
+    intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=151;
+  }
+
   // ltw3
   else if ( modelL == "ltw3" ) {
     probType=continuousWith0_1;

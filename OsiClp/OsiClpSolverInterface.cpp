@@ -362,6 +362,14 @@ void OsiClpSolverInterface::resolve()
   }
   int saveOptions = modelPtr_->specialOptions();
   int startFinishOptions;
+  bool takeHint;
+  OsiHintStrength strength;
+  bool gotHint = (getHintParam(OsiDoInBranchAndCut,takeHint,strength));
+  assert (gotHint);
+  if (strength!=OsiHintIgnore&&takeHint) {
+    // could do something - think about it
+    //printf("hint %d %c\n",strength,takeHint ? 'T' :'F');
+  }
   if((specialOptions_&1)==0) {
     startFinishOptions=0;
     modelPtr_->setSpecialOptions(saveOptions|(64|1024));
@@ -372,6 +380,7 @@ void OsiClpSolverInterface::resolve()
     else
       modelPtr_->setSpecialOptions(saveOptions|(64|128|512|1024|2048|4096));
   }
+  //printf("options %d size %d\n",modelPtr_->specialOptions(),modelPtr_->numberColumns());
   //modelPtr_->setSolveType(1);
   // Set message handler to have same levels etc
   bool oldDefault;
@@ -379,10 +388,8 @@ void OsiClpSolverInterface::resolve()
   //basis_.print();
   setBasis(basis_,modelPtr_);
   // set reasonable defaults
-  bool takeHint;
-  OsiHintStrength strength;
   // Switch off printing if asked to
-  bool gotHint = (getHintParam(OsiDoReducePrint,takeHint,strength));
+  gotHint = (getHintParam(OsiDoReducePrint,takeHint,strength));
   assert (gotHint);
   int saveMessageLevel=messageHandler()->logLevel();
   if (strength!=OsiHintIgnore&&takeHint) {

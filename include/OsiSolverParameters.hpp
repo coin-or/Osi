@@ -70,6 +70,8 @@ enum OsiHintParam {
   OsiDoCrash,
   /*** Whether to reduce amount of printout e.g. for branch and cut */
   OsiDoReducePrint,
+  /*** Whether we are in branch and cut - so can modify behavior */
+  OsiDoInBranchAndCut,
   /** Just a marker, so that OsiSolverInterface can allocate a static sized
       array to store parameters. */
   OsiLastHintParam

@@ -122,6 +122,8 @@ public:
   //@{
     /** \brief Insert a row cut */
     inline void insert( const OsiRowCut & rc );
+    /** \brief Insert a row cut unless it is a duplicate - cut may get sorted*/
+    void insertIfNotDuplicate( OsiRowCut & rc );
     /** \brief Insert a column cut */
     inline void insert( const OsiColCut & cc );
 

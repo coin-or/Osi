@@ -1,4 +1,4 @@
-//  LAST EDIT: Tues 29 Apr 2003 by Brady Hunsaker
+//  LAST EDIT: Saturday 3 May 2003 by Brady Hunsaker
 //-----------------------------------------------------------------------------
 // name:     OSI Interface for GLPK
 // author:   Vivian DE Smedt
@@ -28,7 +28,10 @@
 // Methods that are not implemented:
 //
 //  getPrimalRays, getDualRays
-//  setColSolution, setRowPrice
+//
+// Methods that are implemented, but do not do what you probably expect:
+//
+//  setColSolution, setRowPrice  
 //
 // Many methods have not been attempted to be improved (for speed) 
 // to take advantage of how GLPK works.  The initial emphasis has been on
@@ -1534,20 +1537,54 @@ void OsiGlpkSolverInterface::setObjSense(double s)
 
 void OsiGlpkSolverInterface::setColSolution(const double * cs)
 {
-	// ??? not yet implemented.
-        // This could be implemented by changing colsol_ and not telling
-        // GLPK, but that doesn't seem useful.  I think it's better to 
-        // just leave it unsupported.  Apparently this routine is mainly
-        // for interior point solvers.
-	throw CoinError("method is not yet implemented", "setColSolution", "OsiGlpkSolverInterface");
+  // You probably don't want to use this function.  You probably want
+  // setWarmStart instead.
+  // This implementation changes the cached information, 
+  // BUT DOES NOT TELL GLPK about the changes.  In that sense, it's not
+  // really useful.  It is added to conform to current OSI expectations.
+
+  // Other results (such as row prices) might not make sense with this 
+  // new solution, but we can't free all the results we have, since the 
+  // row prices may have already been set with setRowPrice.
+  if (cs == 0)
+    delete [] colsol_;
+  else
+    {
+      int nc = getNumCols();
+
+      if (colsol_ == 0)
+	colsol_ = new double[nc];
+
+      // Copy in new col solution.
+      CoinDisjointCopyN( cs, nc, colsol_ );
+    }
 }
 
 //-----------------------------------------------------------------------------
 
 void OsiGlpkSolverInterface::setRowPrice(const double * rs)
 {
-	// ??? not yet implemented.
-	throw CoinError("method is not yet implemented", "setRowPrice", "OsiGlpkSolverInterface");
+  // You probably don't want to use this function.  You probably want
+  // setWarmStart instead.
+  // This implementation changes the cached information, 
+  // BUT DOES NOT TELL GLPK about the changes.  In that sense, it's not
+  // really useful.  It is added to conform to current OSI expectations.
+
+  // Other results (such as column solutions) might not make sense with this 
+  // new solution, but we can't free all the results we have, since the 
+  // column solutions may have already been set with setColSolution.
+  if (rs == 0)
+    delete [] rowsol_;
+  else
+    {
+      int nr = getNumRows();
+
+      if (rowsol_ == 0)
+	rowsol_ = new double[nr];
+
+      // Copy in new col solution.
+      CoinDisjointCopyN( rs, nr, rowsol_ );
+    }
 }
 
 //#############################################################################

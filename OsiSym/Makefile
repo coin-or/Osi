@@ -41,6 +41,10 @@ export MakefileDir := $(CoinDir)/Makefiles
 include ${MakefileDir}/Makefile.coin
 include ${MakefileDir}/Makefile.location
 
+ifeq ($(UNAME),CYGWIN)
+SymDefine += HAS_RANDOM HAS_SRANDOM
+endif
+
 export ExtraIncDir  := \
     ${SymIncDir}  ${SymUserIncDir} ${OsiIncDir}  ${CoinIncDir}
 export ExtraLibDir  := \
@@ -62,6 +66,7 @@ default: install
 
 install library : % :
 	(cd $(CoinDir)/Osi && $(MAKE) -f Makefile.Osi install)
+	echo $(ExtraDefine)
 	$(MAKE) -f ${MakefileDir}/Makefile.lib $*
 #	(cd $(SYMROOT) && $(MAKE))
 

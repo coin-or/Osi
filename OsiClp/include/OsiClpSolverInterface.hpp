@@ -628,7 +628,7 @@ private:
     /// Warm start
     CoinWarmStartBasis getBasis(ClpSimplex * model) const;
     /// Sets up working basis as a copy of input
-    void setBasis( const CoinWarmStartBasis & basis);
+    void setBasis( const CoinWarmStartBasis & basis, ClpSimplex * model);
   //@}
   
   /**@name Private member data */

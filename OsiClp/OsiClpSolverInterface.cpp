@@ -68,6 +68,7 @@ void OsiClpSolverInterface::initialSolve()
   basis_ = getBasis(&solver);
   lastAlgorithm_=1; // primal
 #endif
+  //basis_.print();
   solver.returnModel(*modelPtr_);
   time1 = cpuTime()-time1;
   totalTime += time1;
@@ -81,7 +82,8 @@ void OsiClpSolverInterface::resolve()
   solver.borrowModel(*modelPtr_);
   // Set message handler to have same levels etc
   solver.passInMessageHandler(handler_);
-  setBasis(basis_);
+  //basis_.print();
+  setBasis(basis_,&solver);
   solver.scaling();
 
   ClpDualRowSteepest steep;
@@ -1094,31 +1096,32 @@ OsiClpSolverInterface::getBasis(ClpSimplex * model) const
 }
 // Sets up basis
 void 
-OsiClpSolverInterface::setBasis ( const CoinWarmStartBasis & basis)
+OsiClpSolverInterface::setBasis ( const CoinWarmStartBasis & basis,
+				  ClpSimplex * model)
 {
   // transform basis to status arrays
   int iRow,iColumn;
-  int numberRows = modelPtr_->numberRows();
-  int numberColumns = modelPtr_->numberColumns();
-  if (!modelPtr_->statusExists()) {
+  int numberRows = model->numberRows();
+  int numberColumns = model->numberColumns();
+  if (!model->statusExists()) {
     /*
       get status arrays
       ClpBasis would seem to have overheads and we will need
       extra bits anyway.
     */
-    modelPtr_->createStatus();
+    model->createStatus();
   }
   CoinWarmStartBasis basis2 = basis;
   // resize if necessary
   basis2.resize(numberRows,numberColumns);
   // move status
-  modelPtr_->createStatus();
+  model->createStatus();
   for (iRow=0;iRow<numberRows;iRow++) {
-    modelPtr_->setRowStatus(iRow,
+    model->setRowStatus(iRow,
 		 (ClpSimplex::Status) basis2.getArtifStatus(iRow));
   }
   for (iColumn=0;iColumn<numberColumns;iColumn++) {
-    modelPtr_->setColumnStatus(iColumn,
+    model->setColumnStatus(iColumn,
 		    (ClpSimplex::Status) basis2.getStructStatus(iColumn));
   }
 }

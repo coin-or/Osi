@@ -2383,7 +2383,7 @@ OsiClpSolverInterface::getBInvARow(int row, double* z, double * slack)
     indexError(row,"getBInvARow");
   }
 #endif
-  assert (modelPtr_->solveType()==2);
+  assert (modelPtr_->solveType()==2||(specialOptions_&8)!=0);
   ClpFactorization * factorization = modelPtr_->factorization();
   CoinIndexedVector * rowArray0 = modelPtr_->rowArray(0);
   CoinIndexedVector * rowArray1 = modelPtr_->rowArray(1);
@@ -2429,7 +2429,7 @@ OsiClpSolverInterface::getBInvRow(int row, double* z)
     indexError(row,"getBInvRow");
   }
 #endif
-  assert (modelPtr_->solveType()==2);
+  assert (modelPtr_->solveType()==2||(specialOptions_&8)!=0);
   ClpFactorization * factorization = modelPtr_->factorization();
   CoinIndexedVector * rowArray0 = modelPtr_->rowArray(0);
   CoinIndexedVector * rowArray1 = modelPtr_->rowArray(1);
@@ -2446,7 +2446,7 @@ OsiClpSolverInterface::getBInvRow(int row, double* z)
 void 
 OsiClpSolverInterface::getBInvACol(int col, double* vec)
 {
-  assert (modelPtr_->solveType()==2);
+  assert (modelPtr_->solveType()==2||(specialOptions_&8)!=0);
   ClpFactorization * factorization = modelPtr_->factorization();
   CoinIndexedVector * rowArray0 = modelPtr_->rowArray(0);
   CoinIndexedVector * rowArray1 = modelPtr_->rowArray(1);
@@ -2478,7 +2478,7 @@ OsiClpSolverInterface::getBInvACol(int col, double* vec)
 void 
 OsiClpSolverInterface::getBInvCol(int col, double* vec)
 {
-  assert (modelPtr_->solveType()==2);
+  assert (modelPtr_->solveType()==2||(specialOptions_&8)!=0);
   ClpFactorization * factorization = modelPtr_->factorization();
   CoinIndexedVector * rowArray0 = modelPtr_->rowArray(0);
   CoinIndexedVector * rowArray1 = modelPtr_->rowArray(1);
@@ -2504,8 +2504,9 @@ OsiClpSolverInterface::getBInvCol(int col, double* vec)
 void 
 OsiClpSolverInterface::getBasics(int* index)
 {
-  assert (modelPtr_->solveType()==2);
+  assert (modelPtr_->solveType()==2||(specialOptions_&8)!=0);
   assert (index);
+  assert (modelPtr_->pivotVariable());
   memcpy(index,modelPtr_->pivotVariable(),
 	 modelPtr_->numberRows()*sizeof(int));
 }

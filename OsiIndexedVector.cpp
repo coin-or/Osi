@@ -214,7 +214,7 @@ OsiIndexedVector::add( int index, double element )
     if (fabs(element)>= TINY_ELEMENT) {
       elements_[index] = element;
     } else {
-      elements_[index] = TINY_ELEMENT*1.0e-10;
+      elements_[index] = 1.0e-100;
     }
   } else if (fabs(element)>= TINY_ELEMENT) {
     indices_[nElements_++] = index;

@@ -245,7 +245,7 @@ OsiFactorization::factorSparse (  )
 		}		
 		int increment2 =
 
-		  ( increment + BITS_PER_INT - 1 ) >> SHIFT_PER_INT;
+		  ( increment + OSIFACTORIZATION_BITS_PER_INT - 1 ) >> OSIFACTORIZATION_SHIFT_PER_INT;
 		OsiBigIndex size = increment2 * numberDoRow;
 
 		if ( size > workSize ) {

@@ -325,29 +325,6 @@ private:
   /// return code is <0 error, 0= finished
   int factorSparse (  );
 
-  /** Does one pivot in factorization,
-  pivot routines return false on lack of memory.
-   This version is for large nucleus */
-  bool pivot ( int pivotRow,
-	       int pivotColumn,
-	       int pivotRowPosition,
-	       int pivotColumnPosition,
-	       double work[],
-	       unsigned int workArea2[],
-	       int increment,
-	       int increment2, int markRow[] );
-
-  /** Does one pivot in factorization,
-  pivot routines return false on lack of memory.
-   This version is for small nucleus */
-  bool pivot ( int pivotRow,
-	       int pivotColumn,
-	       int pivotRowPosition,
-	       int pivotColumnPosition,
-	       double work[],
-	       unsigned int workArea2[],
-	       int increment,
-	       int increment2, short markRow[] );
   /// Pivots when just one other row so faster?
   bool pivotOneOtherRow ( int pivotRow,
 			  int pivotColumn );
@@ -447,9 +424,9 @@ private:
 
   /********************************* START LARGE TEMPLATE ********/
 // this should have defines so will work in 64 bit mode
-#define BITS_PER_INT 32
-#define SHIFT_PER_INT 5
-#define MASK_PER_INT 0x1f
+#define OSIFACTORIZATION_BITS_PER_INT 32
+#define OSIFACTORIZATION_SHIFT_PER_INT 5
+#define OSIFACTORIZATION_MASK_PER_INT 0x1f
   template <class T>  bool
   pivot ( int pivotRow,
 	  int pivotColumn,
@@ -672,8 +649,8 @@ private:
       if ( mark != largeInteger ) {
 	//will be updated
 	work[mark] = value;
-	int word = mark >> SHIFT_PER_INT;
-	int bit = mark & MASK_PER_INT;
+	int word = mark >> OSIFACTORIZATION_SHIFT_PER_INT;
+	int bit = mark & OSIFACTORIZATION_MASK_PER_INT;
 
 	temp2[word] = temp2[word] | ( 1 << bit );	//say already in counts
 	added--;
@@ -703,8 +680,8 @@ private:
       } else if ( mark != largeInteger ) {
 	//will be updated
 	work[mark] = value;;
-	int word = mark >> SHIFT_PER_INT;
-	int bit = mark & MASK_PER_INT;
+	int word = mark >> OSIFACTORIZATION_SHIFT_PER_INT;
+	int bit = mark & OSIFACTORIZATION_MASK_PER_INT;
 
 	temp2[word] = temp2[word] | ( 1 << bit );	//say already in counts
 	added--;
@@ -760,8 +737,8 @@ private:
       } else {
 	work[j] = 0.0;
 	added--;
-	int word = j >> SHIFT_PER_INT;
-	int bit = j & MASK_PER_INT;
+	int word = j >> OSIFACTORIZATION_SHIFT_PER_INT;
+	int bit = j & OSIFACTORIZATION_MASK_PER_INT;
 
 	if ( temp2[word] & ( 1 << bit ) ) {
 	  //take out of row list
@@ -782,8 +759,8 @@ private:
 	  numberInRow[iRow]--;
 	} else {
 	  //make sure won't be added
-	  int word = j >> SHIFT_PER_INT;
-	  int bit = j & MASK_PER_INT;
+	  int word = j >> OSIFACTORIZATION_SHIFT_PER_INT;
+	  int bit = j & OSIFACTORIZATION_MASK_PER_INT;
 
 	  temp2[word] = temp2[word] | ( 1 << bit );	//say already in counts
 	}			
@@ -809,14 +786,14 @@ private:
   }				
   //get space for row list
   unsigned int *putBase = workArea2;
-  int bigLoops = numberInPivotColumn >> SHIFT_PER_INT;
+  int bigLoops = numberInPivotColumn >> OSIFACTORIZATION_SHIFT_PER_INT;
   int i = 0;
 
   // do linked lists and update counts
   while ( bigLoops ) {
     bigLoops--;
     int bit;
-    for ( bit = 0; bit < BITS_PER_INT; i++, bit++ ) {
+    for ( bit = 0; bit < OSIFACTORIZATION_BITS_PER_INT; i++, bit++ ) {
       unsigned int *putThis = putBase;
       int iRow = indexL[i];
 

@@ -235,7 +235,8 @@ OsiFactorization::replaceColumn ( int pivotRow,
                                  int numberOfElements,
                                  int indicesRow[], double elements[] )
 {
-  OsiIndexedVector *region = new OsiIndexedVector ( numberRowsExtra_ );
+  OsiIndexedVector *region = new OsiIndexedVector;
+  region->reserve(numberRowsExtra_ );
   int status;
   
   if (increasingRows_>1) {

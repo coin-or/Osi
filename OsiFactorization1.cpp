@@ -58,7 +58,7 @@ void OsiFactorization::gutsOfDestructor()
 void OsiFactorization::gutsOfInitialize(int type)
 {
   // change defines to allow for 64 bits
-  assert (BITS_PER_INT==8*sizeof(int));
+  assert (OSIFACTORIZATION_BITS_PER_INT==8*sizeof(int));
   if ((type&1)!=0) {
     areaFactor_ = 0.0;
     increasingRows_ = 1;

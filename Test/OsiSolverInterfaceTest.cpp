@@ -1779,7 +1779,9 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 	    si->initialSolve();
 
       CoinRelFltEq eq(1.0e-7) ;
-	    assert (eq(si->getObjValue(),2.0));
+      double objValue = si->getObjValue();
+	    if ( !eq(objValue,2.0) )
+        failureMessage(solverName,"getObjValue after adding empty cols and then rows.");;
     }
   }
 	
@@ -1821,8 +1823,11 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 	    // solve
 	    si->initialSolve();
 
-      CoinRelFltEq eq(1.0e-7) ;
-	    assert (eq(si->getObjValue(),2.0));
+      CoinRelFltEq eq(1.0e-7) ;      
+      double objValue = si->getObjValue();
+	    if ( !eq(objValue,2.0) )
+        failureMessage(solverName,"getObjValue after adding empty rows and then cols.");
+
     }
   }
 	delete si;

@@ -1414,6 +1414,8 @@ void OsiClpSolverInterface::freeCachedResults() const
   rowrange_=NULL;
   matrixByRow_=NULL;
   ws_ = NULL;
+  if (modelPtr_&&modelPtr_->clpMatrix())
+    modelPtr_->clpMatrix()->refresh(modelPtr_); // make sure all clean
 }
 
 //------------------------------------------------------------------

@@ -585,22 +585,34 @@ OsiIndexedVectorUnitTest()
     // Compute ratio
     OsiIndexedVector ratio = v1 / v2;
     
+/*
+  The original code here used sortIncrElement, ostensibly to test that the
+  zero (nominally in ratio[2]) disappeared. In fact, it's never created, and
+  sortIncr was a noop. Changed to sortDecr to see some action.  Then it
+  turned out that the Sun CC compiler is math-challenged when it comes to
+  optimization, declaring that 1.0/1.0 = 24! Working through a temp gets it
+  over this block. To say I'm developing an active dislike for C++
+  optimization is a considerable understatement. -- lh, 02.04.09 --
+*/
     // Sort ratios
-    ratio.sortIncrElement();
+    ratio.sortDecrElement();
     
     // Test that the sort really worked
-    // ** 0 vanishes
     assert( ratio.getNumElements() == 2);
-    assert( ratio.getElements()[0] == 1.0/1.0 );
-    assert( ratio.getElements()[1] == 6.0/4.0 );
+    double temp = 1.0 ;
+    temp /= 1.0 ;
+    assert( ratio.getElements()[1] == temp );
+    temp = 6.0 ;
+    temp /= 4.0 ;
+    assert( ratio.getElements()[0] == temp );
     
     // Get numerator of of sorted ratio vector
-    assert( v1[ ratio.getIndices()[0] ] == 1.0 );
-    assert( v1[ ratio.getIndices()[1] ] == 6.0 );
+    assert( v1[ ratio.getIndices()[1] ] == 1.0 );
+    assert( v1[ ratio.getIndices()[0] ] == 6.0 );
     
     // Get denominator of of sorted ratio vector
-    assert( v2[ ratio.getIndices()[0] ] == 1.0 );
-    assert( v2[ ratio.getIndices()[1] ] == 4.0 );
+    assert( v2[ ratio.getIndices()[1] ] == 1.0 );
+    assert( v2[ ratio.getIndices()[0] ] == 4.0 );
   }
   
   // Test copy constructor from ShallowPackedVector

@@ -147,9 +147,8 @@ OsiIndexedVector::setFull(int size, const double * elems,
   int i;
   for (i=0;i<size;i++) {
     int indexValue=i;
-    double value=elems[i];
-    if (fabs(value)>=OSI_INDEXED_TINY_ELEMENT) {
-      elements_[indexValue]=value;
+    if (fabs(elems[i])>=OSI_INDEXED_TINY_ELEMENT) {
+      elements_[indexValue]=elems[i];
       indices_[nElements_++]=indexValue;
     }
   }
@@ -309,16 +308,14 @@ OsiIndexedVector::append(const OsiPackedVectorBase & caboose)
   int numberDuplicates=0;
   for (i=0;i<cs;i++) {
     int indexValue=cind[i];
-    double value=celem[i];
     if (elements_[indexValue]) {
       numberDuplicates++;
-      value += elements_[indexValue];
-      if (fabs(value)<OSI_INDEXED_TINY_ELEMENT) 
+      elements_[indexValue] += celem[i] ;
+      if (fabs(elements_[indexValue])<OSI_INDEXED_TINY_ELEMENT) 
 	needClean=true; // need to go through again
-      elements_[indexValue]=value;
     } else {
-      if (fabs(value)>=OSI_INDEXED_TINY_ELEMENT) {
-	elements_[indexValue]=value;
+      if (fabs(celem[i])>=OSI_INDEXED_TINY_ELEMENT) {
+	elements_[indexValue]=celem[i];
 	indices_[nElements_++]=indexValue;
       }
     }
@@ -717,7 +714,11 @@ OsiIndexedVector::operator*(
       }
     }
   }
-  newOne.nElements_=nElements;
+
+// I don't see why this is necessary. Multiplication cannot add new values.
+//newOne.nElements_=nElements;
+  assert(newOne.nElements_ == nElements) ;
+
   if (needClean) {
     // go through again
     nElements_=0;
@@ -736,8 +737,7 @@ OsiIndexedVector::operator*(
 
 /// Return the element-wise ratio of two indexed vectors
 OsiIndexedVector 
-OsiIndexedVector::operator/(
-                            const OsiIndexedVector& op2) 
+OsiIndexedVector::operator/ (const OsiIndexedVector& op2) 
 {
   // I am treating 0.0/0.0 as 0.0
   int i;
@@ -761,7 +761,11 @@ OsiIndexedVector::operator/(
       }
     }
   }
-  newOne.nElements_=nElements;
+
+// I don't see why this is necessary. Division can only modify existing.
+//newOne.nElements_=nElements;
+  assert(newOne.nElements_ == nElements) ;
+
   if (needClean) {
     // go through again
     nElements_=0;
@@ -836,18 +840,19 @@ OsiIndexedVector::gutsOfSetVector(int size,
   int numberDuplicates=0;
   for (i=0;i<size;i++) {
     int indexValue=inds[i];
-    double value=elems[i];
-    if (elements_[indexValue]) {
-      numberDuplicates++;
-      value += elements_[indexValue];
-      if (fabs(value)<OSI_INDEXED_TINY_ELEMENT) 
-	needClean=true; // need to go through again
-      elements_[indexValue]=value;
-    } else {
-      if (fabs(value)>=OSI_INDEXED_TINY_ELEMENT) {
-	elements_[indexValue]=value;
+    if (elements_[indexValue] == 0)
+    {
+      if (fabs(elems[i])>=OSI_INDEXED_TINY_ELEMENT) {
 	indices_[nElements_++]=indexValue;
+	elements_[indexValue]=elems[i];
       }
+    }
+    else
+    {
+      numberDuplicates++;
+      elements_[indexValue] += elems[i] ;
+      if (fabs(elements_[indexValue])<OSI_INDEXED_TINY_ELEMENT) 
+	needClean=true; // need to go through again
     }
   }
   if (needClean) {
@@ -891,20 +896,18 @@ OsiIndexedVector::gutsOfSetVector(int size, int numberIndices,
   int numberDuplicates=0;
   for (i=0;i<numberIndices;i++) {
     int indexValue=inds[i];
-    double value=elems[indexValue];
     if (indexValue<0) 
       throw CoinError("negative index", method, "OsiIndexedVector");
     else if (indexValue>=size) 
       throw CoinError("too large an index", method, "OsiIndexedVector");
     if (elements_[indexValue]) {
       numberDuplicates++;
-      value += elements_[indexValue];
-      if (fabs(value)<OSI_INDEXED_TINY_ELEMENT) 
+      elements_[indexValue] += elems[indexValue] ;
+      if (fabs(elements_[indexValue])<OSI_INDEXED_TINY_ELEMENT) 
 	needClean=true; // need to go through again
-      elements_[indexValue]=value;
     } else {
-      if (fabs(value)>=OSI_INDEXED_TINY_ELEMENT) {
-	elements_[indexValue]=value;
+      if (fabs(elems[indexValue])>=OSI_INDEXED_TINY_ELEMENT) {
+	elements_[indexValue]=elems[indexValue];
 	indices_[nElements_++]=indexValue;
       }
     }
@@ -935,7 +938,9 @@ OsiIndexedVector::gutsOfSetConstant(int size,
                                     bool testForDuplicateIndex,
                                     const char * method) 
 {
-  // we are going to do a faster test for duplicates so test base class when empty
+
+  // we are going to do a faster test for duplicates so test base class
+  // when empty
   OsiPackedVectorBase::setTestForDuplicateIndex(testForDuplicateIndex);
   // and clear index set
   clearIndexSet();
@@ -961,17 +966,19 @@ OsiIndexedVector::gutsOfSetConstant(int size,
   bool needClean=false;
   for (i=0;i<size;i++) {
     int indexValue=inds[i];
-    if (elements_[indexValue]) {
-      numberDuplicates++;
-      value += elements_[indexValue];
-      if (fabs(value)<OSI_INDEXED_TINY_ELEMENT) 
-	needClean=true; // need to go through again
-      elements_[indexValue]=value;
-    } else {
+    if (elements_[indexValue] == 0)
+    {
       if (fabs(value)>=OSI_INDEXED_TINY_ELEMENT) {
-	elements_[indexValue]=value;
+	elements_[indexValue] += value;
 	indices_[nElements_++]=indexValue;
       }
+    }
+    else
+    {
+      numberDuplicates++;
+      elements_[indexValue] += value ;
+      if (fabs(elements_[indexValue])<OSI_INDEXED_TINY_ELEMENT) 
+	needClean=true; // need to go through again
     }
   }
   if (needClean) {

@@ -4,7 +4,7 @@ LibType := SHARED
 # Select optimization (-O or -g). -O will be automatically bumped up to the 
 # highest level of optimization the compiler supports. If want something in
 # between then specify the exact level you want, e.g., -O1 or -O2
-OptLevel := -g
+OptLevel := -O
 
 # Look at the ${CoinDir}/Makefiles/Makefile.location file and edit
 # the location of the various libraries
@@ -48,4 +48,5 @@ export LibType OptLevel LIBNAME LIBSRC
 default: install
 
 install clean doc library: % :
+	(cd ../Coin && ${MAKE} install)
 	$(MAKE) -f ${MakefileDir}/Makefile.lib $*

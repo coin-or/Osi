@@ -911,7 +911,7 @@ public:
 	<ul>
 	  <li> 0 - normal
 	  <li> 1 - extra accuracy 
-	  <li> 2 - IEEE hex (later)
+	  <li> 2 - IEEE hex
 	</ul>
 
 	Returns non-zero on I/O error

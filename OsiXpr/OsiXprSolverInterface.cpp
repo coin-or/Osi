@@ -1158,7 +1158,6 @@ OsiXprSolverInterface::setColLower( int elementIndex, double elementValue )
           elementIndex,boundType,elementValue);
       }
 
-      chgbds(1, &elementIndex, &boundType, &elementValue);
       if ( vartype_[elementIndex] == 'B' && 
 	   (elementValue != 0.0 && elementValue != 1.0) ) {
         char elementType = 'I';
@@ -1169,6 +1168,8 @@ OsiXprSolverInterface::setColLower( int elementIndex, double elementValue )
         }
 	chgcoltype(1, &elementIndex, &elementType);
       }
+      chgbds(1, &elementIndex, &boundType, &elementValue);
+
       freeCachedResults();
       //    delete [] collower_;
       //    collower_ = NULL;
@@ -1353,7 +1354,7 @@ OsiXprSolverInterface::setContinuous(int index)
 
     getipv(N_PSTAT, &pstat);
 
-    if ( pstat & 6 == 0 ) { 		// not presolved
+    if ( (pstat & 6) == 0 ) { 		// not presolved
       char qctype = 'C';
 
       chgcoltype(1, &index, &qctype);
@@ -1372,7 +1373,7 @@ OsiXprSolverInterface::setInteger(int index)
 
     getipv(N_PSTAT, &pstat);
 
-    if ( pstat & 6 == 0 ) { 		// not presolved
+    if ( (pstat & 6) == 0 ) { 		// not presolved
       char qctype;
 
       if ( getColLower()[index] == 0.0 && 
@@ -1397,11 +1398,11 @@ OsiXprSolverInterface::setContinuous(const int* indices, int len)
 
     getipv(N_PSTAT, &pstat);
 
-    if ( pstat & 6 == 0 ) { 		// not presolved
+    if ( (pstat & 6) == 0 ) { 		// not presolved
       char *qctype = new char[len];
 
       CoinFillN(qctype, len, 'C');
-      chgcoltype(1, const_cast<int *>(indices), qctype);
+      chgcoltype(len, const_cast<int *>(indices), qctype);
       freeCachedResults();
     }
   }
@@ -1417,7 +1418,7 @@ OsiXprSolverInterface::setInteger(const int* indices, int len)
 
     getipv(N_PSTAT, &pstat);
 
-    if ( pstat & 6 == 0 ) { 		// not presolved
+    if ( (pstat & 6) == 0 ) { 		// not presolved
       char *qctype = new char[len];
       const double* clb = getColLower();
       const double* cub = getColUpper();
@@ -1429,7 +1430,7 @@ OsiXprSolverInterface::setInteger(const int* indices, int len)
 	  qctype[i] = 'I';
       }
 
-      chgcoltype(1, const_cast<int *>(indices), qctype);
+      chgcoltype(len, const_cast<int *>(indices), qctype);
       freeCachedResults();
     }
   }
@@ -2362,12 +2363,12 @@ OsiXprSolverInterface::~OsiXprSolverInterface ()
    if ( xprSaved_ ) {
       //    cout << "Problem " << xprProbname_ << " deleted from matrix " << xprMatrixId_ << "." << endl; 
       //    *** Temporarily no matrix deletes until XPRESS bug resolved.
-      //    int iret = delmat(xprMatrixId_);
-      //    if ( iret != 0 ) { 
-      //      getipv(N_ERRNO, &iret);
-      //      cout << "Deletion reported error " << iret << endl;
-      //    }
-      //    assert( iret == 0 );
+      //      int iret = delmat(xprMatrixId_);
+      //      if ( iret != 0 ) { 
+      //	 getipv(N_ERRNO, &iret);
+      //	 cout << "Deletion reported error " << iret << endl;
+      //      }
+      //      assert( iret == 0 );
    } else if ( xprCurrentProblem_ == this ) xprCurrentProblem_ = NULL;
 
    gutsOfDestructor();
@@ -2682,8 +2683,8 @@ OsiXprSolverInterface::activateMe() const
           fprintf(getLogFilePtr(),"  int iret = savmat(& matrixId);\n");
         }
 
-	 //      cout << "Problem " << xprCurrentProblem_->xprProbname_
-	 //	   << " saved as matrix ";
+	//      cout << "Problem " << xprCurrentProblem_->xprProbname_
+	//	   << " saved as matrix ";
 	 int iret = savmat(& xprCurrentProblem_->xprMatrixId_);
 	 if ( iret != 0 ) getipv(N_ERRNO, &iret);
 	 assert( iret == 0 );

@@ -1,4 +1,4 @@
-//  LAST EDIT: Fri Aug 31 15:31:37 2001 by Tobias Pfender (opt14!bzfpfend) 
+//  LAST EDIT: Tue Nov 27 16:30:04 CET 2001 by Laszlo Ladanyi
 //-----------------------------------------------------------------------------
 // name:     OSI Interface for CPLEX
 // author:   Tobias Pfender
@@ -101,7 +101,7 @@ void OsiCpxSolverInterface::resolve()
       checkCPXerror( err, "CPXchgprobtype", "resolve" );
     }
 
-  CPXdualopt( env_, lp );   
+  int stat = CPXdualopt( env_, lp );   
 }
 //-----------------------------------------------------------------------------
 void OsiCpxSolverInterface::branchAndBound()
@@ -243,43 +243,58 @@ bool OsiCpxSolverInterface::isAbandoned() const
 {
   int stat = CPXgetstat( env_, getMutableLpPtr() );
 
-  return stat == 0 || stat == CPX_NUM_BEST_FEAS || stat == CPX_NUM_BEST_INFEAS || 
-    stat == CPX_ABORT_FEAS || stat == CPX_ABORT_INFEAS || stat == CPX_ABORT_CROSSOVER;
+  return (stat == 0 || 
+	  stat == CPX_NUM_BEST_FEAS || 
+	  stat == CPX_NUM_BEST_INFEAS || 
+	  stat == CPX_ABORT_FEAS || 
+	  stat == CPX_ABORT_INFEAS || 
+	  stat == CPX_ABORT_CROSSOVER);
 }
 
 bool OsiCpxSolverInterface::isProvenOptimal() const
 {
   int stat = CPXgetstat( env_, getMutableLpPtr() );
 
-  return stat == CPX_OPTIMAL || stat == CPX_OPTIMAL_INFEAS;
+  return (stat == CPX_OPTIMAL || 
+	  stat == CPX_OPTIMAL_INFEAS);
 }
 
 bool OsiCpxSolverInterface::isProvenPrimalInfeasible() const
 {
   int stat = CPXgetstat( env_, getMutableLpPtr() );
+  int method = CPXgetmethod( env_, getMutableLpPtr() );
 
-  return stat == CPX_INFEASIBLE || stat == CPX_ABORT_PRIM_INFEAS || stat == CPX_ABORT_PRIM_DUAL_INFEAS;
+  return (method == CPX_ALG_PRIMAL && stat == CPX_INFEASIBLE || 
+	  method == CPX_ALG_DUAL && stat == CPX_UNBOUNDED || 
+	  stat == CPX_ABORT_PRIM_INFEAS ||
+	  stat == CPX_ABORT_PRIM_DUAL_INFEAS);
 }
 
 bool OsiCpxSolverInterface::isProvenDualInfeasible() const
 {
   int stat = CPXgetstat( env_, getMutableLpPtr() );
+  int method = CPXgetmethod( env_, getMutableLpPtr() );
 
-  return stat == CPX_UNBOUNDED || stat == CPX_ABORT_DUAL_INFEAS || stat == CPX_ABORT_PRIM_DUAL_INFEAS;
+  return (method == CPX_ALG_PRIMAL && stat == CPX_UNBOUNDED || 
+	  method == CPX_ALG_DUAL && stat == CPX_INFEASIBLE || 
+	  stat == CPX_ABORT_DUAL_INFEAS || 
+	  stat == CPX_ABORT_PRIM_DUAL_INFEAS);
 }
 
 bool OsiCpxSolverInterface::isPrimalObjectiveLimitReached() const
 {
   int stat = CPXgetstat( env_, getMutableLpPtr() );
+  int method = CPXgetmethod( env_, getMutableLpPtr() );
 
-  return stat == CPX_OBJ_LIM; // ??? CPLEX just have an objective limit - not primal/dual
+  return method == CPX_ALG_PRIMAL && stat == CPX_OBJ_LIM;
 }
 
 bool OsiCpxSolverInterface::isDualObjectiveLimitReached() const
 {
   int stat = CPXgetstat( env_, getMutableLpPtr() );
+  int method = CPXgetmethod( env_, getMutableLpPtr() );
 
-  return stat == CPX_OBJ_LIM; // ??? CPLEX just have an objective limit - not primal/dual
+  return method == CPX_ALG_DUAL && stat == CPX_OBJ_LIM;
 }
 
 bool OsiCpxSolverInterface::isIterationLimitReached() const

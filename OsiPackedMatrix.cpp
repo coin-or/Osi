@@ -726,8 +726,9 @@ OsiPackedMatrix::appendMinorVector(const int vecsize,
 				   const double *vecelem)
    throw(CoinError)
 {
+  int i;
 #ifdef OSI_DEBUG
-  for (int i = 0; i < vecsize; ++i) {
+  for (i = 0; i < vecsize; ++i) {
     if (vecind[i] < 0 || vecind[i] >= majorDim_)
       throw CoinError("out of range index",
 		     "appendMinorVector", "OsiPackedMatrix");
@@ -743,7 +744,6 @@ OsiPackedMatrix::appendMinorVector(const int vecsize,
 #endif
 #endif
 
-  int i;
   // test that there's a gap at the end of every major-dimension vector where
   // we want to add a new entry
    

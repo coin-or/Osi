@@ -383,8 +383,8 @@ void OsiClpSolverInterface::resolve()
   } else {
     modelPtr_->scaling(0);
   }
-  ClpDualRowSteepest steep;
-  modelPtr_->setDualRowPivotAlgorithm(steep);
+  //ClpDualRowSteepest steep;
+  //modelPtr_->setDualRowPivotAlgorithm(steep);
   // sort out hints;
   // algorithm -1 force dual, +1 force primal
   int algorithm = -1;
@@ -395,6 +395,7 @@ void OsiClpSolverInterface::resolve()
   //modelPtr_->saveModel("save.bad");
   // presolve
   gotHint = (getHintParam(OsiDoPresolveInResolve,takeHint,strength));
+  int startFinishOptions= ((specialOptions_&1)==0) ? 0 : 1+4;
   assert (gotHint);
   if (strength!=OsiHintIgnore&&takeHint) {
     ClpPresolve pinfo;
@@ -450,7 +451,7 @@ void OsiClpSolverInterface::resolve()
       // check if clp thought it was in a loop
       if (modelPtr_->status()==3&&modelPtr_->numberIterations()<modelPtr_->maximumIterations()) {
 	// switch algorithm
-	modelPtr_->primal();
+	modelPtr_->primal(0,startFinishOptions);
 	lastAlgorithm_=1; // primal
 	if (modelPtr_->status()==3&&
 	    modelPtr_->numberIterations()<modelPtr_->maximumIterations()) {
@@ -467,7 +468,7 @@ void OsiClpSolverInterface::resolve()
       }
     } else {
       //printf("doing primal\n");
-      modelPtr_->primal();
+      modelPtr_->primal(0,startFinishOptions);
       lastAlgorithm_=1; // primal
       // check if clp thought it was in a loop
       if (modelPtr_->status()==3&&modelPtr_->numberIterations()<modelPtr_->maximumIterations()) {
@@ -846,192 +847,6 @@ std::vector<double*> OsiClpSolverInterface::getDualRays(int maxNumRays) const
 std::vector<double*> OsiClpSolverInterface::getPrimalRays(int maxNumRays) const
 {
   return std::vector<double*>(1, modelPtr_->unboundedRay());
-}
-//------------------------------------------------------------------
-/* Set a single row lower bound<br>
-   Use -DBL_MAX for -infinity. */
-void 
-OsiClpSolverInterface::setRowLower( int elementIndex, double elementValue ) {
-  if (elementValue<-1.0e27)
-    elementValue=-COIN_DBL_MAX;
-  modelPtr_->rowLower()[elementIndex] = elementValue;
-}
-      
-/* Set a single row upper bound<br>
-   Use DBL_MAX for infinity. */
-void 
-OsiClpSolverInterface::setRowUpper( int elementIndex, double elementValue ) {
-  if (elementValue>1.0e27)
-    elementValue=COIN_DBL_MAX;
-  modelPtr_->rowUpper()[elementIndex] = elementValue;
-}
-    
-/* Set a single row lower and upper bound */
-void 
-OsiClpSolverInterface::setRowBounds( int elementIndex,
-	      double lower, double upper ) {
-  if (lower<-1.0e27)
-    lower=-COIN_DBL_MAX;
-  if (upper>1.0e27)
-    upper=COIN_DBL_MAX;
-  assert (upper>=lower);
-  modelPtr_->rowLower()[elementIndex] = lower;
-  modelPtr_->rowUpper()[elementIndex] = upper;
-}
-//-----------------------------------------------------------------------------
-void OsiClpSolverInterface::setColSetBounds(const int* indexFirst,
-					    const int* indexLast,
-					    const double* boundList)
-{
-  double * lower = modelPtr_->columnLower();
-  double * upper = modelPtr_->columnUpper();
-  const int * saveFirst=indexFirst;
-#ifndef NDEBUG
-  int n = modelPtr_->numberColumns();
-#endif
-  while (indexFirst != indexLast) {
-    const int iCol=*indexFirst++;
-#ifndef NDEBUG
-    if (iCol<0||iCol>=n) {
-      indexError(iCol,"setColSetBounds");
-    }
-#endif
-    // force redundant but might do something with nan
-    lower[iCol]= forceIntoRange(*boundList++, -OsiClpInfinity, OsiClpInfinity);
-    upper[iCol]= forceIntoRange(*boundList++, -OsiClpInfinity, OsiClpInfinity);
-    if (lower[iCol]<-1.0e27)
-      lower[iCol]=-COIN_DBL_MAX;
-    if (upper[iCol]>1.0e27)
-      upper[iCol]=COIN_DBL_MAX;
-    assert (upper[iCol]>=lower[iCol]);
-  }
-  if (modelPtr_->solveType()==2) {
-    // directly into code as well
-    indexFirst = saveFirst;
-    double * lower2 = modelPtr_->lowerRegion(1);
-    double * upper2 = modelPtr_->upperRegion(1);
-    while (indexFirst != indexLast) {
-      const int iCol=*indexFirst++;
-      lower2[iCol]= lower[iCol];
-      upper2[iCol]= upper[iCol];
-    }
-  }
-}
-//-----------------------------------------------------------------------------
-void
-OsiClpSolverInterface::setRowType(int i, char sense, double rightHandSide,
-				  double range)
-{
-  // *TEST*
-#ifndef NDEBUG
-  int n = modelPtr_->numberRows();
-  if (i<0||i>=n) {
-    indexError(i,"setRowType");
-  }
-#endif
-  double lower, upper;
-  convertSenseToBound(sense, rightHandSide, range, lower, upper);
-  setRowBounds(i, lower, upper);
-  // If user is using sense then set
-  if (rowsense_) {
-    rowsense_[i] = sense;
-    rhs_[i] = rightHandSide;
-    rowrange_[i] = range;
-  }
-}
-//-----------------------------------------------------------------------------
-void OsiClpSolverInterface::setRowSetBounds(const int* indexFirst,
-					    const int* indexLast,
-					    const double* boundList)
-{
-#ifndef NDEBUG
-  int n = modelPtr_->numberRows();
-#endif
-  double * lower = modelPtr_->rowLower();
-  double * upper = modelPtr_->rowUpper();
-  const int * saveFirst=indexFirst;
-  const int len = indexLast - indexFirst;
-  while (indexFirst != indexLast) {
-    const int iRow=*indexFirst++;
-#ifndef NDEBUG
-    if (iRow<0||iRow>=n) {
-      indexError(iRow,"setRowSetBounds");
-    }
-#endif
-   // force redundant but might do something with nan
-    lower[iRow]= forceIntoRange(*boundList++, -OsiClpInfinity, OsiClpInfinity);
-    upper[iRow]= forceIntoRange(*boundList++, -OsiClpInfinity, OsiClpInfinity);
-    if (lower[iRow]<-1.0e27)
-      lower[iRow]=-COIN_DBL_MAX;
-    if (upper[iRow]>1.0e27)
-      upper[iRow]=COIN_DBL_MAX;
-    assert (upper[iRow]>=lower[iRow]);
-  }
-  if (rowsense_ != NULL) {
-    assert ((rhs_ != NULL) && (rowrange_ != NULL));
-    indexFirst -= len;
-    while (indexFirst != indexLast) {
-      const int iRow=*indexFirst++;
-      convertBoundToSense(lower[iRow], upper[iRow],
-			  rowsense_[iRow], rhs_[iRow], rowrange_[iRow]);
-    }
-  }
-  if (modelPtr_->solveType()==2) {
-    // directly into code as well
-    indexFirst = saveFirst;
-    double * lower2 = modelPtr_->lowerRegion(0);
-    double * upper2 = modelPtr_->upperRegion(0);
-    while (indexFirst != indexLast) {
-      const int iRow=*indexFirst++;
-      lower2[iRow]= lower[iRow];
-      upper2[iRow]= upper[iRow];
-    }
-  }
-}
-//-----------------------------------------------------------------------------
-void
-OsiClpSolverInterface::setRowSetTypes(const int* indexFirst,
-				      const int* indexLast,
-				      const char* senseList,
-				      const double* rhsList,
-				      const double* rangeList)
-{
-#ifndef NDEBUG
-  int n = modelPtr_->numberRows();
-#endif
-  double * lower = modelPtr_->rowLower();
-  double * upper = modelPtr_->rowUpper();
-  const int len = indexLast - indexFirst;
-  while (indexFirst != indexLast) {
-    const int iRow= *indexFirst++;
-#ifndef NDEBUG
-    if (iRow<0||iRow>=n) {
-      indexError(iRow,"isContinuous");
-    }
-#endif
-    if (rangeList){
-      convertSenseToBound(*senseList++, *rhsList++, *rangeList++,
-			  lower[iRow], upper[iRow]);
-    } else {
-      convertSenseToBound(*senseList++, *rhsList++, 0,
-			  lower[iRow], upper[iRow]);
-    }
-  }
-  if (rowsense_ != NULL) {
-    assert ((rhs_ != NULL) && (rowrange_ != NULL));
-    indexFirst -= len;
-    senseList -= len;
-    rhsList -= len;
-    if (rangeList)
-       rangeList -= len;
-    while (indexFirst != indexLast) {
-      const int iRow=*indexFirst++;
-      rowsense_[iRow] = *senseList++;
-      rhs_[iRow] = *rhsList++;
-      if (rangeList)
-	 rowrange_[iRow] = *rangeList++;
-    }
-  }
 }
 //#############################################################################
 void
@@ -1497,7 +1312,8 @@ ws_(NULL),
 rowActivity_(NULL),
 columnActivity_(NULL),
 matrixByRow_(NULL),
-integerInformation_(NULL)
+integerInformation_(NULL),
+specialOptions_(0)
 {
   modelPtr_=NULL;
   notOwned_=false;
@@ -1552,6 +1368,7 @@ integerInformation_(NULL)
 	   numberColumns*sizeof(char));
   }
   saveData_ = rhs.saveData_;
+  specialOptions_ = rhs.specialOptions_;
   fillParamMaps();
   messageHandler()->setLogLevel(rhs.messageHandler()->logLevel());
 }
@@ -1571,7 +1388,8 @@ itlimOrig_(9999999),
 lastAlgorithm_(0),
 notOwned_(false),
 matrixByRow_(NULL),
-integerInformation_(NULL)
+integerInformation_(NULL),
+specialOptions_(0)
 {
   modelPtr_ = rhs;
   linearObjective_ = modelPtr_->objective();
@@ -1627,7 +1445,15 @@ OsiClpSolverInterface::operator=(const OsiClpSolverInterface& rhs)
       modelPtr_ = new ClpSimplex(*rhs.modelPtr_);
     notOwned_=false;
     linearObjective_ = modelPtr_->objective();
-    
+    saveData_ = rhs.saveData_;
+    specialOptions_ = rhs.specialOptions_;
+    basis_ = rhs.basis_;
+    if (rhs.integerInformation_) {
+      int numberColumns = modelPtr_->numberColumns();
+      integerInformation_ = new char[numberColumns];
+      memcpy(integerInformation_,rhs.integerInformation_,
+	     numberColumns*sizeof(char));
+    }
     if ( rhs.ws_ ) 
       ws_ = new CoinWarmStartBasis(*rhs.ws_);
     delete [] rowActivity_;
@@ -1710,7 +1536,6 @@ OsiClpSolverInterface::applyRowCuts(int numberCuts, const OsiRowCut ** cuts)
   delete [] rowub;
 
 }
-
 //-----------------------------------------------------------------------------
 
 void OsiClpSolverInterface::applyColCut( const OsiColCut & cc )
@@ -1963,11 +1788,7 @@ OsiClpSolverInterface::setObjCoeff( int elementIndex, double elementValue )
     indexError(elementIndex,"setObjCoeff");
   }
 #endif
-  linearObjective_[elementIndex] = elementValue;
-  if (modelPtr_->solveType()==2) {
-    // simplex interface
-    modelPtr_->costRegion(1)[elementIndex] = elementValue;
-  }
+  modelPtr_->setObjectiveCoefficient(elementIndex,elementValue);
 }
 
 /* Set a single column lower bound<br>
@@ -1981,13 +1802,7 @@ OsiClpSolverInterface::setColLower( int elementIndex, double elementValue )
     indexError(elementIndex,"setColLower");
   }
 #endif
-  if (elementValue<-1.0e27)
-    elementValue=-COIN_DBL_MAX;
-  modelPtr_->columnLower()[elementIndex] = elementValue;
-  if (modelPtr_->solveType()==2) {
-    // simplex interface
-    modelPtr_->lowerRegion(1)[elementIndex] = elementValue;
-  }
+  modelPtr_->setColumnLower(elementIndex,elementValue);
 }
       
 /* Set a single column upper bound<br>
@@ -2001,13 +1816,7 @@ OsiClpSolverInterface::setColUpper( int elementIndex, double elementValue )
     indexError(elementIndex,"setColUpper");
   }
 #endif
-  if (elementValue>1.0e27)
-    elementValue=COIN_DBL_MAX;
-  modelPtr_->columnUpper()[elementIndex] = elementValue;
-  if (modelPtr_->solveType()==2) {
-    // simplex interface
-    modelPtr_->upperRegion(1)[elementIndex] = elementValue;
-  }
+  modelPtr_->setColumnUpper(elementIndex,elementValue);
 }
 
 /* Set a single column lower and upper bound */
@@ -2021,17 +1830,155 @@ OsiClpSolverInterface::setColBounds( int elementIndex,
     indexError(elementIndex,"setColBounds");
   }
 #endif
-  if (lower<-1.0e27)
-    lower=-COIN_DBL_MAX;
-  if (upper>1.0e27)
-    upper=COIN_DBL_MAX;
-  assert (upper>=lower);
-  modelPtr_->columnLower()[elementIndex] = lower;
-  modelPtr_->columnUpper()[elementIndex] = upper;
-  if (modelPtr_->solveType()==2) {
-    // simplex interface
-    modelPtr_->lowerRegion(1)[elementIndex] = lower;
-    modelPtr_->upperRegion(1)[elementIndex] = upper;
+  modelPtr_->setColumnBounds(elementIndex,lower,upper);
+}
+void OsiClpSolverInterface::setColSetBounds(const int* indexFirst,
+					    const int* indexLast,
+					    const double* boundList)
+{
+#ifndef NDEBUG
+  int n = modelPtr_->numberColumns();
+  const int * indexFirst2=indexFirst;
+  while (indexFirst2 != indexLast) {
+    const int iColumn=*indexFirst++;
+    if (iColumn<0||iColumn>=n) {
+      indexError(iColumn,"setColSetBounds");
+    }
+  }
+#endif
+  modelPtr_->setColSetBounds(indexFirst,indexLast,boundList);
+}
+//------------------------------------------------------------------
+/* Set a single row lower bound<br>
+   Use -DBL_MAX for -infinity. */
+void 
+OsiClpSolverInterface::setRowLower( int elementIndex, double elementValue ) {
+#ifndef NDEBUG
+  int n = modelPtr_->numberRows();
+  if (elementIndex<0||elementIndex>=n) {
+    indexError(elementIndex,"setColBounds");
+  }
+#endif
+  modelPtr_->setRowLower(elementIndex , elementValue);
+}
+      
+/* Set a single row upper bound<br>
+   Use DBL_MAX for infinity. */
+void 
+OsiClpSolverInterface::setRowUpper( int elementIndex, double elementValue ) {
+#ifndef NDEBUG
+  int n = modelPtr_->numberRows();
+  if (elementIndex<0||elementIndex>=n) {
+    indexError(elementIndex,"setColBounds");
+  }
+#endif
+  modelPtr_->setRowUpper(elementIndex , elementValue);
+}
+    
+/* Set a single row lower and upper bound */
+void 
+OsiClpSolverInterface::setRowBounds( int elementIndex,
+	      double lower, double upper ) {
+#ifndef NDEBUG
+  int n = modelPtr_->numberRows();
+  if (elementIndex<0||elementIndex>=n) {
+    indexError(elementIndex,"setColBounds");
+  }
+#endif
+  modelPtr_->setRowBounds(elementIndex,lower,upper);
+}
+//-----------------------------------------------------------------------------
+void
+OsiClpSolverInterface::setRowType(int i, char sense, double rightHandSide,
+				  double range)
+{
+#ifndef NDEBUG
+  int n = modelPtr_->numberRows();
+  if (i<0||i>=n) {
+    indexError(i,"setRowType");
+  }
+#endif
+  double lower, upper;
+  convertSenseToBound(sense, rightHandSide, range, lower, upper);
+  setRowBounds(i, lower, upper);
+  // If user is using sense then set
+  if (rowsense_) {
+    rowsense_[i] = sense;
+    rhs_[i] = rightHandSide;
+    rowrange_[i] = range;
+  }
+}
+//-----------------------------------------------------------------------------
+void OsiClpSolverInterface::setRowSetBounds(const int* indexFirst,
+					    const int* indexLast,
+					    const double* boundList)
+{
+#ifndef NDEBUG
+  int n = modelPtr_->numberRows();
+  const int * indexFirst2=indexFirst;
+  while (indexFirst2 != indexLast) {
+    const int iColumn=*indexFirst++;
+    if (iColumn<0||iColumn>=n) {
+      indexError(iColumn,"setColumnSetBounds");
+    }
+  }
+#endif
+  modelPtr_->setRowSetBounds(indexFirst,indexLast,boundList);
+  if (rowsense_ != NULL) {
+    assert ((rhs_ != NULL) && (rowrange_ != NULL));
+    double * lower = modelPtr_->rowLower();
+    double * upper = modelPtr_->rowUpper();
+    while (indexFirst != indexLast) {
+      const int iRow=*indexFirst++;
+      convertBoundToSense(lower[iRow], upper[iRow],
+			  rowsense_[iRow], rhs_[iRow], rowrange_[iRow]);
+    }
+  }
+}
+//-----------------------------------------------------------------------------
+void
+OsiClpSolverInterface::setRowSetTypes(const int* indexFirst,
+				      const int* indexLast,
+				      const char* senseList,
+				      const double* rhsList,
+				      const double* rangeList)
+{
+#ifndef NDEBUG
+  int n = modelPtr_->numberRows();
+#endif
+  const int len = indexLast - indexFirst;
+  while (indexFirst != indexLast) {
+    const int iRow= *indexFirst++;
+#ifndef NDEBUG
+    if (iRow<0||iRow>=n) {
+      indexError(iRow,"isContinuous");
+    }
+#endif
+    double lowerValue;
+    double upperValue;
+    if (rangeList){
+      convertSenseToBound(*senseList++, *rhsList++, *rangeList++,
+			  lowerValue, upperValue);
+    } else {
+      convertSenseToBound(*senseList++, *rhsList++, 0,
+			  lowerValue, upperValue);
+    }
+    modelPtr_->setRowBounds(iRow,lowerValue,upperValue);
+  }
+  if (rowsense_ != NULL) {
+    assert ((rhs_ != NULL) && (rowrange_ != NULL));
+    indexFirst -= len;
+    senseList -= len;
+    rhsList -= len;
+    if (rangeList)
+       rangeList -= len;
+    while (indexFirst != indexLast) {
+      const int iRow=*indexFirst++;
+      rowsense_[iRow] = *senseList++;
+      rhs_[iRow] = *rhsList++;
+      if (rangeList)
+	 rowrange_[iRow] = *rangeList++;
+    }
   }
 }
 /*Enables normal operation of subsequent functions.
@@ -2051,6 +1998,7 @@ OsiClpSolverInterface::enableSimplexInterface(bool doingPrimal)
   modelPtr_->scaling(0);
   // Do initialization
   saveData_ = modelPtr_->saveData();
+  specialOptions_ = 0;
   // set infeasibility cost up
   modelPtr_->setInfeasibilityCost(1.0e12);
   // probably should save and restore?

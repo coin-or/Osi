@@ -15,6 +15,7 @@
 #include "CoinWarmStartBasis.hpp"
 
 class OsiRowCut;
+class OsiClpUserSolver;
 #ifndef COIN_DBL_MAX
 static const double OsiClpInfinity = DBL_MAX;
 #else
@@ -26,9 +27,6 @@ static const double OsiClpInfinity = COIN_DBL_MAX;
 /** Clp Solver Interface
 
     Instantiation of OsiClpSolverInterface for the Model Algorithm.
-
-    It has a trivial branch and bound code for completeness.  It would be
-    an interesting project to expand it and move it to base class.
 
 */
 
@@ -534,7 +532,8 @@ public:
       */
       virtual void applyRowCuts(int numberCuts, const OsiRowCut * cuts);
       /** Apply a collection of row cuts which are all effective.
-	  This is passed in as an array of pointers.
+	  applyCuts seems to do one at a time which seems inefficient.
+	  This uses array of pointers
       */
       virtual void applyRowCuts(int numberCuts, const OsiRowCut ** cuts);
     //@}
@@ -662,6 +661,11 @@ public:
   //@{
     /// Get pointer to Clp model
   ClpSimplex * getModelPtr() const ;
+  /// Get special options
+  inline unsigned int specialOptions() const
+  { return specialOptions_;};
+  inline void setSpecialOptions(unsigned int value)
+  { specialOptions_=value;};
   //@}
 
   //---------------------------------------------------------------------------
@@ -707,8 +711,8 @@ protected:
 
   //---------------------------------------------------------------------------
 
-private:
-  /**@name Private methods */
+protected:
+  /**@name Protected methods */
   //@{
     /// The real work of a copy constructor (used by copy and assignment)
     void gutsOfDestructor();
@@ -727,7 +731,7 @@ private:
     void setBasis( const CoinWarmStartBasis & basis, ClpSimplex * model);
   //@}
   
-  /**@name Private member data */
+  /**@name Protected member data */
   //@{
      /// Clp model represented by this class instance
      mutable ClpSimplex * modelPtr_;
@@ -776,6 +780,10 @@ private:
 
       /// To save data in OsiSimplex stuff
       ClpDataSave saveData_;
+      /** Special options
+	  1 try and keep work regions as much as possible
+      */
+      unsigned int specialOptions_;
   //@}
 };
 

@@ -404,7 +404,7 @@ OsiSolverInterface::OsiSolverInterface (const OsiSolverInterface & rhs) :
     handler_ = new CoinMessageHandler(*rhs.handler_);
   else
     handler_ = rhs.handler_;
-  messages_ = CoinMessage();
+  messages_ = CoinMessages(rhs.messages_);
   CoinDisjointCopyN(rhs.intParam_, OsiLastIntParam, intParam_);
   CoinDisjointCopyN(rhs.dblParam_, OsiLastDblParam, dblParam_);
   CoinDisjointCopyN(rhs.strParam_, OsiLastStrParam, strParam_);

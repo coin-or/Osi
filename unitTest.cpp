@@ -18,6 +18,7 @@
 #include "CoinSort.hpp"
 #include "OsiShallowPackedVector.hpp"
 #include "OsiPackedVector.hpp"
+#include "OsiIndexedVector.hpp"
 #include "OsiSolverInterface.hpp"
 #include "OsiPackedMatrix.hpp"
 #include "OsiRowCutDebugger.hpp"
@@ -132,6 +133,9 @@ int main (int argc, const char *argv[])
 
   testingMessage( "Testing OsiPackedVector\n" );
   OsiPackedVectorUnitTest();
+
+  testingMessage( "Testing OsiIndexedVector\n" );
+  OsiIndexedVectorUnitTest();
 
   testingMessage( "Testing OsiPackedMatrix\n" );
   OsiPackedMatrixUnitTest();

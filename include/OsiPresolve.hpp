@@ -132,6 +132,12 @@ public:
   { nonLinearValue_ = value;};
   inline double nonLinearValue() const
     { return nonLinearValue_;};
+  /** Whether we want to skip dual part of presolve etc.
+      1 bit allows duplicate column processing on integer columns
+      and dual stuff on integers
+  */
+  inline void setPresolveActions(int action)
+  { presolveActions_  = (presolveActions_&0xffff0000)|(action&0xffff);};
 
 private:
   /*! Original model (solver interface loaded with the original problem).
@@ -176,6 +182,11 @@ private:
   /*! \brief Number of nonzero matrix coefficients in the original model. */
   CoinBigIndex nelems_;
 
+  /** Whether we want to skip dual part of presolve etc.
+      1 bit allows duplicate column processing on integer columns
+      and dual stuff on integers
+  */
+  int presolveActions_;
   /// Number of major passes
   int numberPasses_;
 

@@ -47,6 +47,7 @@ OsiPresolve::OsiPresolve() :
   ncols_(0),
   nrows_(0),
   nelems_(0),
+  presolveActions_(0),
   numberPasses_(5)
 {
 }
@@ -499,7 +500,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
   // if integers then switch off dual stuff
   // later just do individually
   bool doDualStuff = true;
-  {
+  if ((presolveActions_&1)==0) {
     int i;
     int ncol = presolvedModel_->getNumCols();
     for (i=0;i<ncol;i++)
@@ -789,6 +790,9 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
       }
 
       if (dupcol) {
+        // maybe allow integer columns to be checked
+        if ((presolveActions_&1)!=0)
+          prob->setPresolveOptions(prob->presolveOptions()|1);
 	paction_ = dupcol_action::presolve(prob, paction_);
 #	if DEBUG_PRESOLVE
 	check_and_tell(prob,paction_,pactiond) ;

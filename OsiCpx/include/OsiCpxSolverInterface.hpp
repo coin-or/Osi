@@ -591,6 +591,11 @@ public:
   };
   CPXLPptr getLpPtr( int keepCached = KEEPCACHED_NONE );
   
+  //@{
+  /// Method to access CPLEX environment pointer
+  CPXENVptr getEnvironmentPtr();
+  //@}  
+
   /// return a vector of variable types (continous, binary, integer)
   const char* getCtype() const;
   
@@ -653,10 +658,6 @@ protected:
   
 private:
   /**@name Private static class functions  */
-  //@{
-  /// Method to access CPLEX environment pointer
-  static CPXENVptr getEnvironmentPtr();
-  //@}  
   
   /**@name Private static class data */
   //@{

@@ -663,7 +663,20 @@ protected:
   
 private:
   /**@name Private static class functions  */
-  
+  //@{
+  /// switches CPLEX to prob type LP
+  void switchToLP();
+
+  /// switches CPLEX to prob type MIP
+  void switchToMIP();
+
+  /// resizes coltype_ vector to be able to store at least minsize elements
+  void resizeColType( int minsize );
+
+  /// frees colsize_ vector
+  void freeColType();
+  //@}
+
   /**@name Private static class data */
   //@{
   /// CPLEX environment pointer
@@ -738,9 +751,6 @@ private:
   /// Pointer to dense vector of variable lower bounds
   mutable double  *colupper_;
   
-  /// Pointer to dense vector of variable types (continous, binary, integer)
-  mutable char    *ctype_;
-  
   /// Pointer to dense vector of row sense indicators
   mutable char    *rowsense_;
   
@@ -774,6 +784,18 @@ private:
   /// Pointer to row-wise copy of problem matrix coefficients.
   mutable CoinPackedMatrix *matrixByCol_;  
   //@}
+
+  /**@name Additional information needed for storing MIP problems */
+  //@{
+  /// Pointer to dense vector of variable types (continous, binary, integer)
+  char            *coltype_;
+
+  /// Size of allocated memory for coltype_
+  int             coltypesize_;
+  
+  /// Stores whether CPLEX' prob type is currently set to MIP
+  mutable bool    probtypemip_;
+
   //@}
 };
 

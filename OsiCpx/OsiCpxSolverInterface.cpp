@@ -28,6 +28,16 @@
 #include "CoinPackedMatrix.hpp"
 #include "CoinWarmStartBasis.hpp"
 
+
+// #define DEBUG 1
+
+#ifdef DEBUG
+#define debugMessage printf
+#else
+#define debugMessage if( false ) printf
+#endif
+
+
 //#############################################################################
 // A couple of helper functions
 //#############################################################################
@@ -72,79 +82,129 @@ checkCPXerror( int err, std::string cpxfuncname, std::string osimethod )
     }
 }
 
+void
+OsiCpxSolverInterface::switchToLP( void )
+{
+  debugMessage("OsiCpxSolverInterface::switchToLP()\n");
+
+  if( probtypemip_ )
+  {
+     CPXLPptr lp = getMutableLpPtr();
+
+#if CPX_VERSION >= 800
+     assert(CPXgetprobtype(env_,lp) == CPXPROB_MILP);
+#else
+     assert(CPXgetprobtype(env_,lp) == CPXPROB_MIP);
+#endif
+
+     int err = CPXchgprobtype( env_, lp, CPXPROB_LP );
+     checkCPXerror( err, "CPXchgprobtype", "switchToLP" );
+  }
+}
+
+void
+OsiCpxSolverInterface::switchToMIP( void )
+{
+  debugMessage("OsiCpxSolverInterface::switchToMIP()\n");
+
+  if( !probtypemip_ )
+  {
+     CPXLPptr lp = getMutableLpPtr();
+     int nc = getNumCols();
+     int *cindarray = new int[nc];
+
+     assert(CPXgetprobtype(env_,lp) == CPXPROB_LP);
+     assert(coltype_ != NULL);
+
+     for( int i = 0; i < nc; ++i )
+        cindarray[i] = i;
+
+#if CPX_VERSION >= 800
+     int err = CPXchgprobtype( env_, lp, CPXPROB_MILP );
+#else
+     int err = CPXchgprobtype( env_, lp, CPXPROB_MIP );
+#endif
+     checkCPXerror( err, "CPXchgprobtype", "switchToMIP" );
+
+     err = CPXchgctype( env_, lp, nc, cindarray, coltype_ );
+     checkCPXerror( err, "CPXchgctype", "switchToMIP" );
+
+     delete[] cindarray;
+  }
+}
+
+void
+OsiCpxSolverInterface::resizeColType( int minsize )
+{
+  debugMessage("OsiCpxSolverInterface::resizeColType()\n");
+
+  if( minsize > coltypesize_ )
+  {
+     int newcoltypesize = 2*coltypesize_;
+     if( minsize > newcoltypesize )
+        newcoltypesize = minsize;
+     char *newcoltype = new char[newcoltypesize];
+
+     if( coltype_ != NULL )
+     {
+        CoinDisjointCopyN( coltype_, coltypesize_, newcoltype );
+        delete[] coltype_;
+     }
+     coltype_ = newcoltype;
+     coltypesize_ = newcoltypesize;
+  }
+  assert(minsize == 0 || coltype_ != NULL);
+  assert(coltypesize_ >= minsize);
+}
+
+void
+OsiCpxSolverInterface::freeColType()
+{
+  debugMessage("OsiCpxSolverInterface::freeColType()\n");
+
+   if( coltypesize_ > 0 )
+   {
+      delete[] coltype_;
+      coltype_ = NULL;
+      coltypesize_ = 0;
+   }
+   assert(coltype_ == NULL);
+}
+
+
 //#############################################################################
 // Solve methods
 //#############################################################################
 
 void OsiCpxSolverInterface::initialSolve()
 {
-  CPXLPptr lp = getLpPtr( OsiCpxSolverInterface::FREECACHED_RESULTS );
-  // If mip problem (ie integer data exits),
-  // then must change problem type.
-  // CPLEX will return an error condition if this is not done
-  int probType = CPXgetprobtype(env_,lp);
+  debugMessage("OsiCpxSolverInterface::initialSolve()\n");
 
-#if CPX_VERSION >= 800
-  if ( probType == CPXPROB_MILP )
-    {
-      int err = CPXchgprobtype( env_, lp, CPXPROB_RELAXEDMILP );
-      checkCPXerror( err, "CPXchgprobtype", "initialSolve" );
-    }
-#else
-  if ( probType == CPXPROB_MIP )
-    {
-      int err = CPXchgprobtype( env_, lp, CPXPROB_RELAXED );
-      checkCPXerror( err, "CPXchgprobtype", "initialSolve" );
-    }
-#endif     
+  switchToLP();
+
+  CPXLPptr lp = getLpPtr( OsiCpxSolverInterface::FREECACHED_RESULTS );
 
   CPXprimopt( env_, lp );
 }
 //-----------------------------------------------------------------------------
 void OsiCpxSolverInterface::resolve()
 {
-  CPXLPptr lp = getLpPtr( OsiCpxSolverInterface::FREECACHED_RESULTS );
-  // If mip problem (ie integer data exits),
-  // then must change problem type.
-  // CPLEX will return an error condition if this is not done
-  int probType = CPXgetprobtype( env_, lp );
+  debugMessage("OsiCpxSolverInterface::resolve()\n");
 
-#if CPX_VERSION >= 800
-  if ( probType == CPXPROB_MILP )
-    {
-      int err = CPXchgprobtype( env_, lp, CPXPROB_RELAXEDMILP );
-      checkCPXerror( err, "CPXchgprobtype", "resolve" );
-    }
-#else
-  if ( probType == CPXPROB_MIP )
-    {
-      int err = CPXchgprobtype( env_, lp, CPXPROB_RELAXED );
-      checkCPXerror( err, "CPXchgprobtype", "resolve" );
-    }
-#endif
+  switchToLP();
+
+  CPXLPptr lp = getLpPtr( OsiCpxSolverInterface::FREECACHED_RESULTS );
 
   CPXdualopt( env_, lp );   
 }
 //-----------------------------------------------------------------------------
 void OsiCpxSolverInterface::branchAndBound()
 {
+  debugMessage("OsiCpxSolverInterface::branchAndBound()\n");
+
+  switchToMIP();
+
   CPXLPptr lp = getLpPtr( OsiCpxSolverInterface::FREECACHED_RESULTS );
-
-  int probType = CPXgetprobtype( env_, lp );
-
-#if CPX_VERSION >= 800
-  if ( probType != CPXPROB_MILP ) 
-    {
-      int err = CPXchgprobtype( env_, lp, CPXPROB_MILP );
-      checkCPXerror( err, "CPXchgprobtype", "branchAndBound" );
-    }
-#else
-  if ( probType != CPXPROB_MIP ) 
-    {
-      int err = CPXchgprobtype( env_, lp, CPXPROB_MIP );
-      checkCPXerror( err, "CPXchgprobtype", "branchAndBound" );
-    }
-#endif
 
   CPXmipopt( env_, lp );
 }
@@ -156,6 +216,8 @@ void OsiCpxSolverInterface::branchAndBound()
 bool
 OsiCpxSolverInterface::setIntParam(OsiIntParam key, int value)
 {
+  debugMessage("OsiCpxSolverInterface::setIntParam(%d, %d)\n", key, value);
+
   bool retval = false;
   switch (key)
     {
@@ -183,6 +245,8 @@ OsiCpxSolverInterface::setIntParam(OsiIntParam key, int value)
 bool
 OsiCpxSolverInterface::setDblParam(OsiDblParam key, double value)
 {
+  debugMessage("OsiCpxSolverInterface::setDblParam(%d, %g)\n", key, value);
+
   bool retval = false;
   switch (key)
     {
@@ -220,6 +284,8 @@ OsiCpxSolverInterface::setDblParam(OsiDblParam key, double value)
 bool
 OsiCpxSolverInterface::setStrParam(OsiStrParam key, const std::string & value)
 {
+  debugMessage("OsiCpxSolverInterface::setStrParam(%d, %s)\n", key, value.c_str());
+
   bool retval=false;
   switch (key) {
   case OsiProbName:
@@ -238,6 +304,8 @@ OsiCpxSolverInterface::setStrParam(OsiStrParam key, const std::string & value)
 bool
 OsiCpxSolverInterface::getIntParam(OsiIntParam key, int& value) const
 {
+  debugMessage("OsiCpxSolverInterface::getIntParam(%d)\n", key);
+
   bool retval = false;
   switch (key)
     {
@@ -260,6 +328,8 @@ OsiCpxSolverInterface::getIntParam(OsiIntParam key, int& value) const
 bool
 OsiCpxSolverInterface::getDblParam(OsiDblParam key, double& value) const
 {
+  debugMessage("OsiCpxSolverInterface::getDblParam(%d)\n", key);
+
   bool retval = false;
   switch (key) 
     {
@@ -297,6 +367,8 @@ OsiCpxSolverInterface::getDblParam(OsiDblParam key, double& value) const
 bool
 OsiCpxSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
 {
+  debugMessage("OsiCpxSolverInterface::getStrParam(%d)\n", key);
+
   switch (key) {
   case OsiProbName:
     OsiSolverInterface::getStrParam(key, value);
@@ -317,6 +389,8 @@ OsiCpxSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
 
 bool OsiCpxSolverInterface::isAbandoned() const
 {
+  debugMessage("OsiCpxSolverInterface::isAbandoned()\n");
+
   int stat = CPXgetstat( env_, getMutableLpPtr() );
 
 #if CPX_VERSION >= 800
@@ -338,6 +412,8 @@ bool OsiCpxSolverInterface::isAbandoned() const
 
 bool OsiCpxSolverInterface::isProvenOptimal() const
 {
+  debugMessage("OsiCpxSolverInterface::isProvenOptimal()\n");
+
   int stat = CPXgetstat( env_, getMutableLpPtr() );
 
 #if CPX_VERSION >= 800
@@ -351,6 +427,8 @@ bool OsiCpxSolverInterface::isProvenOptimal() const
 
 bool OsiCpxSolverInterface::isProvenPrimalInfeasible() const
 {
+  debugMessage("OsiCpxSolverInterface::isProvenPrimalInfeasible()\n");
+
   int stat = CPXgetstat( env_, getMutableLpPtr() );
   int method = CPXgetmethod( env_, getMutableLpPtr() );
 
@@ -367,6 +445,8 @@ bool OsiCpxSolverInterface::isProvenPrimalInfeasible() const
 
 bool OsiCpxSolverInterface::isProvenDualInfeasible() const
 {
+  debugMessage("OsiCpxSolverInterface::isProvenDualInfeasible()\n");
+
   int stat = CPXgetstat( env_, getMutableLpPtr() );
   int method = CPXgetmethod( env_, getMutableLpPtr() );
 
@@ -383,6 +463,8 @@ bool OsiCpxSolverInterface::isProvenDualInfeasible() const
 
 bool OsiCpxSolverInterface::isPrimalObjectiveLimitReached() const
 {
+  debugMessage("OsiCpxSolverInterface::isPrimalObjectiveLimitReached()\n");
+
   int stat = CPXgetstat( env_, getMutableLpPtr() );
   int method = CPXgetmethod( env_, getMutableLpPtr() );
 
@@ -395,6 +477,8 @@ bool OsiCpxSolverInterface::isPrimalObjectiveLimitReached() const
 
 bool OsiCpxSolverInterface::isDualObjectiveLimitReached() const
 {
+  debugMessage("OsiCpxSolverInterface::isDualObjectiveLimitReached()\n");
+
   int stat = CPXgetstat( env_, getMutableLpPtr() );
   int method = CPXgetmethod( env_, getMutableLpPtr() );
 
@@ -407,6 +491,8 @@ bool OsiCpxSolverInterface::isDualObjectiveLimitReached() const
 
 bool OsiCpxSolverInterface::isIterationLimitReached() const
 {
+  debugMessage("OsiCpxSolverInterface::isIterationLimitReached()\n");
+
   int stat = CPXgetstat( env_, getMutableLpPtr() );
 
 #if CPX_VERSION >= 800
@@ -422,12 +508,16 @@ bool OsiCpxSolverInterface::isIterationLimitReached() const
 
 CoinWarmStart* OsiCpxSolverInterface::getWarmStart() const
 {
+  debugMessage("OsiCpxSolverInterface::getWarmStart()\n");
+
   CoinWarmStartBasis* ws = NULL;
   int numcols = getNumCols();
   int numrows = getNumRows();
   int *cstat = new int[numcols];
   int *rstat = new int[numrows];
   int restat, i;
+
+  assert(!probtypemip_);
 
   restat = CPXgetbase( env_, getMutableLpPtr(), cstat, rstat );
   if( restat == 0 )
@@ -488,6 +578,8 @@ CoinWarmStart* OsiCpxSolverInterface::getWarmStart() const
 
 bool OsiCpxSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
 {
+  debugMessage("OsiCpxSolverInterface::setWarmStart(%p)\n", warmstart);
+
   const CoinWarmStartBasis* ws = dynamic_cast<const CoinWarmStartBasis*>(warmstart);
   int numcols, numrows, i, restat;
   int *cstat, *rstat;
@@ -501,6 +593,8 @@ bool OsiCpxSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
   
   if( numcols != getNumCols() || numrows != getNumRows() )
     return false;
+
+  switchToLP();
 
   cstat = new int[numcols];
   rstat = new int[numrows];
@@ -562,8 +656,12 @@ bool OsiCpxSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
 
 void OsiCpxSolverInterface::markHotStart()
 {
+  debugMessage("OsiCpxSolverInterface::markHotStart()\n");
+
   int err;
   int numcols, numrows;
+
+  assert(!probtypemip_);
 
   numcols = getNumCols();
   numrows = getNumRows();
@@ -585,8 +683,12 @@ void OsiCpxSolverInterface::markHotStart()
 
 void OsiCpxSolverInterface::solveFromHotStart()
 {
+  debugMessage("OsiCpxSolverInterface::solveFromHotStart()\n");
+
   int err;
   int maxiter;
+
+  switchToLP();
 
   assert( getNumCols() <= hotStartCStatSize_ );
   assert( getNumRows() <= hotStartRStatSize_ );
@@ -606,6 +708,8 @@ void OsiCpxSolverInterface::solveFromHotStart()
 
 void OsiCpxSolverInterface::unmarkHotStart()
 {
+  debugMessage("OsiCpxSolverInterface::unmarkHotStart()\n");
+
   // ??? be lazy with deallocating memory and do nothing here, deallocate memory in the destructor
 }
 
@@ -618,14 +722,20 @@ void OsiCpxSolverInterface::unmarkHotStart()
 //------------------------------------------------------------------
 int OsiCpxSolverInterface::getNumCols() const
 {
+  debugMessage("OsiCpxSolverInterface::getNumCols()\n");
+
   return CPXgetnumcols( env_, getMutableLpPtr() );
 }
 int OsiCpxSolverInterface::getNumRows() const
 {
+  debugMessage("OsiCpxSolverInterface::getNumRows()\n");
+
   return CPXgetnumrows( env_, getMutableLpPtr() );
 }
 int OsiCpxSolverInterface::getNumElements() const
 {
+  debugMessage("OsiCpxSolverInterface::getNumElements()\n");
+
   return CPXgetnumnz( env_, getMutableLpPtr() );
 }
 
@@ -635,6 +745,8 @@ int OsiCpxSolverInterface::getNumElements() const
 
 const double * OsiCpxSolverInterface::getColLower() const
 {
+  debugMessage("OsiCpxSolverInterface::getColLower()\n");
+
   if( collower_ == NULL )
     {
       int ncols = CPXgetnumcols( env_, getMutableLpPtr() );
@@ -649,6 +761,8 @@ const double * OsiCpxSolverInterface::getColLower() const
 //------------------------------------------------------------------
 const double * OsiCpxSolverInterface::getColUpper() const
 {
+  debugMessage("OsiCpxSolverInterface::getColUpper()\n");
+
   if( colupper_ == NULL )
     {
       int ncols = CPXgetnumcols( env_, getMutableLpPtr() );
@@ -663,6 +777,8 @@ const double * OsiCpxSolverInterface::getColUpper() const
 //------------------------------------------------------------------
 const char * OsiCpxSolverInterface::getRowSense() const
 {
+  debugMessage("OsiCpxSolverInterface::getRowSense()\n");
+
   if ( rowsense_==NULL )
     {      
       // rowsense is determined with rhs, so invoke rhs
@@ -674,6 +790,8 @@ const char * OsiCpxSolverInterface::getRowSense() const
 //------------------------------------------------------------------
 const double * OsiCpxSolverInterface::getRightHandSide() const
 {
+  debugMessage("OsiCpxSolverInterface::getRightHandSide()\n");
+
   if ( rhs_==NULL )
     {
       CPXLPptr lp = getMutableLpPtr();
@@ -721,6 +839,8 @@ const double * OsiCpxSolverInterface::getRightHandSide() const
 //------------------------------------------------------------------
 const double * OsiCpxSolverInterface::getRowRange() const
 {
+  debugMessage("OsiCpxSolverInterface::getRowRange()\n");
+
   if ( rowrange_==NULL ) 
     {
       // rowrange is determined with rhs, so invoke rhs
@@ -732,6 +852,8 @@ const double * OsiCpxSolverInterface::getRowRange() const
 //------------------------------------------------------------------
 const double * OsiCpxSolverInterface::getRowLower() const
 {
+  debugMessage("OsiCpxSolverInterface::getRowLower()\n");
+
   if ( rowlower_ == NULL )
     {
       int     nrows = getNumRows();
@@ -754,6 +876,8 @@ const double * OsiCpxSolverInterface::getRowLower() const
 //------------------------------------------------------------------
 const double * OsiCpxSolverInterface::getRowUpper() const
 {  
+  debugMessage("OsiCpxSolverInterface::getRowUpper()\n");
+
   if ( rowupper_ == NULL )
     {
       int     nrows = getNumRows();
@@ -777,6 +901,8 @@ const double * OsiCpxSolverInterface::getRowUpper() const
 //------------------------------------------------------------------
 const double * OsiCpxSolverInterface::getObjCoefficients() const
 {
+  debugMessage("OsiCpxSolverInterface::getObjCoefficients()\n");
+
   if ( obj_==NULL )
     {
       int ncols = CPXgetnumcols( env_, getMutableLpPtr() );
@@ -792,6 +918,8 @@ const double * OsiCpxSolverInterface::getObjCoefficients() const
 //------------------------------------------------------------------
 double OsiCpxSolverInterface::getObjSense() const
 {
+  debugMessage("OsiCpxSolverInterface::getObjSense()\n");
+
   if( CPXgetobjsen( env_, getMutableLpPtr() ) == CPX_MIN )
     return +1.0;
   else
@@ -804,37 +932,9 @@ double OsiCpxSolverInterface::getObjSense() const
 
 bool OsiCpxSolverInterface::isContinuous( int colNumber ) const
 {
-  CPXLPptr lp = getMutableLpPtr();
-  int probType = CPXgetprobtype(env_, lp);
-  bool ctype;
+  debugMessage("OsiCpxSolverInterface::isContinuous(%d)\n", colNumber);
 
-#if CPX_VERSION >= 800
-  if ( probType == CPXPROB_RELAXEDMILP ) {
-    int err = CPXchgprobtype(env_, lp, CPXPROB_MILP);
-    checkCPXerror( err, "CPXchgprobtype", "isContinuous" );
-  }
-#else
-  if ( probType == CPXPROB_RELAXED ) {
-    int err = CPXchgprobtype(env_, lp, CPXPROB_MIP);
-    checkCPXerror( err, "CPXchgprobtype", "isContinuous" );
-  }
-#endif
-
-  ctype = getCtype()[colNumber] == CPX_CONTINUOUS;
-
-#if CPX_VERSION >= 800
-  if ( probType == CPXPROB_RELAXEDMILP ) {
-    int err = CPXchgprobtype(env_, lp, CPXPROB_RELAXEDMILP);
-    checkCPXerror( err, "CPXchgprobtype", "isContinuous" );
-  }
-#else
-  if ( probType == CPXPROB_RELAXED ) {
-    int err = CPXchgprobtype(env_, lp, CPXPROB_RELAXED);
-    checkCPXerror( err, "CPXchgprobtype", "isContinuous" );
-  }
-#endif
-
-  return ctype;
+  return getCtype()[colNumber] == CPX_CONTINUOUS;
 }
 
 //------------------------------------------------------------------
@@ -843,6 +943,8 @@ bool OsiCpxSolverInterface::isContinuous( int colNumber ) const
 
 const CoinPackedMatrix * OsiCpxSolverInterface::getMatrixByRow() const
 {
+  debugMessage("OsiCpxSolverInterface::getMatrixByRow()\n");
+
   if ( matrixByRow_ == NULL ) 
     {
       int nrows = getNumRows();
@@ -887,6 +989,8 @@ const CoinPackedMatrix * OsiCpxSolverInterface::getMatrixByRow() const
 
 const CoinPackedMatrix * OsiCpxSolverInterface::getMatrixByCol() const
 {
+  debugMessage("OsiCpxSolverInterface::getMatrixByCol()\n");
+
   if ( matrixByCol_ == NULL )
     {
       int nrows = getNumRows();
@@ -933,6 +1037,8 @@ const CoinPackedMatrix * OsiCpxSolverInterface::getMatrixByCol() const
 //------------------------------------------------------------------
 double OsiCpxSolverInterface::getInfinity() const
 {
+  debugMessage("OsiCpxSolverInterface::getInfinity()\n");
+
   return CPX_INFBOUND;
 }
 
@@ -944,6 +1050,8 @@ double OsiCpxSolverInterface::getInfinity() const
 
 const double * OsiCpxSolverInterface::getColSolution() const
 {
+  debugMessage("OsiCpxSolverInterface::getColSolution()\n");
+
   if( colsol_==NULL )
     {
       CPXLPptr lp = getMutableLpPtr();
@@ -951,13 +1059,8 @@ const double * OsiCpxSolverInterface::getColSolution() const
       if( ncols > 0 )
 	{
 	  colsol_ = new double[ncols]; 
-	  int probType = CPXgetprobtype(env_,lp);
 
-#if CPX_VERSION >= 800
-	  if ( probType == CPXPROB_MILP ) {
-#else
-	  if ( probType == CPXPROB_MIP ) {
-#endif
+          if( probtypemip_ ) {
 	    int err = CPXgetmipx( env_, lp, colsol_, 0, ncols-1 );
 	    if ( err == CPXERR_NO_INT_SOLN ) 
 	      CoinFillN( colsol_, ncols, 0.0 );
@@ -977,6 +1080,8 @@ const double * OsiCpxSolverInterface::getColSolution() const
 //------------------------------------------------------------------
 const double * OsiCpxSolverInterface::getRowPrice() const
 {
+  debugMessage("OsiCpxSolverInterface::getRowPrice()\n");
+
   if( rowsol_==NULL )
     {
       int nrows = getNumRows();
@@ -995,6 +1100,8 @@ const double * OsiCpxSolverInterface::getRowPrice() const
 //------------------------------------------------------------------
 const double * OsiCpxSolverInterface::getReducedCost() const
 {
+  debugMessage("OsiCpxSolverInterface::getReducedCost()\n");
+
   if( redcost_==NULL )
     {
       int ncols = CPXgetnumcols( env_, getMutableLpPtr() );
@@ -1013,19 +1120,37 @@ const double * OsiCpxSolverInterface::getReducedCost() const
 //------------------------------------------------------------------
 const double * OsiCpxSolverInterface::getRowActivity() const
 {
-  // *FIXME* : this can be returned for integer programs, just use 
-  // *FIXME* : CPXgetmipslack and subtract from the right-hand-side
+  debugMessage("OsiCpxSolverInterface::getRowActivity()\n");
+
   if( rowact_==NULL )
     {
       int nrows = getNumRows();
       if( nrows > 0 )
 	{
 	  rowact_ = new double[nrows];
-	  int err = CPXgetax( env_, getMutableLpPtr(), rowact_, 0, nrows-1 );
-	  if ( err == CPXERR_NO_SOLN )
-	    CoinFillN( rowact_, nrows, 0.0 );
-	  else
-	    checkCPXerror( err, "CPXgetax", "getRowActivity" );
+          if( probtypemip_ )
+          {
+             double *rowslack = new double[nrows];
+             int err = CPXgetmipslack( env_, getMutableLpPtr(), rowslack, 0, nrows-1 );
+             if ( err == CPXERR_NO_SOLN )
+                CoinFillN( rowact_, nrows, 0.0 );
+             else
+             {
+                // *FIXME* : this has to be tested for ranged rows
+                checkCPXerror( err, "CPXgetmipslack", "getRowActivity" );
+                for( int r = 0; r < nrows; ++r )
+                   rowact_[r] = getRightHandSide()[r] - rowslack[r];
+             }
+             delete [] rowslack;
+          }
+          else
+          {
+             int err = CPXgetax( env_, getMutableLpPtr(), rowact_, 0, nrows-1 );
+             if ( err == CPXERR_NO_SOLN )
+                CoinFillN( rowact_, nrows, 0.0 );
+             else
+                checkCPXerror( err, "CPXgetax", "getRowActivity" );
+          }
 	}
     }
   return rowact_;
@@ -1033,17 +1158,14 @@ const double * OsiCpxSolverInterface::getRowActivity() const
 //------------------------------------------------------------------
 double OsiCpxSolverInterface::getObjValue() const
 {
+  debugMessage("OsiCpxSolverInterface::getObjValue()\n");
+
   double objval = 0.0;
   int err;
 
   CPXLPptr lp = getMutableLpPtr();
-  int probType = CPXgetprobtype(env_,lp);
 
-#if CPX_VERSION >= 800
-  if ( probType == CPXPROB_MILP ) {
-#else
-  if ( probType == CPXPROB_MIP ) {
-#endif
+  if( probtypemip_ ) {
     err = CPXgetmipobjval( env_, lp, &objval);
     if ( err == CPXERR_NO_INT_SOLN ) 
       // => return 0.0 as objective value (?? is this the correct behaviour ??)
@@ -1068,11 +1190,15 @@ double OsiCpxSolverInterface::getObjValue() const
 //------------------------------------------------------------------
 int OsiCpxSolverInterface::getIterationCount() const
 {
+  debugMessage("OsiCpxSolverInterface::getIterationCount()\n");
+
   return CPXgetitcnt( env_, getMutableLpPtr() );
 }
 //------------------------------------------------------------------
 std::vector<double*> OsiCpxSolverInterface::getDualRays(int maxNumRays) const
 {
+  debugMessage("OsiCpxSolverInterface::getDualRays(%d)\n", maxNumRays);
+
    OsiCpxSolverInterface solver(*this);
 
    const int numcols = getNumCols();
@@ -1141,6 +1267,8 @@ std::vector<double*> OsiCpxSolverInterface::getDualRays(int maxNumRays) const
 //------------------------------------------------------------------
 std::vector<double*> OsiCpxSolverInterface::getPrimalRays(int maxNumRays) const
 {
+  debugMessage("OsiCpxSolverInterface::getPrimalRays(%d)\n", maxNumRays);
+
   // *FIXME* : must write the method -LL
   throw CoinError("method is not yet written", "getPrimalRays",
 		 "OsiCpxSolverInterface");
@@ -1153,6 +1281,8 @@ std::vector<double*> OsiCpxSolverInterface::getPrimalRays(int maxNumRays) const
 
 void OsiCpxSolverInterface::setObjCoeff( int elementIndex, double elementValue )
 {
+  debugMessage("OsiCpxSolverInterface::setObjCoeff(%d, %g)\n", elementIndex, elementValue);
+
   int err = CPXchgobj(env_, getLpPtr( OsiCpxSolverInterface::FREECACHED_COLUMN ), 1, &elementIndex, &elementValue);
   checkCPXerror(err, "CPXchgobj", "setObjCoeff");
 }
@@ -1161,6 +1291,8 @@ void OsiCpxSolverInterface::setObjCoeffSet(const int* indexFirst,
 					   const int* indexLast,
 					   const double* coeffList)
 {
+  debugMessage("OsiCpxSolverInterface::setObjCoeffSet(%p, %p, %p)\n", indexFirst, indexLast, coeffList);
+
    const int cnt = indexLast - indexFirst;
    int err = CPXchgobj(env_,
 		       getLpPtr(OsiCpxSolverInterface::FREECACHED_COLUMN), cnt,
@@ -1171,6 +1303,8 @@ void OsiCpxSolverInterface::setObjCoeffSet(const int* indexFirst,
 //-----------------------------------------------------------------------------
 void OsiCpxSolverInterface::setColLower(int elementIndex, double elementValue)
 {
+  debugMessage("OsiCpxSolverInterface::setColLower(%d, %g)\n", elementIndex, elementValue);
+
   char c = 'L';
   int err = CPXchgbds( env_, getLpPtr( OsiCpxSolverInterface::FREECACHED_COLUMN ), 1, &elementIndex, &c, &elementValue );
   checkCPXerror( err, "CPXchgbds", "setColLower" );
@@ -1178,6 +1312,8 @@ void OsiCpxSolverInterface::setColLower(int elementIndex, double elementValue)
 //-----------------------------------------------------------------------------
 void OsiCpxSolverInterface::setColUpper(int elementIndex, double elementValue)
 {  
+  debugMessage("OsiCpxSolverInterface::setColUpper(%d, %g)\n", elementIndex, elementValue);
+
   char c = 'U';
   int err = CPXchgbds( env_, getLpPtr( OsiCpxSolverInterface::FREECACHED_COLUMN ), 1, &elementIndex, &c, &elementValue );
   checkCPXerror( err, "CPXchgbds", "setColUpper" );
@@ -1185,6 +1321,8 @@ void OsiCpxSolverInterface::setColUpper(int elementIndex, double elementValue)
 //-----------------------------------------------------------------------------
 void OsiCpxSolverInterface::setColBounds( int elementIndex, double lower, double upper )
 {
+  debugMessage("OsiCpxSolverInterface::setColBounds(%d, %g, %g)\n", elementIndex, lower, upper);
+
   char c[2] = { 'L', 'U' };
   int ind[2];
   double bd[2];
@@ -1202,6 +1340,8 @@ void OsiCpxSolverInterface::setColSetBounds(const int* indexFirst,
 					    const int* indexLast,
 					    const double* boundList)
 {
+  debugMessage("OsiCpxSolverInterface::setColSetBounds(%p, %p, %p)\n", indexFirst, indexLast, boundList);
+
    const int cnt = indexLast - indexFirst;
    if (cnt <= 0)
       return;
@@ -1227,6 +1367,8 @@ void OsiCpxSolverInterface::setColSetBounds(const int* indexFirst,
 void
 OsiCpxSolverInterface::setRowLower( int i, double elementValue )
 {
+  debugMessage("OsiCpxSolverInterface::setRowLower(%d, %g)\n", i, elementValue);
+
   double rhs   = getRightHandSide()[i];
   double range = getRowRange()[i];
   char   sense = getRowSense()[i];
@@ -1242,6 +1384,8 @@ OsiCpxSolverInterface::setRowLower( int i, double elementValue )
 void
 OsiCpxSolverInterface::setRowUpper( int i, double elementValue )
 {
+  debugMessage("OsiCpxSolverInterface::setRowUpper(%d, %g)\n", i, elementValue);
+
   double rhs   = getRightHandSide()[i];
   double range = getRowRange()[i];
   char   sense = getRowSense()[i];
@@ -1257,6 +1401,8 @@ OsiCpxSolverInterface::setRowUpper( int i, double elementValue )
 void
 OsiCpxSolverInterface::setRowBounds( int elementIndex, double lower, double upper )
 {
+  debugMessage("OsiCpxSolverInterface::setRowBounds(%d, %g, %g)\n", elementIndex, lower, upper);
+
   double rhs, range;
   char sense;
   
@@ -1268,6 +1414,8 @@ void
 OsiCpxSolverInterface::setRowType(int i, char sense, double rightHandSide,
 				  double range)
 {
+  debugMessage("OsiCpxSolverInterface::setRowType(%d, %c, %g, %g)\n", i, sense, rightHandSide, range);
+
   int err;
 
   if (sense == 'R') {
@@ -1294,6 +1442,8 @@ void OsiCpxSolverInterface::setRowSetBounds(const int* indexFirst,
 					    const int* indexLast,
 					    const double* boundList)
 {
+  debugMessage("OsiCpxSolverInterface::setRowSetBounds(%p, %p, %p)\n", indexFirst, indexLast, boundList);
+
    const int cnt = indexLast - indexFirst;
    if (cnt <= 0)
       return;
@@ -1320,6 +1470,9 @@ OsiCpxSolverInterface::setRowSetTypes(const int* indexFirst,
 				      const double* rhsList,
 				      const double* rangeList)
 {
+  debugMessage("OsiCpxSolverInterface::setRowSetTypes(%p, %p, %p, %p, %p)\n", 
+     indexFirst, indexLast, senseList, rhsList, rangeList);
+
    const int cnt = indexLast - indexFirst;
    if (cnt <= 0)
       return;
@@ -1369,13 +1522,18 @@ OsiCpxSolverInterface::setRowSetTypes(const int* indexFirst,
 void
 OsiCpxSolverInterface::setContinuous(int index)
 {
-  CPXLPptr lp = getLpPtr( OsiCpxSolverInterface::FREECACHED_COLUMN );
-  int probType = CPXgetprobtype( env_, lp );
-  if ( probType != CPXPROB_LP )
+  debugMessage("OsiCpxSolverInterface::setContinuous(%d)\n", index);
+
+  assert(coltype_ != NULL);
+  assert(coltypesize_ >= getNumCols());
+
+  coltype_[index] = 'C';
+
+  if ( probtypemip_ )
     {
+      CPXLPptr lp = getMutableLpPtr();
       int err;
-      char type = 'C';
-      err = CPXchgctype( env_, lp, 1, &index, &type );
+      err = CPXchgctype( env_, lp, 1, &index, &coltype_[index] );
       checkCPXerror( err, "CPXchgctype", "setContinuous" );
     }
 }
@@ -1383,73 +1541,48 @@ OsiCpxSolverInterface::setContinuous(int index)
 void
 OsiCpxSolverInterface::setInteger(int index)
 {
-  CPXLPptr lp = getLpPtr( OsiCpxSolverInterface::FREECACHED_COLUMN );
-  int probType = CPXgetprobtype( env_, lp );
-  int err;
-  char type = 'I';
-  if( probType == CPXPROB_LP ) 
-    {
-#if CPX_VERSION >= 800
-      err = CPXchgprobtype( env_, lp, CPXPROB_MILP );
-#else
-      err = CPXchgprobtype( env_, lp, CPXPROB_MIP );
-#endif
-      checkCPXerror( err, "CPXchgprobtype", "setInteger" );
-    }  
+  debugMessage("OsiCpxSolverInterface::setInteger(%d)\n", index);
+
+  assert(coltype_ != NULL);
+  assert(coltypesize_ >= getNumCols());
+
   if( getColLower()[index] == 0.0 && getColUpper()[index] == 1.0 )
-    type = 'B';
-  err = CPXchgctype( env_, lp, 1, &index, &type );
-  checkCPXerror( err, "CPXchgctype", "setInteger");
+     coltype_[index] = 'B';
+  else
+     coltype_[index] = 'I';
+
+  if ( probtypemip_ )
+    {
+      CPXLPptr lp = getMutableLpPtr();
+      int err;
+      err = CPXchgctype( env_, lp, 1, &index, &coltype_[index] );
+      checkCPXerror( err, "CPXchgctype", "setInteger" );
+    }
 }
 //-----------------------------------------------------------------------------
 void
 OsiCpxSolverInterface::setContinuous(const int* indices, int len)
 {
-  CPXLPptr lp = getLpPtr( OsiCpxSolverInterface::FREECACHED_COLUMN );
-  int probType = CPXgetprobtype( env_, lp );
-  if( probType != CPXPROB_LP )
-    {
-      int err;
-      char* type = new char[len];
-      CoinFillN( type, len, 'C' );
-      err = CPXchgctype( env_, lp, len, const_cast<int*>(indices), type );
-      checkCPXerror( err, "CPXchgctype", "setContinuous" );
-      delete[] type;
-    }
+  debugMessage("OsiCpxSolverInterface::setContinuous(%p, %d)\n", indices, len);
+
+  for( int i = 0; i < len; ++i )
+     setContinuous(indices[i]);
 }
 //-----------------------------------------------------------------------------
 void
 OsiCpxSolverInterface::setInteger(const int* indices, int len)
 {
-  CPXLPptr lp = getLpPtr( OsiCpxSolverInterface::FREECACHED_COLUMN );
-  int probType = CPXgetprobtype( env_, lp );
+  debugMessage("OsiCpxSolverInterface::setInteger(%p, %d)\n", indices, len);
 
-  if ( probType == CPXPROB_LP ) {
-#if CPX_VERSION >= 800
-    CPXchgprobtype(env_,lp,CPXPROB_MILP);
-#else
-    CPXchgprobtype(env_,lp,CPXPROB_MIP);
-#endif
-  }
-
-  int err;
-  char* type = new char[len];
-  CoinFillN( type, len, 'I' );
-  const double* clb = getColLower();
-  const double* cub = getColUpper();
   for( int i = 0; i < len; ++i )
-    {
-      if( clb[indices[i]] == 0.0 && cub[indices[i]] == 1.0 )
-	type[i] = 'B';
-    }
-  err = CPXchgctype( env_, lp, len, const_cast<int*>(indices), type );
-  checkCPXerror( err, "CPXchgctype", "setInteger");
-  delete[] type;
+     setInteger(indices[i]);
 }
 //#############################################################################
 
 void OsiCpxSolverInterface::setObjSense(double s) 
 {
+  debugMessage("OsiCpxSolverInterface::setObjSense(%g)\n", s);
+
   if( s == +1.0 )
     CPXchgobjsen( env_, getLpPtr( OsiCpxSolverInterface::FREECACHED_RESULTS ), CPX_MIN );
   else
@@ -1460,6 +1593,8 @@ void OsiCpxSolverInterface::setObjSense(double s)
 
 void OsiCpxSolverInterface::setColSolution(const double * cs) 
 {
+  debugMessage("OsiCpxSolverInterface::setColSolution(%p)\n", cs);
+
   int nc = getNumCols();
 
   if( cs == NULL )
@@ -1490,6 +1625,8 @@ void OsiCpxSolverInterface::setColSolution(const double * cs)
 
 void OsiCpxSolverInterface::setRowPrice(const double * rs) 
 {
+  debugMessage("OsiCpxSolverInterface::setRowPrice(%p)\n", rs);
+
   int nr = getNumRows();
 
   if( rs == NULL )
@@ -1523,6 +1660,14 @@ OsiCpxSolverInterface::addCol(const CoinPackedVectorBase& vec,
 			      const double collb, const double colub,   
 			      const double obj)
 {
+  debugMessage("OsiCpxSolverInterface::addCol(%p, %g, %g, %g)\n", &vec, collb, colub, obj);
+
+  int nc = getNumCols();
+  assert(coltypesize_ >= nc);
+
+  resizeColType(nc + 1);
+  coltype_[nc] = 'C';
+
   int err;
   int cmatbeg[2] = {0, vec.getNumElements()};
 
@@ -1542,6 +1687,14 @@ OsiCpxSolverInterface::addCols(const int numcols,
 			       const double* collb, const double* colub,   
 			       const double* obj)
 {
+  debugMessage("OsiCpxSolverInterface::addCols(%d, %p, %p, %p, %p)\n", numcols, cols, collb, colub, obj);
+
+  int nc = getNumCols();
+  assert(coltypesize_ >= nc);
+
+  resizeColType(nc + numcols);
+  CoinFillN(&coltype_[nc], numcols, 'C');
+
   int i;
   int nz = 0;
   for (i = 0; i < numcols; ++i)
@@ -1580,6 +1733,8 @@ OsiCpxSolverInterface::addCols(const int numcols,
 void 
 OsiCpxSolverInterface::deleteCols(const int num, const int * columnIndices)
 {
+  debugMessage("OsiCpxSolverInterface::deleteCols(%d, %p)\n", num, columnIndices);
+
   int ncols = getNumCols();
   int *delstat = new int[ncols];
   int i, err;
@@ -1589,6 +1744,14 @@ OsiCpxSolverInterface::deleteCols(const int num, const int * columnIndices)
     delstat[columnIndices[i]] = 1;
   err = CPXdelsetcols( env_, getLpPtr( OsiCpxSolverInterface::KEEPCACHED_ROW ), delstat );
   checkCPXerror( err, "CPXdelsetcols", "deleteCols" );
+
+  for( i = 0; i < ncols; ++i )
+  {
+     assert(delstat[i] <= i);
+     if( delstat[i] != -1 )
+        coltype_[delstat[i]] = coltype_[i];
+  }
+
   delete[] delstat;
 }
 //-----------------------------------------------------------------------------
@@ -1596,6 +1759,8 @@ void
 OsiCpxSolverInterface::addRow(const CoinPackedVectorBase& vec,
 			      const double rowlb, const double rowub)
 {
+  debugMessage("OsiCpxSolverInterface::addRow(%p, %g, %g)\n", &vec, rowlb, rowub);
+
   char sense;
   double rhs, range;
 
@@ -1608,6 +1773,8 @@ OsiCpxSolverInterface::addRow(const CoinPackedVectorBase& vec,
 			      const char rowsen, const double rowrhs,   
 			      const double rowrng)
 {
+  debugMessage("OsiCpxSolverInterface::addRow(%p, %c, %g, %g)\n", &vec, rowsen, rowrhs, rowrng);
+
   int err;
   int rmatbeg = 0;
   double rhs;
@@ -1652,6 +1819,8 @@ OsiCpxSolverInterface::addRows(const int numrows,
 			       const CoinPackedVectorBase * const * rows,
 			       const double* rowlb, const double* rowub)
 {
+  debugMessage("OsiCpxSolverInterface::addRows(%d, %p, %p, %p)\n", numrows, rows, rowlb, rowub);
+
   int i;
 
   for( i = 0; i < numrows; ++i )
@@ -1664,6 +1833,8 @@ OsiCpxSolverInterface::addRows(const int numrows,
 			       const char* rowsen, const double* rowrhs,   
 			       const double* rowrng)
 {
+  debugMessage("OsiCpxSolverInterface::addRows(%d, %p, %p, %p, %p)\n", numrows, rows, rowsen, rowrhs, rowrng);
+
   int i;
 
   for( i = 0; i < numrows; ++i )
@@ -1673,6 +1844,8 @@ OsiCpxSolverInterface::addRows(const int numrows,
 void 
 OsiCpxSolverInterface::deleteRows(const int num, const int * rowIndices)
 {
+  debugMessage("OsiCpxSolverInterface::deleteRows(%d, %p)\n", num, rowIndices);
+
   int nrows = getNumRows();
   int *delstat = new int[nrows];
   int i, err;
@@ -1695,6 +1868,8 @@ OsiCpxSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
 				    const double* obj,
 				    const double* rowlb, const double* rowub )
 {
+  debugMessage("OsiCpxSolverInterface::loadProblem(%p, %p, %p, %p, %p, %p)\n", &matrix, collb, colub, obj, rowlb, rowub);
+
   const double inf = getInfinity();
   
   int nrows = matrix.getNumRows();
@@ -1724,6 +1899,8 @@ OsiCpxSolverInterface::assignProblem( CoinPackedMatrix*& matrix,
 				      double*& obj,
 				      double*& rowlb, double*& rowub )
 {
+  debugMessage("OsiCpxSolverInterface::assignProblem()\n");
+
   loadProblem( *matrix, collb, colub, obj, rowlb, rowub );
   delete matrix;   matrix = 0;
   delete[] collb;  collb = 0;
@@ -1742,6 +1919,9 @@ OsiCpxSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
 				    const char* rowsen, const double* rowrhs,
 				    const double* rowrng )
 {
+  debugMessage("OsiCpxSolverInterface::loadProblem(%p, %p, %p, %p, %p, %p, %p)\n",
+     &matrix, collb, colub, obj, rowsen, rowrhs, rowrng);
+
   int nc=matrix.getNumCols();
   int nr=matrix.getNumRows();
 
@@ -1751,7 +1931,7 @@ OsiCpxSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
     {
       assert( rowsen != NULL );
       assert( rowrhs != NULL );
-      
+
       int i;
       
       // Set column values to defaults if NULL pointer passed
@@ -1856,6 +2036,9 @@ OsiCpxSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
       
       if ( freeMatrixRequired ) 
 	delete m;
+
+      resizeColType(nc);
+      CoinFillN(coltype_, nc, 'C');
     }
 }
    
@@ -1868,6 +2051,8 @@ OsiCpxSolverInterface::assignProblem( CoinPackedMatrix*& matrix,
 				      char*& rowsen, double*& rowrhs,
 				      double*& rowrng )
 {
+  debugMessage("OsiCpxSolverInterface::assignProblem()\n");
+
    loadProblem( *matrix, collb, colub, obj, rowsen, rowrhs, rowrng );
    delete matrix;   matrix = 0;
    delete[] collb;  collb = 0;
@@ -1888,6 +2073,8 @@ OsiCpxSolverInterface::loadProblem(const int numcols, const int numrows,
 				   const double* obj,
 				   const double* rowlb, const double* rowub )
 {
+  debugMessage("OsiCpxSolverInterface::loadProblem()\n");
+
   const double inf = getInfinity();
   
   char   * rowSense = new char  [numrows];
@@ -1919,6 +2106,9 @@ OsiCpxSolverInterface::loadProblem(const int numcols, const int numrows,
 				   const char* rowsen, const double* rowrhs,
 				   const double* rowrng )
 {
+  debugMessage("OsiCpxSolverInterface::loadProblem(%d, %d, %p, %p, %p, %p, %p, %p, %p, %p, %p)\n",
+     numcols, numrows, start, index, value, collb, colub, obj, rowsen, rowrhs, rowrng);
+
   const int nc = numcols;
   const int nr = numrows;
 
@@ -2002,6 +2192,9 @@ OsiCpxSolverInterface::loadProblem(const int numcols, const int numrows,
   delete[] rr;
   delete[] rhs;
   delete[] sen;
+
+  resizeColType(nc);
+  CoinFillN(coltype_, nc, 'C');
 }
  
 //-----------------------------------------------------------------------------
@@ -2010,6 +2203,8 @@ OsiCpxSolverInterface::loadProblem(const int numcols, const int numrows,
 int OsiCpxSolverInterface::readMps( const char * filename,
 				     const char * extension )
 {
+  debugMessage("OsiCpxSolverInterface::readMps(%s, %s)\n", filename, extension);
+
 #if 0
   std::string f(filename);
   std::string e(extension);
@@ -2029,6 +2224,9 @@ void OsiCpxSolverInterface::writeMps( const char * filename,
 				      const char * extension,
 				      double objSense ) const
 {
+  debugMessage("OsiCpxSolverInterface::writeMps(%s, %s, %g)\n", filename, extension, objSense);
+
+  // *FIXME* : this will not output ctype information to the MPS file
   char filetype[4] = "MPS";
   std::string f(filename);
   std::string e(extension);
@@ -2057,20 +2255,9 @@ CPXLPptr OsiCpxSolverInterface::getLpPtr( int keepCached )
 
 const char * OsiCpxSolverInterface::getCtype() const
 {
-  if ( ctype_==NULL )
-    {
-      int ncols = CPXgetnumcols( env_, getMutableLpPtr() );
-      if( ncols > 0 )
-	{
-	  ctype_ = new char[ncols];
-	  int err = CPXgetctype( env_, getMutableLpPtr(), ctype_, 0, ncols-1 );
-	  if ( err == CPXERR_NOT_MIP ) 
-	    CoinFillN( ctype_, ncols, 'C' );
-	  else
-	    checkCPXerror( err, "CPXgetctype", "getCtype" );
-	}
-    }
-  return ctype_;
+  debugMessage("OsiCpxSolverInterface::getCtype()\n");
+
+  return coltype_;
 }
 
 //#############################################################################
@@ -2143,7 +2330,6 @@ OsiCpxSolverInterface::OsiCpxSolverInterface()
     obj_(NULL),
     collower_(NULL),
     colupper_(NULL),
-    ctype_(NULL),
     rowsense_(NULL),
     rhs_(NULL),
     rowrange_(NULL),
@@ -2154,8 +2340,13 @@ OsiCpxSolverInterface::OsiCpxSolverInterface()
     redcost_(NULL),
     rowact_(NULL),
     matrixByRow_(NULL),
-    matrixByCol_(NULL)
+    matrixByCol_(NULL),
+    coltype_(NULL),
+    coltypesize_(0),
+    probtypemip_(false)
 {
+  debugMessage("OsiCpxSolverInterface::OsiCpxSolverInterface()\n");
+
   incrementInstanceCounter();
   gutsOfConstructor();
 }
@@ -2166,6 +2357,8 @@ OsiCpxSolverInterface::OsiCpxSolverInterface()
 //----------------------------------------------------------------
 OsiSolverInterface * OsiCpxSolverInterface::clone(bool copyData) const
 {
+  debugMessage("OsiCpxSolverInterface::clone(%d)\n", copyData);
+
   return( new OsiCpxSolverInterface( *this ) );
 }
 
@@ -2183,7 +2376,6 @@ OsiCpxSolverInterface::OsiCpxSolverInterface( const OsiCpxSolverInterface & sour
     obj_(NULL),
     collower_(NULL),
     colupper_(NULL),
-    ctype_(NULL),
     rowsense_(NULL),
     rhs_(NULL),
     rowrange_(NULL),
@@ -2194,8 +2386,13 @@ OsiCpxSolverInterface::OsiCpxSolverInterface( const OsiCpxSolverInterface & sour
     redcost_(NULL),
     rowact_(NULL),
     matrixByRow_(NULL),
-    matrixByCol_(NULL)
+    matrixByCol_(NULL),
+    coltype_(NULL),
+    coltypesize_(0),
+    probtypemip_(false)
 {
+  debugMessage("OsiCpxSolverInterface::OsiCpxSolverInterface(%p)\n", &source);
+
   incrementInstanceCounter();  
   gutsOfConstructor();
   gutsOfCopy( source );
@@ -2207,6 +2404,8 @@ OsiCpxSolverInterface::OsiCpxSolverInterface( const OsiCpxSolverInterface & sour
 //-------------------------------------------------------------------
 OsiCpxSolverInterface::~OsiCpxSolverInterface()
 {
+  debugMessage("OsiCpxSolverInterface::~OsiCpxSolverInterface()\n");
+
   gutsOfDestructor();
   decrementInstanceCounter();
 }
@@ -2216,6 +2415,8 @@ OsiCpxSolverInterface::~OsiCpxSolverInterface()
 //-------------------------------------------------------------------
 OsiCpxSolverInterface& OsiCpxSolverInterface::operator=( const OsiCpxSolverInterface& rhs )
 {
+  debugMessage("OsiCpxSolverInterface::operator=(%p)\n", &rhs);
+
   if (this != &rhs)
     {    
       OsiSolverInterface::operator=( rhs );
@@ -2233,6 +2434,8 @@ OsiCpxSolverInterface& OsiCpxSolverInterface::operator=( const OsiCpxSolverInter
 
 void OsiCpxSolverInterface::applyColCut( const OsiColCut & cc )
 {
+  debugMessage("OsiCpxSolverInterface::applyColCut(%p)\n", &cc);
+
   const double * cplexColLB = getColLower();
   const double * cplexColUB = getColUpper();
   const CoinPackedVector & lbs = cc.lbs();
@@ -2251,6 +2454,8 @@ void OsiCpxSolverInterface::applyColCut( const OsiColCut & cc )
 
 void OsiCpxSolverInterface::applyRowCut( const OsiRowCut & rowCut )
 {
+  debugMessage("OsiCpxSolverInterface::applyRowCut(%p)\n", &rowCut);
+
   int err = 0;
   double rhs = 0.0;
   double rng = 0.0;
@@ -2358,9 +2563,8 @@ void OsiCpxSolverInterface::gutsOfCopy( const OsiCpxSolverInterface & source )
   loadProblem(*cols,lb,ub,obj,sense,rhs,source.getRowRange());
 
   // Set MIP information
-  const char * colType = source.getCtype();
-  if ( colType != NULL )
-    CPXcopyctype( env_, getLpPtr(), const_cast<char *>(colType) );
+  resizeColType(source.coltypesize_);
+  CoinDisjointCopyN( source.coltype_, source.coltypesize_, coltype_ );
   
   // Set Solution
   setColSolution(source.getColSolution());
@@ -2459,7 +2663,6 @@ void OsiCpxSolverInterface::gutsOfDestructor()
   assert( obj_==NULL );
   assert( collower_==NULL );
   assert( colupper_==NULL );
-  assert( ctype_==NULL );
   assert( rowsense_==NULL );
   assert( rhs_==NULL );
   assert( rowrange_==NULL );
@@ -2471,6 +2674,8 @@ void OsiCpxSolverInterface::gutsOfDestructor()
   assert( rowact_==NULL );
   assert( matrixByRow_==NULL );
   assert( matrixByCol_==NULL );
+  assert( coltype_==NULL );
+  assert( coltypesize_==0 );
 }
 
 //-------------------------------------------------------------------
@@ -2478,14 +2683,12 @@ void OsiCpxSolverInterface::gutsOfDestructor()
 
 void OsiCpxSolverInterface::freeCachedColRim()
 {
-  freeCacheChar( ctype_ );
   freeCacheDouble( obj_ );  
   freeCacheDouble( collower_ ); 
   freeCacheDouble( colupper_ ); 
   assert( obj_==NULL );
   assert( collower_==NULL );
   assert( colupper_==NULL );
-  assert( ctype_==NULL );
 }
 
 void OsiCpxSolverInterface::freeCachedRowRim()
@@ -2546,4 +2749,5 @@ void OsiCpxSolverInterface::freeAllMemory()
   hotStartCStatSize_ = 0;
   hotStartRStat_     = NULL;
   hotStartRStatSize_ = 0;
+  freeColType();
 }

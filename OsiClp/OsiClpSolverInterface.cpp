@@ -117,7 +117,7 @@ OsiClpSolverInterface::setIntParam(OsiIntParam key, int value)
 {
    std::map<OsiIntParam, ClpIntParam>::const_iterator clpkey =
       intParamMap_.find(key);
-   if (clpkey->second != ClpLastIntParam) {
+   if (clpkey != intParamMap_.end() ) {
       return modelPtr_->setIntParam(clpkey->second, value);
    }
    return false;
@@ -130,7 +130,7 @@ OsiClpSolverInterface::setDblParam(OsiDblParam key, double value)
 {
    std::map<OsiDblParam, ClpDblParam>::const_iterator clpkey =
       dblParamMap_.find(key);
-   if (clpkey->second != ClpLastDblParam) {
+   if (clpkey != dblParamMap_.end() ) {
       return modelPtr_->setDblParam(clpkey->second, value);
    }
    return false;
@@ -143,7 +143,7 @@ OsiClpSolverInterface::setStrParam(OsiStrParam key, const std::string & value)
 {
    std::map<OsiStrParam, ClpStrParam>::const_iterator clpkey =
       strParamMap_.find(key);
-   if (clpkey->second != ClpLastStrParam) {
+   if (clpkey != strParamMap_.end() ) {
       return modelPtr_->setStrParam(clpkey->second, value);
    }
    return false;
@@ -157,7 +157,7 @@ OsiClpSolverInterface::getIntParam(OsiIntParam key, int& value) const
 {
    std::map<OsiIntParam, ClpIntParam>::const_iterator clpkey =
       intParamMap_.find(key);
-   if (clpkey->second != ClpLastIntParam) {
+   if (clpkey != intParamMap_.end() ) {
       return modelPtr_->getIntParam(clpkey->second, value);
    }
    return false;
@@ -170,7 +170,7 @@ OsiClpSolverInterface::getDblParam(OsiDblParam key, double& value) const
 {
    std::map<OsiDblParam, ClpDblParam>::const_iterator clpkey =
       dblParamMap_.find(key);
-   if (clpkey->second != ClpLastDblParam) {
+   if (clpkey != dblParamMap_.end() ) {
       return modelPtr_->getDblParam(clpkey->second, value);
    }
    return false;
@@ -187,7 +187,7 @@ OsiClpSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
   }
    std::map<OsiStrParam, ClpStrParam>::const_iterator clpkey =
       strParamMap_.find(key);
-   if (clpkey->second != ClpLastStrParam) {
+   if (clpkey != strParamMap_.end() ) {
       return modelPtr_->getStrParam(clpkey->second, value);
    }
    return false;

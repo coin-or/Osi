@@ -103,6 +103,9 @@ void OsiClpSolverInterface::initialSolve()
     // change from 200
     model2->factorization()->maximumPivots(100+model2->numberRows()/50);
     if (!doPrimal) {
+      // faster if bounds tightened
+      //int numberInfeasibilities = model2->tightenPrimalBounds();
+      model2->tightenPrimalBounds();
       // look further
       bool crashResult=false;
       if (doCrash>0)
@@ -116,14 +119,11 @@ void OsiClpSolverInterface::initialSolve()
     else if (algorithm>0)
       doPrimal=true;
     if (!doPrimal) {
-      // faster if bounds tightened
-      //int numberInfeasibilities = model2->tightenPrimalBounds();
-      model2->tightenPrimalBounds();
       //if (numberInfeasibilities)
       //std::cout<<"** Analysis indicates model infeasible"
       //       <<std::endl;
       // up dual bound for safety
-      model2->setDualBound(1.0e10);
+      model2->setDualBound(1.0e11);
       model2->dual();
       // check if clp thought it was in a loop
       if (model2->status()==3&&

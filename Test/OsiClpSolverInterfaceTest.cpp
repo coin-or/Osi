@@ -926,6 +926,20 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     m.setObjSense(-1.0);
     m.initialSolve();
   }
+  // Solve an lp when interface is on
+  {    
+    OsiClpSolverInterface m;
+    std::string fn = mpsDir+"p0033";
+    m.readMps(fn.c_str(),"mps");
+    // enable special mode
+    m.setHintParam(OsiDoScale,false,OsiHintDo);
+    m.setHintParam(OsiDoPresolveInInitial,false,OsiHintDo);
+    m.setHintParam(OsiDoDualInInitial,false,OsiHintDo);
+    m.setHintParam(OsiDoPresolveInResolve,false,OsiHintDo);
+    m.setHintParam(OsiDoDualInResolve,false,OsiHintDo);
+    m.enableSimplexInterface(true);
+    m.initialSolve();
+  }
   // Do common solverInterface testing 
   {
     OsiClpSolverInterface m;

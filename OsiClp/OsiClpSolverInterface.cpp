@@ -47,6 +47,9 @@ void OsiClpSolverInterface::initialSolve()
   ClpSimplex solver;
   double time1 = CoinCpuTime();
   solver.borrowModel(*modelPtr_);
+  // Treat as if user simplex not enabled
+  int saveSolveType=solver.solveType();
+  solver.setSolveType(1);
   // Set message handler to have same levels etc
   solver.passInMessageHandler(handler_);
   // set reasonable defaults
@@ -205,6 +208,7 @@ void OsiClpSolverInterface::initialSolve()
   basis_ = getBasis(&solver);
   //basis_.print();
   solver.messageHandler()->setLogLevel(saveMessageLevel);
+  solver.setSolveType(saveSolveType);
   solver.returnModel(*modelPtr_);
   time1 = CoinCpuTime()-time1;
   totalTime += time1;
@@ -216,6 +220,8 @@ void OsiClpSolverInterface::resolve()
 {
   ClpSimplex solver;
   solver.borrowModel(*modelPtr_);
+  int saveSolveType=solver.solveType();
+  solver.setSolveType(1);
   // Set message handler to have same levels etc
   solver.passInMessageHandler(handler_);
   //basis_.print();
@@ -333,6 +339,7 @@ void OsiClpSolverInterface::resolve()
   basis_ = getBasis(&solver);
   //basis_.print();
   solver.messageHandler()->setLogLevel(saveMessageLevel);
+  solver.setSolveType(saveSolveType);
   solver.returnModel(*modelPtr_);
 }
 

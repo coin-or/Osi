@@ -550,6 +550,26 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       delete[]el;
       delete[]inx;
     }
+    // Test using bad basis
+    {
+      OsiClpSolverInterface fim;
+      std::string fn = mpsDir+"exmip1";
+      fim.readMps(fn.c_str(),"mps");
+      fim.initialSolve();
+      int numberRows = fim.getModelPtr()->numberRows();
+      int * rowStatus = new int[numberRows];
+      int numberColumns = fim.getModelPtr()->numberColumns();
+      int * columnStatus = new int[numberColumns];
+      fim.getBasisStatus(rowStatus,columnStatus);
+      int i;
+      for (i=0;i<numberRows;i++) {
+        rowStatus[i]=2;
+      }        
+      fim.setBasisStatus(rowStatus,columnStatus);
+      fim.resolve();
+      delete [] rowStatus;
+      delete [] columnStatus;
+    }
         // Test matrixByCol method
     {
   

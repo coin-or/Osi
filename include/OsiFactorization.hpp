@@ -61,7 +61,7 @@ public:
   If status is okay, basic variables have pivot row.
   If status is singular, then basic variables have +1 and ones thrown out have -INT_MAX
   to say thrown out.
-  returns 0 -okay, -1 singular, -99 memory */
+  returns 0 -okay, -1 singular, -2 too many in basis, -99 memory */
   int factorize ( OsiPackedMatrix & matrix, 
 		  int rowIsBasic[], int columnIsBasic[] , 
 		  double areaFactor = 0.0 );

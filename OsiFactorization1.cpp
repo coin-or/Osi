@@ -1,6 +1,7 @@
 #include "OsiFactorization.hpp"
 #include "OsiIndexedVector.hpp"
 #include "CoinHelperFunctions.hpp"
+#include "OsiPackedMatrix.hpp"
 
 //:class OsiFactorization.  Deals with Factorization and Updates
 //  OsiFactorization.  Constructor
@@ -131,10 +132,9 @@ void OsiFactorization::gutsOfInitialize(int type)
     sparse_=NULL;
   }
 }
-#if 0
 //Part of LP
 int OsiFactorization::factorize (
-				 OSIPackedMatrix & matrix,
+				 OsiPackedMatrix & matrix,
 				 int rowIsBasic[],
 				 int columnIsBasic[],
 				 double areaFactor )
@@ -144,43 +144,105 @@ int OsiFactorization::factorize (
   gutsOfInitialize(2);
   if (areaFactor)
     areaFactor_ = areaFactor;
-  //could do this faster if fastpath
+  const int * row = matrix.getIndices();
+  const int * columnStart = matrix.getVectorStarts();
+  const int * columnLength = matrix.getVectorLengths(); 
+  const double * element = matrix.getElements();
+  int numberRows=matrix.getNumRows();
+  int numberColumns=matrix.getNumCols();
   int numberBasic = 0;
-  OsiBigIndex numberElements;
-  int numberRowBasic;
-  int *baseColumns = 0;
-  OsiBigIndex *numberElementsOnCpu = 0;
-  int numberTasks;		//1 even if numberThreads 0
+  OsiBigIndex numberElements=0;
+  int numberRowBasic=0;
 
-  numberTasks = 1;
-  baseColumns = new int [ numberTasks + 1 ];
-  numberElementsOnCpu = new OsiBigIndex [ numberTasks ];
-  numberElements = simplex->matrixSubset ( 0, 0, 0,
-					    baseColumns, numberElementsOnCpu,
-					    true, true );
-  numberBasic = baseColumns[numberTasks];
-  numberRowBasic = baseColumns[0];
-  if ( numberBasic > simplex->currentRows() ) {
-    simplex->deleteBasicColumns ( numberBasic -
-				   simplex->currentRows() );
-    numberBasic = numberRowBasic;
-    numberElements = numberBasic;
-    numberBasic += simplex->numberBasicColumns ( numberElements );
+  // compute how much in basis
+
+  int i;
+
+  for (i=0;i<numberRows;i++) {
+    if (rowIsBasic[i]>=0)
+      numberRowBasic++;
+  }
+
+  for (i=0;i<numberColumns;i++) {
+    if (columnIsBasic[i]>=0) {
+      numberBasic++;
+      numberElements += columnLength[i];
+    }
+  }
+  if ( numberBasic > numberRows ) {
+    return -2; // say too many in basis
   }				
   numberElements = 3 * numberBasic + 3 * numberElements + 10000;
-  getAreas ( simplex->currentRows(), numberBasic, numberElements,
+  getAreas ( numberRows, numberBasic, numberElements,
 	     2 * numberElements );
   //fill
-  lengthU_ = simplex->matrixSubset ( indexRowU_, indexColumnU_, elementU_,
-				      baseColumns, numberElementsOnCpu, true,
-				      true );
-  deleteColumnIndex ( baseColumns );
-  deleteElementIndex ( numberElementsOnCpu );
+  //copy
+  numberBasic=0;
+  numberElements=0;
+  for (i=0;i<numberRows;i++) {
+    if (rowIsBasic[i]>=0) {
+      indexRowU_[numberElements]=i;
+      indexColumnU_[numberElements]=numberBasic;
+      elementU_[numberElements++]=slackValue_;
+      numberBasic++;
+    }
+  }
+  for (i=0;i<numberColumns;i++) {
+    if (columnIsBasic[i]>=0) {
+      int j;
+      for (j=columnStart[i];j<columnStart[i]+columnLength[i];j++) {
+	indexRowU_[numberElements]=row[j];
+	indexColumnU_[numberElements]=numberBasic;
+	elementU_[numberElements++]=element[j];
+      }
+      numberBasic++;
+    }
+  }
+  lengthU_ = numberElements;
+
   preProcess ( 0 );
   factor (  );
+  numberBasic=0;
+  if (status_ == 0) {
+    int * permuteBack = permuteBack_;
+    int * back = pivotColumnBack_;
+    for (i=0;i<numberRows;i++) {
+      if (rowIsBasic[i]>=0) {
+	rowIsBasic[i]=permuteBack[back[numberBasic++]];
+      }
+    }
+    for (i=0;i<numberColumns;i++) {
+      if (columnIsBasic[i]>=0) {
+	columnIsBasic[i]=permuteBack[back[numberBasic++]];
+      }
+    }
+    // Set up permutation vector
+    if (increasingRows_<2) {
+      // these arrays start off as copies of permute
+      // (and we could use permute_ instead of pivotColumn (not back though))
+      CoinDisjointCopyN ( permute_, numberRows_ , pivotColumn_  );
+      CoinDisjointCopyN ( permuteBack_, numberRows_ , pivotColumnBack_  );
+    }
+  } else if (status_ == -1) {
+    // mark as basic or non basic
+    for (i=0;i<numberRows;i++) {
+      if (rowIsBasic[i]>=0) {
+	if (pivotColumn_[numberBasic]>=0) 
+	  rowIsBasic[i]=pivotColumn_[numberBasic];
+	numberBasic++;
+      }
+    }
+    for (i=0;i<numberColumns;i++) {
+      if (columnIsBasic[i]>=0) {
+	if (pivotColumn_[numberBasic]>=0) 
+	  columnIsBasic[i]=pivotColumn_[numberBasic];
+	numberBasic++;
+      }
+    }
+  }
+
   return status_;
 }
-#endif
 //Given as triplets
 int OsiFactorization::factorize (
 			     int numberOfRows,
@@ -207,10 +269,10 @@ int OsiFactorization::factorize (
   preProcess ( 0 );
   factor (  );
   //say which column is pivoting on which row
-  int * permuteBack = permuteBack_;
-  int * back = pivotColumnBack_;
   int i;
   if (status_ == 0) {
+    int * permuteBack = permuteBack_;
+    int * back = pivotColumnBack_;
     for (i=0;i<numberOfColumns;i++) {
       permutation[i]=permuteBack[back[i]];
     }

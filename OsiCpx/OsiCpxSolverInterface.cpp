@@ -190,11 +190,19 @@ void OsiCpxSolverInterface::initialSolve()
 
   /* If the problem is found infeasible during presolve, resolve it to get a 
      proper term code */
+#if CPX_VERSION >= 800
+  if (term == CPX_STAT_INForUNBD){
+    CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_OFF );
+    CPXprimopt( env_, lp );
+    CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_ON );
+  }
+#else
   if (term == CPXERR_PRESLV_INForUNBD){
     CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_OFF );
     CPXprimopt( env_, lp );
     CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_ON );
   }
+#endif
 }
 //-----------------------------------------------------------------------------
 void OsiCpxSolverInterface::resolve()
@@ -209,11 +217,25 @@ void OsiCpxSolverInterface::resolve()
 
   /* If the problem is found infeasible during presolve, resolve it to get a 
      proper term code */
+#if CPX_VERSION >= 800
+
+  int stat = CPXgetstat( env_, getMutableLpPtr() );
+
+  if (stat == CPX_STAT_INForUNBD){
+    CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_OFF );
+    CPXdualopt( env_, lp );
+    CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_ON );
+  }
+
+#else
+
   if (term == CPXERR_PRESLV_INForUNBD){
     CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_OFF );
     CPXdualopt( env_, lp );
     CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_ON );
   }
+
+#endif
 }
 //-----------------------------------------------------------------------------
 void OsiCpxSolverInterface::branchAndBound()
@@ -966,7 +988,7 @@ bool OsiCpxSolverInterface::isContinuous( int colNumber ) const
 {
   debugMessage("OsiCpxSolverInterface::isContinuous(%d)\n", colNumber);
 
-  return getCtype()[colNumber] == CPX_CONTINUOUS;
+  return getCtype()[colNumber] == 'C';
 }
 
 //------------------------------------------------------------------

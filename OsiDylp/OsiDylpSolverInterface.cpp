@@ -4589,7 +4589,7 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
   One last thing --- make a copy of wsb to be the active basis (that is, unless
   wsb is the active basis, and we're simply installing it in lpprob).
 */
-  if (wsb != activeBasis)
+  if (wsb != static_cast<const CoinWarmStart *>(activeBasis) )
   { delete activeBasis ;
     activeBasis = wsb->clone() ;
     activeIsModified = false ; }

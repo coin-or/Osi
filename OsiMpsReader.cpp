@@ -287,12 +287,12 @@ int OSIMpsio::cleanCard()
   char * getit;
 #ifdef OSI_ZLIB
   if (fp_) {
+#endif
     // normal file
     getit = fgets ( card_, MAX_CARD_LENGTH, fp_ );
-  } else {
-#endif
-    getit = gzgets ( gzfp_, card_, MAX_CARD_LENGTH );
 #ifdef OSI_ZLIB
+  } else {
+    getit = gzgets ( gzfp_, card_, MAX_CARD_LENGTH );
   }
 #endif
   

@@ -84,6 +84,9 @@ public:
   //---------------------------------------------------------------------------
   /**@name WarmStart related methods */
   //@{
+    /// Get empty warm start object
+    inline CoinWarmStart *getEmptyWarmStart () const
+    { return (dynamic_cast<CoinWarmStart *>(new CoinWarmStartBasis())) ; }
     /// Get warmstarting information
     virtual CoinWarmStart* getWarmStart() const;
     /** Set warmstarting information. Return true/false depending on whether

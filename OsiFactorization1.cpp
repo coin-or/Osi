@@ -165,6 +165,8 @@ int OsiFactorization::factorize (
       numberRowBasic++;
   }
 
+  numberBasic = numberRowBasic;
+
   for (i=0;i<numberColumns;i++) {
     if (columnIsBasic[i]>=0) {
       numberBasic++;

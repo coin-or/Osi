@@ -782,6 +782,7 @@ protected:
       ClpDataSave saveData_;
       /** Special options
 	  1 try and keep work regions as much as possible
+	  2 do not use any perturbation
       */
       unsigned int specialOptions_;
   //@}

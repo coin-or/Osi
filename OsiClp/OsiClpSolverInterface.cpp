@@ -360,7 +360,14 @@ void OsiClpSolverInterface::resolve()
     disableSimplexInterface();
   }
   int saveOptions = modelPtr_->specialOptions();
-  modelPtr_->setSpecialOptions(saveOptions|(64|1024)); // go as far as possible
+  int startFinishOptions;
+  if((specialOptions_&1)==0) {
+    startFinishOptions=0;
+    modelPtr_->setSpecialOptions(saveOptions|(64|1024)); // go as far as possible
+  } else {
+    startFinishOptions=1+4;
+    modelPtr_->setSpecialOptions(saveOptions|(64|128|1024)); // go as far as possible
+  }
   //modelPtr_->setSolveType(1);
   // Set message handler to have same levels etc
   bool oldDefault;
@@ -391,8 +398,6 @@ void OsiClpSolverInterface::resolve()
   } else {
     modelPtr_->scaling(0);
   }
-  //ClpDualRowSteepest steep;
-  //modelPtr_->setDualRowPivotAlgorithm(steep);
   // sort out hints;
   // algorithm -1 force dual, +1 force primal
   int algorithm = -1;
@@ -403,7 +408,6 @@ void OsiClpSolverInterface::resolve()
   //modelPtr_->saveModel("save.bad");
   // presolve
   gotHint = (getHintParam(OsiDoPresolveInResolve,takeHint,strength));
-  int startFinishOptions= ((specialOptions_&1)==0) ? 0 : 1+4;
   assert (gotHint);
   if (strength!=OsiHintIgnore&&takeHint) {
     ClpPresolve pinfo;
@@ -421,8 +425,6 @@ void OsiClpSolverInterface::resolve()
     // change from 200
     model2->factorization()->maximumPivots(100+model2->numberRows()/50);
     if (algorithm<0) {
-      // up dual bound for safety
-      //model2->setDualBound(1.0e10);
       model2->dual();
       // check if clp thought it was in a loop
       if (model2->status()==3&&
@@ -431,8 +433,6 @@ void OsiClpSolverInterface::resolve()
 	model2->primal();
       }
     } else {
-      // up infeasibility cost for safety
-      //model2->setInfeasibilityCost(1.0e10);
       model2->primal(1);
       // check if clp thought it was in a loop
       if (model2->status()==3
@@ -454,12 +454,25 @@ void OsiClpSolverInterface::resolve()
   } else {
     if (algorithm<0) {
       //printf("doing dual\n");
-      modelPtr_->dual();
+      int savePerturbation = modelPtr_->perturbation();
+      if ((specialOptions_&2)!=0)
+	modelPtr_->setPerturbation(100);
+      modelPtr_->dual(0,startFinishOptions);
+      modelPtr_->setPerturbation(savePerturbation);
       lastAlgorithm_=2; // dual
       // check if clp thought it was in a loop
       if (modelPtr_->status()==3&&modelPtr_->numberIterations()<modelPtr_->maximumIterations()) {
 	// switch algorithm
+	//modelPtr_->messageHandler()->setLogLevel(63);
+	// Allow for catastrophe
+	int saveMax = modelPtr_->maximumIterations();
+	int numberIterations = modelPtr_->numberIterations();
+	int numberRows = modelPtr_->numberRows();
+	int numberColumns = modelPtr_->numberColumns();
+	if (modelPtr_->maximumIterations()>100000+numberIterations)
+	  modelPtr_->setMaximumIterations(numberIterations + 1000 + 2*numberRows+numberColumns);
 	modelPtr_->primal(0,startFinishOptions);
+	modelPtr_->setMaximumIterations(saveMax);
 	lastAlgorithm_=1; // primal
 	if (modelPtr_->status()==3&&
 	    modelPtr_->numberIterations()<modelPtr_->maximumIterations()) {
@@ -469,8 +482,13 @@ void OsiClpSolverInterface::resolve()
 	  modelPtr_->primal();
 	  if (modelPtr_->status()==3&&
 	      modelPtr_->numberIterations()<modelPtr_->maximumIterations()) {
-	    printf("Real real trouble - treat as infeasible\n");
-	    modelPtr_->setProblemStatus(1);
+	    if (modelPtr_->numberPrimalInfeasibilities()) {
+	      printf("Real real trouble - treat as infeasible\n");
+	      modelPtr_->setProblemStatus(1);
+	    } else {
+	      printf("Real real trouble - treat as optimal\n");
+	      modelPtr_->setProblemStatus(0);
+	    }
 	  }
 	}
       }

@@ -19,6 +19,7 @@ class OsiCuts;
 class OsiRowCut;
 class OsiRowCutDebugger;
 class CoinSet;
+class CoinBuild;
 #include "CoinFinite.hpp"
 
 //#############################################################################
@@ -745,6 +746,8 @@ public:
       virtual void addRows(const int numrows,
 			   const int * rowStarts, const int * columns, const double * element,
 			   const double* rowlb, const double* rowub);
+      /// Add rows using a CoinBuild object
+      void addRows(const CoinBuild & buildObject);
 #if 0
       /** */
       virtual void addRows(const CoinPackedMatrix& matrix,

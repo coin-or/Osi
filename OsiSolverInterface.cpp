@@ -18,6 +18,8 @@
 #include "OsiColCut.hpp"
 #include "OsiRowCutDebugger.hpp"
 #include <cassert>
+#include "CoinFinite.hpp"
+#include "CoinBuild.hpp"
 
 //#############################################################################
 // Hotstart related methods (primarily used in strong branching)
@@ -231,6 +233,34 @@ OsiSolverInterface::addRows(const int numrows,
 {
   for (int i = 0; i < numrows; ++i) {
     addRow(*rows[i], rowlb[i], rowub[i]);
+  }
+}
+//-----------------------------------------------------------------------------
+void
+OsiSolverInterface::addRows(const CoinBuild & buildObject)
+{
+  int number = buildObject.numberRows();
+  if (number) {
+    CoinPackedVectorBase ** rows=
+      new CoinPackedVectorBase * [number];
+    int iRow;
+    double * lower = new double [number];
+    double * upper = new double [number];
+    for (iRow=0;iRow<number;iRow++) {
+      const int * columns;
+      const double * elements;
+      int numberElements = buildObject.row(iRow,lower[iRow],upper[iRow],
+                                           columns,elements);
+      rows[iRow] = 
+	new CoinPackedVector(numberElements,
+			     columns,elements);
+    }
+    addRows(number, rows, lower, upper);
+    for (iRow=0;iRow<number;iRow++) 
+      delete rows[iRow];
+    delete [] rows;
+    delete [] lower;
+    delete [] upper;
   }
 }
 //-----------------------------------------------------------------------------

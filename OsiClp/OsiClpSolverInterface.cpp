@@ -1512,6 +1512,10 @@ int
 OsiClpSolverInterface::readMps(const char *filename,
 			       const char *extension ) 
 {
+  // Get rid of integer stuff
+  delete [] integerInformation_;
+  integerInformation_=NULL;
+  
   int numberErrors = OsiSolverInterface::readMps(filename,extension);
   // move across integer information
   int numberColumns = modelPtr_->numberColumns();

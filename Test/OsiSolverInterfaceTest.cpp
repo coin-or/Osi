@@ -2079,6 +2079,57 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     }
     delete si;
   }
+  
+  // Test case submitted by Vivian De Smedt (slightly modifed to work with Vol Algorithm).
+  if ( dylpSolverInterface ) {
+    failureMessage(solverName,"Vivian De Smedt testcase problem on addCol call");
+  }
+  else if ( glpkSolverInterface ) {
+    failureMessage(solverName,"Vivian De Smedt testcase problem on loadProblem call");
+  }
+  else {
+    OsiSolverInterface *s = emptySi->clone();
+    double dEmpty = 0;
+    int iEmpty = 0;
+    char cEmpty = '?';
+    
+    s->loadProblem(0, 0, &iEmpty, &iEmpty, &dEmpty, &dEmpty, &dEmpty, &dEmpty, &dEmpty, &dEmpty);
+    double inf = s->getInfinity();
+    CoinPackedVector c;
+    
+    s->addCol(c, 0, 10, 3);
+    s->addCol(c, 0, 10, 1);
+    
+    CoinPackedVector r1;
+    r1.insert(0, 2);
+    r1.insert(1, 1);
+    s->addRow(r1, -inf, 10);
+    
+    CoinPackedVector r2;
+    r2.insert(0, 1);
+    r2.insert(1, 3);
+    s->addRow(r2, -inf, 15);
+    
+    s->setObjSense(-1);
+    
+    s->resolve();
+    const double * colSol = s->getColSolution();
+    // Don't test for exact answer, because Vol algorithm
+    // only returns an appoximate solution
+    assert( colSol[0]>4.5 );
+    assert( colSol[1]<0.5 );
+    
+    s->setObjCoeff(0, 1);
+    s->setObjCoeff(1, 1);
+    
+    s->resolve();    
+    colSol = s->getColSolution();
+    // Don't test for exact answer, because Vol algorithm
+    // only returns an appoximate solution
+    assert( colSol[0]>2.3 && colSol[0]<3.7 );
+    assert( colSol[1]>3.5 && colSol[1]<4.5 );
+    delete s;
+  }
 
   /*
     With this matrix we have a primal/dual infeas problem. Leaving the first

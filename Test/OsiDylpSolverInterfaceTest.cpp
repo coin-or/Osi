@@ -62,7 +62,7 @@ void test_starts (const std::string& mpsDir)
   CoinWarmStart *ws = osi->getWarmStart() ;
 
 /*
-  Brief interruption for an diot check: are the signs of the reduced costs
+  Brief interruption for an idiot check: are the signs of the reduced costs
   correct in the solution, given minimisation? Easy to test with status info
   from the warm start object.
 */
@@ -201,10 +201,19 @@ void OsiDylpSolverInterfaceUnitTest (const std::string &mpsDir,
   osi->handler_->message(ODSI_TEST_MSG,osi->messages_) ;
   osi->handler_->finish() ;
   OsiSolverInterfaceCommonUnitTest(osi,mpsDir,netLibDir) ;
+/*
+  Test the reset function.
+*/
+  std::cout << "Testing reset ...\n" ;
+  OsiDylpSolverInterface* osi2 = new OsiDylpSolverInterface ;
+  osi->reset() ;
+  osi->assert_same(*osi,*osi2,true) ;
   delete osi ;
+  delete osi2 ;
   std::cout <<
     "Testing cold/warm/hot start ...\n" ;
   test_starts(mpsDir) ;
+
   std::cout << "\n dylp tests completed.\n\n" ;
 
   return ; }

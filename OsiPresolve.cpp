@@ -335,6 +335,8 @@ OsiPresolve::postsolve(bool updateStatus)
 
   double *acts = new double [nrows0];
   double *sol = new double [ncols0];
+  CoinZeroN(acts,nrows0);
+  CoinZeroN(sol,ncols0);
   
   unsigned char * rowstat=NULL;
   unsigned char * colstat = NULL;
@@ -1682,6 +1684,7 @@ CoinPostsolveMatrix::CoinPostsolveMatrix(OsiSolverInterface*  si,
   const CoinBigIndex nelemsr = m->getNumElements();
 
   CoinDisjointCopyN(m->getVectorStarts(), ncols1, mcstrt_);
+  CoinZeroN(mcstrt_+ncols1,ncols0_-ncols1);
   mcstrt_[ncols_] = nelems0;	// ??
   CoinDisjointCopyN(m->getVectorLengths(),ncols1,  hincol_);
   CoinDisjointCopyN(m->getIndices(),      nelemsr, hrow_);

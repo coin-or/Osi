@@ -307,7 +307,6 @@ int main (int argc, const char *argv[])
     OsiSimplexInterfaceCommonUnitTest(&clpSi,mpsDir);
   }
 #endif
-
   testingMessage( "Testing OsiCuts\n" );
   OsiCutsUnitTest();
 

@@ -984,6 +984,8 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       }
     }
     printf("\n");
+    m.disableSimplexInterface();
+    free(binvA);
   }
   // Do common solverInterface testing 
   {

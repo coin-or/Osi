@@ -71,6 +71,7 @@ OsiOneMessage::OsiOneMessage(int externalNumber, char detail,
 void 
 OsiOneMessage::replaceMessage( const char * message)
 {
+  free(message_);
   message_=strdup(message);
 }
 

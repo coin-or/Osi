@@ -16,7 +16,7 @@
 #include "OsiVolSolverInterface.hpp"
 #endif
 #ifdef COIN_USE_DYLP
-#  include "OsiDyLpSolverInterface.hpp"
+#  include "OsiDylpSolverInterface.hpp"
 #endif
 #ifdef COIN_USE_XPR
 #include "OsiXprSolverInterface.hpp"

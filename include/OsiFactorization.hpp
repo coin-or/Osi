@@ -2,6 +2,7 @@
 #define OsiFactorization_H
 
 #include <iostream>
+#include <string>
 
 class OsiPackedMatrix;
 class OsiIndexedVector;
@@ -38,6 +39,7 @@ typedef int OsiBigIndex;
 
 
 class OsiFactorization {
+   friend void OsiFactorizationUnitTest( const std::string & mpsDir );
 
 public:
 

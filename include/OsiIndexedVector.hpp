@@ -13,6 +13,8 @@
 #include "OsiPackedVectorBase.hpp"
 #include "CoinSort.hpp"
 
+#define OSI_INDEXED_TINY_ELEMENT 1.0e-50
+
 /** Indexed Vector
 
 This stores values unpacked but apart from that is like OsiPackedVector.  It
@@ -186,6 +188,26 @@ public:
    /** Insert or if exists add an element into the vector
        Any resulting zero elements will be made tiny */
    void add(int index, double element);
+   /** Insert or if exists add an element into the vector
+       Any resulting zero elements will be made tiny.
+       This version does no checking and must be followed by
+       stopQuickAdd */
+   inline void quickAdd(int index, double element)
+               {
+		 if (elements_[index]) {
+		   element += elements_[index];
+		   if (fabs(element)>= OSI_INDEXED_TINY_ELEMENT) {
+		     elements_[index] = element;
+		   } else {
+		     elements_[index] = 1.0e-100;
+		   }
+		 } else if (fabs(element)>= OSI_INDEXED_TINY_ELEMENT) {
+		   indices_[nElements_++] = index;
+		   elements_[index] = element;
+		 }
+	       };
+   /// Stops quickAdd - so sorts etc will work
+   void stopQuickAdd();
    /** set all small values to zero and return number remaining
       - < tolerance => 0.0 */
    int clean(double tolerance);

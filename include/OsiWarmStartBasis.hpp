@@ -20,8 +20,6 @@ public:
     atUpperBound = 0x02,
     atLowerBound = 0x03
   };
-private:
-  OsiWarmStartBasis& operator=(const OsiWarmStartBasis&);
 
 public:
   /// return the number of structural variables
@@ -32,9 +30,11 @@ public:
   /** return the basic status of the structural variables (4 variable per
       byte, 2 bits for each variable) */
   const char * getStructuralStatus() const { return structuralStatus_; }
+  char * getStructuralStatus() { return structuralStatus_; }
   /** return the basic status of the artificial variables (4 variable per
       byte, 2 bits for each variable) */
   const char * getArtificialStatus() const { return artificialStatus_; }
+  char * getArtificialStatus() { return artificialStatus_; }
 
   void setSize(int ns, int na) {
     delete[] structuralStatus_;
@@ -65,7 +65,6 @@ public:
     st_byte &= ~(3 << ((i&3)<<1));
     st_byte |= (st << ((i&3)<<1));
   }
-
   /** Assign the status vectors to be the warmstart information. In this
       method the object assumes ownership of the pointers and upon return
       the argument pointers will be a NULL pointers. If copying is desirable
@@ -116,6 +115,22 @@ public:
     delete[] artificialStatus_;
   }
 
+  OsiWarmStartBasis& operator=(const OsiWarmStartBasis& rhs)
+  {
+    if (this != &rhs) {
+      numStructural_=rhs.numStructural_;
+      numArtificial_=rhs.numArtificial_;
+      delete [] structuralStatus_;
+      delete [] artificialStatus_;
+      structuralStatus_ = new char[(numStructural_ + 3) / 4];
+      artificialStatus_ = new char[(numArtificial_ + 3) / 4];
+      CoinDisjointCopyN(rhs.structuralStatus_, (numStructural_ + 3) / 4,
+			structuralStatus_);
+      CoinDisjointCopyN(rhs.artificialStatus_, (numArtificial_ + 3) / 4,
+			artificialStatus_);
+    }
+    return *this;
+  };
 private:
   ///@name Private data members
   //@{
@@ -131,5 +146,15 @@ private:
     char * artificialStatus_;
   //@}
 };
+// inline after getting array
+inline OsiWarmStartBasis::Status getStatus(char * array, int i)  {
+  const int st = (array[i>>2] >> ((i&3)<<1)) & 3;
+  return static_cast<OsiWarmStartBasis::Status>(st);
+}
+inline void setStatus(char * array, int i, OsiWarmStartBasis::Status st) {
+  char& st_byte = array[i>>2];
+  st_byte &= ~(3 << ((i&3)<<1));
+  st_byte |= (st << ((i&3)<<1));
+}
 
 #endif

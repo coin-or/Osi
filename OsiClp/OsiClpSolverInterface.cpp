@@ -61,11 +61,11 @@ void OsiClpSolverInterface::initialSolve()
   solver.setPrimalColumnPivotAlgorithm(steepP);
 #if 0
   solver.dual();
-  basis_ = getBasis();
+  basis_ = getBasis(&solver);
   lastAlgorithm_=2; // dual
 #else
   solver.primal();
-  basis_ = getBasis();
+  basis_ = getBasis(&solver);
   lastAlgorithm_=1; // primal
 #endif
   solver.returnModel(*modelPtr_);
@@ -88,7 +88,8 @@ void OsiClpSolverInterface::resolve()
   solver.setDualRowPivotAlgorithm(steep);
   //solver.saveModel("save.bad");
   solver.dual();
-  basis_ = getBasis();
+  basis_ = getBasis(&solver);
+  //basis_.print();
   lastAlgorithm_=2; // dual
   solver.returnModel(*modelPtr_);
 }
@@ -1070,24 +1071,25 @@ OsiClpSolverInterface::fillParamMaps()
 }
 // Warm start
 CoinWarmStartBasis
-OsiClpSolverInterface::getBasis() const
+OsiClpSolverInterface::getBasis(ClpSimplex * model) const
 {
   int iRow,iColumn;
-  int numberRows = modelPtr_->numberRows();
-  int numberColumns = modelPtr_->numberColumns();
+  int numberRows = model->numberRows();
+  int numberColumns = model->numberColumns();
   CoinWarmStartBasis basis;
   basis.setSize(numberColumns,numberRows);
 
-  if (modelPtr_->statusExists()) {
+  if (model->statusExists()) {
     for (iRow=0;iRow<numberRows;iRow++) {
       basis.setArtifStatus(iRow,
-			   (CoinWarmStartBasis::Status) modelPtr_->getRowStatus(iRow));
+			   (CoinWarmStartBasis::Status) model->getRowStatus(iRow));
     }
     for (iColumn=0;iColumn<numberColumns;iColumn++) {
       basis.setStructStatus(iColumn,
-		       (CoinWarmStartBasis::Status) modelPtr_->getColumnStatus(iColumn));
+		       (CoinWarmStartBasis::Status) model->getColumnStatus(iColumn));
     }
   }
+  //basis.print();
   return basis;
 }
 // Sets up basis

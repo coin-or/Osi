@@ -626,7 +626,7 @@ private:
     ///
     void fillParamMaps();
     /// Warm start
-    CoinWarmStartBasis getBasis() const;
+    CoinWarmStartBasis getBasis(ClpSimplex * model) const;
     /// Sets up working basis as a copy of input
     void setBasis( const CoinWarmStartBasis & basis);
   //@}

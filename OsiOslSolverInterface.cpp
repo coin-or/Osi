@@ -266,6 +266,30 @@ bool OsiOslSolverInterface::isProvenDualInfeasible() const
 bool OsiOslSolverInterface::isPrimalObjectiveLimitReached() const
 {
   // *TEST*
+  double limit = 0.0;
+  OsiSolverInterface::getDblParam(OsiPrimalObjectiveLimit, limit);
+  if (limit > 1e30) {
+    // was not ever set
+    return false;
+  }
+   
+  EKKModel* model = getMutableModelPtr();
+  const int lastalgo = ekk_lastAlgorithm(model);
+  const double obj = ekk_getRobjvalue(model);
+  const double maxmin = ekk_getRmaxmin(model);
+
+  switch (lastalgo) {
+   case 0: // no simplex was needed
+     return maxmin > 0 ? (obj < limit) /*minim*/ : (obj > limit) /*maxim*/;
+   case 2: // dual simplex
+     if (ekk_getIprobstat(model) == 0) // optimal
+	return maxmin > 0 ? (obj < limit) /*minim*/ : (obj > limit) /*maxim*/;
+     return false;
+   case 1: // primal simplex
+     return maxmin > 0 ? (obj < limit) /*minim*/ : (obj > limit) /*maxim*/;
+  }
+  return false; // fake return
+}
   EKKModel* model = getMutableModelPtr();
   if (ekk_lastAlgorithm(model) == 2) // dual simplex
     return false;
@@ -284,23 +308,31 @@ bool OsiOslSolverInterface::isPrimalObjectiveLimitReached() const
 bool OsiOslSolverInterface::isDualObjectiveLimitReached() const
 {
   // *TEST*
-  EKKModel* model = getMutableModelPtr();
-  if (ekk_lastAlgorithm(model) == 1) // primal simplex
-    return false;
-
-  const int stat2 = ekk_getIprobstat2(model);
-  if (stat2 == 11) // over dual limit
-     return true;
-
   double limit = 0.0;
   OsiSolverInterface::getDblParam(OsiDualObjectiveLimit, limit);
-  if (limit == DBL_MAX) {
+  if (limit > 1e30) {
     // was not ever set
     return false;
   }
+   
+  EKKModel* model = getMutableModelPtr();
+  const int lastalgo = ekk_lastAlgorithm(model);
   const double obj = ekk_getRobjvalue(model);
   const double maxmin = ekk_getRmaxmin(model);
-  return maxmin > 0 ? (obj > limit) /*minim*/ : (obj < limit) /*maxim*/;
+
+  switch (lastalgo) {
+   case 0: // no simplex was needed
+     return maxmin > 0 ? (obj > limit) /*minim*/ : (obj < limit) /*maxim*/;
+   case 1: // primal simplex
+     if (ekk_getIprobstat(model) == 0) // optimal
+	return maxmin > 0 ? (obj > limit) /*minim*/ : (obj < limit) /*maxim*/;
+     return false;
+   case 2: // dual simplex
+     if (ekk_getIprobstat2(model) == 11) // over dual limit
+	return true;
+     return maxmin > 0 ? (obj > limit) /*minim*/ : (obj < limit) /*maxim*/;
+  }
+  return false; // fake return
 }
 
 bool OsiOslSolverInterface::isIterationLimitReached() const

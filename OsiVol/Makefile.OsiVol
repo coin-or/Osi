@@ -6,7 +6,7 @@ LibType := SHARED
 # between then specify the exact level you want, e.g., -O1 or -O2
 OptLevel := -O
 
-LIBNAME := osivol
+LIBNAME := OsiVol
 
 LIBSRC :=
 LIBSRC += OsiVolSolverInterface.cpp
@@ -15,12 +15,12 @@ LIBSRC += OsiVolSolverInterface.cpp
 # You should not need to edit below this line.
 ##############################################################################
 # The location of the customized Makefiles
-export MakefileDir := ../Common/make
+export MakefileDir := $(CoinDir)/Common/make
 include ${MakefileDir}/Makefile.coin
 include ${MakefileDir}/Makefile.location
 
-export OsiIncDir := ../include
-export OsiLibDir := ../lib
+OsiIncDir := $(CoinDir)/include
+OsiLibDir := $(CoinDir)/lib
 
 export ExtraIncDir := ${VolIncDir} ${OsiIncDir}
 export ExtraLibDir := ${VolLibDir} ${OsiLibDir}
@@ -37,8 +37,14 @@ export LibType OptLevel LIBNAME LIBSRC
 
 default: install
 
-install clean doc library: % :
+install library : % :
+	(cd $(CoinDir)/Vol && $(MAKE) install)
+	(cd $(CoinDir)/Osi && $(MAKE) -f Makefile.Osi install)
 	$(MAKE) -f ${MakefileDir}/Makefile.lib $*
 
-libosi:
-	$(MAKE) -f ${MakefileDir}/Makefile.lib library
+libOsiVol :
+	(cd $(CoinDir)/Osi && $(MAKE) libOsi)
+	$(MAKE) -f ${MakefileDir}/Makefile.lib $*
+
+clean doc : % :
+	$(MAKE) -f ${MakefileDir}/Makefile.lib $*

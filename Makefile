@@ -1,7 +1,5 @@
-LIBS =
-LIBS += osi
-LIBS += osiosl
-LIBS += osivol
+SOLVERLIBS += libOsiOsl
+SOLVERLIBS += libOsiVol
 #LIBS += osicpx
 #LIBS += osispx
 #LIBS += osixpr
@@ -9,24 +7,32 @@ LIBS += osivol
 
 .DELETE_ON_ERROR:
 
+export CoinDir = $(shell cd ..; pwd)
+
 .PHONY: 
 
-default: all-lib
+default: install
 
-install: all-instlib
+install: inst-libOsi $(addprefix inst-,$(SOLVERLIBS))
 
-clean: all-cleanlib
+clean: clean-libOsi $(addprefix clean-,$(SOLVERLIBS))
 
-all-lib: $(addprefix lib,$(LIBS))
-all-instlib: $(addprefix instlib,$(LIBS))
-all-cleanlib: $(addprefix cleanlib,$(LIBS))
+###############################################################################
 
-lib% :
-	${MAKE} -f Makefile.$* library
+libOsi : 
+	${MAKE} -f Makefile.Osi library
 
-instlib% :
-	${MAKE} -f Makefile.$* install
+$(SOLVERLIBS) : lib% :
+	(cd $* && ${MAKE} -f Makefile.$* library)
 
-cleanlib% :
-	${MAKE} -f Makefile.$* clean
+inst-libOsi :
+	${MAKE} -f Makefile.Osi install
 
+$(addprefix inst-,$(SOLVERLIBS)) : inst-lib% :
+	(cd $* && ${MAKE} -f Makefile.$* install)
+
+clean-libOsi :
+	${MAKE} -f Makefile.Osi clean
+
+$(addprefix clean-,$(SOLVERLIBS)) : clean-lib% :
+	(cd $* && ${MAKE} -f Makefile.$* clean)

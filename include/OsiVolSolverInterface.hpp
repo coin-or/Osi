@@ -530,6 +530,16 @@ public:
 
   //---------------------------------------------------------------------------
 
+protected:
+  /**@name Helper methods for problem input */
+  void initFromRlbRub(const int rownum,
+		      const double* rowlb, const double* rowub);
+  void initFromRhsSenseRange(const int rownum, const char* rowsen,
+			     const double* rowrhs, const double* rowrng);
+  void initFromClbCubObj(const int colnum, const double* collb,
+			 const double* colub, const double* obj);
+public:
+   
   /**@name Methods to input a problem */
   //@{
     /** Load in an problem by copying the arguments (the constraints on the
@@ -588,6 +598,25 @@ public:
     			     double*& collb, double*& colub, double*& obj,
     			     char*& rowsen, double*& rowrhs,
     			     double*& rowrng);
+
+    /** Just like the other loadProblem() methods except that the matrix is
+	given in a standard column major ordered format (without gaps). */
+    virtual void loadProblem(const int numcols, const int numrows,
+			     const int* start, const int* index,
+			     const double* value,
+			     const double* collb, const double* colub,   
+			     const double* obj,
+			     const double* rowlb, const double* rowub);
+
+    /** Just like the other loadProblem() methods except that the matrix is
+	given in a standard column major ordered format (without gaps). */
+    virtual void loadProblem(const int numcols, const int numrows,
+			     const int* start, const int* index,
+			     const double* value,
+			     const double* collb, const double* colub,   
+			     const double* obj,
+			     const char* rowsen, const double* rowrhs,   
+			     const double* rowrng);
     
     /** Read an mps file from the given filename */
     virtual void readMps(const char *filename,

@@ -1187,21 +1187,11 @@ OsiOslSolverInterface::loadProblem(const OsiPackedMatrix& matrix,
 				   const double* rowlb, const double* rowub)
 {
    const OsiPackedMatrix * m = toColumnOrderedGapFree(matrix);
-   // Use getMutableModelPtr(), so that the cached stuff is not immediately
-   // deleted.
-   // Reason: it is possible that matrix itself is in this class, and that m
-   // points to matrix. We don't want to delete it before loading it in...
-   ekk_loadRimModel(getMutableModelPtr(),
-		    matrix.getNumRows(), rowlb, rowub,
-		    matrix.getNumCols(), obj, collb, colub);
-   // m is column ordered!
-   ekk_addColumnElementBlock(getMutableModelPtr(), m->getNumCols(),
-			     m->getIndices(), m->getVectorStarts(),
-			     m->getElements());
+   loadProblem(m->getNumCols(), m->getNumRows(),
+	       m->getVectorStarts(), m->getIndices(), m->getElements(),
+	       collb, colub, obj, rowlb, rowub);
    if (m != &matrix)
       delete m;
-   // Now we can free the cached results
-   freeCachedResults();
 }
 
 //-----------------------------------------------------------------------------
@@ -1230,31 +1220,12 @@ OsiOslSolverInterface::loadProblem(const OsiPackedMatrix& matrix,
 				   const char* rowsen, const double* rowrhs,   
 				   const double* rowrng)
 {
-  assert( rowsen != NULL );
-  assert( rowrhs != NULL );
-  double * rowlb = new double[matrix.getNumRows()];
-  double * rowub = new double[matrix.getNumRows()];
-  for (int i = matrix.getNumRows() - 1; i >= 0; --i) {   
-    convertSenseToBound(rowsen[i],rowrhs[i],rowrng[i],rowlb[i],rowub[i]);
-  }
-  const OsiPackedMatrix * m = toColumnOrderedGapFree(matrix);
-  // Use getMutableModelPtr(), so that the cached stuff is not immediately
-  // deleted.
-  // Reason: it is possible that matrix itself is in this class, and that m
-  // points to matrix. We don't want to delete it before loading it in...
-  ekk_loadRimModel(getMutableModelPtr(),
-    matrix.getNumRows(), rowlb, rowub,
-    matrix.getNumCols(), obj, collb, colub);
-  // m is column ordered!
-  ekk_addColumnElementBlock(getMutableModelPtr(), m->getNumCols(),
-    m->getIndices(), m->getVectorStarts(), m->getElements());
-  if (m != &matrix)
-    delete m;
-  delete[] rowlb;
-  delete[] rowub;
-  
-  // Now we can free the cached results
-  freeCachedResults();
+   const OsiPackedMatrix * m = toColumnOrderedGapFree(matrix);
+   loadProblem(m->getNumCols(), m->getNumRows(),
+	       m->getVectorStarts(), m->getIndices(), m->getElements(),
+	       collb, colub, obj, rowsen, rowrhs, rowrng);
+   if (m != &matrix)
+      delete m;
 }
 
 //-----------------------------------------------------------------------------
@@ -1274,6 +1245,55 @@ OsiOslSolverInterface::assignProblem(OsiPackedMatrix*& matrix,
    delete[] rowsen; rowsen = 0;
    delete[] rowrhs; rowrhs = 0;
    delete[] rowrng; rowrng = 0;
+}
+
+//-----------------------------------------------------------------------------
+
+void
+OsiOslSolverInterface::loadProblem(const int numcols, const int numrows,
+				   const int* start, const int* index,
+				   const double* value,
+				   const double* collb, const double* colub,
+				   const double* obj,
+				   const double* rowlb, const double* rowub)
+{
+   // Use getMutableModelPtr(), so that the cached stuff is not immediately
+   // deleted.
+   ekk_loadRimModel(getMutableModelPtr(),
+		    numrows, rowlb, rowub, numcols, obj, collb, colub);
+   ekk_addColumnElementBlock(getMutableModelPtr(),
+			     numcols, index, start, value);
+   // Now we can free the cached results
+   freeCachedResults();
+}
+//-----------------------------------------------------------------------------
+
+void
+OsiOslSolverInterface::loadProblem(const int numcols, const int numrows,
+				   const int* start, const int* index,
+				   const double* value,
+				   const double* collb, const double* colub,
+				   const double* obj,
+				   const char* rowsen, const double* rowrhs,   
+				   const double* rowrng)
+{
+   assert( rowsen != NULL );
+   assert( rowrhs != NULL );
+   double * rowlb = new double[numrows];
+   double * rowub = new double[numrows];
+   for (int i = numrows; i >= 0; --i) {   
+      convertSenseToBound(rowsen[i],rowrhs[i],rowrng[i],rowlb[i],rowub[i]);
+   }
+   // Use getMutableModelPtr(), so that the cached stuff is not immediately
+   // deleted.
+   ekk_loadRimModel(getMutableModelPtr(),
+		    numrows, rowlb, rowub, numcols, obj, collb, colub);
+   ekk_addColumnElementBlock(getMutableModelPtr(),
+			     numcols, index, start, value);
+   // Now we can free the cached results
+   freeCachedResults();
+   delete[] rowlb;
+   delete[] rowub;
 }
 
 //-----------------------------------------------------------------------------

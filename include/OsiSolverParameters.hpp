@@ -46,6 +46,8 @@ enum OsiStrParam {
   /** Name of the problem. This is the found on the Name card of
       an mps file. */
   OsiProbName = 0,
+  /** Name of the solver. This parameter is not settable. */
+  OsiSolverName,
   /** Just a marker, so that OsiSolverInterface can allocate a static sized
       array to store parameters. */
   OsiLastStrParam

@@ -341,6 +341,7 @@ OsiSolverInterface::OsiSolverInterface () :
   dblParam_[OsiObjOffset] = 0.0;
 
   strParam_[OsiProbName] = "OsiDefaultName";
+  strParam_[OsiSolverName] = "Unknown Solver";
   handler_ = new CoinMessageHandler();
   messages_ = CoinMessage();
 }

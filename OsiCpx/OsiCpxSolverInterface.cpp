@@ -273,6 +273,9 @@ OsiCpxSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
   case OsiProbName:
     OsiSolverInterface::getStrParam(key, value);
     break;
+  case OsiSolverName:
+    value = "cplex";
+    break;
   case OsiLastStrParam:
     return false;
   }

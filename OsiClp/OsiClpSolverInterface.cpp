@@ -170,6 +170,10 @@ OsiClpSolverInterface::getDblParam(OsiDblParam key, double& value) const
 bool
 OsiClpSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
 {
+  if ( key==OsiSolverName ) {
+    value = "clp";
+    return true;
+  }
    std::map<OsiStrParam, ClpStrParam>::const_iterator clpkey =
       strParamMap_.find(key);
    if (clpkey->second != ClpLastStrParam) {

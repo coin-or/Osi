@@ -357,6 +357,20 @@ OsiGlpkSolverInterface::getDblParam( OsiDblParam key, double& value ) const
 	return retval;
 }
 
+
+bool
+OsiGlpkSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
+{
+	bool retval = false;
+  switch (key) {
+  case OsiSolverName:
+    value = "glpk";
+    break;
+  case OsiLastStrParam:
+    return false;
+  }
+  return true;
+}
 //#############################################################################
 // Methods returning info on how the solution process terminated
 //#############################################################################

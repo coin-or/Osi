@@ -2530,6 +2530,9 @@ bool ODSI::getStrParam (OsiStrParam key, std::string& value) const
   { case OsiProbName:
     { value = osi_probname ;
       break ; }
+    case OsiSolverName:
+    { value="dylp" ;
+      break ; }
     default:
     { return (false) ; } }
   

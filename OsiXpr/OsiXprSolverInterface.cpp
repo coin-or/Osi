@@ -152,6 +152,10 @@ OsiXprSolverInterface::setStrParam(OsiStrParam key, const std::string & value)
     OsiSolverInterface::setStrParam(key,value);
     return retval = true;
 
+  case OsiSolverName:
+    value = "xpress";
+    return retval = true;
+
   case OsiLastStrParam:
     return false;
   }

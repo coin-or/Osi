@@ -425,80 +425,19 @@ void OsiSolverInterfaceMpsUnitTest
     for (i = 0 ; i < static_cast<int>(vecSiP.size()) ; ++i)
     {
       double startTime = cpuTime();
+      
 #     ifdef COIN_USE_VOL
       { 
         OsiVolSolverInterface * si =
           dynamic_cast<OsiVolSolverInterface *>(vecSiP[i]) ;
         if (si != NULL )  { 
-          siName[i]="OsiVolSolverInterface";
           // VOL does not solve netlib cases so don't bother trying to solve
           break ; 
         }
       }
 #     endif
-#     ifdef COIN_USE_CLP
-      { 
-        OsiClpSolverInterface * si =
-          dynamic_cast<OsiClpSolverInterface *>(vecSiP[i]) ;
-        if (si != NULL )  {    
-          siName[i]="OsiClpSolverInterface";
-        }
-      }
-#     endif
-#     ifdef COIN_USE_DYLP
-      { 
-        OsiDylpSolverInterface * si =
-          dynamic_cast<OsiDylpSolverInterface *>(vecSiP[i]) ;
-        if (si != NULL )  {    
-          siName[i]="OsiDylpSolverInterface";
-        }
-      }
-#     endif
-#     ifdef COIN_USE_GLPK
-      { 
-        OsiGlpkSolverInterface * si =
-          dynamic_cast<OsiGlpkSolverInterface *>(vecSiP[i]) ;
-        if (si != NULL )  {    
-          siName[i]="OsiGlpkSolverInterface";
-        }
-      }
-#     endif
-#     ifdef COIN_USE_XPR
-      { 
-        OsiXprSolverInterface * si =
-          dynamic_cast<OsiXprSolverInterface *>(vecSiP[i]) ;
-        if (si != NULL )  {    
-          siName[i]="OsiXprSolverInterface";
-        }
-      }
-#     endif
-#     ifdef COIN_USE_CPX
-      { 
-        OsiCpxSolverInterface * si =
-          dynamic_cast<OsiCpxSolverInterface *>(vecSiP[i]) ;
-        if (si != NULL )  {    
-          siName[i]="OsiCpxSolverInterface";
-        }
-      }
-#     endif
-#     ifdef COIN_USE_SPX
-      { 
-        OsiSpxSolverInterface * si =
-          dynamic_cast<OsiSpxSolverInterface *>(vecSiP[i]) ;
-        if (si != NULL )  {    
-          siName[i]="OsiSpxSolverInterface";
-        }
-      }
-#     endif
-#     ifdef COIN_USE_OSL
-      { 
-        OsiOslSolverInterface * si =
-          dynamic_cast<OsiOslSolverInterface *>(vecSiP[i]) ;
-        if (si != NULL )  {    
-          siName[i]="OsiOslSolverInterface";
-        }
-      }
-#     endif
+
+      vecSiP[i]->getStrParam(OsiSolverName,siName[i]);
       
       vecSiP[i]->initialSolve() ;
       
@@ -508,7 +447,7 @@ void OsiSolverInterfaceMpsUnitTest
         CoinRelFltEq eq(objValueTol[m]) ;
         if (eq(soln,objValue[m])) { 
           std::cerr 
-	    <<siName[i]<<" "
+	    <<siName[i]<<"SolverInterface "
 	    << soln << " = " << objValue[m] << " ; okay";
           numProbSolved[i]++;
         } else  { 
@@ -590,6 +529,16 @@ void
 OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 				 const std::string & mpsDir)
 {
+  // Test that solverInterface knows its name.
+  // The name is used for displaying messages when testing
+  {
+    OsiSolverInterface * si = emptySi->clone();
+    std::string solverName;
+    bool supportsSolverName = si->getStrParam(OsiSolverName,solverName);
+    assert( supportsSolverName );
+    assert( solverName != "Unknown Solver" );
+    delete si;
+  }
   
   int i;
   CoinRelFltEq eq;

@@ -252,6 +252,9 @@ OsiOslSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
   case OsiProbName:
     value = ekk_getCname(getMutableModelPtr());
     break;
+  case OsiSolverName:
+    value = "osl";
+    break;
   case OsiLastStrParam:
     return false;
   }

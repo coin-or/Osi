@@ -1430,7 +1430,7 @@ int OsiMpsReader::readMps()
 	  } else {
 	    numberErrors++;
 	    if ( numberErrors < 100 ) {
-		  handler_->message(OSI_MPS_DUPROW,messages_)
+		  handler_->message(OSI_MPS_NOMATCHROW,messages_)
 		    <<mpsfile.rowName()<<mpsfile.cardNumber()<<mpsfile.card()
 		    <<OsiMessageEol;
 	    } else if (numberErrors > 100000) {

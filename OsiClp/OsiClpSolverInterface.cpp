@@ -81,11 +81,11 @@ void OsiClpSolverInterface::initialSolve()
   //solver.setDualBound(1.0e6);
   //solver.setDualTolerance(1.0e-7);
 
-  ClpDualRowSteepest steep;
-  solver.setDualRowPivotAlgorithm(steep);
+  //ClpDualRowSteepest steep;
+  //solver.setDualRowPivotAlgorithm(steep);
   //solver.setPrimalTolerance(1.0e-8);
-  ClpPrimalColumnSteepest steepP;
-  solver.setPrimalColumnPivotAlgorithm(steepP);
+  //ClpPrimalColumnSteepest steepP;
+  //solver.setPrimalColumnPivotAlgorithm(steepP);
   /*
     If basis then do primal (as user could do dual with resolve)
     If not then see if dual feasible (and allow for gubs etc?)
@@ -2121,8 +2121,8 @@ OsiClpSolverInterface::getBInvARow(int row, double* z, double * slack)
     int n = modelPtr_->numberRows();
     double * array = rowArray1->denseVector();
     for (int i=0;i<n;i++) {
-      // clp stores slacks as -1.0
-      slack[i] = - array[i];
+      // clp stores slacks as -1.0  (Does not seem to matter - basics should be 1.0)
+      slack[i] =  array[i];
     }
     //memcpy(slack,rowArray1->denseVector(),
     //   modelPtr_->numberRows()*sizeof(double));

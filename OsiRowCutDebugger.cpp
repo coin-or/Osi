@@ -422,6 +422,59 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
     expectedNumberColumns=89;
   }
 
+  // air03
+  else if ( modelL == "air03" ) {
+    probType=pure0_1;
+    int intIndicesAt1[]={
+      1, 3, 5, 13, 14, 28, 38, 49, 75, 76, 
+      151, 185, 186, 271, 370, 466, 570, 614, 732, 819, 
+      1151, 1257, 1490, 2303, 2524, 3301, 3616, 4129, 4390, 4712, 
+      5013, 5457, 5673, 6436, 7623, 8122, 8929, 10689, 10694, 10741, 
+      10751
+    };
+    int numIndices = sizeof(intIndicesAt1)/sizeof(int);
+    intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=10757;
+  }
+
+  // air04
+  else if ( modelL == "air04" ) {
+    probType=pure0_1;
+    int intIndicesAt1[]={
+      0, 1, 3, 4, 5, 6, 7, 9, 11, 12, 
+      13, 17, 19, 20, 21, 25, 26, 27, 28, 29, 
+      32, 35, 36, 39, 40, 42, 44, 45, 47, 48, 
+      49, 50, 51, 52, 53, 56, 57, 58, 60, 63, 
+      64, 66, 67, 68, 73, 74, 80, 81, 83, 85, 
+      87, 92, 93, 94, 95, 99, 101, 102, 105, 472, 
+      616, 680, 902, 1432, 1466, 1827, 2389, 2535, 2551, 2883, 
+      3202, 3215, 3432, 3438, 3505, 3517, 3586, 3811, 3904, 4092, 
+      4685, 4700, 4834, 4847, 4892, 5189, 5211, 5394, 5878, 6045, 
+      6143, 6493, 6988, 7511, 7664, 7730, 7910, 8041, 8350, 8615, 
+      8635, 8670
+    };
+    int numIndices = sizeof(intIndicesAt1)/sizeof(int);
+    intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=8904;
+  }
+
+  // air05
+  else if ( modelL == "air05" ) {
+    probType=pure0_1;
+    int intIndicesAt1[]={
+      2, 4, 5, 6, 7, 8, 9, 10, 14, 15, 
+      19, 20, 25, 34, 35, 37, 39, 40, 41, 42, 
+      43, 44, 45, 47, 48, 50, 52, 55, 57, 58, 
+      66, 72, 105, 218, 254, 293, 381, 695, 1091, 1209, 
+      1294, 1323, 1348, 1580, 1769, 2067, 2156, 2162, 2714, 2732, 
+      3113, 3131, 3145, 3323, 3398, 3520, 3579, 4295, 5025, 5175, 
+      5317, 5340, 6324, 6504, 6645, 6809
+    };
+    int numIndices = sizeof(intIndicesAt1)/sizeof(int);
+    intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=7195;
+  }
+
   // seymour
   else if ( modelL == "seymour" ) {
     probType=pure0_1;
@@ -600,6 +653,28 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
     int numIndices = sizeof(intIndicesAt1)/sizeof(int);
     intSoln.setConstant(numIndices,intIndicesAt1,1.0);
     expectedNumberColumns=1298;
+  }
+
+  // vpm1
+  else if ( modelL == "vpm1" ) {
+    probType=continuousWith0_1;
+    int intIndicesAt1[]=
+      { 180,181,182,185,195,211,214,226,231,232,244,251,263,269,
+	285,294,306,307,314,  319};
+    int numIndices = sizeof(intIndicesAt1)/sizeof(int);
+    intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=378;
+  }
+
+  // vpm2
+  else if ( modelL == "vpm2" ) {
+    probType=continuousWith0_1;
+    int intIndicesAt1[]=
+      {170,173,180,181,182,185,193,194,196,213,219,220,226,
+       245,251,262,263,267,269,273,288,289,294,319,320};
+    int numIndices = sizeof(intIndicesAt1)/sizeof(int);
+    intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=378;
   }
 
   // l152lav

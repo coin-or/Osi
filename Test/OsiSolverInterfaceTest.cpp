@@ -42,6 +42,9 @@
 #ifdef COIN_USE_CLP
 #include "OsiClpSolverInterface.hpp"
 #endif
+#ifdef COIN_USE_SYM
+#include "OsiSymSolverInterface.hpp"
+#endif
 #ifdef COIN_USE_FMP
 #include "OsiFmpSolverInterface.hpp"
 #endif
@@ -1500,16 +1503,18 @@ void OsiSolverInterfaceMpsUnitTest
             std::cerr <<fabs(objValue[m] - soln); 
           }
         } else {
-          if (vecSiP[i]->isProvenPrimalInfeasible())  
-            std::cerr << "error; primal infeasible" ;
-          else if (vecSiP[i]->isProvenDualInfeasible())  
-            std::cerr << "error; dual infeasible" ;
-          else if (vecSiP[i]->isIterationLimitReached()) 
-            std::cerr << "error; iteration limit" ;
-          else if (vecSiP[i]->isAbandoned()) 
-            std::cerr << "error; abandoned" ;
-          else  
-            std::cerr << "error; unknown" ;
+	   if (vecSiP[i]->isProvenPrimalInfeasible()) 
+	      std::cerr << "error; primal infeasible" ;
+#ifndef COIN_USE_SYM 
+	   else if (vecSiP[i]->isProvenDualInfeasible())
+	      std::cerr << "error; dual infeasible" ;
+#endif
+	   else if (vecSiP[i]->isIterationLimitReached()) 
+	      std::cerr << "error; iteration limit" ;
+	   else if (vecSiP[i]->isAbandoned()) 
+	      std::cerr << "error; abandoned" ;
+	   else  
+	      std::cerr << "error; unknown" ;
         }
         std::cerr<<" - took " <<timeOfSolution<<" seconds."<<std::endl; 
         timeTaken[i] += timeOfSolution;
@@ -1756,6 +1761,16 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     const OsiFmpSolverInterface * si =
       dynamic_cast<const OsiFmpSolverInterface *>(emptySi);
     if ( si != NULL ) fmpSolverInterface = true;
+#endif
+  }
+
+  // Determine if this is the emptySi is an OsiSymSolverInterface
+  bool symSolverInterface = false;
+  {
+#ifdef COIN_USE_SYM
+     const OsiSymSolverInterface * si =
+	dynamic_cast<const OsiSymSolverInterface *>(emptySi);
+     if ( si != NULL ) symSolverInterface = true;
 #endif
   }
 
@@ -2219,13 +2234,15 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     for ( i = 0;  i < m1.getNumCols();  i++ ) 
       assert(m1.getColSolution()[i] == i + .5);
     
+
     double * rs = new double[m1.getNumRows()];
     for ( i = 0;  i < m1.getNumRows();  i++ ) 
       rs[i] = i - .5;
+  if ( !symSolverInterface ) {
     m1.setRowPrice(rs);
     for ( i = 0;  i < m1.getNumRows();  i++ ) 
       assert(m1.getRowPrice()[i] == i - .5);
-    
+  }
     delete [] cs;
     delete [] rs;
     delete &m1;
@@ -3216,7 +3233,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   }
 
   // Test presolve
-  if ( !volSolverInterface /*&& !fmpSolverInterface*/ ) {
+  if ( !volSolverInterface /*&& !fmpSolverInterface*/ && !symSolverInterface) {
     OsiSolverInterface * si = emptySi->clone();
     std::string fn = netlibDir+"25fv47";
     si->readMps(fn.c_str(),"mps");
@@ -3249,7 +3266,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   }
 
   // Perform tests that are embodied in functions
-  if ( !volSolverInterface )
+  if ( !volSolverInterface && !symSolverInterface)
   {
     
     typedef bool (*TestFunction)(OsiSolverInterface*);

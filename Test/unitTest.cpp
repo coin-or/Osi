@@ -46,6 +46,9 @@
 #ifdef COIN_USE_CLP
 #include "OsiClpSolverInterface.hpp"
 #endif
+#ifdef COIN_USE_SYM
+#include "OsiSymSolverInterface.hpp"
+#endif
 #ifdef COIN_USE_MSK
 #include "OsiMskSolverInterface.hpp"
 #endif
@@ -338,6 +341,25 @@ int main (int argc, const char *argv[])
     OsiSimplexInterfaceCommonUnitTest(&clpSi,mpsDir);
   }
 #endif
+
+#ifdef COIN_USE_SYM  
+  {
+    OsiSymSolverInterface symSi;
+    testingMessage( "Testing OsiRowCut with OsiSymSolverInterface\n" );
+    OsiRowCutUnitTest(&symSi,mpsDir);
+  }
+  {
+    OsiSymSolverInterface symSi;
+    testingMessage( "Testing OsiColCut with OsiSymSolverInterface\n" );
+    OsiColCutUnitTest(&symSi,mpsDir);
+  }
+  {
+    OsiSymSolverInterface symSi;
+    testingMessage( "Testing OsiRowCutDebugger with OsiSymSolverInterface\n" );
+    OsiRowCutDebuggerUnitTest(&symSi,mpsDir);
+  }
+#endif
+
 #ifdef COIN_USE_MSK  
   {
     OsiMskSolverInterface MskSi;
@@ -413,6 +435,11 @@ int main (int argc, const char *argv[])
   OsiMskSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
+#ifdef COIN_USE_SYM
+  testingMessage( "Testing OsiSymSolverInterface\n" );
+  OsiSymSolverInterfaceUnitTest(mpsDir,netlibDir);
+#endif
+
   if (parms.find("-testOsiSolverInterface") != parms.end())
   {
     // Create vector of solver interfaces
@@ -439,6 +466,10 @@ int main (int argc, const char *argv[])
     clpSi->setHintParam(OsiDoPresolveInInitial,true,OsiHintTry);
     clpSi->setHintParam(OsiDoReducePrint,true,OsiHintTry);
     vecSi.push_back(clpSi);
+#endif
+#   if COIN_USE_SYM
+    OsiSolverInterface * symSi = new OsiSymSolverInterface;
+    vecSi.push_back(symSi);
 #endif
 #   if COIN_USE_DYLP
     OsiSolverInterface * dylpSi = new OsiDylpSolverInterface;

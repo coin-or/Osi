@@ -66,6 +66,14 @@ ifneq ($(filter COIN_libOsiSpx,$(CoinLibsDefined)),)
     TESTSRC += OsiSpxSolverInterfaceTest.cpp
 endif
 
+ifneq ($(filter COIN_libOsiSym,$(CoinLibsDefined)),)
+    IncDir  += ${OsiSymIncDir} ${SymIncDir}
+    LibDir  += ${OsiSymLibDir} ${SymLibDir}
+    LibName += ${OsiSymLibName} ${SymLibName} libCgl.so 
+    Define  += ${OsiSymDefine} ${SymDefine} COIN_USE_SYM
+    TESTSRC += OsiSymSolverInterfaceTest.cpp
+endif
+
 ifneq ($(filter COIN_libOsiVol,$(CoinLibsDefined)),)
     IncDir  += ${OsiVolIncDir} ${VolIncDir}
     LibDir  += ${OsiVolLibDir} ${VolLibDir}

@@ -39,6 +39,9 @@ endif
 ifneq ($(filter COIN_libGlpk,$(CoinLibsDefined)),)
     SOLVERLIBS += libOsiGlpk
 endif
+ifneq ($(filter COIN_libSym,$(CoinLibsDefined)),)
+    SOLVERLIBS += libOsiSym
+endif
 ifneq ($(filter COIN_libMsk,$(CoinLibsDefined)),)
     SOLVERLIBS += libOsiMsk
 endif

@@ -403,6 +403,12 @@ void OsiClpSolverInterface::resolve()
       // problem found to be infeasible - whats best?
       model2 = modelPtr_;
     }
+    // return number of rows
+    int * stats = (int *) getApplicationData();
+    if (stats) {
+      stats[0]=model2->numberRows();
+      stats[1]=model2->numberColumns();
+    }
     // change from 200
     model2->factorization()->maximumPivots(100+model2->numberRows()/50);
     if (algorithm<0) {
@@ -418,7 +424,7 @@ void OsiClpSolverInterface::resolve()
     } else {
       // up infeasibility cost for safety
       //model2->setInfeasibilityCost(1.0e10);
-      model2->primal();
+      model2->primal(1);
       // check if clp thought it was in a loop
       if (model2->status()==3
 	  &&model2->numberIterations()<model2->maximumIterations()) {
@@ -890,6 +896,12 @@ OsiClpSolverInterface::setRowType(int i, char sense, double rightHandSide,
   double lower, upper;
   convertSenseToBound(sense, rightHandSide, range, lower, upper);
   setRowBounds(i, lower, upper);
+  // If user is using sense then set
+  if (rowsense_) {
+    rowsense_[i] = sense;
+    rhs_[i] = rightHandSide;
+    rowrange_[i] = range;
+  }
 }
 //-----------------------------------------------------------------------------
 void OsiClpSolverInterface::setRowSetBounds(const int* indexFirst,
@@ -943,13 +955,13 @@ OsiClpSolverInterface::setRowSetTypes(const int* indexFirst,
       indexError(iRow,"isContinuous");
     }
 #endif
-      if (rangeList){
-	convertSenseToBound(*senseList++, *rhsList++, *rangeList++,
-			    lower[iRow], upper[iRow]);
-      } else {
-	convertSenseToBound(*senseList++, *rhsList++, 0,
-			    lower[iRow], upper[iRow]);
-      }
+    if (rangeList){
+      convertSenseToBound(*senseList++, *rhsList++, *rangeList++,
+			  lower[iRow], upper[iRow]);
+    } else {
+      convertSenseToBound(*senseList++, *rhsList++, 0,
+			  lower[iRow], upper[iRow]);
+    }
   }
   if (rowsense_ != NULL) {
     assert ((rhs_ != NULL) && (rowrange_ != NULL));

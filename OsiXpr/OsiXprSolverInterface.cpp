@@ -152,10 +152,6 @@ OsiXprSolverInterface::setStrParam(OsiStrParam key, const std::string & value)
     OsiSolverInterface::setStrParam(key,value);
     return retval = true;
 
-  case OsiSolverName:
-    value = "xpress";
-    return retval = true;
-
   case OsiLastStrParam:
     return false;
   }
@@ -220,6 +216,9 @@ OsiXprSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
   switch (key) {
   case OsiProbName:
     OsiSolverInterface::getStrParam(key, value);
+    break;
+  case OsiSolverName:
+    value = "xpress";
     break;
   case OsiLastStrParam:
     return false;

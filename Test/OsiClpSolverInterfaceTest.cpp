@@ -560,12 +560,12 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       int * rowStatus = new int[numberRows];
       int numberColumns = fim.getModelPtr()->numberColumns();
       int * columnStatus = new int[numberColumns];
-      fim.getBasisStatus(rowStatus,columnStatus);
+      fim.getBasisStatus(columnStatus,rowStatus);
       int i;
       for (i=0;i<numberRows;i++) {
         rowStatus[i]=2;
       }        
-      fim.setBasisStatus(rowStatus,columnStatus);
+      fim.setBasisStatus(columnStatus,rowStatus);
       fim.resolve();
       delete [] rowStatus;
       delete [] columnStatus;

@@ -10,6 +10,7 @@
 #include <cfloat>
 
 #include "OsiMpsReader.hpp"
+#include "OsiOsiMessage.hpp"
 #include <math.h>
 #include <string>
 #include <stdio.h>
@@ -163,10 +164,10 @@ public:
   /**@name Constructor and destructor */
   //@{
   /// Constructor expects file to be open - reads down to (and reads) NAME card
-  OSIMpsio ( FILE * fp );
+  OSIMpsio ( FILE * fp , OsiMpsReader * reader);
 #ifdef COIN_USE_ZLIB
   /// This one takes gzFile if fp null
-  OSIMpsio ( FILE * fp, gzFile fp );
+  OSIMpsio ( FILE * fp, gzFile fp, OsiMpsReader * reader );
 #endif
   /// Destructor
   ~OSIMpsio (  );
@@ -243,6 +244,12 @@ private:
   bool freeFormat_;
   /// If all names <= 8 characters then allow embedded blanks
   bool eightChar_;
+  /// MpsReader
+  OsiMpsReader * reader_;
+  /// Message handler
+  OsiMessageHandler * handler_;
+  /// Messages
+  OsiMessages messages_;
   //@}
 };
 
@@ -338,7 +345,7 @@ nextBlankOr ( char *image )
 }
 
 //  OSIMpsio.  Constructor
-OSIMpsio::OSIMpsio (  FILE * fp )
+OSIMpsio::OSIMpsio (  FILE * fp , OsiMpsReader * reader)
 {
   memset ( card_, 0, MAX_CARD_LENGTH );
   position_ = card_;
@@ -352,6 +359,9 @@ OSIMpsio::OSIMpsio (  FILE * fp )
   cardNumber_ = 0;
   freeFormat_ = false;
   eightChar_ = true;
+  reader_ = reader;
+  handler_ = reader_->messageHandler();
+  messages_ = reader_->messages();
   bool found = false;
 
   while ( !found ) {
@@ -364,10 +374,8 @@ OSIMpsio::OSIMpsio (  FILE * fp )
     if ( !strncmp ( card_, "NAME", 4 ) ) {
       section_ = OSI_NAME_SECTION;
       char *next = card_ + 4;
-
-      {
-	std::cout<<"At line "<< cardNumber_ <<" "<< card_<<std::endl;
-      }
+      handler_->message(OSI_MPS_LINE,messages_)<<cardNumber_
+					       <<card_<<OsiMessageEol;
       while ( next != eol_ ) {
 	if ( *next == ' ' || *next == '\t' ) {
 	  next++;
@@ -392,6 +400,7 @@ OSIMpsio::OSIMpsio (  FILE * fp )
       } else {
 	strcpy ( columnName_, "no_name" );
       }
+      position_=eol_;
       break;
     } else if ( card_[0] != '*' && card_[0] != '#' ) {
       section_ = OSI_UNKNOWN_SECTION;
@@ -401,7 +410,7 @@ OSIMpsio::OSIMpsio (  FILE * fp )
 }
 #ifdef COIN_USE_ZLIB
 // This one takes gzFile if fp null
-OSIMpsio::OSIMpsio (  FILE * fp , gzFile gzFile)
+OSIMpsio::OSIMpsio (  FILE * fp , gzFile gzFile, OsiMpsReader * reader)
 {
   memset ( card_, 0, MAX_CARD_LENGTH );
   position_ = card_;
@@ -416,6 +425,9 @@ OSIMpsio::OSIMpsio (  FILE * fp , gzFile gzFile)
   cardNumber_ = 0;
   freeFormat_ = false;
   eightChar_ = true;
+  reader_ = reader;
+  handler_ = reader_->messageHandler();
+  messages_ = reader_->messages();
   bool found = false;
 
   while ( !found ) {
@@ -429,9 +441,8 @@ OSIMpsio::OSIMpsio (  FILE * fp , gzFile gzFile)
       section_ = OSI_NAME_SECTION;
       char *next = card_ + 4;
 
-      {
-	std::cout<<"At line "<< cardNumber_ <<" "<< card_<<std::endl;
-      }
+      handler_->message(OSI_MPS_LINE,messages_)<<cardNumber_
+					       <<card_<<OsiMessageEol;
       while ( next != eol_ ) {
 	if ( *next == ' ' || *next == '\t' ) {
 	  next++;
@@ -780,9 +791,8 @@ OSIMpsio::nextField (  )
       // not a comment
       int i;
 
-      {
-	std::cout<<"At line "<< cardNumber_ <<" "<< card_<<std::endl;
-      }
+      handler_->message(OSI_MPS_LINE,messages_)<<cardNumber_
+					       <<card_<<OsiMessageEol;
       for ( i = OSI_ROW_SECTION; i < OSI_UNKNOWN_SECTION; i++ ) {
 	if ( !strncmp ( card_, section[i], strlen ( section[i] ) ) ) {
 	  break;
@@ -1043,7 +1053,9 @@ void OsiMpsReader::setInfinity(double value)
   if ( value >= 1.020 ) {
     infinity_ = value;
   } else {
-    std::cout << "Illegal value for infinity of " << value << std::endl;
+    handler_->message(OSI_MPS_ILLEGAL,messages_)<<"infinity"
+						<<value
+						<<OsiMessageEol;
   }
 
 }
@@ -1087,7 +1099,9 @@ void OsiMpsReader::setDefaultBound(int value)
   if ( value >= 1 && value <=MAX_INTEGER ) {
     defaultBound_ = value;
   } else {
-    std::cout << "Illegal default integer bound of " << value << std::endl;
+    handler_->message(OSI_MPS_ILLEGAL,messages_)<<"default integer bound"
+						<<value
+						<<OsiMessageEol;
   }
 }
 // gets default upper bound for integer variables
@@ -1135,13 +1149,6 @@ int OsiMpsReader::readMps()
       fp = fopen ( fileName_, "r" );
       goodFile = (fp!=NULL);
 #ifdef COIN_USE_ZLIB
-      if (! goodFile) {
-	 // Try to open it with .gz extension
-	 std::string fil(fileName_);
-	 fil += ".gz";
-	 gzFile = gzopen(fil.c_str(),"rb");
-	 goodFile = (gzFile!=NULL);
-      }
     }
 #endif
   } else {
@@ -1149,14 +1156,15 @@ int OsiMpsReader::readMps()
     goodFile = true;
   }
   if (!goodFile) {
-    std::cout << "Unable to open file " << fileName_ << std::endl;
+    handler_->message(OSI_MPS_FILE,messages_)<<fileName_
+					     <<OsiMessageEol;
     return -1;
   }
   bool ifmps;
 #ifdef COIN_USE_ZLIB
-  OSIMpsio mpsfile ( fp , gzFile);
+  OSIMpsio mpsfile ( fp , gzFile, this);
 #else
-  OSIMpsio mpsfile ( fp );
+  OSIMpsio mpsfile ( fp , this);
 #endif
 
   if ( mpsfile.whichSection (  ) == OSI_NAME_SECTION ) {
@@ -1165,13 +1173,13 @@ int OsiMpsReader::readMps()
     free(problemName_);
     problemName_=strdup(mpsfile.columnName());
   } else if ( mpsfile.whichSection (  ) == OSI_UNKNOWN_SECTION ) {
-    std::cout << "Unknown image " << mpsfile.
-      card (  ) << " at line 1 of file " << fileName_ << std::endl;
+    handler_->message(OSI_MPS_BADFILE1,messages_)<<mpsfile.card()
+						 <<fileName_
+						 <<OsiMessageEol;
 #ifdef COIN_USE_ZLIB
-    if (!fp) {
-      std::cout << "Consider the possibility of a compressed file "
-		<< "which zlib is unable to read" << std::endl;
-    }
+    if (!fp) 
+      handler_->message(OSI_MPS_BADFILE2,messages_)<<OsiMessageEol;
+
 #endif
     return -2;
   } else if ( mpsfile.whichSection (  ) != OSI_EOF_SECTION ) {
@@ -1180,7 +1188,8 @@ int OsiMpsReader::readMps()
     problemName_=strdup(mpsfile.card());
     ifmps = false;
   } else {
-    std::cout << "EOF on file" << fileName_ << std::endl;
+    handler_->message(OSI_MPS_EOF,messages_)<<fileName_
+					    <<OsiMessageEol;
     return -3;
   }
   OSIElementIndex *start;
@@ -1196,7 +1205,8 @@ int OsiMpsReader::readMps()
     bool gotNrow = false;
 
     //get ROWS
-    assert ( mpsfile.nextField (  ) == OSI_ROW_SECTION );
+    mpsfile.nextField (  ) ;
+    assert ( mpsfile.whichSection (  ) == OSI_ROW_SECTION );
     //use malloc etc as I don't know how to do realloc in C++
     numberRows_ = 0;
     numberColumns_ = 0;
@@ -1254,10 +1264,11 @@ int OsiMpsReader::readMps()
       default:
 	numberErrors++;
 	if ( numberErrors < 100 ) {
-	  std::cout << "Bad image at card " << mpsfile.
-	    cardNumber (  ) << " " << mpsfile.card (  ) << std::endl;
+	  handler_->message(OSI_MPS_BADIMAGE,messages_)<<mpsfile.cardNumber()
+						       <<mpsfile.card()
+						       <<OsiMessageEol;
 	} else if (numberErrors > 100000) {
-	  std::cout << "Returning as too many errors"<< std::endl;
+	  handler_->message(OSI_MPS_RETURNING,messages_)<<OsiMessageEol;
 	  return numberErrors;
 	}
       }
@@ -1379,11 +1390,12 @@ int OsiMpsReader::readMps()
 	      if ( objUsed ) {
 		numberErrors++;
 		if ( numberErrors < 100 ) {
-		  std::cout << "Duplicate objective at card " <<
-		    mpsfile.cardNumber (  )
-		    << " " << mpsfile.card (  ) << std::endl;
+		  handler_->message(OSI_MPS_DUPOBJ,messages_)
+		    <<mpsfile.cardNumber()<<mpsfile.card()
+		    <<OsiMessageEol;
 		} else if (numberErrors > 100000) {
-		  std::cout << "Returning as too many errors"<< std::endl;
+		  handler_->message(OSI_MPS_RETURNING,messages_)
+		    <<OsiMessageEol;
 		  return numberErrors;
 		}
 	      } else {
@@ -1399,11 +1411,13 @@ int OsiMpsReader::readMps()
 		element[rowUsed[irow]] += value;
 		numberErrors++;
 		if ( numberErrors < 100 ) {
-		  std::cout << "Duplicate row at card " << mpsfile.
-		    cardNumber (  ) << " " << mpsfile.
-		    card (  ) << " " << mpsfile.rowName (  ) << std::endl;
+		  handler_->message(OSI_MPS_DUPROW,messages_)
+		    <<mpsfile.rowName()<<mpsfile.cardNumber()
+		    <<mpsfile.card()
+		    <<OsiMessageEol;
 		} else if (numberErrors > 100000) {
-		  std::cout << "Returning as too many errors"<< std::endl;
+		  handler_->message(OSI_MPS_RETURNING,messages_)
+		    <<OsiMessageEol;
 		  return numberErrors;
 		}
 	      } else {
@@ -1416,11 +1430,11 @@ int OsiMpsReader::readMps()
 	  } else {
 	    numberErrors++;
 	    if ( numberErrors < 100 ) {
-	      std::cout << "No match for row at card " << mpsfile.
-		cardNumber (  ) << " " << mpsfile.card (  ) << " " << mpsfile.
-		rowName (  ) << std::endl;
+		  handler_->message(OSI_MPS_DUPROW,messages_)
+		    <<mpsfile.rowName()<<mpsfile.cardNumber()<<mpsfile.card()
+		    <<OsiMessageEol;
 	    } else if (numberErrors > 100000) {
-	      std::cout << "Returning as too many errors"<< std::endl;
+	      handler_->message(OSI_MPS_RETURNING,messages_)<<OsiMessageEol;
 	      return numberErrors;
 	    }
 	  }
@@ -1442,10 +1456,11 @@ int OsiMpsReader::readMps()
       default:
 	numberErrors++;
 	if ( numberErrors < 100 ) {
-	  std::cout << "Bad image at card " << mpsfile.
-	    cardNumber (  ) << " " << mpsfile.card (  ) << std::endl;
+	  handler_->message(OSI_MPS_BADIMAGE,messages_)<<mpsfile.cardNumber()
+						       <<mpsfile.card()
+						       <<OsiMessageEol;
 	} else if (numberErrors > 100000) {
-	  std::cout << "Returning as too many errors"<< std::endl;
+	  handler_->message(OSI_MPS_RETURNING,messages_)<<OsiMessageEol;
 	  return numberErrors;
 	}
       }
@@ -1509,11 +1524,11 @@ int OsiMpsReader::readMps()
 	    if ( objUsed ) {
 	      numberErrors++;
 	      if ( numberErrors < 100 ) {
-		std::cout << "Duplicate objective at card " <<
-		  mpsfile.cardNumber (  )
-		  << " " << mpsfile.card (  ) << std::endl;
+		  handler_->message(OSI_MPS_DUPOBJ,messages_)
+		    <<mpsfile.cardNumber()<<mpsfile.card()
+		    <<OsiMessageEol;
 	      } else if (numberErrors > 100000) {
-		std::cout << "Returning as too many errors"<< std::endl;
+		handler_->message(OSI_MPS_RETURNING,messages_)<<OsiMessageEol;
 		return numberErrors;
 	      }
 	    } else {
@@ -1524,11 +1539,11 @@ int OsiMpsReader::readMps()
 	    if ( rowlower_[irow] != -infinity_ ) {
 	      numberErrors++;
 	      if ( numberErrors < 100 ) {
-		std::cout << "Duplicate row at card " << mpsfile.
-		  cardNumber (  ) << " " << mpsfile.
-		  card (  ) << " " << mpsfile.rowName (  ) << std::endl;
+		handler_->message(OSI_MPS_DUPROW,messages_)
+		  <<mpsfile.rowName()<<mpsfile.cardNumber()<<mpsfile.card()
+		  <<OsiMessageEol;
 	      } else if (numberErrors > 100000) {
-		std::cout << "Returning as too many errors"<< std::endl;
+		handler_->message(OSI_MPS_RETURNING,messages_)<<OsiMessageEol;
 		return numberErrors;
 	      }
 	    } else {
@@ -1538,11 +1553,11 @@ int OsiMpsReader::readMps()
 	} else {
 	  numberErrors++;
 	  if ( numberErrors < 100 ) {
-	    std::cout << "No match for row at card " << mpsfile.
-	      cardNumber (  ) << " " << mpsfile.card (  ) << " " << mpsfile.
-	      rowName (  ) << std::endl;
+	    handler_->message(OSI_MPS_NOMATCHROW,messages_)
+	      <<mpsfile.rowName()<<mpsfile.cardNumber()<<mpsfile.card()
+	      <<OsiMessageEol;
 	  } else if (numberErrors > 100000) {
-	    std::cout << "Returning as too many errors"<< std::endl;
+	    handler_->message(OSI_MPS_RETURNING,messages_)<<OsiMessageEol;
 	    return numberErrors;
 	  }
 	}
@@ -1550,10 +1565,11 @@ int OsiMpsReader::readMps()
       default:
 	numberErrors++;
 	if ( numberErrors < 100 ) {
-	  std::cout << "Bad image at card " << mpsfile.
-	    cardNumber (  ) << " " << mpsfile.card (  ) << std::endl;
+	  handler_->message(OSI_MPS_BADIMAGE,messages_)<<mpsfile.cardNumber()
+						       <<mpsfile.card()
+						       <<OsiMessageEol;
 	} else if (numberErrors > 100000) {
-	  std::cout << "Returning as too many errors"<< std::endl;
+	  handler_->message(OSI_MPS_RETURNING,messages_)<<OsiMessageEol;
 	  return numberErrors;
 	}
       }
@@ -1591,22 +1607,23 @@ int OsiMpsReader::readMps()
 	      // objective
 	      numberErrors++;
 	      if ( numberErrors < 100 ) {
-		std::cout << "Duplicate objective at card " <<
-		  mpsfile.cardNumber (  )
-		  << " " << mpsfile.card (  ) << std::endl;
+		  handler_->message(OSI_MPS_DUPOBJ,messages_)
+		    <<mpsfile.cardNumber()<<mpsfile.card()
+		    <<OsiMessageEol;
 	      } else if (numberErrors > 100000) {
-		std::cout << "Returning as too many errors"<< std::endl;
+		handler_->message(OSI_MPS_RETURNING,messages_)<<OsiMessageEol;
 		return numberErrors;
 	      }
 	    } else {
 	      if ( rowupper_[irow] != infinity_ ) {
 		numberErrors++;
 		if ( numberErrors < 100 ) {
-		  std::cout << "Duplicate row at card " << mpsfile.
-		    cardNumber (  ) << " " << mpsfile.
-		    card (  ) << " " << mpsfile.rowName (  ) << std::endl;
+		  handler_->message(OSI_MPS_DUPROW,messages_)
+		    <<mpsfile.rowName()<<mpsfile.cardNumber()<<mpsfile.card()
+		    <<OsiMessageEol;
 		} else if (numberErrors > 100000) {
-		  std::cout << "Returning as too many errors"<< std::endl;
+		  handler_->message(OSI_MPS_RETURNING,messages_)
+		    <<OsiMessageEol;
 		  return numberErrors;
 		}
 	      } else {
@@ -1616,11 +1633,11 @@ int OsiMpsReader::readMps()
 	  } else {
 	    numberErrors++;
 	    if ( numberErrors < 100 ) {
-	      std::cout << "No match for row at card " << mpsfile.
-		cardNumber (  ) << " " << mpsfile.card (  ) << " " << mpsfile.
-		rowName (  ) << std::endl;
+	      handler_->message(OSI_MPS_NOMATCHROW,messages_)
+		<<mpsfile.rowName()<<mpsfile.cardNumber()<<mpsfile.card()
+		<<OsiMessageEol;
 	    } else if (numberErrors > 100000) {
-	      std::cout << "Returning as too many errors"<< std::endl;
+	      handler_->message(OSI_MPS_RETURNING,messages_)<<OsiMessageEol;
 	      return numberErrors;
 	    }
 	  }
@@ -1628,10 +1645,11 @@ int OsiMpsReader::readMps()
 	default:
 	  numberErrors++;
 	  if ( numberErrors < 100 ) {
-	    std::cout << "Bad image at card " << mpsfile.
-	      cardNumber (  ) << " " << mpsfile.card (  ) << std::endl;
+	  handler_->message(OSI_MPS_BADIMAGE,messages_)<<mpsfile.cardNumber()
+						       <<mpsfile.card()
+						       <<OsiMessageEol;
 	  } else if (numberErrors > 100000) {
-	    std::cout << "Returning as too many errors"<< std::endl;
+	    handler_->message(OSI_MPS_RETURNING,messages_)<<OsiMessageEol;
 	    return numberErrors;
 	  }
 	}
@@ -1851,21 +1869,23 @@ int OsiMpsReader::readMps()
 	  if ( ifError ) {
 	    numberErrors++;
 	    if ( numberErrors < 100 ) {
-	      std::cout << "Bad image at card " << mpsfile.
-		cardNumber (  ) << " " << mpsfile.card (  ) << std::endl;
+	      handler_->message(OSI_MPS_BADIMAGE,messages_)
+		<<mpsfile.cardNumber()
+		<<mpsfile.card()
+		<<OsiMessageEol;
 	    } else if (numberErrors > 100000) {
-	      std::cout << "Returning as too many errors"<< std::endl;
+	      handler_->message(OSI_MPS_RETURNING,messages_)<<OsiMessageEol;
 	      return numberErrors;
 	    }
 	  }
 	} else {
 	  numberErrors++;
 	  if ( numberErrors < 100 ) {
-	    std::cout << "No match for column at card " << mpsfile.
-	      cardNumber (  ) << " " << mpsfile.card (  ) << " " << mpsfile.
-	      rowName (  ) << std::endl;
+	    handler_->message(OSI_MPS_NOMATCHCOL,messages_)
+	      <<mpsfile.rowName()<<mpsfile.cardNumber()<<mpsfile.card()
+	      <<OsiMessageEol;
 	  } else if (numberErrors > 100000) {
-	    std::cout << "Returning as too many errors"<< std::endl;
+	    handler_->message(OSI_MPS_RETURNING,messages_)<<OsiMessageEol;
 	    return numberErrors;
 	  }
 	}
@@ -1939,8 +1959,11 @@ int OsiMpsReader::readMps()
   free ( start );
   free ( element );
 
-  std::cout<<"Problem "<<problemName_<< " has " << numberRows_ << " rows, " << numberColumns_
-	   << " columns and " << numberElements_ << " elements" <<std::endl;
+  handler_->message(OSI_MPS_STATS,messages_)<<problemName_
+					    <<numberRows_
+					    <<numberColumns_
+					    <<numberElements_
+					    <<OsiMessageEol;
   return numberErrors;
 }
 // Problem name
@@ -2316,7 +2339,8 @@ problemName_(strdup("")),
 objectiveName_(strdup("")),
 rhsName_(strdup("")),
 rangeName_(strdup("")),
-boundName_(strdup(""))
+boundName_(strdup("")),
+defaultHandler_(true)
 {
   numberHash_[0]=0;
   hash_[0]=NULL;
@@ -2324,13 +2348,15 @@ boundName_(strdup(""))
   numberHash_[1]=0;
   hash_[1]=NULL;
   names_[1]=NULL;
+  handler_ = new OsiMessageHandler();
+  messages_ = OsiOsiMessage();
 }
 
 //-------------------------------------------------------------------
 // Copy constructor 
 //-------------------------------------------------------------------
 OsiMpsReader::OsiMpsReader (
-                  const OsiMpsReader & source)
+                  const OsiMpsReader & rhs)
 :
 rowsense_(NULL),
 rhs_(NULL),
@@ -2354,7 +2380,8 @@ problemName_(strdup("")),
 objectiveName_(strdup("")),
 rhsName_(strdup("")),
 rangeName_(strdup("")),
-boundName_(strdup(""))
+boundName_(strdup("")),
+defaultHandler_(true)
 {
   numberHash_[0]=0;
   hash_[0]=NULL;
@@ -2362,16 +2389,23 @@ boundName_(strdup(""))
   numberHash_[1]=0;
   hash_[1]=NULL;
   names_[1]=NULL;
-  if ( source.rowlower_ !=NULL || source.collower_ != NULL) {
-    gutsOfCopy(source);
+  if ( rhs.rowlower_ !=NULL || rhs.collower_ != NULL) {
+    gutsOfCopy(rhs);
     // OK and proper to leave rowsense_, rhs_, and
     // rowrange_ (also row copy and hash) to NULL.  They will be constructed
     // if they are required.
   }
+  defaultHandler_ = rhs.defaultHandler_;
+  if (defaultHandler_)
+    handler_ = new OsiMessageHandler(*rhs.handler_);
+  else
+    handler_ = rhs.handler_;
+  messages_ = OsiOsiMessage();
 }
 
 void OsiMpsReader::gutsOfCopy(const OsiMpsReader & rhs)
 {
+  defaultHandler_ = rhs.defaultHandler_;
   if (rhs.matrixByColumn_)
     matrixByColumn_=new OsiPackedMatrix(*(rhs.matrixByColumn_));
   numberElements_=rhs.numberElements_;
@@ -2447,6 +2481,12 @@ OsiMpsReader::operator=(
     if ( rhs.rowlower_ !=NULL || rhs.collower_ != NULL) {
       gutsOfCopy(rhs);
     }
+    defaultHandler_ = rhs.defaultHandler_;
+    if (defaultHandler_)
+      handler_ = new OsiMessageHandler(*rhs.handler_);
+    else
+      handler_ = rhs.handler_;
+    messages_ = OsiOsiMessage();
   }
   return *this;
 }
@@ -2457,6 +2497,10 @@ OsiMpsReader::operator=(
 void OsiMpsReader::gutsOfDestructor()
 {  
   freeAll();
+  if (defaultHandler_) {
+    delete handler_;
+    handler_ = NULL;
+  }
 }
 
 
@@ -2512,7 +2556,18 @@ void OsiMpsReader::releaseRedundantInformation()
   delete matrixByRow_;
   matrixByRow_=NULL;
 }
-
-//#############################################################################
+// Pass in Message handler (not deleted at end)
+void 
+OsiMpsReader::passInMessageHandler(OsiMessageHandler * handler)
+{
+  defaultHandler_=false;
+  handler_=handler;
+}
+// Set language
+void 
+OsiMpsReader::newLanguage(OsiMessages::Language language)
+{
+  messages_ = OsiOsiMessage(language);
+}
 
 

@@ -4,7 +4,7 @@
 #define OsiMpsReader_H
 
 #include "OsiPackedMatrix.hpp"
-
+#include "OsiMessageHandler.hpp"
 //#############################################################################
 
 /** MPS Reader Interface
@@ -163,6 +163,22 @@ public:
     double objectiveOffset() const;
   //@}
 
+  /**@name Message handling */
+  //@{
+  /// Pass in Message handler (not deleted at end)
+  void passInMessageHandler(OsiMessageHandler * handler);
+  /// Set language
+  void newLanguage(OsiMessages::Language language);
+  void setLanguage(OsiMessages::Language language)
+  {newLanguage(language);};
+  /// Return handler
+  OsiMessageHandler * messageHandler() const
+  {return handler_;};
+  /// Return messages
+  OsiMessages messages() 
+  {return messages_;};
+  //@}
+
   /**@name Name type methods */
   //@{
     /// Problem name
@@ -288,6 +304,12 @@ private:
      char * rhsName_;
      char * rangeName_;
      char * boundName_;
+  /// Message handler
+  OsiMessageHandler * handler_;
+  /// Flag to say if default handler (so delete)
+  bool defaultHandler_;
+  /// Messages
+  OsiMessages messages_;
     //@}
   //@}
 

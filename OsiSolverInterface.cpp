@@ -15,6 +15,7 @@
 #include "OsiColCut.hpp"
 #include "OsiRowCutDebugger.hpp"
 #include "OsiMpsReader.hpp"
+#include "OsiOsiMessage.hpp"
 
 //#############################################################################
 // Hotstart related methods (primarily used in strong branching)
@@ -314,7 +315,8 @@ const OsiRowCutDebugger * OsiSolverInterface::getRowCutDebugger() const
 OsiSolverInterface::OsiSolverInterface () :
   appData_(NULL), 
   rowCutDebugger_(NULL),
-  ws_(NULL)
+  ws_(NULL),
+  defaultHandler_(true)
 {
   intParam_[OsiMaxNumIteration] = 9999999;
   intParam_[OsiMaxNumIterationHotStart] = 9999999;
@@ -326,21 +328,31 @@ OsiSolverInterface::OsiSolverInterface () :
   dblParam_[OsiObjOffset] = 0.0;
 
   strParam_[OsiProbName] = "OsiDefaultName";
+  handler_ = new OsiMessageHandler();
+  messages_ = OsiOsiMessage();
 }
 
 //-------------------------------------------------------------------
 // Copy constructor 
 //-------------------------------------------------------------------
-OsiSolverInterface::OsiSolverInterface (const OsiSolverInterface & source) :
-  appData_(source.appData_),
+OsiSolverInterface::OsiSolverInterface (const OsiSolverInterface & rhs) :
+  appData_(rhs.appData_),
   rowCutDebugger_(NULL),
-  ws_(NULL)
+  ws_(NULL),
+  defaultHandler_(true)
 {  
-  if ( source.rowCutDebugger_!=NULL )
-    rowCutDebugger_ = new OsiRowCutDebugger(*source.rowCutDebugger_);
-  CoinDisjointCopyN(source.intParam_, OsiLastIntParam, intParam_);
-  CoinDisjointCopyN(source.dblParam_, OsiLastDblParam, dblParam_);
-  CoinDisjointCopyN(source.strParam_, OsiLastStrParam, strParam_);
+  if ( rhs.rowCutDebugger_!=NULL )
+    rowCutDebugger_ = new OsiRowCutDebugger(*rhs.rowCutDebugger_);
+  defaultHandler_ = rhs.defaultHandler_;
+  if (defaultHandler_)
+    handler_ = new OsiMessageHandler(*rhs.handler_);
+  else
+    handler_ = rhs.handler_;
+  handler_ = new OsiMessageHandler(*rhs.handler_);
+  messages_ = OsiOsiMessage();
+  CoinDisjointCopyN(rhs.intParam_, OsiLastIntParam, intParam_);
+  CoinDisjointCopyN(rhs.dblParam_, OsiLastDblParam, dblParam_);
+  CoinDisjointCopyN(rhs.strParam_, OsiLastStrParam, strParam_);
 }
 
 //-------------------------------------------------------------------
@@ -353,6 +365,10 @@ OsiSolverInterface::~OsiSolverInterface ()
   rowCutDebugger_ = NULL;
   delete ws_;
   ws_ = NULL;
+  if (defaultHandler_) {
+    delete handler_;
+    handler_ = NULL;
+  }
 }
 
 //----------------------------------------------------------------
@@ -373,7 +389,16 @@ OsiSolverInterface::operator=(const OsiSolverInterface& rhs)
     CoinDisjointCopyN(rhs.strParam_, OsiLastStrParam, strParam_);
     delete ws_;
     ws_ = NULL;
-  }
+     if (defaultHandler_) {
+      delete handler_;
+      handler_ = NULL;
+    }
+    defaultHandler_ = rhs.defaultHandler_;
+    if (defaultHandler_)
+      handler_ = new OsiMessageHandler(*rhs.handler_);
+    else
+      handler_ = rhs.handler_;
+ }
   return *this;
 }
 
@@ -427,4 +452,18 @@ int OsiSolverInterface::readMps(const char * filename,
     }
   }
   return numberErrors;
+}
+
+// Pass in Message handler (not deleted at end)
+void 
+OsiSolverInterface::passInMessageHandler(OsiMessageHandler * handler)
+{
+  defaultHandler_=false;
+  handler_=handler;
+}
+// Set language
+void 
+OsiSolverInterface::newLanguage(OsiMessages::Language language)
+{
+  messages_ = OsiOsiMessage(language);
 }

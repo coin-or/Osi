@@ -10,6 +10,7 @@
 #include "OsiPackedVectorBase.hpp"
 
 #include "OsiSolverParameters.hpp"
+#include "OsiMessageHandler.hpp"
 
 class OsiPackedMatrix;
 class OsiCuts;
@@ -719,7 +720,23 @@ public:
     /// Get Application Data<br>
     void * getApplicationData() const;
   //@}
+  //---------------------------------------------------------------------------
 
+  /**@name Message handling */
+  //@{
+  /// Pass in Message handler (not deleted at end)
+  void passInMessageHandler(OsiMessageHandler * handler);
+  /// Set language
+  void newLanguage(OsiMessages::Language language);
+  void setLanguage(OsiMessages::Language language)
+  {newLanguage(language);};
+  /// Return handler
+  OsiMessageHandler * messageHandler() const
+  {return handler_;};
+  /// Return messages
+  OsiMessages messages() 
+  {return messages_;};
+  //@}
   //---------------------------------------------------------------------------
 
   /**@name Methods related to testing generated cuts */
@@ -811,7 +828,15 @@ private:
     /* The warmstart information used for hotstarting in case the default
        hotstart implementation is used */
     OsiWarmStart* ws_;
-  //@}
+  /// Why not just make useful stuff protected
+protected:
+   /// Message handler
+  OsiMessageHandler * handler_;
+  /// Flag to say if default handler (so delete)
+  bool defaultHandler_;
+  /// Messages
+  OsiMessages messages_;
+ //@}
 };
 
 //#############################################################################
@@ -900,4 +925,5 @@ OsiSolverInterface::convertSenseToBound(const char sense, const double right,
     break;
   }
 }
+
 #endif

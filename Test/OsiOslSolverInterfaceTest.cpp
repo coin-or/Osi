@@ -12,13 +12,407 @@
 #include "OsiCuts.hpp"
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
+#include "OsiOsiMessage.hpp"
+
+// below needed for pathetic branch and bound code
+#include <vector>
+#include <map>
+using std::max;
+using std::min;
+// Trivial class for Branch and Bound
+
+class OsiNode  {
+  
+public:
+    
+  // Default Constructor 
+  OsiNode ();
+
+  // Constructor from current state (and list of integers)
+  // Also chooses branching variable (if none set to -1)
+  OsiNode (OsiSolverInterface &model,
+	   int numberIntegers, int * integer);
+  
+  // Copy constructor 
+  OsiNode ( const OsiNode &);
+   
+  // Assignment operator 
+  OsiNode & operator=( const OsiNode& rhs);
+
+  // Destructor 
+  ~OsiNode ();
+  
+  // Public data
+  // Basis (should use tree, but not as wasteful as bounds!)
+  OsiWarmStartBasis basis_;
+  // Objective value
+  double objectiveValue_;
+  // Branching variable (0 is first integer)
+  int variable_;
+  // Way to branch - -1 down (first), 1 up, -2 down (second), 2 up (second)
+  int way_;
+  // Number of integers (for length of arrays)
+  int numberIntegers_;
+  // Current value
+  double value_;
+  // Now I must use tree
+  // Bounds stored in full (for integers)
+  int * lower_;
+  int * upper_;
+};
+
+
+OsiNode::OsiNode() :
+  basis_(OsiWarmStartBasis()),
+  objectiveValue_(1.0e100),
+  variable_(-100),
+  way_(-1),
+  numberIntegers_(0),
+  value_(0.5),
+  lower_(NULL),
+  upper_(NULL)
+{
+}
+OsiNode::OsiNode(OsiSolverInterface & model,
+		 int numberIntegers, int * integer)
+{
+  const OsiWarmStartBasis* ws =
+    dynamic_cast<const OsiWarmStartBasis*>(model.getWarmStart());
+
+  assert (ws!=NULL); // make sure not volume
+  basis_ = OsiWarmStartBasis(*ws);
+  variable_=-1;
+  way_=-1;
+  numberIntegers_=numberIntegers;
+  value_=0.0;
+  if (model.isProvenOptimal()&&!model.isDualObjectiveLimitReached()) {
+    objectiveValue_ = model.getObjSense()*model.getObjValue();
+  } else {
+    objectiveValue_ = 1.0e100;
+    lower_ = NULL;
+    upper_ = NULL;
+    return; // node cutoff
+  }
+  lower_ = new int [numberIntegers_];
+  upper_ = new int [numberIntegers_];
+  assert (upper_!=NULL);
+  const double * lower = model.getColLower();
+  const double * upper = model.getColUpper();
+  const double * solution = model.getColSolution();
+  int i;
+  // Hard coded integer tolerance
+#define INTEGER_TOLERANCE 1.0e-6
+  // Number of strong branching candidates
+#define STRONG_BRANCHING 5
+#ifdef STRONG_BRANCHING
+  double upMovement[STRONG_BRANCHING];
+  double downMovement[STRONG_BRANCHING];
+  double solutionValue[STRONG_BRANCHING];
+  int chosen[STRONG_BRANCHING];
+  int iSmallest=0;
+  // initialize distance from integer
+  for (i=0;i<STRONG_BRANCHING;i++) {
+    upMovement[i]=0.0;
+    chosen[i]=-1;
+  }
+#endif
+  variable_=-1;
+  // This has hard coded integer tolerance
+  double mostAway=INTEGER_TOLERANCE;
+  for (i=0;i<numberIntegers;i++) {
+    int iColumn = integer[i];
+    lower_[i]=(int)lower[iColumn];
+    upper_[i]=(int)upper[iColumn];
+    double value = solution[iColumn];
+    value = max(value,(double) lower_[i]);
+    value = min(value,(double) upper_[i]);
+    double nearest = floor(value+0.5);
+    if (fabs(value-nearest)>mostAway) {
+#ifdef STRONG_BRANCHING
+      double away = fabs(value-nearest);
+      if (away>upMovement[iSmallest]) {
+	//add to list
+	upMovement[iSmallest]=away;
+	solutionValue[iSmallest]=value;
+	chosen[iSmallest]=i;
+	int j;
+	iSmallest=-1;
+	double smallest = 1.0;
+	for (j=0;j<STRONG_BRANCHING;j++) {
+	  if (upMovement[j]<smallest) {
+	    smallest=upMovement[j];
+	    iSmallest=j;
+	  }
+	}
+      }
+#else
+      mostAway=fabs(value-nearest);
+      variable_=i;
+      value_=value;
+      if (value<=nearest)
+	way_=1; // up
+      else
+	way_=-1; // down
+#endif
+    }
+  }
+#ifdef STRONG_BRANCHING
+  int numberStrong=0;
+  for (i=0;i<STRONG_BRANCHING;i++) {
+    if (chosen[i]>=0) { 
+      numberStrong ++;
+      variable_ = chosen[i];
+    }
+  }
+  if (numberStrong==1) {
+    // just one - makes it easy
+    int iColumn = integer[variable_];
+    double value = solution[iColumn];
+    value = max(value,(double) lower_[variable_]);
+    value = min(value,(double) upper_[variable_]);
+    double nearest = floor(value+0.5);
+    value_=value;
+    if (value<=nearest)
+      way_=1; // up
+    else
+      way_=-1; // down
+  } else if (numberStrong) {
+    // more than one - choose
+    bool chooseOne=true;
+    model.markHotStart();
+    for (i=0;i<STRONG_BRANCHING;i++) {
+      int iInt = chosen[i];
+      if (iInt>=0) {
+	int iColumn = integer[iInt];
+	double value = solutionValue[i]; // value of variable in original
+	double objectiveChange;
+	value = max(value,(double) lower_[iInt]);
+	value = min(value,(double) upper_[iInt]);
+
+	// try down
+
+	model.setColUpper(iColumn,floor(value));
+	model.solveFromHotStart();
+	model.setColUpper(iColumn,upper_[iInt]);
+	if (model.isProvenOptimal()&&!model.isDualObjectiveLimitReached()) {
+	  objectiveChange = model.getObjSense()*model.getObjValue()
+	    - objectiveValue_;
+	} else {
+	  objectiveChange = 1.0e100;
+	}
+	downMovement[i]=objectiveChange;
+
+	// try up
+
+	model.setColLower(iColumn,ceil(value));
+	model.solveFromHotStart();
+	model.setColLower(iColumn,lower_[iInt]);
+	if (model.isProvenOptimal()&&!model.isDualObjectiveLimitReached()) {
+	  objectiveChange = model.getObjSense()*model.getObjValue()
+	    - objectiveValue_;
+	} else {
+	  objectiveChange = 1.0e100;
+	}
+	upMovement[i]=objectiveChange;
+	
+	/* Possibilities are:
+	   Both sides feasible - store
+	   Neither side feasible - set objective high and exit
+	   One side feasible - change bounds and resolve
+	*/
+	bool solveAgain=false;
+	if (upMovement[i]<1.0e100) {
+	  if(downMovement[i]<1.0e100) {
+	    // feasible - no action
+	  } else {
+	    // up feasible, down infeasible
+	    solveAgain = true;
+	    model.setColLower(iColumn,ceil(value));
+	  }
+	} else {
+	  if(downMovement[i]<1.0e100) {
+	    // down feasible, up infeasible
+	    solveAgain = true;
+	    model.setColUpper(iColumn,floor(value));
+	  } else {
+	    // neither side feasible
+	    objectiveValue_=1.0e100;
+	    chooseOne=false;
+	    break;
+	  }
+	}
+	if (solveAgain) {
+	  // need to solve problem again - signal this
+	  variable_ = numberIntegers;
+	  chooseOne=false;
+	  break;
+	}
+      }
+    }
+    if (chooseOne) {
+      // choose the one that makes most difference both ways
+      double best = -1.0;
+      double best2 = -1.0;
+      for (i=0;i<STRONG_BRANCHING;i++) {
+	int iInt = chosen[i];
+	if (iInt>=0) {
+	  model.messageHandler()->message(OSI_BAB_STRONG,model.messages())
+	    <<i<<iInt<<downMovement[i]<<upMovement[i]
+	    <<solutionValue[i]
+	    <<OsiMessageEol;
+	  bool better = false;
+	  if (min(upMovement[i],downMovement[i])>best) {
+	    // smaller is better
+	    better=true;
+	  } else if (min(upMovement[i],downMovement[i])>best-1.0e-5) {
+	    if (max(upMovement[i],downMovement[i])>best2+1.0e-5) {
+	      // smaller is about same, but larger is better
+	      better=true;
+	    }
+	  }
+	  if (better) {
+	    best = min(upMovement[i],downMovement[i]);
+	    best2 = max(upMovement[i],downMovement[i]);
+	    variable_ = iInt;
+	    double value = solutionValue[i];
+	    value = max(value,(double) lower_[variable_]);
+	    value = min(value,(double) upper_[variable_]);
+	    value_=value;
+	    if (upMovement[i]<=downMovement[i])
+	      way_=1; // up
+	    else
+	      way_=-1; // down
+	  }
+	}
+      }
+    }
+    // Delete the snapshot
+    model.unmarkHotStart();
+  }
+#endif
+}
+
+OsiNode::OsiNode(const OsiNode & rhs) 
+{  
+  basis_=rhs.basis_;
+  objectiveValue_=rhs.objectiveValue_;
+  variable_=rhs.variable_;
+  way_=rhs.way_;
+  numberIntegers_=rhs.numberIntegers_;
+  value_=rhs.value_;
+  lower_=NULL;
+  upper_=NULL;
+  if (rhs.lower_!=NULL) {
+    lower_ = new int [numberIntegers_];
+    upper_ = new int [numberIntegers_];
+    assert (upper_!=NULL);
+    memcpy(lower_,rhs.lower_,numberIntegers_*sizeof(int));
+    memcpy(upper_,rhs.upper_,numberIntegers_*sizeof(int));
+  }
+}
+
+OsiNode &
+OsiNode::operator=(const OsiNode & rhs)
+{
+  if (this != &rhs) {
+    basis_=rhs.basis_;
+    objectiveValue_=rhs.objectiveValue_;
+    variable_=rhs.variable_;
+    way_=rhs.way_;
+    numberIntegers_=rhs.numberIntegers_;
+    value_=rhs.value_;
+    delete [] lower_;
+    delete [] upper_;
+    lower_=NULL;
+    upper_=NULL;
+    if (rhs.lower_!=NULL) {
+      lower_ = new int [numberIntegers_];
+      upper_ = new int [numberIntegers_];
+      assert (upper_!=NULL);
+      memcpy(lower_,rhs.lower_,numberIntegers_*sizeof(int));
+      memcpy(upper_,rhs.upper_,numberIntegers_*sizeof(int));
+    }
+  }
+  return *this;
+}
+
+
+OsiNode::~OsiNode ()
+{
+  delete [] lower_;
+  delete [] upper_;
+}
+
+#include <vector>
+
+// Vector of OsiNodes 
+typedef std::vector<OsiNode>    OsiVectorNode;
 
 //#############################################################################
 
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
+class OsiOslMessageTest :
+   public OsiMessageHandler {
 
+public:
+  virtual int print() ;
+};
+
+int
+OsiOslMessageTest::print()
+{
+  static int numberOptimal=0,numberInfeasible=0;
+  if (currentSource()=="Osl") {
+    if (currentMessage().externalNumber()==1) { 
+      numberOptimal++;
+      if (numberOptimal%100==0)
+	return OsiMessageHandler::print(); // print
+    } else if (currentMessage().externalNumber()==2) { 
+      numberInfeasible++;
+    }
+  }  else if (currentSource()=="Osi") {
+    if (currentMessage().externalNumber()==5) 
+      std::cout<<"End of search trapped, "
+	       <<numberOptimal<<" optimal Lp's, "
+	       <<numberInfeasible
+	       <<" infeasible (including strong branching)"<<std::endl;
+    return OsiMessageHandler::print();
+  }
+  return 0;
+}
+#include <stdio.h>
+// OSL function to trap messages
+extern "C" void trapMessages(EKKModel * model, int  msgno, int nreal,
+                            double * rvec, int nint, int * ivec,
+                            int nchar, char * cvec)
+{
+  // break out message (assumes prefix there)
+  char severity = cvec[nchar*128+8];
+  char mainPart[153];
+  strncpy(mainPart,cvec+nchar*128+9,152);
+  mainPart[152]='\0';
+  int length = strlen(mainPart);
+  int i;
+  for (i=length-1;i>=0;i--) {
+    if (mainPart[i]!=' '&&mainPart[i]!='\t')
+      break;
+  }
+  if (i>=0) {
+    mainPart[i+1]='\0';
+    OsiMessageHandler * handler =  (OsiMessageHandler *) ekk_userData(model);
+    handler->message(msgno,"Osl",mainPart,severity);
+    for (i=0;i<nreal;i++) 
+      *handler<<rvec[i];
+    for (i=0;i<nint;i++) 
+      *handler<<ivec[i];
+    for (i=0;i<nchar;i++) 
+      *handler<<cvec+128*i;
+    handler->finish();
+  }
+  return;
+}
 //--------------------------------------------------------------------------
 // test EKKsolution methods.
 void
@@ -732,6 +1126,169 @@ OsiOslSolverInterfaceUnitTest(const std::string & mpsDir)
     OsiOslSolverInterface m;
     OsiSolverInterfaceCommonUnitTest(&m, mpsDir);
   }
+
+  // Do primitive branch and bound
+  // And test message handling
+  /* This could be moved down to OsiSolverInterface by
+     putting in branchAndBound and taking off m.
+  */
+  int iPass;
+  for (iPass=0;iPass<2;iPass++) {
+    OsiOslSolverInterface m;
+    std::string fn = mpsDir+"p0033";
+    m.readMps(fn.c_str(),"mps");
+     // derived message handler (only used on second pass)
+    OsiOslMessageTest messageHandler;
+   if (iPass) {
+      std::cout<<"Testing derived message handler"<<std::endl;
+      m.passInMessageHandler(&messageHandler);
+      ekk_registerMsguCallBack(m.getModelPtr(),trapMessages);
+      // say all messages to be trapped
+      ekk_mset(m.getModelPtr(),1,0,-1,2,9999,0);
+      // pass handler to OSL
+      ekk_setUserData(m.getModelPtr(),&messageHandler);
+   }
+    OsiMessageHandler * handler = m.messageHandler();
+    OsiMessages messages = m.messages() ;
+    // solve LP
+    m.initialSolve();
+    // setColBounds prints every time - don't even get to message handler
+    ekk_messagePrintOff(m.getModelPtr() ,317);
+    ekk_messagePrintOff(m.getModelPtr() ,318);
+    ekk_messagePrintOff(m.getModelPtr() ,3048);
+    ekk_messagePrintOff(m.getModelPtr() ,85);
+    ekk_messagePrintOff(m.getModelPtr() ,82);
+    ekk_messagePrintOff(m.getModelPtr() ,38);
+
+    if (m.isProvenOptimal()&&!m.isDualObjectiveLimitReached()) {
+      // This is a really simple Branch and Bound code - mainly
+      // to test strong branching
+      // I should look at STL more to allow other than depth first
+      int numberIntegers=0;
+      int numberColumns = m.getNumCols();
+      int iColumn;
+      int i;
+      for (iColumn=0;iColumn<numberColumns;iColumn++) {
+	if( m.isInteger(iColumn))
+	  numberIntegers++;
+      }
+      if (!numberIntegers) {
+	handler->message(OSI_BAB_NOINT,messages)
+	  <<OsiMessageEol;
+	return;
+      }
+      int * which = new int[numberIntegers]; // which variables are integer
+      numberIntegers=0;
+      for (iColumn=0;iColumn<numberColumns;iColumn++) {
+	if( m.isInteger(iColumn))
+	  which[numberIntegers++]=iColumn;
+      }
+      
+      // empty tree
+      OsiVectorNode branchingTree;
+      
+      // Add continuous to it;
+      branchingTree.push_back(OsiNode(m,numberIntegers,which));
+      
+      // For printing totals
+      int numberIterations=0;
+      int numberNodes =0;
+      
+      OsiNode bestNode;
+      // while until nothing on stack
+      while (branchingTree.size()) {
+	// last node
+	OsiNode node = branchingTree.back();
+	branchingTree.pop_back();
+	numberNodes++;
+	if (node.variable_>=0) {
+	  // branch - do bounds
+	  for (i=0;i<numberIntegers;i++) {
+	    iColumn=which[i];
+	    m.setColBounds( iColumn,node.lower_[i],node.upper_[i]);
+	  }
+	  // move basis
+	  m.setWarmStart(&node.basis_);
+	  // do branching variable
+	  if (node.way_<0) {
+	    m.setColUpper(which[node.variable_],floor(node.value_));
+	    // now push back node if more to come
+	    if (node.way_==-1) { 
+	      node.way_=+2;	  // Swap direction
+	      branchingTree.push_back(node);
+	    }
+	  } else {
+	    m.setColLower(which[node.variable_],ceil(node.value_));
+	    // now push back node if more to come
+	    if (node.way_==1) { 
+	      node.way_=-2;	  // Swap direction
+	      branchingTree.push_back(node);
+	    }
+	  }
+	  // solve
+	  m.resolve();
+	  numberIterations += m.getIterationCount();
+	  if (!m.isIterationLimitReached()) {
+	    OsiNode newNode(m,numberIntegers,which);
+	    // something extra may have been fixed by strong branching
+	    // if so go round again
+	    while (newNode.variable_==numberIntegers) {
+	      m.resolve();
+	      newNode = OsiNode(m,numberIntegers,which);
+	    }
+	    if (newNode.objectiveValue_<1.0e100) {
+	      // push on stack
+	      branchingTree.push_back(newNode);
+	    }
+	  } else {
+	    // maximum iterations - exit
+	    handler->message(OSI_BAB_MAXITS,messages)
+	      <<OsiMessageEol;
+	  break;
+	  }
+	} else {
+	  // integer solution - save
+	  bestNode = node;
+	  // set cutoff (hard coded tolerance)
+	  m.setDblParam(OsiDualObjectiveLimit,bestNode.objectiveValue_-1.0e-5);
+	  handler->message(OSI_BAB_SOLUTION,messages)
+	    <<bestNode.objectiveValue_<<numberIterations
+	    <<numberNodes
+	    <<OsiMessageEol;
+	}
+      }
+      handler->message(OSI_BAB_END,messages)
+	<<numberIterations
+	<<numberNodes
+	<<OsiMessageEol;
+      if (bestNode.numberIntegers_) {
+	// we have a solution restore
+	// do bounds
+	for (i=0;i<numberIntegers;i++) {
+	  iColumn=which[i];
+	  m.setColBounds( iColumn,bestNode.lower_[i],bestNode.upper_[i]);
+	}
+	// move basis
+	m.setWarmStart(&bestNode.basis_);
+	m.resolve();
+      }
+      delete [] which;
+    } else {
+      handler->message(OSI_BAB_INFEAS,messages)
+	<<OsiMessageEol;
+      throw CoinError("The LP relaxation is infeasible or too expensive",
+		      "branchAndBound", "OsiClpSolverInterface");
+    }
+    ekk_messagePrintOn(m.getModelPtr() ,317);
+    ekk_messagePrintOn(m.getModelPtr() ,318);
+    ekk_messagePrintOn(m.getModelPtr() ,3048);
+    ekk_messagePrintOn(m.getModelPtr() ,85);
+    ekk_messagePrintOn(m.getModelPtr() ,82);
+    ekk_messagePrintOn(m.getModelPtr() ,38);
+    // Very important to normalize before going out of scope
+    ekk_clearMsguCallBack(m.getModelPtr());
+    ekk_setUserData(m.getModelPtr(),NULL);
+   }
 
   assert(OsiOslSolverInterface::getNumInstances()==0);
 

@@ -28,7 +28,9 @@ LIBSRC += OsiPackedVector.cpp
 LIBSRC += OsiShallowPackedVector.cpp
 LIBSRC += OsiIndexedVector.cpp
 
+LIBSRC += OsiMessageHandler.cpp
 LIBSRC += OsiMpsReader.cpp
+LIBSRC += OsiOsiMessage.cpp
 LIBSRC += OsiPackedMatrix.cpp
 LIBSRC += OsiSolverInterface.cpp
 LIBSRC += OsiWarmStartBasis.cpp

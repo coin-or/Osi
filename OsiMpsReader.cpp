@@ -298,8 +298,8 @@ int OSIMpsio::cleanCard()
   
   if ( getit ) {
     cardNumber_++;
-    char * lastNonBlank = card_-1;
-    char * image = card_;
+    unsigned char * lastNonBlank = (unsigned char *) card_-1;
+    unsigned char * image = (unsigned char *) card_;
     while ( *image != '\0' ) {
       if ( *image != '\t' && *image < ' ' ) {
 	break;

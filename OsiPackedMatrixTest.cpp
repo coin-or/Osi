@@ -131,7 +131,8 @@ OsiPackedMatrixUnitTest()
       std::copy(startsBase,startsBase+major+1,starts);
       std::copy(lenBase,lenBase+major,lens);
       
-      OsiPackedMatrix pm(false,minor,major,numels,elem,ind,starts,lens);
+      OsiPackedMatrix pm(false,minor,major,numels,elem,ind,starts,lens,
+			 .25,.25);
       
       assert( elem!=NULL );
       assert( ind!=NULL );

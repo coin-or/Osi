@@ -1,8 +1,13 @@
 // Copyright (C) 2000, International Business Machines
 // Corporation and others.  All Rights Reserved.
 #ifdef COIN_USE_OSL
-#ifndef OsiOslSolverInterface_H
-#define OsiOslSolverInterface_H
+
+#ifndef _OsiOslSolverInterface_hpp_
+#define _OsiOslSolverInterface_hpp_
+
+#if defined(__MINGW32__) && !defined(OSLMSDLL)
+#  define OSLMSDLL
+#endif
 
 #include <string>
 #include <ekk_c_api.h>

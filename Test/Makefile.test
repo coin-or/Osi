@@ -88,6 +88,11 @@ IncDir += ${OsiIncDir} ${CoinIncDir} ${zlibIncDir} ${bzlibIncDir}
 LibDir += ${OsiLibDir} ${CoinLibDir} ${zlibLibDir} ${bzlibLibDir}
 LibName += ${OsiLibName} ${CoinLibName} ${zlibLibName} ${bzlibLibName}
 Define += ${OsiDefine} ${CoinDefine} ${zlibDefine} ${bzlibDefine}
+#lapack
+IncDir +=  $(lapackIncDir)
+LibDir +=  $(lapackLibDir)
+LibName += $(lapackLibName)
+Define +=  $(lapackDefine)
 
 TESTSRC += OsiColCutTest.cpp
 TESTSRC += OsiCutsTest.cpp

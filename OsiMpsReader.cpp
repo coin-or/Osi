@@ -12,72 +12,59 @@ const bool True = true;
 const bool False = false;
 
 #include <math.h>
-typedef double YKTDouble;
-typedef float YKTReal;
 
-/// The following lengths are in decreasing order
+/// The following lengths are in decreasing order (for 64 bit etc)
 /// Large enough to contain element index
-typedef int YKTElementIndex;
-
-/// Probably always int
-typedef int YKTInt;
+typedef int OSIElementIndex;
 
 /// Large enough to contain column index
-typedef int YKTColumnIndex;
+typedef int OSIColumnIndex;
 
 /// Large enough to contain row index (or basis)
-typedef int YKTRowIndex;
+typedef int OSIRowIndex;
 
-/// Always short
-typedef unsigned short YKTShort;
-
-/// Always char?
-typedef char YKTChar;
-
-typedef
-  std::string YKTString;
 #define MAX_FIELD_LENGTH 100
 #define MAX_CARD_LENGTH 5*MAX_FIELD_LENGTH+80
 
-enum YKTSectionType { YKT_NO_SECTION, YKT_NAME_SECTION, YKT_ROW_SECTION,
-  YKT_COLUMN_SECTION,
-  YKT_RHS_SECTION, YKT_RANGE_SECTION, YKT_BOUND_SECTION,
-  YKT_ENDATA_SECTION, YKT_EOF_SECTION, YKT_UNKNOWN_SECTION
+enum OSISectionType { OSI_NO_SECTION, OSI_NAME_SECTION, OSI_ROW_SECTION,
+  OSI_COLUMN_SECTION,
+  OSI_RHS_SECTION, OSI_RANGE_SECTION, OSI_BOUND_SECTION,
+  OSI_ENDATA_SECTION, OSI_EOF_SECTION, OSI_UNKNOWN_SECTION
 };
 
-enum YKTMpsType { YKT_N_ROW, YKT_E_ROW, YKT_L_ROW, YKT_G_ROW,
-  YKT_BLANK_COLUMN, YKT_S1_COLUMN, YKT_S2_COLUMN, YKT_S3_COLUMN,
-  YKT_INTORG, YKT_INTEND, YKT_SOSEND, YKT_UNSET_BOUND,
-  YKT_UP_BOUND, YKT_FX_BOUND, YKT_LO_BOUND, YKT_FR_BOUND,
-  YKT_MI_BOUND, YKT_PL_BOUND, YKT_BV_BOUND, YKT_UI_BOUND,
-  YKT_SC_BOUND, YKT_UNKNOWN_MPS_TYPE
+enum OSIMpsType { OSI_N_ROW, OSI_E_ROW, OSI_L_ROW, OSI_G_ROW,
+  OSI_BLANK_COLUMN, OSI_S1_COLUMN, OSI_S2_COLUMN, OSI_S3_COLUMN,
+  OSI_INTORG, OSI_INTEND, OSI_SOSEND, OSI_UNSET_BOUND,
+  OSI_UP_BOUND, OSI_FX_BOUND, OSI_LO_BOUND, OSI_FR_BOUND,
+  OSI_MI_BOUND, OSI_PL_BOUND, OSI_BV_BOUND, OSI_UI_BOUND,
+  OSI_SC_BOUND, OSI_UNKNOWN_MPS_TYPE
 };
 
 /// Very simple code for reading MPS data
-class YKTMpsio {
+class OSIMpsio {
 
 public:
 
   /**@name Constructor and destructor */
   //@{
   /// Constructor expects file to be open - reads down to (and reads) NAME card
-  YKTMpsio ( FILE * fp );
+  OSIMpsio ( FILE * fp );
   /// Destructor
-  ~YKTMpsio (  );
+  ~OSIMpsio (  );
   //@}
 
 
   /**@name card stuff */
   //@{
-  /// Gets next field and returns section type e.g. YKT_COLUMN_SECTION
-  YKTSectionType nextField (  );
+  /// Gets next field and returns section type e.g. OSI_COLUMN_SECTION
+  OSISectionType nextField (  );
   /// Returns current section type
-  inline YKTSectionType whichSection (  ) const {
+  inline OSISectionType whichSection (  ) const {
     return section_;
   };
   /// Only for first field on card otherwise BLANK_COLUMN
-  /// e.g. YKT_E_ROW
-  inline YKTMpsType mpsType (  ) const {
+  /// e.g. OSI_E_ROW
+  inline OSIMpsType mpsType (  ) const {
     return mpsType_;
   };
   /// Cleans card - taking out trailing blanks
@@ -99,7 +86,7 @@ public:
     return card_;
   };
   /// Returns card number
-  inline YKTElementIndex cardNumber (  ) const {
+  inline OSIElementIndex cardNumber (  ) const {
     return cardNumber_;
   };
   //@}
@@ -115,8 +102,8 @@ private:
   char *position_;
   /// End of card
   char *eol_;
-  /// Current YKTMpsType
-  YKTMpsType mpsType_;
+  /// Current OSIMpsType
+  OSIMpsType mpsType_;
   /// Current row name
   char rowName_[MAX_FIELD_LENGTH];
   /// Current column name
@@ -126,9 +113,9 @@ private:
   /// File pointer
   FILE *fp_;
   /// Which section we think we are in
-  YKTSectionType section_;
+  OSISectionType section_;
   /// Card number
-  YKTElementIndex cardNumber_;
+  OSIElementIndex cardNumber_;
   /// Whether free format.  Just for blank RHS etc
   bool freeFormat_;
   /// If all names <= 8 characters then allow embedded blanks
@@ -145,20 +132,20 @@ const static char *section[] = {
   "", "NAME", "ROW", "COLUMN", "RHS", "RANGE", "BOUND", "ENDATA", " "
 };
 
-// what is allowed in each section - must line up with YKTSectionType
-const static YKTMpsType startType[] = {
-  YKT_UNKNOWN_MPS_TYPE, YKT_UNKNOWN_MPS_TYPE,
-  YKT_N_ROW, YKT_BLANK_COLUMN,
-  YKT_BLANK_COLUMN, YKT_BLANK_COLUMN,
-  YKT_UP_BOUND, YKT_UNKNOWN_MPS_TYPE,
-  YKT_UNKNOWN_MPS_TYPE, YKT_UNKNOWN_MPS_TYPE
+// what is allowed in each section - must line up with OSISectionType
+const static OSIMpsType startType[] = {
+  OSI_UNKNOWN_MPS_TYPE, OSI_UNKNOWN_MPS_TYPE,
+  OSI_N_ROW, OSI_BLANK_COLUMN,
+  OSI_BLANK_COLUMN, OSI_BLANK_COLUMN,
+  OSI_UP_BOUND, OSI_UNKNOWN_MPS_TYPE,
+  OSI_UNKNOWN_MPS_TYPE, OSI_UNKNOWN_MPS_TYPE
 };
-const static YKTMpsType endType[] = {
-  YKT_UNKNOWN_MPS_TYPE, YKT_UNKNOWN_MPS_TYPE,
-  YKT_BLANK_COLUMN, YKT_UNSET_BOUND,
-  YKT_S1_COLUMN, YKT_S1_COLUMN,
-  YKT_UNKNOWN_MPS_TYPE, YKT_UNKNOWN_MPS_TYPE,
-  YKT_UNKNOWN_MPS_TYPE, YKT_UNKNOWN_MPS_TYPE
+const static OSIMpsType endType[] = {
+  OSI_UNKNOWN_MPS_TYPE, OSI_UNKNOWN_MPS_TYPE,
+  OSI_BLANK_COLUMN, OSI_UNSET_BOUND,
+  OSI_S1_COLUMN, OSI_S1_COLUMN,
+  OSI_UNKNOWN_MPS_TYPE, OSI_UNKNOWN_MPS_TYPE,
+  OSI_UNKNOWN_MPS_TYPE, OSI_UNKNOWN_MPS_TYPE
 };
 const static int allowedLength[] = {
   0, 0,
@@ -175,7 +162,7 @@ const static char *mpsTypes[] = {
   "  ", "UP", "FX", "LO", "FR", "MI", "PL", "BV", "UI", "SC"
 };
 
-void YKTMpsio::cleanCard()
+void OSIMpsio::cleanCard()
 {
   cardNumber_++;
   char * lastNonBlank = card_-1;
@@ -207,18 +194,18 @@ nextBlankOr ( char *image )
   return image;
 }
 
-//  YKTMpsio.  Constructor
-YKTMpsio::YKTMpsio (  FILE * fp )
+//  OSIMpsio.  Constructor
+OSIMpsio::OSIMpsio (  FILE * fp )
 {
   memset ( card_, 0, MAX_CARD_LENGTH );
   position_ = card_;
   eol_ = card_;
-  mpsType_ = YKT_UNKNOWN_MPS_TYPE;
+  mpsType_ = OSI_UNKNOWN_MPS_TYPE;
   memset ( rowName_, 0, MAX_FIELD_LENGTH );
   memset ( columnName_, 0, MAX_FIELD_LENGTH );
   value_ = 0.0;
   fp_ = fp;
-  section_ = YKT_EOF_SECTION;
+  section_ = OSI_EOF_SECTION;
   cardNumber_ = 0;
   freeFormat_ = false;
   eightChar_ = true;
@@ -229,13 +216,13 @@ YKTMpsio::YKTMpsio (  FILE * fp )
     char *getit = fgets ( card_, MAX_CARD_LENGTH, fp_ );
 
     if ( !getit ) {
-      section_ = YKT_EOF_SECTION;
+      section_ = OSI_EOF_SECTION;
       break;
     }
     // strip off newline etc
     cleanCard();
     if ( !strncmp ( card_, "NAME", 4 ) ) {
-      section_ = YKT_NAME_SECTION;
+      section_ = OSI_NAME_SECTION;
       char *next = card_ + 4;
 
       {
@@ -267,14 +254,14 @@ YKTMpsio::YKTMpsio (  FILE * fp )
       }
       break;
     } else if ( card_[0] != '*' && card_[0] != '#' ) {
-      section_ = YKT_UNKNOWN_SECTION;
+      section_ = OSI_UNKNOWN_SECTION;
       break;
     }
   }
 }
 
-//  ~YKTMpsio.  Destructor
-YKTMpsio::~YKTMpsio (  )
+//  ~OSIMpsio.  Destructor
+OSIMpsio::~OSIMpsio (  )
 {
 }
 
@@ -296,10 +283,10 @@ strcpyAndCompress ( char *to, const char *from )
 }
 
 //  nextField
-YKTSectionType
-YKTMpsio::nextField (  )
+OSISectionType
+OSIMpsio::nextField (  )
 {
-  mpsType_ = YKT_BLANK_COLUMN;
+  mpsType_ = OSI_BLANK_COLUMN;
   // find next non blank character
   char *next = position_;
 
@@ -322,7 +309,7 @@ YKTMpsio::nextField (  )
     char *getit = fgets ( card_, MAX_CARD_LENGTH, fp_ );
 
     if ( !getit ) {
-      return YKT_EOF_SECTION;
+      return OSI_EOF_SECTION;
     }
     // strip off newline
     cleanCard();
@@ -349,12 +336,12 @@ YKTMpsio::nextField (  )
 	} else {
 	  nchar = -1;
 	}
-	mpsType_ = YKT_BLANK_COLUMN;
+	mpsType_ = OSI_BLANK_COLUMN;
 	// special coding if RHS or RANGE, not free format and blanks
-	if ( ( section_ != YKT_RHS_SECTION && section_ != YKT_RANGE_SECTION )
+	if ( ( section_ != OSI_RHS_SECTION && section_ != OSI_RANGE_SECTION )
 	     || freeFormat_ || strncmp ( card_ + 4, "        ", 8 ) ) {
 	  // if columns section only look for first field if MARKER
-	  if ( section_ == YKT_COLUMN_SECTION
+	  if ( section_ == OSI_COLUMN_SECTION
 	       && !strstr ( next, "'MARKER'" ) ) nchar = -1;
 	  if ( nchar == allowedLength[section_] ) {
 	    //could be a type
@@ -362,11 +349,11 @@ YKTMpsio::nextField (  )
 
 	    for ( i = startType[section_]; i < endType[section_]; i++ ) {
 	      if ( !strncmp ( next, mpsTypes[i], nchar ) ) {
-		mpsType_ = ( YKTMpsType ) i;
+		mpsType_ = ( OSIMpsType ) i;
 		break;
 	      }
 	    }
-	    if ( mpsType_ != YKT_BLANK_COLUMN ) {
+	    if ( mpsType_ != OSI_BLANK_COLUMN ) {
 	      //we know all we need so we can skip over
 	      next = nextBlank;
 	      while ( next != eol_ ) {
@@ -379,15 +366,15 @@ YKTMpsio::nextField (  )
 	      if ( next == eol_ ) {
 		// error
 		position_ = eol_;
-		mpsType_ = YKT_UNKNOWN_MPS_TYPE;
+		mpsType_ = OSI_UNKNOWN_MPS_TYPE;
 	      } else {
 		nextBlank = nextBlankOr ( next );
 	      }
 	    }
 	  }
-	  if ( mpsType_ != YKT_UNKNOWN_MPS_TYPE ) {
+	  if ( mpsType_ != OSI_UNKNOWN_MPS_TYPE ) {
 	    // special coding if BOUND, not free format and blanks
-	    if ( section_ != YKT_BOUND_SECTION ||
+	    if ( section_ != OSI_BOUND_SECTION ||
 		 freeFormat_ || strncmp ( card_ + 4, "        ", 8 ) ) {
 	      char save = '?';
 
@@ -432,12 +419,12 @@ YKTMpsio::nextField (  )
 	      // error unless row section
 	      position_ = eol_;
 	      value_ = -1.0e100;
-	      if ( section_ != YKT_ROW_SECTION )
-		mpsType_ = YKT_UNKNOWN_MPS_TYPE;
+	      if ( section_ != OSI_ROW_SECTION )
+		mpsType_ = OSI_UNKNOWN_MPS_TYPE;
 	    } else {
 	      nextBlank = nextBlankOr ( next );
 	    }
-	    if ( section_ != YKT_ROW_SECTION ) {
+	    if ( section_ != OSI_ROW_SECTION ) {
 	      char save = '?';
 
 	      if ( !freeFormat_ && eightChar_ && next == card_ + 14 ) {
@@ -474,19 +461,19 @@ YKTMpsio::nextField (  )
 		}
 	      }
 	      // special coding for markers
-	      if ( section_ == YKT_COLUMN_SECTION &&
+	      if ( section_ == OSI_COLUMN_SECTION &&
 		   !strncmp ( rowName_, "'MARKER'", 8 ) && next != eol_ ) {
 		if ( !strncmp ( next, "'INTORG'", 8 ) ) {
-		  mpsType_ = YKT_INTORG;
+		  mpsType_ = OSI_INTORG;
 		} else if ( !strncmp ( next, "'INTEND'", 8 ) ) {
-		  mpsType_ = YKT_INTEND;
+		  mpsType_ = OSI_INTEND;
 		} else if ( !strncmp ( next, "'SOSORG'", 8 ) ) {
-		  if ( mpsType_ == YKT_BLANK_COLUMN )
-		    mpsType_ = YKT_S1_COLUMN;
+		  if ( mpsType_ == OSI_BLANK_COLUMN )
+		    mpsType_ = OSI_S1_COLUMN;
 		} else if ( !strncmp ( next, "'SOSEND'", 8 ) ) {
-		  mpsType_ = YKT_SOSEND;
+		  mpsType_ = OSI_SOSEND;
 		} else {
-		  mpsType_ = YKT_UNKNOWN_MPS_TYPE;
+		  mpsType_ = OSI_UNKNOWN_MPS_TYPE;
 		}
 		position_ = eol_;
 		return section_;
@@ -495,8 +482,8 @@ YKTMpsio::nextField (  )
 		// error unless bounds
 		position_ = eol_;
 		value_ = -1.0e100;
-		if ( section_ != YKT_BOUND_SECTION )
-		  mpsType_ = YKT_UNKNOWN_MPS_TYPE;
+		if ( section_ != OSI_BOUND_SECTION )
+		  mpsType_ = OSI_UNKNOWN_MPS_TYPE;
 	      } else {
 		nextBlank = nextBlankOr ( next );
 		if ( nextBlank ) {
@@ -558,7 +545,7 @@ YKTMpsio::nextField (  )
 	    // error 
 	    position_ = eol_;
 	    value_ = -1.0e100;
-	    mpsType_ = YKT_UNKNOWN_MPS_TYPE;
+	    mpsType_ = OSI_UNKNOWN_MPS_TYPE;
 	  } else {
 	    nextBlank = nextBlankOr ( next );
 	    value_ = -1.0e100;
@@ -586,14 +573,14 @@ YKTMpsio::nextField (  )
       {
 	std::cout<<"At line "<< cardNumber_ <<" "<< card_<<std::endl;
       }
-      for ( i = YKT_ROW_SECTION; i < YKT_UNKNOWN_SECTION; i++ ) {
+      for ( i = OSI_ROW_SECTION; i < OSI_UNKNOWN_SECTION; i++ ) {
 	if ( !strncmp ( card_, section[i], strlen ( section[i] ) ) ) {
 	  break;
 	}
       }
       position_ = card_;
       eol_ = card_;
-      section_ = ( YKTSectionType ) i;
+      section_ = ( OSISectionType ) i;
       return section_;
     } else {
       // comment
@@ -640,7 +627,7 @@ YKTMpsio::nextField (  )
     if ( next == eol_ ) {
       // error
       position_ = eol_;
-      mpsType_ = YKT_UNKNOWN_MPS_TYPE;
+      mpsType_ = OSI_UNKNOWN_MPS_TYPE;
     } else {
       nextBlank = nextBlankOr ( next );
     }
@@ -689,7 +676,7 @@ hash ( const char *name, int maxsiz, int length )
 
 //  startHash.  Creates hash list for names
 void
-OsiMpsReader::startHash ( char **names, const YKTColumnIndex number , int section )
+OsiMpsReader::startHash ( char **names, const OSIColumnIndex number , int section )
 {
   names_[section] = names;
   numberHash_[section] = number;
@@ -699,10 +686,10 @@ void
 OsiMpsReader::startHash ( int section ) const
 {
   char ** names = names_[section];
-  YKTColumnIndex number = numberHash_[section];
-  YKTColumnIndex i;
-  YKTColumnIndex maxhash = 4 * number;
-  YKTColumnIndex ipos, iput;
+  OSIColumnIndex number = numberHash_[section];
+  OSIColumnIndex i;
+  OSIColumnIndex maxhash = 4 * number;
+  OSIColumnIndex ipos, iput;
 
   //hash_=(OsiHashLink *) malloc(maxhash*sizeof(OsiHashLink));
   hash_[section] = new OsiHashLink[maxhash];
@@ -743,7 +730,7 @@ OsiMpsReader::startHash ( int section ) const
     ipos = hash ( thisName, maxhash, length );
 
     while ( 1 ) {
-      YKTColumnIndex j1 = hashThis[ipos].index;
+      OSIColumnIndex j1 = hashThis[ipos].index;
 
       if ( j1 == i )
 	break;
@@ -754,7 +741,7 @@ OsiMpsReader::startHash ( int section ) const
 	  printf ( "** duplicate name %s\n", names[i] );
 	  break;
 	} else {
-	  YKTColumnIndex k = hashThis[ipos].next;
+	  OSIColumnIndex k = hashThis[ipos].next;
 
 	  if ( k == -1 ) {
 	    while ( 1 ) {
@@ -789,13 +776,13 @@ OsiMpsReader::stopHash ( int section )
 }
 
 //  findHash.  -1 not found
-YKTColumnIndex
+OSIColumnIndex
 OsiMpsReader::findHash ( const char *name , int section ) const
 {
-  YKTColumnIndex found = -1;
+  OSIColumnIndex found = -1;
 
 #if 0
-  YKTColumnIndex i;
+  OSIColumnIndex i;
 
   for ( i = 0; i < numberHash_; i++ ) {
     if ( !strcmp ( names_[section][i], name ) ) {
@@ -806,8 +793,8 @@ OsiMpsReader::findHash ( const char *name , int section ) const
 #else
   char ** names = names_[section];
   OsiHashLink * hashThis = hash_[section];
-  YKTColumnIndex maxhash = 4 * numberHash_[section];
-  YKTColumnIndex ipos;
+  OSIColumnIndex maxhash = 4 * numberHash_[section];
+  OSIColumnIndex ipos;
 
   /* default if we don't find anything */
   if ( !maxhash )
@@ -816,13 +803,13 @@ OsiMpsReader::findHash ( const char *name , int section ) const
 
   ipos = hash ( name, maxhash, length );
   while ( 1 ) {
-    YKTColumnIndex j1 = hashThis[ipos].index;
+    OSIColumnIndex j1 = hashThis[ipos].index;
 
     if ( j1 >= 0 ) {
       char *thisName2 = names[j1];
 
       if ( strcmp ( name, thisName2 ) != 0 ) {
-	YKTColumnIndex k = hashThis[ipos].next;
+	OSIColumnIndex k = hashThis[ipos].next;
 
 	if ( k != -1 )
 	  ipos = k;
@@ -936,36 +923,36 @@ int OsiMpsReader::readMps()
     std::cout << "Unable to open file " << fileName_ << endl;
     return -1;
   }
-  YKTRowIndex numberRows;
-  YKTColumnIndex numberColumns;
-  YKTElementIndex numberElements;
+  OSIRowIndex numberRows;
+  OSIColumnIndex numberColumns;
+  OSIElementIndex numberElements;
   char name[100];
   bool ifmps;
-  YKTMpsio mpsfile ( fp );
+  OSIMpsio mpsfile ( fp );
 
-  if ( mpsfile.whichSection (  ) == YKT_NAME_SECTION ) {
+  if ( mpsfile.whichSection (  ) == OSI_NAME_SECTION ) {
     ifmps = true;
     strcpy ( name, mpsfile.columnName (  ) );
-  } else if ( mpsfile.whichSection (  ) == YKT_UNKNOWN_SECTION ) {
+  } else if ( mpsfile.whichSection (  ) == OSI_UNKNOWN_SECTION ) {
     std::cout << "Unknown image " << mpsfile.
       card (  ) << " at line 1 of file" << fileName_ << endl;
     return -2;
-  } else if ( mpsfile.whichSection (  ) != YKT_EOF_SECTION ) {
+  } else if ( mpsfile.whichSection (  ) != OSI_EOF_SECTION ) {
     strcpy ( name, mpsfile.card (  ) );
     ifmps = false;
   } else {
     std::cout << "EOF on file" << fileName_ << endl;
     return -3;
   }
-  YKTDouble *rowlower;
-  YKTDouble *rowupper;
-  YKTDouble *collower;
-  YKTDouble *colupper;
-  YKTDouble *objective;
-  YKTElementIndex *start;
-  YKTRowIndex *row;
-  YKTDouble *element;
-  YKTDouble objectiveOffset = 0.0;
+  double *rowlower;
+  double *rowupper;
+  double *collower;
+  double *colupper;
+  double *objective;
+  OSIElementIndex *start;
+  OSIRowIndex *row;
+  double *element;
+  double objectiveOffset = 0.0;
 
   int numberErrors = 0;
   int i;
@@ -975,27 +962,27 @@ int OsiMpsReader::readMps()
     bool gotNrow = false;
 
     //get ROWS
-    assert ( mpsfile.nextField (  ) == YKT_ROW_SECTION );
+    assert ( mpsfile.nextField (  ) == OSI_ROW_SECTION );
     //use malloc etc as I don't know how to do realloc in C++
     numberRows = 0;
     numberColumns = 0;
     numberElements = 0;
-    YKTRowIndex maxRows = 1000;
+    OSIRowIndex maxRows = 1000;
     char objectiveName[200];
-    YKTMpsType *rowType =
+    OSIMpsType *rowType =
 
-      ( YKTMpsType * ) malloc ( maxRows * sizeof ( YKTMpsType ) );
+      ( OSIMpsType * ) malloc ( maxRows * sizeof ( OSIMpsType ) );
     char **rowName = ( char ** ) malloc ( maxRows * sizeof ( char * ) );
 
     // for discarded free rows
-    YKTRowIndex maxFreeRows = 100;
-    YKTRowIndex numberOtherFreeRows = 0;
+    OSIRowIndex maxFreeRows = 100;
+    OSIRowIndex numberOtherFreeRows = 0;
     char **freeRowName =
 
       ( char ** ) malloc ( maxFreeRows * sizeof ( char * ) );
-    while ( mpsfile.nextField (  ) == YKT_ROW_SECTION ) {
+    while ( mpsfile.nextField (  ) == OSI_ROW_SECTION ) {
       switch ( mpsfile.mpsType (  ) ) {
-      case YKT_N_ROW:
+      case OSI_N_ROW:
 	if ( !gotNrow ) {
 	  gotNrow = true;
 	  strcpy ( objectiveName, mpsfile.columnName (  ) );
@@ -1013,14 +1000,14 @@ int OsiMpsReader::readMps()
 	  numberOtherFreeRows++;
 	}
 	break;
-      case YKT_E_ROW:
-      case YKT_L_ROW:
-      case YKT_G_ROW:
+      case OSI_E_ROW:
+      case OSI_L_ROW:
+      case OSI_G_ROW:
 	if ( numberRows == maxRows ) {
 	  maxRows = ( 3 * maxRows ) / 2 + 1000;
 	  rowType =
-	    ( YKTMpsType * ) realloc ( rowType,
-				       maxRows * sizeof ( YKTMpsType ) );
+	    ( OSIMpsType * ) realloc ( rowType,
+				       maxRows * sizeof ( OSIMpsType ) );
 	  rowName =
 
 	    ( char ** ) realloc ( rowName, maxRows * sizeof ( char * ) );
@@ -1040,11 +1027,11 @@ int OsiMpsReader::readMps()
 	}
       }
     }
-    assert ( mpsfile.whichSection (  ) == YKT_COLUMN_SECTION );
+    assert ( mpsfile.whichSection (  ) == OSI_COLUMN_SECTION );
     assert ( gotNrow );
     rowType =
-      ( YKTMpsType * ) realloc ( rowType,
-				 numberRows * sizeof ( YKTMpsType ) );
+      ( OSIMpsType * ) realloc ( rowType,
+				 numberRows * sizeof ( OSIMpsType ) );
     // put objective and other free rows at end
     rowName =
       ( char ** ) realloc ( rowName,
@@ -1056,21 +1043,21 @@ int OsiMpsReader::readMps()
 	     numberOtherFreeRows * sizeof ( char * ) );
 
     startHash ( rowName, numberRows + 1 + numberOtherFreeRows , 0 );
-    YKTColumnIndex maxColumns = 1000 + numberRows / 5;
-    YKTElementIndex maxElements = 5000 + numberRows / 2;
-    YKTMpsType *columnType = ( YKTMpsType * )
-      malloc ( maxColumns * sizeof ( YKTMpsType ) );
+    OSIColumnIndex maxColumns = 1000 + numberRows / 5;
+    OSIElementIndex maxElements = 5000 + numberRows / 2;
+    OSIMpsType *columnType = ( OSIMpsType * )
+      malloc ( maxColumns * sizeof ( OSIMpsType ) );
     char **columnName = ( char ** ) malloc ( maxColumns * sizeof ( char * ) );
 
-    objective = ( YKTDouble * ) malloc ( maxColumns * sizeof ( YKTDouble ) );
-    start = ( YKTElementIndex * )
-      malloc ( ( maxColumns + 1 ) * sizeof ( YKTElementIndex ) );
-    row = ( YKTRowIndex * )
-      malloc ( maxElements * sizeof ( YKTRowIndex ) );
+    objective = ( double * ) malloc ( maxColumns * sizeof ( double ) );
+    start = ( OSIElementIndex * )
+      malloc ( ( maxColumns + 1 ) * sizeof ( OSIElementIndex ) );
+    row = ( OSIRowIndex * )
+      malloc ( maxElements * sizeof ( OSIRowIndex ) );
     element =
-      ( YKTDouble * ) malloc ( maxElements * sizeof ( YKTDouble ) );
+      ( double * ) malloc ( maxElements * sizeof ( double ) );
     // for duplicates
-    YKTElementIndex *rowUsed = new YKTElementIndex[numberRows];
+    OSIElementIndex *rowUsed = new OSIElementIndex[numberRows];
 
     for (i=0;i<numberRows;i++) {
       rowUsed[i]=-1;
@@ -1081,25 +1068,25 @@ int OsiMpsReader::readMps()
     char lastColumn[200];
 
     memset ( lastColumn, '\0', 200 );
-    YKTColumnIndex column = -1;
+    OSIColumnIndex column = -1;
     bool inIntegerSet = false;
-    YKTColumnIndex numberIntegers = 0;
-    const YKTDouble tinyElement = 1.0e-14;
+    OSIColumnIndex numberIntegers = 0;
+    const double tinyElement = 1.0e-14;
 
-    while ( mpsfile.nextField (  ) == YKT_COLUMN_SECTION ) {
+    while ( mpsfile.nextField (  ) == OSI_COLUMN_SECTION ) {
       switch ( mpsfile.mpsType (  ) ) {
-      case YKT_BLANK_COLUMN:
+      case OSI_BLANK_COLUMN:
 	if ( strcmp ( lastColumn, mpsfile.columnName (  ) ) ) {
 	  // new column
 
 	  // reset old column and take out tiny
 	  if ( numberColumns ) {
 	    objUsed = false;
-	    YKTElementIndex i;
-	    YKTElementIndex k = start[column];
+	    OSIElementIndex i;
+	    OSIElementIndex k = start[column];
 
 	    for ( i = k; i < numberElements; i++ ) {
-	      YKTRowIndex irow = row[i];
+	      OSIRowIndex irow = row[i];
 
 	      if ( fabs ( element[i] ) > tinyElement ) {
 		element[k++] = element[i];
@@ -1111,21 +1098,21 @@ int OsiMpsReader::readMps()
 	  column = numberColumns;
 	  if ( numberColumns == maxColumns ) {
 	    maxColumns = ( 3 * maxColumns ) / 2 + 1000;
-	    columnType = ( YKTMpsType * )
-	      realloc ( columnType, maxColumns * sizeof ( YKTMpsType ) );
+	    columnType = ( OSIMpsType * )
+	      realloc ( columnType, maxColumns * sizeof ( OSIMpsType ) );
 	    columnName = ( char ** )
 	      realloc ( columnName, maxColumns * sizeof ( char * ) );
 
-	    objective = ( YKTDouble * )
-	      realloc ( objective, maxColumns * sizeof ( YKTDouble ) );
-	    start = ( YKTElementIndex * )
+	    objective = ( double * )
+	      realloc ( objective, maxColumns * sizeof ( double ) );
+	    start = ( OSIElementIndex * )
 	      realloc ( start,
-			( maxColumns + 1 ) * sizeof ( YKTElementIndex ) );
+			( maxColumns + 1 ) * sizeof ( OSIElementIndex ) );
 	  }
 	  if ( !inIntegerSet ) {
-	    columnType[column] = YKT_UNSET_BOUND;
+	    columnType[column] = OSI_UNSET_BOUND;
 	  } else {
-	    columnType[column] = YKT_INTORG;
+	    columnType[column] = OSI_INTORG;
 	    numberIntegers++;
 	  }
 	  columnName[column] = strdup ( mpsfile.columnName (  ) );
@@ -1137,16 +1124,16 @@ int OsiMpsReader::readMps()
 	if ( fabs ( mpsfile.value (  ) ) > tinyElement ) {
 	  if ( numberElements == maxElements ) {
 	    maxElements = ( 3 * maxElements ) / 2 + 1000;
-	    row = ( YKTRowIndex * )
-	      realloc ( row, maxElements * sizeof ( YKTRowIndex ) );
-	    element = ( YKTDouble * )
-	      realloc ( element, maxElements * sizeof ( YKTDouble ) );
+	    row = ( OSIRowIndex * )
+	      realloc ( row, maxElements * sizeof ( OSIRowIndex ) );
+	    element = ( double * )
+	      realloc ( element, maxElements * sizeof ( double ) );
 	  }
 	  // get row number
-	  YKTRowIndex irow = findHash ( mpsfile.rowName (  ) , 0 );
+	  OSIRowIndex irow = findHash ( mpsfile.rowName (  ) , 0 );
 
 	  if ( irow >= 0 ) {
-	    YKTDouble value = mpsfile.value (  );
+	    double value = mpsfile.value (  );
 
 	    // check for duplicates
 	    if ( irow == numberRows ) {
@@ -1201,16 +1188,16 @@ int OsiMpsReader::readMps()
 	  }
 	}
 	break;
-      case YKT_INTORG:
+      case OSI_INTORG:
 	inIntegerSet = true;
 	break;
-      case YKT_INTEND:
+      case OSI_INTEND:
 	inIntegerSet = false;
 	break;
-      case YKT_S1_COLUMN:
-      case YKT_S2_COLUMN:
-      case YKT_S3_COLUMN:
-      case YKT_SOSEND:
+      case OSI_S1_COLUMN:
+      case OSI_S2_COLUMN:
+      case OSI_S3_COLUMN:
+      case OSI_SOSEND:
 	std::cout << "** code sos etc later" << endl;
 	abort (  );
 	break;
@@ -1227,24 +1214,24 @@ int OsiMpsReader::readMps()
     }
     start[numberColumns] = numberElements;
     delete[]rowUsed;
-    assert ( mpsfile.whichSection (  ) == YKT_RHS_SECTION );
+    assert ( mpsfile.whichSection (  ) == OSI_RHS_SECTION );
     columnType =
-      ( YKTMpsType * ) realloc ( columnType,
-				 numberColumns * sizeof ( YKTMpsType ) );
+      ( OSIMpsType * ) realloc ( columnType,
+				 numberColumns * sizeof ( OSIMpsType ) );
     columnName =
 
       ( char ** ) realloc ( columnName, numberColumns * sizeof ( char * ) );
-    objective = ( YKTDouble * )
-      realloc ( objective, numberColumns * sizeof ( YKTDouble ) );
-    start = ( YKTElementIndex * )
-      realloc ( start, ( numberColumns + 1 ) * sizeof ( YKTElementIndex ) );
-    row = ( YKTRowIndex * )
-      realloc ( row, numberElements * sizeof ( YKTRowIndex ) );
-    element = ( YKTDouble * )
-      realloc ( element, numberElements * sizeof ( YKTDouble ) );
+    objective = ( double * )
+      realloc ( objective, numberColumns * sizeof ( double ) );
+    start = ( OSIElementIndex * )
+      realloc ( start, ( numberColumns + 1 ) * sizeof ( OSIElementIndex ) );
+    row = ( OSIRowIndex * )
+      realloc ( row, numberElements * sizeof ( OSIRowIndex ) );
+    element = ( double * )
+      realloc ( element, numberElements * sizeof ( double ) );
 
-    rowlower = ( YKTDouble * ) malloc ( numberRows * sizeof ( YKTDouble ) );
-    rowupper = ( YKTDouble * ) malloc ( numberRows * sizeof ( YKTDouble ) );
+    rowlower = ( double * ) malloc ( numberRows * sizeof ( double ) );
+    rowupper = ( double * ) malloc ( numberRows * sizeof ( double ) );
     for (i=0;i<numberRows;i++) {
       rowlower[i]=-infinity_;
       rowupper[i]=infinity_;
@@ -1254,16 +1241,16 @@ int OsiMpsReader::readMps()
     bool gotRhs = false;
 
     // need coding for blank rhs
-    while ( mpsfile.nextField (  ) == YKT_RHS_SECTION ) {
-      YKTRowIndex irow;
+    while ( mpsfile.nextField (  ) == OSI_RHS_SECTION ) {
+      OSIRowIndex irow;
 
       switch ( mpsfile.mpsType (  ) ) {
-      case YKT_BLANK_COLUMN:
+      case OSI_BLANK_COLUMN:
 	if ( strcmp ( lastColumn, mpsfile.columnName (  ) ) ) {
 
 	  // skip rest if got a rhs
 	  if ( gotRhs ) {
-	    while ( mpsfile.nextField (  ) == YKT_RHS_SECTION ) {
+	    while ( mpsfile.nextField (  ) == OSI_RHS_SECTION ) {
 	    }
 	  } else {
 	    gotRhs = true;
@@ -1273,7 +1260,7 @@ int OsiMpsReader::readMps()
 	// get row number
 	irow = findHash ( mpsfile.rowName (  ) , 0 );
 	if ( irow >= 0 ) {
-	  YKTDouble value = mpsfile.value (  );
+	  double value = mpsfile.value (  );
 
 	  // check for duplicates
 	  if ( irow == numberRows ) {
@@ -1330,20 +1317,20 @@ int OsiMpsReader::readMps()
 	}
       }
     }
-    if ( mpsfile.whichSection (  ) == YKT_RANGE_SECTION ) {
+    if ( mpsfile.whichSection (  ) == OSI_RANGE_SECTION ) {
       memset ( lastColumn, '\0', 200 );
       bool gotRange = false;
-      YKTRowIndex irow;
+      OSIRowIndex irow;
 
       // need coding for blank range
-      while ( mpsfile.nextField (  ) == YKT_RANGE_SECTION ) {
+      while ( mpsfile.nextField (  ) == OSI_RANGE_SECTION ) {
 	switch ( mpsfile.mpsType (  ) ) {
-	case YKT_BLANK_COLUMN:
+	case OSI_BLANK_COLUMN:
 	  if ( strcmp ( lastColumn, mpsfile.columnName (  ) ) ) {
 
 	    // skip rest if got a range
 	    if ( gotRange ) {
-	      while ( mpsfile.nextField (  ) == YKT_RANGE_SECTION ) {
+	      while ( mpsfile.nextField (  ) == OSI_RANGE_SECTION ) {
 	      }
 	    } else {
 	      gotRange = true;
@@ -1353,7 +1340,7 @@ int OsiMpsReader::readMps()
 	  // get row number
 	  irow = findHash ( mpsfile.rowName (  ) , 0 );
 	  if ( irow >= 0 ) {
-	    YKTDouble value = mpsfile.value (  );
+	    double value = mpsfile.value (  );
 
 	    // check for duplicates
 	    if ( irow == numberRows ) {
@@ -1409,15 +1396,15 @@ int OsiMpsReader::readMps()
     stopHash ( 0 );
     // massage ranges
     {
-      YKTRowIndex irow;
+      OSIRowIndex irow;
 
       for ( irow = 0; irow < numberRows; irow++ ) {
-	YKTDouble lo = rowlower[irow];
-	YKTDouble up = rowupper[irow];
-	YKTDouble up2 = rowupper[irow];	//range
+	double lo = rowlower[irow];
+	double up = rowupper[irow];
+	double up2 = rowupper[irow];	//range
 
 	switch ( rowType[irow] ) {
-	case YKT_E_ROW:
+	case OSI_E_ROW:
 	  if ( lo == -infinity_ )
 	    lo = 0.0;
 	  if ( up == infinity_ ) {
@@ -1429,7 +1416,7 @@ int OsiMpsReader::readMps()
 	    lo += up2;
 	  }
 	  break;
-	case YKT_L_ROW:
+	case OSI_L_ROW:
 	  if ( lo == -infinity_ ) {
 	    up = 0.0;
 	  } else {
@@ -1440,7 +1427,7 @@ int OsiMpsReader::readMps()
 	    lo = up - fabs ( up2 );
 	  }
 	  break;
-	case YKT_G_ROW:
+	case OSI_G_ROW:
 	  if ( lo == -infinity_ ) {
 	    lo = 0.0;
 	    up = infinity_;
@@ -1460,7 +1447,7 @@ int OsiMpsReader::readMps()
 #if 0
     // get rid of row names !
     {
-      YKTRowIndex irow;
+      OSIRowIndex irow;
 
       for ( irow = 0; irow < numberRows; irow++ ) {
 	free ( rowName[irow] );
@@ -1473,8 +1460,8 @@ int OsiMpsReader::readMps()
     }
 #endif
     // default bounds
-    collower = ( YKTDouble * ) malloc ( numberColumns * sizeof ( YKTDouble ) );
-    colupper = ( YKTDouble * ) malloc ( numberColumns * sizeof ( YKTDouble ) );
+    collower = ( double * ) malloc ( numberColumns * sizeof ( double ) );
+    colupper = ( double * ) malloc ( numberColumns * sizeof ( double ) );
     for (i=0;i<numberColumns;i++) {
       collower[i]=0.0;
       colupper[i]=infinity_;
@@ -1483,24 +1470,24 @@ int OsiMpsReader::readMps()
     integerType_ = new char[numberColumns];
 
     for ( column = 0; column < numberColumns; column++ ) {
-      if ( columnType[column] == YKT_INTORG ) {
-	columnType[column] = YKT_UNSET_BOUND;
+      if ( columnType[column] == OSI_INTORG ) {
+	columnType[column] = OSI_UNSET_BOUND;
 	integerType_[column] = 1;
       } else {
 	integerType_[column] = 0;
       }
     }
-    if ( mpsfile.whichSection (  ) == YKT_BOUND_SECTION ) {
+    if ( mpsfile.whichSection (  ) == OSI_BOUND_SECTION ) {
       memset ( lastColumn, '\0', 200 );
       bool gotBound = false;
 
       startHash ( columnName, numberColumns , 1 );
-      while ( mpsfile.nextField (  ) == YKT_BOUND_SECTION ) {
+      while ( mpsfile.nextField (  ) == OSI_BOUND_SECTION ) {
 	if ( strcmp ( lastColumn, mpsfile.columnName (  ) ) ) {
 
 	  // skip rest if got a bound
 	  if ( gotBound ) {
-	    while ( mpsfile.nextField (  ) == YKT_BOUND_SECTION ) {
+	    while ( mpsfile.nextField (  ) == OSI_BOUND_SECTION ) {
 	    }
 	  } else {
 	    gotBound = true;;
@@ -1508,39 +1495,39 @@ int OsiMpsReader::readMps()
 	  }
 	}
 	// get column number
-	YKTColumnIndex icolumn = findHash ( mpsfile.rowName (  ) , 1 );
+	OSIColumnIndex icolumn = findHash ( mpsfile.rowName (  ) , 1 );
 
 	if ( icolumn >= 0 ) {
-	  YKTDouble value = mpsfile.value (  );
+	  double value = mpsfile.value (  );
 	  bool ifError = false;
 
 	  switch ( mpsfile.mpsType (  ) ) {
-	  case YKT_UP_BOUND:
+	  case OSI_UP_BOUND:
 	    if ( value == -1.0e100 )
 	      ifError = true;
-	    if ( columnType[icolumn] == YKT_UNSET_BOUND ) {
+	    if ( columnType[icolumn] == OSI_UNSET_BOUND ) {
 	      if ( value < 0.0 ) {
 		collower[icolumn] = -infinity_;
 	      }
-	    } else if ( columnType[icolumn] == YKT_LO_BOUND ) {
+	    } else if ( columnType[icolumn] == OSI_LO_BOUND ) {
 	      if ( value < collower[icolumn] ) {
 		ifError = true;
 	      } else if ( value < collower[icolumn] + tinyElement ) {
 		value = collower[icolumn];
 	      }
-	    } else if ( columnType[icolumn] == YKT_MI_BOUND ) {
+	    } else if ( columnType[icolumn] == OSI_MI_BOUND ) {
 	    } else {
 	      ifError = true;
 	    }
 	    colupper[icolumn] = value;
-	    columnType[icolumn] = YKT_UP_BOUND;
+	    columnType[icolumn] = OSI_UP_BOUND;
 	    break;
-	  case YKT_LO_BOUND:
+	  case OSI_LO_BOUND:
 	    if ( value == -1.0e100 )
 	      ifError = true;
-	    if ( columnType[icolumn] == YKT_UNSET_BOUND ) {
-	    } else if ( columnType[icolumn] == YKT_UP_BOUND ||
-			columnType[icolumn] == YKT_UI_BOUND ) {
+	    if ( columnType[icolumn] == OSI_UNSET_BOUND ) {
+	    } else if ( columnType[icolumn] == OSI_UP_BOUND ||
+			columnType[icolumn] == OSI_UI_BOUND ) {
 	      if ( value > colupper[icolumn] ) {
 		ifError = true;
 	      } else if ( value > colupper[icolumn] - tinyElement ) {
@@ -1550,50 +1537,50 @@ int OsiMpsReader::readMps()
 	      ifError = true;
 	    }
 	    collower[icolumn] = value;
-	    columnType[icolumn] = YKT_LO_BOUND;
+	    columnType[icolumn] = OSI_LO_BOUND;
 	    break;
-	  case YKT_FX_BOUND:
+	  case OSI_FX_BOUND:
 	    if ( value == -1.0e100 )
 	      ifError = true;
-	    if ( columnType[icolumn] == YKT_UNSET_BOUND ) {
+	    if ( columnType[icolumn] == OSI_UNSET_BOUND ) {
 	    } else {
 	      ifError = true;
 	    }
 	    collower[icolumn] = value;
 	    colupper[icolumn] = value;
-	    columnType[icolumn] = YKT_FX_BOUND;
+	    columnType[icolumn] = OSI_FX_BOUND;
 	    break;
-	  case YKT_FR_BOUND:
-	    if ( columnType[icolumn] == YKT_UNSET_BOUND ) {
+	  case OSI_FR_BOUND:
+	    if ( columnType[icolumn] == OSI_UNSET_BOUND ) {
 	    } else {
 	      ifError = true;
 	    }
 	    collower[icolumn] = -infinity_;
 	    colupper[icolumn] = infinity_;
-	    columnType[icolumn] = YKT_FR_BOUND;
+	    columnType[icolumn] = OSI_FR_BOUND;
 	    break;
-	  case YKT_MI_BOUND:
-	    if ( columnType[icolumn] == YKT_UNSET_BOUND ) {
+	  case OSI_MI_BOUND:
+	    if ( columnType[icolumn] == OSI_UNSET_BOUND ) {
 	      colupper[icolumn] = 0.0;
-	    } else if ( columnType[icolumn] == YKT_UP_BOUND ) {
+	    } else if ( columnType[icolumn] == OSI_UP_BOUND ) {
 	    } else {
 	      ifError = true;
 	    }
 	    collower[icolumn] = -infinity_;
-	    columnType[icolumn] = YKT_MI_BOUND;
+	    columnType[icolumn] = OSI_MI_BOUND;
 	    break;
-	  case YKT_PL_BOUND:
-	    if ( columnType[icolumn] == YKT_UNSET_BOUND ) {
+	  case OSI_PL_BOUND:
+	    if ( columnType[icolumn] == OSI_UNSET_BOUND ) {
 	    } else {
 	      ifError = true;
 	    }
-	    columnType[icolumn] = YKT_PL_BOUND;
+	    columnType[icolumn] = OSI_PL_BOUND;
 	    break;
-	  case YKT_UI_BOUND:
+	  case OSI_UI_BOUND:
 	    if ( value == -1.0e100 )
 	      ifError = true;
-	    if ( columnType[icolumn] == YKT_UNSET_BOUND ) {
-	    } else if ( columnType[icolumn] == YKT_LO_BOUND ) {
+	    if ( columnType[icolumn] == OSI_UNSET_BOUND ) {
+	    } else if ( columnType[icolumn] == OSI_LO_BOUND ) {
 	      if ( value < collower[icolumn] ) {
 		ifError = true;
 	      } else if ( value < collower[icolumn] + tinyElement ) {
@@ -1603,20 +1590,20 @@ int OsiMpsReader::readMps()
 	      ifError = true;
 	    }
 	    colupper[icolumn] = value;
-	    columnType[icolumn] = YKT_UI_BOUND;
+	    columnType[icolumn] = OSI_UI_BOUND;
 	    if ( !integerType_[icolumn] ) {
 	      numberIntegers++;
 	      integerType_[icolumn] = 1;
 	    }
 	    break;
-	  case YKT_BV_BOUND:
-	    if ( columnType[icolumn] == YKT_UNSET_BOUND ) {
+	  case OSI_BV_BOUND:
+	    if ( columnType[icolumn] == OSI_UNSET_BOUND ) {
 	    } else {
 	      ifError = true;
 	    }
 	    collower[icolumn] = 0.0;
 	    colupper[icolumn] = 1.0;
-	    columnType[icolumn] = YKT_BV_BOUND;
+	    columnType[icolumn] = OSI_BV_BOUND;
 	    if ( !integerType_[icolumn] ) {
 	      numberIntegers++;
 	      integerType_[icolumn] = 1;
@@ -1654,7 +1641,7 @@ int OsiMpsReader::readMps()
 #if 0
     // get rid of column names !
     {
-      YKTColumnIndex icolumn;
+      OSIColumnIndex icolumn;
 
       for ( icolumn = 0; icolumn < numberColumns; icolumn++ ) {
 	free ( columnName[icolumn] );
@@ -1667,39 +1654,39 @@ int OsiMpsReader::readMps()
       delete[]integerType_;
       integerType_ = NULL;
     } else {
-      YKTColumnIndex icolumn;
+      OSIColumnIndex icolumn;
 
       for ( icolumn = 0; icolumn < numberColumns; icolumn++ ) {
 	if ( integerType_[icolumn] ) {
 	  assert ( collower[icolumn] >= -MAX_INTEGER );
 	  // if 0 infinity make 0-1 ???
-	  if ( columnType[icolumn] == YKT_UNSET_BOUND ) 
+	  if ( columnType[icolumn] == OSI_UNSET_BOUND ) 
 	    colupper[icolumn] = defaultBound_;
 	  if ( colupper[icolumn] > MAX_INTEGER ) 
 	    colupper[icolumn] = MAX_INTEGER;
 	}
       }
     }
-    assert ( mpsfile.whichSection (  ) == YKT_ENDATA_SECTION );
+    assert ( mpsfile.whichSection (  ) == OSI_ENDATA_SECTION );
   } else {
     fscanf ( fp, "%d %d %d\n", &numberRows, &numberColumns, &numberElements );
-    YKTColumnIndex i;
+    OSIColumnIndex i;
 
-    rowlower = ( YKTDouble * ) malloc ( numberRows * sizeof ( YKTDouble ) );
-    rowupper = ( YKTDouble * ) malloc ( numberRows * sizeof ( YKTDouble ) );
+    rowlower = ( double * ) malloc ( numberRows * sizeof ( double ) );
+    rowupper = ( double * ) malloc ( numberRows * sizeof ( double ) );
     for ( i = 0; i < numberRows; i++ ) {
       int j;
 
       fscanf ( fp, "%d %lg %lg\n", &j, &rowlower[i], &rowupper[i] );
       assert ( i == j );
     }
-    collower = ( YKTDouble * ) malloc ( numberColumns * sizeof ( YKTDouble ) );
-    colupper = ( YKTDouble * ) malloc ( numberColumns * sizeof ( YKTDouble ) );
-    objective= ( YKTDouble * ) malloc ( numberColumns * sizeof ( YKTDouble ) );
-    start = ( YKTElementIndex *) malloc ((numberColumns + 1) *
-					sizeof (YKTElementIndex) );
-    row = ( YKTRowIndex * ) malloc (numberElements * sizeof (YKTRowIndex));
-    element = ( YKTDouble * ) malloc (numberElements * sizeof (YKTDouble) );
+    collower = ( double * ) malloc ( numberColumns * sizeof ( double ) );
+    colupper = ( double * ) malloc ( numberColumns * sizeof ( double ) );
+    objective= ( double * ) malloc ( numberColumns * sizeof ( double ) );
+    start = ( OSIElementIndex *) malloc ((numberColumns + 1) *
+					sizeof (OSIElementIndex) );
+    row = ( OSIRowIndex * ) malloc (numberElements * sizeof (OSIRowIndex));
+    element = ( double * ) malloc (numberElements * sizeof (double) );
 
     start[0] = 0;
     numberElements = 0;

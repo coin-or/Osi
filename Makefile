@@ -77,8 +77,12 @@ $(addprefix inst-,$(SOLVERLIBS)) : inst-lib% :
 
 clean-libOsi :
 	@rm -rf Junk
-	@rm -rf $(UNAME)
+	@rm -rf $(UNAME)*
 	@rm -rf dep
+	@rm -rf */Junk
+	@rm -rf */$(UNAME)*
+	@rm -rf */dep
+	@rm -f unitTest
 
 $(addprefix clean-,$(SOLVERLIBS)) : clean-lib% :
 	(cd $* && ${MAKE} clean)

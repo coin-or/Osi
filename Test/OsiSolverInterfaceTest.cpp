@@ -595,13 +595,23 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 #endif
   }
 
-  // Determine if this is the emptySi is an OsiOslSolverInterface
+  // Determine if this is the emptySi is an OsiDylpSolverInterface
   bool dylpSolverInterface = false;
   {
 #ifdef COIN_USE_DYLP
     const OsiDylpSolverInterface * si =
       dynamic_cast<const OsiDylpSolverInterface *>(emptySi);
     if ( si != NULL ) dylpSolverInterface = true;
+#endif
+  }
+
+  // Determine if this is the emptySi is an OsiGlpkSolverInterface
+  bool glpkSolverInterface = false;
+  {
+#ifdef COIN_USE_GLPK
+    const OsiGlpkSolverInterface * si =
+      dynamic_cast<const OsiGlpkSolverInterface *>(emptySi);
+    if ( si != NULL ) glpkSolverInterface = true;
 #endif
   }
 
@@ -1495,7 +1505,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     assert(si->getDblParam(OsiLastDblParam, dval) == false);
     assert(si->setIntParam(OsiLastIntParam, 0) == false);
     assert(si->setDblParam(OsiLastDblParam, 0) == false);
-
+    
     for (i = 0; i < OsiLastIntParam; ++i) {
       const bool exists = si->getIntParam(static_cast<OsiIntParam>(i), ival);
       // existence and test should result in the same
@@ -1505,30 +1515,30 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       assert(!exists ^ testIntParam(si, i, 9999999));
       assert(!exists ^ testIntParam(si, i, INT_MAX));
       if (exists)
-	assert(si->getIntParam(static_cast<OsiIntParam>(i), ival));
+        assert(si->getIntParam(static_cast<OsiIntParam>(i), ival));
     }
-#ifdef COIN_USE_GLPK
-    if (!dynamic_cast<OsiGlpkSolverInterface*>(si)) {
-#endif
+    // Test for glpk since it dies on this test
+    if ( glpkSolverInterface ) {
+      failureMessage(solverName,"[g,s]etDblParam");
+    }
+    else {
       for (i = 0; i < OsiLastDblParam; ++i) {
-	const bool exists = si->getDblParam(static_cast<OsiDblParam>(i), dval);
-	// existence and test should result in the same
-	assert(!exists ^ testDblParam(si, i, -1e50));
-	assert(!exists ^ testDblParam(si, i, -1e10));
-	assert(!exists ^ testDblParam(si, i, -1));
-	assert(!exists ^ testDblParam(si, i, -1e-4));
-	assert(!exists ^ testDblParam(si, i, -1e-15));
-	assert(!exists ^ testDblParam(si, i, 1e50));
-	assert(!exists ^ testDblParam(si, i, 1e10));
-	assert(!exists ^ testDblParam(si, i, 1));
-	assert(!exists ^ testDblParam(si, i, 1e-4));
-	assert(!exists ^ testDblParam(si, i, 1e-15));
-	if (exists)
-	  assert(si->setDblParam(static_cast<OsiDblParam>(i), dval));
+        const bool exists = si->getDblParam(static_cast<OsiDblParam>(i), dval);
+        // existence and test should result in the same
+        assert(!exists ^ testDblParam(si, i, -1e50));
+        assert(!exists ^ testDblParam(si, i, -1e10));
+        assert(!exists ^ testDblParam(si, i, -1));
+        assert(!exists ^ testDblParam(si, i, -1e-4));
+        assert(!exists ^ testDblParam(si, i, -1e-15));
+        assert(!exists ^ testDblParam(si, i, 1e50));
+        assert(!exists ^ testDblParam(si, i, 1e10));
+        assert(!exists ^ testDblParam(si, i, 1));
+        assert(!exists ^ testDblParam(si, i, 1e-4));
+        assert(!exists ^ testDblParam(si, i, 1e-15));
+        if (exists)
+          assert(si->setDblParam(static_cast<OsiDblParam>(i), dval));
       }
-#ifdef COIN_USE_GLPK
     }
-#endif
     delete si;
   }
 

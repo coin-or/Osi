@@ -581,6 +581,42 @@ public:
   /// Get pointer to underlying solver
   inline OsiSolverInterface * getRealSolverPtr() const 
   { return modelPtr_->solver();};
+  /// Set cutoff bound on the objective function.
+  inline void setCutoff(double value) 
+  { modelPtr_->setCutoff(value);};
+  /// Get the cutoff bound on the objective function - always as minimize
+  inline double getCutoff() const
+  { return modelPtr_->getCutoff();};
+  /// Set the CbcModel::CbcMaxNumNode maximum node limit 
+  inline void setMaximumNodes( int value)
+  { modelPtr_->setMaximumNodes(value);};
+  /// Get the CbcModel::CbcMaxNumNode maximum node limit
+  inline int getMaximumNodes() const
+  { return modelPtr_->getMaximumNodes();};
+  /// Set the CbcModel::CbcMaxNumSol maximum number of solutions
+  inline void setMaximumSolutions( int value) 
+  { modelPtr_->setMaximumSolutions(value);};
+  /// Get the CbcModel::CbcMaxNumSol maximum number of solutions 
+  inline int getMaximumSolutions() const 
+  { return modelPtr_->getMaximumSolutions();};
+  /// Set the CbcModel::CbcMaximumSeconds maximum number of seconds 
+  inline void setMaximumSeconds( double value) 
+  { modelPtr_->setMaximumSeconds(value);};
+  /// Get the CbcModel::CbcMaximumSeconds maximum number of seconds 
+  inline double getMaximumSeconds() const 
+  { return modelPtr_->getMaximumSeconds();};
+  /// Node limit reached?
+  inline bool isNodeLimitReached() const
+  { return modelPtr_->isNodeLimitReached();};
+  /// Solution limit reached?
+  inline bool isSolutionLimitReached() const
+  { return modelPtr_->isSolutionLimitReached();};
+  /// Get how many Nodes it took to solve the problem.
+  inline int getNodeCount() const
+  { return modelPtr_->getNodeCount();};
+    /// Final status of problem - 0 finished, 1 stopped, 2 difficulties
+    inline int status() const
+  { return modelPtr_->status();};
   //@}
   
   //---------------------------------------------------------------------------

@@ -74,6 +74,12 @@ OsiCbcSolverInterface::getDblParam(OsiDblParam key, double& value) const
 bool
 OsiCbcSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
 {
+  if ( key==OsiSolverName ) {
+    std::string value2;
+    modelPtr_->solver()->getStrParam(key,value2);
+    value = "cbc"+value2;
+    return true;
+  }
   return modelPtr_->solver()->getStrParam(key,value);
 }
 
@@ -413,7 +419,6 @@ OsiCbcSolverInterface::writeMpsNative(const char *filename,
 //#############################################################################
 // Constructors, destructors clone and assignment
 //#############################################################################
-
 //-------------------------------------------------------------------
 // Default Constructor 
 //-------------------------------------------------------------------

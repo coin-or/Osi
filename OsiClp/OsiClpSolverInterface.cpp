@@ -374,7 +374,9 @@ void OsiClpSolverInterface::resolve()
     startFinishOptions=0;
     modelPtr_->setSpecialOptions(saveOptions|(64|1024));
   } else {
-    startFinishOptions=1+2+4;
+    startFinishOptions=1+4;
+    if ((specialOptions_&8)!=0)
+      startFinishOptions +=2; // allow re-use of factorization
     if((specialOptions_&4)==0) 
       modelPtr_->setSpecialOptions(saveOptions|(64|128|512|1024|4096));
     else
@@ -469,6 +471,7 @@ void OsiClpSolverInterface::resolve()
       if ((specialOptions_&2)!=0)
 	modelPtr_->setPerturbation(100);
       modelPtr_->dual(0,startFinishOptions);
+      assert (modelPtr_->objectiveValue()<1.0e100);
       modelPtr_->setPerturbation(savePerturbation);
       lastAlgorithm_=2; // dual
       // check if clp thought it was in a loop
@@ -504,6 +507,7 @@ void OsiClpSolverInterface::resolve()
 	  }
 	}
       }
+      assert (modelPtr_->objectiveValue()<1.0e100);
     } else {
       //printf("doing primal\n");
       modelPtr_->primal(0,startFinishOptions);
@@ -691,6 +695,9 @@ bool OsiClpSolverInterface::isPrimalObjectiveLimitReached() const
 bool OsiClpSolverInterface::isDualObjectiveLimitReached() const
 {
 
+  const int stat = modelPtr_->status();
+  if (stat == 1)
+  return true;
   double limit = 0.0;
   modelPtr_->getDblParam(ClpDualObjectiveLimit, limit);
   if (limit > 1e30) {
@@ -705,11 +712,11 @@ bool OsiClpSolverInterface::isDualObjectiveLimitReached() const
    case 0: // no simplex was needed
      return maxmin > 0 ? (obj > limit) /*minim*/ : (-obj > limit) /*maxim*/;
    case 1: // primal simplex
-     if (modelPtr_->status() == 0) // optimal
+     if (stat == 0) // optimal
 	return maxmin > 0 ? (obj > limit) /*minim*/ : (-obj > limit) /*maxim*/;
      return false;
    case 2: // dual simplex
-     if (modelPtr_->status() != 0 && modelPtr_->status() != 3)
+     if (stat != 0 && stat != 3)
 	// over dual limit
 	return true;
      return maxmin > 0 ? (obj > limit) /*minim*/ : (-obj > limit) /*maxim*/;

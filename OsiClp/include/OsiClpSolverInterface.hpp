@@ -784,6 +784,7 @@ protected:
 	  1 try and keep work regions as much as possible
 	  2 do not use any perturbation
 	  4 allow exit before re-factorization
+          8 try and re-use factorization (only if no cuts in tree)
       */
       unsigned int specialOptions_;
   //@}

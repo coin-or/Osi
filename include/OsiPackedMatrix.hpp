@@ -494,7 +494,8 @@ public:
        For example if: <br>
          rowIndices[0]=2; colIndices[0]=5; elements[0]=2.0 <br>
          rowIndices[1]=2; colIndices[1]=5; elements[1]=0.5 <br>
-       then the created matrix will contain a value of 2.5 in row 2 and column 5.
+       then the created matrix will contain a value of 2.5 in row 2 and column 5.<br>
+       The matrix is created without gaps.
    */
    OsiPackedMatrix(const bool colordered,
      const int * rowIndices, 

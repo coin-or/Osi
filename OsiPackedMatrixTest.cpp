@@ -550,6 +550,17 @@ OsiPackedMatrixUnitTest()
       assert( eq( pmtco.getVector(3)[3] , 2.8 ) );
       assert( eq( pmtco.getVector(0)[2] , 0.0 ) );
 
+      // Test to make sure there are no gaps in the created matrix
+      assert( pmtco.getVectorStarts()[0]==0 );
+      assert( pmtco.getVectorStarts()[1]==2 );
+      assert( pmtco.getVectorStarts()[2]==4 );
+      assert( pmtco.getVectorStarts()[3]==6 );
+      assert( pmtco.getVectorStarts()[4]==8 );
+      assert( pmtco.getVectorStarts()[5]==10 );
+      assert( pmtco.getVectorStarts()[6]==11 );
+      assert( pmtco.getVectorStarts()[7]==12 );
+      assert( pmtco.getVectorStarts()[8]==14 );
+
       // Test the whole matrix
       OsiPackedMatrix globalco;
       globalco.reverseOrderedCopyOf(*globalP);
@@ -558,8 +569,14 @@ OsiPackedMatrixUnitTest()
       // create row ordered matrix from triples
       OsiPackedMatrix pmtro(false,ri,ci,el,ne);
       assert(!pmtro.isColOrdered());
-      assert( eq( pmtco.getVector(3)[3] , 2.8 ) );
-      assert( eq( pmtco.getVector(2)[0] , 0.0 ) );
+      assert( eq( pmtro.getVector(3)[3] , 2.8 ) );
+      assert( eq( pmtro.getVector(2)[0] , 0.0 ) );
+      assert( pmtro.getVectorStarts()[0]==0 );
+      assert( pmtro.getVectorStarts()[1]==5 );
+      assert( pmtro.getVectorStarts()[2]==7 );
+      assert( pmtro.getVectorStarts()[3]==9 );
+      assert( pmtro.getVectorStarts()[4]==11 );
+      assert( pmtro.getVectorStarts()[5]==14 );
       assert(globalP->isEquivalent(pmtro));
 
     }

@@ -1,5 +1,5 @@
 /*! \legal
-  Copyright (C) 2002, 2003
+  Copyright (C) 2002, 2003, 2004.
   Lou Hafer, Stephen Tse, International Business Machines Corporation and
   others. All Rights Reserved.
 */
@@ -170,12 +170,13 @@ const double CoinInfinity = DBL_MAX ;
 */
 
 namespace {
-  char sccsid[] = "%W%	%G%" ;
+  char sccsid[] = "@(#)OsiDylpSolverInterface.cpp	1.16	06/22/04" ;
   char cvsid[] = "$Id$" ;
 }
 
 #include <string>
 #include <cassert>
+#include <sstream>
 #include <OsiColCut.hpp>
 #include <OsiRowCut.hpp>
 #include <OsiRowCutDebugger.hpp>
@@ -224,8 +225,9 @@ extern void strfree(const char *str) ;
   Four global variables, cmdchn, cmdecho, logchn, and gtxecho, control
   command input/echoing and log message output/echoing.
 
-  Gtxecho can be indirectly controlled using the OsiDoReducePrint hint; it
-  is set to true whenever messageHandler()->logLevel() > 0.
+  Gtxecho can be controlled using the OsiDoReducePrint hint; it
+  is set to true whenever the print level is specified as an absolute integer
+  such that (print level) & 0x10 != 0
 
   By default, solver command (option) files are handled in the following
   manner: When an MPS file example.mps is read, the solver looks for an
@@ -804,6 +806,15 @@ void ODSI::add_col (const CoinPackedVectorBase& coin_colj,
 */
   if (!consys) construct_consys(0,0) ;
 /*
+  Generate a name. Not a trivial issue; unique names are critical to the
+  ability to write out a system in mps format.
+*/
+  std::ostringstream nme ;
+  nme << "var" ;
+  nme << addedColCnt++ ;
+  std::string colname = nme.str() ;
+  pk_colj->nme = colname.c_str() ;
+/*
   Add the column.
 */
   bool r = consys_addcol_pk(consys,vtypj,pk_colj,objj,vlbj,vubj) ;
@@ -835,6 +846,18 @@ void ODSI::add_row (const CoinPackedVectorBase &coin_rowi, char clazzi,
   Do we need a consys?
 */
   if (!consys) construct_consys(0,0) ;
+/*
+  Generate a name. Not a trivial issue; unique names are critical to the
+  ability to write out a system in mps format.
+*/
+  std::ostringstream nme ;
+  if (clazzi == 'a')
+  { nme << "con" ; }
+  else
+  { nme << "cut" ; }
+  nme << addedRowCnt++ ;
+  std::string rowname = nme.str() ;
+  pk_rowi->nme = rowname.c_str() ;
 /*
   Add the row.
 */
@@ -1025,7 +1048,9 @@ inline void ODSI::construct_options ()
   setDblParam(OsiDualTolerance,tolerances->dfeas_scale*tolerances->cost) ;
   setDblParam(OsiPrimalTolerance,tolerances->pfeas_scale*tolerances->zero) ;
 /*
-  Differentiate options for initial solution vs. reoptimising.
+  Differentiate options for initial solution vs. reoptimising. Give a fair bit
+  more feasibility clearance for resolving in order to cope with inaccuracy
+  introduced by inaccuracy in calculating cut coefficients.
 */
   initialSolveOptions->forcecold = true ;
   initialSolveOptions->fullsys = true ;
@@ -1183,8 +1208,7 @@ void ODSI::load_problem (const CoinMpsIO &mps)
   { for (int j = 0 ; j < n ; j++) vtyp[j] = vartypCON ; }
 /*
   Second loop. Insert the coefficients by column. If we need to create a
-  column-ordered copy, take advantage and cache it.  The size of colj is a
-  gross overestimate, but it saves the trouble of constantly reallocating it.
+  column-ordered copy, take advantage and cache it.
 */
   const CoinPackedMatrix *matrix2 ;
   if (matrix.isColOrdered())
@@ -1194,7 +1218,7 @@ void ODSI::load_problem (const CoinMpsIO &mps)
     _matrix_by_col->reverseOrderedCopyOf(matrix) ;
     matrix2 = _matrix_by_col ; }
   
-  pkvec_struct* colj = pkvec_new(n) ;
+  pkvec_struct* colj = pkvec_new(m) ;
 
   for (int j = 0 ; j < n ; j++)
   { const CoinShallowPackedVector coin_col = matrix2->getVector(j) ;
@@ -1245,29 +1269,9 @@ void ODSI::load_problem (const CoinPackedMatrix& matrix,
 */
   destruct_problem(true) ;
 /*
-  Create an empty consys_struct.
-*/
-  int m = matrix.getNumCols() ;
-  int n = matrix.getNumRows() ;
-
-  construct_consys(n,m) ;
-/*
-  First loop: Insert empty constraints into the new constraint system.
-*/
-  pkvec_struct* rowi = pkvec_new(0) ;
-  assert(rowi) ;
-
-  for (int i = 0 ; i < n ; i++)
-  { rowi->nme = 0 ;
-    bool r = consys_addrow_pk(consys,'a',ctyp[i],rowi,rhs[i],rhslow[i],0,0) ;
-    assert(r) ;
-  }
-
-  if (rowi) pkvec_free(rowi) ;
-/*
-  Second loop. Insert the coefficients by column. If we need to create a
-  column-ordered copy, take advantage and cache it.  The size of colj is a
-  gross overestimate, but it saves the trouble of constantly reallocating it.
+  We're expecting to work with a column-ordered matrix, so make sure that's
+  true. If we need to create a column-ordered copy, take advantage and cache
+  it.
 */
   const CoinPackedMatrix *matrix2 ;
   if (matrix.isColOrdered())
@@ -1276,10 +1280,31 @@ void ODSI::load_problem (const CoinPackedMatrix& matrix,
   { _matrix_by_col = new CoinPackedMatrix ;
     _matrix_by_col->reverseOrderedCopyOf(matrix) ;
     matrix2 = _matrix_by_col ; }
-  
-  pkvec_struct* colj = pkvec_new(n) ;
+/*
+  Create an empty consys_struct.
+*/
+  int m = matrix2->getNumRows() ;
+  int n = matrix2->getNumCols() ;
 
-  for (int j = 0 ; j < m ; j++)
+  construct_consys(n,m) ;
+/*
+  First loop: Insert empty constraints into the new constraint system.
+*/
+  pkvec_struct* rowi = pkvec_new(0) ;
+  assert(rowi) ;
+
+  for (int i = 0 ; i < m ; i++)
+  { rowi->nme = 0 ;
+    bool r = consys_addrow_pk(consys,'a',ctyp[i],rowi,rhs[i],rhslow[i],0,0) ;
+    assert(r) ; }
+
+  if (rowi) pkvec_free(rowi) ;
+/*
+  Second loop. Insert the coefficients by column.
+*/
+  pkvec_struct* colj = pkvec_new(m) ;
+
+  for (int j = 0 ; j < n ; j++)
   { const CoinShallowPackedVector coin_col = matrix2->getVector(j) ;
     packed_vector(coin_col,n,colj) ;
     double objj = obj?obj[j]:0 ;
@@ -1527,6 +1552,8 @@ ODSI::OsiDylpSolverInterface ()
     hotstart_fallback(0),
     activeBasis(0),
     activeIsModified(false),
+    addedColCnt(0),
+    addedRowCnt(0),
 
     _objval(0),
     _col_x(0),
@@ -1593,6 +1620,8 @@ ODSI::OsiDylpSolverInterface (const OsiDylpSolverInterface& src)
     hotstart_fallback(0),	// do not copy hot start information
     activeBasis(0),
     activeIsModified(false),
+    addedColCnt(src.addedColCnt),
+    addedRowCnt(src.addedRowCnt),
   
     _objval(src._objval),
     _col_x(0),
@@ -1695,6 +1724,9 @@ OsiDylpSolverInterface &ODSI::operator= (const OsiDylpSolverInterface &rhs)
     { activeBasis = rhs.activeBasis->clone() ;
       activeIsModified = rhs.activeIsModified ; }
 
+    addedColCnt = rhs.addedColCnt ;
+    addedRowCnt = rhs.addedRowCnt ;
+
     _objval = rhs._objval ;
     _col_x = 0 ;
     _col_obj = 0 ;
@@ -1775,6 +1807,8 @@ void ODSI::destruct_problem (bool preserve_interface)
   if (consys)
   { consys_free(consys) ;
     consys = 0 ; }
+  addedColCnt = 0 ;
+  addedRowCnt = 0 ;
  
   if (hotstart_fallback)
   { delete hotstart_fallback ;
@@ -1819,7 +1853,6 @@ void ODSI::destruct_problem (bool preserve_interface)
 void ODSI::detach_dylp ()
 
 { assert(dylp_owner == this && lpprob && lpprob->consys) ;
-  assert(flgon(lpprob->ctlopts,lpctlDYVALID)) ;
   flags save_flags = getflg(lpprob->ctlopts,lpctlNOFREE|lpctlONLYFREE) ;
   clrflg(lpprob->ctlopts,lpctlNOFREE) ;
   setflg(lpprob->ctlopts,lpctlONLYFREE) ;
@@ -2903,12 +2936,19 @@ void ODSI::writeMps (const char *basename,
   
   int n = getNumCols(),
       m = getNumRows() ;
-
+/*
+  If the client has no opinion about the sense of the objective, go with the
+  solver's notion. If the client's desired sense conflicts with the solver's
+  sense, negate the objective.
+*/
+  if (objsense == 0) objsense = getObjSense() ;
   if (objsense == getObjSense())
   { outputobj = const_cast<double *>(solverobj) ; }
   else
   { outputobj = new double[n] ;
     std::transform(solverobj,solverobj+n,outputobj,std::negate<double>()) ; }
+
+  mps.setProblemName(consys->nme) ;
 
   char *vartyp = new char[n] ;
   typedef char *charp ;
@@ -2930,9 +2970,9 @@ void ODSI::writeMps (const char *basename,
 /*
   We really need to work on symbolic names for these magic numbers.
 */
-  int errcnt = mps.writeMps(filename.c_str(),0,4,2) ;
+  int errcnt = mps.writeMps(filename.c_str(),0,0,2) ;
   handler_->message(ODSI_MPSFILEIO,messages_)
-    << filename << "read" << errcnt << CoinMessageEol ;
+    << filename << "written" << errcnt << CoinMessageEol ;
 /*
   Free up the arrays we allocated.
 */
@@ -3104,15 +3144,14 @@ ODSI::loadProblem (const int colcnt, const int rowcnt,
   <dl>
     <dt>OsiDualTolerance</dt>
     <dd>(supported)
-	This doesn't really correspond to a dylp parameter, but
-	it can be faked (sort of).
-	Dylp's dual feasibility tolerance is dynamically
+	This doesn't really correspond to a dylp parameter, but it can be
+	faked (sort of).  Dylp's dual feasibility tolerance is dynamically
 	scaled from an absolute dual zero tolerance. There is also an
 	additional scaling factor (`lpcontrol dfeas' in the dylp
-	documentation, normally defaulted to 1.0) that can be controlled by
-	the user.  Given a value for the OsiDualTolerance parameter, the code
-	calculates the appropriate value for dfeas such that
-	OsiDualTolerance = dfeas*(absolute dual zero tolerance).
+	documentation) that can be controlled by the user.  Given a value for
+	the OsiDualTolerance parameter, the code calculates the appropriate
+	value for dfeas such that OsiDualTolerance = dfeas*(absolute dual
+	zero tolerance).
     </dd>
 
     <dt>OsiDualObjectiveLimit</dt>
@@ -3441,19 +3480,21 @@ bool ODSI::setHintParam (OsiHintParam key, bool sense,
       retval = true ;
       break ; }
 /*
+  The current absolute print settings are held in info_[OsiDoReducePrint].
   An unadorned hint changes the level by +/- 1, 2, or 3, depending on sense
   and strength (abusing the equivalence of enums and integers).  If info is
-  non-zero, it is taken as a pointer to an integer which is the absolute
-  value for the log level. In this case, sense is irrelevant. Note that
-  CoinMessageHandler recognizes levels 0 -- 4 as generic levels.
+  non-zero, it is taken as a pointer to an integer which is the new absolute
+  value for the print settings. In this case, sense is irrelevant.
+  
+  Note that CoinMessageHandler recognizes levels 0 -- 4 as generic levels.
   Conveniently, dylp has a similar set of generic levels. The larger powers
-  of 2 (8, 16, 32, etc.) left to trigger specific classes of debugging
+  of 2 (8, 16, 32, etc.) are left to trigger specific classes of debugging
   printout. These must be set using info. Currently:
     0x08	CoinMpsIO messages
     0x10	Echo to terminal
 */
     case OsiDoReducePrint:
-    { int verbosity = messageHandler()->logLevel() ;
+    { int verbosity = reinterpret_cast<int>(info_[key]) ;
       mps_debug = false ;
       if (info)
       { verbosity = *reinterpret_cast<int *>(info) ;
@@ -3464,7 +3505,8 @@ bool ODSI::setHintParam (OsiHintParam key, bool sense,
 	  verbosity = max(verbosity,0) ; }
 	else
 	{ verbosity += strength ;
-	  verbosity = min(verbosity,4) ; } } 
+	  verbosity = min(verbosity,4) ; } }
+      info_[key] = reinterpret_cast<void *>(verbosity) ;
 
       dy_setprintopts(0,initialSolveOptions) ;
       dy_setprintopts(0,resolveOptions) ;
@@ -3603,12 +3645,12 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
   flips = 0 ;
   for (ndx = lpprob->consys->concnt ; ndx > 0 ; ndx--)
   { if (lpprob->consys->ctyp[ndx] == contypGE)
-    { if (consys_mulrow(lpprob->consys,ndx,-1) == FALSE)
+    { if (consys_mulrow(lpprob->consys,ndx,-1) == false)
       { errmsg(112,rtnnme,lpprob->consys->nme,"scalar multiply","row",
-	       consys_nme(lpprob->consys,'c',ndx,FALSE,NULL),ndx) ;
+	       consys_nme(lpprob->consys,'c',ndx,false,NULL),ndx) ;
 	FREE(flipped) ;
 	return (lpFATAL) ; }
-      flipped[ndx] = TRUE ;
+      flipped[ndx] = true ;
       flips++ ; } }
 
 /*
@@ -3630,15 +3672,43 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
 
 /*
   Did it work? If not, get down to trying to recover. The algorithm is
-  to first try a cold start, then proceed to halve the refactor frequency.
+  to first try a cold start with the full system, then proceed to halve
+  the refactor frequency.
   
   Since a cold start rebuilds all dylp data structures from scratch, we don't
   need to worry about the various *CHG flags. And if we're about to retry,
   dylp freed the data structure regardless of the NOFREE flag.
 */
   if (!(lpret == lpOPTIMAL || lpret == lpINFEAS || lpret == lpUNBOUNDED))
-  { if (lcl_opts.forcecold == TRUE) lcl_opts.factor /= 2 ;
-    lcl_opts.forcecold = TRUE ;   
+  { 
+#   ifdef DYLP_POSTMORTEM
+/*
+  This is the hard way to do this, given how close we are to dylp. But I wanted
+  to try it to exercise the code. Calling destruct_cache() is necessary to make
+  sure that writeMps sees any constraint flips.
+*/
+    int saveInfo ;
+    void *foo = &saveInfo ;
+    bool saveSense,saveEcho[2] ;
+    OsiHintStrength saveStrength ;
+    getHintParam(OsiDoReducePrint,saveSense,saveStrength,foo) ;
+    saveEcho[0] = initial_gtxecho ;
+    saveEcho[1] = resolve_gtxecho ;
+
+    int level = 4 ;
+    level |= 0x10 ;
+    setHintParam(OsiDoReducePrint,true,OsiForceDo,&level) ;
+    lcl_opts.print = initialSolveOptions->print ;
+    gtxecho = initial_gtxecho ;
+    std::cout << "Verbosity now maxed at " << level << ".\n" ;
+    destruct_cache() ;
+    writeMps("dylpPostmortem","mps") ;
+#   endif
+    if (lcl_opts.forcecold == true) lcl_opts.factor /= 2 ;
+    lcl_opts.forcecold = true ;   
+    lcl_opts.fullsys = true ;
+    lcl_tols.pfeas_scale *= 100 ;
+    lcl_tols.dfeas_scale *= 100 ;
 /*
   We're ready. Open a loop that'll call dylp, doing a cold start on each
   lp and halving the refactor frequency with each call. Don't forget to
@@ -3669,7 +3739,17 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
 	{ outfmt(logchn,gtxecho,"\n  failed, status %s",
 		 dy_prtlpret(lpprob->lpret)) ; } }
 #     endif
-    } }
+    }
+#   ifdef DYLP_POSTMORTEM
+/*
+  Note that sense and strength are unimportant, execpt that we need something
+  stronger than OsiHintIgnore.
+*/
+    setHintParam(OsiDoReducePrint,saveSense,OsiHintTry,&saveInfo) ;
+    initial_gtxecho = saveEcho[0] ;
+    resolve_gtxecho = saveEcho[1] ;
+#   endif
+    }
 /*
   Time to undo any constraint flips. We also have to tweak the corresponding
   duals --- flipping the sign of a row in the basis corresponds to flipping the
@@ -3679,17 +3759,17 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
 */
   if (flips > 0)
   { for (ndx = lpprob->consys->concnt ; ndx > 0 ; ndx--)
-    { if (flipped[ndx] == TRUE)
-      { if (consys_mulrow(lpprob->consys,ndx,-1) == FALSE)
+    { if (flipped[ndx] == true)
+      { if (consys_mulrow(lpprob->consys,ndx,-1) == false)
 	{ errmsg(112,rtnnme,lpprob->consys->nme,"scalar multiply","row",
-		 consys_nme(lpprob->consys,'c',ndx,FALSE,NULL),ndx) ;
+		 consys_nme(lpprob->consys,'c',ndx,false,NULL),ndx) ;
 	  FREE(flipped) ;
 	  return (lpFATAL) ; } } }
     if (lpprob->y != NULL)
     { basis = lpprob->basis ;
       for (ndx = 0 ; ndx < basis->len ; ndx++)
       { cndx = basis->el[ndx].cndx ;
-	if (flipped[cndx] == TRUE) lpprob->y[ndx] = -lpprob->y[ndx] ; } } }
+	if (flipped[cndx] == true) lpprob->y[ndx] = -lpprob->y[ndx] ; } } }
   FREE(flipped) ;
 /*
   That's it, we've done our best. Do a little printing and return.
@@ -3746,11 +3826,13 @@ void ODSI::initialSolve ()
 */
   if (!lpprob) construct_lpprob() ;
 /*
-  Is the basis package initialised?
+  Is the basis package initialised? The second parameter controls how
+  many basis updates the basis can hold before it requires refactoring.
+  Adding 5 to dylp's refactor interval should give a safety margin.
 */
   if (basis_ready == false)
-  { int count = static_cast<int>((1.5*getNumRows()) + 2*getNumCols()) ;
-    dy_initbasis(count,initialSolveOptions->factor,0) ;
+  { int count = static_cast<int>(1.5*getNumRows()) ;
+    dy_initbasis(count,initialSolveOptions->factor+5,0) ;
     basis_ready = true ; }
 /*
   Does some other ODSI object own the solver? If so, detach it. This surely
@@ -4368,10 +4450,10 @@ const double* ODSI::getRowLower () const
 { if (!consys) return (0) ;
   if (_row_lower) return _row_lower ;
 
-  int n = getNumRows() ;
-  double* lower = new double[n] ;
+  int m = getNumRows() ;
+  double* lower = new double[m] ;
 
-  for (int i = 0 ; i < n ; i++)
+  for (int i = 0 ; i < m ; i++)
   { contyp_enum ctypi = consys->ctyp[idx(i)] ;
     switch (ctypi)
     { case contypEQ:
@@ -4407,10 +4489,10 @@ const double* ODSI::getRowUpper () const
 { if (!consys) return (0) ;
   if (_row_upper) return _row_upper ;
 
-  int n = getNumRows() ;
-  double* upper = new double[n] ;
+  int m = getNumRows() ;
+  double* upper = new double[m] ;
 
-  for (int i = 0 ; i < n ; i++)
+  for (int i = 0 ; i < m ; i++)
   { if (consys->ctyp[idx(i)] == contypGE || consys->ctyp[idx(i)] == contypNB)
       upper[i] = odsiInfinity ;
     else
@@ -4433,11 +4515,11 @@ const char* ODSI::getRowSense () const
 { if (!consys) return (0) ;
   if (_row_sense) return _row_sense ;
   
-  int n = getNumRows() ;
-  char* sense = new char[n] ;
+  int m = getNumRows() ;
+  char* sense = new char[m] ;
   const contyp_enum* ctyp = INV_VEC(contyp_enum,consys->ctyp) ;
 
-  std::transform(ctyp,ctyp+n,sense,type_to_sense) ;
+  std::transform(ctyp,ctyp+m,sense,type_to_sense) ;
 
   _row_sense = sense ;
   return sense ; }
@@ -4458,13 +4540,13 @@ const double* ODSI::getRowRange () const
 { if (!consys) return (0) ;
   if (_row_range) return _row_range ;
   
-  int n = getNumRows() ;  
-  double* range = new double[n] ;
+  int m = getNumRows() ;  
+  double* range = new double[m] ;
   const double* lower = getRowLower() ;
   const double* upper = getRowUpper() ;
   const char* sense = getRowSense() ;
 
-  for (int i=0 ; i<n ; i++)
+  for (int i=0 ; i<m ; i++)
     if (sense[i] != 'R')
       range[i] = 0.0 ;
     else
@@ -4489,13 +4571,13 @@ const double* ODSI::getRightHandSide () const
 { if (!consys) return (0) ;
   if (_row_rhs) return _row_rhs ;
   
-  int n = getNumRows() ;  
-  double* rhs = new double[n] ;
+  int m = getNumRows() ;  
+  double* rhs = new double[m] ;
   const double* lower = getRowLower() ;
   const double* upper = getRowUpper() ;
   const char* sense = getRowSense() ;
 
-  for (int i = 0 ; i < n ; i++)
+  for (int i = 0 ; i < m ; i++)
   { switch (sense[i])
     { case 'N':
       { rhs[i] = 0.0 ;
@@ -5005,8 +5087,8 @@ void ODSI::resolve ()
   basis here. Similarly, setWarmStart will force a warm start. But if we have
   an unmodified active basis, dylp should be able to manage a hot start.
 */
-{ assert(lpprob && lpprob->basis && lpprob->status && consys &&
-	 resolveOptions && tolerances) ;
+{ assert(lpprob && lpprob->basis && lpprob->status &&
+	 consys && resolveOptions && tolerances) ;
 
 /*
   Does some other ODSI object own the solver? If so, detach it. This surely
@@ -5016,11 +5098,17 @@ void ODSI::resolve ()
   { dylp_owner->detach_dylp() ;
     clrflg(lpprob->ctlopts,lpctlDYVALID) ; }
 /*
-  Is the basis package initialised?
+  We're reoptimising, so you might ask ``Why should we need to initialize the
+  basis?''. Consider this scenario: we've optimised with ODSI object1, and
+  captured a warm start. Then we destroy object1, create object2, install the
+  warm start, and call resolve(). That's why we need to do this.  The second
+  parameter controls how many basis updates the basis can hold before it
+  requires refactoring.  Adding 5 to dylp's refactor interval should give a
+  safety margin.
 */
   if (basis_ready == false)
   { int count = static_cast<int>((1.5*getNumRows()) + 2*getNumCols()) ;
-    dy_initbasis(count,initialSolveOptions->factor,0) ;
+    dy_initbasis(count,initialSolveOptions->factor+5,0) ;
     basis_ready = true ; }
 /*
   We can hope that activeBasis is already installed in the lpprob, but there

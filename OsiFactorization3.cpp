@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "OsiFactorization.hpp"
 #include "OsiIndexedVector.hpp"
 #include "CoinHelperFunctions.hpp"
@@ -8,19 +10,19 @@
 //  updateColumn.  Updates one column (FTRAN) when permuted
 int
 OsiFactorization::updateColumn ( OsiIndexedVector * regionSparse,
-			     bool FTUpdate )
+                                bool FTUpdate )
 {
   double *region = regionSparse->denseVector (  );
   int *regionIndex = regionSparse->getIndices (  );
   int numberNonZero = regionSparse->getNumElements (  );
-
+  
   //  ******* L
   updateColumnL ( regionSparse );
   //permute extra
   //row bits here
   updateColumnR ( regionSparse );
   bool noRoom = false;
-
+  
   //update counts
   //save in U
   //in at end
@@ -28,25 +30,25 @@ OsiFactorization::updateColumn ( OsiIndexedVector * regionSparse,
     //number may be slightly high because of R permutations
     numberNonZero = regionSparse->getNumElements (  );
     int iColumn = numberColumnsExtra_;
-
+    
     //getColumnSpace also moves fixed part
     //getColumnSpace(iColumn,numberNonZero);
     startColumnU_[iColumn] = startColumnU_[maximumColumnsExtra_];
     OsiBigIndex start = startColumnU_[iColumn];
     OsiBigIndex space = lengthAreaU_ - ( start + numberNonZero );
-
+    
     if ( space >= 0 ) {
       int * putIndex = indexRowU_ + start;
       double * putElement = elementU_ + start;
       int i,n=numberNonZero;
       numberNonZero=0;
       for (i=0;i<n;i++) {
-	int indexValue = regionIndex[i];
-	double value = region[indexValue];
-	if (value) {
-	  putIndex[numberNonZero]=indexValue;
-	  putElement[numberNonZero++]=value;
-	}
+        int indexValue = regionIndex[i];
+        double value = region[indexValue];
+        if (value) {
+          putIndex[numberNonZero]=indexValue;
+          putElement[numberNonZero++]=value;
+        }
       }
       //redo in case packed down
       numberInColumn_[iColumn] = numberNonZero;
@@ -60,7 +62,7 @@ OsiFactorization::updateColumn ( OsiIndexedVector * regionSparse,
       //  ******* U
       updateColumnU ( regionSparse, 0, regionSparse->getNumElements (  ) );
       startColumnU_[maximumColumnsExtra_] = start + numberNonZero;
-    }				
+    }       
   } else {
     //  ******* U
     updateColumnU ( regionSparse, 0, regionSparse->getNumElements (  ) );
@@ -70,14 +72,14 @@ OsiFactorization::updateColumn ( OsiIndexedVector * regionSparse,
     return numberNonZero;
   } else {
     return -numberNonZero;
-  }				
+  }       
 }
 // const version
 int
 OsiFactorization::updateColumn ( OsiIndexedVector * regionSparse) const
 {
   int numberNonZero;
-
+  
   //  ******* L
   updateColumnL ( regionSparse );
   //permute extra
@@ -95,7 +97,7 @@ void
 OsiFactorization::throwAwayColumn (  )
 {
   int iColumn = numberColumnsExtra_;
-
+  
   numberInColumn_[iColumn] = 0;
 }
 
@@ -108,7 +110,7 @@ OsiFactorization::updateColumnL ( OsiIndexedVector * regionSparse) const
   int number = regionSparse->getNumElements (  );
   int numberNonZero;
   double tolerance = zeroTolerance_;
-
+  
   if (numberL_) {
     numberNonZero = 0;
     int j, k;
@@ -127,59 +129,59 @@ OsiFactorization::updateColumnL ( OsiIndexedVector * regionSparse) const
       int nList;
 #ifdef DEBUG
       for (i=0;i<maximumRowsExtra_;i++) {
-	assert (!mark[i]);
+        assert (!mark[i]);
       }
 #endif
       int nStack;
       nList=0;
       for (k=0;k<number;k++) {
-	iPivot=regionIndex[k];
-	if (iPivot>=baseL_) {
-	  nStack=1;
-	  stack[0]=iPivot;
-	  next[0]=startColumn[iPivot+1]-1;
-	  while (nStack) {
-	    int kPivot,j;
-	    /* take off stack */
-	    kPivot=stack[--nStack];
-	    if (!mark[kPivot]) {
-	      j=next[nStack];
-	      if (j<startColumn[kPivot]) {
-		/* finished so mark */
-		list[nList++]=kPivot;
-		mark[kPivot]=1;
-	      } else {
-		kPivot=indexRow[j];
-		/* put back on stack */
-		next[nStack++] --;
-		if (!mark[kPivot]) {
-		  /* and new one */
-		  stack[nStack]=kPivot;
-		  next[nStack++]=startColumn[kPivot+1]-1;
-		}
-	      }
-	    }
-	  }
-	} else {
-	  // just put on list
-	  regionIndex[numberNonZero++]=iPivot;
-	}
+        iPivot=regionIndex[k];
+        if (iPivot>=baseL_) {
+          nStack=1;
+          stack[0]=iPivot;
+          next[0]=startColumn[iPivot+1]-1;
+          while (nStack) {
+            int kPivot,j;
+            /* take off stack */
+            kPivot=stack[--nStack];
+            if (!mark[kPivot]) {
+              j=next[nStack];
+              if (j<startColumn[kPivot]) {
+                /* finished so mark */
+                list[nList++]=kPivot;
+                mark[kPivot]=1;
+              } else {
+                kPivot=indexRow[j];
+                /* put back on stack */
+                next[nStack++] --;
+                if (!mark[kPivot]) {
+                  /* and new one */
+                  stack[nStack]=kPivot;
+                  next[nStack++]=startColumn[kPivot+1]-1;
+                }
+              }
+            }
+          }
+        } else {
+          // just put on list
+          regionIndex[numberNonZero++]=iPivot;
+        }
       }
       for (i=nList-1;i>=0;i--) {
-	iPivot = list[i];
-	mark[iPivot]=0;
-	//printf("pivot %d %d\n",i,iPivot);
-	double pivotValue = region[iPivot];
-	if ( fabs ( pivotValue ) > tolerance ) {
-	  regionIndex[numberNonZero++]=iPivot;
-	  for ( j = startColumn[iPivot]; j < startColumn[iPivot+1]; j ++ ) {
-	    int iRow = indexRow[j];
-	    double value = element[j];
-	    region[iRow] -= value * pivotValue;
-	  }
-	} else {
-	  region[iPivot]=0.0;
-	}
+        iPivot = list[i];
+        mark[iPivot]=0;
+        //printf("pivot %d %d\n",i,iPivot);
+        double pivotValue = region[iPivot];
+        if ( fabs ( pivotValue ) > tolerance ) {
+          regionIndex[numberNonZero++]=iPivot;
+          for ( j = startColumn[iPivot]; j < startColumn[iPivot+1]; j ++ ) {
+            int iRow = indexRow[j];
+            double value = element[j];
+            region[iRow] -= value * pivotValue;
+          }
+        } else {
+          region[iPivot]=0.0;
+        }
       }
       regionSparse->setNumElements ( numberNonZero );
     } else {
@@ -187,41 +189,41 @@ OsiFactorization::updateColumnL ( OsiIndexedVector * regionSparse) const
       
       // do easy ones
       for (k=0;k<number;k++) {
-	iPivot=regionIndex[k];
-	if (iPivot<baseL_) 
-	  regionIndex[numberNonZero++]=iPivot;
+        iPivot=regionIndex[k];
+        if (iPivot<baseL_) 
+          regionIndex[numberNonZero++]=iPivot;
       }
       // now others
       for ( i = baseL_; i < last; i++ ) {
-	double pivotValue = region[i];
-	OsiBigIndex start = startColumn[i];
-	OsiBigIndex end = startColumn[i + 1];
-	
-	if ( fabs(pivotValue) > tolerance ) {
-	  OsiBigIndex j;
-	  for ( j = start; j < end; j ++ ) {
-	    int iRow0 = indexRow[j];
-	    double result0 = region[iRow0];
-	    double value0 = element[j];
-	    
-	    region[iRow0] = result0 - value0 * pivotValue;
-	  }			
-	  regionIndex[numberNonZero++] = i;
-	} else {
-	  region[i] = 0.0;
-	}				
-      }			
+        double pivotValue = region[i];
+        OsiBigIndex start = startColumn[i];
+        OsiBigIndex end = startColumn[i + 1];
+        
+        if ( fabs(pivotValue) > tolerance ) {
+          OsiBigIndex j;
+          for ( j = start; j < end; j ++ ) {
+            int iRow0 = indexRow[j];
+            double result0 = region[iRow0];
+            double value0 = element[j];
+            
+            region[iRow0] = result0 - value0 * pivotValue;
+          }     
+          regionIndex[numberNonZero++] = i;
+        } else {
+          region[i] = 0.0;
+        }       
+      }     
       //clean up end
       for ( ; i < numberRowsExtra_; i++ ) {
-	double pivotValue = region[i];
-	if ( fabs(pivotValue) > tolerance ) {
-	  regionIndex[numberNonZero++] = i;
-	} else {
-	  region[i] = 0.0;
-	}				
-      }			
+        double pivotValue = region[i];
+        if ( fabs(pivotValue) > tolerance ) {
+          regionIndex[numberNonZero++] = i;
+        } else {
+          region[i] = 0.0;
+        }       
+      }     
       regionSparse->setNumElements ( numberNonZero );
-    }	
+    } 
   }
 }
 
@@ -229,13 +231,13 @@ OsiFactorization::updateColumnL ( OsiIndexedVector * regionSparse) const
 //      returns 0=OK, 1=Probably OK, 2=singular, 3=no room
 int
 OsiFactorization::replaceColumn ( int pivotRow,
-			      double pivotCheck,
-			      int numberOfElements,
-			      int indicesRow[], double elements[] )
+                                 double pivotCheck,
+                                 int numberOfElements,
+                                 int indicesRow[], double elements[] )
 {
   OsiIndexedVector *region = new OsiIndexedVector ( numberRowsExtra_ );
   int status;
-
+  
   if (increasingRows_>1) {
     status =
       updateColumn ( region, elements, indicesRow, numberOfElements, true );
@@ -247,9 +249,9 @@ OsiFactorization::replaceColumn ( int pivotRow,
     status = replaceColumn ( region, pivotRow, pivotCheck );
   } else {
     status = 3;
-  }				
+  }       
   delete region;
-
+  
   return status;
 }
 //  replaceColumn.  Replaces one Column to basis
@@ -257,37 +259,37 @@ OsiFactorization::replaceColumn ( int pivotRow,
 //partial update already in U
 int
 OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
-			      int pivotRow,
-			      double pivotCheck )
+                                 int pivotRow,
+                                 double pivotCheck )
 {
   OsiBigIndex *startColumn;
   int *indexRow;
   double *element;
-
+  
   //return at once if too many iterations
   if ( numberColumnsExtra_ >= maximumColumnsExtra_ ) {
     return 3;
-  }				
+  }       
   if ( lengthAreaU_ < startColumnU_[maximumColumnsExtra_] ) {
     return 3;
-  }		
-
+  }   
+  
   int realPivotRow;
   if (increasingRows_>1) {
     realPivotRow = pivotRow;
   } else {
     realPivotRow = pivotColumn_[pivotRow];
   }
-
+  
   //zeroed out region
   double *region = regionSparse->denseVector (  );
-
+  
   element = elementU_;
   //take out old pivot column
   OsiBigIndex start = startColumnU_[realPivotRow];
-
+  
   OsiBigIndex end = start + numberInColumn_[realPivotRow];
-
+  
   totalElements_ -= numberInColumn_[realPivotRow];
   double oldPivot = pivotRegion_[realPivotRow];
 #if DEBUG>1
@@ -295,31 +297,31 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
   //if (numberL_) checkNumber=-1;
   if (numberR_>=checkNumber) {
     printf("pivot row %d, check %g - alpha region:\n",
-	   realPivotRow,pivotCheck);
-    /*int i;
-    for (i=0;i<numberRows_;i++) {
+      realPivotRow,pivotCheck);
+      /*int i;
+      for (i=0;i<numberRows_;i++) {
       if (pivotRegion_[i])
-	printf("%d %g\n",i,pivotRegion_[i]);
-	}*/
+      printf("%d %g\n",i,pivotRegion_[i]);
+  }*/
   }   
 #endif
   pivotRegion_[realPivotRow] = 0.0;
   OsiBigIndex i;
-
+  
   for ( i = start; i < end ; i ++ ) {
     element[i] = 0.0;
-  }				
+  }       
   numberInColumn_[realPivotRow] = 0;
   //get entries in row (pivot not stored)
   OsiBigIndex *startRow = startRowU_;
-
+  
   start = startRow[realPivotRow];
   end = start + numberInRow_[realPivotRow];
   int numberNonZero = 0;
   int *indexColumn = indexColumnU_;
   OsiBigIndex *convertRowToColumn = convertRowToColumnU_;
   int *regionIndex = regionSparse->getIndices (  );
-
+  
 #if DEBUG>1
   if (numberR_>=checkNumber) 
     printf("Before btranu\n");
@@ -327,7 +329,7 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
   for ( i = start; i < end ; i ++ ) {
     int iColumn = indexColumn[i];
     OsiBigIndex j = convertRowToColumn[i];
-
+    
     region[iColumn] = element[j];
 #if DEBUG>1
     if (numberR_>=checkNumber) 
@@ -335,7 +337,7 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
 #endif
     element[j] = 0.0;
     regionIndex[numberNonZero++] = iColumn;
-  }				
+  }       
   //do BTRAN - finding first one to use
   regionSparse->setNumElements ( numberNonZero );
   updateColumnTransposeU ( regionSparse );
@@ -347,8 +349,8 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
   element = elementR_;
   OsiBigIndex l = lengthR_;
   int number = numberR_;
-
-  startColumn[number] = l;	//for luck and first time
+  
+  startColumn[number] = l;  //for luck and first time
   number++;
   startColumn[number] = l + numberNonZero;
   numberR_ = number;
@@ -358,7 +360,7 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
     //not enough room
     regionSparse->clear();
     return 3;
-  }				
+  }       
 #if DEBUG>1
   if (numberR_>=checkNumber) 
     printf("After btranu\n");
@@ -369,15 +371,15 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
     if (numberR_>=checkNumber) 
       printf("%d %g\n",iRow,region[iRow]);
 #endif
-
+    
     indexRow[l] = iRow;
     element[l] = region[iRow];
     l++;
-  }				
+  }       
   //take out row
   int next = nextRow_[realPivotRow];
   int last = lastRow_[realPivotRow];
-
+  
   nextRow_[last] = next;
   lastRow_[next] = last;
 #if DEBUG_OSI
@@ -399,7 +401,7 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
   OsiBigIndex startU = startColumn[numberColumnsExtra_];
   int *indexU = &indexRow[startU];
   double *elementU = &element[startU];
-
+  
   number = numberInColumn_[numberColumnsExtra_];
   if (number>1000) {
     int last = indexU[number-1];
@@ -415,14 +417,14 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
     //not enough room
     regionSparse->clear();
     return 3;
-  }				
+  }       
   double saveFromU = 0.0;
-
+  
   //put in pivot
   //add row counts
   //could count dense int temp=0;
   double tolerance = zeroTolerance_;
-
+  
 #if DEBUG>1
   if (numberR_>=checkNumber) 
     printf("On U\n");
@@ -433,32 +435,32 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
     if (numberR_>=checkNumber) 
       printf("%d %g\n",iRow,elementU[i]);
 #endif
-
+    
     if ( fabs ( elementU[i] ) > tolerance ) {
       if ( iRow != realPivotRow ) {
-	int next = nextRow_[iRow];
-	int numberInRow = numberInRow_[iRow];
-	OsiBigIndex space;
-	OsiBigIndex put = startRow[iRow] + numberInRow;
-
-	space = startRow[next] - put;
-	if ( space <= 0 ) {
-	  getRowSpaceIterate ( iRow, numberInRow + 4 );
-	  put = startRow[iRow] + numberInRow;
-	}			
-	indexColumn[put] = numberColumnsExtra_;
-	convertRowToColumn[put] = i + startU;
-	numberInRow_[iRow] = numberInRow + 1;
-	saveFromU = saveFromU - elementU[i] * region[iRow];
+        int next = nextRow_[iRow];
+        int numberInRow = numberInRow_[iRow];
+        OsiBigIndex space;
+        OsiBigIndex put = startRow[iRow] + numberInRow;
+        
+        space = startRow[next] - put;
+        if ( space <= 0 ) {
+          getRowSpaceIterate ( iRow, numberInRow + 4 );
+          put = startRow[iRow] + numberInRow;
+        }     
+        indexColumn[put] = numberColumnsExtra_;
+        convertRowToColumn[put] = i + startU;
+        numberInRow_[iRow] = numberInRow + 1;
+        saveFromU = saveFromU - elementU[i] * region[iRow];
       } else {
-	//zero out and save
-	saveFromU += elementU[i];
-	elementU[i] = 0.0;
-      }				
+        //zero out and save
+        saveFromU += elementU[i];
+        elementU[i] = 0.0;
+      }       
     } else {
       elementU[i] = 0.0;
-    }				
-  }				
+    }       
+  }       
   //in at end
   last = lastRow_[maximumRowsExtra_];
   nextRow_[last] = numberRowsExtra_;
@@ -470,17 +472,17 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
   //check accuracy
   oldPivot = pivotCheck / oldPivot;
   int status;
-
+  
   if ( fabs ( saveFromU ) > 1.0e-7 ) {
     double pivotValue = 1.0 / saveFromU;
-
+    
     pivotRegion_[numberRowsExtra_] = pivotValue;
     //modify by pivot
     for ( i = 0; i < number; i++ ) {
       elementU[i] *= pivotValue;
-    }				
+    }       
     double checkTolerance;
-
+    
     if ( numberRowsExtra_ < numberRows_ + 2 ) {
       checkTolerance = 1.0e-5;
     } else if ( numberRowsExtra_ < numberRows_ + 10 ) {
@@ -489,7 +491,7 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
       checkTolerance = 1.0e-8;
     } else {
       checkTolerance = 1.0e-10;
-    }				
+    }       
     if ( fabs ( 1.0 - fabs ( saveFromU / oldPivot ) ) < checkTolerance ) {
       status = 0;
       numberRowsExtra_++;
@@ -501,41 +503,41 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
       cout << oldPivot << " " << saveFromU << endl;
 #endif
       if ( fabs ( fabs ( oldPivot ) - fabs ( saveFromU ) ) < 1.0e-12 ||
-	   fabs ( 1.0 - fabs ( saveFromU / oldPivot ) ) < 1.0e-8 ) {
-	status = 2;
+        fabs ( 1.0 - fabs ( saveFromU / oldPivot ) ) < 1.0e-8 ) {
+        status = 2;
       } else {
-	status = 1;
-      }				
-    }				
+        status = 1;
+      }       
+    }       
   } else {
     //error
     status = 1;
 #if DEBUG_OSI
     cout << saveFromU / oldPivot << " " << saveFromU << endl;
 #endif
-  }				
+  }       
   if ( numberRowsExtra_ > numberRows_ + 50 ) {
     OsiBigIndex extra = factorElements_ >> 1;
-
+    
     if ( numberRowsExtra_ > numberRows_ + 100 + numberRows_ / 500 ) {
       if ( extra < 2 * numberRows_ ) {
-	extra = 2 * numberRows_;
-      }				
+        extra = 2 * numberRows_;
+      }       
     } else {
       if ( extra < 5 * numberRows_ ) {
-	extra = 5 * numberRows_;
-      }				
-    }				
+        extra = 5 * numberRows_;
+      }       
+    }       
     OsiBigIndex added = totalElements_ - factorElements_;
-
+    
     if ( added > extra && added > ( factorElements_ ) << 1 ) {
       status = 3;
       if ( messageLevel_ & 4 ) {
-	std::cout << "Factorization has "<< totalElements_
-		  << ", basis had " << factorElements_ <<std::endl;
+        std::cout << "Factorization has "<< totalElements_
+          << ", basis had " << factorElements_ <<std::endl;
       }
-    }				
-  }				
+    }       
+  }       
   regionSparse->clear();
   return status;
 }
@@ -543,15 +545,15 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
 //  updateColumnTranspose.  Updates one column transpose (BTRAN)
 int
 OsiFactorization::updateColumnTranspose ( OsiIndexedVector * regionSparse,
-				      double vector[],
-			             int index[],
-				      int number ) const
+                                         double vector[],
+                                         int index[],
+                                         int number ) const
 {
   //zero region
   regionSparse->clear (  );
   double *region = regionSparse->denseVector (  );
   int i;
-
+  
   //move indices into index array
   int *regionIndex = regionSparse->getIndices (  );
   int numberNonZero = number;
@@ -566,7 +568,7 @@ OsiFactorization::updateColumnTranspose ( OsiIndexedVector * regionSparse,
       iRow=pivotColumn_[iRow];
       region[iRow] = value;
       regionIndex[j] = iRow;
-    }	
+    } 
   }
   regionSparse->setNumElements ( numberNonZero );
   number =  updateColumnTranspose ( regionSparse );
@@ -626,9 +628,9 @@ OsiFactorization::updateColumnTransposeU ( OsiIndexedVector * regionSparse) cons
   double *region = regionSparse->denseVector (  );
   int numberNonZero = regionSparse->getNumElements (  );
   double tolerance = zeroTolerance_;
-
+  
   int *regionIndex = regionSparse->getIndices (  );
-    
+  
   int i,j;
   
   OsiBigIndex *startRow = startRowU_;
@@ -638,11 +640,11 @@ OsiFactorization::updateColumnTransposeU ( OsiIndexedVector * regionSparse) cons
   
   double * element = elementU_;
   int last = numberU_;
-    
+  
   double pivotValue;
-    
+  
   int *numberInRow = numberInRow_;
-
+  
   if (numberNonZero<sparseThreshold_) {
     // use sparse_ as temporary area
     // mark known to be zero
@@ -665,26 +667,26 @@ OsiFactorization::updateColumnTransposeU ( OsiIndexedVector * regionSparse) cons
       stack[0]=iPivot;
       next[0]=startRow[iPivot]+numberInRow[iPivot]-1;
       while (nStack) {
-	int kPivot,j;
-	/* take off stack */
-	kPivot=stack[--nStack];
-	if (!mark[kPivot]) {
-	  j=next[nStack];
-	  if (j<startRow[kPivot]) {
-	    /* finished so mark */
-	    list[nList++]=kPivot;
-	    mark[kPivot]=1;
-	  } else {
-	    kPivot=indexColumn[j];
-	    /* put back on stack */
-	    next[nStack++] --;
-	    if (!mark[kPivot]) {
-	      /* and new one */
-	      stack[nStack]=kPivot;
-	      next[nStack++]=startRow[kPivot]+numberInRow[kPivot]-1;
-	    }
-	  }
-	}
+        int kPivot,j;
+        /* take off stack */
+        kPivot=stack[--nStack];
+        if (!mark[kPivot]) {
+          j=next[nStack];
+          if (j<startRow[kPivot]) {
+            /* finished so mark */
+            list[nList++]=kPivot;
+            mark[kPivot]=1;
+          } else {
+            kPivot=indexColumn[j];
+            /* put back on stack */
+            next[nStack++] --;
+            if (!mark[kPivot]) {
+              /* and new one */
+              stack[nStack]=kPivot;
+              next[nStack++]=startRow[kPivot]+numberInRow[kPivot]-1;
+            }
+          }
+        }
       }
     }
     numberNonZero=0;
@@ -693,43 +695,43 @@ OsiFactorization::updateColumnTransposeU ( OsiIndexedVector * regionSparse) cons
       mark[iPivot]=0;
       pivotValue = region[iPivot];
       if ( fabs ( pivotValue ) > tolerance ) {
-	OsiBigIndex start = startRow[iPivot];
-	int numberIn = numberInRow[iPivot];
-	OsiBigIndex end = start + numberIn;
-	OsiBigIndex j;
-	for (j=start ; j < end; j ++ ) {
-	  int iRow = indexColumn[j];
-	  OsiBigIndex getElement = convertRowToColumn[j];
-	  double value = element[getElement];
-	  
-	  region[iRow] = region[iRow]
-	    - value * pivotValue;
-	}			
-	regionIndex[numberNonZero++] = iPivot;
+        OsiBigIndex start = startRow[iPivot];
+        int numberIn = numberInRow[iPivot];
+        OsiBigIndex end = start + numberIn;
+        OsiBigIndex j;
+        for (j=start ; j < end; j ++ ) {
+          int iRow = indexColumn[j];
+          OsiBigIndex getElement = convertRowToColumn[j];
+          double value = element[getElement];
+          
+          region[iRow] = region[iRow]
+            - value * pivotValue;
+        }     
+        regionIndex[numberNonZero++] = iPivot;
       } else {
-	region[iPivot] = 0.0;
-      }				
-    }				
+        region[iPivot] = 0.0;
+      }       
+    }       
   } else {
     numberNonZero = 0;
     for (i=0 ; i < last; i++ ) {
       pivotValue = region[i];
       if ( fabs ( pivotValue ) > tolerance ) {
-	OsiBigIndex start = startRow[i];
-	int numberIn = numberInRow[i];
-	OsiBigIndex end = start + numberIn;
-	for (j = start ; j < end; j ++ ) {
-	  int iRow = indexColumn[j];
-	  OsiBigIndex getElement = convertRowToColumn[j];
-	  double value = element[getElement];
-	  
-	  region[iRow] -=  value * pivotValue;
-	}			
-	regionIndex[numberNonZero++] = i;
+        OsiBigIndex start = startRow[i];
+        int numberIn = numberInRow[i];
+        OsiBigIndex end = start + numberIn;
+        for (j = start ; j < end; j ++ ) {
+          int iRow = indexColumn[j];
+          OsiBigIndex getElement = convertRowToColumn[j];
+          double value = element[getElement];
+          
+          region[iRow] -=  value * pivotValue;
+        }     
+        regionIndex[numberNonZero++] = i;
       } else {
-	region[i] = 0.0;
-      }				
-    }				
+        region[i] = 0.0;
+      }       
+    }       
   }
   //set counts
   regionSparse->setNumElements ( numberNonZero );
@@ -745,7 +747,7 @@ OsiFactorization::updateColumnTransposeL ( OsiIndexedVector * regionSparse ) con
   double tolerance = zeroTolerance_;
   int base;
   int first = -1;
-
+  
   if (sparseThreshold_) {
     // use row copy of L
     double * element = elementByRowL_;
@@ -765,73 +767,73 @@ OsiFactorization::updateColumnTransposeL ( OsiIndexedVector * regionSparse ) con
       int k, iPivot;
 #ifdef DEBUG
       for (i=0;i<maximumRowsExtra_;i++) {
-	assert (!mark[i]);
+        assert (!mark[i]);
       }
 #endif
       int nStack;
       nList=0;
       for (k=0;k<number;k++) {
-	iPivot=regionIndex[k];
-	nStack=1;
-	stack[0]=iPivot;
-	next[0]=startRow[iPivot+1]-1;
-	while (nStack) {
-	  int kPivot,j;
-	  /* take off stack */
-	  kPivot=stack[--nStack];
-	  if (!mark[kPivot]) {
-	    j=next[nStack];
-	    if (j<startRow[kPivot]) {
-	      /* finished so mark */
-	      list[nList++]=kPivot;
-	      mark[kPivot]=1;
-	    } else {
-	      kPivot=column[j];
-	      /* put back on stack */
-	      next[nStack++] --;
-	      if (!mark[kPivot]) {
-		/* and new one */
-		stack[nStack]=kPivot;
-		next[nStack++]=startRow[kPivot+1]-1;
-	      }
-	    }
-	  }
-	}
+        iPivot=regionIndex[k];
+        nStack=1;
+        stack[0]=iPivot;
+        next[0]=startRow[iPivot+1]-1;
+        while (nStack) {
+          int kPivot,j;
+          /* take off stack */
+          kPivot=stack[--nStack];
+          if (!mark[kPivot]) {
+            j=next[nStack];
+            if (j<startRow[kPivot]) {
+              /* finished so mark */
+              list[nList++]=kPivot;
+              mark[kPivot]=1;
+            } else {
+              kPivot=column[j];
+              /* put back on stack */
+              next[nStack++] --;
+              if (!mark[kPivot]) {
+                /* and new one */
+                stack[nStack]=kPivot;
+                next[nStack++]=startRow[kPivot+1]-1;
+              }
+            }
+          }
+        }
       }
       numberNonZero=0;
       for (i=nList-1;i>=0;i--) {
-	iPivot = list[i];
-	mark[iPivot]=0;
-	double pivotValue = region[iPivot];
-	if ( fabs ( pivotValue ) > tolerance ) {
-	  regionIndex[numberNonZero++] = iPivot;
-	  for ( j = startRow[iPivot]; j < startRow[iPivot+1]; j ++ ) {
-	    int iRow = column[j];
-	    double value = element[j];
-	    region[iRow] -= value * pivotValue;
-	  }
-	} else {
-	  region[iPivot]=0.0;
-	}
+        iPivot = list[i];
+        mark[iPivot]=0;
+        double pivotValue = region[iPivot];
+        if ( fabs ( pivotValue ) > tolerance ) {
+          regionIndex[numberNonZero++] = iPivot;
+          for ( j = startRow[iPivot]; j < startRow[iPivot+1]; j ++ ) {
+            int iRow = column[j];
+            double value = element[j];
+            region[iRow] -= value * pivotValue;
+          }
+        } else {
+          region[iPivot]=0.0;
+        }
       }
     } else {
       for (first=numberRows_-1;first>=0;first--) {
-	if (region[first]) 
-	  break;
+        if (region[first]) 
+          break;
       }
       numberNonZero=0;
       for (i=first;i>=0;i--) {
-	double pivotValue = region[i];
-	if ( fabs ( pivotValue ) > tolerance ) {
-	  regionIndex[numberNonZero++] = i;
-	  for (j = startRow[i + 1]-1;j >= startRow[i]; j--) {
-	    int iRow = column[j];
-	    double value = element[j];
-	    region[iRow] -= pivotValue*value;
-	  }
-	} else {
-	  region[i] = 0.0;
-	}			
+        double pivotValue = region[i];
+        if ( fabs ( pivotValue ) > tolerance ) {
+          regionIndex[numberNonZero++] = i;
+          for (j = startRow[i + 1]-1;j >= startRow[i]; j--) {
+            int iRow = column[j];
+            double value = element[j];
+            region[iRow] -= pivotValue*value;
+          }
+        } else {
+          region[i] = 0.0;
+        }     
       }
     }
   } else {
@@ -839,7 +841,7 @@ OsiFactorization::updateColumnTransposeL ( OsiIndexedVector * regionSparse ) con
     //scan
     for (first=numberRows_-1;first>=0;first--) {
       if (region[first]) 
-	break;
+        break;
     }
     if ( first >= 0 ) {
       base = baseL_;
@@ -849,41 +851,41 @@ OsiFactorization::updateColumnTransposeL ( OsiIndexedVector * regionSparse ) con
       int last = baseL_ + numberL_;
       
       if ( first >= last ) {
-	first = last - 1;
-      }				
+        first = last - 1;
+      }       
       int i;
       double pivotValue;
       for (i = first ; i >= base; i-- ) {
-	OsiBigIndex j;
-	pivotValue = region[i];
-	for ( j= startColumn[i] ; j < startColumn[i+1]; j++ ) {
-	  int iRow = indexRow[j];
-	  double value = element[j];
-	  
-	  pivotValue -= value * region[iRow];
-	}				
-	if ( fabs ( pivotValue ) > tolerance ) {
-	  region[i] = pivotValue;
-	  regionIndex[numberNonZero++] = i;
-	} else {
-	  region[i] = 0.0;
-	}				
-      }				
+        OsiBigIndex j;
+        pivotValue = region[i];
+        for ( j= startColumn[i] ; j < startColumn[i+1]; j++ ) {
+          int iRow = indexRow[j];
+          double value = element[j];
+          
+          pivotValue -= value * region[iRow];
+        }       
+        if ( fabs ( pivotValue ) > tolerance ) {
+          region[i] = pivotValue;
+          regionIndex[numberNonZero++] = i;
+        } else {
+          region[i] = 0.0;
+        }       
+      }       
       //may have stopped early
       if ( first < base ) {
-	base = first + 1;
-      }				
+        base = first + 1;
+      }       
       for (i = base -1 ; i >= 0; i-- ) {
-	pivotValue = region[i];
-	if ( fabs ( pivotValue ) > tolerance ) {
-	  region[i] = pivotValue;
-	  regionIndex[numberNonZero++] = i;
-	} else {
-	  region[i] = 0.0;
-	}				
-      }				
-    }			
-  }	
+        pivotValue = region[i];
+        if ( fabs ( pivotValue ) > tolerance ) {
+          region[i] = pivotValue;
+          regionIndex[numberNonZero++] = i;
+        } else {
+          region[i] = 0.0;
+        }       
+      }       
+    }     
+  } 
   //set counts
   regionSparse->setNumElements ( numberNonZero );
 }
@@ -893,34 +895,34 @@ OsiFactorization::updateColumnTransposeL ( OsiIndexedVector * regionSparse ) con
 //also moves existing vector
 bool
 OsiFactorization::getRowSpaceIterate ( int iRow,
-				   int extraNeeded )
+                                      int extraNeeded )
 {
   int number = numberInRow_[iRow];
   OsiBigIndex *startRow = startRowU_;
   int *indexColumn = indexColumnU_;
   OsiBigIndex *convertRowToColumn = convertRowToColumnU_;
   OsiBigIndex space = lengthAreaU_ - startRow[maximumRowsExtra_];
-
+  
   if ( space < extraNeeded + number + 2 ) {
     //compression
     int iRow = nextRow_[maximumRowsExtra_];
     OsiBigIndex put = 0;
-
+    
     while ( iRow != maximumRowsExtra_ ) {
       //move
       OsiBigIndex get = startRow[iRow];
       OsiBigIndex getEnd = startRow[iRow] + numberInRow_[iRow];
-
+      
       startRow[iRow] = put;
       OsiBigIndex i;
       for ( i = get; i < getEnd; i++ ) {
-	indexColumn[put] = indexColumn[i];
-	convertRowToColumn[put] = convertRowToColumn[i];
-	put++;
-      }				
+        indexColumn[put] = indexColumn[i];
+        convertRowToColumn[put] = convertRowToColumn[i];
+        put++;
+      }       
       iRow = nextRow_[iRow];
       numberCompressions_++;
-    }				/* endwhile */
+    }       /* endwhile */
     startRow[maximumRowsExtra_] = put;
     space = lengthAreaU_ - put;
     if ( space < extraNeeded + number + 2 ) {
@@ -929,12 +931,12 @@ OsiFactorization::getRowSpaceIterate ( int iRow,
       //if not then return so code can start again
       status_ = -99;
       return false;
-    }				
-  }				
+    }       
+  }       
   OsiBigIndex put = startRow[maximumRowsExtra_];
   int next = nextRow_[iRow];
   int last = lastRow_[iRow];
-
+  
   //out
   nextRow_[last] = next;
   lastRow_[next] = last;
@@ -946,7 +948,7 @@ OsiFactorization::getRowSpaceIterate ( int iRow,
   nextRow_[iRow] = maximumRowsExtra_;
   //move
   OsiBigIndex get = startRow[iRow];
-
+  
   startRow[iRow] = put;
   while ( number ) {
     number--;
@@ -954,7 +956,7 @@ OsiFactorization::getRowSpaceIterate ( int iRow,
     convertRowToColumn[put] = convertRowToColumn[get];
     put++;
     get++;
-  }				/* endwhile */
+  }       /* endwhile */
   //add four for luck
   startRow[maximumRowsExtra_] = put + extraNeeded + 4;
   return true;

@@ -1,6 +1,8 @@
 #ifndef OsiFactorization_H
 #define OsiFactorization_H
 
+#include <iostream>
+
 class OsiPackedMatrix;
 class OsiIndexedVector;
 
@@ -524,7 +526,7 @@ private:
 
   if ( l + numberInPivotColumn > lengthAreaL_ ) {
     //need another area
-    cout << "code pivot 1" << endl;
+    std::cout << "code pivot 1" << std::endl;
     //leave gap so starts will work
     exit ( 99 );
   }				

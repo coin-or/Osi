@@ -1,3 +1,5 @@
+#include <cassert>
+
 #include "OsiFactorization.hpp"
 #include "OsiIndexedVector.hpp"
 #include "CoinHelperFunctions.hpp"
@@ -310,28 +312,28 @@ OsiFactorization::show_self (  ) const
   int i;
 
   for ( i = 0; i < numberRows_; i++ ) {
-    cout << "r " << i << " " << pivotColumn_[i]
+    std::cout << "r " << i << " " << pivotColumn_[i]
       << " " << pivotColumnBack_[i]
       << " " << permute_[i]
       << " " << permuteBack_[i]
       << " " << pivotRowL_[i]
       << " " << pivotColumn_[i]
-      << " " << pivotRegion_[i] << endl;
+      << " " << pivotRegion_[i] << std::endl;
   }				
   for ( i = 0; i < numberRows_; i++ ) {
-    cout << "u " << i << " " << numberInColumn_[i] << endl;
+    std::cout << "u " << i << " " << numberInColumn_[i] << std::endl;
     int j;
     for ( j = startColumnU_[i]; j < startColumnU_[i] + numberInColumn_[i];
 	  j++ ) {
-      cout << indexRowU_[j] << " " << elementU_[j] << endl;
+      std::cout << indexRowU_[j] << " " << elementU_[j] << std::endl;
     }				
   }				
   for ( i = 0; i < numberRows_; i++ ) {
-    cout << "l " << i << " " << startColumnL_[i + 1] -
-      startColumnL_[i] << endl;
+    std::cout << "l " << i << " " << startColumnL_[i + 1] -
+      startColumnL_[i] << std::endl;
     int j;
     for ( j = startColumnL_[i]; j < startColumnL_[i + 1]; j++ ) {
-      cout << indexRowL_[j] << " " << elementL_[j] << endl;
+      std::cout << indexRowL_[j] << " " << elementL_[j] << std::endl;
     }				
   }				
 
@@ -589,7 +591,7 @@ OsiFactorization::factor (  )
 	  int goodRow = pivotRowL_[i];	//valid pivot row
 
 	  if ( i != nextRow_[goodRow] ) {
-	    cout << "bad1" << endl;
+	    std::cout << "bad1" << std::endl;
 	  }			
 	  int goodColumn = pivotColumn_[i];
 
@@ -602,7 +604,7 @@ OsiFactorization::factor (  )
 	for ( i = 0; i < numberRows_; i++ ) {
 	  permute_[i] = lastRow_[i];
 	  if ( permute_[i] < 0 ) {
-	    //cout << i << " " <<permute_[i] << endl;
+	    //std::cout << i << " " <<permute_[i] << std::endl;
 	  } else {
 	    k++;
 	  }			
@@ -663,7 +665,7 @@ OsiFactorization::pivotRowSingleton ( int pivotRow,
 
   if ( l + numberDoColumn > lengthAreaL_ ) {
     //need another area
-    cout << "code pivot 1" << endl;
+    std::cout << "code pivot 1" << std::endl;
     //leave gap so starts will work
     abort (  );
   }				
@@ -1184,7 +1186,7 @@ OsiFactorization::cleanup (  )
 #if DEBUG_OSI
   for ( i = 0; i < numberRows_; i++ ) {
     if ( permute_[i] < 0 ) {
-      cout << i << endl;
+      std::cout << i << std::endl;
       abort (  );
     }				
   }				
@@ -1350,7 +1352,7 @@ OsiFactorization::checkConsistency (  )
 	}			
 	if ( !found ) {
 	  bad = true;
-	  cout << "row " << iRow << " column " << iColumn << " Rows" << endl;
+	  std::cout << "row " << iRow << " column " << iColumn << " Rows" << std::endl;
 	}			
       }				
     }				
@@ -1377,8 +1379,8 @@ OsiFactorization::checkConsistency (  )
 	}			
 	if ( !found ) {
 	  bad = true;
-	  cout << "row " << iRow << " column " << iColumn << " Columns" <<
-	    endl;
+	  std::cout << "row " << iRow << " column " << iColumn << " Columns" <<
+	    std::endl;
 	}			
       }				
     }				
@@ -1411,7 +1413,7 @@ OsiFactorization::pivotOneOtherRow ( int pivotRow,
 
   if ( l + 1 > lengthAreaL_ ) {
     //need another area
-    cout << "code pivot 1" << endl;
+    std::cout << "code pivot 1" << std::endl;
     //leave gap so starts will work
     abort (  );
   }				

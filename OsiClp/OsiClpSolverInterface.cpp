@@ -125,8 +125,8 @@ void OsiClpSolverInterface::initialSolve()
       bool crashResult=false;
       if (doCrash>0)
 	crashResult =  (solver.crash(1000.0,1)>0);
-      else if (doCrash==0)
-	crashResult =  (solver.crash(1000.0,1)>0);
+      else if (doCrash==0&&algorithm>0)
+      crashResult =  (solver.crash(1000.0,1)>0);
       doPrimal=crashResult;
     }
     if (algorithm<0)

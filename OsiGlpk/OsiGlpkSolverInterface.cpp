@@ -1431,7 +1431,7 @@ OsiGlpkSolverInterface::setRowUpper( int elementIndex, double elementValue )
 
 	case LPX_FR:
 	case LPX_UP:
-		lb = inf;
+		lb = -inf;
 		break;
 
 	default:

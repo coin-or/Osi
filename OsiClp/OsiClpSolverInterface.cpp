@@ -170,14 +170,11 @@ void OsiClpSolverInterface::initialSolve()
     //if (solver.numberIterations())
     //printf("****** iterated %d\n",solver.numberIterations());
   } else {
-    if (!doPrimal) {
-      // look further
-      bool crashResult=false;
+    if (doPrimal) {
       if (doCrash>0)
-	crashResult =  (solver.crash(1000.0,2)>0);
+	solver.crash(1000.0,2);
       else if (doCrash==0)
-	crashResult =  (solver.crash(1000.0,0)>0);
-      doPrimal=crashResult;
+	solver.crash(1000.0,0);
     }
     if (algorithm<0)
       doPrimal=false;

@@ -114,7 +114,8 @@ bool OsiRowCutDebugger::onOptimalPath(const OsiSolverInterface & si) const
 {
   if (integerVariable_) {
     int nCols=si.getNumCols(); 
-    assert (nCols==numberColumns_); // check user has not modified problem
+    if (nCols!=numberColumns_)
+      return false; // check user has not modified problem
     int i;
     const double * collower = si.getColLower();
     const double * colupper = si.getColUpper();
@@ -151,6 +152,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
   delete [] integerVariable_;
   delete [] optimalSolution_;
   numberColumns_ = 0;
+  int expectedNumberColumns = 0;
 
 
   enum {undefined, pure0_1, continuousWith0_1, generalMip } probType;
@@ -203,6 +205,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
     probType=continuousWith0_1;
     intSoln.insert(2,1.);
     intSoln.insert(3,1.);
+    expectedNumberColumns=8;
   }
 
   // p0033
@@ -211,6 +214,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
     int intIndicesAt1[]={ 0,6,7,9,13,17,18,22,24,25,26,27,28,29 };
     int numIndices = sizeof(intIndicesAt1)/sizeof(int);
     intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=33;
   }
 
   // flugpl
@@ -220,6 +224,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
     double intSolnV[] = { 6.,60., 6.,60.,16.,70., 7.,70.,12.,75.};
     int vecLen = sizeof(intIndicesV)/sizeof(int);
     intSoln.setVector(vecLen,intIndicesV,intSolnV);
+    expectedNumberColumns=18;
   }
 
   // enigma
@@ -228,6 +233,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
     int intIndicesAt1[]={ 0,18,25,36,44,59,61,77,82,93 };
     int numIndices = sizeof(intIndicesAt1)/sizeof(int);
     intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=100;
   }
 
   // mod011
@@ -236,6 +242,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
     int intIndicesAt1[]={ 10,29,32,40,58,77,80,88 };
     int numIndices = sizeof(intIndicesAt1)/sizeof(int);
     intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=10958;
   }
 
   // ltw3
@@ -244,6 +251,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
     int intIndicesAt1[]={ 20,23,24,26,32,33,40,47 };
     int numIndices = sizeof(intIndicesAt1)/sizeof(int);
     intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=48;
   }
 
   // mod008
@@ -252,6 +260,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
     int intIndicesAt1[]={1,59,83,116,123};
     int numIndices = sizeof(intIndicesAt1)/sizeof(int);
     intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=319;
   }
 
   // mod010
@@ -263,6 +272,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
 	1951,2332,2352,2380,2471,2555,2577,2610,2646,2647};
     int numIndices = sizeof(intIndicesAt1)/sizeof(int);
     intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=2655;
   }
 
   // modglob
@@ -273,6 +283,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
 	278,282,284,286,288};
     int numIndices = sizeof(intIndicesAt1)/sizeof(int);
     intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=422;
   }
 
   // p0201
@@ -282,6 +293,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
 	128,132,146,151,164,166,182,183,200};
     int numIndices = sizeof(intIndicesAt1)/sizeof(int);
     intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=201;
   }
 
   // p0282
@@ -292,6 +304,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
 	262,263,273,275,276,277,280,281};
     int numIndices = sizeof(intIndicesAt1)/sizeof(int);
     intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=282;
   }
 
   // p0548
@@ -309,6 +322,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
 	542,545,547};
     int numIndices = sizeof(intIndicesAt1)/sizeof(int);
     intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=548;
   }
 
   // p2756
@@ -325,6 +339,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
 	2643,2645,2651,2653,2672,2675,2680,2683,2708,2727,2730,2751};
     int numIndices = sizeof(intIndicesAt1)/sizeof(int);
     intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=2756;
   }
 
   // bell3a
@@ -334,6 +349,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
     double intSolnV[] = {4.,21.,4.,4.,6.,1.,25.,8.};
     int vecLen = sizeof(intIndicesV)/sizeof(int);
     intSoln.setVector(vecLen,intIndicesV,intSolnV);
+    expectedNumberColumns=133;
   }
 
   // 10teams
@@ -345,6 +361,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
 	1892,1945,1989};
     int numIndices = sizeof(intIndicesAt1)/sizeof(int);
     intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=2025;
   }
 
   // danoint
@@ -353,6 +370,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
     int intIndicesAt1[]={3,5,8,11,15,21,24,25,31,34,37,42,46,48,51,56};
     int numIndices = sizeof(intIndicesAt1)/sizeof(int);
     intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=521;
   }
 
   // dcmulti
@@ -362,6 +380,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
 	45,52,53,60,61,64,65,66,67};
     int numIndices = sizeof(intIndicesAt1)/sizeof(int);
     intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=548;
   }
 
   // egout
@@ -372,6 +391,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
 	48,49,52,53,54};
     int numIndices = sizeof(intIndicesAt1)/sizeof(int);
     intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=141;
   }
 
   // fixnet6
@@ -381,6 +401,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
 	375,413,423,533,537,574,688,690,693,712,753,773,778,783,847};
     int numIndices = sizeof(intIndicesAt1)/sizeof(int);
     intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=878;
   }
 
   // khb05250
@@ -389,6 +410,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
     int intIndicesAt1[]={1,3,8,11,12,15,16,17,18,21,22,23};
     int numIndices = sizeof(intIndicesAt1)/sizeof(int);
     intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=1350;
   }
 
   // lseu
@@ -397,6 +419,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
     int intIndicesAt1[]={0,1,6,13,26,33,38,43,50,52,63,65,85};
     int numIndices = sizeof(intIndicesAt1)/sizeof(int);
     intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=89;
   }
 
   // misc03
@@ -406,6 +429,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
 	152,154,155,157};
     int numIndices = sizeof(intIndicesAt1)/sizeof(int);
     intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=160;
   }
 
   // misc07
@@ -415,6 +439,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
 	245,247,249,251,253,255,257};
     int numIndices = sizeof(intIndicesAt1)/sizeof(int);
     intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=260;
   }
 
   // gen
@@ -431,6 +456,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
 	1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,23.,12.,11.,14.,16.};
     int vecLen = sizeof(intIndicesV)/sizeof(int);
     intSoln.setVector(vecLen,intIndicesV,intSolnV);
+    expectedNumberColumns=870;
   }
 
   // gt2
@@ -442,6 +468,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
 	2.,1.,1.,6.,1.,1.};
     int vecLen = sizeof(intIndicesV)/sizeof(int);
     intSoln.setVector(vecLen,intIndicesV,intSolnV);
+    expectedNumberColumns=188;
   }
 
   // fiber
@@ -452,6 +479,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
 	742,761,762,776,779,817,860,1044,1067,1122,1238};
     int numIndices = sizeof(intIndicesAt1)/sizeof(int);
     intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=1298;
   }
 
   // l152lav
@@ -462,6 +490,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
 	1902,1917,1948,1950};
     int numIndices = sizeof(intIndicesAt1)/sizeof(int);
     intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=1989;
   }
 
   // bell5
@@ -473,6 +502,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
 	2.,38.,2.,498.,125.,10.,17.,41.,19.};
     int vecLen = sizeof(intIndicesV)/sizeof(int);
     intSoln.setVector(vecLen,intIndicesV,intSolnV);
+    expectedNumberColumns=104;
   }
 
   // blend2
@@ -486,12 +516,13 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
 	1.,1.,1.,1.,1.,1.,1.,1.,1.};
     int vecLen = sizeof(intIndicesV)/sizeof(int);
     intSoln.setVector(vecLen,intIndicesV,intSolnV);
+    expectedNumberColumns=353;
   }
 
 
   // check to see if the model parameter is 
   // a known problem.
-  if ( probType != undefined ) {
+  if ( probType != undefined && si.getNumCols() == expectedNumberColumns) {
 
     // Specified model is a known problem
     

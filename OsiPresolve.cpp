@@ -1291,12 +1291,13 @@ void CoinPresolveMatrix::update_model(OsiSolverInterface * si,
 				     CoinBigIndex nelems0)
 {
   int nels=0;
-  for (int i=0; i<ncols_; i++) 
+  int i;
+  for ( i=0; i<ncols_; i++) 
     nels += hincol_[i];
   CoinPackedMatrix m(true,nrows_,ncols_,nels, colels_, hrow_,mcstrt_,hincol_);
   si->loadProblem(m, clo_, cup_, cost_, rlo_, rup_);
 
-  for (int i=0; i<ncols_; i++) {
+  for ( i=0; i<ncols_; i++) {
     if (integerType_[i])
       si->setInteger(i);
     else

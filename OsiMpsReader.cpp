@@ -26,6 +26,7 @@ typedef int OSIColumnIndex;
 /// Large enough to contain row index (or basis)
 typedef int OSIRowIndex;
 
+// We are allowing free format - but there is a limit!
 #define MAX_FIELD_LENGTH 100
 #define MAX_CARD_LENGTH 5*MAX_FIELD_LENGTH+80
 
@@ -589,7 +590,7 @@ OSIMpsio::nextField (  )
       // comment
     }
   }
-  // we only get here for second field (we even allow more???)
+  // we only get here for second field (we could even allow more???)
   {
     char save = '?';
     char *nextBlank = nextBlankOr ( next );
@@ -784,16 +785,6 @@ OsiMpsReader::findHash ( const char *name , int section ) const
 {
   OSIColumnIndex found = -1;
 
-#if 0
-  OSIColumnIndex i;
-
-  for ( i = 0; i < numberHash_; i++ ) {
-    if ( !strcmp ( names_[section][i], name ) ) {
-      found = i;
-      break;
-    }
-  }
-#else
   char ** names = names_[section];
   OsiHashLink * hashThis = hash_[section];
   OSIColumnIndex maxhash = 4 * numberHash_[section];
@@ -827,7 +818,6 @@ OsiMpsReader::findHash ( const char *name , int section ) const
       break;
     }
   }
-#endif
   return found;
 }
 
@@ -878,7 +868,7 @@ const bool OsiMpsReader::fileReadable() const
     return true;
   }
 }
-/** objective offset - this is RHS entry for objective row */
+/* objective offset - this is RHS entry for objective row */
 double OsiMpsReader::objectiveOffset() const
 {
   return objectiveOffset_;
@@ -1452,21 +1442,6 @@ int OsiMpsReader::readMps()
       }
     }
     free ( rowType );
-#if 0
-    // get rid of row names !
-    {
-      OSIRowIndex irow;
-
-      for ( irow = 0; irow < numberRows; irow++ ) {
-	free ( rowName[irow] );
-      }
-      for ( irow = 0; irow < numberOtherFreeRows; irow++ ) {
-	free ( freeRowName[irow] );
-      }
-      free ( rowName );
-      free ( freeRowName );
-    }
-#endif
     // default bounds
     collower = ( double * ) malloc ( numberColumns * sizeof ( double ) );
     colupper = ( double * ) malloc ( numberColumns * sizeof ( double ) );
@@ -1666,6 +1641,7 @@ int OsiMpsReader::readMps()
     free ( columnType );
     assert ( mpsfile.whichSection (  ) == OSI_ENDATA_SECTION );
   } else {
+    // This is very simple format - what should we use?
     fscanf ( fp, "%d %d %d\n", &numberRows, &numberColumns, &numberElements );
     OSIColumnIndex i;
 
@@ -1743,7 +1719,6 @@ int OsiMpsReader::getNumElements() const
 
 //------------------------------------------------------------------
 // Get pointer to column lower and upper bounds.
-// Set element of column lower & upper bounds.
 //------------------------------------------------------------------  
 const double * OsiMpsReader::getColLower() const
 {

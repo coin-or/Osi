@@ -709,7 +709,7 @@ bool test10VivianDeSmedt(OsiSolverInterface *s)
 
 	int numcols = 2;
 	int numrows = 2;
-	const int start[] = {0, 2, 4};
+	const CoinBigIndex start[] = {0, 2, 4};
 	const int index[] = {0, 1, 0, 1};
 	const double value[] = {4, 1, 2, 3};
 	const double collb[] = {0, 0};
@@ -764,7 +764,7 @@ bool test11VivianDeSmedt(OsiSolverInterface *s)
 
 	int numcols = 2;
 	int numrows = 2;
-	const int start[] = {0, 2, 4};
+	const CoinBigIndex start[] = {0, 2, 4};
 	const int index[] = {0, 1, 0, 1};
 	const double value[] = {4, 1, 2, 3};
 	const double collb[] = {0, 0};
@@ -3074,9 +3074,10 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     OsiSolverInterface *s = emptySi->clone();
     double dEmpty = 0;
     int iEmpty = 0;
+    CoinBigIndex iEmpty2 = 0;
     //char cEmpty = '?';
     
-    s->loadProblem(0, 0, &iEmpty, &iEmpty, &dEmpty, &dEmpty, &dEmpty, &dEmpty, &dEmpty, &dEmpty);
+    s->loadProblem(0, 0, &iEmpty2, &iEmpty, &dEmpty, &dEmpty, &dEmpty, &dEmpty, &dEmpty, &dEmpty);
     double inf = s->getInfinity();
     CoinPackedVector c;
     

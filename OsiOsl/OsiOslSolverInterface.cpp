@@ -24,7 +24,7 @@ toColumnOrderedGapFree(const CoinPackedMatrix& matrix)
 {
    CoinPackedMatrix * m = 0;
    if (matrix.isColOrdered()) {
-      const int * start = matrix.getVectorStarts();
+      const CoinBigIndex * start = matrix.getVectorStarts();
       const int * length = matrix.getVectorLengths();
       int i;
       for (i = matrix.getNumCols() - 1; i >= 0; --i)
@@ -717,7 +717,7 @@ const CoinPackedMatrix * OsiOslSolverInterface::getMatrixByRow() const
     matrixByRow_ = new CoinPackedMatrix();
     matrixByRow_->copyOf(false /* not column ordered */,
 			 getNumCols(), getNumRows(), getNumElements(),
-			 rowCopy.element, rowCopy.index, rowCopy.start,
+			 rowCopy.element, rowCopy.index, (CoinBigIndex *) rowCopy.start,
 			 NULL /* compute lengths */);
     ekk_free(rowCopy.element);
     ekk_free(rowCopy.index);
@@ -734,7 +734,7 @@ const CoinPackedMatrix * OsiOslSolverInterface::getMatrixByCol() const
     matrixByColumn_ = new CoinPackedMatrix();
     matrixByColumn_->copyOf(true /* column ordered */,
 			    getNumRows(), getNumCols(), getNumElements(),
-			    colCopy.element, colCopy.index, colCopy.start,
+			    colCopy.element, colCopy.index, (CoinBigIndex *) colCopy.start,
 			    NULL /* compute lengths */);
     ekk_free(colCopy.element);
     ekk_free(colCopy.index);
@@ -1347,7 +1347,7 @@ OsiOslSolverInterface::assignProblem(CoinPackedMatrix*& matrix,
 
 void
 OsiOslSolverInterface::loadProblem(const int numcols, const int numrows,
-				   const int* start, const int* index,
+				   const CoinBigIndex * start, const int* index,
 				   const double* value,
 				   const double* collb, const double* colub,
 				   const double* obj,
@@ -1358,7 +1358,7 @@ OsiOslSolverInterface::loadProblem(const int numcols, const int numrows,
    ekk_loadRimModel(getMutableModelPtr(),
 		    numrows, rowlb, rowub, numcols, obj, collb, colub);
    ekk_addColumnElementBlock(getMutableModelPtr(),
-			     numcols, index, start, value);
+			     numcols, index, (const int *)start, value);
    // Now we can free the cached results
    freeCachedResults();
 }
@@ -1366,7 +1366,7 @@ OsiOslSolverInterface::loadProblem(const int numcols, const int numrows,
 
 void
 OsiOslSolverInterface::loadProblem(const int numcols, const int numrows,
-				   const int* start, const int* index,
+				   const CoinBigIndex * start, const int* index,
 				   const double* value,
 				   const double* collb, const double* colub,
 				   const double* obj,
@@ -1385,7 +1385,7 @@ OsiOslSolverInterface::loadProblem(const int numcols, const int numrows,
    ekk_loadRimModel(getMutableModelPtr(),
 		    numrows, rowlb, rowub, numcols, obj, collb, colub);
    ekk_addColumnElementBlock(getMutableModelPtr(),
-			     numcols, index, start, value);
+			     numcols, index, (const int *) start, value);
    // Now we can free the cached results
    freeCachedResults();
    delete[] rowlb;

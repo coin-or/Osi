@@ -19,6 +19,11 @@ class OsiCuts;
 class OsiRowCut;
 class OsiRowCutDebugger;
 class CoinSet;
+#ifndef COIN_BIG_INDEX
+typedef int CoinBigIndex;
+#else
+typedef long CoinBigIndex;
+#endif
 
 //#############################################################################
 
@@ -815,7 +820,7 @@ public:
     /** Just like the other loadProblem() methods except that the matrix is
 	given in a standard column major ordered format (without gaps). */
     virtual void loadProblem(const int numcols, const int numrows,
-			     const int* start, const int* index,
+			     const CoinBigIndex * start, const int* index,
 			     const double* value,
 			     const double* collb, const double* colub,   
 			     const double* obj,
@@ -824,7 +829,7 @@ public:
     /** Just like the other loadProblem() methods except that the matrix is
 	given in a standard column major ordered format (without gaps). */
     virtual void loadProblem(const int numcols, const int numrows,
-			     const int* start, const int* index,
+			     const CoinBigIndex * start, const int* index,
 			     const double* value,
 			     const double* collb, const double* colub,   
 			     const double* obj,

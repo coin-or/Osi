@@ -1080,7 +1080,7 @@ OsiClpSolverInterface::assignProblem(CoinPackedMatrix*& matrix,
 
 void
 OsiClpSolverInterface::loadProblem(const int numcols, const int numrows,
-				   const int* start, const int* index,
+				   const CoinBigIndex * start, const int* index,
 				   const double* value,
 				   const double* collb, const double* colub,
 				   const double* obj,
@@ -1096,7 +1096,7 @@ OsiClpSolverInterface::loadProblem(const int numcols, const int numrows,
 
 void
 OsiClpSolverInterface::loadProblem(const int numcols, const int numrows,
-				   const int* start, const int* index,
+				   const CoinBigIndex * start, const int* index,
 				   const double* value,
 				   const double* collb, const double* colub,
 				   const double* obj,

@@ -587,7 +587,7 @@ OsiOslSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
         assert( eq(ev[12],  1.0) );
         assert( eq(ev[13],  1.9) );
         
-        const int * mi = siC1mbr->getVectorStarts();
+        const CoinBigIndex * mi = siC1mbr->getVectorStarts();
         assert( mi[0]==0 );
         assert( mi[1]==5 );
         assert( mi[2]==7 );
@@ -708,7 +708,7 @@ OsiOslSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       assert( eq(ev[12],  1.0) );
       assert( eq(ev[13],  1.9) );
       
-      const int * mi = lhsmbr->getVectorStarts();
+      const CoinBigIndex * mi = lhsmbr->getVectorStarts();
       assert( mi[0]==0 );
       assert( mi[1]==5 );
       assert( mi[2]==7 );

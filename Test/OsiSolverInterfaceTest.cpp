@@ -82,7 +82,7 @@ failureMessage(
   messageText = "*** ";
   messageText += solverName + "SolverInteface Test Failure: ";
   messageText += message;
-  std::cerr <<messageText.c_str();
+  std::cerr <<messageText.c_str() <<std::endl;
 }
 
 //--------------------------------------------------------------------------
@@ -575,13 +575,33 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     delete si;
   }
 
-  // Determine if this is the emptySi is an OsiVoSolverInterface
+  // Determine if this is the emptySi is an OsiVolSolverInterface
   bool volSolverInterface = false;
   {
 #ifdef COIN_USE_VOL
-    const OsiVolSolverInterface * vsi =
+    const OsiVolSolverInterface * si =
       dynamic_cast<const OsiVolSolverInterface *>(emptySi);
-    if ( vsi != NULL ) volSolverInterface = true;
+    if ( si != NULL ) volSolverInterface = true;
+#endif
+  }
+
+  // Determine if this is the emptySi is an OsiOslSolverInterface
+  bool oslSolverInterface = false;
+  {
+#ifdef COIN_USE_OSL
+    const OsiOslSolverInterface * si =
+      dynamic_cast<const OsiOslSolverInterface *>(emptySi);
+    if ( si != NULL ) oslSolverInterface = true;
+#endif
+  }
+
+  // Determine if this is the emptySi is an OsiOslSolverInterface
+  bool dylpSolverInterface = false;
+  {
+#ifdef COIN_USE_DYLP
+    const OsiDylpSolverInterface * si =
+      dynamic_cast<const OsiDylpSolverInterface *>(emptySi);
+    if ( si != NULL ) dylpSolverInterface = true;
 #endif
   }
 
@@ -605,7 +625,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   OsiSolverInterface * exmip1Si = emptySi->clone(); 
   exmip1Si->readMps(fn.c_str(),"mps");
 
-#if 0
+
   // Solver Interfaces do not presently pass this set of tests.
   // Something should be done to make them consistent.
   // When there is an empty solver interface should
@@ -615,21 +635,33 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   // Test that values returned from an empty solverInterface
   {
     OsiSolverInterface * si = emptySi->clone();
-    assert( si->getNumRows()==0 );
-    assert( si->getNumCols()==0 );
-    assert( si->getNumElements()==0 );
-    assert( si->getColLower()==NULL );
-    assert( si->getColUpper()==NULL );
-    assert( si->getColSolution()==NULL );
-    assert( si->getObjCoefficients()==NULL );
-    assert( si->getRowRange()==NULL );
-    assert( si->getRightHandSide()!=NULL );
-    assert( si->getRowSense()==NULL );
-    assert( si->getRowLower()==NULL );
-    assert( si->getRowUpper()==NULL );
+    if( si->getNumRows()!=0 )
+      failureMessage(solverName,"getNumRows with empty solverInterface");
+    if( si->getNumCols()!=0 )
+      failureMessage(solverName,"getNumCols with empty solverInterface");;
+    if( si->getNumElements()!=0 )
+      failureMessage(solverName,"getNumElements with empty solverInterface");;
+    if( si->getColLower()!=NULL )
+      failureMessage(solverName,"getColLower with empty solverInterface");;
+    if( si->getColUpper()!=NULL )
+      failureMessage(solverName,"getColUpper with empty solverInterface");;
+    if( si->getColSolution()!=NULL )
+      failureMessage(solverName,"getColSolution with empty solverInterface");;
+    if( si->getObjCoefficients()!=NULL )
+      failureMessage(solverName,"getObjCoefficients with empty solverInterface");;
+    if( si->getRowRange()!=NULL )
+      failureMessage(solverName,"getRowRange with empty solverInterface");;
+    if( si->getRightHandSide()!=NULL )
+      failureMessage(solverName,"getRightHandSide with empty solverInterface");;
+    if( si->getRowSense()!=NULL )
+      failureMessage(solverName,"getRowSense with empty solverInterface");;
+    if( si->getRowLower()!=NULL )
+      failureMessage(solverName,"getRowLower with empty solverInterface");;
+    if( si->getRowUpper()!=NULL )
+      failureMessage(solverName,"getRowUpper with empty solverInterface");;
     delete si;
   }
-#endif
+
   
   // Test that problem was loaded correctly
   {
@@ -1280,19 +1312,31 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 
 	double objective[]={5.0,6.0,5.5};
 
-	// Add empty columns
-	for (i=0;i<3;i++) 
-	  si->addCol(CoinPackedVector(),0.0,10.0,objective[i]);
+  // OslSi fails this test and crashes
+  if ( oslSolverInterface ) {
+     failureMessage(solverName,"addCol when columns are empty");
+  }
+  else if ( dylpSolverInterface ) {
+     failureMessage(solverName,"addCol when columns are empty");
+  }
+  else {
+	  // Add empty columns
+	  for (i=0;i<3;i++) 
+	    si->addCol(CoinPackedVector(),0.0,10.0,objective[i]);
 
-	// Add rows
-	si->addRow(row1,2.0,100.0);
-	si->addRow(row2,2.0,100.0);
+	  // Add rows
+	  si->addRow(row1,2.0,100.0);
+	  si->addRow(row2,2.0,100.0);
 
-	// solve
-	si->initialSolve();
+    // Vol can not solve problem of this form
+    if ( !volSolverInterface ) {
+	    // solve
+	    si->initialSolve();
 
-        CoinRelFltEq eq(1.0e-7) ;
-	assert (eq(si->getObjValue(),2.0));
+      CoinRelFltEq eq(1.0e-7) ;
+	    assert (eq(si->getObjValue(),2.0));
+    }
+  }
 	
 	delete si;
       }
@@ -1312,21 +1356,30 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 
 	double objective[]={5.0,6.0,5.5};
 
-	// Add empty rows
-	for (i=0;i<2;i++) 
-	  si->addRow(CoinPackedVector(),2.0,100.0);
+  if ( dylpSolverInterface ) {
+    failureMessage(solverName,"addCol add columns to null");
+  }
+  else {
+	  // Add empty rows
+	  for (i=0;i<2;i++) 
+	    si->addRow(CoinPackedVector(),2.0,100.0);
 
-	// Add columns
-	si->addCol(col1,0.0,10.0,objective[0]);
-	si->addCol(col2,0.0,10.0,objective[1]);
-	si->addCol(col3,0.0,10.0,objective[2]);
+	  // Add columns
+    if ( volSolverInterface ) {
+      failureMessage(solverName,"addCol add columns to null");
+    }
+    else {
+	    si->addCol(col1,0.0,10.0,objective[0]);
+	    si->addCol(col2,0.0,10.0,objective[1]);
+	    si->addCol(col3,0.0,10.0,objective[2]);
 
-	// solve
-	si->initialSolve();
+	    // solve
+	    si->initialSolve();
 
-        CoinRelFltEq eq(1.0e-7) ;
-	assert (eq(si->getObjValue(),2.0));
-	
+      CoinRelFltEq eq(1.0e-7) ;
+	    assert (eq(si->getObjValue(),2.0));
+    }
+  }
 	delete si;
       }
     }

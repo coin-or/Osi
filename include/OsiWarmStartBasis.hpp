@@ -43,6 +43,8 @@ public:
     artificialStatus_ = new char[(na + 3) / 4];
     CoinFillN(structuralStatus_, (ns + 3) / 4, (char)0);
     CoinFillN(artificialStatus_, (na + 3) / 4, (char)0);
+    numArtificial_ = na;
+    numStructural_ = ns;
   }
 
   Status getStructStatus(int i) const {

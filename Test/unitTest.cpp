@@ -264,6 +264,31 @@ int main (int argc, const char *argv[])
     OsiSimplexInterfaceCommonUnitTest(&dylpSi,mpsDir);
   }
 #endif
+  
+
+#ifdef COIN_USE_FMP
+  {
+    OsiFmpSolverInterface fmpSi;
+    testingMessage( "Testing OsiRowCut with OsiFmpSolverInterface\n" );
+    OsiRowCutUnitTest(&fmpSi,mpsDir);
+  }
+  {
+    OsiFmpSolverInterface fmpSi;
+    testingMessage( "Testing OsiColCut with OsiFmpSolverInterface\n" );
+    OsiColCutUnitTest(&fmpSi,mpsDir);
+  }
+  // FortMP does not presently pass this test
+  {
+    OsiFmpSolverInterface fmpSi;
+    testingMessage( "Testing OsiRowCutDebugger with OsiFmpSolverInterface\n" );
+    OsiRowCutDebuggerUnitTest(&fmpSi,mpsDir);
+  }
+  {
+    OsiFmpSolverInterface fmpSi;
+    testingMessage( "Testing OsiSimplexInterface with OsiFmpSolverInterface\n" );
+    OsiSimplexInterfaceCommonUnitTest(&fmpSi,mpsDir);
+  }
+#endif
 
 #ifdef COIN_USE_GLPK
   {

@@ -21,23 +21,6 @@
 #include "ClpPresolve.hpp"
 
 static double totalTime=0.0;
-//  static double cpuTime()
-//  {
-//    double cpu_temp;
-//  #if defined(_MSC_VER)
-//    unsigned int ticksnow;        /* clock_t is same as int */
-  
-//    ticksnow = (unsigned int)clock();
-  
-//    cpu_temp = (double)((double)ticksnow/CLOCKS_PER_SEC);
-//  #else
-//    struct rusage usage;
-//    getrusage(RUSAGE_SELF,&usage);
-//    cpu_temp = usage.ru_utime.tv_sec;
-//    cpu_temp += 1.0e-6*((double) usage.ru_utime.tv_usec);
-//  #endif
-//    return cpu_temp;
-//  }
 
 //#############################################################################
 // Solve methods
@@ -496,7 +479,14 @@ void OsiClpSolverInterface::resolve()
   //modelPtr_->setSolveType(saveSolveType);
 #endif
 }
-
+// For errors to make sure print to screen
+// only called in debug mode
+static void indexError(int index,
+			std::string methodName)
+{
+  std::cerr<<"Illegal index "<<index<<" in OsiClpSolverInterface::"<<methodName<<std::endl;
+  throw CoinError("Illegal index",methodName,"OsiClpSolverInterface");
+}
 //#############################################################################
 // Parameter related methods
 //#############################################################################
@@ -801,6 +791,12 @@ const double * OsiClpSolverInterface::getRowRange() const
 bool OsiClpSolverInterface::isContinuous(int colNumber) const
 {
   if ( integerInformation_==NULL ) return true;
+#ifndef NDEBUG
+  int n = modelPtr_->numberColumns();
+  if (colNumber<0||colNumber>=n) {
+    indexError(colNumber,"isContinuous");
+  }
+#endif
   if ( integerInformation_[colNumber]==0 ) return true;
   return false;
 }
@@ -850,8 +846,16 @@ void OsiClpSolverInterface::setColSetBounds(const int* indexFirst,
 {
   double * lower = modelPtr_->columnLower();
   double * upper = modelPtr_->columnUpper();
+#ifndef NDEBUG
+  int n = modelPtr_->numberColumns();
+#endif
   while (indexFirst != indexLast) {
     const int iCol=*indexFirst++;
+#ifndef NDEBUG
+    if (iCol<0||iCol>=n) {
+      indexError(iCol,"setColSetBounds");
+    }
+#endif
     lower[iCol]= forceIntoRange(*boundList++, -OsiClpInfinity, OsiClpInfinity);
     upper[iCol]= forceIntoRange(*boundList++, -OsiClpInfinity, OsiClpInfinity);
   }
@@ -873,6 +877,12 @@ OsiClpSolverInterface::setRowType(int i, char sense, double rightHandSide,
 				  double range)
 {
   // *TEST*
+#ifndef NDEBUG
+  int n = modelPtr_->numberRows();
+  if (i<0||i>=n) {
+    indexError(i,"setRowType");
+  }
+#endif
   double lower, upper;
   convertSenseToBound(sense, rightHandSide, range, lower, upper);
   setRowBounds(i, lower, upper);
@@ -882,11 +892,19 @@ void OsiClpSolverInterface::setRowSetBounds(const int* indexFirst,
 					    const int* indexLast,
 					    const double* boundList)
 {
+#ifndef NDEBUG
+  int n = modelPtr_->numberRows();
+#endif
   double * lower = modelPtr_->rowLower();
   double * upper = modelPtr_->rowUpper();
   const int len = indexLast - indexFirst;
   while (indexFirst != indexLast) {
     const int iRow=*indexFirst++;
+#ifndef NDEBUG
+    if (iRow<0||iRow>=n) {
+      indexError(iRow,"setRowSetBounds");
+    }
+#endif
     lower[iRow]= forceIntoRange(*boundList++, -OsiClpInfinity, OsiClpInfinity);
     upper[iRow]= forceIntoRange(*boundList++, -OsiClpInfinity, OsiClpInfinity);
   }
@@ -908,11 +926,19 @@ OsiClpSolverInterface::setRowSetTypes(const int* indexFirst,
 				      const double* rhsList,
 				      const double* rangeList)
 {
+#ifndef NDEBUG
+  int n = modelPtr_->numberRows();
+#endif
   double * lower = modelPtr_->rowLower();
   double * upper = modelPtr_->rowUpper();
   const int len = indexLast - indexFirst;
   while (indexFirst != indexLast) {
     const int iRow= *indexFirst++;
+#ifndef NDEBUG
+    if (iRow<0||iRow>=n) {
+      indexError(iRow,"isContinuous");
+    }
+#endif
       if (rangeList){
 	convertSenseToBound(*senseList++, *rhsList++, *rangeList++,
 			    lower[iRow], upper[iRow]);
@@ -943,6 +969,12 @@ OsiClpSolverInterface::setContinuous(int index)
 {
 
   if (integerInformation_) {
+#ifndef NDEBUG
+    int n = modelPtr_->numberColumns();
+    if (index<0||index>=n) {
+      indexError(index,"setContinuous");
+    }
+#endif
     integerInformation_[index]=0;
   }
 }
@@ -954,6 +986,12 @@ OsiClpSolverInterface::setInteger(int index)
     integerInformation_ = new char[modelPtr_->numberColumns()];
     CoinFillN ( integerInformation_, modelPtr_->numberColumns(),(char) 0);
   }
+#ifndef NDEBUG
+  int n = modelPtr_->numberColumns();
+  if (index<0||index>=n) {
+    indexError(index,"setInteger");
+  }
+#endif
   integerInformation_[index]=1;
 }
 //-----------------------------------------------------------------------------
@@ -961,9 +999,18 @@ void
 OsiClpSolverInterface::setContinuous(const int* indices, int len)
 {
   if (integerInformation_) {
+#ifndef NDEBUG
+    int n = modelPtr_->numberColumns();
+#endif
     int i;
     for (i=0; i<len;i++) {
-      integerInformation_[i]=0;
+#ifndef NDEBUG
+      int colNumber = indices[i];
+      if (colNumber<0||colNumber>=n) {
+	indexError(colNumber,"setContinuous");
+      }
+#endif
+      integerInformation_[colNumber]=0;
     }
   }
 }
@@ -975,9 +1022,18 @@ OsiClpSolverInterface::setInteger(const int* indices, int len)
     integerInformation_ = new char[modelPtr_->numberColumns()];
     CoinFillN ( integerInformation_, modelPtr_->numberColumns(),(char) 0);
   }
+#ifndef NDEBUG
+  int n = modelPtr_->numberColumns();
+#endif
   int i;
   for (i=0; i<len;i++) {
-    integerInformation_[indices[i]]=1;
+#ifndef NDEBUG
+    int colNumber = indices[i];
+    if (colNumber<0||colNumber>=n) {
+      indexError(colNumber,"setInteger");
+    }
+#endif
+    integerInformation_[colNumber]=1;
   }
 }
 //-----------------------------------------------------------------------------
@@ -1772,6 +1828,12 @@ OsiClpSolverInterface::getObjValue() const
 void 
 OsiClpSolverInterface::setObjCoeff( int elementIndex, double elementValue )
 {
+#ifndef NDEBUG
+  int n = modelPtr_->numberColumns();
+  if (elementIndex<0||elementIndex>=n) {
+    indexError(elementIndex,"setObjCoeff");
+  }
+#endif
   linearObjective_[elementIndex] = elementValue;
   if (modelPtr_->solveType()==2) {
     // simplex interface
@@ -1784,6 +1846,12 @@ OsiClpSolverInterface::setObjCoeff( int elementIndex, double elementValue )
 void 
 OsiClpSolverInterface::setColLower( int elementIndex, double elementValue )
 {
+#ifndef NDEBUG
+  int n = modelPtr_->numberColumns();
+  if (elementIndex<0||elementIndex>=n) {
+    indexError(elementIndex,"setColLower");
+  }
+#endif
   modelPtr_->columnLower()[elementIndex] = elementValue;
   if (modelPtr_->solveType()==2) {
     // simplex interface
@@ -1796,6 +1864,12 @@ OsiClpSolverInterface::setColLower( int elementIndex, double elementValue )
 void 
 OsiClpSolverInterface::setColUpper( int elementIndex, double elementValue )
 {
+#ifndef NDEBUG
+  int n = modelPtr_->numberColumns();
+  if (elementIndex<0||elementIndex>=n) {
+    indexError(elementIndex,"setColUpper");
+  }
+#endif
   modelPtr_->columnUpper()[elementIndex] = elementValue;
   if (modelPtr_->solveType()==2) {
     // simplex interface
@@ -1808,6 +1882,12 @@ void
 OsiClpSolverInterface::setColBounds( int elementIndex,
 				     double lower, double upper )
 {
+#ifndef NDEBUG
+  int n = modelPtr_->numberColumns();
+  if (elementIndex<0||elementIndex>=n) {
+    indexError(elementIndex,"setColBounds");
+  }
+#endif
   modelPtr_->columnLower()[elementIndex] = lower;
   modelPtr_->columnUpper()[elementIndex] = upper;
   if (modelPtr_->solveType()==2) {
@@ -2108,6 +2188,12 @@ void OsiClpSolverInterface::setObjectiveAndRefresh(double* c)
 void 
 OsiClpSolverInterface::getBInvARow(int row, double* z, double * slack)
 {
+#ifndef NDEBUG
+  int n = modelPtr_->numberRows();
+  if (row<0||row>=n) {
+    indexError(row,"getBInvARow");
+  }
+#endif
   assert (modelPtr_->solveType()==2);
   ClpFactorization * factorization = modelPtr_->factorization();
   CoinIndexedVector * rowArray0 = modelPtr_->rowArray(0);
@@ -2148,6 +2234,12 @@ void
 OsiClpSolverInterface::getBInvRow(int row, double* z)
 
 {
+#ifndef NDEBUG
+  int n = modelPtr_->numberRows();
+  if (row<0||row>=n) {
+    indexError(row,"getBInvRow");
+  }
+#endif
   assert (modelPtr_->solveType()==2);
   ClpFactorization * factorization = modelPtr_->factorization();
   CoinIndexedVector * rowArray0 = modelPtr_->rowArray(0);
@@ -2172,7 +2264,12 @@ OsiClpSolverInterface::getBInvACol(int col, double* vec)
   rowArray0->clear();
   rowArray1->clear();
   // get column of matrix
-  assert(col>=0&&col<modelPtr_->numberColumns());
+#ifndef NDEBUG
+  int n = modelPtr_->numberColumns();
+  if (col<0||col>=n) {
+    indexError(col,"getBInvACol");
+  }
+#endif
   modelPtr_->unpack(rowArray1,col);
   factorization->updateColumn(rowArray0,rowArray1,false);
   memcpy(vec,rowArray1->denseVector(),modelPtr_->numberRows()*sizeof(double));
@@ -2189,6 +2286,12 @@ OsiClpSolverInterface::getBInvCol(int col, double* vec)
   CoinIndexedVector * rowArray1 = modelPtr_->rowArray(1);
   rowArray0->clear();
   rowArray1->clear();
+#ifndef NDEBUG
+  int n = modelPtr_->numberRows();
+  if (col<0||col>=n) {
+    indexError(col,"getBInvCol");
+  }
+#endif
   // put +1 in row
   rowArray1->insert(col,1.0);
   factorization->updateColumn(rowArray0,rowArray1,false);
@@ -2240,5 +2343,5 @@ void
 OsiClpSolverInterface::branchAndBound() {
   throw CoinError("Sorry, Clp doesn't implement B&B.  This is because the original Simple Branch and Bound\n\
 code has been much developed and moved to Sbb.  If you want a native Branch and Bound code use Sbb",
-		  "branchAndBound", "OsiClpSolverInterface");
+		  "branchAndBound","OsiClpSolverInterface");
 };

@@ -231,7 +231,33 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       assert(  fim.isIntegerNonBinary(3) );
       assert( !fim.isIntegerNonBinary(4) );
     }
-    
+    // Test some catches
+    {
+      OsiClpSolverInterface solver;
+      try {
+	solver.setObjCoeff(0,0.0);
+      }
+      catch (CoinError e) {
+	std::cout<<"Correct throw"<<std::endl;
+      }
+      std::string fn = mpsDir+"exmip1";
+      solver.readMps(fn.c_str(),"mps");
+      try {
+	solver.setObjCoeff(0,0.0);
+      }
+      catch (CoinError e) {
+	std::cout<<"** Incorrect throw"<<std::endl;
+	abort();
+      }
+      try {
+	int index[]={0,20};
+	double value[]={0.0,0.0,0.0,0.0};
+	solver.setColSetBounds(index,index+2,value);
+      }
+      catch (CoinError e) {
+	std::cout<<"Correct throw"<<std::endl;
+      }
+    }
     // Test apply cuts method
     {      
       OsiClpSolverInterface im(m);

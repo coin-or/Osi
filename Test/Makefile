@@ -12,8 +12,6 @@ include ${MakefileDir}/Makefile.coin
 include ${MakefileDir}/Makefile.location
 
 IncDir :=
-IncDir += ${zlibIncDir}
-IncDir += ${bzlibIncDir}
 IncDir += ${OsiSolverIncDir}
 IncDir += ${OsiIncDir}
 IncDir += ${OslIncDir}
@@ -22,10 +20,10 @@ IncDir += ${CpxIncDir}
 IncDir += ${SpxIncDir}
 IncDir += ${XprIncDir}
 IncDir += ${ClpIncDir}
+IncDir += ${zlibIncDir}
+IncDir += ${bzlibIncDir}
 
 LibDir :=
-LibDir += ${zlibLibDir}
-LibDir += ${bzlibLibDir}
 LibDir += ${OsiSolverLibDir}
 LibDir += ${OsiLibDir}
 LibDir += ${OslLibDir}
@@ -34,10 +32,10 @@ LibDir += ${CpxLibDir}
 LibDir += ${SpxLibDir}
 LibDir += ${XprLibDir}
 LibDir += ${ClpLibDir}
+LibDir += ${zlibLibDir}
+LibDir += ${bzlibLibDir}
 
 LibName :=
-LibName += ${zlibLibName}
-LibName += ${bzlibLibName}
 LibName += ${OsiSolverLibName}
 LibName += ${OsiLibName}
 LibName += ${OslLibName}
@@ -46,10 +44,10 @@ LibName += ${CpxLibName}
 LibName += ${SpxLibName}
 LibName += ${XprLibName}
 LibName += ${ClpLibName}
+LibName += ${zlibLibName}
+LibName += ${bzlibLibName}
 
 Define :=
-Define += ${zlibDefine}
-Define += ${bzlibDefine}
 Define += ${OslDefine}
 Define += ${VolDefine}
 Define += ${CpxDefine}
@@ -57,6 +55,8 @@ Define += ${SpxDefine}
 Define += ${XprDefine}
 Define += ${ClpDefine}
 Define += ${OsiDefine}
+Define += ${zlibDefine}
+Define += ${bzlibDefine}
 
 ##############################################################################
 # You should not need to edit below this line.

@@ -15,13 +15,13 @@
 #include <stdio.h>
 #include <iostream>
 
-// define OSI_ZLIB if you want to be able to read compressed files!
+// define COIN_USE_ZLIB if you want to be able to read compressed files!
 // Look at http://www.gzip.org/zlib/
 // zlib is due to Jean-loup Gailly and Mark Adler
 // It is not under CPL but zlib.h has the following
 // Permission is granted to anyone to use this software for any purpose,
 // including commercial applications, and to alter it and redistribute it
-#ifdef OSI_ZLIB
+#ifdef COIN_USE_ZLIB
 #include "zlib.h"
 #endif
 
@@ -164,7 +164,7 @@ public:
   //@{
   /// Constructor expects file to be open - reads down to (and reads) NAME card
   OSIMpsio ( FILE * fp );
-#ifdef OSI_ZLIB
+#ifdef COIN_USE_ZLIB
   /// This one takes gzFile if fp null
   OSIMpsio ( FILE * fp, gzFile fp );
 #endif
@@ -231,7 +231,7 @@ private:
   char columnName_[MAX_FIELD_LENGTH];
   /// File pointer
   FILE *fp_;
-#ifdef OSI_ZLIB
+#ifdef COIN_USE_ZLIB
   /// Compressed file object
   gzFile gzfp_;
 #endif
@@ -285,12 +285,12 @@ const static char *mpsTypes[] = {
 int OSIMpsio::cleanCard()
 {
   char * getit;
-#ifdef OSI_ZLIB
+#ifdef COIN_USE_ZLIB
   if (fp_) {
 #endif
     // normal file
     getit = fgets ( card_, MAX_CARD_LENGTH, fp_ );
-#ifdef OSI_ZLIB
+#ifdef COIN_USE_ZLIB
   } else {
     getit = gzgets ( gzfp_, card_, MAX_CARD_LENGTH );
   }
@@ -399,7 +399,7 @@ OSIMpsio::OSIMpsio (  FILE * fp )
     }
   }
 }
-#ifdef OSI_ZLIB
+#ifdef COIN_USE_ZLIB
 // This one takes gzFile if fp null
 OSIMpsio::OSIMpsio (  FILE * fp , gzFile gzFile)
 {
@@ -467,7 +467,7 @@ OSIMpsio::OSIMpsio (  FILE * fp , gzFile gzFile)
 //  ~OSIMpsio.  Destructor
 OSIMpsio::~OSIMpsio (  )
 {
-#ifdef OSI_ZLIB
+#ifdef COIN_USE_ZLIB
   if (!fp_) {
     // no fp_ so must be compressed read
     gzclose(gzfp_);
@@ -1120,11 +1120,11 @@ int OsiMpsReader::readMps()
 {
   FILE *fp;
   bool goodFile=false;
-#ifdef OSI_ZLIB
+#ifdef COIN_USE_ZLIB
   gzFile gzFile=NULL;
 #endif
   if (strcmp(fileName_,"stdin")) {
-#ifdef OSI_ZLIB
+#ifdef COIN_USE_ZLIB
     int length=strlen(fileName_);
     if (!strcmp(fileName_+length-3,".gz")) {
       gzFile = gzopen(fileName_,"rb");
@@ -1134,7 +1134,14 @@ int OsiMpsReader::readMps()
 #endif
       fp = fopen ( fileName_, "r" );
       goodFile = (fp!=NULL);
-#ifdef OSI_ZLIB
+#ifdef COIN_USE_ZLIB
+      if (! goodFile) {
+	 // Try to open it with .gz extension
+	 std::string fil(fileName_);
+	 fil += ".gz";
+	 gzFile = gzopen(fil.c_str(),"rb");
+	 goodFile = (gzFile!=NULL);
+      }
     }
 #endif
   } else {
@@ -1146,7 +1153,7 @@ int OsiMpsReader::readMps()
     return -1;
   }
   bool ifmps;
-#ifdef OSI_ZLIB
+#ifdef COIN_USE_ZLIB
   OSIMpsio mpsfile ( fp , gzFile);
 #else
   OSIMpsio mpsfile ( fp );
@@ -1160,7 +1167,7 @@ int OsiMpsReader::readMps()
   } else if ( mpsfile.whichSection (  ) == OSI_UNKNOWN_SECTION ) {
     std::cout << "Unknown image " << mpsfile.
       card (  ) << " at line 1 of file " << fileName_ << std::endl;
-#ifdef OSI_ZLIB
+#ifdef COIN_USE_ZLIB
     if (!fp) {
       std::cout << "Consider the possibility of a compressed file "
 		<< "which zlib is unable to read" << std::endl;

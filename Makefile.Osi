@@ -44,10 +44,10 @@ include ${MakefileDir}/Makefile.location
 export OsiIncDir := ../include
 export OsiLibDir := ../lib
 
-export ExtraIncDir := ${OsiIncDir}
-export ExtraLibDir := ${OsiLibDir}
-export ExtraLibName := ${OsiLibName}
-export ExtraDefine := 
+export ExtraIncDir := ${zlibIncDir} ${bzlibIncDir}
+export ExtraLibDir := ${zlibLibDir} ${bzlibLibDir}
+export ExtraLibName := ${zlibLibName} ${bzlibLibName}
+export ExtraDefine := ${zlibDefine} ${bzlibDefine}
 
 export LibType OptLevel LIBNAME LIBSRC
 

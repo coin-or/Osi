@@ -59,6 +59,10 @@ extern "C" {
   problem to the lp solver and return the results.  There are three other
   structures, options, tolerance, and statistics, that respectively hold
   control parameters, tolerances, and collect statistics.
+
+  Detailed documentation is contained in OsiDylpSolverInterface.cpp, which
+  is not normally scanned when generating COIN OSI layer documentation. Try
+  `make doc' in the source directory of the OsiDylp distribution.
 */
 
 class OsiDylpSolverInterface: public OsiSolverInterface
@@ -92,6 +96,10 @@ public:
   /*! \brief Destructor */
 
   ~OsiDylpSolverInterface() ;
+
+  /*! \brief Reset the SI to the state produced by the default constructor. */
+
+  void reset() ;
 
 //@}
 
@@ -427,10 +435,10 @@ public:
   /*! \brief Change the language for OsiDylp messages */
 
   inline void newLanguage(CoinMessages::Language language)
-  { messages_ = setOsiDylpMessages(language) ; } ;
+  { setOsiDylpMessages(language) ; } ;
 
   inline void setLanguage(CoinMessages::Language language)
-  { messages_ = setOsiDylpMessages(language) ; } ;
+  { setOsiDylpMessages(language) ; } ;
 
 //@}
 
@@ -469,11 +477,11 @@ public:
 
   /*! \brief Establish a log file */
 
-  void dylp_logfile(const char* name, bool echo) ;
+  void dylp_logfile(const char* name, bool echo = false) ;
 
   /*! \brief Set the language for messages */
 
-  CoinMessages setOsiDylpMessages(CoinMessages::Language local_language) ;
+  void setOsiDylpMessages(CoinMessages::Language local_language) ;
 
 //@}
 
@@ -685,22 +693,23 @@ private:
   Copy verification functions, to check that two structures are identical.
 */
 //@{
+  template<class T> static void assert_same(const T& t1, const T& t2,
+					    bool exact) ;
+  template<class T> static void assert_same(const T* t1, const T* t2,
+					    int n, bool exact) ;
+
+  static void assert_same(double d1, double d2, bool exact) ;
+
   static void assert_same(const basis_struct& b1, 
   			  const basis_struct& b2, bool exact) ;
   static void assert_same(const consys_struct& c1, const 
-    consys_struct& c2, bool exact) ;
+			  consys_struct& c2, bool exact) ;
   static void assert_same(const conbnd_struct& c1, const 
-    conbnd_struct& c2, bool exact) ;
-  static void assert_same(double d1, double d2, bool exact) ;
-  static void assert_same(int i1, int i2, bool exact) ;
+			  conbnd_struct& c2, bool exact) ;
   static void assert_same(const lpprob_struct& l1, 
-    const lpprob_struct& l2, bool exact) ;
+			  const lpprob_struct& l2, bool exact) ;
   static void assert_same(const OsiDylpSolverInterface& o1, 
-    const OsiDylpSolverInterface& o2, bool exact) ;
-  template<class T> static void assert_same(const T& t1, 
-    const T& t2, bool exact) ;
-  template<class T> static void assert_same(const T* t1, const T* t2,
-    int n, bool exact) ;
+			  const OsiDylpSolverInterface& o2, bool exact) ;
 //@}
 #endif
 
@@ -713,6 +722,8 @@ private:
 
   static pkvec_struct* packed_vector(
     const CoinShallowPackedVector vector, int dimension) ;
+  static void packed_vector(
+    const CoinShallowPackedVector vector, int dimension, pkvec_struct *dst) ;
 //@}
 
 /*! \name File i/o helper routines */

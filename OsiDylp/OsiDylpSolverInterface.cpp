@@ -66,6 +66,11 @@
    or column (addRow or addCol, respectively) before you can adjust other
    properties (row or column bounds, objective, variable values, etc.)
 
+   <strong>LP Problem Existence</strong>
+   The LP problem structure is not created until it's needed. A valid LP
+   problem structure will exist after the first call to the solver
+   (initialSolve) or after a warm start object is loaded (setWarmStart).
+
    <strong>Caching</strong>:
    Since vectors returned by OsiSolverInterface "get" functions are constant
    (not modifiable by users) and it is convenient for users to make repeated
@@ -156,11 +161,14 @@ extern void strfree(const char *str) ;
   Four global variables, cmdchn, cmdecho, logchn, and gtxecho, control
   command input/echoing and log message output/echoing.
 
+  Gtxecho can be indirectly controlled using the OsiDoReducePrint hint; it
+  is set to true whenever messageHandler()->logLevel() > 0.
+
   By default, solver command (option) files are handled in the following
   manner: When an MPS file example.mps is read, the solver looks for an
   options file example.spc in the same directory. If it exists, it is
   processed. This is a local file open/close, well-defined and clean, but
-  with little user control. Commands are not echoed during processing.
+  with little user control. The commands will not be echoed.
 
   The user can process and arbitrary command file by calling dylp_controlfile
   (a non-OSI function).
@@ -286,7 +294,7 @@ template<class T> inline T* ODSI::inv_vec (T* vec) { return vec+1 ; }
 #  define INV_VEC(zz_type_zz,zz_vec_zz) inv_vec<zz_type_zz>(zz_vec_zz)
 #endif
 
-/*! \brief Convert an CoinShallowPackedVector to a dylp pkvec.
+/*! \brief Load a CoinShallowPackedVector into a new dylp pkvec.
 
   pkvec's created with this routine must eventually be freed with pkvec_free.
   Note that 0-based indexing is used for the entries of the coeff vector
@@ -303,10 +311,30 @@ pkvec_struct* ODSI::packed_vector (const CoinShallowPackedVector src,
 
   assert(dst) ;
 
+  if (n == 0) return (dst) ;
+
+  packed_vector(src,dimension,dst) ;
+
+  return (dst) ; }
+
+
+/*! \brief Load a CoinShallowPackedVector to an existing dylp pkvec.
+
+  Note that 0-based indexing is used for the entries of the coeff vector
+  (i.e., coeffs[0] is valid).
+
+  \param dimension The length of the vector if it were to be unpacked.
+*/
+
+void ODSI::packed_vector (const CoinShallowPackedVector src, int dimension,
+			  pkvec_struct *dst)
+
+{ int n = src.getNumElements() ;
+
   dst->cnt = n ;
   dst->dim = dimension ;
 
-  if (n == 0) return (dst) ;
+  if (n == 0) return ;
 
   const int* indices = src.getIndices() ;
   const double* elements = src.getElements() ;
@@ -316,7 +344,7 @@ pkvec_struct* ODSI::packed_vector (const CoinShallowPackedVector src,
   { coeffs[i].ndx = idx(indices[i]) ;
     coeffs[i].val = elements[i] ; }
 
-  return (dst) ; }
+  return ; }
 
 
 //@} // VectorHelpers
@@ -967,21 +995,19 @@ void ODSI::load_problem (const CoinPackedMatrix& matrix,
 */
   destruct_problem(true) ;
 /*
-  Create an empty consys_struct. Request the standard attached vectors:
-  objective, variable upper & lower bounds, variable and constraint types,
-  and constraint right-hand-side and range (rhslow).
+  Create an empty consys_struct.
 */
-  int colcnt = matrix.getNumCols() ;
-  int rowcnt = matrix.getNumRows() ;
+  int m = matrix.getNumCols() ;
+  int n = matrix.getNumRows() ;
 
-  construct_consys(rowcnt,colcnt) ;
+  construct_consys(n,m) ;
 /*
   First loop: Insert empty constraints into the new constraint system.
 */
   pkvec_struct* rowi = pkvec_new(0) ;
   assert(rowi) ;
 
-  for (int i = 0 ; i < rowcnt ; i++)
+  for (int i = 0 ; i < n ; i++)
   { rowi->nme = 0 ;
     bool r = consys_addrow_pk(consys,'a',ctyp[i],rowi,rhs[i],rhslow[i],0,0) ;
     assert(r) ;
@@ -989,23 +1015,32 @@ void ODSI::load_problem (const CoinPackedMatrix& matrix,
 
   if (rowi) pkvec_free(rowi) ;
 /*
-  Second loop. Insert the coefficients by column.
+  Second loop. Insert the coefficients by column. If we need to create a
+  column-ordered copy, take advantage and cache it.  The size of colj is a
+  gross overestimate, but it saves the trouble of constantly reallocating it.
 */
-  CoinPackedMatrix matrix2 = matrix ;
-  if (!matrix2.isColOrdered()) matrix2.reverseOrdering() ;
+  const CoinPackedMatrix *matrix2 ;
+  if (matrix.isColOrdered())
+  { matrix2 = &matrix ; }
+  else
+  { _matrix_by_col = new CoinPackedMatrix ;
+    _matrix_by_col->reverseOrderedCopyOf(matrix) ;
+    matrix2 = _matrix_by_col ; }
+  
+  pkvec_struct* colj = pkvec_new(n) ;
 
-  for (int j = 0 ; j < colcnt ; j++)
-  { const CoinShallowPackedVector coin_col = matrix2.getVector(j) ;
-    pkvec_struct* colj = packed_vector(coin_col,rowcnt) ;
-    colj->nme = 0 ;
+  for (int j = 0 ; j < m ; j++)
+  { const CoinShallowPackedVector coin_col = matrix2->getVector(j) ;
+    packed_vector(coin_col,n,colj) ;
     double objj = obj?obj[j]:0 ;
     double vlbj = col_lower?col_lower[j]:0 ;
     double vubj = col_upper?col_upper[j]:DYLP_INFINITY ;
+    colj->nme = 0 ;
     bool r = consys_addcol_pk(consys,vartypCON,colj,objj,vlbj,vubj) ;
-    pkvec_free(colj) ;
-    assert(r) ;
-  }
-  assert(matrix2.isEquivalent(*getMatrixByCol())) ;
+    assert(r) ; }
+
+  pkvec_free(colj) ;
+  assert(matrix2->isEquivalent(*getMatrixByCol())) ;
 
 /*
   Finish up. Establish a primal solution and an objective. The primal solution
@@ -1076,12 +1111,11 @@ void ODSI::load_problem (const int colcnt, const int rowcnt,
   if (rowi) pkvec_free(rowi) ;
 /*
   Second loop. Insert the coefficients by column. The size of colj is a gross
-  overestimate, but it saves us the trouble of constantly reallocating it.
+  overestimate, but it saves the trouble of constantly reallocating it.
 */
   pkvec_struct *colj = pkvec_new(rowcnt) ;
   assert(colj) ;
   colj->dim = rowcnt ;
-  colj->nme = 0 ;
   pkcoeff_struct *coeffs = colj->coeffs ;
 
   for (int j = 0 ; j < colcnt ; j++)
@@ -1096,6 +1130,7 @@ void ODSI::load_problem (const int colcnt, const int rowcnt,
     double objj = obj?obj[j]:0 ;
     double vlbj = col_lower?col_lower[j]:0 ;
     double vubj = col_upper?col_upper[j]:DYLP_INFINITY ;
+    colj->nme = 0 ;
     bool r = consys_addcol_pk(consys,vartypCON,colj,objj,vlbj,vubj) ;
     assert(r) ;
   }
@@ -1258,10 +1293,9 @@ ODSI::OsiDylpSolverInterface ()
 
 {
 /*
-  Replace the OSI default messages with ODSI messages. The default log level
-  will be 1.
+  Replace the OSI default messages with ODSI messages.
 */
-  messages_ = setOsiDylpMessages(CoinMessages::us_en) ;
+  setOsiDylpMessages(CoinMessages::us_en) ;
 /*
   Clear the hint info_ array.
 */
@@ -1362,8 +1396,10 @@ ODSI::OsiDylpSolverInterface (const OsiDylpSolverInterface& src)
 
 inline OsiSolverInterface* ODSI::clone (bool copyData) const
 
-{
-  return new OsiDylpSolverInterface(*this) ;
+{ if (copyData)
+  { return new OsiDylpSolverInterface(*this) ; }
+  else
+  { return new OsiDylpSolverInterface() ; }
 }
 
 
@@ -1378,12 +1414,17 @@ inline OsiSolverInterface* ODSI::clone (bool copyData) const
 
 /*! \brief Destroy LP problem. 
 
-  Free the problem-specific structures in an ODSI object.  First the dylp
-  lpprob_struct, the main structure passed to dylp. consys_free will free the
-  constraint system, and dy_freesoln will free the remaining data structures
-  associated with lpprob. There remains only to destroy lpprob itself. To
-  finish the job, free the options, tolerances, and statistics structures and
-  call destruct_cache to free the cache structures.
+  This routine will free the problem-specific structures in an ODSI object.
+  It relinquishes ownership of the solver, if necessary, and then the
+  lpprob_struct, the main structure passed to dylp, is destroyed.
+  Consys_free will free the constraint system, and dy_freesoln will free the
+  remaining data structures associated with lpprob. There remains only to
+  destroy the lpprob itself. To finish the job, free the options, tolerances,
+  and statistics structures and call destruct_cache to free the cache
+  structures.
+
+  Because the lpprob structure is created only when dylp is actually
+  called, it's possible that the interface contains only a constraint system.
 
   If the base ODSI object will be retained, set preserve_interface to true.
   This will retain the current options and tolerance settings, and reinitialise
@@ -1392,13 +1433,28 @@ inline OsiSolverInterface* ODSI::clone (bool copyData) const
 
 void ODSI::destruct_problem (bool preserve_interface)
 
-{ if (lpprob)
+{ 
+/*
+  If this object claims ownership of the solver, it should possess an lpprob
+  structure created when the solver was called.
+*/
+  assert((dylp_owner != this) || (dylp_owner == this && lpprob)) ;
+
+  if (dylp_owner == this) detach_dylp() ;
+
+  if (lpprob)
   { assert(lpprob->consys == consys) ;
     consys_free(consys) ;
     consys = 0 ;
     dy_freesoln(lpprob) ;
     delete lpprob ;
     lpprob = 0 ; }
+  else
+  if (consys)
+  { consys_free(consys) ;
+    consys = 0 ; }
+
+  destruct_cache() ;
 
   if (preserve_interface == false)
   { if (initialSolveOptions)
@@ -1417,9 +1473,8 @@ void ODSI::destruct_problem (bool preserve_interface)
     else
     { delete statistics ;
       statistics = 0 ; } }
-
-  destruct_cache() ;
-}
+  
+  return ; }
 
 
 /*! \brief Detach an ODSI instance from the dylp solver
@@ -1452,15 +1507,16 @@ void ODSI::detach_dylp ()
 
     Destruction of the last ODSI object triggers shutdown of the basis
     maintenance and i/o subsystems and deallocation of all dylp internal
-    data structures.  The call to detach_dylp is solely to free data
-    structures.
-
+    data structures.
 */
 
 ODSI::~OsiDylpSolverInterface ()
 
-{ if (dylp_owner == this) detach_dylp() ;
-
+{
+/*
+  Destroy the problem-specific structures used by dylp, and close the log
+  file, if open.
+*/
   destruct_problem(false) ;
   if (local_logchn != IOID_INV && local_logchn != IOID_NOSTRM)
     (void) closefile(local_logchn) ;
@@ -1473,6 +1529,46 @@ ODSI::~OsiDylpSolverInterface ()
     ioterm() ;
     errterm() ; }
   
+  return ; }
+
+/*! \ingroup ODSIConstructorsDestructors
+    \brief Reset the SI to the state produced by the default constructor.
+
+    When it's inconvenient to destroy one SI and construct a new one, this
+    function can be used to reset an existing SI to the same state produced
+    by the default constructor.
+*/
+
+void ODSI::reset ()
+
+{ 
+/*
+  Destroy the problem-specific structures used by dylp, and close the log
+  file, if open.
+*/
+  destruct_problem(false) ;
+  if (local_logchn != IOID_INV && local_logchn != IOID_NOSTRM)
+  { (void) closefile(local_logchn) ;
+    local_logchn = IOID_NOSTRM ; }
+/*
+  That takes care of cleaning out the ODSI object. Call setInitialData to
+  reset the underlying OSI object.
+*/
+  setInitialData() ;
+/*
+  Now the equivalent for ODSI: ensure default values for various fields in the
+  object. Regrettably, messages_ is not a pointer, so we can't preserve the
+  CoinMessages structure over the reset.
+*/
+  initial_gtxecho = false ;
+  resolve_gtxecho = false ;
+  lp_retval = lpINV ;
+  obj_sense = 1.0 ;
+  mps_debug = false ;
+  construct_options() ;
+  setOsiDylpMessages(CoinMessages::us_en) ;
+  for (int i = 0 ; i < OsiLastHintParam ; i++) info_[i] = 0 ;
+
   return ; }
 
 
@@ -1841,10 +1937,6 @@ void ODSI::setRowPrice (const double* price)
 
   return ; }
 
-
-
-
-
 //@} // ProbAdjust
 
 
@@ -1856,37 +1948,30 @@ void ODSI::setRowPrice (const double* price)
 
   This group of helper functions verify the correctness of copies of the
   data structures used in ODSI objects. For uniformity, all functions take
-  a parameter, `exact', which influences the type of checks for some of the
-  more complex structures.
+  a parameter, `exact', which influences the rigour of the test for some types.
 */
 //@{
 
 
 /*! \brief Compare two double values for equality.
 
- Exact requires exact bit-for-bit equality, which is usually not what you want.
- Inexact tests for equality within a tolerances of 1.0e-10, scaled by the
- maximum of the two doubles.
+  Exact bit-for-bit equality (i.e., d1 == d2) is usually not what is wanted
+  when comparing floating point values. The inexact test looks for equality
+  within a tolerance of 1.0e-10, scaled by the maximum of the two values.  To
+  do a toleranced test, both values must be finite.
 */
+
 void ODSI::assert_same (double d1, double d2, bool exact)
 
 { if (d1 == d2) return ;
+
   assert(!exact && finite(d1) && finite(d2)) ;
 
-  //-- from OsiFloatEqual.hpp
   static const double epsilon = 1.e-10 ;
-  double tol = std::max(fabs(d1), fabs(d2)) + 1 ;
+  double tol = std::max(fabs(d1),fabs(d2))+1 ;
   double diff = fabs(d1 - d2) ;
 
-  assert(diff <= tol * epsilon) ;
-}
-
-
-/*! \brief Compare two integer values for equality. */
-
-void ODSI::assert_same (int i1, int i2, bool exact)
-
-{ assert(exact && i1 == i2) ; }
+  assert(diff <= tol*epsilon) ; }
 
 
 /*! \brief Byte-wise equality comparison of a structure
@@ -1898,20 +1983,17 @@ template<class T>
   void ODSI::assert_same (const T& t1, const T& t2, bool exact)
 
 
-{ assert(exact) ;                // be explicit
-  if (&t1 == &t2) return ;
-  assert(memcmp(&t1, &t2, sizeof(T)) == 0) ;
-}
+{ if (&t1 == &t2) return ;
+  assert(memcmp(&t1,&t2,sizeof(T)) == 0) ; }
 
 
-/*! \brief Element-wise comparison of two primitive arrays. */
+/*! \brief Element-wise comparison of two primitive arrays.  */
 
 template<class T>
   void ODSI::assert_same (const T* t1, const T* t2, int n, bool exact)
 
 { if (t1 == t2) return ;
-  for (int i=0 ; i<n ; i++) assert_same(t1[i], t2[i], exact) ;
-}
+  for (int i=0 ; i<n ; i++) assert_same(t1[i],t2[i],exact) ; }
 
 
 /*! \brief Verify copy of a dylp basis structure
@@ -1929,8 +2011,7 @@ void ODSI::assert_same (const basis_struct& b1, const basis_struct& b2,
 
   int size = b1.len*sizeof(basisel_struct) ;
   assert(memcmp(inv_vec<basisel_struct>(b1.el),
-		inv_vec<basisel_struct>(b2.el),size) == 0) ;
-}
+		inv_vec<basisel_struct>(b2.el),size) == 0) ; }
 
 
 /*! \brief Verify copy of a dylp constraint bound
@@ -1949,8 +2030,7 @@ void ODSI::assert_same (const conbnd_struct& c1, const conbnd_struct& c2,
   //-- consys.h::conbnd_struct
   assert(c1.revs == c2.revs) ;
   assert(c1.inf == c2.inf) ;
-  assert(c1.bnd == c2.bnd) ;
-}
+  assert(c1.bnd == c2.bnd) ; }
 
 
 /*! \brief Verify copy of a dylp constraint matrix (consys_struct)
@@ -1966,19 +2046,16 @@ void ODSI::assert_same (const consys_struct& c1, const consys_struct& c2,
 			bool exact)
 
 { if (&c1 == &c2) return ;
-
-  //-- from consys.h::consys_struct
-
-  // name can differ
-  assert(!exact || c1.nme == c2.nme) ;
+/*
+  Simple fields: flags, counts, indices.
+*/
   assert(c1.parts == c2.parts) ;
   assert(c1.opts == c2.opts) ;
   assert(c1.varcnt == c2.varcnt) ;
   assert(c1.archvcnt == c2.archvcnt) ;
   assert(c1.logvcnt == c2.logvcnt) ;
-  // FIXME loadproblem does not load these info
-  assert(!exact || c1.intvcnt == c2.intvcnt) ;
-  assert(!exact || c1.binvcnt == c2.binvcnt) ;
+  assert(c1.intvcnt == c2.intvcnt) ;
+  assert(c1.binvcnt == c2.binvcnt) ;
   assert(c1.maxcollen == c2.maxcollen) ;
   assert(c1.maxcolndx == c2.maxcolndx) ;
   assert(c1.concnt == c2.concnt) ;
@@ -1986,29 +2063,35 @@ void ODSI::assert_same (const consys_struct& c1, const consys_struct& c2,
   assert(c1.cutccnt == c2.cutccnt) ;
   assert(c1.maxrowlen == c2.maxrowlen) ;
   assert(c1.maxrowndx == c2.maxrowndx) ;
-  // capacity can differ
-  assert(!exact || c1.colsze == c2.colsze) ;
-  assert(!exact || c1.rowsze == c2.rowsze) ;
-  // name can differ
-  assert(!exact || c1.objnme == c2.objnme) ;
   assert(c1.objndx == c2.objndx) ;
   assert(c1.xzndx == c2.xzndx) ;
-  
+/*
+  Associated vectors.
+*/
   int var_count = ODSI::idx(c1.varcnt) ;
   int con_count = ODSI::idx(c1.concnt) ;
 
   assert_same(c1.obj, c2.obj, var_count, exact) ;
-  // FIXME loadproblem does not load these info
-  if (exact) assert_same(c1.vtyp, c2.vtyp, var_count, true) ;
+  assert_same(c1.vtyp, c2.vtyp, var_count, true) ;
   assert_same(c1.vub, c2.vub, var_count, exact) ;
   assert_same(c1.vlb, c2.vlb, var_count, exact) ;
+  assert_same(c1.colscale, c2.colscale, var_count, exact) ;
+
   assert_same(c1.rhs, c2.rhs, con_count, exact) ;
   assert_same(c1.rhslow, c2.rhslow, con_count, exact) ;
   assert_same(c1.ctyp, c2.ctyp, con_count, true) ;
   assert_same(c1.cub, c2.cub, con_count, exact) ;
   assert_same(c1.clb, c2.clb, con_count, exact) ;
-  // check attvhdr_struct* attvecssrc
-}
+  assert_same(c1.rowscale, c2.rowscale, con_count, exact) ;
+/*
+  These can differ and have no mathematical effect. Test them only if the
+  client has requested exact equality.
+*/
+  if (exact)
+  { assert(c1.nme == c2.nme) ;
+    assert(c1.colsze == c2.colsze) ;
+    assert(c1.rowsze == c2.rowsze) ;
+    assert(c1.objnme == c2.objnme) ; } }
 
 
 /*! \brief  Verify copy of a dylp lp problem (lpprob_struct)
@@ -2022,27 +2105,36 @@ void ODSI::assert_same (const lpprob_struct& l1, const lpprob_struct& l2,
 			bool exact)
 
 { if (&l1 == &l2) return ;
-
-  //-- from dylp.h::lpprob_struct
-
+/*
+  Simple fields: flags, LP phase & return code, objective value, iteration
+  count.
+*/
   assert(l1.ctlopts == l2.ctlopts) ;
   assert(l1.phase == l2.phase) ;
   assert(l1.lpret == l2.lpret) ;
-  assert(l1.obj == l2.obj) ;
+  assert_same(l1.obj,l2.obj,exact) ;
   assert(l1.iters == l2.iters) ;
-  // capacity can differ
-  assert(!exact || l1.colsze == l2.colsze) ;
-  assert(!exact || l1.rowsze == l2.rowsze) ;
-
+/*
+  The allocated capacity can differ unless the client requires exact
+  equivalence.
+*/
+  if (exact)
+  { assert(l1.colsze == l2.colsze) ;
+    assert(l1.rowsze == l2.rowsze) ; }
+/*
+  Vectors: x, y, status
+*/
   int min_col = idx(std::min(l1.colsze, l2.colsze)) ;
   int min_row = idx(std::min(l1.rowsze, l2.rowsze)) ;
 
-  assert_same(*l1.consys, *l2.consys, exact) ;
-  assert_same(*l1.basis, *l2.basis, exact) ;
-  assert_same(l1.status, l2.status, min_col, exact) ;
-  assert_same(l1.x, l2.x, min_row, exact) ;
-  assert_same(l1.y, l2.y, min_row, exact) ;
-}
+  assert_same(l1.status,l2.status,min_col,exact) ;
+  assert_same(l1.x,l2.x,min_row, exact) ;
+  assert_same(l1.y,l2.y,min_row, exact) ;
+/*
+  Complex structures: the constraint system and basis.
+*/
+  assert_same(*l1.consys,*l2.consys,exact) ;
+  assert_same(*l1.basis,*l2.basis,exact) ; }
 
 
 /*! \brief Verify copy of an ODSI object.
@@ -2055,22 +2147,63 @@ void ODSI::assert_same (const lpprob_struct& l1, const lpprob_struct& l2,
 void ODSI::assert_same (const OsiDylpSolverInterface& o1,
 			const OsiDylpSolverInterface& o2, bool exact)
 
-{ if (&o1 == &o2) return ;
-
-  assert_same(*o1.lpprob, *o2.lpprob, exact) ;
-
-  assert(!o1.lpprob || o1.consys == o1.lpprob->consys) ;
-  assert(!o2.lpprob || o2.consys == o2.lpprob->consys) ;
-  const CoinPackedMatrix* m1 = o1.getMatrixByCol() ;
-  const CoinPackedMatrix* m2 = o2.getMatrixByCol() ;
-  assert(!m1 || m1->isEquivalent(*m2)) ;
-
+{ 
+/*
+  The same chunk of memory?
+*/
+  if (&o1 == &o2) return ;
+/*
+  These three fields are static. If they don't match, we're really
+  confused.
+*/
+  assert(o1.reference_count == o2.reference_count) ;
+  assert(o1.basis_ready == o2.basis_ready) ;
+  assert(o1.dylp_owner == o2.dylp_owner) ;
+/*
+  Test the rest of the simple data fields.
+*/
+  assert(o1.local_logchn == o2.local_logchn) ;
+  assert(o1.initial_gtxecho == o2.initial_gtxecho) ;
+  assert(o1.resolve_gtxecho == o2.resolve_gtxecho) ;
+  assert(o1.lp_retval == o2.lp_retval) ;
+  assert(o1.obj_sense == o2.obj_sense) ;
+  assert(o1.solvername == o2.solvername) ;
+  assert(o1.mps_debug == o2.mps_debug) ;
+/*
+  Options, tolerances, and statistics should be byte-for-byte identical.
+*/
   assert_same(*o1.initialSolveOptions, *o2.initialSolveOptions, true) ;
   assert_same(*o1.resolveOptions, *o2.resolveOptions, true) ;
   assert_same(*o1.statistics, *o2.statistics, true) ;
   assert_same(*o1.tolerances, *o2.tolerances, true) ;
-
-  assert(o1.lp_retval == o2.lp_retval) ;
+/*
+  The info_ array. The best we can do here is entry by entry equality.
+*/
+  assert_same(o1.info_,o2.info_,OsiLastHintParam,exact) ;
+/*
+  Now the more complicated structures. If the lpprob exists, it should
+  reference a constraint system, and it should be the same constraint system
+  as the consys field. The call to assert_same will check both the lpprob and
+  the consys structures.
+*/
+  if (o1.lpprob)
+  { assert(o2.lpprob) ;
+    assert(o1.lpprob->consys && (o1.consys == o1.lpprob->consys)) ;
+    assert(o2.lpprob->consys && (o2.consys == o2.lpprob->consys)) ;
+    assert_same(*o1.lpprob,*o2.lpprob,exact) ; }
+  else
+  { assert(!o2.lpprob) ;
+    assert_same(*o1.consys,*o2.consys,exact) ; }
+/*
+  A belt & suspenders check: retrieve the matrix as a COINPackedMatrix and
+  use the COIN isEquivalent routine to check for equality.
+*/
+  const CoinPackedMatrix* m1 = o1.getMatrixByCol() ;
+  const CoinPackedMatrix* m2 = o2.getMatrixByCol() ;
+  if (m1)
+  { assert(m2 || m1->isEquivalent(*m2)) ; }
+  else
+  { assert(!m2) ; }
 }
 
 //@} // CopyVerifiers

@@ -101,20 +101,24 @@ static MsgDefn uk_en_defns[] = {
 
 } /* End unnamed:file */
 
-/*
-  This function constructs a CoinMessage object filled with a default
-  set of messages, overlaid with whatever is available for the specified
-  language.
+/*!
+  This function constructs a CoinMessage object filled with a default set of
+  messages, overlaid with whatever is available for the specified language.
+  It is used to establish the initial set of messages, and is also called
+  whenever the language is changed. The latter, because there's no way of
+  guaranteeing that the sets of messages for alternate languages will all
+  replace the same messages. This approach guarantees that the set of
+  messages is always composed of the default language and the messages for
+  one alternate language.
 */
 
-CoinMessages ODSI::setOsiDylpMessages (CoinMessages::Language local_language)
+void ODSI::setOsiDylpMessages (CoinMessages::Language local_language)
 
   
-{ CoinMessages *msgs =
-	new CoinMessages(sizeof(us_en_defns)/sizeof(MsgDefn)) ;
+{ CoinMessages(sizeof(us_en_defns)/sizeof(MsgDefn)) ;
 
-  msgs->setLanguage(local_language) ;
-  strcpy(msgs->source_,"dylp");
+  messages_.setLanguage(local_language) ;
+  strcpy(messages_.source_,"dylp");
 
 /*
   Yes, this is gloriously redundant, but it's set up in anticipation of
@@ -133,7 +137,7 @@ CoinMessages ODSI::setOsiDylpMessages (CoinMessages::Language local_language)
 */
   while (msgdefn->inID != ODSI_DUMMY_END)
   { CoinOneMessage coinmsg(msgdefn->exID,msgdefn->lvl,msgdefn->fmt) ;
-    msgs->addMessage(msgdefn->inID,coinmsg) ;
+    messages_.addMessage(msgdefn->inID,coinmsg) ;
     msgdefn++ ; }
 /*
   Now, if the local language differs from the default language, load any
@@ -153,10 +157,10 @@ CoinMessages ODSI::setOsiDylpMessages (CoinMessages::Language local_language)
 	break; } }
 
     while (msgdefn->inID != ODSI_DUMMY_END)
-    { msgs->replaceMessage(msgdefn->inID,msgdefn->fmt) ;
+    { messages_.replaceMessage(msgdefn->inID,msgdefn->fmt) ;
       msgdefn++ ; } }
 
-  return (*msgs) ; }
+  return ; }
 
 
 #endif /* COIN_USE_DYLP */

@@ -54,6 +54,10 @@ MakefileDir := ../Common/make
 include ${MakefileDir}/Makefile.coin
 include ${MakefileDir}/Makefile.detectSolver
 
+###############################################################################
+
+include ${MakefileDir}/Makefile.rules
+
 ##############################################################################
 
 CXXFLAGS += $(OPTFLAG)
@@ -116,10 +120,6 @@ install: libosi
 	@rm -f ${InstallDir}/lib/libosi$(LIBEXT)
 	@cd ${InstallDir}/lib; \
 		ln -s libosi$(OptVersion)$(LIBEXT) libosi$(LIBEXT)
-
-###############################################################################
-
-include ${MakefileDir}/Makefile.rules
 
 ###############################################################################
 

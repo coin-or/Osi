@@ -358,7 +358,7 @@ void OsiClpSolverInterface::resolve()
     disableSimplexInterface();
   }
   int saveOptions = modelPtr_->specialOptions();
-  modelPtr_->setSpecialOptions(saveOptions|64); // go as far as possible
+  modelPtr_->setSpecialOptions(saveOptions|(64|1024)); // go as far as possible
   //modelPtr_->setSolveType(1);
   // Set message handler to have same levels etc
   bool oldDefault;

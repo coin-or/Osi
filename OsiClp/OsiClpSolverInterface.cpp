@@ -1861,7 +1861,7 @@ void OsiClpSolverInterface::setColSetBounds(const int* indexFirst,
   int n = modelPtr_->numberColumns();
   const int * indexFirst2=indexFirst;
   while (indexFirst2 != indexLast) {
-    const int iColumn=*indexFirst++;
+    const int iColumn=*indexFirst2++;
     if (iColumn<0||iColumn>=n) {
       indexError(iColumn,"setColSetBounds");
     }
@@ -1938,7 +1938,7 @@ void OsiClpSolverInterface::setRowSetBounds(const int* indexFirst,
   int n = modelPtr_->numberRows();
   const int * indexFirst2=indexFirst;
   while (indexFirst2 != indexLast) {
-    const int iColumn=*indexFirst++;
+    const int iColumn=*indexFirst2++;
     if (iColumn<0||iColumn>=n) {
       indexError(iColumn,"setColumnSetBounds");
     }

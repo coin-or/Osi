@@ -778,38 +778,24 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     
   }
 
-  // Solve an integer problem 
-#if 0
+  // Test add/delete columns
   {    
     OsiClpSolverInterface m;
     std::string fn = mpsDir+"p0033";
     m.readMps(fn.c_str(),"mps");
-    std::cout<<"Testing languages and derived message handler"<<std::endl;
-    m.setLanguage(CoinMessages::uk_en);
-    // derived message handler
-    OsiClpMessageTest messageHandler;
-    // Vanilla one but to FILE ptr
+    double inf = m.getInfinity();
 
-    CoinMessageHandler defaultHandler(stderr);
-    
-    /* This is a bit of a mess - or it could be a feature.  Osi and
-       Clp can be using different message handlers.  On reflection I
-       think this makes sense */
-    // First just trap Clp messages and see when optimal
-    m.getModelPtr()->passInMessageHandler(&messageHandler);
+    CoinPackedVector c0;
+    c0.insert(0, 4);
+    c0.insert(1, 1);
+    m.addCol(c0, 0, inf, 3);
     
     m.initialSolve();
-    m.setLanguage(CoinMessages::us_en);
-    // now put Clp messages to stderr and trap end of search
-    m.getModelPtr()->passInMessageHandler(&defaultHandler);
-
-    m.passInMessageHandler(&messageHandler);
-    // This also tests slow strong branching
-    m.branchAndBound();
+    int iCol = m.getNumCols()-1;
+    m.deleteCols(1,&iCol);
     m.resolve();
-    //m.getObjValue();
+
   }
-#endif
 
   // Solve an lp by hand
   {    

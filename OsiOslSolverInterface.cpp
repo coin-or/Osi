@@ -8,8 +8,6 @@
 
 #include <cassert>
 
-#include <ekk_c_api.h>
-
 #include "OsiOslSolverInterface.hpp"
 #include "OsiCuts.hpp"
 #include "OsiRowCut.hpp"

@@ -242,4 +242,51 @@ void
 OsiRowCutUnitTest(const OsiSolverInterface * baseSiP,    
 		  const std::string & mpsDir);
 
+/** Row Cut Class which refers back to row which created it.
+    It may be useful to strengthen a row rather than add a cut.  To do this
+    we need to know which row is strengthened.  This trivial extension
+    to OsiRowCut does that.
+
+*/
+class OsiRowCut2 : public OsiRowCut {
+
+public:
+  
+  /**@name Which row */
+  //@{
+  /// Get row
+  inline int whichRow() const
+  { return whichRow_;};
+  /// Set row
+  inline void setWhichRow(int row)
+  { whichRow_=row;};
+  //@}
+  
+  /**@name Constructors and destructors */
+  //@{
+  /// Assignment operator
+  OsiRowCut2 & operator=( const OsiRowCut2& rhs);
+  
+  /// Copy constructor 
+  OsiRowCut2 ( const OsiRowCut2 &);  
+  
+  /// Clone
+  virtual OsiRowCut2 * clone() const;
+  
+  /// Default Constructor 
+  OsiRowCut2 (int row=-1);
+  
+  /// Destructor 
+  virtual ~OsiRowCut2 ();
+  //@}
+
+private:
+  
+ 
+  /**@name Private member data */
+  //@{
+  /// Which row
+  int whichRow_;
+  //@}
+};
 #endif

@@ -222,3 +222,54 @@ OsiRowCut::print() const
   }
   std::cout<<std::endl;
 }
+//-------------------------------------------------------------------
+// Default Constructor 
+//-------------------------------------------------------------------
+OsiRowCut2::OsiRowCut2 (int row)
+:
+OsiRowCut(),
+whichRow_(row)
+{
+  // nothing to do here
+}
+//-------------------------------------------------------------------
+// Copy constructor 
+//-------------------------------------------------------------------
+OsiRowCut2::OsiRowCut2 (
+                  const OsiRowCut2 & source)
+:
+OsiRowCut(source),
+whichRow_(source.whichRow_)
+{  
+  // Nothing to do here
+}
+
+
+//----------------------------------------------------------------
+// Clone
+//----------------------------------------------------------------
+OsiRowCut2 * OsiRowCut2::clone() const
+{  return (new OsiRowCut2(*this));}
+
+
+//-------------------------------------------------------------------
+// Destructor 
+//-------------------------------------------------------------------
+OsiRowCut2::~OsiRowCut2 ()
+{
+  // Nothing to do here
+}
+
+//----------------------------------------------------------------
+// Assignment operator 
+//-------------------------------------------------------------------
+OsiRowCut2 &
+OsiRowCut2::operator=(
+                      const OsiRowCut2& rhs)
+{
+  if (this != &rhs) {
+    OsiRowCut::operator=(rhs);
+    whichRow_=rhs.whichRow_;
+  }
+  return *this;
+}

@@ -93,6 +93,11 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
   originalColumn_ = new int[ncols_];
   delete [] originalRow_;
   originalRow_ = new int[nrows_];
+  int i;
+  for (i=0;i<ncols_;i++) 
+    originalColumn_[i]=i;
+  for (i=0;i<nrows_;i++) 
+    originalRow_[i]=i;
 
   // result is 0 - okay, 1 infeasible, -1 go round again
   int result = -1;

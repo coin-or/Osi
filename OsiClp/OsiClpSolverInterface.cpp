@@ -1967,7 +1967,6 @@ OsiClpSolverInterface::disableSimplexInterface()
 void 
 OsiClpSolverInterface::getBasisStatus(int* cstat, int* rstat)
 {
-  assert (modelPtr_->solveType()==2);
   int i, n;
   n=modelPtr_->numberRows();
   int lookup[]={0,1,2,3,0,3};
@@ -1982,7 +1981,6 @@ OsiClpSolverInterface::getBasisStatus(int* cstat, int* rstat)
 int 
 OsiClpSolverInterface::setBasisStatus(const int* cstat, const int* rstat)
 {
-  assert (modelPtr_->solveType()==2);
   modelPtr_->createStatus();
   int i, n;
   double * lower, * upper, * solution;

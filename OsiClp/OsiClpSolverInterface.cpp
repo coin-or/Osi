@@ -1110,6 +1110,7 @@ OsiClpSolverInterface::setBasis ( const CoinWarmStartBasis & basis)
   // resize if necessary
   basis2.resize(numberRows,numberColumns);
   // move status
+  modelPtr_->createStatus();
   for (iRow=0;iRow<numberRows;iRow++) {
     modelPtr_->setRowStatus(iRow,
 		 (ClpSimplex::Status) basis2.getArtifStatus(iRow));

@@ -17,7 +17,8 @@
 #include <string>
 #include "cplex.h"
 #include "OsiSolverInterface.hpp"
-//#include "CoinPackedMatrix.hpp"
+#include "CoinPackedMatrix.hpp"
+#include "CoinWarmStartBasis.hpp"
 
 /** CPLEX Solver Interface
 

@@ -18,6 +18,7 @@ class CoinWarmStart;
 class OsiCuts;
 class OsiRowCut;
 class OsiRowCutDebugger;
+class CoinSet;
 
 //#############################################################################
 
@@ -837,6 +838,15 @@ public:
    */
     virtual int readMps(const char *filename,
 			 const char *extension = "mps") ;
+
+    /** Read a problem in MPS format from the given full filename.
+    
+	This uses CoinMpsIO::readMps() to read
+	the MPS file and returns the number of errors encountered.
+	It also may return an array of set information
+   */
+  virtual int readMps(const char *filename, const char*extension,
+			int & numberSets, CoinSet ** & sets);
 
     /** Write the problem in MPS format to the specified file.
 

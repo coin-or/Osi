@@ -519,6 +519,50 @@ int OsiSolverInterface::readMps(const char * filename,
   }
   return numberErrors;
 }
+/* Read a problem in MPS format from the given full filename.
+   
+This uses CoinMpsIO::readMps() to read
+the MPS file and returns the number of errors encountered.
+It also may return an array of set information
+*/
+int 
+OsiSolverInterface::readMps(const char *filename, const char*extension,
+			    int & numberSets, CoinSet ** & sets)
+{
+  CoinMpsIO m;
+  m.setInfinity(getInfinity());
+  
+  int numberErrors = m.readMps(filename,extension,numberSets,sets);
+  handler_->message(COIN_SOLVER_MPS,messages_)
+    <<m.getProblemName()<< numberErrors <<CoinMessageEol;
+  if (!numberErrors) {
+
+    // set objective function offest
+    setDblParam(OsiObjOffset,m.objectiveOffset());
+
+    // set problem name
+    setStrParam(OsiProbName,m.getProblemName());
+
+    // no errors
+    loadProblem(*m.getMatrixByCol(),m.getColLower(),m.getColUpper(),
+		m.getObjCoefficients(),m.getRowSense(),m.getRightHandSide(),
+		m.getRowRange());
+    const char * integer = m.integerColumns();
+    if (integer) {
+      int i,n=0;
+      int nCols=m.getNumCols();
+      int * index = new int [nCols];
+      for (i=0;i<nCols;i++) {
+	if (integer[i]) {
+	  index[n++]=i;
+	}
+      }
+      setInteger(index,n);
+      delete [] index;
+    }
+  }
+  return numberErrors;
+}
 
 int 
 OsiSolverInterface::writeMpsNative(const char *filename, 

@@ -542,11 +542,16 @@ bool OsiClpSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
   const CoinWarmStartBasis* ws =
     dynamic_cast<const CoinWarmStartBasis*>(warmstart);
 
-  if (! ws)
+  if (ws) {
+    basis_ = CoinWarmStartBasis(*ws);
+    return true;
+  } else if (!warmstart) {
+    // create from current basis
+    basis_ = getBasis(modelPtr_);
+    return true;
+  } else {
     return false;
-  basis_ = CoinWarmStartBasis(*ws);
-  return true;
-
+  }
 }
 
 //#############################################################################

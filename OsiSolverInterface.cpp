@@ -17,6 +17,7 @@
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
 #include "OsiRowCutDebugger.hpp"
+#include <cassert>
 
 //#############################################################################
 // Hotstart related methods (primarily used in strong branching)

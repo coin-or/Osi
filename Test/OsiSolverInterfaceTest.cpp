@@ -260,7 +260,6 @@ void OsiSolverInterfaceMpsUnitTest
 */
     for (i = vecSiP.size()-1 ; i >= 0 ; --i)
     { vecSiP[i] = vecEmptySiP[i]->clone() ;
-    std::cout<<vecEmptySiP[i]<<" "<<vecSiP[i]<<std::endl;
       
       std::string fn = mpsDir+mpsName[m] ;
       vecSiP[i]->readMps(fn.c_str(),"mps") ;

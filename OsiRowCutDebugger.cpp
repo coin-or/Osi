@@ -422,6 +422,25 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
     expectedNumberColumns=89;
   }
 
+  // stein27
+  else if ( modelL == "stein27" ) {
+    probType=pure0_1;
+    int intIndicesAt1[]={0,1,3,4,5,6,7,8,9,11,13,16,17,19,21,22,25,26};
+    int numIndices = sizeof(intIndicesAt1)/sizeof(int);
+    intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=27;
+  }
+
+  // stein45
+  else if ( modelL == "stein45" ) {
+    probType=pure0_1;
+    int intIndicesAt1[]={0,1,4,5,6,7,8,9,10,11,14,17,18,19,21,23,24,25,26,28,
+    31,32,33,36,37,39,40,42,43,44};
+    int numIndices = sizeof(intIndicesAt1)/sizeof(int);
+    intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=45;
+  }
+
   // misc03
   else if ( modelL == "misc03" ) {
     probType=continuousWith0_1;

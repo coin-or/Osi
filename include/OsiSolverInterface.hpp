@@ -990,6 +990,9 @@ public:
 	Otherwise NULL is returned
     */
     const OsiRowCutDebugger * getRowCutDebugger() const;
+    /// If you want to get debugger object even if not on optimal path then use this
+    const OsiRowCutDebugger * getRowCutDebuggerAlways() const;
+
   //@} 
 
   //---------------------------------------------------------------------------

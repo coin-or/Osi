@@ -2883,3 +2883,12 @@ void OsiCpxSolverInterface::freeAllMemory()
   hotStartRStatSize_ = 0;
   freeColType();
 }
+
+//#############################################################################
+// Resets as if default constructor
+void 
+OsiCpxSolverInterface::reset()
+{
+  setInitialData(); // clear base class
+  gutsOfDestructor();
+}

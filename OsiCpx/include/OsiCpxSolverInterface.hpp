@@ -647,6 +647,9 @@ public:
   
   /// Destructor 
   virtual ~OsiCpxSolverInterface();
+
+  /// Resets as if default constructor
+  virtual void reset();
   //@}
   
 protected:

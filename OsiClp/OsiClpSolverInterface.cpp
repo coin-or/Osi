@@ -16,11 +16,13 @@
 #include "CoinHelperFunctions.hpp"
 #include "ClpDualRowSteepest.hpp"
 #include "ClpPrimalColumnSteepest.hpp"
+#include "ClpFactorization.hpp"
 #include "ClpSimplex.hpp"
 #include "OsiClpSolverInterface.hpp"
 #include "OsiCuts.hpp"
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
+#include "Presolve.hpp"
 
 static double totalTime=0.0;
 static double cpuTime()
@@ -66,6 +68,55 @@ void OsiClpSolverInterface::initialSolve()
    */
   bool doPrimal = (basis_.numberBasicStructurals()>0);
   setBasis(basis_,&solver);
+  //#define PRESOLVE
+#ifdef PRESOLVE
+  Presolve pinfo;
+  ClpSimplex * model2 = pinfo.presolvedModel(solver,1.0e-8);
+  // change from 200
+  model2->factorization()->maximumPivots(100+model2->numberRows()/50);
+  if (!doPrimal) {
+    // look further
+    if (solver.crash(1.0,0)>0)
+      doPrimal=true;
+  }
+  doPrimal=false;
+  if (!doPrimal) {
+    // faster if bounds tightened
+    //int numberInfeasibilities = model2->tightenPrimalBounds();
+     model2->tightenPrimalBounds();
+    //if (numberInfeasibilities)
+    //std::cout<<"** Analysis indicates model infeasible"
+    //       <<std::endl;
+     // up dual bound for safety
+     model2->setDualBound(1.0e10);
+     model2->dual();
+      // check if clp thought it was in a loop
+    if (model2->status()==3&&
+	model2->numberIterations()<model2->maximumIterations()) {
+      // switch algorithm
+      model2->primal();
+      }
+  } else {
+    // up infeasibility cost for safety
+    model2->setInfeasibilityCost(1.0e10);
+    model2->primal();
+      // check if clp thought it was in a loop
+    if (model2->status()==3
+	&&model2->numberIterations()<model2->maximumIterations()) {
+      // switch algorithm
+      model2->dual();
+      }
+  }
+  pinfo.postsolve(true);
+  
+  delete model2;
+  printf("Resolving from postsolved model\n");
+  // later try without (1) and check duals before solve
+  solver.primal(1);
+  lastAlgorithm_=1; // primal
+  //if (solver.numberIterations())
+  //printf("****** iterated %d\n",solver.numberIterations());
+#else
   if (!doPrimal) {
     // look further
     if (solver.crash(1.0,0)>0)
@@ -92,6 +143,7 @@ void OsiClpSolverInterface::initialSolve()
       lastAlgorithm_=2; // dual
     }
   }
+#endif
   basis_ = getBasis(&solver);
   //basis_.print();
   solver.returnModel(*modelPtr_);

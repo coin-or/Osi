@@ -33,8 +33,8 @@ OslLibDir := PROBE
 OslLibName := libosl.so
 
 # Vol
-VolIncDir := NONE
-#VolIncDir := PROBE
+#VolIncDir := NONE
+VolIncDir := PROBE
 VolLibDir := PROBE
 VolLibName := libvol.so
 
@@ -75,7 +75,7 @@ VPATH := . : include : Junk : ${TARGETDIR} : ${DEPDIR}
 #########################################################################
 
 CXXFLAGS += $(addprefix -I,$(DETECTINCDIRS))
-CXXFLAGS += $(addprefix -D,$(SOLVERDEFINES))
+CXXFLAGS += $(addprefix -D,$(DETECTDEFINES))
 
 LIBDIRS := $(DETECTLIBDIRS) $(InstallDir)/lib
 LIBS    := libosi.so $(DETECTLIBNAMES)

@@ -1815,6 +1815,185 @@ OsiXprSolverInterface::assignProblem(OsiPackedMatrix*& matrix,
 }
 
 //-----------------------------------------------------------------------------
+
+void
+OsiXprSolverInterface::loadProblem(const int numcols, const int numrows,
+				   const int* start, const int* index,
+				   const double* value,
+				   const double* collb, const double* colub,   
+				   const double* obj,
+				   const double* rowlb, const double* rowub )
+{
+  const double inf = getInfinity();
+  
+  char   * rowSense = new char  [numrows];
+  double * rowRhs   = new double[numrows];
+  double * rowRange = new double[numrows];
+  
+  for ( int i = numrows - 1; i >= 0; --i ) {
+    const double lower = rowlb ? rowlb[i] : -inf;
+    const double upper = rowub ? rowub[i] : inf;
+    convertBoundToSense( lower, upper, rowSense[i], rowRhs[i], rowRange[i] );
+  }
+
+  loadProblem(numcols, numrows, start, index, value, collb, colub, obj,
+	      rowSense, rowRhs, rowRange);
+  delete [] rowSense;
+  delete [] rowRhs;
+  delete [] rowRange;
+
+}
+
+//-----------------------------------------------------------------------------
+
+void
+OsiXprSolverInterface::loadProblem(const int numcols, const int numrows,
+				   const int* start, const int* index,
+				   const double* value,
+				   const double* collb, const double* colub,   
+				   const double* obj,
+				   const char* rowsen, const double* rowrhs,
+				   const double* rowrng )
+{
+  assert( rowsen != NULL );
+  assert( rowrhs != NULL );
+
+  activateMe();
+  freeCachedResults();
+  int i;
+ 
+  // Set column values to defaults if NULL pointer passed
+  int nc = numcols;
+  int nr = numrows;
+  int * len = new int[nc];
+  double * clb;  
+  double * cub;
+  double * ob;
+
+  std::adjacent_difference(start, start + (nc+1), len);
+  
+  if ( collb!=NULL ) {
+    clb=const_cast<double*>(collb);
+  }
+  else {
+    clb = new double[nc];
+    for( i=0; i<nc; i++ ) clb[i]=0.0;
+  }
+  if ( colub!=NULL ) 
+    cub=const_cast<double*>(colub);
+  else {
+    cub = new double[nc];
+    for( i=0; i<nc; i++ ) cub[i]=DPLINF;
+  }
+  if ( obj!=NULL ) 
+    ob=const_cast<double*>(obj);
+  else {
+    ob = new double[nc];
+    for( i=0; i<nc; i++ ) ob[i]=0.0;
+  }
+
+  // Generate a problem name
+  char probName[256];
+  sprintf(probName, "Prob%i", osiSerial_);
+
+  if ( getLogFilePtr()!=NULL ) {   
+    fprintf(getLogFilePtr(),"{\n"); 
+
+    fprintf(getLogFilePtr(),"  char rowsen[%d];\n",nr);
+    for ( i=0; i<nr; i++ )
+      fprintf(getLogFilePtr(),"  rowsen[%d]='%c';\n",i,rowsen[i]);
+
+    fprintf(getLogFilePtr(),"  double rowrhs[%d];\n",nr);
+    for ( i=0; i<nr; i++ )
+      fprintf(getLogFilePtr(),"  rowrhs[%d]=%f;\n",i,rowrhs[i]);
+    
+    fprintf(getLogFilePtr(),"  double rowrng[%d];\n",nr);
+    for ( i=0; i<nr; i++ )
+      fprintf(getLogFilePtr(),"  rowrng[%d]=%f;\n",i,rowrng[i]);
+
+    fprintf(getLogFilePtr(),"  double ob[%d];\n",nc);
+    for ( i=0; i<nc; i++ )
+      fprintf(getLogFilePtr(),"  ob[%d]=%f;\n",i,ob[i]);
+
+    fprintf(getLogFilePtr(),"  double clb[%d];\n",nc);
+    for ( i=0; i<nc; i++ )
+      fprintf(getLogFilePtr(),"  clb[%d]=%f;\n",i,clb[i]);
+
+    fprintf(getLogFilePtr(),"  double cub[%d];\n",nc);
+    for ( i=0; i<nc; i++ )
+      fprintf(getLogFilePtr(),"  cub[%d]=%f;\n",i,cub[i]);
+
+    fprintf(getLogFilePtr(),"  int vectorStarts[%d];\n",nc+1);
+    for ( i=0; i<=nc; i++ )
+      fprintf(getLogFilePtr(),"  vectorStarts[%d]=%d;\n",i,start[i]);
+
+    fprintf(getLogFilePtr(),"  int vectorLengths[%d];\n",nc);
+    for ( i=0; i<nc; i++ )
+      fprintf(getLogFilePtr(),"  vectorLengths[%d]=%d;\n",i,len[i]);
+    
+    fprintf(getLogFilePtr(),"  int indices[%d];\n",start[nc]);
+    for ( i=0; i<start[nc]; i++ )
+      fprintf(getLogFilePtr(),"  indices[%d]=%d;\n",i,index[i]);
+
+    fprintf(getLogFilePtr(),"  double elements[%d];\n",start[nc]);
+    for ( i=0; i<start[nc]; i++ )
+      fprintf(getLogFilePtr(),"  elements[%d]=%f;\n",i,value[i]);
+
+    fprintf(getLogFilePtr(),
+            "  int iret = loadprob(\"%s\",\n"
+            "                      %d,\n"
+            "                      %d,\n"
+            "                      rowsen,\n"
+            "                      rowrhs,\n"
+            "                      rowrng,\n"
+            "                      ob,\n"
+            "                      vectorStarts,\n"
+            "                      vectorLengths,\n"
+            "                      indices,\n"
+            "                      elements,\n"
+            "                      clb,\n"
+            "                      cub );\n",probName,nc,nr );    
+    fprintf(getLogFilePtr(),"}\n");
+  }
+  // Need to cast away const'ness
+  int iret = loadprob(probName,
+    nc,
+    nr,
+    rowsen,
+    const_cast<double*>(rowrhs),
+    const_cast<double*>(rowrng),
+    ob,
+    const_cast<int*>(start),
+    const_cast<int*>(len),
+    const_cast<int*>(index),
+    const_cast<double*>(value),
+    clb,
+    cub );
+  
+  if ( iret != 0 )
+    getipv(N_ERRNO, &iret);
+  assert( iret == 0 );
+  
+   
+  if (getLogFilePtr()!=NULL) {
+    fprintf(getLogFilePtr(),"{\n");
+    fprintf(getLogFilePtr(),"   char pname[256];\n");
+    fprintf(getLogFilePtr(),"   getprob(pname);\n");
+    fprintf(getLogFilePtr(),"}\n");
+  }
+
+  char pname[256];      // Problem names can be 200 chars in XPRESS 12
+  getprob(pname);
+  xprProbname_ = pname;
+  
+  if ( collb == NULL ) delete[] clb;
+  if ( colub == NULL ) delete[] cub;
+  if ( obj   == NULL ) delete[] ob;
+  delete[] len;
+}
+
+
+//-----------------------------------------------------------------------------
 // Read mps files
 //-----------------------------------------------------------------------------
 

@@ -15,8 +15,10 @@
 #  pragma warning(disable:4786)
 #endif
 
+#include <iostream>
 #include <cassert>
 #include <string>
+#include <numeric>
 
 #include "CoinError.hpp"
 
@@ -63,7 +65,8 @@ inline void checkCPXerror( int err, std::string cpxfuncname, std::string osimeth
     {
       char s[100];
       sprintf( s, "%s returned error %d", cpxfuncname.c_str(), err );
-      cout << "ERROR: " << s << " (" << osimethod << " in OsiCpxSolverInterface)" << endl;
+      std::cout << "ERROR: " << s << " (" << osimethod << 
+	" in OsiCpxSolverInterface)" << std::endl;
       throw CoinError( s, osimethod.c_str(), "OsiCpxSolverInterface" );
     }
 }
@@ -101,7 +104,7 @@ void OsiCpxSolverInterface::resolve()
       checkCPXerror( err, "CPXchgprobtype", "resolve" );
     }
 
-  int stat = CPXdualopt( env_, lp );   
+  CPXdualopt( env_, lp );   
 }
 //-----------------------------------------------------------------------------
 void OsiCpxSolverInterface::branchAndBound()
@@ -692,7 +695,23 @@ double OsiCpxSolverInterface::getObjSense() const
 
 bool OsiCpxSolverInterface::isContinuous( int colNumber ) const
 {
-  return( getCtype()[colNumber] == CPX_CONTINUOUS );
+  CPXLPptr lp = getMutableLpPtr();
+  int probType = CPXgetprobtype(env_, lp);
+  int ctype;
+
+  if ( probType == CPXPROB_RELAXED ) {
+    int err = CPXchgprobtype(env_, lp, CPXPROB_MIP);
+    checkCPXerror( err, "CPXchgprobtype", "isContinuous" );
+  }
+  
+  ctype = getCtype()[colNumber] == CPX_CONTINUOUS;
+
+  if ( probType == CPXPROB_RELAXED ) {
+    int err = CPXchgprobtype(env_, lp, CPXPROB_RELAXED);
+    checkCPXerror( err, "CPXchgprobtype", "isContinuous" );
+  }
+
+  return ctype;
 }
 
 //------------------------------------------------------------------
@@ -1528,6 +1547,130 @@ OsiCpxSolverInterface::assignProblem( OsiPackedMatrix*& matrix,
    delete[] rowsen; rowsen = 0;
    delete[] rowrhs; rowrhs = 0;
    delete[] rowrng; rowrng = 0;
+}
+
+//-----------------------------------------------------------------------------
+
+void
+OsiCpxSolverInterface::loadProblem(const int numcols, const int numrows,
+				   const int* start, const int* index,
+				   const double* value,
+				   const double* collb, const double* colub,   
+				   const double* obj,
+				   const double* rowlb, const double* rowub )
+{
+  const double inf = getInfinity();
+  
+  char   * rowSense = new char  [numrows];
+  double * rowRhs   = new double[numrows];
+  double * rowRange = new double[numrows];
+  
+  for ( int i = numrows - 1; i >= 0; --i ) {
+    const double lower = rowlb ? rowlb[i] : -inf;
+    const double upper = rowub ? rowub[i] : inf;
+    convertBoundToSense( lower, upper, rowSense[i], rowRhs[i], rowRange[i] );
+  }
+
+  loadProblem(numcols, numrows, start, index, value, collb, colub, obj,
+	      rowSense, rowRhs, rowRange);
+  delete [] rowSense;
+  delete [] rowRhs;
+  delete [] rowRange;
+
+}
+
+//-----------------------------------------------------------------------------
+
+void
+OsiCpxSolverInterface::loadProblem(const int numcols, const int numrows,
+				   const int* start, const int* index,
+				   const double* value,
+				   const double* collb, const double* colub,   
+				   const double* obj,
+				   const char* rowsen, const double* rowrhs,
+				   const double* rowrng )
+{
+  const int nc = numcols;
+  const int nr = numrows;
+
+  if( nr == 0 || nc == 0 ) {
+    // empty LP? -> kill old LP
+    gutsOfDestructor();
+    return;
+  }
+
+  assert( rowsen != NULL );
+  assert( rowrhs != NULL );
+      
+  int i;
+      
+  // Set column values to defaults if NULL pointer passed
+  int * len = new int[nc];
+  double * clb = new double[nc];  
+  double * cub = new double[nc];  
+  double * ob = new double[nc];  
+  double * rr = new double[nr];
+  double * rhs = new double[nr];
+  char * sen = new char[nr];
+  
+  std::adjacent_difference(start, start + (nc+1), len);
+
+  if ( collb != NULL )
+    CoinDisjointCopyN(collb, nc, clb);
+  else
+    CoinFillN(clb, nc, 0.0);
+
+  if ( colub!=NULL )
+    CoinDisjointCopyN(colub, nc, cub);
+  else
+    CoinFillN(cub, nc, getInfinity());
+  
+  if ( obj!=NULL )
+    CoinDisjointCopyN(obj, nc, ob);
+  else
+    CoinFillN(ob, nc, 0.0);
+  
+  if ( rowrng != NULL ) {
+    for ( i=0; i<nr; i++ ) {
+      if (rowsen[i] == 'R') {
+	if ( rowrng[i] >= 0 ) {
+	  rhs[i] = rowrhs[i] - rowrng[i];
+	  rr[i] = rowrng[i];
+	} else {
+	  rhs[i] = rowrhs[i];
+	  rr[i] = -rowrng[i];
+	}
+      } else {
+	rhs[i] = rowrhs[i];
+	rr[i] = 0.0;
+      }
+    }
+  } else {
+    CoinDisjointCopyN(rowrhs, nr, rhs);
+  }
+
+  CoinDisjointCopyN(rowsen, nr, sen);
+  
+  int objDirection = CPXgetobjsen( env_, getMutableLpPtr() );
+      
+  int err = CPXcopylp( env_, getLpPtr(), 
+		       nc, nr,
+		       // Leave ObjSense alone(set to current value).
+		       objDirection, ob, rhs, sen,
+		       const_cast<int *>(start), 
+		       len, const_cast<int *>(index), 
+		       const_cast<double *>(value),
+		       clb, cub, rr);
+
+  checkCPXerror( err, "CPXcopylp", "loadProblem" );
+  
+  delete[] len;
+  delete[] clb;
+  delete[] cub;
+  delete[] ob;
+  delete[] rr;
+  delete[] rhs;
+  delete[] sen;
 }
  
 //-----------------------------------------------------------------------------

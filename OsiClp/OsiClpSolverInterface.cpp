@@ -57,18 +57,24 @@ void OsiClpSolverInterface::initialSolve()
   bool takeHint;
   OsiHintStrength strength;
   // Switch off printing if asked to
-  assert(getHintParam(OsiDoReducePrint,takeHint,strength));
+  bool gotHint = (getHintParam(OsiDoReducePrint,takeHint,strength));
+  assert (gotHint);
   int saveMessageLevel=messageHandler()->logLevel();
   if (strength!=OsiHintIgnore&&takeHint) {
     if (saveMessageLevel)
       solver.messageHandler()->setLogLevel(saveMessageLevel-1);
   }
   // scaling
-  assert(getHintParam(OsiDoScale,takeHint,strength));
-  if (strength==OsiHintIgnore||takeHint)
-    solver.scaling(1);
-  else
+  if (modelPtr_->solveType()==1) {
+    gotHint = (getHintParam(OsiDoScale,takeHint,strength));
+    assert (gotHint);
+    if (strength==OsiHintIgnore||takeHint)
+      solver.scaling(1);
+    else
+      solver.scaling(0);
+  } else {
     solver.scaling(0);
+  }
   solver.setDualBound(1.0e6);
   solver.setDualTolerance(1.0e-7);
   ClpDualRowSteepest steep;
@@ -86,17 +92,20 @@ void OsiClpSolverInterface::initialSolve()
   // sort out hints;
   // algorithm 0 whatever, -1 force dual, +1 force primal
   int algorithm = 0;
-  assert(getHintParam(OsiDoDualInInitial,takeHint,strength));
+  gotHint = (getHintParam(OsiDoDualInInitial,takeHint,strength));
+  assert (gotHint);
   if (strength!=OsiHintIgnore)
     algorithm = takeHint ? -1 : 1;
   // crash 0 do lightweight if all slack, 1 do, -1 don't
   int doCrash=0;
-  assert(getHintParam(OsiDoCrash,takeHint,strength));
+  gotHint = (getHintParam(OsiDoCrash,takeHint,strength));
+  assert (gotHint);
   if (strength!=OsiHintIgnore)
     doCrash = takeHint ? 1 : -1;
 	 
   // presolve
-  assert(getHintParam(OsiDoPresolveInInitial,takeHint,strength));
+  gotHint = (getHintParam(OsiDoPresolveInInitial,takeHint,strength));
+  assert (gotHint);
   if (strength!=OsiHintIgnore&&takeHint) {
     Presolve pinfo;
     ClpSimplex * model2 = pinfo.presolvedModel(solver,1.0e-8);
@@ -208,30 +217,37 @@ void OsiClpSolverInterface::resolve()
   bool takeHint;
   OsiHintStrength strength;
   // Switch off printing if asked to
-  assert(getHintParam(OsiDoReducePrint,takeHint,strength));
+  bool gotHint = (getHintParam(OsiDoReducePrint,takeHint,strength));
+  assert (gotHint);
   int saveMessageLevel=messageHandler()->logLevel();
   if (strength!=OsiHintIgnore&&takeHint) {
     if (saveMessageLevel)
       solver.messageHandler()->setLogLevel(saveMessageLevel-1);
   }
   // scaling
-  assert(getHintParam(OsiDoScale,takeHint,strength));
-  if (strength==OsiHintIgnore||takeHint)
-    solver.scaling(1);
-  else
+  if (modelPtr_->solveType()==1) {
+    gotHint = (getHintParam(OsiDoScale,takeHint,strength));
+    assert (gotHint);
+    if (strength==OsiHintIgnore||takeHint)
+      solver.scaling(1);
+    else
+      solver.scaling(0);
+  } else {
     solver.scaling(0);
-
+  }
   ClpDualRowSteepest steep;
   solver.setDualRowPivotAlgorithm(steep);
   // sort out hints;
   // algorithm -1 force dual, +1 force primal
   int algorithm = -1;
-  assert(getHintParam(OsiDoDualInInitial,takeHint,strength));
+  gotHint = (getHintParam(OsiDoDualInInitial,takeHint,strength));
+  assert (gotHint);
   if (strength!=OsiHintIgnore)
     algorithm = takeHint ? -1 : 1;
   //solver.saveModel("save.bad");
   // presolve
-  assert(getHintParam(OsiDoPresolveInInitial,takeHint,strength));
+  gotHint = (getHintParam(OsiDoPresolveInInitial,takeHint,strength));
+  assert (gotHint);
   if (strength!=OsiHintIgnore&&takeHint) {
     Presolve pinfo;
     ClpSimplex * model2 = pinfo.presolvedModel(solver,1.0e-8);
@@ -545,7 +561,8 @@ void OsiClpSolverInterface::solveFromHotStart()
   bool takeHint;
   OsiHintStrength strength;
   // Switch off printing if asked to
-  assert(getHintParam(OsiDoReducePrint,takeHint,strength));
+  bool gotHint = (getHintParam(OsiDoReducePrint,takeHint,strength));
+  assert (gotHint);
   int saveMessageLevel=messageHandler()->logLevel();
   if (strength!=OsiHintIgnore&&takeHint) {
     if (saveMessageLevel)
@@ -649,6 +666,17 @@ void OsiClpSolverInterface::setColSetBounds(const int* indexFirst,
     const int iCol=*indexFirst++;
     lower[iCol]= forceIntoRange(*boundList++, -OsiClpInfinity, OsiClpInfinity);
     upper[iCol]= forceIntoRange(*boundList++, -OsiClpInfinity, OsiClpInfinity);
+  }
+  if (modelPtr_->solveType()==2) {
+    // directly into code as well
+    double * lower = modelPtr_->lowerRegion(1);
+    double * upper = modelPtr_->upperRegion(1);
+    while (indexFirst != indexLast) {
+      const int iCol=*indexFirst++;
+      lower[iCol]= forceIntoRange(*boundList++, -OsiClpInfinity, OsiClpInfinity);
+      upper[iCol]= forceIntoRange(*boundList++, -OsiClpInfinity, OsiClpInfinity);
+    }
+    
   }
 }
 //-----------------------------------------------------------------------------
@@ -762,12 +790,22 @@ void OsiClpSolverInterface::setColSolution(const double * cs)
 {
   CoinDisjointCopyN(cs,modelPtr_->numberColumns(),
 		    modelPtr_->primalColumnSolution());
+  if (modelPtr_->solveType()==2) {
+    // directly into code as well
+    CoinDisjointCopyN(cs,modelPtr_->numberColumns(),
+		      modelPtr_->solutionRegion(1));
+  }
 }
 //-----------------------------------------------------------------------------
 void OsiClpSolverInterface::setRowPrice(const double * rs) 
 {
   CoinDisjointCopyN(rs,modelPtr_->numberRows(),
 		    modelPtr_->dualRowSolution());
+  if (modelPtr_->solveType()==2) {
+    // directly into code as well (? sign )
+    CoinDisjointCopyN(rs,modelPtr_->numberRows(),
+		      modelPtr_->djRegion(0));
+  }
 }
 
 //#############################################################################
@@ -1454,4 +1492,227 @@ OsiClpSolverInterface::readMps(const char *filename,
   delete [] info;
   return numberErrors;
 }
+// Get pointer to array[getNumCols()] of primal solution vector
+const double * 
+OsiClpSolverInterface::getColSolution() const 
+{ 
+  if (modelPtr_->solveType()!=2) {
+    return modelPtr_->primalColumnSolution();
+  } else {
+    // simplex interface
+    return modelPtr_->solutionRegion(1);
+  }
+}
+  
+// Get pointer to array[getNumRows()] of dual prices
+const double * 
+OsiClpSolverInterface::getRowPrice() const
+{ 
+  if (modelPtr_->solveType()!=2) {
+    return modelPtr_->dualRowSolution();
+  } else {
+    // simplex interface
+    //return modelPtr_->djRegion(0);
+    return modelPtr_->dualRowSolution();
+  }
+}
+  
+// Get a pointer to array[getNumCols()] of reduced costs
+const double * 
+OsiClpSolverInterface::getReducedCost() const 
+{ 
+  if (modelPtr_->solveType()!=2) {
+    return modelPtr_->dualColumnSolution();
+  } else {
+    // simplex interface
+    return modelPtr_->djRegion(1);
+  }
+}
+
+/* Get pointer to array[getNumRows()] of row activity levels (constraint
+   matrix times the solution vector */
+const double * 
+OsiClpSolverInterface::getRowActivity() const 
+{ 
+  if (modelPtr_->solveType()!=2) {
+    return modelPtr_->primalRowSolution();
+  } else {
+    // simplex interface
+    return modelPtr_->solutionRegion(0);
+  }
+}
+/* Set an objective function coefficient */
+void 
+OsiClpSolverInterface::setObjCoeff( int elementIndex, double elementValue )
+{
+  modelPtr_->objective()[elementIndex] = elementValue;
+  if (modelPtr_->solveType()==2) {
+    // simplex interface
+    modelPtr_->costRegion(1)[elementIndex] = elementValue;
+  }
+}
+
+/* Set a single column lower bound<br>
+   Use -DBL_MAX for -infinity. */
+void 
+OsiClpSolverInterface::setColLower( int elementIndex, double elementValue )
+{
+  modelPtr_->columnLower()[elementIndex] = elementValue;
+  if (modelPtr_->solveType()==2) {
+    // simplex interface
+    modelPtr_->lowerRegion(1)[elementIndex] = elementValue;
+  }
+}
+      
+/* Set a single column upper bound<br>
+   Use DBL_MAX for infinity. */
+void 
+OsiClpSolverInterface::setColUpper( int elementIndex, double elementValue )
+{
+  modelPtr_->columnUpper()[elementIndex] = elementValue;
+  if (modelPtr_->solveType()==2) {
+    // simplex interface
+    modelPtr_->upperRegion(1)[elementIndex] = elementValue;
+  }
+}
+
+/* Set a single column lower and upper bound */
+void 
+OsiClpSolverInterface::setColBounds( int elementIndex,
+				     double lower, double upper )
+{
+  modelPtr_->columnLower()[elementIndex] = lower;
+  modelPtr_->columnUpper()[elementIndex] = upper;
+  if (modelPtr_->solveType()==2) {
+    // simplex interface
+    modelPtr_->lowerRegion(1)[elementIndex] = lower;
+    modelPtr_->upperRegion(1)[elementIndex] = upper;
+  }
+}
+#ifdef OSISIMPLEXINTERFACE
+/*Enables normal operation of subsequent functions.
+  This method is supposed to ensure that all typical things (like
+  reduced costs, etc.) are updated when individual pivots are executed
+  and can be queried by other methods 
+*/
+void 
+OsiClpSolverInterface::enableSimplexInterface()
+{
+  assert (modelPtr_->solveType()==1);
+  modelPtr_->setSolveType(2);
+}
+
+//Undo whatever setting changes the above method had to make
+void 
+OsiClpSolverInterface::disableSimplexInterface()
+{
+  assert (modelPtr_->solveType()==2);
+  modelPtr_->setSolveType(1);
+}
+/* The following two methods may be replaced by the
+   methods of OsiSolverInterface using OsiWarmStartBasis if:
+   1. OsiWarmStartBasis resize operation is implemented
+   more efficiently and
+   2. It is ensured that effects on the solver are the same
+   
+   Returns a basis status of the structural/artificial variables 
+*/
+void 
+OsiClpSolverInterface::getBasisStatus(int* cstat, int* rstat)
+{
+}
+
+//Set the status of structural/artificial variables 
+int 
+OsiClpSolverInterface::setBasisStatus(const int* cstat, const int* rstat)
+{
+}
+
+/* Perform a pivot by substituting a colIn for colOut in the basis. 
+   The status of the leaving variable is given in statOut. Where
+   1 is to upper bound, -1 to lower bound
+*/
+int 
+OsiClpSolverInterface::pivot(int colIn, int colOut, int outStatus)
+{
+  return 0;
+}
+
+/* Obtain a result of the primal pivot 
+   Outputs: colOut -- leaving column, outStatus -- its status,
+   t -- step size, and, if dx!=NULL, *dx -- primal ray direction.
+   Inputs: colIn -- entering column, sign -- direction of its change (+/-1).
+   Both for colIn and colOut, artificial variables are index by
+   the negative of the row index minus 1.
+   Return code (for now): 0 -- leaving variable found, 
+   -1 -- everything else?
+   Clearly, more informative set of return values is required 
+*/
+int 
+OsiClpSolverInterface::primalPivotResult(int colIn, int sign, 
+					 int& colOut, int& outStatus, 
+					 double& t, CoinPackedVector* dx)
+{
+  return 0;
+}
+
+/* Obtain a result of the dual pivot (similar to the previous method)
+   Differences: entering variable and a sign of its change are now
+   the outputs, the leaving variable and its statuts -- the inputs
+   If dx!=NULL, then *dx contains dual ray
+   Return code: same
+*/
+int 
+OsiClpSolverInterface::dualPivotResult(int& colIn, int& sign, 
+			      int colOut, int outStatus, 
+			      double& t, CoinPackedVector* dx)
+{
+  return 0;
+}
+
+//Get the reduced gradient for the cost vector c 
+void 
+OsiClpSolverInterface::getReducedGradient(double* z, const double * c)
+{
+}
+
+/* Set a new objective and apply the old basis so that the
+   reduced costs are properly updated  */
+void OsiClpSolverInterface::setObjectiveAndRefresh(double* c)
+{
+}
+
+//Get a row of the tableau
+void 
+OsiClpSolverInterface::getBInvARow(int row, double* z)
+{
+}
+
+//Get a row of the basis inverse
+void 
+OsiClpSolverInterface::getBInvRow(int row, double* z)
+{
+}
+
+//Get a column of the tableau
+void 
+OsiClpSolverInterface::getBInvACol(int col, double* vec)
+{
+}
+
+//Get a column of the basis inverse
+void 
+OsiClpSolverInterface::getBInvCol(int col, double* vec)
+{
+}
+
+/* Get basic indices (order of indices corresponds to the
+   order of elements in a vector retured by getBInvACol() and
+   getBInvCol()).
+*/
+void 
+OsiClpSolverInterface::getBasics(int* index)
+{
+}
+#endif
 

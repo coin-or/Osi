@@ -315,7 +315,7 @@ bool test3VivianDeSmedt(OsiSolverInterface *s)
 {
 	bool ret = true;
 
-	double inf = s->getInfinity();
+	//double inf = s->getInfinity();
 
 	CoinPackedVector empty;
 
@@ -3177,7 +3177,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     test_functions.push_back(std::pair<TestFunction, const char*>(&test14VivianDeSmedt,"test14VivianDeSmedt"));
     test_functions.push_back(std::pair<TestFunction, const char*>(&test15VivianDeSmedt,"test15VivianDeSmedt"));
     
-    int i;
+    unsigned int i;
     for (i = 0; i < test_functions.size(); ++i) {	
       OsiSolverInterface *s = emptySi->clone();
       const char * testName = test_functions[i].second;

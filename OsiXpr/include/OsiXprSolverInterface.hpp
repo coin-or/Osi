@@ -539,9 +539,13 @@ public:
 			 const char *extension = "mps");
 
 
-    /** Write the problem into an mps file of the given filename */
+    /** Write the problem into an mps file of the given filename.
+     If objSense is non zero then -1.0 forces the code to write a
+    maximization objective and +1.0 to write a minimization one.
+    If 0.0 then solver can do what it wants */
     virtual void writeMps(const char *filename,
-			  const char *extension = "mps") const;
+			  const char *extension = "mps",
+			  double objSense=0.0) const;
   //@}
 
   //---------------------------------------------------------------------------

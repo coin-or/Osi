@@ -1905,7 +1905,8 @@ int OsiGlpkSolverInterface::readMps( const char * filename,
 //-----------------------------------------------------------------------------
 
 void OsiGlpkSolverInterface::writeMps( const char * filename,
-									  const char * extension ) const
+				       const char * extension,
+				       double objSense ) const
 {
 	// Could be in OsiSolverInterfaceImpl.
 #if 1

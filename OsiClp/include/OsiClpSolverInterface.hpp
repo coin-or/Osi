@@ -544,15 +544,18 @@ public:
 			     const double* obj,
 			     const char* rowsen, const double* rowrhs,   
 			     const double* rowrng);
-#if 0    
-    /** Read an mps file from the given filename */
+    /** Read an mps file from the given filename (defaults to Osi reader) - returns
+	number of errors (see OsiMpsReader class) */
     virtual int readMps(const char *filename,
-			 const char *extension = "mps");
-#endif
+			 const char *extension = "mps") ;
 
-    /** Write the problem into an mps file of the given filename */
+    /** Write the problem into an mps file of the given filename.
+     If objSense is non zero then -1.0 forces the code to write a
+    maximization objective and +1.0 to write a minimization one.
+    If 0.0 then solver can do what it wants */
     virtual void writeMps(const char *filename,
-			  const char *extension = "mps") const;
+			  const char *extension = "mps",
+			  double objSense=0.0) const;
     /** Write the problem into an mps file of the given filename,
 	names may be null.  formatType is
 	0 - normal
@@ -561,9 +564,10 @@ public:
 
 	Returns non-zero on I/O error
     */
-    virtual int writeMps(const char *filename, 
+    virtual int writeMpsNative(const char *filename, 
 		  const char ** rowNames, const char ** columnNames,
-		  int formatType=0,int numberAcross=2) const ;
+		  int formatType=0,int numberAcross=2,
+			 double objSense=0.0) const ;
   //@}
 
   /**@name Message handling (extra for Clp messages).

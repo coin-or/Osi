@@ -1562,7 +1562,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 	OsiSolverInterface *  si1 = emptySi->clone(); 
 	OsiSolverInterface *  si2 = emptySi->clone(); 
 	si1->readMps(fn.c_str(),"mps");
-	si1->writeMps("test.out",NULL,NULL);
+	si1->writeMpsNative("test.out",NULL,NULL);
 	si1->writeMps("test2","out");
 	si2->readMps("test.out","");
 	bool solved = true;

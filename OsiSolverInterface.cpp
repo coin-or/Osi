@@ -503,11 +503,12 @@ int OsiSolverInterface::readMps(const char * filename,
 }
 
 int 
-OsiSolverInterface::writeMps(const char *filename, 
+OsiSolverInterface::writeMpsNative(const char *filename, 
 			     const char ** rowNames, 
 			     const char ** columnNames,
 			     int formatType,
-			     int numberAcross) const
+			     int numberAcross,
+			     double objSense) const
 {
    const int numcols = getNumCols();
    char* integrality = new char[numcols];
@@ -521,14 +522,23 @@ OsiSolverInterface::writeMps(const char *filename,
       }
    }
 
+   // Get multiplier for objective function - default 1.0
+   double * objective = new double[numcols];
+   memcpy(objective,getObjCoefficients(),numcols*sizeof(double));
+   if (objSense<0.0) {
+     for (int i = 0; i < numcols; ++i) 
+       objective [i] = - objective[i];
+   }
+
    CoinMpsIO writer;
    writer.setInfinity(getInfinity());
    writer.passInMessageHandler(handler_);
    writer.setMpsData(*getMatrixByCol(), getInfinity(),
 		     getColLower(), getColUpper(),
-		     getObjCoefficients(), hasInteger ? integrality : 0,
+		     objective, hasInteger ? integrality : 0,
 		     getRowLower(), getRowUpper(),
 		     (const char **)0, (const char **)0);
+   delete [] objective;
    delete[] integrality;
    return writer.writeMps(filename, 1 /*gzip it*/, formatType, numberAcross);
 }
@@ -545,4 +555,14 @@ void
 OsiSolverInterface::newLanguage(CoinMessages::Language language)
 {
   messages_ = CoinMessage(language);
+}
+// copy all parameters in this section from one solver to another
+void 
+OsiSolverInterface::copyParameters(OsiSolverInterface & rhs)
+{
+  CoinDisjointCopyN(rhs.intParam_, OsiLastIntParam, intParam_);
+  CoinDisjointCopyN(rhs.dblParam_, OsiLastDblParam, dblParam_);
+  CoinDisjointCopyN(rhs.strParam_, OsiLastStrParam, strParam_);
+  CoinDisjointCopyN(rhs.hintParam_, OsiLastHintParam, hintParam_);
+  CoinDisjointCopyN(rhs.hintStrength_, OsiLastHintParam, hintStrength_);
 }

@@ -101,14 +101,16 @@ public:
   int readMps(const char *filename, const char *extension = "mps") ;
 
   /*! \brief Write the problem into the specified file in MPS format. */
-
-  void writeMps(const char *basename, const char *extension = "mps") const ;
+    virtual void writeMps(const char *filename,
+			  const char *extension = "mps",
+			  double objSense=0.0) const;
 
   /*! \brief Write the problem into the specified file in MPS format. */
 
-  int writeMps(const char *filename,
+  int writeMpsNative(const char *filename,
 	       const char **rownames, const char **colnames,
-	       int formatType = 0, int numberAcross = 2 ) const ;
+	       int formatType = 0, int numberAcross = 2,
+	       double objSense = 0.0) const ;
 
   /*! \brief Load a problem description (OSI packed matrix, row sense,
 	  parameters unaffected).

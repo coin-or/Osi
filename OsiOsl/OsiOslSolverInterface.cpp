@@ -1374,7 +1374,8 @@ int OsiOslSolverInterface::readMps(const char *filename,
 //-----------------------------------------------------------------------------
 
 void OsiOslSolverInterface::writeMps(const char * filename,
-				     const char * extension) const
+				     const char * extension,
+				     double objSense) const
 {
   std::string f(filename);
   std::string e(extension);

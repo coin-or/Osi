@@ -1030,7 +1030,8 @@ OsiClpSolverInterface::loadProblem(const int numcols, const int numrows,
 //-----------------------------------------------------------------------------
 
 void OsiClpSolverInterface::writeMps(const char * filename,
-				     const char * extension) const
+				     const char * extension,
+				     double objSense) const
 {
   std::string f(filename);
   std::string e(extension);
@@ -1042,16 +1043,17 @@ void OsiClpSolverInterface::writeMps(const char * filename,
     fullname = f;
   }
   // Fall back on Osi version - without names
-  OsiSolverInterface::writeMps(fullname.c_str(), NULL, NULL);
+  OsiSolverInterface::writeMpsNative(fullname.c_str(), 
+				     NULL, NULL,0,2,objSense);
 }
 
 int 
-OsiClpSolverInterface::writeMps(const char *filename, 
+OsiClpSolverInterface::writeMpsNative(const char *filename, 
 		  const char ** rowNames, const char ** columnNames,
-		  int formatType,int numberAcross) const 
+		  int formatType,int numberAcross,double objSense) const 
 {
-  return OsiSolverInterface::writeMps(filename, rowNames, columnNames,
-			       formatType, numberAcross);
+  return OsiSolverInterface::writeMpsNative(filename, rowNames, columnNames,
+			       formatType, numberAcross,objSense);
 }
 
 //#############################################################################
@@ -1413,3 +1415,29 @@ OsiClpSolverInterface::setBasis ( const CoinWarmStartBasis & basis,
 		    (ClpSimplex::Status) basis2.getStructStatus(iColumn));
   }
 }
+/* Read an mps file from the given filename (defaults to Osi reader) - returns
+   number of errors (see OsiMpsReader class) */
+int 
+OsiClpSolverInterface::readMps(const char *filename,
+			       const char *extension ) 
+{
+  int numberErrors = OsiSolverInterface::readMps(filename,extension);
+  // move across integer information
+  int numberColumns = modelPtr_->numberColumns();
+  int i;
+  char * info = new char [numberColumns];
+  int numberIntegers=0;
+  for (i=0;i<numberColumns;i++) {
+    if (isInteger(i)) {
+      info[i]=1;
+      numberIntegers++;
+    } else {
+      info[i]=0;
+    }
+  }
+  if (numberIntegers)
+    modelPtr_->copyInIntegerInformation(info);
+  delete [] info;
+  return numberErrors;
+}
+

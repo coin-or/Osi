@@ -2155,7 +2155,8 @@ OsiXprSolverInterface::readMps(const char *filename, const char *extension)
 // Write mps files
 //-----------------------------------------------------------------------------
 void OsiXprSolverInterface::writeMps(const char *filename,
-				     const char *extension) const
+				     const char *extension,
+				     double objSense) const
 {
   activateMe();
 

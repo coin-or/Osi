@@ -1745,7 +1745,8 @@ int OsiCpxSolverInterface::readMps( const char * filename,
 // Write mps files
 //-----------------------------------------------------------------------------
 void OsiCpxSolverInterface::writeMps( const char * filename,
-				      const char * extension ) const
+				      const char * extension,
+				      double objSense ) const
 {
   char filetype[4] = "MPS";
   std::string f(filename);

@@ -1323,7 +1323,8 @@ int OsiSpxSolverInterface::readMps( const char * filename,
 // Write mps files
 //-----------------------------------------------------------------------------
 void OsiSpxSolverInterface::writeMps( const char * filename,
-				      const char * extension ) const
+				      const char * extension,
+				      double objSense) const
 {
   std::string f(filename);
   std::string e(extension);

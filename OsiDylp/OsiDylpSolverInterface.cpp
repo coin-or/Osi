@@ -2105,7 +2105,8 @@ int ODSI::readMps (const char* basename, const char* extension)
   NOTE: dylp does not support direct writing of compressed files.
 */
 
-void ODSI::writeMps (const char *basename, const char *extension) const
+void ODSI::writeMps (const char *basename, const char *extension,
+		     double objSense) const
 
 { CoinMpsIO mps ;
   int n = getNumCols(),
@@ -2163,9 +2164,10 @@ void ODSI::writeMps (const char *basename, const char *extension) const
   NOTE: dylp does not support direct writing of compressed files.
 */
 
-int ODSI::writeMps (const char *filename,
+int ODSI::writeMpsNative (const char *filename,
 		    const char **rownames, const char **colnames,
-		    int formatType, int numberAcross) const
+		    int formatType, int numberAcross,
+			  double objSense) const
 
 { CoinMpsIO mps ;
   int n = getNumCols(),

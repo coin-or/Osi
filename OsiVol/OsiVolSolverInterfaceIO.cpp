@@ -410,7 +410,8 @@ OsiVolSolverInterface::readMps(const char *filename, const char *extension)
 
 void 
 OsiVolSolverInterface::writeMps(const char *filename,
-				const char *extension) const
+				const char *extension,
+				double objSense) const
 {
    CoinMpsIO writer;
    writer.setMpsData(*getMatrixByCol(), getInfinity(),

@@ -674,3 +674,9 @@ OsiRowCutDebugger::operator=(const OsiRowCutDebugger& rhs)
   }
   return *this;
 }
+// Return optimal solution
+const double * 
+OsiRowCutDebugger::optimalSolution() const
+{
+  return optimalSolution_;
+}

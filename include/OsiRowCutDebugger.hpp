@@ -31,6 +31,9 @@ public:
 
   /// check one cut. Return true if cut is invalid
   virtual bool invalidCut(const OsiRowCut & rowcut) const;
+
+  /// Return optimal solution
+  const double * optimalSolution() const;
   //@}
 
   /**@name Activate Debugger */

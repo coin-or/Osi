@@ -204,3 +204,22 @@ OsiWarmStartBasis::deleteColumns(int number, const int * which)
     std::cout<<numberBasic<<" basic structurals deleted"<<std::endl;
 #endif
 }
+// Prints in readable format (for debug)
+void 
+OsiWarmStartBasis::print() const
+{
+  std::cout<<"Basis "<<this<<" has "<<numArtificial_<<" rows and "
+	   <<numStructural_<<" columns"<<std::endl;
+  std::cout<<"Rows:"<<std::endl;
+  int i;
+  char type[]={'F','B','U','L'};
+
+  for (i=0;i<numArtificial_;i++) 
+    std::cout<<type[getArtifStatus(i)];
+  std::cout<<std::endl;
+  std::cout<<"Columns:"<<std::endl;
+
+  for (i=0;i<numStructural_;i++) 
+    std::cout<<type[getStructStatus(i)];
+  std::cout<<std::endl;
+}

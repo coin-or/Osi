@@ -4,7 +4,7 @@
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
 #endif
- 
+
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
@@ -21,7 +21,7 @@
 
 void
 OsiSimplexInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
-				 const std::string & mpsDir)
+                                  const std::string & mpsDir)
 {
   OsiSolverInterface * si = emptySi->clone();
   std::string solverName;
@@ -51,14 +51,14 @@ OsiSimplexInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       const double * dj;
       const double * dual;
       if ((numberIterations&1)==0) {
-	// use given ones
-	dj = si->getReducedCost();
-	dual = si->getRowPrice();
+        // use given ones
+        dj = si->getReducedCost();
+        dual = si->getRowPrice();
       } else {
-	// create
-	dj = djs;
-	dual = duals;
-	simplexSi->getReducedGradient(djs,duals,fakeCost);
+        // create
+        dj = djs;
+        dual = duals;
+        simplexSi->getReducedGradient(djs,duals,fakeCost);
       }
       int i;
       int colIn=9999;
@@ -67,33 +67,33 @@ OsiSimplexInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       // find most negative reduced cost
       // Should check basic - but should be okay on this problem
       for (i=0;i<numberRows;i++) {
-	double value=dual[i];
-	if (value>best) {
-	  direction=-1;
-	  best=value;
-	  colIn=-i-1;
-	}
+        double value=dual[i];
+        if (value>best) {
+          direction=-1;
+          best=value;
+          colIn=-i-1;
+        }
       }
       for (i=0;i<numberColumns;i++) {
-	double value=dj[i];
-	if (value<-best&&solution[i]<1.0e-6) {
-	  direction=1;
-	  best=-value;
-	  colIn=i;
-	} else if (value>best&&solution[i]>1.0-1.0e-6) {
-	  direction=-1;
-	  best=value;
-	  colIn=i;
-	}
+        double value=dj[i];
+        if (value<-best&&solution[i]<1.0e-6) {
+          direction=1;
+          best=-value;
+          colIn=i;
+        } else if (value>best&&solution[i]>1.0-1.0e-6) {
+          direction=-1;
+          best=value;
+          colIn=i;
+        }
       }
       if (colIn==9999)
-	break; // should be optimal
+        break; // should be optimal
       int colOut;
       int outStatus;
       double theta;
       assert(!simplexSi->primalPivotResult(colIn,direction,colOut,outStatus,theta,NULL));
       printf("out %d, direction %d theta %g\n",
-	     colOut,outStatus,theta);
+        colOut,outStatus,theta);
       numberIterations++;
     }
     delete [] fakeCost;

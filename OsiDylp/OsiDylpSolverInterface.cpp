@@ -3181,7 +3181,10 @@ const char* ODSI::getRowSense () const
   
   int n = getNumRows() ;
   char* sense = new char[n] ;
-  const contyp_enum* ctyp = INV_VEC(contyp_enum,consys->ctyp) ;
+
+  const contyp_enum* ctyp;
+  // dylp crashes if n is 0.
+  if ( n != 0 ) ctyp = INV_VEC(contyp_enum,consys->ctyp) ;
 
   for (int i = 0 ; i < n ; i++)
     sense[i] = type_to_sense(ctyp[i]) ;

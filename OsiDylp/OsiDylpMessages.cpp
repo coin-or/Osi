@@ -81,6 +81,11 @@ static MsgDefn us_en_defns[] = {
   { ODSI_MPSFILEIO, 0010, 2, "MPS file %s %s with %d errors." },
   { ODSI_UNSUPFORCEDO, 6001, 1, "Attempt to force unsupported hint; %s." },
   { ODSI_IGNORED, 3001, 2, "Ignored unsupported hint; %s." },
+  { ODSI_EMPTYODWSB, 6101, 1, "Empty warm start basis object." },
+  { ODSI_NOTODWSB, 6102, 1,
+    "The warm start basis object is not an OsiDylpWarmStartBasis object." },
+  { ODSI_ODWSBBADSIZE, 6101, 1,
+    "Basis size %d x %d does not match constraint system size %d x %d." },
   { ODSI_DUMMY_END, 999999, 0, "" }
 } ;
 

@@ -11,6 +11,7 @@
 #include <cassert>
 #include <cstdio>
 
+#include "CoinSort.hpp"
 #include "CoinHelperFunctions.hpp"
 #include "OsiPackedVectorBase.hpp"
 #include "OsiPackedMatrix.hpp"
@@ -1233,12 +1234,12 @@ OsiPackedMatrix::OsiPackedMatrix(const bool colordered,
 }
 
 //-----------------------------------------------------------------------------
-
+   
 OsiPackedMatrix::OsiPackedMatrix(const bool colordered,
 				 const int minor, const int major,
-				 const int numels,
-				 const double * elem, const int * ind,
-				 const int * start, const int * len) :
+         const int numels,
+         const double * elem, const int * ind,
+         const int * start, const int * len) :
    colOrdered_(colordered),
    extraGap_(0.0),
    extraMajor_(0.0),
@@ -1252,7 +1253,205 @@ OsiPackedMatrix::OsiPackedMatrix(const bool colordered,
    maxMajorDim_(0),
    maxSize_(0)
 {
-   gutsOfOpEqual(colordered, minor, major, numels, elem, ind, start, len);
+     gutsOfOpEqual(colordered, minor, major, numels, elem, ind, start, len);
+}
+  
+//-----------------------------------------------------------------------------
+// makes column ordered from triplets and takes out duplicates 
+// will be sorted 
+//
+// This is an interesting in-place sorting algorithm; 
+// We have triples, and want to sort them so that triples with the same column
+// are adjacent.
+// We begin by computing how many entries there are for each column (columnCount)
+// and using that to compute where each set of column entries will *end* (startColumn).
+// As we drop entries into place, startColumn is decremented until it contains
+// the position where the column entries *start*.
+// The invalid column index -2 means there's a "hole" in that position;
+// the invalid column index -1 means the entry in that spot is "where it wants to go".
+// Initially, no one is where they want to go.
+// Going back to front,
+//    if that entry is where it wants to go
+//    then leave it there
+//    otherwise pick it up (which leaves a hole), and 
+//	      for as long as you have an entry in your right hand,
+//	- pick up the entry (with your left hand) in the position where the one in 
+//		your right hand wants to go;
+//	- pass the entry in your left hand to your right hand;
+//	- was that entry really just the "hole"?  If so, stop.
+// It could be that all the entries get shuffled in the first loop iteration
+// and all the rest just confirm that everyone is happy where they are.
+// We never move an entry that is where it wants to go, so entries are moved at
+// most once.  They may not change position if they happen to initially be
+// where they want to go when the for loop gets to them.
+// It depends on how many subpermutations the triples initially defined.
+// Each while loop takes care of one permutation.
+// The while loop has to stop, because each time around we mark one entry as happy.
+// We can't run into a happy entry, because we are decrementing the startColumn
+// all the time, so we must be running into new entries.
+// Once we've processed all the slots for a column, it cannot be the case that
+// there are any others that want to go there.
+// This all means that we eventually must run into the hole.
+OsiPackedMatrix::OsiPackedMatrix(
+     const bool colordered,
+     const int * indexRow ,
+     const int * indexColumn,
+     const double * element, 
+     int numberElements ) 
+     :
+   colOrdered_(colordered),
+     extraGap_(0.0),
+     extraMajor_(0.0),
+     element_(NULL),
+     index_(NULL),
+     start_(NULL),
+     length_(NULL),
+     majorDim_(0),
+     minorDim_(0),
+     size_(0),
+     maxMajorDim_(0),
+     maxSize_(0)
+{
+     OsiAbsFltEq eq;
+       int * colIndices = new int[numberElements];
+       int * rowIndices = new int[numberElements];
+       double * elements = new double[numberElements];
+       CoinCopyN(element,numberElements,elements);
+     if ( colordered ) {
+       CoinCopyN(indexColumn,numberElements,colIndices);
+       CoinCopyN(indexRow,numberElements,rowIndices);
+     }
+     else {
+       CoinCopyN(indexColumn,numberElements,rowIndices);
+       CoinCopyN(indexRow,numberElements,colIndices);
+     }
+
+  int numberRows=*std::max_element(rowIndices,rowIndices+numberElements)+1;
+  int * rowCount = new int[numberRows];
+  int numberColumns=*std::max_element(colIndices,colIndices+numberElements)+1;
+  int * columnCount = new int[numberColumns];
+  int * startColumn = new int[numberColumns+1];
+  int * lengths = new int[numberColumns+1];
+
+  int iColumn,i,k;
+  for (i=0;i<numberRows;i++) {
+    rowCount[i]=0;
+  }
+  for (i=0;i<numberColumns;i++) {
+    columnCount[i]=0;
+  }
+  for (i=0;i<numberElements;i++) {
+    int iRow=rowIndices[i];
+    int iColumn=colIndices[i];
+    rowCount[iRow]++;
+    columnCount[iColumn]++;
+  }
+  i=0;
+  for (iColumn=0;iColumn<numberColumns;iColumn++) {
+    /* position after end of Column */
+    i+=columnCount[iColumn];
+    startColumn[iColumn]=i;
+  } /* endfor */
+  startColumn[iColumn]=i;
+  for (k=numberElements-1;k>=0;k--) {
+    iColumn=colIndices[k];
+    if (iColumn>=0) {
+      /* pick up the entry with your right hand */
+      double value = elements[k];
+      int iRow=rowIndices[k];
+      int iColumnSave=0;
+      colIndices[k]=-2;	/* the hole */
+
+      while (1) {
+	/* pick this up with your left */
+        int iLook=startColumn[iColumn]-1;
+        double valueSave=elements[iLook];
+        int iColumnSave=colIndices[iLook];
+        int iRowSave=rowIndices[iLook];
+
+	/* put the right-hand entry where it wanted to go */
+        startColumn[iColumn]=iLook;
+        elements[iLook]=value;
+        rowIndices[iLook]=iRow;
+        colIndices[iLook]=-1;	/* mark it as being where it wants to be */
+
+	/* there was something there */
+        if (iColumnSave>=0) {
+          iColumn=iColumnSave;
+          value=valueSave;
+          iRow=iRowSave;
+	} else if (iColumnSave == -2) {	/* that was the hole */
+          break;
+	} else {
+	  assert(1==0);	/* should never happen */
+	}
+	/* endif */
+      } /* endwhile */
+    } /* endif */
+  } /* endfor */
+
+  /* now pack the elements and combine entries with the same row and column */
+  /* also, drop entries with "small" coefficients */
+  numberElements=0;
+  for (iColumn=0;iColumn<numberColumns;iColumn++) {
+    int start=startColumn[iColumn];
+    int end =startColumn[iColumn+1];
+    lengths[iColumn]=0;
+    startColumn[iColumn]=numberElements;
+    if (end>start) {
+      int lastRow;
+      double lastValue;
+      // sorts on indices dragging elements with
+      CoinSort_2(rowIndices+start,rowIndices+end,elements+start,CoinFirstLess_2<int, double>());
+      lastRow=rowIndices[start];
+      lastValue=elements[start];
+      for (i=start+1;i<end;i++) {
+        int iRow=rowIndices[i];
+        double value=elements[i];
+        if (iRow>lastRow) {
+          //if(fabs(lastValue)>tolerance) {
+          if(!eq(lastValue,0.0)) {
+            rowIndices[numberElements]=lastRow;
+            elements[numberElements]=lastValue;
+            numberElements++;
+            lengths[iColumn]++;
+          }
+          lastRow=iRow;
+          lastValue=value;
+        } else {
+          lastValue+=value;
+        } /* endif */
+      } /* endfor */
+      //if(fabs(lastValue)>tolerance) {
+      if(!eq(lastValue,0.0)) {
+        rowIndices[numberElements]=lastRow;
+        elements[numberElements]=lastValue;
+        numberElements++;
+        lengths[iColumn]++;
+      }
+    }
+  } /* endfor */
+  startColumn[numberColumns]=numberElements;
+#if 0
+  gutsOfOpEqual(colordered,numberRows,numberColumns,numberElements,elements,rowIndices,startColumn,lengths);
+  
+  delete [] rowCount;
+  delete [] columnCount;
+  delete [] startColumn;
+  delete [] lengths;
+
+  delete [] colIndices;
+  delete [] rowIndices;
+  delete [] elements;
+#else
+  assignMatrix(colordered,numberRows,numberColumns,numberElements,
+    elements,rowIndices,startColumn,lengths); 
+  delete [] rowCount;
+  delete [] columnCount;
+  delete [] lengths;
+  delete [] colIndices;
+#endif
+
 }
 
 //-----------------------------------------------------------------------------

@@ -506,6 +506,63 @@ OsiPackedMatrixUnitTest()
       assert( pm.getExtraGap() == 0.0 );
       assert( pm.getExtraMajor() == 0.0 );
     }
+
+
+    // Test ordered triples constructor
+    {
+    /*************************************************************************
+    *   Setup data to represent this matrix by rows
+    *
+    *    3x1 +  x2         -  2x4 - x5               -    x8 
+    *          2x2y+ 1.1x3
+    *                   x3              +  x6y              
+    *                       2.8x4             -1.2x7 
+    *  5.6x1                      + x5               + 1.9x8 
+    *
+    *************************************************************************/
+      const int ne=17;
+      int ri[ne];
+      int ci[ne];
+      double el[ne];
+      ri[ 0]=1; ci[ 0]=2; el[ 0]=1.1;
+      ri[ 1]=0; ci[ 1]=3; el[ 1]=-2.0;
+      ri[ 2]=4; ci[ 2]=7; el[ 2]=1.9;
+      ri[ 3]=3; ci[ 3]=6; el[ 3]=-1.2;
+      ri[ 4]=2; ci[ 4]=5; el[ 4]=1.0;
+      ri[ 5]=4; ci[ 5]=0; el[ 5]=5.6;
+      ri[ 6]=0; ci[ 6]=7; el[ 6]=-1.0;
+      ri[ 7]=0; ci[ 7]=0; el[ 7]=3.0;
+      ri[ 8]=0; ci[ 8]=4; el[ 8]=-1.0;
+      ri[ 9]=4; ci[ 9]=4; el[ 9]=1.0;
+      ri[10]=3; ci[10]=3; el[10]=2.0; // (3,3) is a duplicate element
+      ri[11]=1; ci[11]=1; el[11]=2.0;
+      ri[12]=0; ci[12]=1; el[12]=1.0;
+      ri[13]=2; ci[13]=2; el[13]=1.0;
+      ri[14]=3; ci[14]=3; el[14]=0.8; // (3,3) is a duplicate element
+      ri[15]=2; ci[15]=0; el[15]=-3.1415;
+      ri[16]=2; ci[16]=0; el[16]= 3.1415;
+      assert(!globalP->isColOrdered());
+
+      // create col ordered matrix from triples
+      OsiPackedMatrix pmtco(true,ri,ci,el,ne);
+
+      // Test that duplicates got the correct value
+      assert( eq( pmtco.getVector(3)[3] , 2.8 ) );
+      assert( eq( pmtco.getVector(0)[2] , 0.0 ) );
+
+      // Test the whole matrix
+      OsiPackedMatrix globalco;
+      globalco.reverseOrderedCopyOf(*globalP);
+      assert(pmtco.isEquivalent(globalco));
+
+      // create row ordered matrix from triples
+      OsiPackedMatrix pmtro(false,ri,ci,el,ne);
+      assert(!pmtro.isColOrdered());
+      assert( eq( pmtco.getVector(3)[3] , 2.8 ) );
+      assert( eq( pmtco.getVector(2)[0] , 0.0 ) );
+      assert(globalP->isEquivalent(pmtro));
+
+    }
     
     delete globalP;
   }

@@ -451,10 +451,10 @@ public:
 	 return false;
      
       for (int i=getMajorDim()-1; i >= 0; --i) {
-	 OsiShallowPackedVector pv = getVector(i);
-	 OsiShallowPackedVector rhsPv = rhs.getVector(i);
-	 if ( !pv.isEquivalent(rhsPv,eq) )
-	    return false;
+        OsiShallowPackedVector pv = getVector(i);
+        OsiShallowPackedVector rhsPv = rhs.getVector(i);
+        if ( !pv.isEquivalent(rhsPv,eq) )
+          return false;
       }
       return true;
    }
@@ -486,6 +486,21 @@ public:
 		   const int minor, const int major, const int numels,
 		   const double * elem, const int * ind,
 		   const int * start, const int * len);
+
+   /** Create packed matrix from ordered triples.
+       If colordered is true then the created matrix will be column ordered.
+       Duplicate matrix elements are allowed. The created matrix will have 
+       the sum of the duplicates. <br>
+       For example if: <br>
+         rowIndices[0]=2; colIndices[0]=5; elements[0]=2.0 <br>
+         rowIndices[1]=2; colIndices[1]=5; elements[1]=0.5 <br>
+       then the created matrix will contain a value of 2.5 in row 2 and column 5.
+   */
+   OsiPackedMatrix(const bool colordered,
+     const int * rowIndices, 
+     const int * colIndices, 
+     const double * elements, 
+     const int numels ); 
 
    /// Copy constructor 
    OsiPackedMatrix(const OsiPackedMatrix& m);

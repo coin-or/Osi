@@ -20,7 +20,6 @@
 #include "OsiColCut.hpp"
 #include "ClpPresolve.hpp"
 static double totalTime=0.0;
-
 //#############################################################################
 // Solve methods
 //#############################################################################
@@ -544,9 +543,13 @@ void OsiClpSolverInterface::resolve()
    1 - will take more risks - if it does not work then bug which will be fixed
    2 - don't bother doing most extreme termination checks e.g. don't bother
        re-factorizing if less than 20 iterations.
+
+   printOut - -1 always skip round common messages instead of doing some work
+               0 skip if normal defaults
+               1 leaves
   */
 void 
-OsiClpSolverInterface::setupForRepeatedUse(int senseOfAdventure)
+OsiClpSolverInterface::setupForRepeatedUse(int senseOfAdventure, int printOut)
 {
   // First try
   switch (senseOfAdventure) {
@@ -559,6 +562,24 @@ OsiClpSolverInterface::setupForRepeatedUse(int senseOfAdventure)
   case 2:
     specialOptions_=1+2+4+8;
     break;
+  }
+  bool stopPrinting=false;
+  if (printOut<0) {
+    stopPrinting=true;
+  } else if (!printOut) {
+    bool takeHint;
+    OsiHintStrength strength;
+    bool gotHint = (getHintParam(OsiDoReducePrint,takeHint,strength));
+    assert (gotHint);
+    int messageLevel=messageHandler()->logLevel();
+    if (strength!=OsiHintIgnore&&takeHint) 
+      messageLevel--;
+    stopPrinting = (messageLevel<=0);
+  }
+  if (stopPrinting) {
+    CoinMessages * messagesPointer = modelPtr_->messagesPointer();
+    // won't even build messages 
+    messagesPointer->setDetailMessages(100,10000,NULL);
   }
 }
 #ifndef NDEBUG
@@ -2490,6 +2511,22 @@ OsiClpSolverInterface::reset()
   // delete linearObjective_;
   linearObjective_ = NULL;
   fillParamMaps();
+}
+// Set a hint parameter
+bool 
+OsiClpSolverInterface::setHintParam(OsiHintParam key, bool yesNo,
+                                    OsiHintStrength strength,
+                                    void * otherInformation)
+{
+  if ( OsiSolverInterface::setHintParam(key,yesNo,strength,otherInformation)) {
+    // special coding for branch and cut
+    if (yesNo&&strength == OsiHintDo&& specialOptions_==-1&&key==OsiDoInBranchAndCut) {
+      setupForRepeatedUse(0,0);
+    }
+    return true;
+  } else {
+    return false;
+  }
 }
 
 

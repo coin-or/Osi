@@ -70,8 +70,12 @@ public:
       1 - will take more risks - if it does not work then bug which will be fixed
       2 - don't bother doing most extreme termination checks e.g. don't bother
           re-factorizing if less than 20 iterations.
+
+      printOut - -1 always skip round common messages instead of doing some work
+                  0 skip if normal defaults
+                  1 leaves
   */
-  void setupForRepeatedUse(int senseOfAdventure=0);
+  void setupForRepeatedUse(int senseOfAdventure=0, int printOut=0);
 
   ///Returns true if a basis is available
   virtual bool basisIsAvailable() {return true;};
@@ -177,6 +181,10 @@ public:
     bool getDblParam(OsiDblParam key, double& value) const;
     // Get a string parameter
     bool getStrParam(OsiStrParam key, std::string& value) const;
+    // Set a hint parameter - overrides OsiSolverInterface
+    virtual bool setHintParam(OsiHintParam key, bool yesNo=true,
+                            OsiHintStrength strength=OsiHintTry,
+			      void * otherInformation=NULL);
   //@}
 
   //---------------------------------------------------------------------------

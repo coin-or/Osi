@@ -16,6 +16,7 @@
 #include <sstream>
 #include <cstdio>
 
+
 #include "OsiSolverInterface.hpp"
 #ifdef COIN_USE_VOL
 #include "OsiVolSolverInterface.hpp"
@@ -40,6 +41,9 @@
 #endif
 #ifdef COIN_USE_CLP
 #include "OsiClpSolverInterface.hpp"
+#endif
+#ifdef COIN_USE_FMP
+#include "OsiFmpSolverInterface.hpp"
 #endif
 #include "CoinFloatEqual.hpp"
 #include "CoinPackedVector.hpp"
@@ -1745,6 +1749,16 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 #endif
   }
 
+  // Determine if this is the emptySi is an OsiFmpSolverInterface
+  bool fmpSolverInterface = false;
+  {
+#ifdef COIN_USE_FMP
+    const OsiFmpSolverInterface * si =
+      dynamic_cast<const OsiFmpSolverInterface *>(emptySi);
+    if ( si != NULL ) fmpSolverInterface = true;
+#endif
+  }
+
   // Test that solverInterface knows about constants
   // in objective function.
   // Do not perform test if Vol solver, because it
@@ -3202,7 +3216,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   }
 
   // Test presolve
-  if ( !volSolverInterface) {
+  if ( !volSolverInterface /*&& !fmpSolverInterface*/ ) {
     OsiSolverInterface * si = emptySi->clone();
     std::string fn = netlibDir+"25fv47";
     si->readMps(fn.c_str(),"mps");

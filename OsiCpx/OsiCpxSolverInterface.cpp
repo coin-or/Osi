@@ -1096,7 +1096,19 @@ void OsiCpxSolverInterface::setObjCoeff( int elementIndex, double elementValue )
   int err = CPXchgobj(env_, getLpPtr( OsiCpxSolverInterface::FREECACHED_COLUMN ), 1, &elementIndex, &elementValue);
   checkCPXerror(err, "CPXchgobj", "setObjCoeff");
 }
-
+//-----------------------------------------------------------------------------
+void OsiCpxSolverInterface::setObjCoeffSet(const int* indexFirst,
+					   const int* indexLast,
+					   const double* coeffList)
+{
+   const int cnt = indexLast - indexFirst;
+   int err = CPXchgobj(env_,
+		       getLpPtr(OsiCpxSolverInterface::FREECACHED_COLUMN), cnt,
+		       const_cast<int*>(indexFirst),
+		       const_cast<double*>(coeffList));
+   checkCPXerror(err, "CPXchgobj", "setObjCoeffSet");
+}
+//-----------------------------------------------------------------------------
 void OsiCpxSolverInterface::setColLower(int elementIndex, double elementValue)
 {
   char c = 'L';
@@ -1130,7 +1142,26 @@ void OsiCpxSolverInterface::setColSetBounds(const int* indexFirst,
 					    const int* indexLast,
 					    const double* boundList)
 {
-  OsiSolverInterface::setColSetBounds( indexFirst, indexLast, boundList );
+   const int cnt = indexLast - indexFirst;
+   if (cnt <= 0)
+      return;
+
+   char* c = new char[2*cnt];
+   int* ind = new int[2*cnt];
+   for (int i = 0; i < cnt; ++i) {
+      register const int j = 2 * i;
+      c[j] = 'L';
+      c[j+1] = 'U';
+      ind[j] = indexFirst[i];
+      ind[j+1] = indexFirst[i];
+   }
+   int err = CPXchgbds( env_,
+			getLpPtr(OsiCpxSolverInterface::FREECACHED_COLUMN),
+			2*cnt, ind, c, boundList );
+   checkCPXerror( err, "CPXchgbds", "setColSetBounds" );
+   delete[] ind;
+   delete[] c;
+   // OsiSolverInterface::setColSetBounds( indexFirst, indexLast, boundList );
 }
 //-----------------------------------------------------------------------------
 void
@@ -1160,7 +1191,7 @@ OsiCpxSolverInterface::setRowUpper( int i, double elementValue )
   if( upper != elementValue ) {
       convertBoundToSense( lower, elementValue, sense, rhs, range );
       setRowType( i, sense, rhs, range );
-    }
+  }
 }
 //-----------------------------------------------------------------------------
 void
@@ -1179,22 +1210,23 @@ OsiCpxSolverInterface::setRowType(int i, char sense, double rightHandSide,
 {
   int err;
 
-  if (sense == 'R')
-    {
-      assert( range >= 0.0 );
-      rightHandSide -= range;
-    }
-  if( sense == 'N' )
-    {
-      sense = 'R';
-      rightHandSide = -getInfinity();
-      range = 2*getInfinity();
-    }
-  err = CPXchgsense( env_, getLpPtr( OsiCpxSolverInterface::FREECACHED_ROW ), 1, &i, &sense );
+  if (sense == 'R') {
+     assert( range >= 0.0 );
+     rightHandSide -= range;
+  }
+  if (sense == 'N') {
+     sense = 'R';
+     rightHandSide = -getInfinity();
+     range = 2*getInfinity();
+  }
+  err = CPXchgsense( env_, getLpPtr( OsiCpxSolverInterface::FREECACHED_ROW ),
+		     1, &i, &sense );
   checkCPXerror( err, "CPXchgsense", "setRowType" );
-  err = CPXchgrhs( env_, getLpPtr( OsiCpxSolverInterface::FREECACHED_ROW ), 1, &i, &rightHandSide );
+  err = CPXchgrhs( env_, getLpPtr( OsiCpxSolverInterface::FREECACHED_ROW ),
+		   1, &i, &rightHandSide );
   checkCPXerror( err, "CPXchgrhs", "setRowType" );
-  err = CPXchgrngval( env_, getLpPtr( OsiCpxSolverInterface::FREECACHED_ROW ), 1, &i, &range );
+  err = CPXchgrngval( env_, getLpPtr( OsiCpxSolverInterface::FREECACHED_ROW ),
+		      1, &i, &range );
   checkCPXerror( err, "CPXchgrngval", "setRowType" );
 }
 //-----------------------------------------------------------------------------
@@ -1202,7 +1234,23 @@ void OsiCpxSolverInterface::setRowSetBounds(const int* indexFirst,
 					    const int* indexLast,
 					    const double* boundList)
 {
-  OsiSolverInterface::setRowSetBounds( indexFirst, indexLast, boundList );
+   const int cnt = indexLast - indexFirst;
+   if (cnt <= 0)
+      return;
+
+   char* sense = new char[cnt];
+   double* rhs = new double[cnt];
+   double* range = new double[cnt];
+   for (int i = 0; i < cnt; ++i) {
+      convertBoundToSense(boundList[2*i], boundList[2*i+1],
+			  sense[i], rhs[i], range[i]);
+   }
+   setRowSetTypes(indexFirst, indexLast, sense, rhs, range);
+   delete[] range;
+   delete[] rhs;
+   delete[] sense;
+   
+   //  OsiSolverInterface::setRowSetBounds( indexFirst, indexLast, boundList );
 }
 //-----------------------------------------------------------------------------
 void
@@ -1212,7 +1260,50 @@ OsiCpxSolverInterface::setRowSetTypes(const int* indexFirst,
 				      const double* rhsList,
 				      const double* rangeList)
 {
-  OsiSolverInterface::setRowSetTypes( indexFirst, indexLast, senseList, rhsList, rangeList );
+   const int cnt = indexLast - indexFirst;
+   if (cnt <= 0)
+      return;
+
+   char* sense = new char[cnt];
+   double* rhs = new double[cnt];
+   double* range = new double[cnt];
+   int* rangeind = new int[cnt];
+   int rangecnt = 0;
+   for (int i = 0; i < cnt; ++i) {
+      sense[i] = senseList[i];
+      rhs[i] = rhsList[i];
+      if (sense[i] == 'R') {
+	 assert(rangeList[i] >= 0.0);
+	 rhs[i] -= rangeList[i];
+	 rangeind[rangecnt] = i;
+	 range[rangecnt] = rangeList[i];
+	 ++rangecnt;
+      }
+      if (sense[i] == 'N') {
+	 sense[i] = 'R';
+	 rhs[i] = -getInfinity();
+	 rangeind[rangecnt] = i;
+	 range[rangecnt] = 2*getInfinity();
+	 ++rangecnt;
+      }
+   }
+   int err;
+   err = CPXchgsense(env_, getLpPtr(OsiCpxSolverInterface::FREECACHED_ROW),
+		     cnt, indexFirst, sense);
+   checkCPXerror( err, "CPXchgsense", "setRowSetTypes" );
+   err = CPXchgrhs(env_, getLpPtr(OsiCpxSolverInterface::FREECACHED_ROW),
+		   cnt, indexFirst, rhs);
+   checkCPXerror( err, "CPXchgrhs", "setRowSetTypes" );
+   err = CPXchgrngval(env_, getLpPtr(OsiCpxSolverInterface::FREECACHED_ROW),
+		      rangecnt, rangeind, range);
+   checkCPXerror( err, "CPXchgrngval", "setRowSetTypes" );
+
+   delete[] rangeind;
+   delete[] range;
+   delete[] rhs;
+   delete[] sense;
+//    OsiSolverInterface::setRowSetTypes( indexFirst, indexLast, senseList,
+//  				      rhsList, rangeList );
 }
 //#############################################################################
 void
@@ -1373,11 +1464,11 @@ OsiCpxSolverInterface::addCol(const CoinPackedVectorBase& vec,
 			      const double obj)
 {
   int err;
-  int cmatbeg = 0;
+  int cmatbeg[2] = {0, vec.getNumElements()};
 
   err = CPXaddcols( env_, getLpPtr( OsiCpxSolverInterface::KEEPCACHED_ROW ),
 		    1, vec.getNumElements(), const_cast<double*>(&obj),
-		    &cmatbeg,
+		    cmatbeg,
 		    const_cast<int*>(vec.getIndices()),
 		    const_cast<double*>(vec.getElements()),
 		    const_cast<double*>(&collb),
@@ -1392,8 +1483,38 @@ OsiCpxSolverInterface::addCols(const int numcols,
 			       const double* obj)
 {
   int i;
-  for( i = 0; i < numcols; ++i )
-    addCol( *(cols[i]), collb[i], colub[i], obj[i] );
+  int nz = 0;
+  for (i = 0; i < numcols; ++i)
+    nz += cols[i]->getNumElements();
+
+  int* index = new int[nz];
+  double* elem = new double[nz];
+  int* start = new int[numcols+1];
+
+  nz = 0;
+  start[0] = 0;
+  for (i = 0; i < numcols; ++i) {
+    const CoinPackedVectorBase* col = cols[i];
+    const int len = col->getNumElements();
+    CoinDisjointCopyN(col->getIndices(), len, index+nz);
+    CoinDisjointCopyN(col->getElements(), len, elem+nz);
+    nz += len;
+    start[i+1] = nz;
+  }
+  int err = CPXaddcols(env_, getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ROW),
+		       numcols, nz, const_cast<double*>(obj),
+		       start, index, elem, 
+		       const_cast<double*>(collb),
+		       const_cast<double*>(colub), NULL );
+  checkCPXerror( err, "CPXaddcols", "addCols" );
+
+  delete[] start;
+  delete[] elem;
+  delete[] index;
+
+//    int i;
+//    for( i = 0; i < numcols; ++i )
+//      addCol( *(cols[i]), collb[i], colub[i], obj[i] );
 }
 //-----------------------------------------------------------------------------
 void 

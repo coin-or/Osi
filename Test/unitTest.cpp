@@ -46,6 +46,9 @@
 #ifdef COIN_USE_CLP
 #include "OsiClpSolverInterface.hpp"
 #endif
+#ifdef COIN_USE_MSK
+#include "OsiMskSolverInterface.hpp"
+#endif
 // Function Prototypes. Function definitions is in this file.
 void testingMessage( const char * const msg );
 
@@ -335,6 +338,29 @@ int main (int argc, const char *argv[])
     OsiSimplexInterfaceCommonUnitTest(&clpSi,mpsDir);
   }
 #endif
+#ifdef COIN_USE_MSK  
+  {
+    OsiMskSolverInterface MskSi;
+    testingMessage( "Testing OsiRowCut with OsiMskSolverInterface\n" );
+    OsiRowCutUnitTest(&MskSi,mpsDir);
+  }
+  {
+    OsiMskSolverInterface MskSi;
+    testingMessage( "Testing OsiColCut with OsiMskSolverInterface\n" );
+    OsiColCutUnitTest(&MskSi,mpsDir);
+  }
+  {
+    OsiMskSolverInterface MskSi;
+    testingMessage( "Testing OsiRowCutDebugger with OsiMskSolverInterface\n" );
+    OsiRowCutDebuggerUnitTest(&MskSi,mpsDir);
+  }
+  {
+    OsiMskSolverInterface MskSi;
+    testingMessage( "Testing OsiSimplexInterface with OsiMskSolverInterface\n" );
+    OsiSimplexInterfaceCommonUnitTest(&MskSi,mpsDir);
+  }
+#endif
+
   testingMessage( "Testing OsiCuts\n" );
   OsiCutsUnitTest();
 
@@ -382,6 +408,10 @@ int main (int argc, const char *argv[])
   testingMessage( "Testing OsiClpSolverInterface\n" );
   OsiClpSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
+#ifdef COIN_USE_MSK
+  testingMessage( "Testing OsiMskSolverInterface\n" );
+  OsiMskSolverInterfaceUnitTest(mpsDir,netlibDir);
+#endif
 
   if (parms.find("-testOsiSolverInterface") != parms.end())
   {
@@ -424,6 +454,10 @@ int main (int argc, const char *argv[])
 #   if COIN_USE_FMP
     OsiSolverInterface * fmpSi = new OsiFmpSolverInterface;
     vecSi.push_back(fmpSi);
+#endif
+#   if COIN_USE_MSK
+    OsiSolverInterface * MskSi = new OsiMskSolverInterface;
+    vecSi.push_back(MskSi);
 #endif
 #   if COIN_USE_VOL
     OsiSolverInterface * volSi = new OsiVolSolverInterface;

@@ -88,25 +88,10 @@ public:
     /// Get pointer to array[getNumCols()] of objective function coefficients
     const double * getObjCoefficients() const;
 
-#if 0
-    /// Get objective function sense (1 for min (default), -1 for max)
-    double getObjSense() const;
-
-    /// Get pointer to array[getNumCols()] of primal solution vector
-    const double * getColSolution() const;
-
-    /// Get pointer to array[getNumRows()] of dual prices
-    const double * getRowPrice() const;
-
-    /// Get objective function value
-    double getObjValue() const;
-
-#endif
-
-  /// Sets infinity!
-  void setInfinity(double value);
-   /// Gets infinity
-   double getInfinity() const;
+    /// Sets infinity!
+    void setInfinity(double value);
+    /// Gets infinity
+    double getInfinity() const;
     /// Return true if column is continuous
     bool isContinuous(int colNumber) const;
 
@@ -164,6 +149,7 @@ public:
   /**@name Things not in OsiSolverInterface */
   //@{
     /// array saying if each variable integer
+    /// at present just zero/non-zero may be extended
     const char * integerColumns() const;
     /// names - returns NULL if out of range
     const char * rowName(int index) const;
@@ -173,8 +159,22 @@ public:
       and > numberRows for dropped free rows */
     int rowIndex(const char * name) const;
     int columnIndex(const char * name) const;
-  /** objective offset - this is RHS entry for objective row */
-  double objectiveOffset() const;
+    /** objective offset - this is RHS entry for objective row */
+    double objectiveOffset() const;
+  //@}
+
+  /**@name Name type methods */
+  //@{
+    /// Problem name
+    const char * getProblemName() const;
+    /// Objective name
+    const char * getObjectiveName() const;
+    /// Rhs name
+    const char * getRhsName() const;
+    /// Range name
+    const char * getRangeName() const;
+    /// Bound name
+    const char * getBoundName() const;
   //@}
 
 
@@ -282,6 +282,12 @@ private:
      double infinity_;
      /// offset for objective function (i.e. rhs of OBJ row)
      double objectiveOffset_;
+     /// information on problem
+     char * problemName_;
+     char * objectiveName_;
+     char * rhsName_;
+     char * rangeName_;
+     char * boundName_;
     //@}
   //@}
 

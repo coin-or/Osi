@@ -401,6 +401,8 @@ int OsiSolverInterface::readOsiMps(const char * filename,
   m.setInfinity(getInfinity());
   
   numberErrors = m.readMps(filename,extension);
+  std::cout <<m.getProblemName()<<" read with " << numberErrors <<
+    " errors" <<std::endl;
   if (!numberErrors) {
     // no errors
     loadProblem(*m.getMatrixByCol(),m.getColLower(),m.getColUpper(),

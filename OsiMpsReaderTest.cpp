@@ -31,6 +31,12 @@ OsiMpsReaderUnitTest(const std::string & mpsDir)
     assert( m.matrixByRow_==NULL );
     assert( m.matrixByColumn_==NULL );
     assert( m.integerType_==NULL);
+    assert( !strcmp( m.getFileName() , "stdin"));
+    assert( !strcmp( m.getProblemName() , ""));
+    assert( !strcmp( m.objectiveName_ , ""));
+    assert( !strcmp( m.rhsName_ , ""));
+    assert( !strcmp( m.rangeName_ , ""));
+    assert( !strcmp( m.boundName_ , ""));
   }
   
   
@@ -40,6 +46,11 @@ OsiMpsReaderUnitTest(const std::string & mpsDir)
     std::string fn = mpsDir+"exmip1";
     m.readMps(fn.c_str(),"mps");
     
+    assert( !strcmp( m.problemName_ , "EXAMPLE"));
+    assert( !strcmp( m.objectiveName_ , "OBJ"));
+    assert( !strcmp( m.rhsName_ , "RHS1"));
+    assert( !strcmp( m.rangeName_ , "RNG1"));
+    assert( !strcmp( m.boundName_ , "BND1"));
     
     // Test copy constructor and assignment operator
     {

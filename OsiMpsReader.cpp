@@ -921,32 +921,27 @@ int OsiMpsReader::readMps()
     std::cout << "Unable to open file " << fileName_ << std::endl;
     return -1;
   }
-  OSIRowIndex numberRows;
-  OSIColumnIndex numberColumns;
-  OSIElementIndex numberElements;
-  char name[100];
   bool ifmps;
   OSIMpsio mpsfile ( fp );
 
   if ( mpsfile.whichSection (  ) == OSI_NAME_SECTION ) {
     ifmps = true;
-    strcpy ( name, mpsfile.columnName (  ) );
+    // save name of section
+    free(problemName_);
+    problemName_=strdup(mpsfile.columnName());
   } else if ( mpsfile.whichSection (  ) == OSI_UNKNOWN_SECTION ) {
     std::cout << "Unknown image " << mpsfile.
       card (  ) << " at line 1 of file" << fileName_ << std::endl;
     return -2;
   } else if ( mpsfile.whichSection (  ) != OSI_EOF_SECTION ) {
-    strcpy ( name, mpsfile.card (  ) );
+    // save name of section
+    free(problemName_);
+    problemName_=strdup(mpsfile.card());
     ifmps = false;
   } else {
     std::cout << "EOF on file" << fileName_ << std::endl;
     return -3;
   }
-  double *rowlower;
-  double *rowupper;
-  double *collower;
-  double *colupper;
-  double *objective;
   OSIElementIndex *start;
   OSIRowIndex *row;
   double *element;
@@ -962,11 +957,10 @@ int OsiMpsReader::readMps()
     //get ROWS
     assert ( mpsfile.nextField (  ) == OSI_ROW_SECTION );
     //use malloc etc as I don't know how to do realloc in C++
-    numberRows = 0;
-    numberColumns = 0;
-    numberElements = 0;
+    numberRows_ = 0;
+    numberColumns_ = 0;
+    numberElements_ = 0;
     OSIRowIndex maxRows = 1000;
-    char objectiveName[200];
     OSIMpsType *rowType =
 
       ( OSIMpsType * ) malloc ( maxRows * sizeof ( OSIMpsType ) );
@@ -983,7 +977,9 @@ int OsiMpsReader::readMps()
       case OSI_N_ROW:
 	if ( !gotNrow ) {
 	  gotNrow = true;
-	  strcpy ( objectiveName, mpsfile.columnName (  ) );
+	  // save name of section
+	  free(objectiveName_);
+	  objectiveName_=strdup(mpsfile.columnName());
 	} else {
 	  // add to discard list
 	  if ( numberOtherFreeRows == maxFreeRows ) {
@@ -1001,7 +997,7 @@ int OsiMpsReader::readMps()
       case OSI_E_ROW:
       case OSI_L_ROW:
       case OSI_G_ROW:
-	if ( numberRows == maxRows ) {
+	if ( numberRows_ == maxRows ) {
 	  maxRows = ( 3 * maxRows ) / 2 + 1000;
 	  rowType =
 	    ( OSIMpsType * ) realloc ( rowType,
@@ -1010,9 +1006,9 @@ int OsiMpsReader::readMps()
 
 	    ( char ** ) realloc ( rowName, maxRows * sizeof ( char * ) );
 	}
-	rowType[numberRows] = mpsfile.mpsType (  );
-	rowName[numberRows] = strdup ( mpsfile.columnName (  ) );
-	numberRows++;
+	rowType[numberRows_] = mpsfile.mpsType (  );
+	rowName[numberRows_] = strdup ( mpsfile.columnName (  ) );
+	numberRows_++;
 	break;
       default:
 	numberErrors++;
@@ -1029,25 +1025,25 @@ int OsiMpsReader::readMps()
     assert ( gotNrow );
     rowType =
       ( OSIMpsType * ) realloc ( rowType,
-				 numberRows * sizeof ( OSIMpsType ) );
+				 numberRows_ * sizeof ( OSIMpsType ) );
     // put objective and other free rows at end
     rowName =
       ( char ** ) realloc ( rowName,
-			    ( numberRows + 1 +
+			    ( numberRows_ + 1 +
 
 			      numberOtherFreeRows ) * sizeof ( char * ) );
-    rowName[numberRows] = objectiveName;
-    memcpy ( rowName + numberRows + 1, freeRowName,
+    rowName[numberRows_] = objectiveName_;
+    memcpy ( rowName + numberRows_ + 1, freeRowName,
 	     numberOtherFreeRows * sizeof ( char * ) );
 
-    startHash ( rowName, numberRows + 1 + numberOtherFreeRows , 0 );
-    OSIColumnIndex maxColumns = 1000 + numberRows / 5;
-    OSIElementIndex maxElements = 5000 + numberRows / 2;
+    startHash ( rowName, numberRows_ + 1 + numberOtherFreeRows , 0 );
+    OSIColumnIndex maxColumns = 1000 + numberRows_ / 5;
+    OSIElementIndex maxElements = 5000 + numberRows_ / 2;
     OSIMpsType *columnType = ( OSIMpsType * )
       malloc ( maxColumns * sizeof ( OSIMpsType ) );
     char **columnName = ( char ** ) malloc ( maxColumns * sizeof ( char * ) );
 
-    objective = ( double * ) malloc ( maxColumns * sizeof ( double ) );
+    objective_ = ( double * ) malloc ( maxColumns * sizeof ( double ) );
     start = ( OSIElementIndex * )
       malloc ( ( maxColumns + 1 ) * sizeof ( OSIElementIndex ) );
     row = ( OSIRowIndex * )
@@ -1055,14 +1051,14 @@ int OsiMpsReader::readMps()
     element =
       ( double * ) malloc ( maxElements * sizeof ( double ) );
     // for duplicates
-    OSIElementIndex *rowUsed = new OSIElementIndex[numberRows];
+    OSIElementIndex *rowUsed = new OSIElementIndex[numberRows_];
 
-    for (i=0;i<numberRows;i++) {
+    for (i=0;i<numberRows_;i++) {
       rowUsed[i]=-1;
     }
     bool objUsed = false;
 
-    numberElements = 0;
+    numberElements_ = 0;
     char lastColumn[200];
 
     memset ( lastColumn, '\0', 200 );
@@ -1078,12 +1074,12 @@ int OsiMpsReader::readMps()
 	  // new column
 
 	  // reset old column and take out tiny
-	  if ( numberColumns ) {
+	  if ( numberColumns_ ) {
 	    objUsed = false;
 	    OSIElementIndex i;
 	    OSIElementIndex k = start[column];
 
-	    for ( i = k; i < numberElements; i++ ) {
+	    for ( i = k; i < numberElements_; i++ ) {
 	      OSIRowIndex irow = row[i];
 
 	      if ( fabs ( element[i] ) > tinyElement ) {
@@ -1091,18 +1087,18 @@ int OsiMpsReader::readMps()
 	      }
 	      rowUsed[irow] = -1;
 	    }
-	    numberElements = k;
+	    numberElements_ = k;
 	  }
-	  column = numberColumns;
-	  if ( numberColumns == maxColumns ) {
+	  column = numberColumns_;
+	  if ( numberColumns_ == maxColumns ) {
 	    maxColumns = ( 3 * maxColumns ) / 2 + 1000;
 	    columnType = ( OSIMpsType * )
 	      realloc ( columnType, maxColumns * sizeof ( OSIMpsType ) );
 	    columnName = ( char ** )
 	      realloc ( columnName, maxColumns * sizeof ( char * ) );
 
-	    objective = ( double * )
-	      realloc ( objective, maxColumns * sizeof ( double ) );
+	    objective_ = ( double * )
+	      realloc ( objective_, maxColumns * sizeof ( double ) );
 	    start = ( OSIElementIndex * )
 	      realloc ( start,
 			( maxColumns + 1 ) * sizeof ( OSIElementIndex ) );
@@ -1115,12 +1111,12 @@ int OsiMpsReader::readMps()
 	  }
 	  columnName[column] = strdup ( mpsfile.columnName (  ) );
 	  strcpy ( lastColumn, mpsfile.columnName (  ) );
-	  objective[column] = 0.0;
-	  start[column] = numberElements;
-	  numberColumns++;
+	  objective_[column] = 0.0;
+	  start[column] = numberElements_;
+	  numberColumns_++;
 	}
 	if ( fabs ( mpsfile.value (  ) ) > tinyElement ) {
-	  if ( numberElements == maxElements ) {
+	  if ( numberElements_ == maxElements ) {
 	    maxElements = ( 3 * maxElements ) / 2 + 1000;
 	    row = ( OSIRowIndex * )
 	      realloc ( row, maxElements * sizeof ( OSIRowIndex ) );
@@ -1134,7 +1130,7 @@ int OsiMpsReader::readMps()
 	    double value = mpsfile.value (  );
 
 	    // check for duplicates
-	    if ( irow == numberRows ) {
+	    if ( irow == numberRows_ ) {
 	      // objective
 	      if ( objUsed ) {
 		numberErrors++;
@@ -1149,11 +1145,11 @@ int OsiMpsReader::readMps()
 	      } else {
 		objUsed = true;
 	      }
-	      value += objective[column];
+	      value += objective_[column];
 	      if ( fabs ( value ) <= tinyElement )
 		value = 0.0;
-	      objective[column] = value;
-	    } else if ( irow < numberRows ) {
+	      objective_[column] = value;
+	    } else if ( irow < numberRows_ ) {
 	      // other free rows will just be discarded so won't get here
 	      if ( rowUsed[irow] >= 0 ) {
 		element[rowUsed[irow]] += value;
@@ -1167,10 +1163,10 @@ int OsiMpsReader::readMps()
 		  return numberErrors;
 		}
 	      } else {
-		row[numberElements] = irow;
-		element[numberElements] = value;
-		rowUsed[irow] = numberElements;
-		numberElements++;
+		row[numberElements_] = irow;
+		element[numberElements_] = value;
+		rowUsed[irow] = numberElements_;
+		numberElements_++;
 	      }
 	    }
 	  } else {
@@ -1210,29 +1206,29 @@ int OsiMpsReader::readMps()
 	}
       }
     }
-    start[numberColumns] = numberElements;
+    start[numberColumns_] = numberElements_;
     delete[]rowUsed;
     assert ( mpsfile.whichSection (  ) == OSI_RHS_SECTION );
     columnType =
       ( OSIMpsType * ) realloc ( columnType,
-				 numberColumns * sizeof ( OSIMpsType ) );
+				 numberColumns_ * sizeof ( OSIMpsType ) );
     columnName =
 
-      ( char ** ) realloc ( columnName, numberColumns * sizeof ( char * ) );
-    objective = ( double * )
-      realloc ( objective, numberColumns * sizeof ( double ) );
+      ( char ** ) realloc ( columnName, numberColumns_ * sizeof ( char * ) );
+    objective_ = ( double * )
+      realloc ( objective_, numberColumns_ * sizeof ( double ) );
     start = ( OSIElementIndex * )
-      realloc ( start, ( numberColumns + 1 ) * sizeof ( OSIElementIndex ) );
+      realloc ( start, ( numberColumns_ + 1 ) * sizeof ( OSIElementIndex ) );
     row = ( OSIRowIndex * )
-      realloc ( row, numberElements * sizeof ( OSIRowIndex ) );
+      realloc ( row, numberElements_ * sizeof ( OSIRowIndex ) );
     element = ( double * )
-      realloc ( element, numberElements * sizeof ( double ) );
+      realloc ( element, numberElements_ * sizeof ( double ) );
 
-    rowlower = ( double * ) malloc ( numberRows * sizeof ( double ) );
-    rowupper = ( double * ) malloc ( numberRows * sizeof ( double ) );
-    for (i=0;i<numberRows;i++) {
-      rowlower[i]=-infinity_;
-      rowupper[i]=infinity_;
+    rowlower_ = ( double * ) malloc ( numberRows_ * sizeof ( double ) );
+    rowupper_ = ( double * ) malloc ( numberRows_ * sizeof ( double ) );
+    for (i=0;i<numberRows_;i++) {
+      rowlower_[i]=-infinity_;
+      rowupper_[i]=infinity_;
     }
     objUsed = false;
     memset ( lastColumn, '\0', 200 );
@@ -1253,6 +1249,9 @@ int OsiMpsReader::readMps()
 	  } else {
 	    gotRhs = true;
 	    strcpy ( lastColumn, mpsfile.columnName (  ) );
+	    // save name of section
+	    free(rhsName_);
+	    rhsName_=strdup(mpsfile.columnName());
 	  }
 	}
 	// get row number
@@ -1261,7 +1260,7 @@ int OsiMpsReader::readMps()
 	  double value = mpsfile.value (  );
 
 	  // check for duplicates
-	  if ( irow == numberRows ) {
+	  if ( irow == numberRows_ ) {
 	    // objective
 	    if ( objUsed ) {
 	      numberErrors++;
@@ -1277,8 +1276,8 @@ int OsiMpsReader::readMps()
 	      objUsed = true;
 	    }
 	    objectiveOffset_ += value;
-	  } else if ( irow < numberRows ) {
-	    if ( rowlower[irow] != -infinity_ ) {
+	  } else if ( irow < numberRows_ ) {
+	    if ( rowlower_[irow] != -infinity_ ) {
 	      numberErrors++;
 	      if ( numberErrors < 100 ) {
 		std::cout << "Duplicate row at card " << mpsfile.
@@ -1289,7 +1288,7 @@ int OsiMpsReader::readMps()
 		return numberErrors;
 	      }
 	    } else {
-	      rowlower[irow] = value;
+	      rowlower_[irow] = value;
 	    }
 	  }
 	} else {
@@ -1333,6 +1332,9 @@ int OsiMpsReader::readMps()
 	    } else {
 	      gotRange = true;
 	      strcpy ( lastColumn, mpsfile.columnName (  ) );
+	      // save name of section
+	      free(rangeName_);
+	      rangeName_=strdup(mpsfile.columnName());
 	    }
 	  }
 	  // get row number
@@ -1341,7 +1343,7 @@ int OsiMpsReader::readMps()
 	    double value = mpsfile.value (  );
 
 	    // check for duplicates
-	    if ( irow == numberRows ) {
+	    if ( irow == numberRows_ ) {
 	      // objective
 	      numberErrors++;
 	      if ( numberErrors < 100 ) {
@@ -1353,7 +1355,7 @@ int OsiMpsReader::readMps()
 		return numberErrors;
 	      }
 	    } else {
-	      if ( rowupper[irow] != infinity_ ) {
+	      if ( rowupper_[irow] != infinity_ ) {
 		numberErrors++;
 		if ( numberErrors < 100 ) {
 		  std::cout << "Duplicate row at card " << mpsfile.
@@ -1364,7 +1366,7 @@ int OsiMpsReader::readMps()
 		  return numberErrors;
 		}
 	      } else {
-		rowupper[irow] = value;
+		rowupper_[irow] = value;
 	      }
 	    }
 	  } else {
@@ -1396,10 +1398,10 @@ int OsiMpsReader::readMps()
     {
       OSIRowIndex irow;
 
-      for ( irow = 0; irow < numberRows; irow++ ) {
-	double lo = rowlower[irow];
-	double up = rowupper[irow];
-	double up2 = rowupper[irow];	//range
+      for ( irow = 0; irow < numberRows_; irow++ ) {
+	double lo = rowlower_[irow];
+	double up = rowupper_[irow];
+	double up2 = rowupper_[irow];	//range
 
 	switch ( rowType[irow] ) {
 	case OSI_E_ROW:
@@ -1437,22 +1439,22 @@ int OsiMpsReader::readMps()
 	  }
 	  break;
 	}
-	rowlower[irow] = lo;
-	rowupper[irow] = up;
+	rowlower_[irow] = lo;
+	rowupper_[irow] = up;
       }
     }
     free ( rowType );
     // default bounds
-    collower = ( double * ) malloc ( numberColumns * sizeof ( double ) );
-    colupper = ( double * ) malloc ( numberColumns * sizeof ( double ) );
-    for (i=0;i<numberColumns;i++) {
-      collower[i]=0.0;
-      colupper[i]=infinity_;
+    collower_ = ( double * ) malloc ( numberColumns_ * sizeof ( double ) );
+    colupper_ = ( double * ) malloc ( numberColumns_ * sizeof ( double ) );
+    for (i=0;i<numberColumns_;i++) {
+      collower_[i]=0.0;
+      colupper_[i]=infinity_;
     }
     // set up integer region just in case
-    integerType_ = (char *) malloc (numberColumns*sizeof(char));
+    integerType_ = (char *) malloc (numberColumns_*sizeof(char));
 
-    for ( column = 0; column < numberColumns; column++ ) {
+    for ( column = 0; column < numberColumns_; column++ ) {
       if ( columnType[column] == OSI_INTORG ) {
 	columnType[column] = OSI_UNSET_BOUND;
 	integerType_[column] = 1;
@@ -1464,7 +1466,7 @@ int OsiMpsReader::readMps()
       memset ( lastColumn, '\0', 200 );
       bool gotBound = false;
 
-      startHash ( columnName, numberColumns , 1 );
+      startHash ( columnName, numberColumns_ , 1 );
       while ( mpsfile.nextField (  ) == OSI_BOUND_SECTION ) {
 	if ( strcmp ( lastColumn, mpsfile.columnName (  ) ) ) {
 
@@ -1475,6 +1477,9 @@ int OsiMpsReader::readMps()
 	  } else {
 	    gotBound = true;;
 	    strcpy ( lastColumn, mpsfile.columnName (  ) );
+	    // save name of section
+	    free(boundName_);
+	    boundName_=strdup(mpsfile.columnName());
 	  }
 	}
 	// get column number
@@ -1490,19 +1495,19 @@ int OsiMpsReader::readMps()
 	      ifError = true;
 	    if ( columnType[icolumn] == OSI_UNSET_BOUND ) {
 	      if ( value < 0.0 ) {
-		collower[icolumn] = -infinity_;
+		collower_[icolumn] = -infinity_;
 	      }
 	    } else if ( columnType[icolumn] == OSI_LO_BOUND ) {
-	      if ( value < collower[icolumn] ) {
+	      if ( value < collower_[icolumn] ) {
 		ifError = true;
-	      } else if ( value < collower[icolumn] + tinyElement ) {
-		value = collower[icolumn];
+	      } else if ( value < collower_[icolumn] + tinyElement ) {
+		value = collower_[icolumn];
 	      }
 	    } else if ( columnType[icolumn] == OSI_MI_BOUND ) {
 	    } else {
 	      ifError = true;
 	    }
-	    colupper[icolumn] = value;
+	    colupper_[icolumn] = value;
 	    columnType[icolumn] = OSI_UP_BOUND;
 	    break;
 	  case OSI_LO_BOUND:
@@ -1511,15 +1516,15 @@ int OsiMpsReader::readMps()
 	    if ( columnType[icolumn] == OSI_UNSET_BOUND ) {
 	    } else if ( columnType[icolumn] == OSI_UP_BOUND ||
 			columnType[icolumn] == OSI_UI_BOUND ) {
-	      if ( value > colupper[icolumn] ) {
+	      if ( value > colupper_[icolumn] ) {
 		ifError = true;
-	      } else if ( value > colupper[icolumn] - tinyElement ) {
-		value = colupper[icolumn];
+	      } else if ( value > colupper_[icolumn] - tinyElement ) {
+		value = colupper_[icolumn];
 	      }
 	    } else {
 	      ifError = true;
 	    }
-	    collower[icolumn] = value;
+	    collower_[icolumn] = value;
 	    columnType[icolumn] = OSI_LO_BOUND;
 	    break;
 	  case OSI_FX_BOUND:
@@ -1529,8 +1534,8 @@ int OsiMpsReader::readMps()
 	    } else {
 	      ifError = true;
 	    }
-	    collower[icolumn] = value;
-	    colupper[icolumn] = value;
+	    collower_[icolumn] = value;
+	    colupper_[icolumn] = value;
 	    columnType[icolumn] = OSI_FX_BOUND;
 	    break;
 	  case OSI_FR_BOUND:
@@ -1538,18 +1543,18 @@ int OsiMpsReader::readMps()
 	    } else {
 	      ifError = true;
 	    }
-	    collower[icolumn] = -infinity_;
-	    colupper[icolumn] = infinity_;
+	    collower_[icolumn] = -infinity_;
+	    colupper_[icolumn] = infinity_;
 	    columnType[icolumn] = OSI_FR_BOUND;
 	    break;
 	  case OSI_MI_BOUND:
 	    if ( columnType[icolumn] == OSI_UNSET_BOUND ) {
-	      colupper[icolumn] = 0.0;
+	      colupper_[icolumn] = 0.0;
 	    } else if ( columnType[icolumn] == OSI_UP_BOUND ) {
 	    } else {
 	      ifError = true;
 	    }
-	    collower[icolumn] = -infinity_;
+	    collower_[icolumn] = -infinity_;
 	    columnType[icolumn] = OSI_MI_BOUND;
 	    break;
 	  case OSI_PL_BOUND:
@@ -1564,15 +1569,15 @@ int OsiMpsReader::readMps()
 	      ifError = true;
 	    if ( columnType[icolumn] == OSI_UNSET_BOUND ) {
 	    } else if ( columnType[icolumn] == OSI_LO_BOUND ) {
-	      if ( value < collower[icolumn] ) {
+	      if ( value < collower_[icolumn] ) {
 		ifError = true;
-	      } else if ( value < collower[icolumn] + tinyElement ) {
-		value = collower[icolumn];
+	      } else if ( value < collower_[icolumn] + tinyElement ) {
+		value = collower_[icolumn];
 	      }
 	    } else {
 	      ifError = true;
 	    }
-	    colupper[icolumn] = value;
+	    colupper_[icolumn] = value;
 	    columnType[icolumn] = OSI_UI_BOUND;
 	    if ( !integerType_[icolumn] ) {
 	      numberIntegers++;
@@ -1584,8 +1589,8 @@ int OsiMpsReader::readMps()
 	    } else {
 	      ifError = true;
 	    }
-	    collower[icolumn] = 0.0;
-	    colupper[icolumn] = 1.0;
+	    collower_[icolumn] = 0.0;
+	    colupper_[icolumn] = 1.0;
 	    columnType[icolumn] = OSI_BV_BOUND;
 	    if ( !integerType_[icolumn] ) {
 	      numberIntegers++;
@@ -1627,14 +1632,14 @@ int OsiMpsReader::readMps()
     } else {
       OSIColumnIndex icolumn;
 
-      for ( icolumn = 0; icolumn < numberColumns; icolumn++ ) {
+      for ( icolumn = 0; icolumn < numberColumns_; icolumn++ ) {
 	if ( integerType_[icolumn] ) {
-	  assert ( collower[icolumn] >= -MAX_INTEGER );
+	  assert ( collower_[icolumn] >= -MAX_INTEGER );
 	  // if 0 infinity make 0-1 ???
 	  if ( columnType[icolumn] == OSI_UNSET_BOUND ) 
-	    colupper[icolumn] = defaultBound_;
-	  if ( colupper[icolumn] > MAX_INTEGER ) 
-	    colupper[icolumn] = MAX_INTEGER;
+	    colupper_[icolumn] = defaultBound_;
+	  if ( colupper_[icolumn] > MAX_INTEGER ) 
+	    colupper_[icolumn] = MAX_INTEGER;
 	}
       }
     }
@@ -1642,63 +1647,80 @@ int OsiMpsReader::readMps()
     assert ( mpsfile.whichSection (  ) == OSI_ENDATA_SECTION );
   } else {
     // This is very simple format - what should we use?
-    fscanf ( fp, "%d %d %d\n", &numberRows, &numberColumns, &numberElements );
+    fscanf ( fp, "%d %d %d\n", &numberRows_, &numberColumns_, &numberElements_ );
     OSIColumnIndex i;
 
-    rowlower = ( double * ) malloc ( numberRows * sizeof ( double ) );
-    rowupper = ( double * ) malloc ( numberRows * sizeof ( double ) );
-    for ( i = 0; i < numberRows; i++ ) {
+    rowlower_ = ( double * ) malloc ( numberRows_ * sizeof ( double ) );
+    rowupper_ = ( double * ) malloc ( numberRows_ * sizeof ( double ) );
+    for ( i = 0; i < numberRows_; i++ ) {
       int j;
 
-      fscanf ( fp, "%d %lg %lg\n", &j, &rowlower[i], &rowupper[i] );
+      fscanf ( fp, "%d %lg %lg\n", &j, &rowlower_[i], &rowupper_[i] );
       assert ( i == j );
     }
-    collower = ( double * ) malloc ( numberColumns * sizeof ( double ) );
-    colupper = ( double * ) malloc ( numberColumns * sizeof ( double ) );
-    objective= ( double * ) malloc ( numberColumns * sizeof ( double ) );
-    start = ( OSIElementIndex *) malloc ((numberColumns + 1) *
+    collower_ = ( double * ) malloc ( numberColumns_ * sizeof ( double ) );
+    colupper_ = ( double * ) malloc ( numberColumns_ * sizeof ( double ) );
+    objective_= ( double * ) malloc ( numberColumns_ * sizeof ( double ) );
+    start = ( OSIElementIndex *) malloc ((numberColumns_ + 1) *
 					sizeof (OSIElementIndex) );
-    row = ( OSIRowIndex * ) malloc (numberElements * sizeof (OSIRowIndex));
-    element = ( double * ) malloc (numberElements * sizeof (double) );
+    row = ( OSIRowIndex * ) malloc (numberElements_ * sizeof (OSIRowIndex));
+    element = ( double * ) malloc (numberElements_ * sizeof (double) );
 
     start[0] = 0;
-    numberElements = 0;
-    for ( i = 0; i < numberColumns; i++ ) {
+    numberElements_ = 0;
+    for ( i = 0; i < numberColumns_; i++ ) {
       int j;
       int n;
 
-      fscanf ( fp, "%d %d %lg %lg %lg\n", &j, &n, &collower[i], &colupper[i],
-	       &objective[i] );
+      fscanf ( fp, "%d %d %lg %lg %lg\n", &j, &n, &collower_[i], &colupper_[i],
+	       &objective_[i] );
       assert ( i == j );
       for ( j = 0; j < n; j++ ) {
-	fscanf ( fp, "       %d %lg\n", &row[numberElements],
-		 &element[numberElements] );
-	numberElements++;
+	fscanf ( fp, "       %d %lg\n", &row[numberElements_],
+		 &element[numberElements_] );
+	numberElements_++;
       }
-      start[i + 1] = numberElements;
+      start[i + 1] = numberElements_;
     }
   }
   // construct packed matrix
   matrixByColumn_ = 
     new OsiPackedMatrix(true,
-			numberRows,numberColumns,numberElements,
+			numberRows_,numberColumns_,numberElements_,
 			element,row,start,NULL);
   free ( row );
   free ( start );
   free ( element );
 
-  rowlower_ = rowlower;
-  rowupper_ = rowupper;
-  collower_ = collower;
-  colupper_ = colupper;
-  objective_ = objective;
-  numberRows_ = numberRows;
-  numberColumns_ = numberColumns;
-  numberElements_ = numberElements;
-  std::cout<<"Problem has " << numberRows_ << " rows, " << numberColumns_
+  std::cout<<"Problem "<<problemName_<< " has " << numberRows_ << " rows, " << numberColumns_
 	   << " columns and " << numberElements_ << " elements" <<std::endl;
   fclose ( fp );
   return numberErrors;
+}
+// Problem name
+const char * OsiMpsReader::getProblemName() const
+{
+  return problemName_;
+}
+// Objective name
+const char * OsiMpsReader::getObjectiveName() const
+{
+  return objectiveName_;
+}
+// Rhs name
+const char * OsiMpsReader::getRhsName() const
+{
+  return rhsName_;
+}
+// Range name
+const char * OsiMpsReader::getRangeName() const
+{
+  return rangeName_;
+}
+// Bound name
+const char * OsiMpsReader::getBoundName() const
+{
+  return boundName_;
 }
 
 //------------------------------------------------------------------
@@ -2043,7 +2065,12 @@ numberColumns_(0),
 numberElements_(0),
 defaultBound_(1),
 infinity_(DBL_MAX),
-objectiveOffset_(0.0)
+objectiveOffset_(0.0),
+problemName_(strdup("")),
+objectiveName_(strdup("")),
+rhsName_(strdup("")),
+rangeName_(strdup("")),
+boundName_(strdup(""))
 {
   numberHash_[0]=0;
   hash_[0]=NULL;
@@ -2076,7 +2103,12 @@ numberColumns_(0),
 numberElements_(0),
 defaultBound_(1),
 infinity_(DBL_MAX),
-objectiveOffset_(0.0)
+objectiveOffset_(0.0),
+problemName_(strdup("")),
+objectiveName_(strdup("")),
+rhsName_(strdup("")),
+rangeName_(strdup("")),
+boundName_(strdup(""))
 {
   numberHash_[0]=0;
   hash_[0]=NULL;
@@ -2117,7 +2149,18 @@ void OsiMpsReader::gutsOfCopy(const OsiMpsReader & rhs)
     integerType_ = (char *) malloc (numberColumns_*sizeof(char));
     memcpy(integerType_,rhs.integerType_,numberColumns_*sizeof(char));
   }
+  free(fileName_);
+  free(problemName_);
+  free(objectiveName_);
+  free(rhsName_);
+  free(rangeName_);
+  free(boundName_);
   fileName_ = strdup(rhs.fileName_);
+  problemName_ = strdup(rhs.problemName_);
+  objectiveName_ = strdup(rhs.objectiveName_);
+  rhsName_ = strdup(rhs.rhsName_);
+  rangeName_ = strdup(rhs.rangeName_);
+  boundName_ = strdup(rhs.boundName_);
   numberHash_[0]=rhs.numberHash_[0];
   numberHash_[1]=rhs.numberHash_[1];
   defaultBound_=rhs.defaultBound_;
@@ -2196,6 +2239,16 @@ void OsiMpsReader::freeAll()
   fileName_=NULL;
   names_[0]=NULL;
   names_[1]=NULL;
+  free(problemName_);
+  free(objectiveName_);
+  free(rhsName_);
+  free(rangeName_);
+  free(boundName_);
+  problemName_=NULL;
+  objectiveName_=NULL;
+  rhsName_=NULL;
+  rangeName_=NULL;
+  boundName_=NULL;
 }
 
 /* Release all information which can be re-calculated e.g. rowsense

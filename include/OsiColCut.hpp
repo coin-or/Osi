@@ -121,6 +121,12 @@ public:
   virtual ~OsiColCut ();
   //@}
   
+  /**@name Debug stuff */
+  //@{
+    /// Print cuts in collection
+  virtual void print() const;
+  //@}
+   
 private:
   
   /**@name Private member data */

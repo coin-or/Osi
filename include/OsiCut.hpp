@@ -33,6 +33,12 @@ public:
   inline double effectiveness() const; 
   //@}
 
+  /**@name Debug stuff */
+  //@{
+    /// Print cuts in collection
+  virtual void print() const {};
+  //@}
+   
 #if 0
   / **@name Times used */
   / /@{

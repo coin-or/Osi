@@ -128,6 +128,12 @@ public:
     virtual ~OsiRowCut ();
   //@}
 
+  /**@name Debug stuff */
+  //@{
+    /// Print cuts in collection
+  virtual void print() const ;
+  //@}
+   
 private:
   
  

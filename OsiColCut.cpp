@@ -6,6 +6,9 @@
 #endif
 
 #include "OsiColCut.hpp"
+#include <cstdlib>
+#include <cstdio>
+#include <iostream>
 
 //-------------------------------------------------------------------
 // Default Constructor 
@@ -57,3 +60,31 @@ OsiColCut::operator=(const OsiColCut& rhs)
   }
   return *this;
 }
+//----------------------------------------------------------------
+// Print
+//-------------------------------------------------------------------
+
+void
+OsiColCut::print() const
+{
+  const CoinPackedVector & cutLbs = lbs();
+  const CoinPackedVector & cutUbs = ubs();
+  int i;
+  std::cout<<"Column cut has "<<cutLbs.getNumElements()
+	   <<" Lower bound cuts"<<std::endl;
+  for ( i=0; i<cutLbs.getNumElements(); i++ ) {
+    int colIndx = cutLbs.getIndices()[i];
+    double newLb= cutLbs.getElements()[i];
+    std::cout<<"[ x"<<colIndx<<" >= "<<newLb<<"] ";
+  }
+  std::cout<<std::endl;
+  std::cout<<"    and "<<cutUbs.getNumElements()
+	   <<" Upper bound cuts"<<std::endl;
+  for ( i=0; i<cutUbs.getNumElements(); i++ ) {
+    int colIndx = cutUbs.getIndices()[i];
+    double newUb= cutUbs.getElements()[i];
+    std::cout<<"[ x"<<colIndx<<" <= "<<newUb<<"] ";
+  }
+  std::cout<<std::endl;
+}
+

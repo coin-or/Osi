@@ -151,6 +151,12 @@ public:
     inline int sizeCuts() const;
   //@}
    
+  /**@name Debug stuff */
+  //@{
+    /// Print cuts in collection
+    inline void printCuts() const;
+  //@}
+   
   /**@name Get a cut from collection */
   //@{
     /// Get pointer to i'th row cut
@@ -356,6 +362,19 @@ OsiCut * OsiCuts::mostEffectiveCutPtr()
     }
   }
   return retVal;
+}
+
+//----------------------------------------------------------------
+// Print all cuts
+//----------------------------------------------------------------
+void
+OsiCuts::printCuts() const  
+{ 
+  const_iterator b=begin();
+  const_iterator e=end();
+  for ( OsiCuts::const_iterator it=b; it!=e; ++it ) 
+    (*it)->print();
+
 }
 
 //----------------------------------------------------------------

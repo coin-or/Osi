@@ -564,6 +564,7 @@ int OsiFactorization::updateColumn ( OsiIndexedVector * regionSparse,
       array[iRow] = value;
       index[j] = iRow;
     }			
+    regionSparse->setNumElements(0);
     regionSparse2->setNumElements(numberNonZero);
   }
   return number;

@@ -2285,7 +2285,8 @@ inline void ODSI::loadProblem
   gen_rowparms(rowcnt,rhs,rhslow,ctyp,sense,rhsin,range) ;
   load_problem(matrix,col_lower,col_upper,obj,ctyp,rhs,rhslow) ;
 
-  delete[] rhs ;
+  // delete[] rhs ; This delete is causing windows to sometimes crash.
+  //                Perhaps the memory is sometimes allocated with malloc.
   delete[] rhslow ;
   delete[] ctyp ; }
 

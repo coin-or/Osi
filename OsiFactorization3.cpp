@@ -1,9 +1,11 @@
-#include <iostream>
+#include <cassert>
+#include <cstdio>
 
 #include "OsiFactorization.hpp"
 #include "OsiIndexedVector.hpp"
 #include "CoinHelperFunctions.hpp"
 #include <stdio.h>
+#include <iostream>
 
 //:class OsiFactorization.  Deals with Factorization and Updates
 
@@ -248,7 +250,7 @@ int OsiFactorization::checkPivot(double saveFromU,
       status = 0;
     } else {
 #if OSI_DEBUG
-      cout << oldPivot << " " << saveFromU << endl;
+      std::cout << oldPivot << " " << saveFromU << std::endl;
 #endif
       if ( fabs ( fabs ( oldPivot ) - fabs ( saveFromU ) ) < 1.0e-12 ||
         fabs ( 1.0 - fabs ( saveFromU / oldPivot ) ) < 1.0e-8 ) {
@@ -261,7 +263,7 @@ int OsiFactorization::checkPivot(double saveFromU,
     //error
     status = 2;
 #if OSI_DEBUG
-    cout << saveFromU / oldPivot << " " << saveFromU << endl;
+    std::cout << saveFromU / oldPivot << " " << saveFromU << std::endl;
 #endif
   } 
   return status;

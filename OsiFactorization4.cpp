@@ -1,6 +1,7 @@
 #include "OsiFactorization.hpp"
 #include "OsiIndexedVector.hpp"
 #include "CoinHelperFunctions.hpp"
+#include <cassert>
 
 
 //  updateColumnU.  Updates part of column (FTRANU)

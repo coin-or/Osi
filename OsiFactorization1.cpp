@@ -812,11 +812,6 @@ OsiFactorization::factor (  )
 	}			
 	for ( i = 0; i < numberGoodU_; i++ ) {
 	  int goodRow = pivotRowL_[i];	//valid pivot row
-#ifdef OSI_DEBUG
-	  if ( i != nextRow_[goodRow] ) {
-	    std::cout << "bad1 OsiFactorization:factor" << std::endl;
-	  }	
-#endif		
 	  int goodColumn = pivotColumn_[i];
 
 	  lastRow_[goodRow] = goodColumn;	//will now have -1 or column sequence

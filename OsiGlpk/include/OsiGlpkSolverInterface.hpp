@@ -1,11 +1,5 @@
-//  LAST EDIT: Sun 2 Nov 2003 by Brady Hunsaker
 //-----------------------------------------------------------------------------
 // name:     OSI Interface for GLPK
-// author:   Vivian DE Smedt
-//           Bruxelles (Belgium)
-//           email: vdesmedt@cso.ulb.ac.be
-// date:     17/11/2001
-// comments: please scan this file for '???' and read the comments
 //-----------------------------------------------------------------------------
 // Copyright (C) 2001, Vivian De Smedt, Braden Hunsaker
 // Copyright (C) 2003  University of Pittsburgh

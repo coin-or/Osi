@@ -1,30 +1,35 @@
-//  LAST EDIT: Sun 2 Nov 2003 by Brady Hunsaker
 //-----------------------------------------------------------------------------
 // name:     OSI Interface for GLPK
-// author:   Vivian DE Smedt
-//           Bruxelles (Belgium)
-//           email: vdesmedt@cso.ulb.ac.be
-// date:     17/11/2001 
-// comments: please scan this file for '???' and read the comments
 //-----------------------------------------------------------------------------
 // Copyright (C) 2001, 2002 Vivian De Smedt
 // Copyright (C) 2002, 2003 Braden Hunsaker 
-// Copyright (C) 2003  University of Pittsburgh
+// Copyright (C) 2003, 2004 University of Pittsburgh
+// Copyright (C) 2004 Joseph Young
 //    University of Pittsburgh coding done by Brady Hunsaker
 // All Rights Reserved.
 //
-// More Comments:
-//    As of version 3.2.1, GLPK problems can be of class GLP_LP or GLP_MIP.
-// The difference is that GLP_MIP problems have a separate MIP data block, 
-// and certain functions are only allowed for GLP_MIP problems.
-//    If a GLP_MIP problem is changed back into a GLP_LP problem, then the 
-// MIP data is lost, including which columns are integer.  However, GLP_MIP
-// problems still have access to LP information (like lpx_get_status).
-//    Therefore, all OSI problems are set to type GLP_MIP.  The only trick 
-// is differentiating when the user calls status routines like 
-// isProvenOptimal().  For now, we assume that the user is referring to 
-// the most recent solution call.  We add an extra variable to the class to
-// record which solution call was most recent (lp or mip).
+// Comments:
+//   
+//    Areas that may need work in the code are marked with '???'.
+//
+//    As of version 4.7, GLPK problems can be of class LPX_LP or LPX_MIP.
+// The difference is that LPX_MIP problems have a separate MIP data block, 
+// and certain functions are only allowed for LPX_MIP problems.
+//
+//    In (much) earlier versions of GLPK, if an LPX_MIP problem was
+// changed back into a LPX_LP problem, then the MIP data was lost,
+// including which columns are integer.  However, LPX_MIP problems
+// still had access to LP information (like lpx_get_status).
+//
+//    It appears that this behavior is no longer true in version 4.7.
+// Therefore it may be worthwhile to adjust the interface to change
+// the class of the problem as needed.  For the time being, however,
+// all OSI problems are set to type LPX_MIP.  The only trick is
+// differentiating when the user calls status routines like
+// isProvenOptimal().  For now, we assume that the user is referring
+// to the most recent solution call.  We add an extra variable,
+// bbWasLast_, to the class to record which solution call was most
+// recent (lp or mip).
 //
 //
 // Possible areas of improvement
@@ -39,12 +44,10 @@
 //  setColSolution, setRowPrice  
 //
 // Many methods have not been attempted to be improved (for speed) 
-// to take advantage of how GLPK works.  The initial emphasis has been on
+// to take advantage of how GLPK works.  The emphasis has been on
 // making things functional and not too messy.  There's plenty of room
 // for more efficient implementations.
 //
-// Some comments refer to GLPK 3.2.1.  Some of these details may have 
-// changed for GLPK 4.1.  Should check this.
 
 //#ifdef COIN_USE_GLPK
 #if defined(_MSC_VER)
@@ -67,12 +70,12 @@
 
 //-----------------------------------------------------------------------------
 
-inline void checkGPLKerror( int err, std::string gplkfuncname, std::string osimethod )
+inline void checkGLPKerror( int err, std::string glpkfuncname, std::string osimethod )
 {
 	if( err != 0 )
 	{
 		char s[100];
-		sprintf( s, "%s returned error %d", gplkfuncname.c_str(), err );
+		sprintf( s, "%s returned error %d", glpkfuncname.c_str(), err );
 		std::cout << "ERROR: " << s << " (" << osimethod << " in OsiGlpkSolverInterface)" << std::endl;
 		throw CoinError( s, osimethod.c_str(), "OsiGlpkSolverInterface" );
 	}
@@ -89,6 +92,7 @@ void OsiGlpkSolverInterface::initialSolve()
 	freeCachedData( OsiGlpkSolverInterface::FREECACHED_RESULTS );
 
 	lpx_set_int_parm(model, LPX_K_MSGLEV, 1);  // suppress most output 
+	lpx_set_int_parm(model, LPX_K_PRESOL, 1);  // turn on presolver
 	int err = lpx_simplex( model );
 	iter_used_ = lpx_get_int_parm(model, LPX_K_ITCNT);
 
@@ -171,8 +175,8 @@ void OsiGlpkSolverInterface::branchAndBound()
 		// What if there's an error there?
 		int err = lpx_integer( model );
 		iter_used_ = lpx_get_int_parm(model, LPX_K_ITCNT);
-		// Looks like GLPK 3.2 does keep the iteration count correctly
-		// during branch and bound.  Should check to be sure. ???
+		// Uncertain whether GLPK 4.7 keeps iteration count correctly
+		// for MIPs ???
 
 		isIterationLimitReached_ = false;
 		isAbandoned_ = false;
@@ -243,7 +247,7 @@ OsiGlpkSolverInterface::setDblParam( OsiDblParam key, double value )
   switch ( key )
     {
     case OsiDualObjectiveLimit:
-      // as of 3.2.1, GLPK only uses this if it does dual simplex
+      // as of 4.7, GLPK only uses this if it does dual simplex
 			dualObjectiveLimit_ = value;
 			if (getObjSense()==1)  // minimization
 			  lpx_set_real_parm( getMutableModelPtr(), 
@@ -255,7 +259,7 @@ OsiGlpkSolverInterface::setDblParam( OsiDblParam key, double value )
 		break;
 
     case OsiPrimalObjectiveLimit:
-      // as of 3.2.1, GLPK only uses this if it does dual simplex
+      // as of 4.7, GLPK only uses this if it does dual simplex
 			primalObjectiveLimit_ = value;
 			if (getObjSense()==1) // minimization
 			  lpx_set_real_parm( getMutableModelPtr(), 
@@ -291,7 +295,7 @@ OsiGlpkSolverInterface::setDblParam( OsiDblParam key, double value )
 		break;
 
     case OsiObjOffset:
-                lpx_set_obj_c0( getMutableModelPtr(), value );
+                lpx_set_obj_coef( getMutableModelPtr(), 0, value );
                 retval = true;
                 break;
 
@@ -373,7 +377,7 @@ OsiGlpkSolverInterface::getDblParam( OsiDblParam key, double& value ) const
 		break;
 
     case OsiObjOffset:
-                value = lpx_get_obj_c0( getMutableModelPtr() );
+                value = lpx_get_obj_coef(getMutableModelPtr(),0);
 		retval = true;
 		break;
 
@@ -421,7 +425,7 @@ bool OsiGlpkSolverInterface::isProvenOptimal() const
 	  }
 	else
 	  {
-	    int stat = lpx_get_mip_stat( model );
+	    int stat = lpx_mip_status( model );
 	    return stat == LPX_I_OPT;
 	  }
 }
@@ -433,7 +437,7 @@ bool OsiGlpkSolverInterface::isProvenPrimalInfeasible() const
 	if( bbWasLast_ == 0 )
 		return lpx_get_prim_stat( model ) == LPX_P_NOFEAS;
 	else
-		return lpx_get_mip_stat( model ) == LPX_NOFEAS;
+		return lpx_mip_status( model ) == LPX_NOFEAS;
 }
 
 bool OsiGlpkSolverInterface::isProvenDualInfeasible() const
@@ -490,7 +494,9 @@ CoinWarmStart* OsiGlpkSolverInterface::getWarmStart() const
 		int stat;
 		double val;
 		double dualVal;
-		lpx_get_row_info( model, i+1 , &stat, &val, &dualVal );
+		stat=lpx_get_row_stat(model,i+1);
+		val=lpx_get_row_prim(model,i+1);
+		dualVal=lpx_get_row_dual(model,i+1);
 		switch( stat ) {
 		case LPX_BS:
 			ws->setArtifStatus( i, CoinWarmStartBasis::basic );
@@ -523,7 +529,7 @@ CoinWarmStart* OsiGlpkSolverInterface::getWarmStart() const
 		int stat;
 		//		double val;
 		//		double dualVal;
-		lpx_get_col_info( model, j+1 , &stat, NULL, NULL );
+	        stat=lpx_get_col_stat(model,j+1);
 		switch( stat ) {
 		case LPX_BS:
 			ws->setStructStatus( j, CoinWarmStartBasis::basic );
@@ -660,7 +666,9 @@ void OsiGlpkSolverInterface::markHotStart()
 		int stat;
 		double val;
 		double dualVal;
-		lpx_get_col_info( model, j+1, &stat, &val, &dualVal );
+		stat=lpx_get_col_stat(model,j);
+		val=lpx_get_col_prim(model,j);
+		dualVal=lpx_get_col_dual(model,j);
 		hotStartCStat_[j] = stat;
 		hotStartCVal_[j] = val;
 		hotStartCDualVal_[j] = dualVal;
@@ -681,7 +689,9 @@ void OsiGlpkSolverInterface::markHotStart()
 		int stat;
 		double val;
 		double dualVal;
-		lpx_get_row_info( model, i+1, &stat, &val, &dualVal );
+		stat=lpx_get_row_stat(model,i+1);
+		val=lpx_get_row_prim(model,i+1);
+		dualVal=lpx_get_row_dual(model,i+1);
 		hotStartRStat_[i] = stat;
 		hotStartRVal_[i] = val;
 		hotStartRDualVal_[i] = dualVal;
@@ -703,13 +713,13 @@ void OsiGlpkSolverInterface::solveFromHotStart()
 
 	int j;
 	for( j = 0; j < numcols; j++ ) {
-	  //		glp_put_col_soln( lp_, j+1, hotStartCStat_[j], hotStartCVal_[j], hotStartCDualVal_[j] );
-	  // ??? Looks like 3.2 doesn't have a way to set the values--just the stat
+	  //	glp_put_col_soln( lp_, j+1, hotStartCStat_[j], hotStartCVal_[j], hotStartCDualVal_[j] );
+	  // GLPK 4.7 doesn't have a way to set the values--just the status
 	  lpx_set_col_stat( model, j+1, hotStartCStat_[j]);
 	}
 	int i;
 	for( i = 0; i < numrows; i++ ) {
-	  //		glp_put_row_soln( lp_, i+1, hotStartRStat_[i], hotStartRVal_[i], hotStartRDualVal_[i] );
+	  //	glp_put_row_soln( lp_, i+1, hotStartRStat_[i], hotStartRVal_[i], hotStartRDualVal_[i] );
 	  lpx_set_row_stat( model, i+1, hotStartRStat_[i]);
 	}
 
@@ -776,7 +786,9 @@ const double * OsiGlpkSolverInterface::getColLower() const
 			int type;
 			double lb;
 			double ub;
-			lpx_get_col_bnds( model, i+1, &type, &lb, &ub );
+			type=lpx_get_col_type(model,i+1);
+			lb=lpx_get_col_lb(model,i+1);
+			ub=lpx_get_col_ub(model,i+1);
 			switch ( type )
 			{
 			case LPX_FR:
@@ -899,7 +911,9 @@ const double * OsiGlpkSolverInterface::getRowLower() const
 			int type;
 			double lb;
 			double ub;
-			lpx_get_row_bnds( model, i+1, &type, &lb, &ub );
+			type=lpx_get_row_type(model,i+1);
+			lb=lpx_get_row_lb(model,i+1);
+			ub=lpx_get_row_ub(model,i+1);
 			switch( type )
 			{
 			case LPX_FR:
@@ -958,7 +972,7 @@ const double * OsiGlpkSolverInterface::getObjCoefficients() const
 		int i;
 		for( i = 0; i < numcols; i++ )
 		{
-			obj_[i] = lpx_get_col_coef( model, i + 1);
+			obj_[i] = lpx_get_obj_coef( model, i + 1);
 		}
 	}
 	return obj_;
@@ -1016,6 +1030,19 @@ const CoinPackedMatrix * OsiGlpkSolverInterface::getMatrixByRow() const
 			{
 				--colind[j];
 			}
+			// ???
+			/*THIS IS A MAJOR HACK, FIND OUT WHY COPY NOT WORKING*/
+#if 0
+			for(j=1;j<=colsize/2;j++){
+				int tempind=colind[j];
+				colind[j]=colind[colsize-j+1];
+				colind[colsize-j+1]=tempind;
+				double tempelem=colelem[j];
+				colelem[j]=colelem[colsize-j+1];
+				colelem[colsize-j+1]=tempelem;
+			}
+#endif
+
 			matrixByRow_->appendRow( colsize, colind+1, colelem+1 );
 		}
 		delete [] colind;
@@ -1109,12 +1136,10 @@ const double * OsiGlpkSolverInterface::getColSolution() const
 			int j;
 			for( j = 0; j < numcols; j++ )
 			  {
-			    int status;
-			    double val;
-			    double dualVal;
-			    lpx_get_col_info( model, j+1, &status, &val, &dualVal);
-			    colsol_[j] = val;
-			    redcost_[j] = dualVal;
+			    // int status;
+			    // status=lpx_get_col_stat(model,j+1);
+			    colsol_[j] = lpx_get_col_prim(model,j+1);
+			    redcost_[j] = lpx_get_col_dual(model,j+1);
 			  }
 		      }
 		  }
@@ -1122,7 +1147,7 @@ const double * OsiGlpkSolverInterface::getColSolution() const
 		  {
 		    int j;
 		    for( j = 0; j < numcols; j++ )
-		      colsol_[j] = lpx_get_mip_col( model, j+1);
+		      colsol_[j] = lpx_mip_col_val( model, j+1);
 		  }
 	}
 	return colsol_;
@@ -1169,24 +1194,25 @@ const double * OsiGlpkSolverInterface::getRowActivity() const
 		    int i;
 		    for( i = 0; i < numrows; i++ )
 		      {
-			int status;
-			double val;
-			double dualVal;
-			lpx_get_row_info( model, i+1, &status, &val, &dualVal);
-			rowact_[i] = val;
-			rowsol_[i] = dualVal;
+			//int status;
+			//status=lpx_get_row_stat(model,i+1);
+			rowact_[i] = lpx_get_row_prim(model,i+1);
+			rowsol_[i] = lpx_get_row_dual(model,i+1);
 		      }
 		  }
 		else  // last call was b&b mip solution
 		  {
 		    int i;
 		    for( i = 0; i < numrows; i++ )
-		      rowact_[i] = lpx_get_mip_row( model, i+1);
-		    rowsol_[i] = 0;  // no dual values for mip
+		      {
+			rowact_[i] = lpx_mip_row_val( model, i+1);
+			rowsol_[i] = 0;  // no dual values for mip
+		      }
 		  }
 	}
 	return rowact_;
 #else
+	// ??? Consider removing this unused code.
 	// Could be in OsiSolverInterfaceImpl.
 	if( !rowact_ )
 	{
@@ -1221,29 +1247,7 @@ const double * OsiGlpkSolverInterface::getRowActivity() const
 
 double OsiGlpkSolverInterface::getObjValue() const
 {
-#if 0
-  This implementation does not pass unitTest, when getObjValue
-  is called prior to solving the problem.
-  The base class implementation passes unitTest.
-
-        LPX *model = getMutableModelPtr();
-	assert( lpx_get_status( model ) != LPX_UNDEF );
-  
-  // Adjust objective function value by constant term in objective function
-  double objOffset;
-  getDblParam(OsiObjOffset,objOffset);
-
-  double obj = lpx_get_obj_val( model );
-
-  // It seems the GLPK has applied the offset to the obj value,
-  // but it applied it with opposite sign.
-  // To fix adjust obj by twice the offset.
-  double retVal = obj - 2.0*objOffset;
-
-	return retVal;
-#else
   return OsiSolverInterface::getObjValue();
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -1278,7 +1282,7 @@ std::vector<double*> OsiGlpkSolverInterface::getPrimalRays(int maxNumRays) const
 void OsiGlpkSolverInterface::setObjCoeff( int elementIndex, double elementValue )
 {
 	freeCachedData( OsiGlpkSolverInterface::FREECACHED_COLUMN );
-	lpx_set_col_coef( getMutableModelPtr(), elementIndex+1, elementValue );
+	lpx_set_obj_coef( getMutableModelPtr(), elementIndex+1, elementValue );
 }
 
 //-----------------------------------------------------------------------------
@@ -1293,7 +1297,8 @@ void OsiGlpkSolverInterface::setColLower(int elementIndex, double elementValue)
 	double lb;
 	double ub;
 
-	lpx_get_col_bnds( getMutableModelPtr(), elementIndex+1, &type, NULL, &ub );
+	type=lpx_get_col_type(getMutableModelPtr(),elementIndex+1);
+	ub=lpx_get_col_ub(getMutableModelPtr(),elementIndex+1);
 	lb = elementValue;
 	switch( type )
 	{
@@ -1325,7 +1330,8 @@ void OsiGlpkSolverInterface::setColUpper(int elementIndex, double elementValue)
 	double lb;
 	double ub;
 
-	lpx_get_col_bnds( getMutableModelPtr(), elementIndex+1, &type, &lb, NULL );
+	type=lpx_get_col_type(getMutableModelPtr(),elementIndex+1);
+	lb=lpx_get_col_lb(getMutableModelPtr(),elementIndex+1);
 	ub = elementValue;
 	switch( type )
 	{
@@ -1389,7 +1395,8 @@ OsiGlpkSolverInterface::setRowLower( int elementIndex, double elementValue )
 	double lb;
 	double ub;
 
-	lpx_get_row_bnds( getMutableModelPtr(), elementIndex+1, &type, NULL, &ub );
+	type=lpx_get_row_type(getMutableModelPtr(),elementIndex+1);
+	ub=lpx_get_row_ub(getMutableModelPtr(),elementIndex+1);
 	lb = elementValue;
 	switch( type )
 	{
@@ -1420,7 +1427,8 @@ OsiGlpkSolverInterface::setRowUpper( int elementIndex, double elementValue )
 	double lb;
 	double ub;
 
-	lpx_get_row_bnds( getMutableModelPtr(), elementIndex+1, &type, &lb, NULL );
+	type=lpx_get_row_type(getMutableModelPtr(),elementIndex+1);
+	lb=lpx_get_row_lb(getMutableModelPtr(),elementIndex+1);
 	ub = elementValue;
 	switch( type )
 	{
@@ -1680,15 +1688,15 @@ OsiGlpkSolverInterface::addCols(const int numcols,
 void
 OsiGlpkSolverInterface::deleteCols(const int num, const int * columnIndices)
 {
+	int columnIndicesPlus1[num];
         LPX *model = getMutableModelPtr();
 	freeCachedData( OsiGlpkSolverInterface::KEEPCACHED_ROW );
 
-	lpx_unmark_all( model );
 	for( int i = 0; i < num; i++ )
 	{
-		lpx_mark_col( model, columnIndices[i]+1, 1);
+		columnIndicesPlus1[i]=columnIndices[i]+1;
 	}
-	lpx_del_items( model );
+	lpx_del_cols(model,num,columnIndicesPlus1);
 }
 
 //-----------------------------------------------------------------------------
@@ -1753,9 +1761,9 @@ OsiGlpkSolverInterface::addRow(const CoinPackedVectorBase& vec,
 //-----------------------------------------------------------------------------
 
 void
-OsiGlpkSolverInterface::addRows(const int numrows,
-								const CoinPackedVectorBase * const * rows,
-								const double* rowlb, const double* rowub)
+OsiGlpkSolverInterface::addRows(const int numrows, 
+				const CoinPackedVectorBase * const * rows,
+				const double* rowlb, const double* rowub)
 {
   // ??? Could do this more efficiently now
 	// Could be in OsiSolverInterfaceImpl.
@@ -1768,9 +1776,9 @@ OsiGlpkSolverInterface::addRows(const int numrows,
 
 void
 OsiGlpkSolverInterface::addRows(const int numrows,
-								const CoinPackedVectorBase * const * rows,
-								const char* rowsen, const double* rowrhs,
-								const double* rowrng)
+				const CoinPackedVectorBase * const * rows,
+				const char* rowsen, const double* rowrhs,
+				const double* rowrng)
 {
 	// Could be in OsiSolverInterfaceImpl.
 	int i;
@@ -1783,15 +1791,16 @@ OsiGlpkSolverInterface::addRows(const int numrows,
 void
 OsiGlpkSolverInterface::deleteRows(const int num, const int * rowIndices)
 {
+
+	int rowIndicesPlus1[num];
         LPX *model = getMutableModelPtr();
 	freeCachedData( OsiGlpkSolverInterface::KEEPCACHED_COLUMN );
 
-	lpx_unmark_all( model );
 	for( int i = 0; i < num; i++ )
 	{
-	  lpx_mark_row( model, rowIndices[i]+1, 1);
+		rowIndicesPlus1[i]=rowIndices[i]+1;
 	}
-	lpx_del_items( model );
+	lpx_del_rows(model,num,rowIndicesPlus1);
 }
 
 //#############################################################################
@@ -1859,9 +1868,9 @@ OsiGlpkSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
 
 void
 OsiGlpkSolverInterface::assignProblem( CoinPackedMatrix*& matrix,
-									  double*& collb, double*& colub,
-									  double*& obj,
-									  double*& rowlb, double*& rowub )
+				       double*& collb, double*& colub,
+				       double*& obj,
+				       double*& rowlb, double*& rowub )
 {
 	// Could be in OsiSolverInterfaceImpl.
 	loadProblem( *matrix, collb, colub, obj, rowlb, rowub );
@@ -1911,10 +1920,10 @@ OsiGlpkSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
 
 void
 OsiGlpkSolverInterface::assignProblem( CoinPackedMatrix*& matrix,
-									  double*& collb, double*& colub,
-									  double*& obj,
-									  char*& rowsen, double*& rowrhs,
-									  double*& rowrng )
+				       double*& collb, double*& colub,
+				       double*& obj,
+				       char*& rowsen, double*& rowrhs,
+				       double*& rowrng )
 {
 	// Could be in OsiSolverInterfaceImpl.
 	loadProblem( *matrix, collb, colub, obj, rowsen, rowrhs, rowrng );
@@ -2042,159 +2051,14 @@ void OsiGlpkSolverInterface::writeMps( const char * filename,
 	std::string fullname = f + "." + e;
 	lpx_write_mps( getMutableModelPtr(), const_cast<char*>( fullname.c_str() ));
 #else
+	// Fall back on native MPS writer.  
+	// These few lines of code haven't been tested. 2004/10/15
 	std::string f( filename );
 	std::string e( extension );
 	std::string fullname = f + "." + e;
 
-	FILE *file = fopen( fullname.c_str(), "w" );
-
-	fprintf( file, "NAME\n" );
-
-	fprintf( file, "ROWS\n" );
-	fprintf( file, " N  OBJ\n" );
-	int i;
-	for( i = 0; i < getNumRows(); i++ )
-	{
-		char rowname[9];
-		_snprintf( rowname, 8, "ROW%02d", i+1 );
-
-		int sense = getRowSense()[i];
-		if( sense == 'R')
-		{
-			sense = 'L';
-		}
-		fprintf( file, " %c  %-8s\n", sense, rowname );
-	}
-
-	const CoinPackedMatrix *matrix = getMatrixByCol();
-
-	fprintf( file, "COLUMNS\n" );
-	double sense = getObjSense();
-	int marker = 0;
-	bool continous = true;
-	int j;
-	for( j = 0; j < matrix->getNumCols(); j++ )
-	{
-		char colname[9];
-		_snprintf( colname, 8, "COL%02d", j+1 );
-
-		if( continous != isContinuous( j ) )
-		{
-			continous = isContinuous( j );
-			if( continous )
-			{
-				char markername[9];
-				_snprintf( markername, 8, "INT%dE", marker );
-				fprintf( file, "    %-8s  'MARKER'                 'INTEND'\n", markername );
-			}
-			else
-			{
-				++marker;
-				char markername[9];
-				_snprintf( markername, 8, "INT%dO", marker );
-				fprintf( file, "    %-8s  'MARKER'                 'INTORG'\n", markername );
-			}
-		}
-
-		if( getObjCoefficients()[j] )
-		{
-			fprintf( file, "    %-8s  %-8s  %12f\n", colname, "OBJ", sense * getObjCoefficients()[j]);
-		}
-		const CoinShallowPackedVector vector = matrix->getVector( j );
-		int field = 0;
-		for( i = 0; i < vector.getNumElements(); i++ )
-		{
-			const int *indices = vector.getIndices();
-			const double *elements = vector.getElements();
-			char rowname[9];
-			_snprintf( rowname, 8, "ROW%02d", indices[i]+1 );
-
-			if( field == 0 )
-			{
-				fprintf( file, "    %-8s  %-8s  %12f", colname, rowname, elements[i]);
-				field = 1;
-			}
-			else
-			{
-				fprintf( file, "   %-8s  %12f\n", rowname, elements[i]);
-				field = 0;
-			}
-		}
-		if( field != 0 )
-			fprintf( file, "\n");
-	}
-	if( !continous )
-	{
-		char markername[9];
-		_snprintf( markername, 8, "INT%dE", marker );
-		fprintf( file, "    %-8s  'MARKER'                 'INTEND'\n", markername );
-	}
-
-
-	fprintf( file, "RHS\n" );
-	for( i = 0; i < getNumRows(); i++ )
-	{
-		char rowname[9];
-		_snprintf( rowname, 8, "ROW%02d", i+1 );
-
-		double rhs = getRightHandSide()[i];
-		if( rhs )
-			fprintf( file, "    RHS       %-8s  %12f\n", rowname, rhs );
-	}
-
-	fprintf( file, "BOUNDS\n" );
-	for( j = 0; j < getNumCols(); j++ )
-	{
-		char colname[9];
-		_snprintf( colname, 8, "COL%02d", j+1 );
-
-		double inf = getInfinity();
-
-		double lb = getColLower()[j];
-		double ub = getColUpper()[j];
-		if( lb > -inf )
-		{
-			if( lb < ub )
-				if( lb )
-				{
-					fprintf( file, " LO %-8s  %-8s  %12f\n", "BND", colname, lb );
-				}
-				else
-				{
-					//fprintf( file, " LO %-8s  %-8s  %12f\n", "BND", colname, lb );
-				}
-			if( ub < inf )
-			{
-				if( lb < ub )
-				{
-					fprintf( file, " UP %-8s  %-8s  %12f\n", "BND", colname, ub );
-				}
-				else
-				{
-					fprintf( file, " FX %-8s  %-8s  %12f\n", "BND", colname, ub );
-				}
-			}
-			else
-			{
-				//fprintf( file, " PL %-8s  %-8s\n", "BND", colname );
-			}
-		}
-		else
-		{
-			if( ub < inf )
-			{
-				fprintf( file, " UP %-8s  %-8s  %12f\n", "BND", colname, ub );
-				fprintf( file, " MI %-8s  %-8s\n", "BND", colname );
-			}
-			else
-			{
-				fprintf( file, " FR %-8s  %-8s\n", "BND", colname );
-			}
-		}
-	}
-
-	fprintf( file, "ENDATA\n" );
-	fclose( file );
+	OsiSolverInterface::writeMpsNative(fullname.c_str(), 
+					   NULL, NULL, 0, 2, objSense); 
 #endif
 }
 
@@ -2272,7 +2136,8 @@ void OsiGlpkSolverInterface::reset()
    lp_ = lpx_create_prob();
    char name[] = "OSI_GLPK";
    lpx_set_prob_name( lp_, name );
-   lpx_set_class( lp_, LPX_MIP );
+   lpx_set_class( lp_, LPX_MIP );  
+   // See note at top of file.   Use LPX_MIP even for LPs.
    assert( lp_ != NULL );
 
 }
@@ -2330,11 +2195,6 @@ void OsiGlpkSolverInterface::applyRowCut( const OsiRowCut & rowCut )
 
 LPX * OsiGlpkSolverInterface::getMutableModelPtr( void ) const
 {
-  // Looks like maybe this isn't necessary.  If an object has been constructed
-  // then lp_ won't be null.  If it hasn't, then just calling lpx_create_prob
-  // isn't enough.
-  //  if (lp_ == NULL)
-  //    { lp_ = lpx_create_prob(); }
   return lp_;
 }
 
@@ -2377,13 +2237,13 @@ void OsiGlpkSolverInterface::gutsOfCopy( const OsiGlpkSolverInterface & source )
 	int tagx;
 	for ( j = 1; j <= numcols; j++ )
 	  {
-	    lpx_get_col_info( srcmodel, j, &tagx, NULL, NULL );
+	    tagx=lpx_get_col_stat(model,j);
 	    lpx_set_col_stat( model, j, tagx );
 	  }
 	int numrows = getNumRows();
 	for ( j = 1; j <= numrows; j++ )
 	  {
-	    lpx_get_row_info( srcmodel, j, &tagx, NULL, NULL );
+	    tagx=lpx_get_row_stat(srcmodel,j);
 	    lpx_set_row_stat( model, j, tagx );
 	  }
 
@@ -2427,7 +2287,7 @@ void OsiGlpkSolverInterface::gutsOfConstructor()
 	lp_ = lpx_create_prob();
 	char name[] = "OSI_GLPK";
 	lpx_set_prob_name( lp_, name );
-	// Make all problems MIPs
+	// Make all problems MIPs.  See note at top of file.
 	lpx_set_class( lp_, LPX_MIP );
 	assert( lp_ != NULL );
 }

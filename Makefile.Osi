@@ -1,0 +1,66 @@
+# Static or shared libraries should be built (STATIC or SHARED)?
+LibType := SHARED
+
+# Select optimization (-O or -g). -O will be automatically bumped up to the 
+# highest level of optimization the compiler supports. If want something in
+# between then specify the exact level you want, e.g., -O1 or -O2
+OptLevel := -O
+
+###############################################################################
+
+LIBNAME := osi
+
+LIBSRC =
+
+LIBSRC += OsiCut.cpp
+LIBSRC += OsiColCut.cpp
+LIBSRC += OsiRowCut.cpp
+LIBSRC += OsiRowCutDebugger.cpp
+LIBSRC += OsiCuts.cpp
+
+LIBSRC += OsiFactorization1.cpp
+LIBSRC += OsiFactorization2.cpp
+LIBSRC += OsiFactorization3.cpp
+LIBSRC += OsiFactorization4.cpp
+
+LIBSRC += OsiPackedVectorBase.cpp
+LIBSRC += OsiPackedVector.cpp
+LIBSRC += OsiShallowPackedVector.cpp
+LIBSRC += OsiIndexedVector.cpp
+
+LIBSRC += OsiMpsReader.cpp
+LIBSRC += OsiPackedMatrix.cpp
+LIBSRC += OsiSolverInterface.cpp
+LIBSRC += OsiWarmStartBasis.cpp
+
+##############################################################################
+# You should not need to edit below this line.
+##############################################################################
+# The location of the customized Makefiles
+export MakefileDir := ../Common/make
+include ${MakefileDir}/Makefile.coin
+include ${MakefileDir}/Makefile.location
+
+export OsiIncDir := ../include
+export OsiLibDir := ../lib
+
+export ExtraIncDir := ${OsiIncDir}
+export ExtraLibDir := ${OsiLibDir}
+export ExtraLibName := ${OsiLibName}
+export ExtraDefine := 
+
+export LibType OptLevel LIBNAME LIBSRC
+
+###############################################################################
+
+.DELETE_ON_ERROR:
+
+.PHONY: default install libosi library clean doc
+
+default: install
+
+install clean doc library: % :
+	$(MAKE) -f ${MakefileDir}/Makefile.lib $*
+
+libosi:
+	$(MAKE) -f ${MakefileDir}/Makefile.lib library

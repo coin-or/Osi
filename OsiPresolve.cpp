@@ -1571,8 +1571,8 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
 	rowstat_[i] = 1;
       }
     }
+    delete basis;
   } 
-
 
 #if 0
   for (i=0; i<nrows; ++i)

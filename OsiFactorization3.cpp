@@ -593,6 +593,59 @@ OsiFactorization::updateColumnTranspose ( OsiIndexedVector * regionSparse,
 }
 
 //  updateColumnTranspose.  Updates one column transpose (BTRAN)
+int
+OsiFactorization::updateColumnTranspose ( OsiIndexedVector * regionSparse,
+                                          OsiIndexedVector * regionSparse2 ) 
+  const
+{
+  //zero region
+  regionSparse->clear (  );
+  double *region = regionSparse->denseVector (  );
+  double * vector = regionSparse2->denseVector();
+  int * index = regionSparse2->getIndices();
+  int number = regionSparse2->getNumElements();
+  int i;
+  
+  //move indices into index array
+  int *regionIndex = regionSparse->getIndices (  );
+  int numberNonZero = number;
+  int j;
+  int iRow;
+  if (increasingRows_ > 1) {
+    abort(); // needs coding
+  } else {
+    for ( j = 0; j < number; j ++ ) {
+      iRow = index[j];
+      double value = vector[iRow];
+      vector[iRow]=0.0;
+      iRow=pivotColumn_[iRow];
+      region[iRow] = value;
+      regionIndex[j] = iRow;
+    } 
+  }
+  regionSparse->setNumElements ( numberNonZero );
+  number =  updateColumnTranspose ( regionSparse );
+  if (increasingRows_ < 2) {
+    for (i=0;i<number;i++) {
+      int iRow=regionIndex[i];
+      double value = region[iRow];
+      region[iRow]=0.0;
+      iRow=permuteBack_[iRow];
+      vector[iRow]=value;
+      index[i]=iRow;
+    }
+  }
+  regionSparse->setNumElements(0);
+  regionSparse2->setNumElements(number);
+#ifdef DEBUG
+  for (i=0;i<numberRowsExtra_;i++) {
+    assert (!region[i]);
+  }
+#endif
+  return number;
+}
+
+//  updateColumnTranspose.  Updates one column transpose (BTRAN)
 //assumes index is sorted i.e. region is correct
 int
 OsiFactorization::updateColumnTranspose ( OsiIndexedVector * regionSparse ) const

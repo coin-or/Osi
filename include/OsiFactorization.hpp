@@ -260,6 +260,12 @@ public:
 				 double array[], //unpacked
 				 int index[],
 				 int number) const;
+  /** Updates one column (BTRAN) from region2
+      This assumes user is thinking non-permuted
+      - returns un-permuted result in region2.
+      region1 starts as zero and is zero at end */
+  int updateColumnTranspose ( OsiIndexedVector * regionSparse,
+			      OsiIndexedVector * regionSparse2) const;
 
 
   /** Takes off permutation vector (only needed if increasingRows_>1),

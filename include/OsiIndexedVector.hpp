@@ -183,6 +183,12 @@ public:
 
    /// Insert an element into the vector
    void insert(int index, double element);
+   /** Insert or if exists add an element into the vector
+       Any resulting zero elements will be made tiny */
+   void add(int index, double element);
+   /** set all small values to zero and return number remaining
+      - < tolerance => 0.0 */
+   int clean(double tolerance);
    /// Append a OsiPackedVector to the end
    void append(const OsiPackedVectorBase & caboose);
 

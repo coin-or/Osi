@@ -35,14 +35,19 @@ CpxLibDir := /usr/local/ilog/cplex71/lib/i86_linux2_glibc2.1_egcs1.1/static_mt
 CpxLibName := libcplex.a
 
 # Osl
+### for unix
 #OslIncDir := NONE
 OslIncDir := PROBE
 OslLibDir := PROBE
 OslLibName := libosl.so
+### for cygwin gcc
+# ExtraIncDirs += /cygdrive/c/IbmOslV3Lib/osllib/include
+# ExtraLibNames += /cygdrive/c/IbmOslV3Lib/osllib/lib/oslmd6030.lib
+### for mingw gcc
+# ExtraIncDirs += c:\IbmOslV3Lib\osllib\include
+# ExtraLibNames += c:\IbmOslV3Lib\osllib\lib\oslmd6030.lib
+# ExtraDefines += COIN_USE_OSL
 
-#ExtraIncDirs += c:\IbmOslV3Lib\osllib\include
-#ExtraDefines += COIN_USE_OSL
-#ExtraLibNames += c:\IbmOslV3Lib\osllib\lib\oslmd6030.lib
 
 # Vol
 #VolIncDir := NONE

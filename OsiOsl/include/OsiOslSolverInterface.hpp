@@ -293,8 +293,8 @@ public:
 #if 0
       // The default implementation is OK.
       /** Set a single column lower and upper bound<br>
-    	  The default implementation just invokes <code>setCollower</code> and
-    	  <code>setColupper</code> */
+    	  The default implementation just invokes setColLower() and
+    	  setColUpper() */
       virtual void setColBounds( int elementIndex,
     				 double lower, double upper ) {
     	 setColLower(elementIndex, lower);
@@ -302,16 +302,16 @@ public:
       }
 #endif
       /** Set the bounds on a number of columns simultaneously<br>
-    	  The default implementation just invokes <code>setCollower</code> and
-    	  <code>setColupper</code> over and over again.
-    	  @param <code>[indexfirst,indexLast)</code> contains the indices of
-    	         the constraints whose </em>either</em> bound changes
-    	  @param indexList the indices of those variables
+    	  The default implementation just invokes setColLower() and
+    	  setColUpper() over and over again.
+    	  @param indexFirst,indexLast pointers to the beginning and after the
+	         end of the array of the indices of the variables whose
+		 <em>either</em> bound changes
     	  @param boundList the new lower/upper bound pairs for the variables
       */
       virtual void setColSetBounds(const int* indexFirst,
 				   const int* indexLast,
-				   const double* boundFirst);
+				   const double* boundList);
       
       /** Set a single row lower bound<br>
     	  Use -DBL_MAX for -infinity. */
@@ -322,8 +322,8 @@ public:
       virtual void setRowUpper( int elementIndex, double elementValue );
     
       /** Set a single row lower and upper bound<br>
-    	  The default implementation just invokes <code>setRowlower</code> and
-    	  <code>setRowupper</code> */
+    	  The default implementation just invokes setRowLower() and
+    	  setRowUpper() */
       virtual void setRowBounds( int elementIndex,
     				 double lower, double upper );
     
@@ -332,10 +332,11 @@ public:
     			      double range);
     
       /** Set the bounds on a number of rows simultaneously<br>
-    	  The default implementation just invokes <code>setRowlower</code> and
-    	  <code>setRowupper</code> over and over again.
-    	  @param <code>[indexfirst,indexLast)</code> contains the indices of
-    	         the constraints whose </em>either</em> bound changes
+    	  The default implementation just invokes setRowLower() and
+    	  setRowUpper() over and over again.
+    	  @param indexFirst,indexLast pointers to the beginning and after the
+	         end of the array of the indices of the constraints whose
+		 <em>either</em> bound changes
     	  @param boundList the new lower/upper bound pairs for the constraints
       */
       virtual void setRowSetBounds(const int* indexFirst,
@@ -343,10 +344,11 @@ public:
     				   const double* boundList);
     
       /** Set the type of a number of rows simultaneously<br>
-    	  The default implementation just invokes <code>setRowtype</code> and
+    	  The default implementation just invokes setRowType()
     	  over and over again.
-    	  @param <code>[indexfirst,indexLast)</code> contains the indices of
-    	         the constraints whose type changes
+    	  @param indexFirst,indexLast pointers to the beginning and after the
+	         end of the array of the indices of the constraints whose
+		 <em>any</em> characteristics changes
     	  @param senseList the new senses
     	  @param rhsList   the new right hand sides
     	  @param rangeList the new ranges

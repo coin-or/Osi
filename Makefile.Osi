@@ -43,14 +43,10 @@ export LibType OptLevel LIBNAME LIBSRC
 
 .DELETE_ON_ERROR:
 
-.PHONY: default install libosi library clean doc
+.PHONY: default install library
 
 default: install
 
-install doc library: % :
+install library: % :
 	(cd ../Coin && ${MAKE} install)
 	$(MAKE) -f ${MakefileDir}/Makefile.lib $*
-clean :
-	@rm -rf Junk
-	@rm -rf $(UNAME)
-	@rm -rf dep

@@ -46,15 +46,19 @@ export SOLVERLIBS
 
 .DELETE_ON_ERROR:
 
-.PHONY: default install clean unitTest
+.PHONY: default install clean doc unitTest
 .PHONY: inst-libOsi $(addprefix inst-,$(SOLVERLIBS))
 .PHONY: clean-libOsi $(addprefix clean-,$(SOLVERLIBS))
+.PHONY: doc-libOsi $(addprefix doc-,$(SOLVERLIBS))
 
 default: install
 
 install: inst-libOsi $(addprefix inst-,$(SOLVERLIBS))
 
 clean: clean-libOsi $(addprefix clean-,$(SOLVERLIBS))
+
+doc:
+	doxygen $(MakefileDir)/doxygen.conf
 
 ###############################################################################
 
@@ -72,7 +76,9 @@ $(addprefix inst-,$(SOLVERLIBS)) : inst-lib% :
 	(cd $* && ${MAKE} install)
 
 clean-libOsi :
-	${MAKE} -f Makefile.Osi clean
+	@rm -rf Junk
+	@rm -rf $(UNAME)
+	@rm -rf dep
 
 $(addprefix clean-,$(SOLVERLIBS)) : clean-lib% :
 	(cd $* && ${MAKE} clean)

@@ -165,7 +165,7 @@ void OsiClpSolverInterface::initialSolve()
     //if (solver.numberIterations())
     //printf("****** iterated %d\n",solver.numberIterations());
   } else {
-    if (doPrimal) {
+    if (!doPrimal) {
       if (doCrash>0)
 	solver.crash(1000.0,2);
       else if (doCrash==0)

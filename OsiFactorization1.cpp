@@ -897,7 +897,7 @@ OsiFactorization::pivotRowSingleton ( int pivotRow,
     pivotRowPosition++;
     iRow = indexRowU_[pivotRowPosition];
   }				/* endwhile */
-#if DEBUG_OSI
+#if OSI_DEBUG
   {
     if ( pivotRowPosition >= endColumn ) {
       abort (  );
@@ -939,7 +939,7 @@ OsiFactorization::pivotRowSingleton ( int pivotRow,
     while ( indexColumnU_[where] != pivotColumn ) {
       where++;
     }				/* endwhile */
-#if DEBUG_OSI
+#if OSI_DEBUG
     if ( where >= end ) {
       abort (  );
     }				
@@ -965,7 +965,7 @@ OsiFactorization::pivotRowSingleton ( int pivotRow,
     while ( indexColumnU_[where] != pivotColumn ) {
       where++;
     }				/* endwhile */
-#if DEBUG_OSI
+#if OSI_DEBUG
     if ( where >= end ) {
       abort (  );
     }				
@@ -1044,7 +1044,7 @@ OsiFactorization::pivotColumnSingleton ( int pivotRow,
 	  pivot++;
 	  iRow = indexRowU_[pivot];
 	}			/* endwhile */
-#if DEBUG_OSI
+#if OSI_DEBUG
 	{
 	  OsiBigIndex end_debug = startColumnU_[iColumn] +
 
@@ -1427,7 +1427,7 @@ OsiFactorization::cleanup (  )
   numberU_ = numberU;
   numberGoodU_ = numberU;
   numberL_ = numberGoodL_;
-#if DEBUG_OSI
+#if OSI_DEBUG
   for ( i = 0; i < numberRows_; i++ ) {
     if ( permute_[i] < 0 ) {
       std::cout << i << std::endl;
@@ -1697,7 +1697,7 @@ OsiFactorization::pivotOneOtherRow ( int pivotRow,
   while ( indexColumnU_[where] != pivotColumn ) {
     where++;
   }				/* endwhile */
-#if DEBUG_OSI
+#if OSI_DEBUG
   if ( where >= end ) {
     abort (  );
   }				
@@ -1881,7 +1881,7 @@ OsiFactorization::pivotOneOtherRow ( int pivotRow,
 	  while ( indexColumnU_[where] != iColumn ) {
 	    where++;
 	  }			/* endwhile */
-#if DEBUG_OSI
+#if OSI_DEBUG
 	  if ( where >= end ) {
 	    abort (  );
 	  }			

@@ -69,7 +69,7 @@ OsiFactorization::factorSparse (  )
 	  if ( look >= numberRows_ ) {
 	    int iColumn = look - numberRows_;
 
-#if DEBUG_OSI
+#if OSI_DEBUG
 	    if ( numberInColumn_[iColumn] != count ) {
 	      abort (  );
 	    }			
@@ -106,7 +106,7 @@ OsiFactorization::factorSparse (  )
 	if ( look < numberRows_ ) {
 	  int iRow = look;
 
-#if DEBUG_OSI
+#if OSI_DEBUG
 	  if ( numberInRow[iRow] != count ) {
 	    abort (  );
 	  }			
@@ -129,7 +129,7 @@ OsiFactorization::factorSparse (  )
 	      while ( indexRow[where] != iRow ) {
 		where++;
 	      }			/* endwhile */
-#if DEBUG_OSI
+#if OSI_DEBUG
 	      {
 		OsiBigIndex end_debug = startColumn[iColumn] +
 		  numberInColumn[iColumn];
@@ -174,7 +174,7 @@ OsiFactorization::factorSparse (  )
 	} else {
 	  int iColumn = look - numberRows;
 
-#if DEBUG_OSI
+#if OSI_DEBUG
 	  if ( numberInColumn[iColumn] != count ) {
 	    abort (  );
 	  }			
@@ -293,7 +293,7 @@ OsiFactorization::factorSparse (  )
 	}			
       }				
     }				/* endwhile */
-#if DEBUG_OSI==2
+#if OSI_DEBUG==2
     checkConsistency (  );
 #endif
   }				/* endwhile */

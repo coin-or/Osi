@@ -50,7 +50,7 @@ OsiFactorization::unPermuteTranspose ( OsiIndexedVector * regionSparse,
 	regionIndex[j] = newRow;
       }			
       regionSparse2->setNumElements ( 0 );
-#ifdef DEBUG
+#ifdef OSI_DEBUG
       regionSparse2->checkClean();
 #endif
     } else {
@@ -154,7 +154,7 @@ OsiFactorization::updateColumnUSparse ( OsiIndexedVector * regionSparse,
   char * mark = (char *) (next + maximumRowsExtra_);
   int nList, nStack;
   int i , iPivot;
-#ifdef DEBUG
+#ifdef OSI_DEBUG
   for (i=0;i<maximumRowsExtra_;i++) {
     assert (!mark[i]);
   }
@@ -181,7 +181,7 @@ OsiFactorization::updateColumnUSparse ( OsiIndexedVector * regionSparse,
 	int kPivot,j;
 	/* take off stack */
 	kPivot=stack[--nStack];
-	if (!mark[kPivot]) {
+	if (mark[kPivot]!=1) {
 	  j=next[nStack];
 	  if (j<startColumn[kPivot]) {
 	    /* finished so mark */
@@ -195,6 +195,7 @@ OsiFactorization::updateColumnUSparse ( OsiIndexedVector * regionSparse,
 	      if (kPivot>=numberSlacks_) {
 		/* and new one */
 		stack[nStack]=kPivot;
+		mark[kPivot]=2;
 		next[nStack++]=startColumn[kPivot]+numberInColumn[kPivot]-1;
 	      } else {
 		// slack
@@ -446,7 +447,7 @@ OsiFactorization::updateColumnTransposeR ( OsiIndexedVector * regionSparse ) con
   double tolerance = zeroTolerance_;
   int i;
 
-#ifdef DEBUG
+#ifdef OSI_DEBUG
   regionSparse->checkClean();
 #endif
   if (numberNonZero) {

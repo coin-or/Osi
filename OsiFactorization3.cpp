@@ -127,7 +127,7 @@ OsiFactorization::updateColumnL ( OsiIndexedVector * regionSparse) const
       int * next = list + maximumRowsExtra_;  /* jnext */
       char * mark = (char *) (next + maximumRowsExtra_);
       int nList;
-#ifdef DEBUG
+#ifdef OSI_DEBUG
       for (i=0;i<maximumRowsExtra_;i++) {
         assert (!mark[i]);
       }
@@ -144,7 +144,7 @@ OsiFactorization::updateColumnL ( OsiIndexedVector * regionSparse) const
             int kPivot,j;
             /* take off stack */
             kPivot=stack[--nStack];
-            if (!mark[kPivot]) {
+            if (mark[kPivot]!=1) {
               j=next[nStack];
               if (j<startColumn[kPivot]) {
                 /* finished so mark */
@@ -157,6 +157,7 @@ OsiFactorization::updateColumnL ( OsiIndexedVector * regionSparse) const
                 if (!mark[kPivot]) {
                   /* and new one */
                   stack[nStack]=kPivot;
+		  mark[kPivot]=2;
                   next[nStack++]=startColumn[kPivot+1]-1;
                 }
               }
@@ -246,7 +247,7 @@ int OsiFactorization::checkPivot(double saveFromU,
     if ( fabs ( 1.0 - fabs ( saveFromU / oldPivot ) ) < checkTolerance ) {
       status = 0;
     } else {
-#if DEBUG_OSI
+#if OSI_DEBUG
       cout << oldPivot << " " << saveFromU << endl;
 #endif
       if ( fabs ( fabs ( oldPivot ) - fabs ( saveFromU ) ) < 1.0e-12 ||
@@ -259,7 +260,7 @@ int OsiFactorization::checkPivot(double saveFromU,
   } else {
     //error
     status = 2;
-#if DEBUG_OSI
+#if OSI_DEBUG
     cout << saveFromU / oldPivot << " " << saveFromU << endl;
 #endif
   } 
@@ -334,7 +335,7 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
   double oldPivot = pivotRegion_[realPivotRow];
   // for accuracy check
   pivotCheck = pivotCheck / oldPivot;
-#if DEBUG>1
+#if OSI_DEBUG>1
   int checkNumber=1000000;
   //if (numberL_) checkNumber=-1;
   if (numberR_>=checkNumber) {
@@ -366,7 +367,7 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
   OsiBigIndex *convertRowToColumn = convertRowToColumnU_;
   int *regionIndex = regionSparse->getIndices (  );
   
-#if DEBUG>1
+#if OSI_DEBUG>1
   if (numberR_>=checkNumber) 
     printf("Before btranu\n");
 #endif
@@ -376,7 +377,7 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
       OsiBigIndex j = convertRowToColumn[i];
       
       region[iColumn] = element[j];
-#if DEBUG>1
+#if OSI_DEBUG>1
       if (numberR_>=checkNumber) 
 	printf("%d %g\n",iColumn,region[iColumn]);
 #endif
@@ -389,7 +390,7 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
       OsiBigIndex j = convertRowToColumn[i];
       
       region[iColumn] = element[j];
-#if DEBUG>1
+#if OSI_DEBUG>1
       if (numberR_>=checkNumber) 
 	printf("%d %g\n",iColumn,region[iColumn]);
 #endif
@@ -465,13 +466,13 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
     regionSparse->clear();
     return 3;
   }       
-#if DEBUG>1
+#if OSI_DEBUG>1
   if (numberR_>=checkNumber) 
     printf("After btranu\n");
 #endif
   for ( i = 0; i < numberNonZero; i++ ) {
     int iRow = regionIndex[i];
-#if DEBUG>1
+#if OSI_DEBUG>1
     if (numberR_>=checkNumber) 
       printf("%d %g\n",iRow,region[iRow]);
 #endif
@@ -486,7 +487,7 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
   
   nextRow_[last] = next;
   lastRow_[next] = last;
-#if DEBUG_OSI
+#if OSI_DEBUG
   nextRow_[realPivotRow] = 777777;
 #endif
   //do permute
@@ -519,13 +520,13 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
 
   double tolerance = zeroTolerance_;
   
-#if DEBUG>1
+#if OSI_DEBUG>1
   if (numberR_>=checkNumber) 
     printf("On U\n");
 #endif
   for ( i = 0; i < number; i++ ) {
     int iRow = indexU[i];
-#if DEBUG>1
+#if OSI_DEBUG>1
     if (numberR_>=checkNumber) 
       printf("%d %g\n",iRow,elementU[i]);
 #endif
@@ -662,7 +663,7 @@ OsiFactorization::updateColumnTranspose ( OsiIndexedVector * regionSparse,
     }
   }
   regionSparse->setNumElements(0);
-#ifdef DEBUG
+#ifdef OSI_DEBUG
   for (i=0;i<numberRowsExtra_;i++) {
     assert (!region[i]);
   }
@@ -725,7 +726,7 @@ OsiFactorization::updateColumnTranspose ( OsiIndexedVector * regionSparse,
     }
   }
   regionSparse->setNumElements(0);
-#ifdef DEBUG
+#ifdef OSI_DEBUG
   for (i=0;i<numberRowsExtra_;i++) {
     assert (!region[i]);
   }
@@ -779,7 +780,7 @@ OsiFactorization::updateColumnTranspose ( OsiIndexedVector * regionSparse,
   }
   regionSparse->setNumElements(0);
   regionSparse2->setNumElements(number);
-#ifdef DEBUG
+#ifdef OSI_DEBUG
   for (i=0;i<numberRowsExtra_;i++) {
     assert (!region[i]);
   }
@@ -850,7 +851,7 @@ OsiFactorization::updateColumnTransposeU ( OsiIndexedVector * regionSparse) cons
     char * mark = (char *) (next + maximumRowsExtra_);
     int nList;
     int iPivot;
-#ifdef DEBUG
+#ifdef OSI_DEBUG
     for (i=0;i<maximumRowsExtra_;i++) {
       assert (!mark[i]);
     }
@@ -866,7 +867,7 @@ OsiFactorization::updateColumnTransposeU ( OsiIndexedVector * regionSparse) cons
         int kPivot,j;
         /* take off stack */
         kPivot=stack[--nStack];
-        if (!mark[kPivot]) {
+        if (mark[kPivot]!=1) {
           j=next[nStack];
           if (j<startRow[kPivot]) {
             /* finished so mark */
@@ -879,6 +880,7 @@ OsiFactorization::updateColumnTransposeU ( OsiIndexedVector * regionSparse) cons
             if (!mark[kPivot]) {
               /* and new one */
               stack[nStack]=kPivot;
+	      mark[kPivot]=2;
               next[nStack++]=startRow[kPivot]+numberInRow[kPivot]-1;
             }
           }
@@ -961,7 +963,7 @@ OsiFactorization::updateColumnTransposeL ( OsiIndexedVector * regionSparse ) con
       int nList;
       int number = numberNonZero;
       int k, iPivot;
-#ifdef DEBUG
+#ifdef OSI_DEBUG
       for (i=0;i<maximumRowsExtra_;i++) {
         assert (!mark[i]);
       }
@@ -977,7 +979,7 @@ OsiFactorization::updateColumnTransposeL ( OsiIndexedVector * regionSparse ) con
           int kPivot,j;
           /* take off stack */
           kPivot=stack[--nStack];
-          if (!mark[kPivot]) {
+          if (mark[kPivot]!=1) {
             j=next[nStack];
             if (j<startRow[kPivot]) {
               /* finished so mark */
@@ -990,6 +992,7 @@ OsiFactorization::updateColumnTransposeL ( OsiIndexedVector * regionSparse ) con
               if (!mark[kPivot]) {
                 /* and new one */
                 stack[nStack]=kPivot;
+		mark[kPivot]=2;
                 next[nStack++]=startRow[kPivot+1]-1;
               }
             }

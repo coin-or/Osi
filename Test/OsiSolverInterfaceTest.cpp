@@ -585,6 +585,21 @@ static bool testDblParam(OsiSolverInterface * si, int k, double val)
   return ret;
 }
 
+static bool testHintParam(OsiSolverInterface * si, int k, bool val,
+			  OsiHintStrength strength)
+{
+  bool i = true, orig = true;
+  OsiHintStrength i2 = OsiHintDo, orig2 = OsiHintDo;
+  bool ret;
+  OsiHintParam key = static_cast<OsiHintParam>(k);
+  si->getHintParam(key, orig, orig2);
+  if (si->setHintParam(key, val, strength)) {
+    ret = (si->getHintParam(key, i, i2) == true) && (i2 == strength);
+  } else {
+    ret = (si->getHintParam(key, i, i2) == true) && (i2 == orig2);
+  }
+  return ret;
+}
 //#############################################################################
 //#############################################################################
 
@@ -623,7 +638,9 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   }
 
   // Determine if this is the emptySi is an OsiOslSolverInterface
+#ifdef COIN_USE_OSL
   bool oslSolverInterface = false;
+#endif
   {
 #ifdef COIN_USE_OSL
     const OsiOslSolverInterface * si =
@@ -2054,10 +2071,14 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     int i;
     int ival;
     double dval;
+    bool hint;
+    OsiHintStrength hintStrength;
     assert(si->getIntParam(OsiLastIntParam, ival) == false);
     assert(si->getDblParam(OsiLastDblParam, dval) == false);
+    assert(si->getHintParam(OsiLastHintParam, hint) == false);
     assert(si->setIntParam(OsiLastIntParam, 0) == false);
     assert(si->setDblParam(OsiLastDblParam, 0) == false);
+    assert(si->setHintParam(OsiLastHintParam, false) == false);
     
     for (i = 0; i < OsiLastIntParam; ++i) {
       const bool exists = si->getIntParam(static_cast<OsiIntParam>(i), ival);
@@ -2091,6 +2112,19 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
         if (exists)
           assert(si->setDblParam(static_cast<OsiDblParam>(i), dval));
       }
+    }
+
+    // test hints
+    for (i = 0; i < OsiLastHintParam; ++i) {
+      const bool exists = si->getHintParam(static_cast<OsiHintParam>(i),
+					   hint, hintStrength);
+      // existence and test should result in the same
+      assert(!exists ^ testHintParam(si, i, false, OsiHintTry));
+      assert(!exists ^ testHintParam(si, i, true, OsiHintDo));
+      assert(!exists ^ testHintParam(si, i, true, OsiHintIgnore));
+      if (exists)
+        assert(si->getHintParam(static_cast<OsiHintParam>(i), hint, 
+				hintStrength));
     }
     delete si;
   }

@@ -329,6 +329,10 @@ int main (int argc, const char *argv[])
 #endif
 #   if COIN_USE_CLP
     OsiSolverInterface * clpSi = new OsiClpSolverInterface;
+    // Okay this is where John Forrest cheats by giving hints
+    //clpSi->setHintParam(OsiDoDualInInitial,true,OsiHintTry);
+    //clpSi->setHintParam(OsiDoCrash,true,OsiHintTry);
+    //clpSi->setHintParam(OsiDoPresolveInInitial,true,OsiHintTry);
     vecSi.push_back(clpSi);
 #endif
 #   if COIN_USE_DYLP

@@ -53,4 +53,37 @@ enum OsiStrParam {
   OsiLastStrParam
 };
 
+enum OsiHintParam {
+  /** Whether to do a presolve in initialSolve */
+  OsiDoPresolveInInitial = 0,
+  /** Whether to use a dual algorithm in initialSolve.
+      The reverse is to use a primal algorithm */
+  OsiDoDualInInitial,
+  /** Whether to do a presolve in resolve */
+  OsiDoPresolveInResolve,
+  /** Whether to use a dual algorithm in resolve.
+      The reverse is to use a primal algorithm */
+  OsiDoDualInResolve,
+  /** Whether to scale problem */
+  OsiDoScale,
+  /** Whether to create a non-slack basis (only in initialSolve) */
+  OsiDoCrash,
+  /*** Whether to reduce amount of printout e.g. for branch and cut */
+  OsiDoReducePrint,
+  /** Just a marker, so that OsiSolverInterface can allocate a static sized
+      array to store parameters. */
+  OsiLastHintParam
+};
+
+enum OsiHintStrength {
+  /** Ignore hint (default) */
+  OsiHintIgnore = 0,
+  /** This means it is only a hint */
+  OsiHintTry,
+  /** This means do hint if at all possible */
+  OsiHintDo,
+  /** And this means throw an exception if not possible */
+  OsiForceDo
+};
+
 #endif

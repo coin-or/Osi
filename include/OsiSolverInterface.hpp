@@ -167,6 +167,16 @@ public:
      example, to store parameters that should be used later on. Such parameter
      could be a limit on the number of iterations to be executed when doing
      hot start.
+
+     The format for hints is slightly different in that the value is 
+     boolean - true meaning do hint and there is an enum to show
+     strength of hint (normally OsiHintTry 0 see OsiSolverParameters.hpp).
+     There is also an optional void pointer to allow for any eventuality.
+     These hints should be set when solver is instantiated.
+     It is totally up to solver how to interpret these hints e.g.you
+     could use the various hint levels to switch off more and more
+     printout.  The default implementation does not store void pointer and
+     always throws an exception on OsiForceDo strength.
   */
   //@{
     // Set an integer parameter
@@ -184,6 +194,17 @@ public:
       strParam_[key] = value;
       return true;
     }
+    // Set a hint parameter
+    virtual bool setHintParam(OsiHintParam key, bool yesNo,
+			      OsiHintStrength strength=OsiHintTry,
+			      void * otherInformation=NULL) {
+      hintParam_[key] = yesNo;
+      hintStrength_[key] = strength;
+      if (strength == OsiForceDo)
+	throw CoinError("OsiForceDo illegal",
+			"setHintParam", "OsiSolverInterface");
+      return true;
+    }
     // Get an integer parameter
     virtual bool getIntParam(OsiIntParam key, int& value) const {
       value = intParam_[key];
@@ -197,6 +218,27 @@ public:
     // Get a string parameter
     virtual bool getStrParam(OsiStrParam key, std::string& value) const {
       value = strParam_[key];
+      return true;
+    }
+    // get a hint parameter
+    virtual bool getHintParam(OsiHintParam key, bool& yesNo,
+			      OsiHintStrength& strength,
+			      void *& otherInformation) const {
+      yesNo = hintParam_[key];
+      strength = hintStrength_[key];
+      otherInformation=NULL;
+      return true;
+    }
+    // get a hint parameter (less information)
+    virtual bool getHintParam(OsiHintParam key, bool& yesNo,
+			      OsiHintStrength& strength) const {
+      yesNo = hintParam_[key];
+      strength = hintStrength_[key];
+      return true;
+    }
+    // get a hint parameter (even less information)
+    virtual bool getHintParam(OsiHintParam key, bool& yesNo) const {
+      yesNo = hintParam_[key];
       return true;
     }
   //@}
@@ -848,6 +890,10 @@ private:
     double dblParam_[OsiLastDblParam];
     /// Array of string parameters
     std::string strParam_[OsiLastStrParam];
+    /// Array of hint parameters
+    bool hintParam_[OsiLastHintParam];
+    /// Array of hint strengths
+    OsiHintStrength hintStrength_[OsiLastHintParam];
 
     /* The warmstart information used for hotstarting in case the default
        hotstart implementation is used */

@@ -368,6 +368,13 @@ OsiSolverInterface::OsiSolverInterface () :
   strParam_[OsiSolverName] = "Unknown Solver";
   handler_ = new CoinMessageHandler();
   messages_ = CoinMessage();
+
+  // initialize all hints
+  int hint;
+  for (hint=OsiDoPresolveInInitial;hint<OsiLastHintParam;hint++) {
+    hintParam_[hint] = false;
+    hintStrength_[hint] = OsiHintIgnore;
+  }
 }
 
 //-------------------------------------------------------------------
@@ -390,6 +397,8 @@ OsiSolverInterface::OsiSolverInterface (const OsiSolverInterface & rhs) :
   CoinDisjointCopyN(rhs.intParam_, OsiLastIntParam, intParam_);
   CoinDisjointCopyN(rhs.dblParam_, OsiLastDblParam, dblParam_);
   CoinDisjointCopyN(rhs.strParam_, OsiLastStrParam, strParam_);
+  CoinDisjointCopyN(rhs.hintParam_, OsiLastHintParam, hintParam_);
+  CoinDisjointCopyN(rhs.hintStrength_, OsiLastHintParam, hintStrength_);
 }
 
 //-------------------------------------------------------------------
@@ -424,6 +433,8 @@ OsiSolverInterface::operator=(const OsiSolverInterface& rhs)
     CoinDisjointCopyN(rhs.intParam_, OsiLastIntParam, intParam_);
     CoinDisjointCopyN(rhs.dblParam_, OsiLastDblParam, dblParam_);
     CoinDisjointCopyN(rhs.strParam_, OsiLastStrParam, strParam_);
+    CoinDisjointCopyN(rhs.hintParam_, OsiLastHintParam, hintParam_);
+    CoinDisjointCopyN(rhs.hintStrength_, OsiLastHintParam, hintStrength_);
     delete ws_;
     ws_ = NULL;
      if (defaultHandler_) {

@@ -185,7 +185,7 @@ const double CoinInfinity = DBL_MAX ;
 #include "OsiPresolve.hpp"
 
 namespace {
-  char sccsid[] UNUSED = "@(#)OsiDylpSolverInterface.cpp	1.18	09/25/04" ;
+  char sccsid[] UNUSED = "@(#)OsiDylpSolverInterface.cpp	1.20	11/13/04" ;
   char cvsid[] UNUSED = "$Id$" ;
 }
 
@@ -1047,9 +1047,7 @@ inline void ODSI::construct_options ()
   setDblParam(OsiDualTolerance,tolerances->dfeas_scale*tolerances->cost) ;
   setDblParam(OsiPrimalTolerance,tolerances->pfeas_scale*tolerances->zero) ;
 /*
-  Differentiate options for initial solution vs. reoptimising. Give a fair bit
-  more feasibility clearance for resolving in order to cope with inaccuracy
-  introduced by inaccuracy in calculating cut coefficients.
+  Differentiate options for initial solution vs. reoptimising.
 */
   initialSolveOptions->forcecold = true ;
   initialSolveOptions->fullsys = true ;
@@ -3700,6 +3698,10 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
     { outfmt(logchn,gtxecho,"\n  success, status %s",
 	     dy_prtlpret(lpprob->lpret)) ; }
     else
+    if (lpret == lpITERLIM)
+    { outfmt(logchn,gtxecho,"\n  premature termination, status %s",
+	     dy_prtlpret(lpprob->lpret)) ; }
+    else
     { outfmt(logchn,gtxecho,"\n  failed, status %s",
 	     dy_prtlpret(lpprob->lpret)) ; } }
 # endif
@@ -3714,10 +3716,12 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
   need to worry about the various *CHG flags. And if we're about to retry,
   dylp freed the data structure regardless of the NOFREE flag.
 */
-  if (!(lpret == lpOPTIMAL || lpret == lpINFEAS || lpret == lpUNBOUNDED))
+  if (!(lpret == lpOPTIMAL || lpret == lpINFEAS || lpret == lpUNBOUNDED ||
+	lpret == lpITERLIM))
   { 
 #   ifdef DYLP_POSTMORTEM
 /*
+  Write an mps file with the failed problem.
   This is the hard way to do this, given how close we are to dylp. But I wanted
   to try it to exercise the code. Calling destruct_cache() is necessary to make
   sure that writeMps sees any constraint flips.
@@ -3876,18 +3880,20 @@ void ODSI::initialSolve ()
     dy_initbasis(count,initialSolveOptions->factor+5,0) ;
     basis_ready = true ; }
 /*
-  Does some other ODSI object own the solver? If so, detach it. This surely
-  means that we no longer have retained data structures.
+  Does some ODSI object (including this object) own the solver? If so, detach
+  it. We're doing an initial solve and we'll want to start fresh.
 */
-  if (dylp_owner != 0 && dylp_owner != this)
+  if (dylp_owner != 0)
   { dylp_owner->detach_dylp() ;
     clrflg(lpprob->ctlopts,lpctlDYVALID) ; }
 /*
   Are we going to do presolve and postsolve? If so, now's the time to presolve
   the constraint system.
 */
+# ifndef NDEBUG
   double startTime = CoinCpuTime() ;
   double presolveTime = startTime ;
+# endif
   bool presolving ;
   double bias = 0 ;
   { OsiHintStrength strength ;
@@ -3907,7 +3913,10 @@ void ODSI::initialSolve ()
     else
     { destruct_presolve() ;
       presolving = false ; }
-    presolveTime = CoinCpuTime() ; }
+#   ifndef NDEBUG
+    presolveTime = CoinCpuTime() ;
+#   endif
+  }
 /*
   Remove any active basis and trash any cached solution.
 */
@@ -3933,16 +3942,18 @@ void ODSI::initialSolve ()
   { lpprob->ctlopts = setflg(lpprob->ctlopts,save_ctlopts) ;
     initialSolveOptions->finpurge.vars = save_finpurge_vars ;
     initialSolveOptions->finpurge.cons = save_finpurge_cons ; }
+# ifndef NDEBUG
   double firstLPTime = CoinCpuTime() ;
+# endif
   hdl->message(ODSI_LPRESULT,messages_)
     << dy_prtlpret(lp_retval)
     << getObjSense()*(lpprob->obj+bias) << lpprob->iters
     << CoinMessageEol ;
   if (!(lp_retval == lpOPTIMAL || lp_retval == lpINFEAS ||
-	lp_retval == lpUNBOUNDED))
-  { throw CoinError("Call to dylp failed.",
+	lp_retval == lpUNBOUNDED || lp_retval == lpITERLIM))
+  { throw CoinError("Call to dylp failed (cold).",
 		    "initialSolve","OsiDylpSolverInterface") ; }
-# if 1
+# ifndef NDEBUG
   dylp_printsoln(true,true) ;
 # endif
 /*
@@ -3952,16 +3963,22 @@ void ODSI::initialSolve ()
   object. When we're done, we again need to clean out the active basis and
   cached solution established as we set up for the second call to dylp.
 */
+# ifndef NDEBUG
   double postsolveTime = firstLPTime ;
   double secondLPTime = firstLPTime ;
+# endif
   int presolIters = lpprob->iters ;
   if (presolving == true)
   { postObj_ = initialisePostsolve(preObj_) ;
     doPostsolve() ;
     installPostsolve() ;
+#   ifndef NDEBUG
     postsolveTime = CoinCpuTime() ;
+#   endif
     lp_retval = do_lp(startWarm) ;
+#   ifndef NDEBUG
     secondLPTime = CoinCpuTime() ;
+#   endif
     hdl->message(ODSI_LPRESULT,messages_)
       << dy_prtlpret(lp_retval) << getObjSense()*lpprob->obj << lpprob->iters
       << CoinMessageEol ;
@@ -3975,7 +3992,7 @@ void ODSI::initialSolve ()
     activeIsModified = false ;
     destruct_col_cache() ;
     destruct_row_cache() ; }
-# if 1
+# ifndef NDEBUG
   printf("Problem %s: tot %.4f pre %.4f lp1 %d %.4f post %.4f lp2 %d %.4f\n",
 	 consys->nme,secondLPTime-startTime,
 	 presolveTime-startTime,
@@ -5293,8 +5310,8 @@ void ODSI::resolve ()
     lpprob->phase = dyINV ;
   lp_retval = do_lp(startWarm) ;
   if (!(lp_retval == lpOPTIMAL || lp_retval == lpINFEAS ||
-	lp_retval == lpUNBOUNDED))
-  { throw CoinError("Call to dylp failed.",
+	lp_retval == lpUNBOUNDED || lp_retval == lpITERLIM))
+  { throw CoinError("Call to dylp failed (warm).",
 		    "resolve","OsiDylpSolverInterface") ; }
 /*
   Trash the cached solution. This needs to happen regardless of how the lp
@@ -5449,8 +5466,8 @@ void ODSI::solveFromHotStart ()
 
     lp_retval = do_lp(startHot) ;
     if (!(lp_retval == lpOPTIMAL || lp_retval == lpINFEAS ||
-	  lp_retval == lpUNBOUNDED))
-    { throw CoinError("Call to dylp failed.",
+	  lp_retval == lpUNBOUNDED || lp_retval == lpITERLIM))
+    { throw CoinError("Call to dylp failed (hot).",
 		      "solveFromHotStart","OsiDylpSolverInterface") ; }
 /*
   Trash the cached solution. This needs to happen regardless of how the lp

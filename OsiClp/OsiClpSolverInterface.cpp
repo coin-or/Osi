@@ -1736,7 +1736,7 @@ OsiClpSolverInterface::primalPivotResult(int colIn, int sign,
   t = modelPtr_->theta();
   int numberColumns = modelPtr_->numberColumns();
   if (dx) {
-    const double * ray = modelPtr_->unboundedRay();
+    double * ray = modelPtr_->unboundedRay();
     if  (ray)
       dx->setFullNonZero(numberColumns,ray);
     else

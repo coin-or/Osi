@@ -795,16 +795,17 @@ int OsiOslSolverInterface::getIterationCount() const
 //------------------------------------------------------------------
 std::vector<double*> OsiOslSolverInterface::getDualRays(int maxNumRays) const
 {
-  // *TEST*
   const int m = getNumRows();
   double* ray = new double[m];
-  CoinDisjointCopyN(ekk_rowaux(getMutableModelPtr()), m, ray);
+  const double* negray = ekk_rowaux(getMutableModelPtr());
+  for (int i = 0; i < m; ++i) {
+     ray[i] = -negray[i];
+  }
   return std::vector<double*>(1, ray);
 }
 //------------------------------------------------------------------
 std::vector<double*> OsiOslSolverInterface::getPrimalRays(int maxNumRays) const
 {
-  // *TEST*
   const int n = getNumCols();
   double* ray = new double[n];
   CoinDisjointCopyN(ekk_colaux(getMutableModelPtr()), n, ray);

@@ -961,11 +961,9 @@ void
 OsiClpSolverInterface::applyRowCuts(int numberCuts, const OsiRowCut * cuts)
 {
   int i;
-#if 0
-  //****** Ask JP or Laci how to get this to work
-  //Why no test case for addRows?
-  const CoinPackedVectorBase *const * rows
-    =     new CoinPackedVectorBase * [numberCuts];
+
+  const CoinPackedVectorBase * * rows
+    =     new const CoinPackedVectorBase * [numberCuts];
   double * rowlb = new double [numberCuts];
   double * rowub = new double [numberCuts];
   for (i=0;i<numberCuts;i++) {
@@ -977,11 +975,7 @@ OsiClpSolverInterface::applyRowCuts(int numberCuts, const OsiRowCut * cuts)
   delete [] rows;
   delete [] rowlb;
   delete [] rowub;
-#else
-  for (i=0;i<numberCuts;i++) {
-    applyRowCut(cuts[i]);
-  }
-#endif
+
 }
 
 //-----------------------------------------------------------------------------

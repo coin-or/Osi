@@ -452,6 +452,49 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir)
       assert( smP->getNumElements() == 14 );
       
     }
+    // Test adding several cuts
+    {
+      OsiClpSolverInterface fim;
+      std::string fn = mpsDir+"exmip1";
+      fim.readMps(fn.c_str(),"mps");
+      // exmip1.mps has 2 integer variables with index 2 & 3
+      fim.initialSolve();
+      OsiRowCut cuts[3];
+      
+      
+      // Generate one ineffective cut plus two trivial cuts
+      int c;
+      int nc = fim.getNumCols();
+      int *inx = new int[nc];
+      for (c=0;c<nc;c++) inx[c]=c;
+      double *el = new double[nc];
+      for (c=0;c<nc;c++) el[c]=1.0+((double)c)*((double)c);
+      
+      cuts[0].setRow(nc,inx,el);
+      cuts[0].setLb(-100.);
+      cuts[0].setUb(500.);
+      cuts[0].setEffectiveness(22);
+      
+      for (c=2;c<4;c++) {
+	el[0]=1.0;
+	inx[0]=c;
+	cuts[c-1].setRow(1,inx,el);
+	cuts[c-1].setLb(1.);
+	cuts[c-1].setUb(100.);
+	cuts[c-1].setEffectiveness(c);
+      }
+
+      fim.applyRowCuts(3,cuts);
+      // resolve
+      fim.resolve();
+      // check integer solution
+      const double * cs = fim.getColSolution();
+      CoinRelFltEq eq;
+      assert( eq(cs[2],   1.0) );
+      assert( eq(cs[3],   1.0) );
+      delete[]el;
+      delete[]inx;
+    }
         // Test matrixByCol method
     {
   

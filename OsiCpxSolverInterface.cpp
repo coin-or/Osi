@@ -1,4 +1,4 @@
-//  LAST EDIT: Thu Mar  8 14:17:15 2001 by Tobias Pfender (opt14!bzfpfend) 
+//  LAST EDIT: Tue Aug 28 17:32:47 2001 by Tobias Pfender (opt14!bzfpfend) 
 //-----------------------------------------------------------------------------
 // name:     OSI Interface for CPLEX
 // author:   Tobias Pfender
@@ -497,62 +497,58 @@ const double * OsiCpxSolverInterface::getColUpper() const
 const char * OsiCpxSolverInterface::getRowSense() const
 {
   if ( rowsense_==NULL )
-  {
-    
-    // rowsense is determined with rhs, so invoke rhs
-    getRightHandSide();
-    assert( rowsense_!=NULL || getNumRows() == 0 );
-#if 0
-    int err;
-    int nrows = getNumRows();
-    rowsense_ = new char[nrows];
-    err = CPXgetsense( env_, getMutableLpPtr(), rowsense_, 0, nrows-1 );
-    checkCPXerror( err, "CPXgetsense", "getRowSense" );
-    // search free constraints CPLEX doesn't support: implemented as ranged rows with infinite bounds
-    const double* therhs = rhs();
-    
-    for( int i = 0; i < nrows; ++i )
-      if( rowsense_[i] == 'R' && therhs[i] <= -infinity() )
-        rowsense_[i] = 'N';
-#endif
-  }
+    {      
+      // rowsense is determined with rhs, so invoke rhs
+      getRightHandSide();
+      assert( rowsense_!=NULL || getNumRows() == 0 );
+    }
   return rowsense_;
 }
 //------------------------------------------------------------------
 const double * OsiCpxSolverInterface::getRightHandSide() const
 {
-  if ( rhs_==NULL ) {
-     CPXLPptr lp = getMutableLpPtr();
-     int nrows = getNumRows();
-     if( nrows > 0 ) {
-	rhs_ = new double[nrows];
-	CPXgetrhs( env_, lp, rhs_, 0, nrows-1 );
-
-	assert( rowrange_ == NULL );
-	rowrange_ = new double[nrows];
-	CPXgetrngval( env_, lp, rowrange_, 0, nrows-1 );
-
-	assert( rowsense_ == NULL );
-	rowsense_ = new char[nrows];
-	CPXgetsense( env_, lp, rowsense_, 0, nrows-1 );
-
-	double inf = getInfinity();
-	int i;
-	for ( i = 0; i < nrows; ++i ) {  
-	   if ( rowsense_[i] != 'R' ) {
-	      rowrange_[i]=0.0;
-	   } else {
-	      if ( rhs_[i] <= -inf ) {
-		 rowsense_[i] = 'N';
-		 rowrange_[i] = 0.0;
-		 rhs_[i] = 0.0;
-	      } else {
-		 rhs_[i] = rhs_[i] + rowrange_[i];
-	      }
-	   }
+  if ( rhs_==NULL )
+    {
+      CPXLPptr lp = getMutableLpPtr();
+      int nrows = getNumRows();
+      if( nrows > 0 ) 
+	{
+	  rhs_ = new double[nrows];
+	  CPXgetrhs( env_, lp, rhs_, 0, nrows-1 );
+	  
+	  assert( rowrange_ == NULL );
+	  rowrange_ = new double[nrows];
+	  CPXgetrngval( env_, lp, rowrange_, 0, nrows-1 );
+	  
+	  assert( rowsense_ == NULL );
+	  rowsense_ = new char[nrows];
+	  CPXgetsense( env_, lp, rowsense_, 0, nrows-1 );
+	  
+	  double inf = getInfinity();
+	  int i;
+	  for ( i = 0; i < nrows; ++i ) 
+	    {  
+	      if ( rowsense_[i] != 'R' ) 
+		rowrange_[i]=0.0;
+	      else
+		{
+		  if ( rhs_[i] <= -inf ) 
+		    {
+		      rowsense_[i] = 'N';
+		      rowrange_[i] = 0.0;
+		      rhs_[i] = 0.0;
+		    } 
+		  else 
+		    {
+		      if( rowrange_[i] >= 0.0 )
+			rhs_[i] = rhs_[i] + rowrange_[i];
+		      else
+			rowrange_[i] = -rowrange_[i];
+		    }
+		}
+	    }
 	}
-     }
-  }
+    }
   return rhs_;
 }
 //------------------------------------------------------------------
@@ -882,7 +878,7 @@ std::vector<double*> OsiCpxSolverInterface::getPrimalRays(int maxNumRays) const
 // Problem modifying methods (rim vectors)
 //#############################################################################
 
-void setObjCoeff( int elementIndex, double elementValue )
+void OsiCpxSolverInterface::setObjCoeff( int elementIndex, double elementValue )
 {
   int err = CPXchgobj(env_, getLpPtr(), 1, &elementIndex, &elementValue);
   checkCPXerror(err, "CPXchgobj", "setObjCoeff");
@@ -1346,32 +1342,36 @@ OsiCpxSolverInterface::loadProblem( const OsiPackedMatrix& matrix,
   double * rowRange = new double[nrows];
   
   int i;
-  for ( i = nrows - 1; i >= 0; --i ) {
-     const double lower = rowlb ? rowlb[i] : -inf;
-     const double upper = rowub ? rowub[i] : inf;
-     rowRange[i] = 0.0;
-     if (lower > -inf) {
+  for ( i = nrows - 1; i >= 0; --i )
+    {
+      const double lower = rowlb ? rowlb[i] : -inf;
+      const double upper = rowub ? rowub[i] : inf;
+      convertBoundToSense( lower, upper, rowSense[i], rowRhs[i], rowRange[i] );
+#if 0
+      rowRange[i] = 0.0;
+      if (lower > -inf) {
 	rowRhs[i] = lower;
 	if (upper < inf) {
-	   if (upper==lower) {
-	      rowSense[i] = 'E';
-	   } else {
-	      rowSense[i] = 'R';
-	      rowRange[i] = upper - lower;
-	   }
+	  if (upper==lower) {
+	    rowSense[i] = 'E';
+	  } else {
+	    rowSense[i] = 'R';
+	    rowRange[i] = upper - lower;
+	  }
 	} else {
-	   rowSense[i] = 'G';
+	  rowSense[i] = 'G';
 	}
-     } else {
+      } else {
 	if (upper < inf) {
-	   rowSense[i] = 'L';
-	   rowRhs[i] = upper;
+	  rowSense[i] = 'L';
+	  rowRhs[i] = upper;
 	} else {
-	   rowSense[i] = 'N';
-	   rowRhs[i] = 0.0;
+	  rowSense[i] = 'N';
+	  rowRhs[i] = 0.0;
 	}
-     }
-  }
+      }
+#endif
+    }
 
   loadProblem(matrix, collb, colub, obj, rowSense, rowRhs, rowRange ); 
   delete [] rowSense;
@@ -1427,40 +1427,56 @@ OsiCpxSolverInterface::loadProblem( const OsiPackedMatrix& matrix,
       double * ob;
       double * rr = NULL;
       double * rhs;
-      if ( collb!=NULL ) {
+      if ( collb!=NULL )
 	clb=const_cast<double*>(collb);
-      } else {
-	clb = new double[nc];
-	OsiFillN(clb, nc, 0.0);
-      }
-      if ( colub!=NULL ) {
-	cub=const_cast<double*>(colub);
-      } else {
-	cub = new double[nc];
-	OsiFillN(cub, nc, getInfinity());
-      }
-      if ( obj!=NULL ) {
-	ob=const_cast<double*>(obj);
-      } else {
-	ob = new double[nc];
-	OsiFillN(ob, nc, 0.0);
-      } 
-      if ( rowrng != NULL ) {
-	rhs = new double[nr];
-	rr = new double[nr];
-	for ( i=0; i<nr; i++ ) {
-	  if (rowsen[i] == 'R') {
-	    rhs[i] = rowrhs[i] - rowrng[i];
-	    rr[i] = rowrng[i];
-	  } else {
-	    rhs[i] = rowrhs[i];
-	    rr[i] = 0.0;
-	  }
+      else
+	{
+	  clb = new double[nc];
+	  CoinFillN(clb, nc, 0.0);
 	}
-      } else {
+      if ( colub!=NULL )
+	cub=const_cast<double*>(colub);
+      else
+	{
+	  cub = new double[nc];
+	  CoinFillN(cub, nc, getInfinity());
+	}
+      if ( obj!=NULL )
+	ob=const_cast<double*>(obj);
+      else
+	{
+	  ob = new double[nc];
+	  CoinFillN(ob, nc, 0.0);
+	}
+      if ( rowrng != NULL )
+	{
+	  rhs = new double[nr];
+	  rr = new double[nr];
+	  for ( i=0; i<nr; i++ )
+	    {
+	      if (rowsen[i] == 'R')
+		{
+		  if( rowrng[i] >= 0 )
+		    {
+		      rhs[i] = rowrhs[i] - rowrng[i];
+		      rr[i] = rowrng[i];
+		    }
+		  else
+		    {
+		      rhs[i] = rowrhs[i];
+		      rr[i] = -rowrng[i];
+		    }
+		} 
+	      else
+		{
+		  rhs[i] = rowrhs[i];
+		  rr[i] = 0.0;
+		}
+	    }
+	} 
+      else
 	rhs = const_cast<double*>(rowrhs);
-      }
-
+      
       bool freeMatrixRequired = false;
       OsiPackedMatrix * m = NULL;
       if ( !matrix.isColOrdered() ) 

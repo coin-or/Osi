@@ -8,6 +8,7 @@
 
 #include <numeric>
 #include <cassert>
+#include <cmath>
 
 #include "CoinHelperFunctions.hpp"
 #include "CoinWarmStartDual.hpp"
@@ -982,7 +983,7 @@ OsiVolSolverInterface::addCol(const CoinPackedVectorBase& vec,
   colupper_[colnum]   = colub;
   objcoeffs_[colnum]  = obj;
   continuous_[colnum] = true;
-  colsol_[colnum]     = 0.0;
+  colsol_[colnum]     = fabs(collb)<fabs(colub) ? collb : colub;
   rc_[colnum]         = 0.0;
 
   updateColMatrix_();
@@ -1005,7 +1006,16 @@ OsiVolSolverInterface::addCols(const int numcols,
     CoinDisjointCopyN(colub, numcols, colupper_ + colnum);
     CoinDisjointCopyN(obj, numcols, objcoeffs_ + colnum);
     CoinFillN(continuous_ + colnum, numcols, true);
-    CoinFillN(colsol_     + colnum, numcols, 0.0);
+    int c;
+    for ( c=0; c<numcols; c++ ) {
+      if ( fabs(collb[colnum+c]) < fabs(colub[colnum+c]) ) {
+        colsol_[colnum+c] = collb[colnum+c];
+      }
+      else {
+        colsol_[colnum+c] = colub[colnum+c];
+      }
+    }
+    //CoinFillN(colsol_     + colnum, numcols, 0.0);
     CoinFillN(rc_         + colnum, numcols, 0.0);
 
     updateColMatrix_();

@@ -996,7 +996,7 @@ private:
   deleteLink ( pivotColumn + numberRows_ );
   totalElements_ += added;
   return true;
-};
+}
 
   /********************************* END LARGE TEMPLATE ********/
   //@}

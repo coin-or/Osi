@@ -1804,13 +1804,14 @@ OsiGlpkSolverInterface::assignProblem( CoinPackedMatrix*& matrix,
 	rowrng = NULL;
 }
 //-----------------------------------------------------------------------------
+
 void
 OsiGlpkSolverInterface::loadProblem(const int numcols, const int numrows,
-                       const int* start, const int* index,
-                       const double* value,
-                       const double* collb, const double* colub,
-                       const double* obj,
-                       const double* rowlb, const double* rowub)
+				   const int* start, const int* index,
+				   const double* value,
+				   const double* collb, const double* colub,
+				   const double* obj,
+				   const double* rowlb, const double* rowub)
 {
   freeCachedData( OsiGlpkSolverInterface::KEEPCACHED_NONE );
   LPX *model = getMutableModelPtr();
@@ -1834,6 +1835,7 @@ OsiGlpkSolverInterface::loadProblem(const int numcols, const int numrows,
       value_adj[i] = value[i-1];
     }
 
+#if 0
   int j;
   for( j = 0; j < numrows; j++ )
     {
@@ -1842,17 +1844,31 @@ OsiGlpkSolverInterface::loadProblem(const int numcols, const int numrows,
       // Note that we should really add one to start[j].  However, we need
       // to give GLPK the address one before that, so it turns out to be
       // just start[j]
-      lpx_set_mat_row( model, j+1, start[j+1]-start[j],
-                 &(index_adj[start[j]]), &(value_adj[start[j]]) );
+      lpx_set_mat_row( model, j+1, start[j+1]-start[j], 
+		       &(index_adj[start[j]]), &(value_adj[start[j]]) );
     }
 
   for( i = 0; i < numcols; i++ )
     {
-      setColBounds( i, collb ? collb[i]:0.0,
-              colub ? colub[i]:inf );
+      setColBounds( i, collb ? collb[i]:0.0, 
+		    colub ? colub[i]:inf );
       setObjCoeff( i, obj ? obj[i]:0.0 );
     }
-
+#else
+  for( i = 0; i < numcols; i++ )
+  {
+	setColBounds( i, collb ? collb[i]:0.0, 
+		    colub ? colub[i]:inf );
+	lpx_set_mat_col( model, i+1, start[i+1]-start[i], &(index_adj[start[i]]), &(value_adj[start[i]]) );
+    setObjCoeff( i, obj ? obj[i]:0.0 );
+  }
+  int j;
+  for( j = 0; j < numrows; j++ )
+  {
+      setRowBounds( j, rowlb ? rowlb[j]:-inf, rowub ? rowub[j]:inf );
+  }
+#endif
+  
 }
 //-----------------------------------------------------------------------------
 

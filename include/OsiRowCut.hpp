@@ -68,13 +68,17 @@ public:
 
   /**@name Comparison operators  */
   //@{
+#if __GNUC__ != 2 
     using OsiCut::operator== ;
+#endif
     /** equal - true if lower bound, upper bound, row elements,
         and OsiCut are equal.
     */
     OsiRowCut_inline bool operator==(const OsiRowCut& rhs) const; 
 
+#if __GNUC__ != 2 
     using OsiCut::operator!= ;
+#endif
     /// not equal
     OsiRowCut_inline bool operator!=(const OsiRowCut& rhs) const; 
   //@}

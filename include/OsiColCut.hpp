@@ -59,13 +59,17 @@ public:
   
   /**@name Comparison operators  */
   //@{
+#if __GNUC__ != 2 
   using OsiCut::operator== ;
+#endif
   /** equal - true if lower bounds, upper bounds, 
   and OsiCut are equal.
   */
   inline virtual bool operator==(const OsiColCut& rhs) const; 
 
+#if __GNUC__ != 2 
   using OsiCut::operator!= ;
+#endif
   /// not equal
   inline virtual bool operator!=(const OsiColCut& rhs) const; 
   //@}

@@ -35,31 +35,33 @@ extern "C" {
 /*! \class OsiDylpSolverInterface
     \brief COIN OSI layer for dylp
 
-  The class OsiDylpSolverInterface (ODSI) is the top level object. It
-  implements the public functions defined for an OsiSolverInterface object.
+  The class OsiDylpSolverInterface (ODSI) implements the public functions
+  defined for a COIN OsiSolverInterface (OSI) object.
 
-  The OSI layer (or at least the OSI test suite) expects that the constraint
-  system read back from the solver will be the same as the constraint system
-  given to the solver.  Dylp expects that any grooming of the constraint
-  system will be done before it's called, and furthermore expects that this
-  grooming will include conversion of >= constraints to <= constraints.  The
-  solution here is to do this grooming in a wrapper, dylp.c:dylp_dolp.
-  dylp_dolp only implements the conversion from >= to <=, which is
-  reversible. dylp can tolerate empty constraints.  dylp_dolp also embodies a
-  rudimentary strategy that attempts to recover from numerical inaccuracy by
-  refactoring the basis more often (on the premise that this will reduce
-  numerical inaccuracy in calculations involving the basis inverse).
+  <h3>OsiDylpSolverInterface Principles for Users</h3>
 
-  Within dylp, a constraint system is held in a row- and column-linked
-  structure called a consys_struct. The lp problem (constraint system plus
-  additional problem information --- primal and dual variables, basis, status,
-  etc.) is held in a structure called an lpprob_struct.
-  
-  Down in the private section of the ODSI class, ODSI.consys is the
-  constraint system. ODSI.lpprob is the lpprob_struct that's used to pass the
-  problem to the lp solver and return the results.  There are three other
-  structures, options, tolerance, and statistics, that respectively hold
-  control parameters, tolerances, and collect statistics.
+  In addition to the principles outlined for the OsiSolverInterface class,
+  ODSI maintains the following:
+
+  <strong>Construction of a Constraint System</strong>:
+  A constraint system can be batch loaded from a file (MPS format) or from
+  a data structure, or it can be built incrementally. When building a
+  constraint system incrementally, keep in mind that you must create a row
+  or column (addRow or addCol, respectively) before you can adjust other
+  properties (row or column bounds, objective, variable values, etc.)
+
+  <strong>Maintenance of an LP Basis</strong>
+  Skirting the edges of the principle that changing the problem invalidates
+  the solution, OsiDylp will maintain a valid basis across two common
+  operations used in branch-and-cut: deletion of a loose constraint and
+  deletion of a nonbasic variable. This basis comes into existence with a call
+  to either of setWarmStart() or initialSolve(). Arguably the set of allowable
+  modifications could be increased.
+
+  <strong>Assignment</strong>
+  Assignment (#operator=()) works pretty much as you'd expect, with one
+  exception. Only one ODSI object can control the dylp solver at a time,
+  so hot start information is not copied on assignment.
 
   Detailed documentation is contained in OsiDylpSolverInterface.cpp, which
   is not normally scanned when generating COIN OSI layer documentation. Try
@@ -88,11 +90,15 @@ public:
 
   /*! \brief Copy constructor */
 
-  OsiDylpSolverInterface(const OsiDylpSolverInterface& src) ;
+  OsiDylpSolverInterface(const OsiDylpSolverInterface &src) ;
 
   /*! \brief Clone the solver object */
 
   OsiSolverInterface* clone(bool copyData = true) const ;
+
+  /*! \brief Assignment */
+
+  OsiDylpSolverInterface &operator=(const OsiDylpSolverInterface &rhs) ;
 
   /*! \brief Destructor */
 
@@ -337,6 +343,10 @@ public:
 
   void initialSolve() ;
 
+  /*! \brief Get an empty OsiDylpWarmStartBasis object */
+
+  CoinWarmStart *getEmptyWarmStart () const ;
+
   /*! \brief Build a warm start object for the current lp solution. */
 
   CoinWarmStart *getWarmStart() const ;
@@ -527,14 +537,20 @@ public:
   std::vector<double *> getPrimalRays(int) const ;
 //@}
 
+/*! \name Dylp data structures
+
+  These structures contain dylp control options and tolerances.
+*/
 /*
-  These structures contain dylp control options and tolerances. Leave
-  them visible to the public for the nonce, until a better programmatic
+  Leave them visible to the public for the nonce, until a better programmatic
   interface is available. Initialized by the constructor.
 */
+//@{
 
   lpopts_struct *initialSolveOptions,*resolveOptions ;
   lptols_struct* tolerances ;
+
+//@}
 
 private:
 
@@ -543,9 +559,18 @@ private:
   using any of these, you should have a look at the code.
   See OsiDylpSolverInterface.ccp for descriptions.
 */ 
+/*! \name Dylp data structures
+
+  These fields hold pointers to the data structures which are used to pass an
+  lp problem to dylp.
+*/
+//@{
+
   consys_struct* consys ;
   lpprob_struct* lpprob ;
   lpstats_struct* statistics ;
+
+//@}
 
 /*! \name Dylp residual control variables */
 //@{
@@ -598,6 +623,16 @@ private:
   /*! \brief Warm start object used as a fallback for hot start */
 
   CoinWarmStart *hotstart_fallback ;
+
+  /*! \brief Current basis */
+
+  CoinWarmStart *activeBasis ;
+
+  /*! \brief Current basis is modified
+
+    True if active_basis has been modified since the last call to dylp.
+  */
+  bool activeIsModified ;
 
 //@}
 
@@ -700,7 +735,7 @@ private:
 /*
   Specializations for more complicated structures.
 */
-  static basis_struct* copy_basis(const basis_struct* src) ;
+  static basis_struct* copy_basis(const basis_struct* src, int dstsze) ;
   static void copy_basis(const basis_struct* src, basis_struct* dst) ;
   static lpprob_struct* copy_lpprob(const lpprob_struct* src) ;
 //@}

@@ -20,7 +20,6 @@
 #include "OsiMessageHandler.hpp"
 enum OSI_Message
 {
-  OSI_CONTINUATION=-1,
   OSI_MPS_LINE=0,
   OSI_MPS_STATS,
   OSI_BAB_MAXITS,
@@ -40,6 +39,7 @@ enum OSI_Message
   OSI_MPS_BADFILE2,
   OSI_MPS_EOF,
   OSI_MPS_RETURNING,
+  OSI_SOLVER_MPS,
   OSI_DUMMY_END
 };
 

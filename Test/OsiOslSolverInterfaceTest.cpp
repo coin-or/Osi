@@ -369,7 +369,7 @@ OsiOslMessageTest::print()
       numberOptimal++;
       if (numberOptimal%100==0)
 	return OsiMessageHandler::print(); // print
-    } else if (currentMessage().externalNumber()==2) { 
+    } else if (currentMessage().externalNumber()==3000) { 
       numberInfeasible++;
     }
   }  else if (currentSource()=="Osi") {
@@ -1150,6 +1150,12 @@ OsiOslSolverInterfaceUnitTest(const std::string & mpsDir)
    }
     OsiMessageHandler * handler = m.messageHandler();
     OsiMessages messages = m.messages() ;
+    if (!iPass) {
+      // switch on strong branching  message
+      int oneMessage=7;
+      // we want to change models copy of messages
+      m.messagesPointer()->setDetailMessages(1,1,&oneMessage);
+    }
     // solve LP
     m.initialSolve();
     // setColBounds prints every time - don't even get to message handler

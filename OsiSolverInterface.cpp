@@ -423,8 +423,8 @@ int OsiSolverInterface::readMps(const char * filename,
   m.setInfinity(getInfinity());
   
   numberErrors = m.readMps(filename,extension);
-  std::cout <<m.getProblemName()<<" read with " << numberErrors <<
-    " errors" <<std::endl;
+  handler_->message(OSI_SOLVER_MPS,messages_)
+    <<m.getProblemName()<< numberErrors <<OsiMessageEol;
   if (!numberErrors) {
 
     // set objective function offest

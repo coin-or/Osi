@@ -736,6 +736,9 @@ public:
   /// Return messages
   OsiMessages messages() 
   {return messages_;};
+  /// Return pointer to messages
+  OsiMessages * messagesPointer() 
+  {return &messages_;};
   //@}
   //---------------------------------------------------------------------------
 

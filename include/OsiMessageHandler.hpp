@@ -35,7 +35,8 @@
 /** Class for one massaged message.
     At this stage it is in the correct language.
     A message may have several parts of which all except the
-    first may be omitted.
+    first may be omitted - see printing(bool) in OsiMessagehandler.
+    Parts are delineated by %?
  */
 
 class OsiOneMessage {
@@ -47,7 +48,7 @@ public:
   OsiOneMessage();
   /** Normal constructor */
   OsiOneMessage(int externalNumber, char detail,
-		int numberParts, const char ** message);
+		const char * message);
   /** Destructor */
   ~OsiOneMessage();
   /** The copy constructor */
@@ -59,10 +60,16 @@ public:
   /**@name Useful stuff */
   //@{
   /// Replaces messages (i.e. a different language)
-  void replaceMessage(int numberParts, const char ** message);
-  /// Returns part of message
-  char * part(int iPart) const
-  {return message_[iPart];};
+  void replaceMessage(const char * message);
+  /// Sets detail level
+  inline void setDetail(int level)
+  {detail_=level;};
+  /// Gets detail level
+  inline int detail() const
+  {return detail_;};
+  /// Returns message
+   char * message() const
+  {return message_;};
   //@}
 
    /**@name gets and sets methods */
@@ -79,8 +86,6 @@ public:
 
   /**@name member data */
   //@{
-  // maximum number of parts to a message
-#define MAXMESSAGE 4
   /// number to print out (also determines severity)
     int externalNumber_;
   /// Will only print if detail matches
@@ -88,7 +93,7 @@ public:
   /// Severity
     char severity_;
   /// Messages (in correct language)
-    char * message_[MAXMESSAGE];
+  char * message_;
   //@}
 };
 
@@ -126,17 +131,22 @@ public:
   void addMessage(int messageNumber, const OsiOneMessage & message);
   /// Replaces messages (i.e. a different language)
   void replaceMessage(int messageNumber, 
-		int numberParts, const char ** message);
+		const char * message);
   /** Language.  Need to think about iso codes */
   inline Language language() const
   {return language_;};
   void setLanguage(Language language)
   {language_ = language;};
+  /// Changes detail level for one message
+  void setDetailMessage(int newLevel, int messageNumber);
+  /// Changes detail level for several messages
+  void setDetailMessages(int newLevel, int numberMessages,
+			 int * messageNumbers);
   //@}
 
   /**@name member data */
   //@{
-  /// Message number
+  /// Number of messages
   int numberMessages_;
   /// Language 
   Language language_;
@@ -246,7 +256,7 @@ public:
   /// Start a message
   OsiMessageHandler & message(int messageNumber,
 			      const OsiMessages & messages);
-  /// returns current (just to make more uniform in look)
+  /// returns current (if you want to make more uniform in look)
   OsiMessageHandler & message();
   /** Gets position of next field in format
       if initial then copies until first % */
@@ -261,8 +271,9 @@ public:
   /** Stop (and print) - or use eol
   */
   int finish();
-  /// Positions to part n
-  OsiMessageHandler & messageSection(int part);
+  /** Allows for skipping printing of part of message,
+      but putting in data */
+  OsiMessageHandler & printing(bool onOff);
 
   /** The following is to help existing codes interface
       Starts message giving number and complete text
@@ -286,8 +297,8 @@ private:
   int prefix_;
   /// Current message
   OsiOneMessage  currentMessage_;
-  /// Part number
-  int part_;
+  /// Internal number for use with enums
+  int internalNumber_;
   /// Format string for message (remainder)
   char * format_;
   /// Number fields filled in,  0 in constructor then incremented
@@ -301,8 +312,12 @@ private:
   char * messageOut_;
   /// Current source of message
   std::string source_;
-  /// If we are skipping this message
-  bool skip_;
+  /** 0 - normal,
+      1 - put in values, move along format, no print
+      2 - put in values, no print
+      3 - skip message
+  */
+  int printStatus_;
   /// Highest message number (indicates any errors)
   int highestNumber_;
   /// File pointer

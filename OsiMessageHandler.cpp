@@ -15,30 +15,23 @@ using std::max;
 OsiOneMessage::OsiOneMessage()
 {
   externalNumber_=-1;
-  int i;
-  for (i=0;i<MAXMESSAGE;i++) 
-    message_[i]=NULL;
+  message_=NULL;
   severity_='I';
   detail_=128;
 }
 /* Destructor */
 OsiOneMessage::~OsiOneMessage()
 {
-  int i;
-  for (i=0;i<MAXMESSAGE;i++) 
-    free(message_[i]);
+  free(message_);
 }
 /* The copy constructor */
 OsiOneMessage::OsiOneMessage(const OsiOneMessage & rhs)
 {
   externalNumber_=rhs.externalNumber_;
-  int i;
-  for (i=0;i<MAXMESSAGE;i++) {
-    if (rhs.message_[i])
-      message_[i]=strdup(rhs.message_[i]);
-    else
-      message_[i]=NULL;
-  }
+  if (rhs.message_)
+    message_=strdup(rhs.message_);
+  else
+    message_=NULL;
   severity_=rhs.severity_;
   detail_=rhs.detail_;
 }
@@ -48,14 +41,11 @@ OsiOneMessage::operator=(const OsiOneMessage & rhs)
 {
   if (this != &rhs) {
     externalNumber_=rhs.externalNumber_;
-    int i;
-    for (i=0;i<MAXMESSAGE;i++) {
-      free(message_[i]);
-      if (rhs.message_[i])
-	message_[i]=strdup(rhs.message_[i]);
-      else
-	message_[i]=NULL;
-    }
+    free(message_);
+    if (rhs.message_)
+      message_=strdup(rhs.message_);
+    else
+      message_=NULL;
     severity_=rhs.severity_;
     detail_=rhs.detail_;
   }
@@ -63,15 +53,10 @@ OsiOneMessage::operator=(const OsiOneMessage & rhs)
 }
 /* Normal constructor */
 OsiOneMessage::OsiOneMessage(int externalNumber, char detail,
-		int numberParts, const char ** message)
+		const char * message)
 {
   externalNumber_=externalNumber;
-  int i;
-  for (i=0;i<MAXMESSAGE;i++) 
-    message_[i]=NULL;
-
-  for (i=0;i<numberParts;i++) 
-    message_[i]=strdup(message[i]);
+  message_=strdup(message);
   if (externalNumber<3000)
     severity_='I';
   else if (externalNumber<6000)
@@ -84,14 +69,9 @@ OsiOneMessage::OsiOneMessage(int externalNumber, char detail,
 }
 // Replaces messages (i.e. a different language)
 void 
-OsiOneMessage::replaceMessage(int numberParts, const char ** message)
+OsiOneMessage::replaceMessage( const char * message)
 {
-  int i;
-  for (i=0;i<MAXMESSAGE;i++) 
-    message_[i]=NULL;
-
-  for (i=0;i<numberParts;i++) 
-    message_[i]=strdup(message[i]);
+  message_=strdup(message);
 }
 
 
@@ -183,10 +163,54 @@ OsiMessages::addMessage(int messageNumber, const OsiOneMessage & message)
 // Replaces messages (i.e. a different language)
 void 
 OsiMessages::replaceMessage(int messageNumber, 
-			    int numberParts, const char ** message)
+			     const char * message)
 {
   assert(messageNumber<numberMessages_);
-  message_[messageNumber]->replaceMessage(numberParts,message);
+  message_[messageNumber]->replaceMessage(message);
+}
+// Changes detail level for one message
+void 
+OsiMessages::setDetailMessage(int newLevel, int messageNumber)
+{
+  int i;
+  for (i=0;i<numberMessages_;i++) {
+    if (message_[i]->externalNumber()==messageNumber) {
+      message_[i]->setDetail(newLevel);
+      break;
+    }
+  }
+}
+// Changes detail level for several messages
+void 
+OsiMessages::setDetailMessages(int newLevel, int numberMessages,
+			       int * messageNumbers)
+{
+  int i;
+  if (numberMessages<3) {
+    // do one by one
+    int j;
+    for (j=0;j<numberMessages;j++) {
+      int messageNumber = messageNumbers[j];
+      for (i=0;i<numberMessages_;i++) {
+	if (message_[i]->externalNumber()==messageNumber) {
+	  message_[i]->setDetail(newLevel);
+	  break;
+	}
+      }
+    }
+  } else {
+    // do backward mapping
+    int backward[10000];
+    for (i=0;i<10000;i++) 
+      backward[i]=-1;
+    for (i=0;i<numberMessages_;i++) 
+      backward[message_[i]->externalNumber()]=i;
+    for (i=0;i<numberMessages;i++) {
+      int iback = backward[messageNumbers[i]];
+      if (iback>=0)
+	message_[iback]->setDetail(newLevel);
+    }
+  }
 }
 
 // Print message, return 0 normally
@@ -203,8 +227,8 @@ OsiMessageHandler::print()
 	messageOut_--;
       } else {
 	break;
-      } /* endif */
-    } /* endwhile */
+      } 
+    } 
     fprintf(fp_,"%s\n",messageBuffer_);
     if (currentMessage_.severity_=='S') {
       fprintf(fp_,"Stopping due to previous errors.\n");
@@ -242,13 +266,13 @@ OsiMessageHandler::OsiMessageHandler() :
   logLevel_(1),
   prefix_(255),
   currentMessage_(),
-  part_(0),
+  internalNumber_(0),
   format_(NULL),
   numberDoubleFields_(0),
   numberIntFields_(0),
   numberCharFields_(0),
   numberStringFields_(0),
-  skip_(true),
+  printStatus_(0),
   highestNumber_(-1),
   fp_(stdout)
 {
@@ -261,13 +285,13 @@ OsiMessageHandler::OsiMessageHandler(FILE * fp) :
   logLevel_(1),
   prefix_(255),
   currentMessage_(),
-  part_(0),
+  internalNumber_(0),
   format_(NULL),
   numberDoubleFields_(0),
   numberIntFields_(0),
   numberCharFields_(0),
   numberStringFields_(0),
-  skip_(true),
+  printStatus_(0),
   highestNumber_(-1),
   fp_(fp)
 {
@@ -285,7 +309,7 @@ OsiMessageHandler::OsiMessageHandler(const OsiMessageHandler& rhs)
   logLevel_=rhs.logLevel_;
   prefix_ = rhs.prefix_;
   currentMessage_=rhs.currentMessage_;
-  part_=rhs.part_;
+  internalNumber_=rhs.internalNumber_;
   int i;
   numberDoubleFields_ = rhs.numberDoubleFields_;
   for (i=0;i<numberDoubleFields_;i++) 
@@ -299,12 +323,12 @@ OsiMessageHandler::OsiMessageHandler(const OsiMessageHandler& rhs)
   numberStringFields_ = rhs.numberStringFields_;
   for (i=0;i<numberStringFields_;i++) 
     stringValue_[i]=rhs.stringValue_[i];
-  int offset = rhs.format_ - rhs.currentMessage_.part(part_);
-  format_ = currentMessage_.part(part_)+offset;
+  int offset = rhs.format_ - rhs.currentMessage_.message();
+  format_ = currentMessage_.message()+offset;
   strcpy(messageBuffer_,rhs.messageBuffer_);
   offset = rhs.messageOut_-rhs.messageBuffer_;
   messageOut_= messageBuffer_+offset;
-  skip_= rhs.skip_;
+  printStatus_= rhs.printStatus_;
   highestNumber_= rhs.highestNumber_;
   fp_ = rhs.fp_;
   source_ = rhs.source_;
@@ -317,7 +341,7 @@ OsiMessageHandler::operator=(const OsiMessageHandler& rhs)
     logLevel_=rhs.logLevel_;
     prefix_ = rhs.prefix_;
     currentMessage_=rhs.currentMessage_;
-    part_=rhs.part_;
+    internalNumber_=rhs.internalNumber_;
     int i;
     numberDoubleFields_ = rhs.numberDoubleFields_;
     for (i=0;i<numberDoubleFields_;i++) 
@@ -331,12 +355,12 @@ OsiMessageHandler::operator=(const OsiMessageHandler& rhs)
     numberStringFields_ = rhs.numberStringFields_;
     for (i=0;i<numberStringFields_;i++) 
       stringValue_[i]=rhs.stringValue_[i];
-    int offset = rhs.format_ - rhs.currentMessage_.part(part_);
-    format_ = currentMessage_.part(part_)+offset;
+    int offset = rhs.format_ - rhs.currentMessage_.message();
+    format_ = currentMessage_.message()+offset;
     strcpy(messageBuffer_,rhs.messageBuffer_);
     offset = rhs.messageOut_-rhs.messageBuffer_;
     messageOut_= messageBuffer_+offset;
-    skip_= rhs.skip_;
+    printStatus_= rhs.printStatus_;
     highestNumber_= rhs.highestNumber_;
     fp_ = rhs.fp_;
     source_ = rhs.source_;
@@ -362,24 +386,24 @@ OsiMessageHandler::message(int messageNumber,
   numberIntFields_=0;
   numberCharFields_=0;
   numberStringFields_=0;
-  part_=0;
+  internalNumber_=messageNumber;
   currentMessage_= *(normalMessage.message_[messageNumber]);
   source_ = normalMessage.source_;
-  format_ = currentMessage_.message_[0];
+  format_ = currentMessage_.message_;
   messageBuffer_[0]='\0';
   messageOut_=messageBuffer_;
   highestNumber_ = max(highestNumber_,currentMessage_.externalNumber_);
   // do we print
   int detail = currentMessage_.detail_;
-  skip_=true;
+  printStatus_=0;
   if (detail>=8) {
     // bit setting - debug
-    if ((detail&logLevel_)!=0)
-      skip_ = false;
-  } else if (logLevel_>=detail) {
-    skip_ = false;
+    if ((detail&logLevel_)==0)
+      printStatus_ = 3;
+  } else if (logLevel_<detail) {
+    printStatus_ = 3;
   }
-  if (!skip_) {
+  if (!printStatus_) {
     if (prefix_) {
       sprintf(messageOut_,"%s%4.4d%c ",source_.c_str(),
 	      currentMessage_.externalNumber_,
@@ -405,12 +429,12 @@ OsiMessageHandler::message(int externalNumber,const char * source,
   numberIntFields_=0;
   numberCharFields_=0;
   numberStringFields_=0;
-  // mark so will not update buffer
-  part_=-1;
+  internalNumber_=externalNumber;
   currentMessage_= OsiOneMessage();
   currentMessage_.setExternalNumber(externalNumber);
   source_ = source;
-  format_ = NULL;
+  // mark so will not update buffer
+  printStatus_=2;
   highestNumber_ = max(highestNumber_,externalNumber);
   // If we get here we always print
   if (prefix_) {
@@ -420,6 +444,22 @@ OsiMessageHandler::message(int externalNumber,const char * source,
   }
   strcat(messageBuffer_,msg);
   messageOut_=messageBuffer_+strlen(messageBuffer_);
+  return *this;
+}
+  /* Allows for skipping printing of part of message,
+      but putting in data */
+  OsiMessageHandler & 
+OsiMessageHandler::printing(bool onOff)
+{
+  // has no effect if skipping or whole message in
+  if (printStatus_<2) {
+    assert(format_[1]=='?');
+    if (onOff)
+      printStatus_=0;
+    else
+      printStatus_=1;
+    format_ = nextPerCent(format_+2,true);
+  }
   return *this;
 }
 /* Stop (and print) 
@@ -435,11 +475,11 @@ OsiMessageHandler::finish()
   numberIntFields_=0;
   numberCharFields_=0;
   numberStringFields_=0;
-  part_=0;
+  internalNumber_=-1;
   format_ = NULL;
   messageBuffer_[0]='\0';
   messageOut_=messageBuffer_;
-  skip_=true;
+  printStatus_=true;
   return 0;
 }
 /* Gets position of next field in format
@@ -452,153 +492,168 @@ OsiMessageHandler::nextPerCent(char * start , const bool initial)
     while (!foundNext) {
       char * nextPerCent = strchr(start,'%');
       if (nextPerCent) {
-        if (initial) {
-          int numberToCopy=nextPerCent-start;
-          strncpy(messageOut_,start,numberToCopy);
-          messageOut_+=numberToCopy;
-        } /* endif */
-        start=nextPerCent;
-        if (start[1]!='%') {
-          foundNext=true;
-        } else {
-          start+=2;
-          if (initial) {
-            *messageOut_='%';
-            messageOut_++;
-          } /* endif */
-        } /* endif */
+	// %? is skipped over as it is just a separator
+	if (nextPerCent[1]!='?') {
+	  if (initial&&!printStatus_) {
+	    int numberToCopy=nextPerCent-start;
+	    strncpy(messageOut_,start,numberToCopy);
+	    messageOut_+=numberToCopy;
+	  } 
+	  start=nextPerCent;
+	  if (start[1]!='%') {
+	    foundNext=true;
+	    if (!initial) 
+	      *start='\0'; //zap
+	  } else {
+	    start+=2;
+	    if (initial) {
+	      *messageOut_='%';
+	      messageOut_++;
+	    } 
+	  }
+	} else {
+	  foundNext=true;
+	  // skip to % and zap
+	  start=nextPerCent;
+	  *start='\0'; 
+	}
       } else {
-        if (initial) {
+        if (initial&&!printStatus_) {
           strcpy(messageOut_,start);
           messageOut_+=strlen(messageOut_);
-        } /* endif */
+        } 
         start=0;
         foundNext=true;
-      } /* endif */
-    } /* endwhile */
-  } /* endif */
+      } 
+    } 
+  } 
   return start;
 }
 // Adds into message
 OsiMessageHandler & 
 OsiMessageHandler::operator<< (int intvalue)
 {
-  if (skip_)
+  if (printStatus_==3)
     return *this; // not doing this message
   intValue_[numberIntFields_++] = intvalue;
-  if (part_>=0) {
+  if (printStatus_<2) {
     if (format_) {
       //format is at % (but may be changed to null)
       *format_='%';
       char * next = nextPerCent(format_+1);
-      if (next) 
-	*next=0;
       // could check
-      sprintf(messageOut_,format_,intvalue);
+      if (!printStatus_) {
+	sprintf(messageOut_,format_,intvalue);
+	messageOut_+=strlen(messageOut_);
+      }
       format_=next;
     } else {
       sprintf(messageOut_," %d",intvalue);
-    } /* endif */
-    messageOut_+=strlen(messageOut_);
+      messageOut_+=strlen(messageOut_);
+    } 
   }
   return *this;
 }
 OsiMessageHandler & 
 OsiMessageHandler::operator<< (double doublevalue)
 {
-  if (skip_)
+  if (printStatus_==3)
     return *this; // not doing this message
   doubleValue_[numberDoubleFields_++] = doublevalue;
-  if (part_>=0) {
+  if (printStatus_<2) {
     if (format_) {
       //format is at % (but changed to 0)
       *format_='%';
       char * next = nextPerCent(format_+1);
-      if (next) 
-	*next=0;
       // could check
-      sprintf(messageOut_,format_,doublevalue);
+      if (!printStatus_) {
+	sprintf(messageOut_,format_,doublevalue);
+	messageOut_+=strlen(messageOut_);
+      }
       format_=next;
     } else {
       sprintf(messageOut_," %g",doublevalue);
-    } /* endif */
-    messageOut_+=strlen(messageOut_);
+      messageOut_+=strlen(messageOut_);
+    } 
   }
   return *this;
 }
 OsiMessageHandler & 
 OsiMessageHandler::operator<< (std::string stringvalue)
 {
-  if (skip_)
+  if (printStatus_==3)
     return *this; // not doing this message
   stringValue_[numberStringFields_++] = stringvalue;
-  if (part_>=0) {
+  if (printStatus_<2) {
     if (format_) {
       //format is at % (but changed to 0)
       *format_='%';
       char * next = nextPerCent(format_+1);
-      if (next) 
-	*next=0;
       // could check
-      sprintf(messageOut_,format_,stringvalue.c_str());
+      if (!printStatus_) {
+	sprintf(messageOut_,format_,stringvalue.c_str());
+	messageOut_+=strlen(messageOut_);
+      }
       format_=next;
     } else {
       sprintf(messageOut_," %s",stringvalue.c_str());
-    } /* endif */
-    messageOut_+=strlen(messageOut_);
+      messageOut_+=strlen(messageOut_);
+    } 
   }
   return *this;
 }
 OsiMessageHandler & 
 OsiMessageHandler::operator<< (char charvalue)
 {
-  if (skip_)
+  if (printStatus_==3)
     return *this; // not doing this message
   intValue_[numberCharFields_++] = charvalue;
-  if (part_>=0) {
+  if (printStatus_<2) {
     if (format_) {
       //format is at % (but changed to 0)
       *format_='%';
       char * next = nextPerCent(format_+1);
-      if (next) 
-	*next=0;
       // could check
-      sprintf(messageOut_,format_,charvalue);
+      if (!printStatus_) {
+	sprintf(messageOut_,format_,charvalue);
+	messageOut_+=strlen(messageOut_);
+      }
       format_=next;
     } else {
       sprintf(messageOut_," %c",charvalue);
-    } /* endif */
-    messageOut_+=strlen(messageOut_);
+      messageOut_+=strlen(messageOut_);
+    } 
   }
   return *this;
 }
 OsiMessageHandler & 
 OsiMessageHandler::operator<< (const char *stringvalue)
 {
-  if (skip_)
+  if (printStatus_==3)
     return *this; // not doing this message
   stringValue_[numberStringFields_++] = stringvalue;
-  if (part_>=0) {
+  if (printStatus_<2) {
     if (format_) {
       //format is at % (but changed to 0)
       *format_='%';
       char * next = nextPerCent(format_+1);
-      if (next) 
-	*next=0;
       // could check
-      sprintf(messageOut_,format_,stringvalue);
+      if (!printStatus_) {
+	sprintf(messageOut_,format_,stringvalue);
+	messageOut_+=strlen(messageOut_);
+      }
       format_=next;
     } else {
       sprintf(messageOut_," %s",stringvalue);
-    } /* endif */
-    messageOut_+=strlen(messageOut_);
+      messageOut_+=strlen(messageOut_);
+    } 
   }
   return *this;
 }
 OsiMessageHandler & 
 OsiMessageHandler::operator<< (OsiMessageMarker marker)
 {
-  if (!skip_) {
+  if (printStatus_!=3) {
     switch (marker) {
     case OsiMessageEol:
       finish();
@@ -614,17 +669,7 @@ OsiMessageHandler::operator<< (OsiMessageMarker marker)
   }
   return *this;
 }
-// Positions to part n
-OsiMessageHandler & 
-OsiMessageHandler::messageSection(int part)
-{
-  if (skip_)
-    return *this; // not doing this message
-  part_=part;
-  format_ = currentMessage_.message_[part];
-  format_ = nextPerCent(format_,true);
-  return *this;
-}
+
 // returns current 
 OsiMessageHandler & 
 OsiMessageHandler::message()

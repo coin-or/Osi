@@ -35,6 +35,7 @@ static Osi_message us_english[]=
  which zlib is unable to read"},
   {OSI_MPS_EOF,6004,0,"EOF on file %s"},
   {OSI_MPS_RETURNING,6005,0,"Returning as too many errors"},
+  {OSI_SOLVER_MPS,8,1,"%s read with %d errors"},
   {OSI_DUMMY_END,999999,0,""}
 };
 // **** aiutami!
@@ -51,17 +52,12 @@ OsiOsiMessage::OsiOsiMessage(Language language) :
   language_=language;
   strcpy(source_,"Osi");
   Osi_message * message = us_english;
-  const char * messages[MAXMESSAGE];
 
   while (message->internalNumber!=OSI_DUMMY_END) {
-    int numberParts=1;
-    messages[0]=message[0].message;
-    while(message[numberParts].internalNumber==OSI_CONTINUATION) 
-      messages[numberParts]=message[numberParts++].message;
-    OsiOneMessage oneMessage(message[0].externalNumber,message[0].detail,
-		numberParts, messages);
-    addMessage(message[0].internalNumber,oneMessage);
-    message += numberParts;
+    OsiOneMessage oneMessage(message->externalNumber,message->detail,
+		message->message);
+    addMessage(message->internalNumber,oneMessage);
+    message ++;
   }
 
   // now override any language ones
@@ -79,13 +75,8 @@ OsiOsiMessage::OsiOsiMessage(Language language) :
   // replace if any found
   if (message) {
     while (message->internalNumber!=OSI_DUMMY_END) {
-      int numberParts=1;
-      messages[0]=message[0].message;
-      while(message[numberParts].internalNumber==OSI_CONTINUATION) 
-	messages[numberParts]=message[numberParts++].message;
-      replaceMessage(message[0].internalNumber,
-		     numberParts, messages);
-      message += numberParts;
+      replaceMessage(message->internalNumber,message->message);
+      message ++;
     }
   }
 }

@@ -1,6 +1,5 @@
 // Copyright (C) 2000, International Business Machines
 // Corporation and others.  All Rights Reserved.
-#ifdef COIN_USE_VOL
 
 #include <cassert>
 
@@ -25,4 +24,3 @@ OsiVolSolverInterfaceUnitTest(const std::string & mpsDir)
   }
 
 }
-#endif

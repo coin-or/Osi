@@ -1,7 +1,6 @@
 // Copyright (C) 2000, International Business Machines
 // Corporation and others.  All Rights Reserved.
 
-#ifdef COIN_USE_VOL
 #ifndef OsiVolSolverInterface_H
 #define OsiVolSolverInterface_H
 
@@ -829,5 +828,4 @@ private:
 void
 OsiVolSolverInterfaceUnitTest(const std::string & mpsDir);
 
-#endif
 #endif

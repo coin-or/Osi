@@ -3,9 +3,6 @@
 // Corporation and others.  All Rights Reserved.
 //-----------------------------------------------------------------------------
 
-
-#ifdef COIN_USE_DYLP
-
 #if defined(_MSC_VER)
 
 /* Turn off compiler warning about long names */
@@ -97,6 +94,3 @@ void OsiDylpSolverInterfaceUnitTest (const std::string& mpsDir)
   std::cout << "\n dylp tests completed." ;
 
   return ; }
-
-#endif // COIN_USE_DYLP
-

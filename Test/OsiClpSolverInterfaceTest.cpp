@@ -1,6 +1,6 @@
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
-#ifdef COIN_USE_CLP
+
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
@@ -755,7 +755,4 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir)
     OsiClpSolverInterface m;
     OsiSolverInterfaceCommonUnitTest(&m, mpsDir);
   }
-
-
 }
-#endif

@@ -9,7 +9,7 @@
 //-----------------------------------------------------------------------------
 // Copyright (C) 2000, Tobias Pfender, International Business Machines
 // Corporation and others.  All Rights Reserved.
-#ifdef COIN_USE_CPX
+
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
@@ -787,4 +787,3 @@ void OsiCpxSolverInterfaceUnitTest( const std::string & mpsDir )
     OsiSolverInterfaceCommonUnitTest(&m, mpsDir);
   }
 }
-#endif

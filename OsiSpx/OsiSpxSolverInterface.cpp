@@ -8,7 +8,7 @@
 //-----------------------------------------------------------------------------
 // Copyright (C) 2002, Tobias Pfender, International Business Machines
 // Corporation and others.  All Rights Reserved.
-#ifdef COIN_USE_SPX
+
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
@@ -1502,5 +1502,3 @@ void OsiSpxSolverInterface::freeAllMemory()
   spxsolver_.clear();
   spxintvars_.clear();
 }
-
-#endif

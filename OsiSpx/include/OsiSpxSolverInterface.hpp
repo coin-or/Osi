@@ -9,7 +9,7 @@
 //-----------------------------------------------------------------------------
 // Copyright (C) 2002, Tobias Pfender, International Business Machines
 // Corporation and others.  All Rights Reserved.
-#ifdef COIN_USE_SPX
+
 #ifndef OsiSpxSolverInterface_H
 #define OsiSpxSolverInterface_H
 
@@ -705,5 +705,4 @@ private:
     compiled with debugging. */
 void OsiSpxSolverInterfaceUnitTest(const std::string & mpsDir);
 
-#endif
 #endif

@@ -19,9 +19,6 @@ export MakefileDir := $(CoinDir)/Common/make
 include ${MakefileDir}/Makefile.coin
 include ${MakefileDir}/Makefile.location
 
-OsiIncDir := $(CoinDir)/include
-OsiLibDir := $(CoinDir)/lib
-
 export ExtraIncDir := ${OslIncDir} ${OsiIncDir}
 export ExtraLibDir := ${OslLibDir} ${OsiLibDir}
 export ExtraLibName := ${OslLibName} ${OsiLibName}

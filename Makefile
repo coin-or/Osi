@@ -1,11 +1,22 @@
+# Comment in the libraries you want to build besides libOsi.
+
+SOLVERLIBS :=
 SOLVERLIBS += libOsiOsl
 SOLVERLIBS += libOsiVol
-#SOLVERLIBS += libOsiClp
-#LIBS += osicpx
-#LIBS += osiclp
-#LIBS += osispx
-#LIBS += osixpr
-#LIBS += osidylp
+SOLVERLIBS += libOsiClp
+# SOLVERLIBS += libOsiCpx
+# SOLVERLIBS += libOsiSpx
+# SOLVERLIBS += libOsiXpr
+# SOLVERLIBS += libOsiDylp
+
+# Look at and if necessary edit the following files:
+# - ../Common/make/Makefile.location
+# - Makefile.Osi 
+# - Osi*/Makefile for the libs you have specified above
+
+###############################################################################
+
+export SOLVERLIBS
 
 .DELETE_ON_ERROR:
 

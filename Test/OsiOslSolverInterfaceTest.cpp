@@ -1,6 +1,6 @@
 // Copyright (C) 2000, International Business Machines
 // Corporation and others.  All Rights Reserved.
-#ifdef COIN_USE_OSL
+
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
@@ -1299,4 +1299,3 @@ OsiOslSolverInterfaceUnitTest(const std::string & mpsDir)
   assert(OsiOslSolverInterface::getNumInstances()==0);
 
 }
-#endif

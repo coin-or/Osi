@@ -10,7 +10,7 @@
 //-----------------------------------------------------------------------------
 // Copyright (C) 2000, Tobias Pfender, International Business Machines
 // Corporation and others.  All Rights Reserved.
-#ifdef COIN_USE_CPX
+
 #ifndef OsiCpxSolverInterface_H
 #define OsiCpxSolverInterface_H
 
@@ -776,5 +776,4 @@ private:
     compiled with debugging. */
 void OsiCpxSolverInterfaceUnitTest(const std::string & mpsDir);
 
-#endif
 #endif

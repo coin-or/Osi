@@ -6,6 +6,16 @@ LibType := SHARED
 # between then specify the exact level you want, e.g., -O1 or -O2
 OptLevel := -O
 
+# Set whether you have zlib/bzlib installed and if so whether you want
+# the MpsReader to be able to read compressed files.
+export zlibDefine := COIN_USE_ZLIB
+# export bzlibDefine := COIN_USE_BZLIB
+
+# Look at the ${CoinDir}/Common/make/Makefile.location file and edit
+# the location of the various libraries
+
+##############################################################################
+# You should not need to edit below this line.
 ###############################################################################
 
 LIBNAME := Osi
@@ -36,20 +46,29 @@ LIBSRC += OsiSolverInterface.cpp
 LIBSRC += OsiWarmStartBasis.cpp
 
 ##############################################################################
-# You should not need to edit below this line.
-##############################################################################
 # The location of the customized Makefiles
-export MakefileDir := ../Common/make
+export MakefileDir := {CoinDir}/Common/make
 include ${MakefileDir}/Makefile.coin
 include ${MakefileDir}/Makefile.location
 
-export OsiIncDir := ../include
-export OsiLibDir := ../lib
+export ExtraIncDir  :=
+export ExtraLibDir  :=
+export ExtraLibName :=
+export ExtraDefine  :=
 
-export ExtraIncDir := ${zlibIncDir} ${bzlibIncDir}
-export ExtraLibDir := ${zlibLibDir} ${bzlibLibDir}
-export ExtraLibName := ${zlibLibName} ${bzlibLibName}
-export ExtraDefine := ${zlibDefine} ${bzlibDefine}
+ifeq ($(findstring COIN_USE_ZLIB,$zlibDefine),COIN_USE_ZLIB)
+    export ExtraIncDir  += ${zlibIncDir} ${bzlibIncDir}
+    export ExtraLibDir  += ${zlibLibDir} ${bzlibLibDir}
+    export ExtraLibName += ${zlibLibName} ${bzlibLibName}
+    export ExtraDefine  += ${zlibDefine} ${bzlibDefine}
+endif
+
+ifeq ($(findstring COIN_USE_BZLIB,$bzlibDefine),COIN_USE_BZLIB)
+    export ExtraIncDir  += ${bzlibIncDir}
+    export ExtraLibDir  += ${bzlibLibDir}
+    export ExtraLibName += ${bzlibLibName}
+    export ExtraDefine  += ${bzlibDefine}
+endif
 
 export LibType OptLevel LIBNAME LIBSRC
 

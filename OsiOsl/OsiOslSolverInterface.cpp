@@ -1,6 +1,6 @@
 // Copyright (C) 2000, International Business Machines
 // Corporation and others.  All Rights Reserved.
-#ifdef COIN_USE_OSL
+
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
@@ -8,6 +8,7 @@
 
 #include <cassert>
 
+#include "OsiPackedMatrix.hpp"
 #include "OsiOslSolverInterface.hpp"
 #include "OsiCuts.hpp"
 #include "OsiRowCut.hpp"
@@ -1654,4 +1655,3 @@ void OsiOslSolverInterface::extractSenseRhsRange() const
 }
 
 //#############################################################################
-#endif

@@ -3,8 +3,6 @@
 // Corporation and others.  All Rights Reserved.
 //-----------------------------------------------------------------------------
 
-#ifdef COIN_USE_DYLP
-
 #if defined(_MSC_VER)
 
 /* Turn off compiler warning about long names */
@@ -3680,5 +3678,3 @@ void ODSI::dylp_logfile (const char *name, bool echo)
   local_gtxecho = echo ; }
 
 //@} // DylpMethods
-
-#endif /* COIN_USE_DYLP */

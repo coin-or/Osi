@@ -1,6 +1,6 @@
 // Copyright (C) 2000, International Business Machines
 // Corporation and others.  All Rights Reserved.
-#ifdef COIN_USE_XPR
+
 #ifndef OsiXprSolverInterface_H
 #define OsiXprSolverInterface_H
 
@@ -774,5 +774,4 @@ private:
 void
 OsiXprSolverInterfaceUnitTest(const std::string & mpsDir);
 
-#endif
 #endif

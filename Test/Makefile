@@ -11,52 +11,82 @@ export MakefileDir := $(CoinDir)/Common/make
 include ${MakefileDir}/Makefile.coin
 include ${MakefileDir}/Makefile.location
 
-IncDir :=
-IncDir += ${OsiSolverIncDir}
-IncDir += ${OsiIncDir}
-IncDir += ${OslIncDir}
-IncDir += ${VolIncDir}
-IncDir += ${CpxIncDir}
-IncDir += ${SpxIncDir}
-IncDir += ${XprIncDir}
-IncDir += ${ClpIncDir}
-IncDir += ${zlibIncDir}
-IncDir += ${bzlibIncDir}
+IncDir  := ${OsiIncDir}
+LibDir  := ${OsiLibDir}
+LibName := ${OsiLibName}
+Define  :=
+TESTSRC :=
 
-LibDir :=
-LibDir += ${OsiSolverLibDir}
-LibDir += ${OsiLibDir}
-LibDir += ${OslLibDir}
-LibDir += ${VolLibDir}
-LibDir += ${CpxLibDir}
-LibDir += ${SpxLibDir}
-LibDir += ${XprLibDir}
-LibDir += ${ClpLibDir}
-LibDir += ${zlibLibDir}
-LibDir += ${bzlibLibDir}
+ifeq ($(findstring libOsiClp,${SOLVERLIBS}),libOsiClp)
+    IncDir += ${ClpIncDir}
+    LibDir += ${ClpLibDir}
+    LibName += ${ClpLibName} libOsiClp.so
+    Define += COIN_USE_CLP
+    TESTSRC += OsiClpSolverInterfaceTest.cpp
+endif
 
-LibName :=
-LibName += ${OsiSolverLibName}
-LibName += ${OsiLibName}
-LibName += ${OslLibName}
-LibName += ${VolLibName}
-LibName += ${CpxLibName}
-LibName += ${SpxLibName}
-LibName += ${XprLibName}
-LibName += ${ClpLibName}
-LibName += ${zlibLibName}
-LibName += ${bzlibLibName}
+ifeq ($(findstring libOsiCpx,${SOLVERLIBS}),libOsiCpx)
+    IncDir += ${CpxIncDir}
+    LibDir += ${CpxLibDir}
+    LibName += ${CpxLibName} libOsiCpx.so
+    Define += COIN_USE_CPX
+    TESTSRC += OsiCpxSolverInterfaceTest.cpp
+endif
 
-Define :=
-Define += ${OslDefine}
-Define += ${VolDefine}
-Define += ${CpxDefine}
-Define += ${SpxDefine}
-Define += ${XprDefine}
-Define += ${ClpDefine}
-Define += ${OsiDefine}
-Define += ${zlibDefine}
-Define += ${bzlibDefine}
+ifeq ($(findstring libOsiDylp,${SOLVERLIBS}),libOsiDylp)
+    IncDir += ${DylpIncDir}
+    LibDir += ${DylpLibDir}
+    LibName += ${DylpLibName} libOsiDylp.so
+    Define += COIN_USE_DYLP
+    TESTSRC += OsiDylpSolverInterfaceTest.cpp
+endif
+
+ifeq ($(findstring libOsiOsl,${SOLVERLIBS}),libOsiOsl)
+    IncDir += ${OslIncDir}
+    LibDir += ${OslLibDir}
+    LibName += ${OslLibName} libOsiOsl.so
+    Define += COIN_USE_OSL
+    TESTSRC += OsiOslSolverInterfaceTest.cpp
+endif
+
+ifeq ($(findstring libOsiSpx,${SOLVERLIBS}),libOsiSpx)
+    IncDir += ${SpxIncDir}
+    LibDir += ${SpxLibDir}
+    LibName += ${SpxLibName} libOsiSpx.so
+    Define += COIN_USE_SPX
+    TESTSRC += OsiSpxSolverInterfaceTest.cpp
+endif
+
+ifeq ($(findstring libOsiVol,${SOLVERLIBS}),libOsiVol)
+    IncDir += ${VolIncDir}
+    LibDir += ${VolLibDir}
+    LibName += ${VolLibName} libOsiVol.so
+    Define += COIN_USE_VOL
+    TESTSRC += OsiVolSolverInterfaceTest.cpp
+endif
+
+ifeq ($(findstring libOsiXpr,${SOLVERLIBS}),libOsiXpr)
+    IncDir += ${XprIncDir}
+    LibDir += ${XprLibDir}
+    LibName += ${XprLibName} libOsiXpr.so
+    Define += COIN_USE_XPR
+    TESTSRC += OsiXprSolverInterfaceTest.cpp
+endif
+
+##############################################################################
+
+TESTSRC += OsiColCutTest.cpp
+TESTSRC += OsiCutsTest.cpp
+TESTSRC += OsiIndexedVectorTest.cpp
+TESTSRC += OsiMpsReaderTest.cpp
+TESTSRC += OsiPackedMatrixTest.cpp
+TESTSRC += OsiPackedVectorTest.cpp
+TESTSRC += OsiRowCutDebuggerTest.cpp
+TESTSRC += OsiRowCutTest.cpp
+TESTSRC += OsiShallowPackedVectorTest.cpp
+TESTSRC += OsiTripleCompareTest.cpp
+TESTSRC += OsiSolverInterfaceTest.cpp
+TESTSRC += unitTest.cpp
 
 ##############################################################################
 # You should not need to edit below this line.
@@ -77,6 +107,9 @@ DEPDIR := dep
 
 VPATH := . : include : Junk : ${TARGETDIR} : ${DEPDIR}
 
+TESTOBJ := $(addprefix $(TARGETDIR)/, $(TESTSRC:.cpp=.o))
+TESTDEP := $(addprefix $(DEPDIR)/, $(TESTSRC:.cpp=.d))
+
 #########################################################################
 
 CXXFLAGS += $(addprefix -I,${IncDir})
@@ -88,12 +121,6 @@ LIBS    := ${LibName}
 LDFLAGS := $(addprefix -L,$(LIBDIRS))
 LDFLAGS += $(call ifprefix,$(SHLINKPREFIX),$(LIBDIRS))
 LDFLAGS += $(patsubst lib%,-l%,$(basename $(LIBS)))
-
-###############################################################################
-
-TESTSRC := $(wildcard *Test.cpp)
-TESTOBJ := $(addprefix $(TARGETDIR)/, $(TESTSRC:.cpp=.o))
-TESTDEP := $(addprefix $(DEPDIR)/, $(TESTSRC:.cpp=.d))
 
 ###############################################################################
 # This one must be right before the rules

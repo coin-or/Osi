@@ -1,6 +1,5 @@
 // Copyright (C) 2001, International Business Machines
 // Corporation and others.  All Rights Reserved.
-#ifdef COIN_USE_VOL
 
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
@@ -431,5 +430,3 @@ OsiVolSolverInterface::writeMps(const char *filename,
   si->writeMps(fname, extension);
   delete si;
 }
-
-#endif

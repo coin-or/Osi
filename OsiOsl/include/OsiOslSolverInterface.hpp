@@ -1,6 +1,5 @@
 // Copyright (C) 2000, International Business Machines
 // Corporation and others.  All Rights Reserved.
-#ifdef COIN_USE_OSL
 
 #ifndef _OsiOslSolverInterface_hpp_
 #define _OsiOslSolverInterface_hpp_
@@ -715,5 +714,4 @@ private:
 void
 OsiOslSolverInterfaceUnitTest(const std::string & mpsDir);
 
-#endif
 #endif

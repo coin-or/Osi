@@ -1,7 +1,6 @@
 // Copyright (C) 2000, International Business Machines
 // Corporation and others.  All Rights Reserved.
 
-#ifdef COIN_USE_CLP
 #ifndef OsiClpSolverInterface_H
 #define OsiClpSolverInterface_H
 
@@ -671,5 +670,4 @@ private:
 void
 OsiClpSolverInterfaceUnitTest(const std::string & mpsDir);
 
-#endif
 #endif

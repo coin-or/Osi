@@ -1,6 +1,5 @@
 // Copyright (C) 2000, International Business Machines
 // Corporation and others.  All Rights Reserved.
-#ifdef COIN_USE_VOL
 
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
@@ -1351,5 +1350,3 @@ OsiVolSolverInterface::applyColCut(const OsiColCut& cc)
 }
 
 //#############################################################################
-
-#endif

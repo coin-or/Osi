@@ -15,6 +15,7 @@ LIBSRC += OsiVolSolverInterfaceIO.cpp
 ##############################################################################
 # You should not need to edit below this line.
 ##############################################################################
+
 # The location of the customized Makefiles
 export MakefileDir := $(CoinDir)/Common/make
 include ${MakefileDir}/Makefile.coin
@@ -29,6 +30,21 @@ export ExtraLibName := ${VolLibName} ${OsiLibName}
 export ExtraDefine := ${VolDefine}
 
 export LibType OptLevel LIBNAME LIBSRC
+
+# Until there's an OsiMpsWriter class we need to play this hocus-pocus
+
+ifeq ($(findstring libOsiOsl,${SOLVERLIBS}),libOsiOsl)
+    ExtraDefine += COIN_USE_OSL
+endif
+ifeq ($(findstring libOsiCpx,${SOLVERLIBS}),libOsiCpx)
+    ExtraDefine += COIN_USE_CPX
+endif
+ifeq ($(findstring libOsiXpr,${SOLVERLIBS}),libOsiXpr)
+    ExtraDefine += COIN_USE_XPR
+endif
+ifeq ($(findstring libOsiSpx,${SOLVERLIBS}),libOsiSpx)
+    ExtraDefine += COIN_USE_SPX
+endif
 
 ###############################################################################
 

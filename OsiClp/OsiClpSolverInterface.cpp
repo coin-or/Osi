@@ -748,20 +748,27 @@ OsiClpSolverInterface::setRowSetTypes(const int* indexFirst,
   const int len = indexLast - indexFirst;
   while (indexFirst != indexLast) {
     const int iRow= *indexFirst++;
-    convertSenseToBound(*senseList++, *rhsList++, *rangeList++,
-			lower[iRow], upper[iRow]);
+      if (rangeList){
+	convertSenseToBound(*senseList++, *rhsList++, *rangeList++,
+			    lower[iRow], upper[iRow]);
+      } else {
+	convertSenseToBound(*senseList++, *rhsList++, 0,
+			    lower[iRow], upper[iRow]);
+      }
   }
   if (rowsense_ != NULL) {
     assert ((rhs_ != NULL) && (rowrange_ != NULL));
     indexFirst -= len;
     senseList -= len;
     rhsList -= len;
-    rangeList -= len;
+    if (rangeList)
+       rangeList -= len;
     while (indexFirst != indexLast) {
       const int iRow=*indexFirst++;
       rowsense_[iRow] = *senseList++;
       rhs_[iRow] = *rhsList++;
-      rowrange_[iRow] = *rangeList++;
+      if (rangeList)
+	 rowrange_[iRow] = *rangeList++;
     }
   }
 }

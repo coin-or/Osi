@@ -184,7 +184,15 @@ void OsiCpxSolverInterface::initialSolve()
 
   CPXLPptr lp = getLpPtr( OsiCpxSolverInterface::FREECACHED_RESULTS );
 
-  CPXprimopt( env_, lp );
+  int term = CPXprimopt( env_, lp );
+
+  /* If the problem is found infeasible during presolve, resolve it to get a 
+     proper term code */
+  if (term == CPXERR_PRESLV_INForUNBD){
+    CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_OFF );
+    CPXprimopt( env_, lp );
+    cpx_status = CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_ON );
+  }
 }
 //-----------------------------------------------------------------------------
 void OsiCpxSolverInterface::resolve()
@@ -200,9 +208,9 @@ void OsiCpxSolverInterface::resolve()
   /* If the problem is found infeasible during presolve, resolve it to get a 
      proper term code */
   if (term == CPXERR_PRESLV_INForUNBD){
-    CPXsetintparam(lp_data->cpxenv, CPX_PARAM_PREIND, CPX_OFF);
-    CPXdualopt(lp_data->cpxenv, lp_data->lp);
-    cpx_status = CPXsetintparam(lp_data->cpxenv, CPX_PARAM_PREIND, CPX_ON);
+    CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_OFF );
+    CPXdualopt( env_, lp );
+    cpx_status = CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_ON );
   }
 }
 //-----------------------------------------------------------------------------
@@ -467,7 +475,7 @@ bool OsiCpxSolverInterface::isProvenDualInfeasible() const
   // In CPLEX 8, the return code is with respect
   // to the original problem, regardless of the algorithm used to solve it
   // --tkr 7/31/03
-  return (stat == CPX_UNBOUNDED)
+  return (stat == CPX_STAT_UNBOUNDED)
   //return (method == CPX_ALG_PRIMAL && stat == CPX_STAT_UNBOUNDED || 
   //	  method == CPX_ALG_DUAL && stat == CPX_STAT_INFEASIBLE);
 #else

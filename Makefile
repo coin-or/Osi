@@ -81,7 +81,7 @@ LIBDIRS := $(DETECTLIBDIRS) $(InstallDir)/lib
 LIBS    := libosi.so $(DETECTLIBNAMES)
 
 LDFLAGS := $(addprefix -L,$(LIBDIRS))
-LDFLAGS += $(addprefix $(SHLINKPREFIX),$(LIBDIRS))
+LDFLAGS += $(call ifprefix,$(SHLINKPREFIX),$(LIBDIRS))
 LDFLAGS += $(patsubst lib%,-l%,$(basename $(LIBS)))
 
 ###############################################################################

@@ -148,7 +148,10 @@ public:
   
       /// Get number of nonzero elements
       virtual int getNumElements() const {
-        return modelPtr_->matrix()->getNumElements(); }
+        int retVal = 0;
+        const CoinPackedMatrix * matrix =modelPtr_->matrix();
+        if ( matrix != NULL ) retVal=matrix->getNumElements();
+        return retVal; }
 
       /// Get pointer to array[getNumCols()] of column lower bounds
       virtual const double * getColLower() const { return modelPtr_->columnLower(); }

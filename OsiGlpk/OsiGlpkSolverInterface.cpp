@@ -1015,7 +1015,7 @@ const CoinPackedMatrix * OsiGlpkSolverInterface::getMatrixByRow() const
 	        LPX *model = getMutableModelPtr();
 
 		matrixByRow_ = new CoinPackedMatrix();
-		matrixByRow_->transpose();
+		matrixByRow_->transpose();  // converts to row-order
 		matrixByRow_->setDimensions( 0, getNumCols() );
 
 		int numcols = getNumCols();
@@ -1030,18 +1030,9 @@ const CoinPackedMatrix * OsiGlpkSolverInterface::getMatrixByRow() const
 			{
 				--colind[j];
 			}
-			// ???
-			/*THIS IS A MAJOR HACK, FIND OUT WHY COPY NOT WORKING*/
-#if 0
-			for(j=1;j<=colsize/2;j++){
-				int tempind=colind[j];
-				colind[j]=colind[colsize-j+1];
-				colind[colsize-j+1]=tempind;
-				double tempelem=colelem[j];
-				colelem[j]=colelem[colsize-j+1];
-				colelem[colsize-j+1]=tempelem;
-			}
-#endif
+			// Note:  lpx_get_mat_row apparently may return the
+			// elements in decreasing order.  This differs from
+			// people's standard expectations but is not an error.
 
 			matrixByRow_->appendRow( colsize, colind+1, colelem+1 );
 		}
@@ -1688,13 +1679,13 @@ OsiGlpkSolverInterface::addCols(const int numcols,
 void
 OsiGlpkSolverInterface::deleteCols(const int num, const int * columnIndices)
 {
-	int columnIndicesPlus1[num];
+	int columnIndicesPlus1[num+1];
         LPX *model = getMutableModelPtr();
 	freeCachedData( OsiGlpkSolverInterface::KEEPCACHED_ROW );
 
 	for( int i = 0; i < num; i++ )
 	{
-		columnIndicesPlus1[i]=columnIndices[i]+1;
+		columnIndicesPlus1[i+1]=columnIndices[i]+1;
 	}
 	lpx_del_cols(model,num,columnIndicesPlus1);
 }
@@ -2230,8 +2221,9 @@ void OsiGlpkSolverInterface::gutsOfCopy( const OsiGlpkSolverInterface & source )
 	}
 
 	// Set Solution
+
 	// In this case, it's easier to use GLPK's own functions than
-	// to go through COIN/OSI interface
+	// to go through COIN/OSI interface.
 	LPX *srcmodel = source.getMutableModelPtr();
 	LPX *model = getMutableModelPtr();
 	int tagx;
@@ -2246,6 +2238,10 @@ void OsiGlpkSolverInterface::gutsOfCopy( const OsiGlpkSolverInterface & source )
 	    tagx=lpx_get_row_stat(srcmodel,j);
 	    lpx_set_row_stat( model, j, tagx );
 	  }
+
+	// In case the cache is different, we'll use setColSolution
+	setColSolution(source.getColSolution());
+	setRowPrice(source.getRowPrice());
 
 	// Now we have GLPK construct the basis so it has solution values
 	lpx_warm_up( model );

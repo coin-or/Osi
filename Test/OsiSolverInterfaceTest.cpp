@@ -13,6 +13,7 @@
 #include <cassert>
 #include <vector>
 #include <iostream>
+#include <sstream>
 #include <cstdio>
 
 #include "OsiSolverInterface.hpp"
@@ -1306,8 +1307,10 @@ void OsiSolverInterfaceMpsUnitTest
       vecSiP[i] = vecEmptySiP[i]->clone() ;
       
       vecSiP[i]->getStrParam(OsiSolverName,siName[i]);
-      
-#     ifdef COIN_USE_DYLP
+/* 
+  REMOVE ME
+
+  #     ifdef COIN_USE_DYLP
       { 
         OsiDylpSolverInterface * si =
           dynamic_cast<OsiDylpSolverInterface *>(vecSiP[i]) ;
@@ -1322,7 +1325,8 @@ void OsiSolverInterfaceMpsUnitTest
           }
         }
       }
-#     endif
+  #     endif
+*/
       
       std::string fn = mpsDir+mpsName[m] ;
       vecSiP[i]->readMps(fn.c_str(),"mps") ;
@@ -1476,17 +1480,16 @@ void OsiSolverInterfaceMpsUnitTest
           }
         }
 #     endif
-        
-#     ifdef COIN_USE_DYLP
+
+/*
+  #     ifdef COIN_USE_DYLP
         { 
           OsiDylpSolverInterface * si =
             dynamic_cast<OsiDylpSolverInterface *>(vecSiP[i]) ;
           if (si != NULL )  { 
             // Solver is DYLP.
             // Skip over netlib cases that DYLP struggles with
-            if ( mpsName[m]=="forplan" ) {
-              continue;
-            }
+	    if ( mpsName[m]=="forplan" ) { continue; }
             // Does not converge to solution after many hours run time for pilot
             if ( mpsName[m]=="pilot" ) {
               failureMessage(siName[i],"skipping pilot. does not solve after many hours on windows");
@@ -1499,7 +1502,8 @@ void OsiSolverInterfaceMpsUnitTest
             }
           }
         }
-#     endif
+  #     endif
+*/
         
         vecSiP[i]->initialSolve() ;
         
@@ -1584,6 +1588,9 @@ static bool testDblParam(OsiSolverInterface * si, int k, double val)
   return ret;
 }
 
+/*
+  Original model
+
 static bool testHintParam(OsiSolverInterface * si, int k, bool val,
 			  OsiHintStrength strength)
 {
@@ -1599,6 +1606,69 @@ static bool testHintParam(OsiSolverInterface * si, int k, bool val,
   }
   return ret;
 }
+*/
+
+static bool testHintParam(OsiSolverInterface * si, int k, bool sense,
+			  OsiHintStrength strength, int *throws)
+/*
+  Tests for proper behaviour of [set,get]HintParam methods. The initial get
+  tests the return value to see if the hint is implemented; the values
+  returned for sense and strength are not checked.
+  
+  If the hint is implemented, a pair of set/get calls is performed at the
+  strength specified by the parameter. The set can return true or, at
+  strength OsiForceDo, throw an exception if the solver cannot comply. The
+  rationale would be that only OsiForceDo must be obeyed, so anything else
+  should return true regardless of whether the solver followed the hint.
+
+  The test checks that the value and strength returned by getHintParam matches
+  the previous call to setHintParam. This is arguably wrong --- one can argue
+  that it should reflect the solver's ability to comply with the hint. But
+  that's how the OSI interface standard has evolved up to now.
+
+  If the hint is not implemented, attempting to set the hint should return
+  false, or throw an exception at strength OsiForceDo.
+
+  The testing code which calls testHintParam is set up so that a successful
+  return is defined as true if the hint is implemented, false if it is not.
+  Information printing is suppressed; uncomment and recompile if you want it.
+*/
+{ bool post_sense ;
+  OsiHintStrength post_strength ;
+  bool ret ;
+  OsiHintParam key = static_cast<OsiHintParam>(k) ;
+
+  if (si->getHintParam(key,post_sense,post_strength))
+  { ret = false ;
+    try
+    { if (si->setHintParam(key,sense,strength))
+      { ret = (si->getHintParam(key,post_sense,post_strength) == true) &&
+	      (post_strength == strength) && (post_sense == sense) ; } }
+    catch (CoinError &thrownErr)
+    { // std::ostringstream msg ;
+      // msg << "setHintParam throw for hint " << key << " sense " << sense <<
+      //      " strength " << strength ;
+      // failureMessage(*si,msg.str()) ;
+      // std::cerr << thrownErr.className() << "::" << thrownErr.methodName() <<
+      //	": " << thrownErr.message() << std::endl ;
+      (*throws)++ ;
+      ret = (strength == OsiForceDo) ; } }
+  else
+  { ret = true ;
+    try
+    { ret = si->setHintParam(key,sense,strength) ; }
+    catch (CoinError &thrownErr)
+    { // std::ostringstream msg ;
+      // msg << "setHintParam throw for hint " << key << " sense " << sense <<
+      //      " strength " << strength ;
+      // failureMessage(*si,msg.str()) ;
+      // std::cerr << thrownErr.className() << "::" << thrownErr.methodName() <<
+      //	": " << thrownErr.message() << std::endl ;
+      (*throws)++ ;
+      ret = !(strength == OsiForceDo) ; } }
+  
+  return ret ; }
+
 //#############################################################################
 //#############################################################################
 
@@ -1607,7 +1677,7 @@ CoinPackedMatrix &BuildExmip1Mtx ()
   Simple function to build a packed matrix for the exmip1 example used in
   tests. The function exists solely to hide the intermediate variables.
   Probably could be written as an initialised declaration.
-  See COIN/Mps/Samples/exmip1.mps for a human-readable presentation.
+  See COIN/Mps/Sample/exmip1.mps for a human-readable presentation.
 
   Ordered triples seem easiest. They're listed in row-major order.
 */
@@ -2998,18 +3068,27 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       }
     }
 
-    // test hints
-    for (i = 0; i < OsiLastHintParam; ++i) {
-      const bool exists = si->getHintParam(static_cast<OsiHintParam>(i),
-					   hint, hintStrength);
-      // existence and test should result in the same
-      assert(!exists ^ testHintParam(si, i, false, OsiHintTry));
-      assert(!exists ^ testHintParam(si, i, true, OsiHintDo));
-      assert(!exists ^ testHintParam(si, i, true, OsiHintIgnore));
-      if (exists)
-        assert(si->getHintParam(static_cast<OsiHintParam>(i), hint, 
-				hintStrength));
+    // test hints --- see testHintParam for detailed explanation.
+
+    { int throws = 0 ;
+
+      for (i = 0 ; i < OsiLastHintParam ; ++i)
+      { const bool exists =
+	  si->getHintParam(static_cast<OsiHintParam>(i),hint,hintStrength) ;
+
+	assert(!exists ^ testHintParam(si,i,true,OsiHintIgnore,&throws)) ;
+	assert(!exists ^ testHintParam(si,i,true,OsiHintTry,&throws)) ;
+	assert(!exists ^ testHintParam(si,i,false,OsiHintTry,&throws)) ;
+	assert(!exists ^ testHintParam(si,i,true,OsiHintDo,&throws)) ;
+	assert(!exists ^ testHintParam(si,i,false,OsiHintDo,&throws)) ;
+	assert(!exists ^ testHintParam(si,i,true,OsiForceDo,&throws)) ;
+	assert(!exists ^ testHintParam(si,i,false,OsiForceDo,&throws)) ; }
+      
+      std::cerr << "Checked " << OsiLastHintParam <<
+		   " hints x (true, false) at strength OsiForceDo; " <<
+		   throws << " throws." << std::endl ;
     }
+
     delete si;
   }
   

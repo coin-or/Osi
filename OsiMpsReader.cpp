@@ -15,6 +15,16 @@
 #include <stdio.h>
 #include <iostream>
 
+// define OSI_ZLIB if you want to be able to read compressed files!
+// Look at http://www.gzip.org/zlib/
+// zlib is due to Jean-loup Gailly and Mark Adler
+// It is not under CPL but zlib.h has the following
+// Permission is granted to anyone to use this software for any purpose,
+// including commercial applications, and to alter it and redistribute it
+#ifdef OSI_ZLIB
+#include "zlib.h"
+#endif
+
 /// The following lengths are in decreasing order (for 64 bit etc)
 /// Large enough to contain element index
 typedef int OSIElementIndex;
@@ -154,6 +164,10 @@ public:
   //@{
   /// Constructor expects file to be open - reads down to (and reads) NAME card
   OSIMpsio ( FILE * fp );
+#ifdef OSI_ZLIB
+  /// This one takes gzFile if fp null
+  OSIMpsio ( FILE * fp, gzFile fp );
+#endif
   /// Destructor
   ~OSIMpsio (  );
   //@}
@@ -217,6 +231,10 @@ private:
   char columnName_[MAX_FIELD_LENGTH];
   /// File pointer
   FILE *fp_;
+#ifdef OSI_ZLIB
+  /// Compressed file object
+  gzFile gzfp_;
+#endif
   /// Which section we think we are in
   OSISectionType section_;
   /// Card number
@@ -266,8 +284,17 @@ const static char *mpsTypes[] = {
 
 int OSIMpsio::cleanCard()
 {
-  //memset ( card_, 0, MAX_CARD_LENGTH );
-  char *getit = fgets ( card_, MAX_CARD_LENGTH, fp_ );
+  char * getit;
+#ifdef OSI_ZLIB
+  if (fp_) {
+    // normal file
+    getit = fgets ( card_, MAX_CARD_LENGTH, fp_ );
+  } else {
+#endif
+    getit = gzgets ( gzfp_, card_, MAX_CARD_LENGTH );
+#ifdef OSI_ZLIB
+  }
+#endif
   
   if ( getit ) {
     cardNumber_++;
@@ -291,15 +318,21 @@ int OSIMpsio::cleanCard()
 char *
 nextBlankOr ( char *image )
 {
-  bool blank = false;
-
-  while ( !blank ) {
+  char * saveImage=image;
+  while ( 1 ) {
     if ( *image == ' ' || *image == '\t' ) {
       break;
     }
     if ( *image == '\0' )
       return NULL;
     image++;
+  }
+  // Allow for floating - or +.  Will fail if user has that as row name!!
+  if (image-saveImage==1&&(*saveImage=='+'||*saveImage=='-')) {
+    while ( *image == ' ' || *image == '\t' ) {
+      image++;
+    }
+    image=nextBlankOr(image);
   }
   return image;
 }
@@ -366,10 +399,82 @@ OSIMpsio::OSIMpsio (  FILE * fp )
     }
   }
 }
+#ifdef OSI_ZLIB
+// This one takes gzFile if fp null
+OSIMpsio::OSIMpsio (  FILE * fp , gzFile gzFile)
+{
+  memset ( card_, 0, MAX_CARD_LENGTH );
+  position_ = card_;
+  eol_ = card_;
+  mpsType_ = OSI_UNKNOWN_MPS_TYPE;
+  memset ( rowName_, 0, MAX_FIELD_LENGTH );
+  memset ( columnName_, 0, MAX_FIELD_LENGTH );
+  value_ = 0.0;
+  fp_ = fp;
+  gzfp_ = gzFile;
+  section_ = OSI_EOF_SECTION;
+  cardNumber_ = 0;
+  freeFormat_ = false;
+  eightChar_ = true;
+  bool found = false;
 
+  while ( !found ) {
+    // need new image
+
+    if ( cleanCard() ) {
+      section_ = OSI_EOF_SECTION;
+      break;
+    }
+    if ( !strncmp ( card_, "NAME", 4 ) ) {
+      section_ = OSI_NAME_SECTION;
+      char *next = card_ + 4;
+
+      {
+	std::cout<<"At line "<< cardNumber_ <<" "<< card_<<std::endl;
+      }
+      while ( next != eol_ ) {
+	if ( *next == ' ' || *next == '\t' ) {
+	  next++;
+	} else {
+	  break;
+	}
+      }
+      if ( next != eol_ ) {
+	char *nextBlank = nextBlankOr ( next );
+	char save;
+
+	if ( nextBlank ) {
+	  save = *nextBlank;
+	  *nextBlank = '\0';
+	  strcpy ( columnName_, next );
+	  *nextBlank = save;
+	  if ( strstr ( nextBlank, "FREE" ) )
+	    freeFormat_ = true;
+	} else {
+	  strcpy ( columnName_, next );
+	}
+      } else {
+	strcpy ( columnName_, "no_name" );
+      }
+      break;
+    } else if ( card_[0] != '*' && card_[0] != '#' ) {
+      section_ = OSI_UNKNOWN_SECTION;
+      break;
+    }
+  }
+}
+#endif
 //  ~OSIMpsio.  Destructor
 OSIMpsio::~OSIMpsio (  )
 {
+#ifdef OSI_ZLIB
+  if (!fp_) {
+    // no fp_ so must be compressed read
+    gzclose(gzfp_);
+  }
+#endif
+  if (fp_)
+    fclose ( fp_ );
 }
 
 void
@@ -1014,17 +1119,38 @@ int OsiMpsReader::readMps(const char * filename,  const char * extension)
 int OsiMpsReader::readMps()
 {
   FILE *fp;
+  bool goodFile=false;
+#ifdef OSI_ZLIB
+  gzFile gzFile=NULL;
+#endif
   if (strcmp(fileName_,"stdin")) {
-    fp = fopen ( fileName_, "r" );
+#ifdef OSI_ZLIB
+    int length=strlen(fileName_);
+    if (!strcmp(fileName_+length-3,".gz")) {
+      gzFile = gzopen(fileName_,"rb");
+      fp = NULL;
+      goodFile = (gzFile!=NULL);
+    } else {
+#endif
+      fp = fopen ( fileName_, "r" );
+      goodFile = (fp!=NULL);
+#ifdef OSI_ZLIB
+    }
+#endif
   } else {
     fp = stdin;
+    goodFile = true;
   }
-  if (!fp) {
+  if (!goodFile) {
     std::cout << "Unable to open file " << fileName_ << std::endl;
     return -1;
   }
   bool ifmps;
+#ifdef OSI_ZLIB
+  OSIMpsio mpsfile ( fp , gzFile);
+#else
   OSIMpsio mpsfile ( fp );
+#endif
 
   if ( mpsfile.whichSection (  ) == OSI_NAME_SECTION ) {
     ifmps = true;
@@ -1033,7 +1159,13 @@ int OsiMpsReader::readMps()
     problemName_=strdup(mpsfile.columnName());
   } else if ( mpsfile.whichSection (  ) == OSI_UNKNOWN_SECTION ) {
     std::cout << "Unknown image " << mpsfile.
-      card (  ) << " at line 1 of file" << fileName_ << std::endl;
+      card (  ) << " at line 1 of file " << fileName_ << std::endl;
+#ifdef OSI_ZLIB
+    if (!fp) {
+      std::cout << "Consider the possibility of a compressed file "
+		<< "which zlib is unable to read" << std::endl;
+    }
+#endif
     return -2;
   } else if ( mpsfile.whichSection (  ) != OSI_EOF_SECTION ) {
     // save name of section
@@ -1802,7 +1934,6 @@ int OsiMpsReader::readMps()
 
   std::cout<<"Problem "<<problemName_<< " has " << numberRows_ << " rows, " << numberColumns_
 	   << " columns and " << numberElements_ << " elements" <<std::endl;
-  fclose ( fp );
   return numberErrors;
 }
 // Problem name

@@ -887,10 +887,9 @@ OsiFactorization::pivotRowSingleton ( int pivotRow,
   OsiBigIndex l = lengthL_;
 
   if ( l + numberDoColumn > lengthAreaL_ ) {
-    //need another area
-    std::cout << "code pivot 1" << std::endl;
-    //leave gap so starts will work
-    abort (  );
+    //need more memory
+    std::cout << "more memory needed in middle of invert" << std::endl;
+    return false;
   }				
   pivotRowL_[numberGoodL_] = pivotRow;
   startColumnL_[numberGoodL_] = l;	//for luck and first time
@@ -1645,10 +1644,9 @@ OsiFactorization::pivotOneOtherRow ( int pivotRow,
   OsiBigIndex l = lengthL_;
 
   if ( l + 1 > lengthAreaL_ ) {
-    //need another area
-    std::cout << "code pivot 1" << std::endl;
-    //leave gap so starts will work
-    abort (  );
+    //need more memory
+    std::cout << "more memory needed in middle of invert" << std::endl;
+    return false;
   }				
   //l+=currentAreaL_->elementByColumn-elementL_;
   //OsiBigIndex lSave=l;

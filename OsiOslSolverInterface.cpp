@@ -1322,7 +1322,7 @@ OsiOslSolverInterface::loadProblem(const int numcols, const int numrows,
    assert( rowrhs != NULL );
    double * rowlb = new double[numrows];
    double * rowub = new double[numrows];
-   for (int i = numrows; i >= 0; --i) {   
+   for (int i = numrows-1; i >= 0; --i) {   
       convertSenseToBound(rowsen[i],rowrhs[i],rowrng[i],rowlb[i],rowub[i]);
    }
    // Use getMutableModelPtr(), so that the cached stuff is not immediately

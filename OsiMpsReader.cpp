@@ -1032,9 +1032,11 @@ int OsiMpsReader::readMps()
 			    ( numberRows_ + 1 +
 
 			      numberOtherFreeRows ) * sizeof ( char * ) );
-    rowName[numberRows_] = objectiveName_;
+    rowName[numberRows_] = strdup(objectiveName_);
     memcpy ( rowName + numberRows_ + 1, freeRowName,
 	     numberOtherFreeRows * sizeof ( char * ) );
+    // now we can get rid of this array
+    free(freeRowName);
 
     startHash ( rowName, numberRows_ + 1 + numberOtherFreeRows , 0 );
     OSIColumnIndex maxColumns = 1000 + numberRows_ / 5;
@@ -2219,6 +2221,8 @@ void OsiMpsReader::gutsOfDestructor()
 void OsiMpsReader::freeAll()
 {  
   releaseRedundantInformation();
+  releaseRowNames();
+  releaseColumnNames();
   delete matrixByRow_;
   delete matrixByColumn_;
   matrixByRow_=NULL;
@@ -2230,8 +2234,6 @@ void OsiMpsReader::freeAll()
   free(objective_);
   free(integerType_);
   free(fileName_);
-  free(names_[0]);
-  free(names_[1]);
   rowlower_=NULL;
   rowupper_=NULL;
   collower_=NULL;
@@ -2239,8 +2241,6 @@ void OsiMpsReader::freeAll()
   objective_=NULL;
   integerType_=NULL;
   fileName_=NULL;
-  names_[0]=NULL;
-  names_[1]=NULL;
   free(problemName_);
   free(objectiveName_);
   free(rhsName_);

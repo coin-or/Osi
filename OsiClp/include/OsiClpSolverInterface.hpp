@@ -793,12 +793,14 @@ protected:
       /// To save data in OsiSimplex stuff
       ClpDataSave saveData_;
       /** Special options
+          -1 off
+          0 simple stuff for branch and bound
 	  1 try and keep work regions as much as possible
 	  2 do not use any perturbation
 	  4 allow exit before re-factorization
           8 try and re-use factorization (only if no cuts in tree)
       */
-      unsigned int specialOptions_;
+      int specialOptions_;
   //@}
 };
 

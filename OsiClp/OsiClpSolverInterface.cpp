@@ -361,7 +361,7 @@ void OsiClpSolverInterface::resolve()
     disableSimplexInterface();
   }
   int saveOptions = modelPtr_->specialOptions();
-  int startFinishOptions;
+  int startFinishOptions=0;
   bool takeHint;
   OsiHintStrength strength;
   bool gotHint = (getHintParam(OsiDoInBranchAndCut,takeHint,strength));
@@ -370,17 +370,21 @@ void OsiClpSolverInterface::resolve()
     // could do something - think about it
     //printf("hint %d %c\n",strength,takeHint ? 'T' :'F');
   }
-  if((specialOptions_&1)==0) {
-    startFinishOptions=0;
-    modelPtr_->setSpecialOptions(saveOptions|(64|1024));
+  if (specialOptions_>=0) {
+    if((specialOptions_&1)==0) {
+      startFinishOptions=0;
+      modelPtr_->setSpecialOptions(saveOptions|(64|1024));
+    } else {
+      startFinishOptions=1+4;
+      if ((specialOptions_&8)!=0)
+        startFinishOptions +=2; // allow re-use of factorization
+      if((specialOptions_&4)==0) 
+        modelPtr_->setSpecialOptions(saveOptions|(64|128|512|1024|4096));
+      else
+        modelPtr_->setSpecialOptions(saveOptions|(64|128|512|1024|2048|4096));
+    }
   } else {
-    startFinishOptions=1+4;
-    if ((specialOptions_&8)!=0)
-      startFinishOptions +=2; // allow re-use of factorization
-    if((specialOptions_&4)==0) 
-      modelPtr_->setSpecialOptions(saveOptions|(64|128|512|1024|4096));
-    else
-      modelPtr_->setSpecialOptions(saveOptions|(64|128|512|1024|2048|4096));
+    modelPtr_->setSpecialOptions(saveOptions|64);
   }
   //printf("options %d size %d\n",modelPtr_->specialOptions(),modelPtr_->numberColumns());
   //modelPtr_->setSolveType(1);
@@ -468,7 +472,7 @@ void OsiClpSolverInterface::resolve()
     if (algorithm<0) {
       //printf("doing dual\n");
       int savePerturbation = modelPtr_->perturbation();
-      if ((specialOptions_&2)!=0)
+      if (specialOptions_>=0&&(specialOptions_&2)!=0)
 	modelPtr_->setPerturbation(100);
       modelPtr_->dual(0,startFinishOptions);
       assert (modelPtr_->objectiveValue()<1.0e100);
@@ -1377,7 +1381,7 @@ rowActivity_(NULL),
 columnActivity_(NULL),
 matrixByRow_(NULL),
 integerInformation_(NULL),
-specialOptions_(0)
+specialOptions_(-1)
 {
   modelPtr_=NULL;
   notOwned_=false;
@@ -1454,7 +1458,7 @@ lastAlgorithm_(0),
 notOwned_(false),
 matrixByRow_(NULL),
 integerInformation_(NULL),
-specialOptions_(0)
+specialOptions_(-1)
 {
   modelPtr_ = rhs;
   linearObjective_ = modelPtr_->objective();
@@ -2064,7 +2068,7 @@ OsiClpSolverInterface::enableSimplexInterface(bool doingPrimal)
   modelPtr_->scaling(0);
   // Do initialization
   saveData_ = modelPtr_->saveData();
-  specialOptions_ = 0;
+  specialOptions_ = -1;
   // set infeasibility cost up
   modelPtr_->setInfeasibilityCost(1.0e12);
   // probably should save and restore?

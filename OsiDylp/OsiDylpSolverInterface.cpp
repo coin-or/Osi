@@ -2131,6 +2131,14 @@ void ODSI::writeMps (const char *basename, const char *extension,
   for (j = 0 ; j < n ; j++)
     colnames[j] = consys_nme(consys,'v',idx(j),false,0) ;
 
+  // Get multiplier for objective function - default 1.0
+  double * objective = new double[numcols];
+  memcpy(objective,getObjCoefficients(),numcols*sizeof(double));
+  if (objSense<0.0) {
+    for (int i = 0; i < n; ++i) 
+      objective [i] = - objective[i];
+  }
+
   mps.setMpsData(*getMatrixByRow(),
 		 getInfinity(),
 		 getColLower(),
@@ -2141,6 +2149,8 @@ void ODSI::writeMps (const char *basename, const char *extension,
 		 getRowUpper(),
 		 colnames,
 		 rownames) ;
+
+  delete [] objective;
 
 /*
   We really need to work on symbolic names for these magic numbers.
@@ -2178,6 +2188,14 @@ int ODSI::writeMpsNative (const char *filename,
 
   for (j = 0 ; j < n ; j++) vartyp[j] = isInteger(j) ;
 
+  // Get multiplier for objective function - default 1.0
+  double * objective = new double[numcols];
+  memcpy(objective,getObjCoefficients(),numcols*sizeof(double));
+  if (objSense<0.0) {
+    for (int i = 0; i < n; ++i) 
+      objective [i] = - objective[i];
+  }
+
   mps.setMpsData(*getMatrixByRow(),
 		 getInfinity(),
 		 getColLower(),
@@ -2189,6 +2207,7 @@ int ODSI::writeMpsNative (const char *filename,
 		 colnames,
 		 rownames) ;
 
+  delete [] objective;
 /*
   We really need to work on symbolic names.
 */

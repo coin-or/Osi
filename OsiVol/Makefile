@@ -10,6 +10,7 @@ LIBNAME := OsiVol
 
 LIBSRC :=
 LIBSRC += OsiVolSolverInterface.cpp
+LIBSRC += OsiVolSolverInterfaceIO.cpp
 
 ##############################################################################
 # You should not need to edit below this line.

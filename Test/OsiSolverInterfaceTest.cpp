@@ -16,10 +16,18 @@
 #ifdef COIN_USE_DYLP
 #  include "OsiDyLpSolverInterface.hpp"
 #endif
+#ifdef COIN_USE_XPR
 #include "OsiXprSolverInterface.hpp"
+#endif
+#ifdef COIN_USE_CPX
 #include "OsiCpxSolverInterface.hpp"
+#endif
+#ifdef COIN_USE_SPX
 #include "OsiSpxSolverInterface.hpp"
+#endif
+#ifdef COIN_USE_OSL
 #include "OsiOslSolverInterface.hpp"
+#endif
 #include "OsiFloatEqual.hpp"
 #include "OsiPackedVector.hpp"
 #include "OsiPackedMatrix.hpp"

@@ -1420,18 +1420,18 @@ OsiGlpkSolverInterface::setRowUpper( int elementIndex, double elementValue )
 	double lb;
 	double ub;
 
-	lpx_get_row_bnds( getMutableModelPtr(), elementIndex+1, &type, NULL, &ub );
-	lb = elementValue;
+	lpx_get_row_bnds( getMutableModelPtr(), elementIndex+1, &type, &lb, NULL );
+	ub = elementValue;
 	switch( type )
 	{
-	case LPX_UP:
+	case LPX_LO:
 	case LPX_DB:
 	case LPX_FX:
 		break;
 
 	case LPX_FR:
-	case LPX_LO:
-		ub = inf;
+	case LPX_UP:
+		lb = inf;
 		break;
 
 	default:

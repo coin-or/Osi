@@ -46,32 +46,7 @@
 #include "CoinPackedMatrix.hpp"
 #include "OsiRowCut.hpp"
 #include "OsiCuts.hpp"
-
-
-#include <time.h>
-#ifndef _MSC_VER
-#include <sys/times.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#endif
-
-static double cpuTime()
-{
-  double cpu_temp;
-#if defined(_MSC_VER)
-  unsigned int ticksnow;        /* clock_t is same as int */
-  
-  ticksnow = (unsigned int)clock();
-  
-  cpu_temp = (double)((double)ticksnow/CLOCKS_PER_SEC);
-#else
-  struct rusage usage;
-  getrusage(RUSAGE_SELF,&usage);
-  cpu_temp = usage.ru_utime.tv_sec;
-  cpu_temp += 1.0e-6*((double) usage.ru_utime.tv_usec);
-#endif
-  return cpu_temp;
-}
+#include "OsiPresolve.hpp"
 
 //--------------------------------------------------------------------------
 // A helper function to write out a message about a test failure
@@ -1468,7 +1443,7 @@ void OsiSolverInterfaceMpsUnitTest
       //    loop. This ensures that all previous solvers are run and compared to one
       //    another.      
       for (i = 0 ; i < static_cast<int>(vecSiP.size()) ; ++i) {
-        double startTime = cpuTime();
+        double startTime = CoinCpuTime();
         
 #     ifdef COIN_USE_VOL
         { 
@@ -1507,7 +1482,7 @@ void OsiSolverInterfaceMpsUnitTest
         
         vecSiP[i]->initialSolve() ;
         
-        double timeOfSolution = cpuTime()-startTime;
+        double timeOfSolution = CoinCpuTime()-startTime;
         if (vecSiP[i]->isProvenOptimal()) { 
           double soln = vecSiP[i]->getObjValue();       
           CoinRelFltEq eq(objValueTol[m]) ;
@@ -2518,7 +2493,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       // Test WriteMps
       
       {
-	
+
 	OsiSolverInterface *  si1 = emptySi->clone(); 
 	OsiSolverInterface *  si2 = emptySi->clone(); 
 	si1->readMps(fn.c_str(),"mps");
@@ -2867,7 +2842,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
         failureMessage(solverName,"getObjValue after adding empty cols and then rows.");;
     }
   }
-	
+
 	delete si;
       }
       // Test adding columns to NULL
@@ -3139,6 +3114,39 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     delete s;
   }
 
+  // Test presolve
+  if ( !volSolverInterface) {
+    OsiSolverInterface * si = emptySi->clone();
+    std::string fn = netlibDir+"25fv47";
+    si->readMps(fn.c_str(),"mps");
+    OsiSolverInterface * presolvedModel;
+    OsiPresolve pinfo;
+    int numberPasses=5; // can change this
+    /* Use a tolerance of 1.0e-8 for feasibility, treat problem as 
+       not being integer, do "numberpasses" passes */
+    presolvedModel = pinfo.presolvedModel(*si,1.0e-8,false,numberPasses);
+    assert(presolvedModel);
+    // switch off presolve
+    presolvedModel->setHintParam(OsiDoPresolveInInitial,false);
+    presolvedModel->initialSolve();
+    double objValue = presolvedModel->getObjValue(); 
+    if( !eq(objValue,5.5018458883e+03) )
+      failureMessage(solverName,"OsiPresolved model has wrong objective");
+    pinfo.postsolve(true);
+
+
+    delete presolvedModel;
+    si->setHintParam(OsiDoPresolveInResolve,false);
+    si->setHintParam(OsiDoDualInResolve,false);
+    si->resolve();
+    objValue = si->getObjValue(); 
+    if( !eq(objValue,5.5018458883e+03) )
+      failureMessage(solverName,"OsiPresolve - final objective wrong");
+    if (si->getIterationCount())
+      failureMessage(solverName,"OsiPresolve - minor error, needs iterations");
+    delete si;
+  }
+
   // Perform tests that are embodied in functions
   if ( !volSolverInterface )
   {
@@ -3162,7 +3170,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     test_functions.push_back(std::pair<TestFunction, const char*>(&test15VivianDeSmedt,"test15VivianDeSmedt"));
     
     unsigned int i;
-    for (i = 0; i < test_functions.size(); ++i) {	
+    for (i = 0; i < test_functions.size(); ++i) {
       OsiSolverInterface *s = emptySi->clone();
       const char * testName = test_functions[i].second;
       {

@@ -54,16 +54,64 @@ void OsiOslSolverInterface::initialSolve()
 {
   EKKModel* model = getMutableModelPtr();
   int rtcod;
-#if 0
-  ekk_crash(model,1); 
-  rtcod=ekk_primalSimplex(model,1);
-#elif 0
+  bool takeHint;
+  OsiHintStrength strength;
+  // Switch off printing if asked to
+  bool gotHint = (getHintParam(OsiDoReducePrint,takeHint,strength));
+  assert (gotHint);
+  if (strength!=OsiHintIgnore&&takeHint) {
+    if (!messageHandler()->logLevel())
+      ekk_messagesPrintOff(model,1,5000);
+    else if (messageHandler()->logLevel()==1)
+      ekk_messagePrintOff(model,317);
+  }
+  // presolve
+  gotHint = (getHintParam(OsiDoPresolveInInitial,takeHint,strength));
+  assert (gotHint);
+  bool presolve = false;
+  if (strength==OsiHintIgnore||takeHint) {
+    ekk_preSolve(model,3,NULL);
+    presolve=true;
+  }
+  // scaling
+  gotHint = (getHintParam(OsiDoScale,takeHint,strength));
+  assert (gotHint);
+  bool scaling=false;
+  if (strength==OsiHintIgnore||takeHint) {
+    ekk_scale(model);
+    scaling=true;
+  }
+
+  // sort out hints;
+  // algorithm 0 whatever, -1 force dual, +1 force primal
+  int algorithm = 0;
+  gotHint = (getHintParam(OsiDoDualInInitial,takeHint,strength));
+  assert (gotHint);
+  if (strength!=OsiHintIgnore)
+    algorithm = takeHint ? -1 : 1;
+  // crash 0 do lightweight if all slack, 1 do, -1 don't
+  int doCrash=0;
+  gotHint = (getHintParam(OsiDoCrash,takeHint,strength));
+  assert (gotHint);
+  if (strength!=OsiHintIgnore)
+    doCrash = takeHint ? 1 : -1;
+  
+  if (doCrash>=0)
+    ekk_crash(model,2);
   ekk_setIiternum(model, 0);
-  rtcod=ekk_simplex(model, 2); // *FIXME* : why not 0 (eitherSimplex)
-#else
-  ekk_setIiternum(model, 0);
-  rtcod=ekk_simplex(model, 0);
-#endif
+  if (algorithm==1) {
+    rtcod = ekk_primalSimplex(model,3);
+  } else if (algorithm==-1) {
+    rtcod = ekk_dualSimplex(model);
+  } else {
+    rtcod = ekk_eitherSimplex(model);
+  }
+  if (presolve) {
+    ekk_postSolve(model,NULL);
+    rtcod=ekk_primalSimplex(model,3);
+  } else if (scaling) {
+    ekk_scaleElements(model,2);
+  }
   // If abandoned use B&B status which says abandoned
   if (rtcod>200)
     ekk_setIprobstat(model,6);
@@ -87,11 +135,42 @@ void OsiOslSolverInterface::resolve()
     else if (messageHandler()->logLevel()==1)
       ekk_messagePrintOff(model,317);
   }
-#if 0
-  rtcod=ekk_dualSimplex(model); // *FIXME* : why not 0 (eitherSimplex)
-#else
-  rtcod=ekk_simplex(model, 256 + 32); // no presolve and no scaling
-#endif
+  // presolve
+  gotHint = (getHintParam(OsiDoPresolveInResolve,takeHint,strength));
+  assert (gotHint);
+  bool presolve = false;
+  if (strength!=OsiHintIgnore&&takeHint) {
+    ekk_preSolve(model,3,NULL);
+    presolve=true;
+  }
+  // scaling
+  gotHint = (getHintParam(OsiDoScale,takeHint,strength));
+  assert (gotHint);
+  bool scaling=false;
+  if (strength!=OsiHintIgnore&&takeHint) {
+    ekk_scale(model);
+    scaling=true;
+  }
+
+  // sort out hints;
+  // algorithm 0 whatever, -1 force dual, +1 force primal
+  int algorithm = 0;
+  gotHint = (getHintParam(OsiDoDualInResolve,takeHint,strength));
+  assert (gotHint);
+  if (strength!=OsiHintIgnore)
+    algorithm = takeHint ? -1 : 1;
+  ekk_setIiternum(model, 0);
+  if (algorithm==1) {
+    rtcod = ekk_primalSimplex(model,3);
+  } else {
+    rtcod = ekk_dualSimplex(model);
+  }
+  if (presolve) {
+    ekk_postSolve(model,NULL);
+    rtcod=ekk_primalSimplex(model,3);
+  } else if (scaling) {
+    ekk_scaleElements(model,2);
+  }
   // If abandoned use B&B status which says abandoned
   if (rtcod>200)
     ekk_setIprobstat(model,6);
@@ -486,12 +565,13 @@ bool OsiOslSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
       break;
     }
   }
+  bool goodBasis=true;
   if (ekk_setRowsNonBasicAtLower(model, numLower, atLower) != 0)
-    goto setWarmStart_Error;
+    goodBasis=false;
   if (ekk_setRowsNonBasicAtUpper(model, numUpper, atUpper) != 0)
-    goto setWarmStart_Error;
+    goodBasis=false;
   if (ekk_markRowsAsBasic(model, numBasic, basic) != 0)
-    goto setWarmStart_Error;
+    goodBasis=false;
 
   numLower = 0;
   numUpper = 0;
@@ -513,22 +593,16 @@ bool OsiOslSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
     }
   }
   if (ekk_setColumnsNonBasicAtLower(model, numLower, atLower) != 0)
-    goto setWarmStart_Error;
+    goodBasis=false;
   if (ekk_setColumnsNonBasicAtUpper(model, numUpper, atUpper) != 0)
-    goto setWarmStart_Error;
+    goodBasis=false;
   if (ekk_markColumnsAsBasic(model, numBasic, basic) != 0)
-    goto setWarmStart_Error;
+    goodBasis=false;
 
   delete[] basic;
   delete[] atUpper;
   delete[] atLower;
-  return true;
-
-  setWarmStart_Error:
-  delete[] basic;
-  delete[] atUpper;
-  delete[] atLower;
-  return false;
+  return goodBasis;
 }
 
 //#############################################################################

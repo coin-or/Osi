@@ -26,7 +26,7 @@
 #include "OsiCuts.hpp"
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
-#include "Presolve.hpp"
+#include "ClpPresolve.hpp"
 
 static double totalTime=0.0;
 static double cpuTime()
@@ -111,8 +111,8 @@ void OsiClpSolverInterface::initialSolve()
   gotHint = (getHintParam(OsiDoPresolveInInitial,takeHint,strength));
   assert (gotHint);
   if (strength!=OsiHintIgnore&&takeHint) {
-    Presolve pinfo;
-    ClpSimplex * model2 = pinfo.presolvedModel(solver,1.0e-8);
+    ClpPresolve pinfo;
+    ClpSimplex * model2 = pinfo.presolvedModel(solver,1.0e-8,false,5,true);
     if (!model2) {
       // problem found to be infeasible - whats best?
       model2 = &solver;
@@ -261,8 +261,8 @@ void OsiClpSolverInterface::resolve()
   gotHint = (getHintParam(OsiDoPresolveInResolve,takeHint,strength));
   assert (gotHint);
   if (strength!=OsiHintIgnore&&takeHint) {
-    Presolve pinfo;
-    ClpSimplex * model2 = pinfo.presolvedModel(solver,1.0e-8);
+    ClpPresolve pinfo;
+    ClpSimplex * model2 = pinfo.presolvedModel(solver,1.0e-8,false,5,true);
     if (!model2) {
       // problem found to be infeasible - whats best?
       model2 = &solver;
@@ -525,8 +525,14 @@ bool OsiClpSolverInterface::isIterationLimitReached() const
 
 CoinWarmStart* OsiClpSolverInterface::getWarmStart() const
 {
-
-  return new CoinWarmStartBasis(basis_);
+  CoinWarmStartBasis * basis;
+  if (basis_.getNumArtificial()) {
+    basis = new CoinWarmStartBasis(basis_);
+  } else {
+    basis = new CoinWarmStartBasis();
+    basis->resize(modelPtr_->numberRows(),modelPtr_->numberColumns());
+  }
+  return basis;
 }
 
 //-----------------------------------------------------------------------------

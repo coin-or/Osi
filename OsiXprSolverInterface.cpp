@@ -1158,7 +1158,6 @@ OsiXprSolverInterface::setColLower( int elementIndex, double elementValue )
           elementIndex,boundType,elementValue);
       }
 
-      chgbds(1, &elementIndex, &boundType, &elementValue);
       if ( vartype_[elementIndex] == 'B' && 
 	   (elementValue != 0.0 && elementValue != 1.0) ) {
         char elementType = 'I';
@@ -1169,6 +1168,9 @@ OsiXprSolverInterface::setColLower( int elementIndex, double elementValue )
         }
 	chgcoltype(1, &elementIndex, &elementType);
       }
+
+      chgbds(1, &elementIndex, &boundType, &elementValue);
+
       freeCachedResults();
       //    delete [] collower_;
       //    collower_ = NULL;
@@ -1190,7 +1192,6 @@ OsiXprSolverInterface::setColUpper( int elementIndex, double elementValue )
         fprintf(getLogFilePtr(),"chgbds(1, %d, %c, %f );\n",
 		elementIndex,boundType,elementValue);
       }
-      chgbds(1, &elementIndex, &boundType, &elementValue);
       if ( vartype_[elementIndex] == 'B' && 
 	   (elementValue != 0.0 && elementValue != 1.0) ) {
 	 char elementType = 'I';  
@@ -1202,6 +1203,9 @@ OsiXprSolverInterface::setColUpper( int elementIndex, double elementValue )
 
 	 chgcoltype(1, &elementIndex, &elementType);
       }
+
+      chgbds(1, &elementIndex, &boundType, &elementValue);
+
       freeCachedResults();
       //    delete [] colupper_;
       //    colupper_ = NULL;
@@ -1353,7 +1357,7 @@ OsiXprSolverInterface::setContinuous(int index)
 
     getipv(N_PSTAT, &pstat);
 
-    if ( pstat & 6 == 0 ) { 		// not presolved
+    if ( (pstat & 6) == 0 ) { 		// not presolved
       char qctype = 'C';
 
       chgcoltype(1, &index, &qctype);
@@ -1372,7 +1376,7 @@ OsiXprSolverInterface::setInteger(int index)
 
     getipv(N_PSTAT, &pstat);
 
-    if ( pstat & 6 == 0 ) { 		// not presolved
+    if ( (pstat & 6) == 0 ) { 		// not presolved
       char qctype;
 
       if ( getColLower()[index] == 0.0 && 
@@ -1397,11 +1401,11 @@ OsiXprSolverInterface::setContinuous(const int* indices, int len)
 
     getipv(N_PSTAT, &pstat);
 
-    if ( pstat & 6 == 0 ) { 		// not presolved
+    if ( (pstat & 6 == 0) ) { 		// not presolved
       char *qctype = new char[len];
 
       CoinFillN(qctype, len, 'C');
-      chgcoltype(1, const_cast<int *>(indices), qctype);
+      chgcoltype(len, const_cast<int *>(indices), qctype);
       freeCachedResults();
     }
   }
@@ -1417,7 +1421,7 @@ OsiXprSolverInterface::setInteger(const int* indices, int len)
 
     getipv(N_PSTAT, &pstat);
 
-    if ( pstat & 6 == 0 ) { 		// not presolved
+    if ( (pstat & 6) == 0 ) { 		// not presolved
       char *qctype = new char[len];
       const double* clb = getColLower();
       const double* cub = getColUpper();
@@ -1429,7 +1433,7 @@ OsiXprSolverInterface::setInteger(const int* indices, int len)
 	  qctype[i] = 'I';
       }
 
-      chgcoltype(1, const_cast<int *>(indices), qctype);
+      chgcoltype(len, const_cast<int *>(indices), qctype);
       freeCachedResults();
     }
   }

@@ -11,6 +11,14 @@ OptLevel := -O
 # ${InstallDir}/lib, executables in ${InstallDir}/bin.
 InstallDir := ..
 
+# Later on add to these variables 
+# - the list of extra directories to be searched for include files
+# - the list of symbols to be defined
+# - the list of files to link the final executable with.
+ExtraIncDirs :=
+ExtraDefines :=
+ExtraLibNames :=
+
 # Detect packages. If a path is set to PROBE then we'll check a couple of
 # reasonable places. If ...IncDir is set to NONE then the package will not be
 # included. Specify the exact path if you know the package exists but we can't
@@ -27,10 +35,15 @@ CpxLibDir := /usr/local/ilog/cplex71/lib/i86_linux2_glibc2.1_egcs1.1/static_mt
 CpxLibName := libcplex.a
 
 # Osl
-OslIncDir := PROBE
-#OslIncDir := NONE
-OslLibDir := PROBE
-OslLibName := libosl.so
+OslIncDir := NONE
+#OslIncDir := PROBE
+#OslLibDir := PROBE
+#OslLibName := libosl.so
+
+ExtraIncDirs += c:\IbmOslV3Lib\osllib\include
+#ExtraIncDirs += /cygdrive/c/IbmOslV3Lib/osllib/include
+ExtraDefines += COIN_USE_OSL
+ExtraLibNames += c:\IbmOslV3Lib\osllib\lib\oslmd6030.lib
 
 # Vol
 #VolIncDir := NONE
@@ -57,7 +70,7 @@ include ${MakefileDir}/Makefile.detectSolver
 ##############################################################################
 
 CXXFLAGS += $(OPTFLAG)
-CXXFLAGS += -Iinclude -I../Common/include
+CXXFLAGS += -Iinclude -I../Common/include 
 ifeq ($(OptLevel),-g)
     CXXFLAGS += -DOSI_DEBUG
 endif
@@ -75,7 +88,10 @@ VPATH := . : include : Junk : ${TARGETDIR} : ${DEPDIR}
 #########################################################################
 
 CXXFLAGS += $(addprefix -I,$(DETECTINCDIRS))
+CXXFLAGS += $(addprefix -I,$(ExtraIncDirs))
+
 CXXFLAGS += $(addprefix -D,$(DETECTDEFINES))
+CXXFLAGS += $(addprefix -D,${ExtraDefines})
 
 LIBDIRS := $(DETECTLIBDIRS) $(InstallDir)/lib
 LIBS    := libosi.so $(DETECTLIBNAMES)
@@ -83,6 +99,7 @@ LIBS    := libosi.so $(DETECTLIBNAMES)
 LDFLAGS := $(addprefix -L,$(LIBDIRS))
 LDFLAGS += $(call ifprefix,$(SHLINKPREFIX),$(LIBDIRS))
 LDFLAGS += $(patsubst lib%,-l%,$(basename $(LIBS)))
+LDFLAGS += ${ExtraLibNames}
 
 ###############################################################################
 
@@ -119,8 +136,7 @@ install: libosi
 	@mkdir -p ${InstallDir}/lib
 	@${CP} $(TARGETDIR)/libosi$(OptVersion)$(LIBEXT) ${InstallDir}/lib
 	@rm -f ${InstallDir}/lib/libosi$(LIBEXT)
-	@cd ${InstallDir}/lib; \
-		ln -s libosi$(OptVersion)$(LIBEXT) libosi$(LIBEXT)
+	@cd ${InstallDir}/lib; ${LN} libosi$(OptVersion)$(LIBEXT) libosi$(LIBEXT)
 
 ###############################################################################
 
@@ -144,7 +160,8 @@ $(TARGETDIR)/unitTest : install $(TESTOBJ)
 	@echo Creating unitTest
 	@mkdir -p $(TARGETDIR)
 	@rm -f $@
-	$(CXX) $(CXXFLAGS) -o $@ $(TESTOBJ) $(LDFLAGS) $(SYSLD) -lm
+	$(CXX) $(CXXFLAGS) -o $@ $(TESTOBJ) \
+		${EXELDFLAGS} $(LDFLAGS) $(SYSLD) -lm
 
 ###############################################################################
 

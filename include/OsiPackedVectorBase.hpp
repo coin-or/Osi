@@ -142,7 +142,7 @@ public:
 	 ++mvIrhs;
       }
       return true;
-   };
+   }
    bool isEquivalent(const OsiPackedVectorBase& rhs) const
    {
       return isEquivalent(rhs,  OsiRelFltEq());

@@ -218,6 +218,8 @@ void OsiClpSolverInterface::initialSolve()
 //-----------------------------------------------------------------------------
 void OsiClpSolverInterface::resolve()
 {
+  //#define BORROW_MODEL
+#ifdef BORROW_MODEL
   ClpSimplex solver;
   solver.borrowModel(*modelPtr_);
   int saveSolveType=solver.solveType();
@@ -341,6 +343,128 @@ void OsiClpSolverInterface::resolve()
   solver.messageHandler()->setLogLevel(saveMessageLevel);
   solver.setSolveType(saveSolveType);
   solver.returnModel(*modelPtr_);
+#else
+  int saveSolveType=modelPtr_->solveType();
+  modelPtr_->setSolveType(1);
+  // Set message handler to have same levels etc
+  modelPtr_->passInMessageHandler(handler_);
+  //basis_.print();
+  setBasis(basis_,modelPtr_);
+  // set reasonable defaults
+  bool takeHint;
+  OsiHintStrength strength;
+  // Switch off printing if asked to
+  bool gotHint = (getHintParam(OsiDoReducePrint,takeHint,strength));
+  assert (gotHint);
+  int saveMessageLevel=messageHandler()->logLevel();
+  if (strength!=OsiHintIgnore&&takeHint) {
+    if (saveMessageLevel)
+      modelPtr_->messageHandler()->setLogLevel(saveMessageLevel-1);
+  }
+  // scaling
+  if (modelPtr_->solveType()==1) {
+    gotHint = (getHintParam(OsiDoScale,takeHint,strength));
+    assert (gotHint);
+    if (strength==OsiHintIgnore||takeHint)
+      modelPtr_->scaling(1);
+    else
+      modelPtr_->scaling(0);
+  } else {
+    modelPtr_->scaling(0);
+  }
+  ClpDualRowSteepest steep;
+  modelPtr_->setDualRowPivotAlgorithm(steep);
+  // sort out hints;
+  // algorithm -1 force dual, +1 force primal
+  int algorithm = -1;
+  gotHint = (getHintParam(OsiDoDualInResolve,takeHint,strength));
+  assert (gotHint);
+  if (strength!=OsiHintIgnore)
+    algorithm = takeHint ? -1 : 1;
+  //modelPtr_->saveModel("save.bad");
+  // presolve
+  gotHint = (getHintParam(OsiDoPresolveInResolve,takeHint,strength));
+  assert (gotHint);
+  if (strength!=OsiHintIgnore&&takeHint) {
+    ClpPresolve pinfo;
+    ClpSimplex * model2 = pinfo.presolvedModel(*modelPtr_,1.0e-8);
+    if (!model2) {
+      // problem found to be infeasible - whats best?
+      model2 = modelPtr_;
+    }
+    // change from 200
+    model2->factorization()->maximumPivots(100+model2->numberRows()/50);
+    if (algorithm<0) {
+      // up dual bound for safety
+      //model2->setDualBound(1.0e10);
+      model2->dual();
+      // check if clp thought it was in a loop
+      if (model2->status()==3&&
+	  model2->numberIterations()<model2->maximumIterations()) {
+	// switch algorithm
+	model2->primal();
+      }
+    } else {
+      // up infeasibility cost for safety
+      //model2->setInfeasibilityCost(1.0e10);
+      model2->primal();
+      // check if clp thought it was in a loop
+      if (model2->status()==3
+	  &&model2->numberIterations()<model2->maximumIterations()) {
+	// switch algorithm
+	model2->dual();
+      }
+    }
+    if (model2!=modelPtr_) {
+      pinfo.postsolve(true);
+    
+      delete model2;
+      // later try without (1) and check duals before solve
+      modelPtr_->primal(1);
+      lastAlgorithm_=1; // primal
+    }
+    //if (modelPtr_->numberIterations())
+    //printf("****** iterated %d\n",modelPtr_->numberIterations());
+  } else {
+    if (algorithm<0) {
+      //printf("doing dual\n");
+      modelPtr_->dual();
+      lastAlgorithm_=2; // dual
+      // check if clp thought it was in a loop
+      if (modelPtr_->status()==3&&modelPtr_->numberIterations()<modelPtr_->maximumIterations()) {
+	// switch algorithm
+	modelPtr_->primal();
+	lastAlgorithm_=1; // primal
+	if (modelPtr_->status()==3&&
+	    modelPtr_->numberIterations()<modelPtr_->maximumIterations()) {
+	  printf("in trouble - try all slack\n");
+	  CoinWarmStartBasis allSlack;
+	  setBasis(allSlack,modelPtr_);
+	  modelPtr_->primal();
+	  if (modelPtr_->status()==3&&
+	      modelPtr_->numberIterations()<modelPtr_->maximumIterations()) {
+	    printf("Real real trouble - treat as infeasible\n");
+	    modelPtr_->setProblemStatus(1);
+	  }
+	}
+      }
+    } else {
+      //printf("doing primal\n");
+      modelPtr_->primal();
+      lastAlgorithm_=1; // primal
+      // check if clp thought it was in a loop
+      if (modelPtr_->status()==3&&modelPtr_->numberIterations()<modelPtr_->maximumIterations()) {
+	// switch algorithm
+	modelPtr_->dual();
+	lastAlgorithm_=2; // dual
+      }
+    }
+  }
+  basis_ = getBasis(modelPtr_);
+  //basis_.print();
+  modelPtr_->messageHandler()->setLogLevel(saveMessageLevel);
+  modelPtr_->setSolveType(saveSolveType);
+#endif
 }
 
 //#############################################################################

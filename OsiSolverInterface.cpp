@@ -285,7 +285,11 @@ double OsiSolverInterface::getObjValue() const
   getDblParam(OsiObjOffset,objOffset);
   
   // Compute dot product of objCoef and colSol and then adjust by offset
-  double retVal = CoinPackedVector(nc,objCoef).dotProduct(colSol)-objOffset;
+  // Jean-Sebastien pointed out this is overkill - lets just do it simply
+  //double retVal = CoinPackedVector(nc,objCoef).dotProduct(colSol)-objOffset;
+  double retVal = -objOffset;
+  for ( int i=0 ; i<nc ; i++ )
+    retVal += objCoef[i]*colSol[i];
   return retVal;
 }
 

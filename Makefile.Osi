@@ -47,7 +47,6 @@ LIBSRC += OsiWarmStartBasis.cpp
 
 ##############################################################################
 # The location of the customized Makefiles
-export MakefileDir := {CoinDir}/Common/make
 export MakefileDir := $(CoinDir)/Common/make
 include ${MakefileDir}/Makefile.coin
 include ${MakefileDir}/Makefile.location

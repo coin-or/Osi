@@ -225,6 +225,39 @@ void OsiSolverInterface::addCols(const int numcols,
 	   obj ? obj[i] : 0.0);
   }
 }
+// Add columns from a build object
+void 
+OsiSolverInterface::addCols(const CoinBuild & buildObject)
+{
+  assert (buildObject.type()==1); // check correct
+  int number = buildObject.numberColumns();
+  if (number) {
+    CoinPackedVectorBase ** columns=
+      new CoinPackedVectorBase * [number];
+    int iColumn;
+    double * objective = new double [number];
+    double * lower = new double [number];
+    double * upper = new double [number];
+    for (iColumn=0;iColumn<number;iColumn++) {
+      const int * rows;
+      const double * elements;
+      int numberElements = buildObject.column(iColumn,lower[iColumn],
+                                              upper[iColumn],objective[iColumn],
+                                              rows,elements);
+      columns[iColumn] = 
+	new CoinPackedVector(numberElements,
+			     rows,elements);
+    }
+    addCols(number, columns, lower, upper,objective);
+    for (iColumn=0;iColumn<number;iColumn++) 
+      delete columns[iColumn];
+    delete [] columns;
+    delete [] objective;
+    delete [] lower;
+    delete [] upper;
+  }
+  return;
+}
 //-----------------------------------------------------------------------------
 void
 OsiSolverInterface::addRows(const int numrows,
@@ -707,6 +740,9 @@ OsiSolverInterface::writeMpsNative(const char *filename,
 		     objective, hasInteger ? integrality : 0,
 		     getRowLower(), getRowUpper(),
 		     columnNames,rowNames);
+   double objOffset=0.0;
+   getDblParam(OsiObjOffset,objOffset);
+   writer.setObjectiveOffset(objOffset);
    delete [] objective;
    delete[] integrality;
    return writer.writeMps(filename, 1 /*gzip it*/, formatType, numberAcross);

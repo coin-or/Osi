@@ -697,6 +697,8 @@ public:
 			   const int * columnStarts, const int * rows, const double * elements,
 			   const double* collb, const double* colub,   
 			   const double* obj);
+      /// Add columnss using a CoinBuild object
+      void addCols(const CoinBuild & buildObject);
 #if 0
       /** */
       virtual void addCols(const CoinPackedMatrix& matrix,

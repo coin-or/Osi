@@ -329,7 +329,10 @@ OsiFactorization::replaceColumn ( OsiIndexedVector * regionSparse,
   
   element = elementU_;
   //take out old pivot column
-  
+
+  // If we have done no pivots then always check before modification
+  if (!numberPivots_)
+    checkBeforeModifying=true;
   
   totalElements_ -= numberInColumn_[realPivotRow];
   double oldPivot = pivotRegion_[realPivotRow];

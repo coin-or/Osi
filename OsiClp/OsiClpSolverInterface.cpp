@@ -2441,14 +2441,23 @@ OsiClpSolverInterface::getBInvACol(int col, double* vec)
   rowArray1->clear();
   // get column of matrix
 #ifndef NDEBUG
-  int n = modelPtr_->numberColumns();
+  int n = modelPtr_->numberColumns()+modelPtr_->numberRows();
   if (col<0||col>=n) {
     indexError(col,"getBInvACol");
   }
 #endif
   modelPtr_->unpack(rowArray1,col);
   factorization->updateColumn(rowArray0,rowArray1,false);
-  memcpy(vec,rowArray1->denseVector(),modelPtr_->numberRows()*sizeof(double));
+  // swap signs if slack
+  int numberRows = modelPtr_->numberRows();
+  if (col<modelPtr_->numberColumns()) {
+    memcpy(vec,rowArray1->denseVector(),
+           numberRows*sizeof(double));
+  } else {
+    double * array = rowArray1->denseVector();
+    for (int i=0;i<numberRows;i++)
+      vec[i] = - array[i];
+  }
   rowArray1->clear();
 }
 

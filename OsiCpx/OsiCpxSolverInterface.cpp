@@ -430,16 +430,18 @@ bool OsiCpxSolverInterface::isProvenPrimalInfeasible() const
   debugMessage("OsiCpxSolverInterface::isProvenPrimalInfeasible()\n");
 
   int stat = CPXgetstat( env_, getMutableLpPtr() );
-  int method = CPXgetmethod( env_, getMutableLpPtr() );
 
 #if CPX_VERSION >= 800
   // The origial return is not correct because the return code is with respect
   // to the original problem, regardless of the algorithm used to solve it
   // --tkr 7/31/03
-  return (method == CPX_STAT_INFEASIBLE)
+  return (stat == CPX_STAT_INFEASIBLE);
   //  return (method == CPX_ALG_PRIMAL && stat == CPX_STAT_INFEASIBLE || 
   //  method == CPX_ALG_DUAL && stat == CPX_STAT_UNBOUNDED);
 #else
+
+  int method = CPXgetmethod( env_, getMutableLpPtr() );
+
   return (method == CPX_ALG_PRIMAL && stat == CPX_INFEASIBLE || 
 	  method == CPX_ALG_DUAL && stat == CPX_UNBOUNDED || 
 	  stat == CPX_ABORT_PRIM_INFEAS ||

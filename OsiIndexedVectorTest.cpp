@@ -474,6 +474,20 @@ OsiIndexedVectorUnitTest()
     v2.setVector(ne1,inx1,el1);    
     assert( v2.getNumElements()==3 );
     assert( v2.capacity()==5 );
+
+    // Test clean method - get rid of 1.2
+    assert(v2.clean(3.0)==2);
+    assert(v2.denseVector()[1]==0.0);
+
+    // Below are purely for debug - so use assert
+    // so we won't try with false
+    // Test checkClean 
+    v2.checkClean();
+    assert( v2.getNumElements()==2 );
+
+    // Get rid of all
+    assert(v2.clean(10.0)==0);
+    v2.checkClear();
     
   }
   

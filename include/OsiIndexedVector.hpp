@@ -189,6 +189,10 @@ public:
    /** set all small values to zero and return number remaining
       - < tolerance => 0.0 */
    int clean(double tolerance);
+   /// For debug check vector is clear i.e. no elements
+   void checkClear();
+   /// For debug check vector is clean i.e. elements match indices
+   void checkClean();
    /// Append a OsiPackedVector to the end
    void append(const OsiPackedVectorBase & caboose);
 

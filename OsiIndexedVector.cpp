@@ -251,6 +251,32 @@ OsiIndexedVector::clean( double tolerance )
 
 //#############################################################################
 
+// For debug check vector is clear i.e. no elements
+void OsiIndexedVector::checkClear()
+{
+  assert(!nElements_);
+  int i;
+  for (i=0;i<capacity_;i++) {
+    assert(!elements_[i]);
+  }
+}
+// For debug check vector is clean i.e. elements match indices
+void OsiIndexedVector::checkClean()
+{
+  double * copy = new double[capacity_];
+  CoinDisjointCopyN(elements_,capacity_,copy);
+  int i;
+  for (i=0;i<nElements_;i++) {
+    int indexValue = indices_[i];
+    copy[indexValue]=0.0;
+  }
+  for (i=0;i<capacity_;i++) {
+    assert(!copy[i]);
+  }
+}
+
+//#############################################################################
+
 void
 OsiIndexedVector::append(const OsiPackedVectorBase & caboose) 
 {

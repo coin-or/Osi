@@ -46,6 +46,11 @@ OsiMpsReaderUnitTest(const std::string & mpsDir)
     std::string fn = mpsDir+"exmip1";
     m.readMps(fn.c_str(),"mps");
     
+     // Test language and re-use
+    m.newLanguage(OsiMessages::it);
+    m.messageHandler()->setPrefix(false);
+    m.readMps(fn.c_str(),"mps");
+
     assert( !strcmp( m.problemName_ , "EXAMPLE"));
     assert( !strcmp( m.objectiveName_ , "OBJ"));
     assert( !strcmp( m.rhsName_ , "RHS1"));

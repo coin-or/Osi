@@ -16,6 +16,7 @@
 #include <string>
 #include "spxsolver.h"
 #include "OsiSolverInterface.hpp"
+#include "CoinWarmStartBasis.hpp"
 
 /** SOPLEX Solver Interface
 

@@ -364,7 +364,8 @@ void OsiClpSolverInterface::resolve()
   }
   //modelPtr_->setSolveType(1);
   // Set message handler to have same levels etc
-  modelPtr_->passInMessageHandler(handler_);
+  bool oldDefault;
+  CoinMessageHandler * saveHandler = modelPtr_->pushMessageHandler(handler_,oldDefault);
   //basis_.print();
   setBasis(basis_,modelPtr_);
   // set reasonable defaults
@@ -479,7 +480,8 @@ void OsiClpSolverInterface::resolve()
   }
   basis_ = getBasis(modelPtr_);
   //basis_.print();
-  modelPtr_->messageHandler()->setLogLevel(saveMessageLevel);
+  //modelPtr_->messageHandler()->setLogLevel(saveMessageLevel);
+  modelPtr_->popMessageHandler(saveHandler,oldDefault);
   if (saveSolveType==2) {
     enableSimplexInterface(doingPrimal);
   }

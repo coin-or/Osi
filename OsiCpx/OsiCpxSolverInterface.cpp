@@ -200,12 +200,9 @@ void OsiCpxSolverInterface::resolve()
   /* If the problem is found infeasible during presolve, resolve it to get a 
      proper term code */
   if (term == CPXERR_PRESLV_INForUNBD){
-    cpx_status = CPXsetintparam(lp_data->cpxenv, CPX_PARAM_PREIND, CPX_OFF);
-    CPX_check_error("dual_simplex - CPXsetintparam");
-    term = CPXdualopt(lp_data->cpxenv, lp_data->lp);
-    CPX_check_error("dual_simplex - CPXdualopt");
+    CPXsetintparam(lp_data->cpxenv, CPX_PARAM_PREIND, CPX_OFF);
+    CPXdualopt(lp_data->cpxenv, lp_data->lp);
     cpx_status = CPXsetintparam(lp_data->cpxenv, CPX_PARAM_PREIND, CPX_ON);
-    CPX_check_error("dual_simplex - CPXsetintparam");
   }
 }
 //-----------------------------------------------------------------------------

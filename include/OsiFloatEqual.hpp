@@ -4,18 +4,10 @@
 #define OsiFloatEqual_H
 
 #include <algorithm>
+#
 #include <cmath>
 
-#if defined(_MSC_VER)
-# include<float.h>
-# define isnan   _isnan
-# define finite  _finite
-#endif
-
-#ifdef sun
-  extern "C" int finite(double),isnan(double) ;
-#endif
-
+#include "CoinFinite.hpp"
 
 /*! \file OsiFloatEqual.hpp
     \brief Function objects for testing equality of real numbers.
@@ -57,7 +49,7 @@ class OsiAbsFltEq
 
   inline bool operator() (const double f1, const double f2) const
 
-  { if (isnan(f1) || isnan(f2)) return false ;
+  { if (CoinIsnan(f1) || CoinIsnan(f2)) return false ;
     if (f1 == f2) return true ;
     return (fabs(f1-f2) < epsilon_) ; } ;
 
@@ -118,9 +110,9 @@ class OsiRelFltEq
 
   inline bool operator() (const double f1, const double f2) const
 
-  { if (isnan(f1) || isnan(f2)) return false ;
+  { if (CoinIsnan(f1) || CoinIsnan(f2)) return false ;
     if (f1 == f2) return true ;
-    if (!finite(f1) || !finite(f2)) return false ;
+    if (!CoinFinite(f1) || !CoinFinite(f2)) return false ;
 
     double tol = (fabs(f1)>fabs(f2))?fabs(f1):fabs(f2) ;
 

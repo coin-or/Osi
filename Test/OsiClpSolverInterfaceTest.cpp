@@ -809,6 +809,87 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     //m.getObjValue();
   }
 #endif
+
+  // Solve an lp by hand
+  {    
+    OsiClpSolverInterface m;
+    std::string fn = mpsDir+"p0033";
+    m.readMps(fn.c_str(),"mps");
+    m.setObjSense(-1.0);
+    m.getModelPtr()->messageHandler()->setLogLevel(4);
+    m.initialSolve();
+    m.setObjSense(1.0);
+    // enable special mode
+    m.enableSimplexInterface(true);
+    // we happen to know that variables are 0-1 and rows are L
+    int numberIterations=0;
+    int numberColumns = m.getNumCols();
+    int numberRows = m.getNumRows();
+    double * fakeCost = new double[numberColumns];
+    double * duals = new double [numberRows];
+    double * djs = new double [numberColumns];
+    const double * solution = m.getColSolution();
+    memcpy(fakeCost,m.getObjCoefficients(),numberColumns*sizeof(double));
+    while (1) {
+      const double * dj;
+      const double * dual;
+      if ((numberIterations&1)==0) {
+	// use given ones
+	dj = m.getReducedCost();
+	dual = m.getRowPrice();
+      } else {
+	// create
+	dj = djs;
+	dual = duals;
+	m.getReducedGradient(djs,duals,fakeCost);
+      }
+      int i;
+      int colIn=9999;
+      int direction=1;
+      double best=1.0e-6;
+      // find most negative reduced cost
+      // Should check basic - but should be okay on this problem
+      for (i=0;i<numberRows;i++) {
+	double value=dual[i];
+	if (value>best) {
+	  direction=-1;
+	  best=value;
+	  colIn=-i-1;
+	}
+      }
+      for (i=0;i<numberColumns;i++) {
+	double value=dj[i];
+	if (value<-best&&solution[i]<1.0e-6) {
+	  direction=1;
+	  best=-value;
+	  colIn=i;
+	} else if (value>best&&solution[i]>1.0-1.0e-6) {
+	  direction=-1;
+	  best=value;
+	  colIn=i;
+	}
+      }
+      if (colIn==9999)
+	break; // should be optimal
+      int colOut;
+      int outStatus;
+      double theta;
+      assert(!m.primalPivotResult(colIn,direction,colOut,outStatus,theta,NULL));
+      printf("out %d, direction %d theta %g\n",
+	     colOut,outStatus,theta);
+      numberIterations++;
+    }
+    delete [] fakeCost;
+    delete [] duals;
+    delete [] djs;
+    // exit special mode
+    m.disableSimplexInterface();
+    m.getModelPtr()->messageHandler()->setLogLevel(4);
+    m.resolve();
+    assert (!m.getIterationCount());
+    m.setObjSense(-1.0);
+    m.initialSolve();
+  }
   // Do common solverInterface testing 
   {
     OsiClpSolverInterface m;

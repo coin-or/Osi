@@ -17,6 +17,8 @@
 #include "CoinIndexedVector.hpp"
 #include "ClpDualRowSteepest.hpp"
 #include "ClpPrimalColumnSteepest.hpp"
+#include "ClpDualRowDantzig.hpp"
+#include "ClpPrimalColumnDantzig.hpp"
 #include "ClpFactorization.hpp"
 #include "ClpSimplex.hpp"
 #include "OsiClpSolverInterface.hpp"
@@ -110,8 +112,9 @@ void OsiClpSolverInterface::initialSolve()
   if (strength!=OsiHintIgnore&&takeHint) {
     Presolve pinfo;
     ClpSimplex * model2 = pinfo.presolvedModel(solver,1.0e-8);
-    // change from 200
-    model2->factorization()->maximumPivots(100+model2->numberRows()/50);
+    // change from 200 (unless changed)
+    if (model2->factorization()->maximumPivots()==200)
+      model2->factorization()->maximumPivots(100+model2->numberRows()/50);
     if (!doPrimal) {
       // faster if bounds tightened
       //int numberInfeasibilities = model2->tightenPrimalBounds();
@@ -1192,6 +1195,7 @@ integerInformation_(NULL)
     memcpy(integerInformation_,rhs.integerInformation_,
 	   numberColumns*sizeof(char));
   }
+  saveData_ = rhs.saveData_;
   fillParamMaps();
   messageHandler()->setLogLevel(rhs.messageHandler()->logLevel());
 }
@@ -1600,8 +1604,21 @@ OsiClpSolverInterface::enableSimplexInterface(bool doingPrimal)
 {
   assert (modelPtr_->solveType()==1);
   modelPtr_->setSolveType(2);
+  if (doingPrimal)
+    modelPtr_->setAlgorithm(1);
+  else
+    modelPtr_->setAlgorithm(-1);
   modelPtr_->scaling(0);
   // Do initialization
+  saveData_ = modelPtr_->saveData();
+  // set infeasibility cost up
+  modelPtr_->setInfeasibilityCost(1.0e12);
+  // probably should save and restore?
+  ClpDualRowDantzig dantzig;
+  modelPtr_->setDualRowPivotAlgorithm(dantzig);
+  ClpPrimalColumnDantzig dantzigP;
+  modelPtr_->setPrimalColumnPivotAlgorithm(dantzigP);
+  assert (!modelPtr_->startup(0));
 }
 
 //Undo whatever setting changes the above method had to make
@@ -1609,8 +1626,12 @@ void
 OsiClpSolverInterface::disableSimplexInterface()
 {
   assert (modelPtr_->solveType()==2);
+  // declare optimality anyway  (for message handler)
+  modelPtr_->setProblemStatus(0);
   modelPtr_->setSolveType(1);
-  abort();
+  modelPtr_->finish();
+  modelPtr_->restoreData(saveData_);
+  basis_ = getBasis(modelPtr_);
 }
 /* The following two methods may be replaced by the
    methods of OsiSolverInterface using OsiWarmStartBasis if:
@@ -1646,7 +1667,7 @@ OsiClpSolverInterface::setBasisStatus(const int* cstat, const int* rstat)
   n=modelPtr_->numberColumns();
   for (i=0;i<n;i++)
     modelPtr_->setColumnStatus(i,(ClpSimplex::Status) cstat[i]);
-  abort();
+  modelPtr_->statusOfProblem();
   return 0;
 }
 
@@ -1658,7 +1679,19 @@ int
 OsiClpSolverInterface::pivot(int colIn, int colOut, int outStatus)
 {
   assert (modelPtr_->solveType()==2);
-  abort();
+  // convert to Clp style (what about flips?)
+  if (colIn<0) 
+    colIn = modelPtr_->numberColumns()+(-1-colIn);
+  if (colOut<0) 
+    colOut = modelPtr_->numberColumns()+(-1-colOut);
+  // in clp direction of out is reversed
+  outStatus = - outStatus;
+  // set in clp
+  modelPtr_->setDirectionOut(outStatus);
+  modelPtr_->setSequenceIn(colIn);
+  modelPtr_->setSequenceOut(colOut);
+  // do pivot
+  modelPtr_->pivot();
   return 0;
 }
 
@@ -1678,8 +1711,29 @@ OsiClpSolverInterface::primalPivotResult(int colIn, int sign,
 					 double& t, CoinPackedVector* dx)
 {
   assert (modelPtr_->solveType()==2);
-  abort();
-  return 0;
+  // convert to Clp style
+  if (colIn<0) 
+    colIn = modelPtr_->numberColumns()+(-1-colIn);
+  // set in clp
+  modelPtr_->setDirectionIn(sign);
+  modelPtr_->setSequenceIn(colIn);
+  modelPtr_->setSequenceOut(-1);
+  int returnCode = modelPtr_->primalPivotResult();
+  t = modelPtr_->theta();
+  int numberColumns = modelPtr_->numberColumns();
+  if (dx) {
+    const double * ray = modelPtr_->unboundedRay();
+    if  (ray)
+      dx->setFullNonZero(numberColumns,ray);
+    else
+      printf("No ray?\n");
+    delete [] ray;
+  }
+  outStatus = - modelPtr_->directionOut();
+  colOut = modelPtr_->sequenceOut();
+  if (colOut>= numberColumns) 
+    colOut = -1-(colOut - numberColumns);
+  return returnCode;
 }
 
 /* Obtain a result of the dual pivot (similar to the previous method)
@@ -1706,7 +1760,19 @@ OsiClpSolverInterface::getReducedGradient(
 					  const double * c)
 {
   assert (modelPtr_->solveType()==2);
-  abort();
+  // could do this faster with coding inside Clp
+  // save current costs
+  int numberColumns = modelPtr_->numberColumns();
+  double * save = new double [numberColumns];
+  memcpy(save,modelPtr_->costRegion(),numberColumns*sizeof(double));
+  memcpy(modelPtr_->costRegion(),c,numberColumns*sizeof(double));
+  modelPtr_->computeDuals();
+  memcpy(modelPtr_->costRegion(),save,numberColumns*sizeof(double));
+  delete [] save;
+  int numberRows = modelPtr_->numberRows();
+  memcpy(duals,modelPtr_->dualRowSolution(),numberRows*sizeof(double));
+  memcpy(columnReducedCosts,modelPtr_->djRegion(1),
+	 numberColumns*sizeof(double));
 }
 
 /* Set a new objective and apply the old basis so that the
@@ -1714,7 +1780,10 @@ OsiClpSolverInterface::getReducedGradient(
 void OsiClpSolverInterface::setObjectiveAndRefresh(double* c)
 {
   assert (modelPtr_->solveType()==2);
-  abort();
+  int numberColumns = modelPtr_->numberColumns();
+  memcpy(modelPtr_->objective(),c,numberColumns*sizeof(double));
+  memcpy(modelPtr_->costRegion(),c,numberColumns*sizeof(double));
+  modelPtr_->computeDuals();
 }
 
 //Get a row of the tableau

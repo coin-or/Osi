@@ -894,9 +894,9 @@ int OsiMpsReader::readMps(const char * filename,  const char * extension)
   std::string f(filename);
   std::string fullname;
   free(fileName_);
-  if (f!="stdin"&&f!="-") {
+  if (strcmp(filename,"stdin")&&strcmp(filename,"-")) {
     std::string e(extension);
-    if (f.find('.')<=0) 
+    if (f.find('.')<=0&&strlen(extension)) 
       fullname = f + "." + e;
     else
       fullname = f;

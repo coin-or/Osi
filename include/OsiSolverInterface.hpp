@@ -20,6 +20,7 @@ class OsiRowCut;
 class OsiRowCutDebugger;
 class CoinSet;
 class CoinBuild;
+class CoinModel;
 #include "CoinFinite.hpp"
 
 //#############################################################################
@@ -697,8 +698,14 @@ public:
 			   const int * columnStarts, const int * rows, const double * elements,
 			   const double* collb, const double* colub,   
 			   const double* obj);
-      /// Add columnss using a CoinBuild object
+      /// Add columns using a CoinBuild object
       void addCols(const CoinBuild & buildObject);
+      /** Add columns from a model object.  returns
+         -1 if object in bad state (i.e. has row information)
+         otherwise number of errors
+         modelObject non const as can be regularized as part of build
+      */
+      int addCols(CoinModel & modelObject);
 #if 0
       /** */
       virtual void addCols(const CoinPackedMatrix& matrix,
@@ -750,6 +757,13 @@ public:
 			   const double* rowlb, const double* rowub);
       /// Add rows using a CoinBuild object
       void addRows(const CoinBuild & buildObject);
+      /** Add rows from a model object.  returns
+         -1 if object in bad state (i.e. has column information)
+         otherwise number of errors.
+
+         modelObject non const as can be regularized as part of build
+      */
+      int addRows(CoinModel & modelObject);
 #if 0
       /** */
       virtual void addRows(const CoinPackedMatrix& matrix,
@@ -884,7 +898,13 @@ public:
 			     const double* collb, const double* colub,   
 			     const double* obj,
 			     const char* rowsen, const double* rowrhs,   
-			     const double* rowrng) = 0;
+  			     const double* rowrng) = 0;
+    /** This loads a model from a coinModel object - returns number of errors.
+
+        modelObject not const as may be changed as part of process.
+        If keepSolution true will try and keep warmStart
+    */
+     int loadFromCoinModel (  CoinModel & modelObject, bool keepSolution=false);
 
     /** Read a problem in MPS format from the given filename.
     

@@ -20,6 +20,7 @@
 #include <cassert>
 #include "CoinFinite.hpp"
 #include "CoinBuild.hpp"
+#include "CoinModel.hpp"
 
 //#############################################################################
 // Hotstart related methods (primarily used in strong branching)
@@ -258,6 +259,92 @@ OsiSolverInterface::addCols(const CoinBuild & buildObject)
   }
   return;
 }
+// Add columns from a model object
+int 
+OsiSolverInterface::addCols( CoinModel & modelObject)
+{
+  bool goodState=true;
+  if (modelObject.rowLowerArray()) {
+    // some row information exists
+    int numberRows2 = modelObject.numberRows();
+    const double * rowLower = modelObject.rowLowerArray();
+    const double * rowUpper = modelObject.rowUpperArray();
+    for (int i=0;i<numberRows2;i++) {
+      if (rowLower[i]!=-COIN_DBL_MAX) 
+        goodState=false;
+      if (rowUpper[i]!=COIN_DBL_MAX) 
+        goodState=false;
+    }
+  }
+  if (goodState) {
+    // can do addColumns
+    int numberErrors = 0;
+    // Set arrays for normal use
+    double * rowLower = modelObject.rowLowerArray();
+    double * rowUpper = modelObject.rowUpperArray();
+    double * columnLower = modelObject.columnLowerArray();
+    double * columnUpper = modelObject.columnUpperArray();
+    double * objective = modelObject.objectiveArray();
+    int * integerType = modelObject.integerTypeArray();
+    double * associated = modelObject.associatedArray();
+    // If strings then do copies
+    if (modelObject.stringsExist()) {
+      numberErrors = modelObject.createArrays(rowLower, rowUpper, columnLower, columnUpper,
+                                 objective, integerType,associated);
+    }
+    CoinPackedMatrix matrix;
+    modelObject.createPackedMatrix(matrix,associated);
+    int numberColumns = getNumCols(); // save number of columns
+    int numberColumns2 = modelObject.numberColumns();
+    if (numberColumns2&&!numberErrors) {
+      const int * row = matrix.getIndices();
+      const int * columnLength = matrix.getVectorLengths();
+      const CoinBigIndex * columnStart = matrix.getVectorStarts();
+      const double * element = matrix.getElements();
+      CoinPackedVectorBase ** columns=
+        new CoinPackedVectorBase * [numberColumns2];
+      int iColumn;
+      assert (columnLower);
+      for (iColumn=0;iColumn<numberColumns2;iColumn++) {
+        int start = columnStart[iColumn];
+        columns[iColumn] = 
+          new CoinPackedVector(columnLength[iColumn],
+                               row+start,element+start);
+      }
+      addCols(numberColumns2, columns, columnLower, columnUpper,objective);
+      for (iColumn=0;iColumn<numberColumns2;iColumn++) 
+        delete columns[iColumn];
+      delete [] columns;
+      // Do integers if wanted
+      assert(integerType);
+      for (iColumn=0;iColumn<numberColumns2;iColumn++) {
+        if (integerType[iColumn])
+          setInteger(iColumn+numberColumns);
+      }
+    }
+    if (columnLower!=modelObject.columnLowerArray()) {
+      delete [] rowLower;
+      delete [] rowUpper;
+      delete [] columnLower;
+      delete [] columnUpper;
+      delete [] objective;
+      delete [] integerType;
+      delete [] associated;
+      //if (numberErrors)
+      //handler_->message(CLP_BAD_STRING_VALUES,messages_)
+      //  <<numberErrors
+      //  <<CoinMessageEol;
+    }
+    return numberErrors;
+  } else {
+    // not suitable for addColumns
+    //handler_->message(CLP_COMPLICATED_MODEL,messages_)
+    //<<modelObject.numberRows()
+    //<<modelObject.numberColumns()
+    //<<CoinMessageEol;
+    return -1;
+  }
+}
 //-----------------------------------------------------------------------------
 void
 OsiSolverInterface::addRows(const int numrows,
@@ -295,6 +382,145 @@ OsiSolverInterface::addRows(const CoinBuild & buildObject)
     delete [] lower;
     delete [] upper;
   }
+}
+//-----------------------------------------------------------------------------
+int
+OsiSolverInterface::addRows( CoinModel & modelObject)
+{
+  bool goodState=true;
+  if (modelObject.columnLowerArray()) {
+    // some column information exists
+    int numberColumns2 = modelObject.numberColumns();
+    const double * columnLower = modelObject.columnLowerArray();
+    const double * columnUpper = modelObject.columnUpperArray();
+    const double * objective = modelObject.objectiveArray();
+    const int * integerType = modelObject.integerTypeArray();
+    for (int i=0;i<numberColumns2;i++) {
+      if (columnLower[i]!=0.0) 
+        goodState=false;
+      if (columnUpper[i]!=COIN_DBL_MAX) 
+        goodState=false;
+      if (objective[i]!=0.0) 
+        goodState=false;
+      if (integerType[i]!=0)
+        goodState=false;
+    }
+  }
+  if (goodState) {
+    // can do addRows
+    int numberErrors = 0;
+    // Set arrays for normal use
+    double * rowLower = modelObject.rowLowerArray();
+    double * rowUpper = modelObject.rowUpperArray();
+    double * columnLower = modelObject.columnLowerArray();
+    double * columnUpper = modelObject.columnUpperArray();
+    double * objective = modelObject.objectiveArray();
+    int * integerType = modelObject.integerTypeArray();
+    double * associated = modelObject.associatedArray();
+    // If strings then do copies
+    if (modelObject.stringsExist()) {
+      numberErrors = modelObject.createArrays(rowLower, rowUpper, columnLower, columnUpper,
+                                 objective, integerType,associated);
+    }
+    CoinPackedMatrix matrix;
+    modelObject.createPackedMatrix(matrix,associated);
+    int numberRows2 = modelObject.numberRows();
+    if (numberRows2&&!numberErrors) {
+      // matrix by rows
+      matrix.reverseOrdering();
+      const int * column = matrix.getIndices();
+      const int * rowLength = matrix.getVectorLengths();
+      const CoinBigIndex * rowStart = matrix.getVectorStarts();
+      const double * element = matrix.getElements();
+      CoinPackedVectorBase ** rows=
+        new CoinPackedVectorBase * [numberRows2];
+      int iRow;
+      assert (rowLower);
+      for (iRow=0;iRow<numberRows2;iRow++) {
+        int start = rowStart[iRow];
+        rows[iRow] = 
+          new CoinPackedVector(rowLength[iRow],
+                               column+start,element+start);
+      }
+      addRows(numberRows2, rows, rowLower, rowUpper);
+      for (iRow=0;iRow<numberRows2;iRow++) 
+        delete rows[iRow];
+      delete [] rows;
+    }
+    if (rowLower!=modelObject.rowLowerArray()) {
+      delete [] rowLower;
+      delete [] rowUpper;
+      delete [] columnLower;
+      delete [] columnUpper;
+      delete [] objective;
+      delete [] integerType;
+      delete [] associated;
+      //if (numberErrors)
+      //handler_->message(CLP_BAD_STRING_VALUES,messages_)
+      //  <<numberErrors
+      //  <<CoinMessageEol;
+    }
+    return numberErrors;
+  } else {
+    // not suitable for addRows
+    //handler_->message(CLP_COMPLICATED_MODEL,messages_)
+    //<<modelObject.numberRows()
+    //<<modelObject.numberColumns()
+    //<<CoinMessageEol;
+    return -1;
+  }
+}
+// This loads a model from a coinModel object - returns number of errors
+int 
+OsiSolverInterface::loadFromCoinModel (  CoinModel & modelObject, bool keepSolution)
+{
+  int numberErrors = 0;
+  // Set arrays for normal use
+  double * rowLower = modelObject.rowLowerArray();
+  double * rowUpper = modelObject.rowUpperArray();
+  double * columnLower = modelObject.columnLowerArray();
+  double * columnUpper = modelObject.columnUpperArray();
+  double * objective = modelObject.objectiveArray();
+  int * integerType = modelObject.integerTypeArray();
+  double * associated = modelObject.associatedArray();
+  // If strings then do copies
+  if (modelObject.stringsExist()) {
+    numberErrors = modelObject.createArrays(rowLower, rowUpper, columnLower, columnUpper,
+                                            objective, integerType,associated);
+  }
+  CoinPackedMatrix matrix;
+  modelObject.createPackedMatrix(matrix,associated);
+  int numberRows = modelObject.numberRows();
+  int numberColumns = modelObject.numberColumns();
+  CoinWarmStart * ws = getWarmStart();
+  bool restoreBasis = keepSolution && numberRows&&numberRows==getNumRows()&&
+    numberColumns==getNumCols();
+  loadProblem(matrix, 
+              columnLower, columnUpper, objective, rowLower, rowUpper);
+  if (restoreBasis)
+    setWarmStart(ws);
+  delete ws;
+  // Do integers if wanted
+  assert(integerType);
+  for (int iColumn=0;iColumn<numberColumns;iColumn++) {
+    if (integerType[iColumn])
+      setInteger(iColumn);
+  }
+  if (rowLower!=modelObject.rowLowerArray()||
+      columnLower!=modelObject.columnLowerArray()) {
+    delete [] rowLower;
+    delete [] rowUpper;
+    delete [] columnLower;
+    delete [] columnUpper;
+    delete [] objective;
+    delete [] integerType;
+    delete [] associated;
+    //if (numberErrors)
+    //  handler_->message(CLP_BAD_STRING_VALUES,messages_)
+    //    <<numberErrors
+    //    <<CoinMessageEol;
+  }
+  return numberErrors;
 }
 //-----------------------------------------------------------------------------
 void

@@ -18,6 +18,7 @@
 #include "CoinMessage.hpp"
 #include "ClpMessage.hpp"
 #include "ClpFactorization.hpp"
+#include "CoinModel.hpp"
 
 //#############################################################################
 
@@ -891,6 +892,121 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     
   }
 
+  // Build a model
+  {    
+    OsiClpSolverInterface model;
+    std::string fn = mpsDir+"p0033";
+    model.readMps(fn.c_str(),"mps");
+    // Point to data
+    int numberRows = model.getNumRows();
+    const double * rowLower = model.getRowLower();
+    const double * rowUpper = model.getRowUpper();
+    int numberColumns = model.getNumCols();
+    const double * columnLower = model.getColLower();
+    const double * columnUpper = model.getColUpper();
+    const double * columnObjective = model.getObjCoefficients();
+    // get row copy
+    CoinPackedMatrix rowCopy = *model.getMatrixByRow();
+    const int * column = rowCopy.getIndices();
+    const int * rowLength = rowCopy.getVectorLengths();
+    const CoinBigIndex * rowStart = rowCopy.getVectorStarts();
+    const double * element = rowCopy.getElements();
+    
+    // solve
+    model.initialSolve();
+    // Now build new model
+    CoinModel build;
+    // Row bounds
+    int iRow;
+    for (iRow=0;iRow<numberRows;iRow++) {
+      build.setRowBounds(iRow,rowLower[iRow],rowUpper[iRow]);
+    }
+    // Column bounds and objective
+    int iColumn;
+    for (iColumn=0;iColumn<numberColumns;iColumn++) {
+      build.setColumnLower(iColumn,columnLower[iColumn]);
+      build.setColumnUpper(iColumn,columnUpper[iColumn]);
+      build.setObjective(iColumn,columnObjective[iColumn]);
+    }
+    // Adds elements one by one by row (backwards by row)
+    for (iRow=numberRows-1;iRow>=0;iRow--) {
+      int start = rowStart[iRow];
+      for (int j=start;j<start+rowLength[iRow];j++) 
+        build(iRow,column[j],element[j]);
+    }
+    // Now create Model
+    OsiClpSolverInterface model2;
+    model2.loadFromCoinModel(build);
+    model2.initialSolve();
+    // Now do with strings attached
+    // Save build to show how to go over rows
+    CoinModel saveBuild = build;
+    build = CoinModel();
+    // Column bounds
+    for (iColumn=0;iColumn<numberColumns;iColumn++) {
+      build.setColumnLower(iColumn,columnLower[iColumn]);
+      build.setColumnUpper(iColumn,columnUpper[iColumn]);
+    }
+    // Objective - half the columns as is and half with multiplier of "1.0+multiplier"
+    // Pick up from saveBuild (for no reason at all)
+    for (iColumn=0;iColumn<numberColumns;iColumn++) {
+      double value = saveBuild.objective(iColumn);
+      if (iColumn*2<numberColumns) {
+        build.setObjective(iColumn,columnObjective[iColumn]);
+      } else {
+        // create as string
+        char temp[100];
+        sprintf(temp,"%g + abs(%g*multiplier)",value,value);
+        build.setObjective(iColumn,temp);
+      }
+    }
+    // It then adds rows one by one but for half the rows sets their values
+    //      with multiplier of "1.0+1.5*multiplier"
+    for (iRow=0;iRow<numberRows;iRow++) {
+      if (iRow*2<numberRows) {
+        // add row in simple way
+        int start = rowStart[iRow];
+        build.addRow(rowLength[iRow],column+start,element+start,
+                     rowLower[iRow],rowUpper[iRow]);
+      } else {
+        // As we have to add one by one let's get from saveBuild
+        CoinModelLink triple=saveBuild.firstInRow(iRow);
+        while (triple.column()>=0) {
+          int iColumn = triple.column();
+          if (iColumn*2<numberColumns) {
+            // just value as normal
+            build(iRow,triple.column(),triple.value());
+          } else {
+            // create as string
+            char temp[100];
+            sprintf(temp,"%g + (1.5*%g*multiplier)",triple.value(), triple.value());
+            build(iRow,iColumn,temp);
+          }
+          triple=saveBuild.next(triple);
+        }
+        // but remember to do rhs
+        build.setRowLower(iRow,rowLower[iRow]);
+        build.setRowUpper(iRow,rowUpper[iRow]);
+      }
+    }
+    // If small switch on error printing
+    if (numberColumns<50)
+      build.setLogLevel(1);
+    int numberErrors=model2.loadFromCoinModel(build);
+    // should fail as we never set multiplier
+    assert (numberErrors);
+    build.associateElement("multiplier",0.0);
+    numberErrors=model2.loadFromCoinModel(build);
+    assert (!numberErrors);
+    model2.initialSolve();
+    // It then loops with multiplier going from 0.0 to 2.0 in increments of 0.1
+    for (double multiplier=0.0;multiplier<2.0;multiplier+= 0.1) {
+      build.associateElement("multiplier",multiplier);
+      numberErrors=model2.loadFromCoinModel(build,true);
+      assert (!numberErrors);
+      model2.resolve();
+    }
+  }
   // Solve an lp by hand
   {    
     OsiClpSolverInterface m;

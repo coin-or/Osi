@@ -322,7 +322,8 @@ void OsiClpSolverInterface::resolve()
 	lastAlgorithm_=1; // primal
 	if (solver.status()==3&&
 	    solver.numberIterations()<solver.maximumIterations()) {
-	  printf("in trouble - try all slack\n");
+	  if (modelPtr_->messageHandler()->logLevel()>0)
+	    printf("in trouble - try all slack\n");
 	  CoinWarmStartBasis allSlack;
 	  setBasis(allSlack,&solver);
 	  solver.primal();
@@ -365,7 +366,7 @@ void OsiClpSolverInterface::resolve()
     startFinishOptions=0;
     modelPtr_->setSpecialOptions(saveOptions|(64|1024));
   } else {
-    startFinishOptions=1+4;
+    startFinishOptions=1+2+4;
     if((specialOptions_&4)==0) 
       modelPtr_->setSpecialOptions(saveOptions|(64|128|512|1024|4096));
     else

@@ -1141,7 +1141,14 @@ double OsiGlpkSolverInterface::getObjValue() const
   double objOffset;
   getDblParam(OsiObjOffset,objOffset);
 
-	return lpx_get_obj_val( model ) - objOffset;
+  double obj = lpx_get_obj_val( model );
+
+  // It seems the GLPK has applied the offset to the obj value,
+  // but it applied it with opposite sign.
+  // To fix adjust obj by twice the offset.
+  double retVal = obj - 2.0*objOffset;
+
+	return retVal;
 }
 
 //-----------------------------------------------------------------------------

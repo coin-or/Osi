@@ -1,5 +1,5 @@
 /*! \legal
-  Copyright (C) 2002, 2003
+  Copyright (C) 2002, 2003, 2004.
   Lou Hafer, International Business Machines Corporation and others.
   All Rights Reserved.
 */
@@ -39,7 +39,7 @@
 */
 
 namespace {
-  char sccsid[] = "@(#)OsiDylpWarmStartBasis.cpp	1.3	03/18/04" ;
+  char sccsid[] = "@(#)OsiDylpWarmStartBasis.cpp	1.4	06/22/04" ;
   char cvsid[] = "$Id$" ;
 }
 
@@ -338,6 +338,9 @@ void ODWSB::deleteRows (int number, const int *which)
 
   int newsze = STATBYTES(oldconcnt-delcnt) ;
   char *newStat = new char[newsze] ;
+# ifndef NDEBUG
+  memset(newStat,0,(newsze*sizeof(char))) ;
+# endif
 
   k = 0 ;
   for (i = 0 ; i < oldconcnt ; i++)

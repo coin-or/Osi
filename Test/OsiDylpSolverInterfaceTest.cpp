@@ -1,6 +1,7 @@
 /*! \legal
-  Copyright (C) 2002, 2003, Lou Hafer, Stephen Tse, International Business
-  Machines Corporation and others. All Rights Reserved.
+  Copyright (C) 2002, 2003, 2004.
+  Lou Hafer, Stephen Tse, International Business Machines Corporation and
+  others. All Rights Reserved.
 */
 
 #ifdef COIN_USE_DYLP
@@ -28,7 +29,7 @@
 #include "OsiDylpMessages.hpp"
 
 
-static char sccsid[] = "%W%	%G%" ;
+static char sccsid[] = "@(#)OsiDylpSolverInterfaceTest.cpp	1.9	06/22/04" ;
 static char cvsid[] = "$Id$" ;
 
 
@@ -46,7 +47,8 @@ void test_starts (const std::string& mpsDir)
 { OsiDylpSolverInterface *osi = new OsiDylpSolverInterface ;
   OsiHintStrength strength ;
   bool sense ;
-  void *info ;
+  int info ;
+  void *p_info = &info ;
 
 /*
   Read in exmip1 and solve it.
@@ -150,8 +152,8 @@ void test_starts (const std::string& mpsDir)
   int level = 5 ;
   level |= 0x10 ;
   osi->setHintParam(OsiDoReducePrint,true,OsiForceDo,&level) ;
-  osi->getHintParam(OsiDoReducePrint,sense,strength,info) ;
-  std::cout << "Verbosity now maxed at " << *static_cast<int *>(info) << ".\n" ;
+  osi->getHintParam(OsiDoReducePrint,sense,strength,p_info) ;
+  std::cout << "Verbosity now maxed at " << info << ".\n" ;
 
   osi->readMps(exmpsfile.c_str(), "mps") ;
 
@@ -216,8 +218,8 @@ void test_starts (const std::string& mpsDir)
 */
   level = 0 ;
   osi->setHintParam(OsiDoReducePrint,true,OsiForceDo,&level) ;
-  osi->getHintParam(OsiDoReducePrint,sense,strength,info) ;
-  std::cout << "Verbosity now at " << *static_cast<int *>(info) << ".\n" ;
+  osi->getHintParam(OsiDoReducePrint,sense,strength,p_info) ;
+  std::cout << "Verbosity now at " << info << ".\n" ;
 
   std::cout << "And back ..." ;
   osi->setObjSense(1.0) ;

@@ -1,4 +1,4 @@
-//  LAST EDIT: Thu Mar  8 11:58:14 2001 by Tobias Pfender (opt14!bzfpfend) 
+//  LAST EDIT: Fri Aug 31 13:54:15 2001 by Tobias Pfender (opt14!bzfpfend) 
 //-----------------------------------------------------------------------------
 // name:     OSI Interface for CPLEX
 // author:   Tobias Pfender
@@ -535,8 +535,35 @@ public:
 
   /**@name CPLEX specific public interfaces */
   //@{
-  /// Get pointer to CPLEX model
-  CPXLPptr getLpPtr();
+  /** Get pointer to CPLEX model and free all specified cached data entries
+      (combined with logical or-operator '|' ):
+  */
+  enum keepCachedFlag
+  {
+    /// discard all cached data (default)
+    KEEPCACHED_NONE    = 0,
+    /// column information: objective values, lower and upper bounds, variable types
+    KEEPCACHED_COLUMN  = 1,
+    /// row information: right hand sides, ranges and senses, lower and upper bounds for row
+    KEEPCACHED_ROW     = 2,
+    /// problem matrix: matrix ordered by column and by row
+    KEEPCACHED_MATRIX  = 4,
+    /// LP solution: primal and dual solution, reduced costs, row activities
+    KEEPCACHED_RESULTS = 8,
+    /// only discard cached LP solution
+    KEEPCACHED_PROBLEM = KEEPCACHED_COLUMN | KEEPCACHED_ROW | KEEPCACHED_MATRIX,
+    /// keep all cached data (similar to getMutableLpPtr())
+    KEEPCACHED_ALL     = KEEPCACHED_PROBLEM | KEEPCACHED_RESULTS,
+    /// free only cached column and LP solution information
+    FREECACHED_COLUMN  = KEEPCACHED_PROBLEM & !KEEPCACHED_COLUMN,
+    /// free only cached row and LP solution information
+    FREECACHED_ROW     = KEEPCACHED_PROBLEM & !KEEPCACHED_ROW,
+    /// free only cached matrix and LP solution information
+    FREECACHED_MATRIX  = KEEPCACHED_PROBLEM & !KEEPCACHED_MATRIX,
+    /// free only cached LP solution information
+    FREECACHED_RESULTS = KEEPCACHED_ALL & !KEEPCACHED_RESULTS
+  };
+  CPXLPptr getLpPtr( int keepCached = KEEPCACHED_NONE );
   
   /// return a vector of variable types (continous, binary, integer)
   const char* getCtype() const;
@@ -645,8 +672,11 @@ private:
   /// free cached matrices
   void freeCachedMatrix();
 
-  /// free all cached data
-  void freeCachedData();
+  /// free all cached data (except specified entries, see getLpPtr())
+  void freeCachedData( int keepCached = KEEPCACHED_NONE );
+
+  /// free all allocated memory
+  void freeAllMemory();
 
   /// Just for testing purposes
   void printBounds(); 
@@ -657,7 +687,14 @@ private:
   //@{
   /// CPLEX model represented by this class instance
   mutable CPXLPptr lp_;
-  
+
+  /// Hotstart information
+  int *hotStartCStat_;
+  int hotStartCStatSize_;
+  int *hotStartRStat_;
+  int hotStartRStatSize_;
+  int hotStartMaxIteration_;
+
   /**@name Cached information derived from the CPLEX model */
   //@{
   /// Pointer to objective vector

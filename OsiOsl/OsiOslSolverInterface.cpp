@@ -189,6 +189,8 @@ OsiOslSolverInterface::setStrParam(OsiStrParam key, const std::string & value)
     retval = ekk_setCname(getMutableModelPtr(), value.c_str());
     return retval == 0;
 
+  case OsiSolverName:
+    return false;
   case OsiLastStrParam:
     return false;
   }

@@ -122,6 +122,17 @@ OsiSolverInterface::isFreeBinary(int colIndex) const
 //#############################################################################
 
 void
+OsiSolverInterface::setObjCoeffSet(const int* indexFirst,
+				  const int* indexLast,
+				  const double* coeffList)
+{
+   const int cnt = indexLast - indexFirst;
+   for (int i = 0; i < cnt; ++i) {
+      setObjCoeff(indexFirst[i], coeffList[i]);
+   }
+}
+//-----------------------------------------------------------------------------
+void
 OsiSolverInterface::setColSetBounds(const int* indexFirst,
 				    const int* indexLast,
 				    const double* boundList)

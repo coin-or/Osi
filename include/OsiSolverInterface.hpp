@@ -472,6 +472,11 @@ public:
       /** Set an objective function coefficient */
       virtual void setObjCoeff( int elementIndex, double elementValue ) = 0;
 
+      /** Set a a set of objective function coefficients */
+      virtual void setObjCoeffSet(const int* indexFirst,
+				  const int* indexLast,
+				  const double* coeffList);
+
       /** Set a single column lower bound<br>
     	  Use -DBL_MAX for -infinity. */
       virtual void setColLower( int elementIndex, double elementValue ) = 0;

@@ -457,20 +457,10 @@ OsiSolverInterface::operator=(const OsiSolverInterface& rhs)
 int OsiSolverInterface::readMps(const char * filename,
     const char * extension)
 {
-  std::string f(filename);
-  std::string e(extension);
-  std::string fullname;
-  if (e!="") {
-    fullname = f + "." + e;
-  } else {
-    // no extension so no trailing period
-    fullname = f;
-  }
   CoinMpsIO m;
-  int numberErrors;
   m.setInfinity(getInfinity());
   
-  numberErrors = m.readMps(filename,extension);
+  int numberErrors = m.readMps(filename,extension);
   handler_->message(COIN_SOLVER_MPS,messages_)
     <<m.getProblemName()<< numberErrors <<CoinMessageEol;
   if (!numberErrors) {

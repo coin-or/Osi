@@ -1679,7 +1679,7 @@ OsiGlpkSolverInterface::addCols(const int numcols,
 void
 OsiGlpkSolverInterface::deleteCols(const int num, const int * columnIndices)
 {
-	int columnIndicesPlus1[num+1];
+	int *columnIndicesPlus1 = new int[num+1];
         LPX *model = getMutableModelPtr();
 	freeCachedData( OsiGlpkSolverInterface::KEEPCACHED_ROW );
 
@@ -1783,7 +1783,7 @@ void
 OsiGlpkSolverInterface::deleteRows(const int num, const int * rowIndices)
 {
 
-	int rowIndicesPlus1[num];
+	int *rowIndicesPlus1 = new int[num];
         LPX *model = getMutableModelPtr();
 	freeCachedData( OsiGlpkSolverInterface::KEEPCACHED_COLUMN );
 

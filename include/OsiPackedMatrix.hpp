@@ -501,7 +501,7 @@ public:
      const int * rowIndices, 
      const int * colIndices, 
      const double * elements, 
-     const int numels ); 
+     int numels ); 
 
    /// Copy constructor 
    OsiPackedMatrix(const OsiPackedMatrix& m);

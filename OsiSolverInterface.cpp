@@ -478,3 +478,465 @@ OsiSolverInterface::newLanguage(OsiMessages::Language language)
 {
   messages_ = OsiOsiMessage(language);
 }
+
+// Function to return number in most efficient way
+// Also creates row name field
+/* formatType is
+   0 - normal and 8 character names
+   1 - extra accuracy
+   2 - IEEE hex
+   4 - normal but free format
+*/
+static void convertDouble(int formatType,double value,char outputValue[20],
+			  const char * name, char outputRow[100])
+{
+  assert (formatType!=2);
+  if ((formatType&3)==0) {
+    if (value<1.0e20) {
+      int power10;
+      if (value>=0.0)
+	power10 =(int) log10(value);
+      else
+	power10 =(int) log10(-value)+1;
+      if (power10<5&&power10>-2) {
+	char format[7];
+	int decimal = 10-power10;
+	if (decimal>10)
+	  decimal=10;
+	sprintf(format,"%%12.%df",decimal);
+	sprintf(outputValue,format,value);
+	// take off trailing 0
+	int j;
+	for (j=11;j>=0;j--) {
+	  if (outputValue[j]=='0')
+	    outputValue[j]=' ';
+	  else
+	    break;
+	}
+      } else {
+	sprintf(outputValue,"%12g",value);
+      }
+    } else {
+      outputValue[0]= '\0'; // needs no value
+    }
+  } else {
+    if (value<1.0e20) {
+      sprintf(outputValue,"%19g",value);
+      // take out blanks
+      int i=0;
+      int j;
+      for (j=0;j<19;j++) {
+	if (outputValue[j]!=' ')
+	  outputValue[i++]=outputValue[j];
+      }
+      outputValue[i]='\0';
+    } else {
+      outputValue[0]= '\0'; // needs no value
+    }
+  }
+  strcpy(outputRow,name);
+  if (!formatType) {
+    int i;
+    // pad out to 12 and 8
+    for (i=0;i<12;i++) {
+      if (outputValue[i]=='\0')
+	break;
+    }
+    for (;i<12;i++) 
+      outputValue[i]=' ';
+    outputValue[12]='\0';
+    for (i=0;i<8;i++) {
+      if (outputRow[i]=='\0')
+	break;
+    }
+    for (;i<8;i++) 
+      outputRow[i]=' ';
+    outputRow[8]='\0';
+  }
+}
+// Put out card image
+static void outputCard(int formatType,int numberFields,
+		       FILE *fp, std::string head,
+		       const char * name,
+		       const char outputValue[2][20],
+		       const char outputRow[2][100])
+{
+  fprintf(fp,"%s",head.c_str());
+  int i;
+  if (!formatType) {
+    char outputColumn[9];
+    strcpy(outputColumn,name);
+    for (i=0;i<8;i++) {
+      if (outputColumn[i]=='\0')
+	break;
+    }
+    for (;i<8;i++) 
+      outputColumn[i]=' ';
+    outputColumn[8]='\0';
+    fprintf(fp,"%s  ",outputColumn);
+    for (i=0;i<numberFields;i++) {
+      fprintf(fp,"%s  %s",outputRow[i],outputValue[i]);
+      if (i<numberFields-1)
+	fprintf(fp,"   ");
+    }
+  } else {
+    fprintf(fp,"%s",name);
+    for (i=0;i<numberFields;i++) {
+      fprintf(fp," %s %s",outputRow[i],outputValue[i]);
+    }
+  }
+  fprintf(fp,"\n");
+}
+/* Write the problem into an mps file of the given filename,
+   names may be null.  formatType is
+   0 - normal
+   1 - extra accuracy
+   2 - IEEE hex
+*/
+int 
+OsiSolverInterface::writeMps(const char *filename, 
+			     const char ** rowNames, 
+			     const char ** columnNames,
+			     int formatType,
+			     int numberAcross) const
+{
+  FILE * fp = fopen(filename,"w");
+  if (!fp)
+    return -1;
+  int numberRows = getNumRows();
+  int numberColumns = getNumCols();
+  char ** rowNameTemp=NULL;
+  char ** columnNameTemp=NULL;
+  // If long names free format
+  unsigned int length = 8;
+  bool freeFormat=(formatType!=0);
+  int i;
+  if (rowNames) {
+    for (i=0;i<numberRows;i++) {
+      if (strlen(rowNames[i])>length)
+	length = strlen(rowNames[i]);
+    }
+  } else {
+    rowNameTemp = new char * [numberRows];
+    for (i=0;i<numberRows;i++) {
+      char * name = new char[9];
+      sprintf(name,"R%7.7d",i);
+      rowNameTemp[i]=name;
+    }
+    rowNames=(const char **) rowNameTemp;
+  }
+  if (columnNames) {
+    for (i=0;i<numberColumns;i++) {
+      if (strlen(columnNames[i])>length)
+	length = strlen(columnNames[i]);
+    }
+  } else {
+    columnNameTemp = new char * [numberColumns];
+    for (i=0;i<numberColumns;i++) {
+      char * name = new char[9];
+      sprintf(name,"C%7.7d",i);
+      columnNameTemp[i]=name;
+    }
+    columnNames=(const char **) columnNameTemp;
+  }
+  if (length>8&&!freeFormat) {
+    freeFormat = true;
+    formatType=4;
+  }
+
+  // NAME card
+
+  fprintf(fp,"NAME          ");
+  std::string problemName;
+  getStrParam(OsiProbName, problemName);
+  if (!problemName.size()) 
+    problemName="BLANK   ";
+  if (problemName.size()>=8) {
+    for (i=0;i<8;i++) 
+      fprintf(fp,"%c",problemName[i]);
+  } else {
+    unsigned int i;
+    for (i=0;i<problemName.size();i++) 
+      fprintf(fp,"%c",problemName[i]);
+    for (;i<8;i++) 
+      fprintf(fp,"%c",' ');
+  }
+
+  if (freeFormat)
+    fprintf(fp,"  FREE");
+
+  // finish off name and do ROWS card and objective 
+
+  fprintf(fp,"\nROWS\n N  OBJROW\n");
+
+  // Rows section
+  // Sense array
+  const char * sense = getRowSense();
+  
+  for (i=0;i<numberRows;i++) {
+    if (sense[i]!='R')
+      fprintf(fp," %c  %s\n",sense[i],rowNames[i]);
+    else
+      fprintf(fp," L  %s\n",rowNames[i]);
+  }
+  
+  // COLUMNS card
+  fprintf(fp,"COLUMNS\n");
+
+  bool ifBounds=false;
+  double largeValue = getInfinity();
+
+  const double * columnLower = getColLower();
+  const double * columnUpper = getColUpper();
+  const double * objective = getObjCoefficients();
+  const OsiPackedMatrix * matrix = getMatrixByCol();
+  const double * elements = matrix->getElements();
+  const int * rows = matrix->getIndices();
+  const int * starts = matrix->getVectorStarts();
+  const int * lengths = matrix->getVectorLengths();
+
+  char outputValue[2][20];
+  char outputRow[2][100];
+
+  // Through columns (only put out if elements or objective value)
+  for (i=0;i<numberColumns;i++) {
+    if (objective[i]||lengths[i]) {
+      // see if bound will be needed
+      if (columnLower[i]||columnUpper[i]<largeValue)
+	ifBounds=true;
+      int numberFields=0;
+      if (objective[i]) {
+	convertDouble(formatType,objective[i],outputValue[0],
+		      "OBJROW",outputRow[0]);
+	numberFields=1;
+      }
+      if (numberFields==numberAcross) {
+	// put out card
+	outputCard(formatType, numberFields,
+		   fp, "    ",
+		   columnNames[i],
+		   outputValue,
+		   outputRow);
+	numberFields=0;
+      }
+      int j;
+      for (j=0;j<lengths[i];j++) {
+	convertDouble(formatType,elements[starts[i]+j],
+		      outputValue[numberFields],
+		      rowNames[rows[starts[i]+j]],
+		      outputRow[numberFields]);
+	numberFields++;
+	if (numberFields==numberAcross) {
+	  // put out card
+	  outputCard(formatType, numberFields,
+		     fp, "    ",
+		     columnNames[i],
+		     outputValue,
+		     outputRow);
+	  numberFields=0;
+	}
+      }
+      if (numberFields) {
+	// put out card
+	outputCard(formatType, numberFields,
+		   fp, "    ",
+		   columnNames[i],
+		   outputValue,
+		   outputRow);
+      }
+    }
+  }
+  
+
+  bool ifRange=false;
+  // RHS
+  fprintf(fp,"RHS\n");
+
+  const double * rowLower = getRowLower();
+  const double * rowUpper = getRowUpper();
+  
+  int numberFields = 0;
+  for (i=0;i<numberRows;i++) {
+    double value;
+    switch (sense[i]) {
+    case 'E':
+      value=rowLower[i];
+      break;
+    case 'R':
+      value=rowUpper[i];
+      ifRange=true;
+      break;
+    case 'L':
+      value=rowUpper[i];
+      break;
+    case 'G':
+      value=rowLower[i];
+      break;
+    default:
+      value=0.0;
+      break;
+    }
+    if (value) {
+      convertDouble(formatType,value,
+		    outputValue[numberFields],
+		    rowNames[i],
+		    outputRow[numberFields]);
+      numberFields++;
+      if (numberFields==numberAcross) {
+	// put out card
+	outputCard(formatType, numberFields,
+		   fp, "    ",
+		   "RHS",
+		   outputValue,
+		   outputRow);
+	numberFields=0;
+      }
+    }
+  }
+  if (numberFields) {
+    // put out card
+    outputCard(formatType, numberFields,
+	       fp, "    ",
+	       "RHS",
+	       outputValue,
+	       outputRow);
+  }
+  
+
+  if (ifRange) {
+    // RANGE
+    fprintf(fp,"RANGE\n");
+
+    numberFields = 0;
+    for (i=0;i<numberRows;i++) {
+      if (sense[i]=='R') {
+	double value =rowUpper[i]-rowLower[i];
+	convertDouble(formatType,value,
+		      outputValue[numberFields],
+		      rowNames[i],
+		      outputRow[numberFields]);
+	numberFields++;
+	if (numberFields==numberAcross) {
+	  // put out card
+	  outputCard(formatType, numberFields,
+		     fp, "    ",
+		     "RANGE",
+		     outputValue,
+		     outputRow);
+	  numberFields=0;
+	}
+      }
+    }
+    if (numberFields) {
+      // put out card
+      outputCard(formatType, numberFields,
+		 fp, "    ",
+		 "RANGE",
+		 outputValue,
+		 outputRow);
+    }
+  }
+  
+
+  if (ifBounds) {
+
+    // BOUNDS
+    fprintf(fp,"BOUNDS\n");
+
+    for (i=0;i<numberColumns;i++) {
+      if (objective[i]||lengths[i]) {
+	// see if bound will be needed
+	if (columnLower[i]||columnUpper[i]<largeValue) {
+	  int numberFields=1;
+	  std::string header[2];
+	  double value[2];
+	  if (columnLower[i]<=-largeValue) {
+	    // FR or MI
+	    if (columnUpper[i]>=largeValue) {
+	      header[0]=" FR ";
+	      value[0] = largeValue;
+	    } else {
+	      header[0]=" MI ";
+	      value[0] = largeValue;
+	      header[0]=" UP ";
+	      value[0] = columnUpper[i];
+	      numberFields=2;
+	    }
+	  } else if (fabs(columnUpper[i]-columnLower[i])<1.0e-8) {
+	    header[0]=" FX ";
+	    value[0] = columnLower[i];
+	  } else {
+	    // do LO if needed
+	    if (columnLower[i]) {
+	      // LO
+	      header[0]=" LO ";
+	      value[0] = columnLower[i];
+	      if (isInteger(i)) {
+		// Integer variable so UI
+		header[1]=" UI ";
+		value[1] = columnUpper[i];
+		numberFields=2;
+	      } else if (columnUpper[i]<largeValue) {
+		// UP
+		header[1]=" UP ";
+		value[1] = columnUpper[i];
+		numberFields=2;
+	      }
+	    } else {
+	      if (isInteger(i)) {
+		// Integer variable so BV or UI
+		if (fabs(columnUpper[i]-1.0)<1.0e-8) {
+		  // BV
+		  header[0]=" BV ";
+		  value[0] = largeValue;
+		} else {
+		  // UI
+		  header[0]=" UI ";
+		  value[0] = columnUpper[i];
+		}
+	      } else {
+		// UP
+		header[0]=" UP ";
+		value[0] = columnUpper[i];
+	      }
+	    }
+	  }
+	  // put out fields
+	  int j;
+	  for (j=0;j<numberFields;j++) {
+	    convertDouble(formatType,value[j],
+			  outputValue[0],
+			  columnNames[i],
+			  outputRow[0]);
+	    // put out card
+	    outputCard(formatType, 1,
+		       fp, header[j],
+		       "BOUND",
+		       outputValue,
+		       outputRow);
+	  }
+	}
+      }
+    }
+  }
+
+  // and finish
+
+  fprintf(fp,"ENDATA\n");
+
+  fclose(fp);
+
+  if (rowNameTemp) {
+    for (i=0;i<numberRows;i++) {
+      delete [] rowNameTemp[i];
+    }
+    delete [] rowNameTemp;
+  }
+  if (columnNameTemp) {
+    for (i=0;i<numberColumns;i++) {
+      delete [] columnNameTemp[i];
+    }
+    delete [] columnNameTemp;
+  }
+  return 0;
+}

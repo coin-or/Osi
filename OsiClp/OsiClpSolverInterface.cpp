@@ -750,9 +750,8 @@ void OsiClpSolverInterface::writeMps(const char * filename,
     // no extension so no trailing period
     fullname = f;
   }
-  throw CoinError("Sorry, the Clp Algorithm doesn't implement writeMps",
-		  "writeMps", "OsiClpSolverInterface");
-
+  // Fall back on Osi version - without names
+  OsiSolverInterface::writeMps(fullname.c_str(), NULL, NULL,1);
 }
 
 //#############################################################################

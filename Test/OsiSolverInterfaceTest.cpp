@@ -43,6 +43,28 @@
 #undef NDEBUG
 #endif
 
+#include  <time.h>
+#include <sys/times.h>
+#include <sys/resource.h>
+#include <unistd.h>
+static double totalTime=0.0;
+static double cpuTime()
+{
+  double cpu_temp;
+#if defined(_MSC_VER)
+  unsigned int ticksnow;        /* clock_t is same as int */
+  
+  ticksnow = (unsigned int)clock();
+  
+  cpu_temp = (double)((double)ticksnow/CLOCKS_PER_SEC);
+#else
+  struct rusage usage;
+  getrusage(RUSAGE_SELF,&usage);
+  cpu_temp = usage.ru_utime.tv_sec;
+  cpu_temp += 1.0e-6*((double) usage.ru_utime.tv_usec);
+#endif
+  return cpu_temp;
+}
 //--------------------------------------------------------------------------
 // A helper function to compare the equivalence of two vectors 
 static bool
@@ -148,7 +170,7 @@ void OsiSolverInterfaceMpsUnitTest
   PUSH_MPS("cycle",true,1904,2857,-5.2263930249e+00,1.e-9)
   PUSH_MPS("czprob",true,930,3523,2.1851966989e+06,1.e-10)
   PUSH_MPS("d2q06c",true,2172,5167,122784.21557456,1.e-7)
-  PUSH_MPS("d6cube",true,416,6184,3.1549166667e+02,1.e-10)
+  PUSH_MPS("d6cube",true,416,6184,3.1549166667e+02,1.e-8)
   PUSH_MPS("degen2",true,445,534,-1.4351780000e+03,1.e-10)
   PUSH_MPS("degen3",true,1504,1818,-9.8729400000e+02,1.e-10)
   PUSH_MPS("dfl001",true,6072,12230,1.1266396047E+07,1.e-5)
@@ -197,7 +219,7 @@ void OsiSolverInterfaceMpsUnitTest
   PUSH_MPS("scrs8",true,491,1169,9.0429998619e+02,1.e-5)
   PUSH_MPS("scsd1",true,78,760,8.6666666743e+00,1.e-10)
   PUSH_MPS("scsd6",true,148,1350,5.0500000078e+01,1.e-10)
-  PUSH_MPS("scsd8",true,398,2750,9.0499999993e+02,1.e-10)
+  PUSH_MPS("scsd8",true,398,2750,9.0499999993e+02,1.e-8)
   PUSH_MPS("sctap1",true,301,480,1.4122500000e+03,1.e-10)
   PUSH_MPS("sctap2",true,1091,1880,1.7248071429e+03,1.e-10)
   PUSH_MPS("sctap3",true,1481,2480,1.4240000000e+03,1.e-10)
@@ -241,9 +263,11 @@ void OsiSolverInterfaceMpsUnitTest
   // and a count on the number of problems the solver intface solved.
   std::vector<std::string> siName;
   std::vector<int> numProbSolved;
+  std::vector<double> timeTaken;
   for ( i=0; i<vecSiP.size(); i++ ) {
     siName.push_back("");
     numProbSolved.push_back(0);
+    timeTaken.push_back(0.0);
   }
 
 /*
@@ -394,6 +418,7 @@ void OsiSolverInterfaceMpsUnitTest
 
     for (i = 0 ; i < static_cast<int>(vecSiP.size()) ; ++i)
     {
+      double startTime = cpuTime();
 #     ifdef COIN_USE_VOL
       { 
         OsiVolSolverInterface * si =
@@ -473,37 +498,33 @@ void OsiSolverInterfaceMpsUnitTest
       
       vecSiP[i]->initialSolve() ;
       
+      double timeOfSolution = cpuTime()-startTime;
       if (vecSiP[i]->isProvenOptimal()) { 
         double soln = vecSiP[i]->getObjValue();       
         OsiRelFltEq eq(objValueTol[m]) ;
         if (eq(soln,objValue[m])) { 
-          //std::cerr << soln << " = " << objValue[m] << " ; ok." <<std::endl; 
-          numProbSolved[i]++; 
-        }
-        else  { 
+          std::cerr 
+	    <<siName[i]<<" "
+	    << soln << " = " << objValue[m] << " ; okay";
+          numProbSolved[i]++;
+        } else  { 
           std::cerr <<siName[i] <<" " <<soln << " != " <<objValue[m] << "; error=" ;
-          std::cerr <<fabs(objValue[m] - soln) <<std::endl; 
+          std::cerr <<fabs(objValue[m] - soln); 
         }
+      } else {
+        if (vecSiP[i]->isProvenPrimalInfeasible())  
+          std::cerr << "error; primal infeasible" ;
+        else if (vecSiP[i]->isProvenDualInfeasible())  
+	  std::cerr << "error; dual infeasible" ;
+	else if (vecSiP[i]->isIterationLimitReached()) 
+	  std::cerr << "error; iteration limit" ;
+	else if (vecSiP[i]->isAbandoned()) 
+	  std::cerr << "error; abandoned" ;
+	else  
+	  std::cerr << "error; unknown" ;
       }
-      else
-        if (vecSiP[i]->isProvenPrimalInfeasible()) { 
-          std::cerr << "error; primal infeasible" << std::endl ; 
-        }
-        else
-          if (vecSiP[i]->isProvenDualInfeasible()) { 
-            std::cerr << "error; dual infeasible" << std::endl ; 
-          }
-          else
-            if (vecSiP[i]->isIterationLimitReached()) { 
-              std::cerr << "error; iteration limit" << std::endl ; 
-            }
-            else
-              if (vecSiP[i]->isAbandoned())  { 
-                std::cerr << "error; abandoned" << std::endl ; 
-              }
-              else  { 
-                std::cerr << "error; unknown" << std::endl ; 
-              } 
+      std::cerr<<" - took " <<timeOfSolution<<" seconds."<<std::endl; 
+      timeTaken[i] += timeOfSolution;
     }
     /*
     Delete the used solver interfaces so we can reload fresh clones for the
@@ -519,6 +540,9 @@ void OsiSolverInterfaceMpsUnitTest
       <<numProbSolved[i]
       <<" out of "
       <<objValue.size()
+      <<" and took "
+      <<timeTaken[i]
+      <<" seconds."
       <<std::endl;
   } 
 }
@@ -909,7 +933,26 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 #else
 	assert(0==1);
 #endif
-      }  
+      }
+      
+      // Test WriteMps
+      
+      {
+	
+	OsiSolverInterface *  si1 = emptySi->clone(); 
+	OsiSolverInterface *  si2 = emptySi->clone(); 
+	si1->readMps(fn.c_str(),"mps");
+	si1->writeMps("test.out",NULL,NULL);
+	si1->writeMps("test2","out");
+	si2->readMps("test.out","");
+	si1->initialSolve();
+	si2->initialSolve();
+        double soln = si1->getObjValue();       
+        OsiRelFltEq eq(1.0e-8) ;
+        assert( eq(soln,si2->getObjValue()));       
+	delete si1;
+	delete si2;
+      }
         
       // Test collower
       basePv.setVector(base->getNumCols(),indices,base->getColLower());

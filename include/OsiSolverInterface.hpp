@@ -709,6 +709,17 @@ public:
     /** Write the problem into an mps file of the given filename */
     virtual void writeMps(const char *filename,
 			  const char *extension = "mps") const = 0;
+    /** Write the problem into an mps file of the given filename,
+	names may be null.  formatType is
+	0 - normal
+	1 - extra accuracy 
+	2 - IEEE hex (later)
+
+	Returns non-zero on I/O error
+    */
+    int writeMps(const char *filename, 
+		  const char ** rowNames, const char ** columnNames,
+		  int formatType=0,int numberAcross=2) const ;
   //@}
 
   //---------------------------------------------------------------------------

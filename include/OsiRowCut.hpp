@@ -68,10 +68,13 @@ public:
 
   /**@name Comparison operators  */
   //@{
+    using OsiCut::operator== ;
     /** equal - true if lower bound, upper bound, row elements,
         and OsiCut are equal.
     */
     OsiRowCut_inline bool operator==(const OsiRowCut& rhs) const; 
+
+    using OsiCut::operator!= ;
     /// not equal
     OsiRowCut_inline bool operator!=(const OsiRowCut& rhs) const; 
   //@}

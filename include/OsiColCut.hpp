@@ -59,10 +59,13 @@ public:
   
   /**@name Comparison operators  */
   //@{
+  using OsiCut::operator== ;
   /** equal - true if lower bounds, upper bounds, 
   and OsiCut are equal.
   */
   inline virtual bool operator==(const OsiColCut& rhs) const; 
+
+  using OsiCut::operator!= ;
   /// not equal
   inline virtual bool operator!=(const OsiColCut& rhs) const; 
   //@}

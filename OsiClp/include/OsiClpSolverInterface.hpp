@@ -704,6 +704,23 @@ public:
   { return specialOptions_;};
   inline void setSpecialOptions(unsigned int value)
   { specialOptions_=value;};
+  /// Get scaling action option
+  inline int cleanupScaling() const
+  { return cleanupScaling_;};
+  /** Set Scaling option
+      When scaling is on it is possible that the scaled problem
+      is feasible but the unscaled is not.  Clp returns a secondary
+      status code to that effect.  This option allows for a cleanup.
+      If you use it I would suggest 1.
+      This only affects actions when scaled optimal
+      0 - no action
+      1 - clean up using dual if primal infeasibility
+      2 - clean up using dual if dual infeasibility
+      3 - clean up using dual if primal or dual infeasibility
+      11,12,13 - as 1,2,3 but use primal
+  */
+  inline void setCleanupScaling(int value)
+  { cleanupScaling_=value;};
   //@}
 
   //---------------------------------------------------------------------------
@@ -833,6 +850,19 @@ protected:
 
       /// To save data in OsiSimplex stuff
       ClpDataSave saveData_;
+      /** Scaling option
+          When scaling is on it is possible that the scaled problem
+          is feasible but the unscaled is not.  Clp returns a secondary
+          status code to that effect.  This option allows for a cleanup.
+          If you use it I would suggest 1.
+          This only affects actions when scaled optimal
+          0 - no action
+          1 - clean up using dual if primal infeasibility
+          2 - clean up using dual if dual infeasibility
+          3 - clean up using dual if primal or dual infeasibility
+          11,12,13 - as 1,2,3 but use primal
+      */
+      int cleanupScaling_;
       /** Special options
           -1 off
           0 simple stuff for branch and bound

@@ -201,6 +201,10 @@ void OsiClpSolverInterface::initialSolve()
       }
     }
   }
+  // If scaled feasible but unscaled infeasible take action
+  if (!solver.status()&&cleanupScaling_) {
+    solver.cleanup(cleanupScaling_);
+  }
   basis_ = getBasis(&solver);
   //basis_.print();
   solver.messageHandler()->setLogLevel(saveMessageLevel);
@@ -229,136 +233,6 @@ void OsiClpSolverInterface::initialSolve()
 //-----------------------------------------------------------------------------
 void OsiClpSolverInterface::resolve()
 {
-  //#define BORROW_MODEL
-#ifdef BORROW_MODEL
-  ClpSimplex solver;
-  solver.borrowModel(*modelPtr_);
-  int saveSolveType=solver.solveType();
-  bool doingPrimal = solver.algorithm()>0;
-  if (saveSolveType==2) {
-    disableSimplexInterface();
-    solver.setSolveType(1);
-  }
-  // Set message handler to have same levels etc
-  solver.passInMessageHandler(handler_);
-  //basis_.print();
-  setBasis(basis_,&solver);
-  // set reasonable defaults
-  bool takeHint;
-  OsiHintStrength strength;
-  // Switch off printing if asked to
-  bool gotHint = (getHintParam(OsiDoReducePrint,takeHint,strength));
-  assert (gotHint);
-  int saveMessageLevel=messageHandler()->logLevel();
-  if (strength!=OsiHintIgnore&&takeHint) {
-    if (saveMessageLevel)
-      solver.messageHandler()->setLogLevel(saveMessageLevel-1);
-  }
-  // scaling
-  if (modelPtr_->solveType()==1) {
-    gotHint = (getHintParam(OsiDoScale,takeHint,strength));
-    assert (gotHint);
-    if (strength==OsiHintIgnore||takeHint)
-      solver.scaling(3);
-    else
-      solver.scaling(0);
-  } else {
-    solver.scaling(0);
-  }
-  ClpDualRowSteepest steep;
-  solver.setDualRowPivotAlgorithm(steep);
-  // sort out hints;
-  // algorithm -1 force dual, +1 force primal
-  int algorithm = -1;
-  gotHint = (getHintParam(OsiDoDualInResolve,takeHint,strength));
-  assert (gotHint);
-  if (strength!=OsiHintIgnore)
-    algorithm = takeHint ? -1 : 1;
-  //solver.saveModel("save.bad");
-  // presolve
-  gotHint = (getHintParam(OsiDoPresolveInResolve,takeHint,strength));
-  assert (gotHint);
-  if (strength!=OsiHintIgnore&&takeHint) {
-    ClpPresolve pinfo;
-    ClpSimplex * model2 = pinfo.presolvedModel(solver,1.0e-8);
-    if (!model2) {
-      // problem found to be infeasible - whats best?
-      model2 = &solver;
-    }
-    // change from 200
-    model2->factorization()->maximumPivots(100+model2->numberRows()/50);
-    if (algorithm<0) {
-      // up dual bound for safety
-      //model2->setDualBound(1.0e10);
-      model2->dual();
-      // check if clp thought it was in a loop
-      if (model2->status()==3&&!model2->hitMaximumIterations()) {
-	// switch algorithm
-	model2->primal();
-      }
-    } else {
-      // up infeasibility cost for safety
-      //model2->setInfeasibilityCost(1.0e10);
-      model2->primal();
-      // check if clp thought it was in a loop
-      if (model2->status()==3&&!model2->hitMaximumIterations()) {
-	// switch algorithm
-	model2->dual();
-      }
-    }
-    if (model2!=&solver) {
-      pinfo.postsolve(true);
-    
-      delete model2;
-      // later try without (1) and check duals before solve
-      solver.primal(1);
-      lastAlgorithm_=1; // primal
-    }
-    //if (solver.numberIterations())
-    //printf("****** iterated %d\n",solver.numberIterations());
-  } else {
-    if (algorithm<0) {
-      //printf("doing dual\n");
-      solver.dual();
-      lastAlgorithm_=2; // dual
-      // check if clp thought it was in a loop
-      if (solver.status()==3&&!solver.hitMaximumIterations()) {
-	// switch algorithm
-	solver.primal();
-	lastAlgorithm_=1; // primal
-      if (solver.status()==3&&!solver.hitMaximumIterations()) {
-	  if (modelPtr_->messageHandler()->logLevel()>0)
-	    printf("in trouble - try all slack\n");
-	  CoinWarmStartBasis allSlack;
-	  setBasis(allSlack,&solver);
-	  solver.primal();
-      if (solver.status()==3&&!solver.hitMaximumIterations()) {
-	    printf("Real real trouble - treat as infeasible\n");
-	    solver.setProblemStatus(1);
-	  }
-	}
-      }
-    } else {
-      //printf("doing primal\n");
-      solver.primal();
-      lastAlgorithm_=1; // primal
-      // check if clp thought it was in a loop
-      if (solver.status()==3&&!solver.hitMaximumIterations()) {
-	// switch algorithm
-	solver.dual();
-	lastAlgorithm_=2; // dual
-      }
-    }
-  }
-  basis_ = getBasis(&solver);
-  //basis_.print();
-  solver.messageHandler()->setLogLevel(saveMessageLevel);
-  solver.returnModel(*modelPtr_);
-  if (saveSolveType==2) {
-    enableSimplexInterface(doingPrimal);
-  }
-  //solver.setSolveType(saveSolveType);
-#else
   int saveSolveType=modelPtr_->solveType();
   bool doingPrimal = modelPtr_->algorithm()>0;
   if (saveSolveType==2) {
@@ -471,12 +345,28 @@ void OsiClpSolverInterface::resolve()
     //if (modelPtr_->numberIterations())
     //printf("****** iterated %d\n",modelPtr_->numberIterations());
   } else {
+    //modelPtr_->setLogLevel(63);
+    modelPtr_->setDualTolerance(1.0e-8);
     if (algorithm<0) {
       //printf("doing dual\n");
       int savePerturbation = modelPtr_->perturbation();
       if (specialOptions_>=0&&(specialOptions_&2)!=0)
 	modelPtr_->setPerturbation(100);
       modelPtr_->dual(0,startFinishOptions);
+      if (!modelPtr_->problemStatus()&&0) {
+        double obj1 = modelPtr_->getObjValue();
+        int its = modelPtr_->maximumIterations();
+        modelPtr_->setMaximumIterations(10000);
+        modelPtr_->allSlackBasis();
+        modelPtr_->dual();
+        int level = modelPtr_->logLevel();
+        modelPtr_->setLogLevel(63);
+        modelPtr_->dual();
+        modelPtr_->primal();
+        assert (fabs(obj1-modelPtr_->getObjValue())<1.0e-4);
+        modelPtr_->setLogLevel(level);
+        modelPtr_->setMaximumIterations(its);
+      }
       assert (modelPtr_->objectiveValue()<1.0e100);
       modelPtr_->setPerturbation(savePerturbation);
       lastAlgorithm_=2; // dual
@@ -524,6 +414,11 @@ void OsiClpSolverInterface::resolve()
       }
     }
   }
+  // If scaled feasible but unscaled infeasible take action
+  //if (!modelPtr_->status()&&cleanupScaling_) {
+  if (cleanupScaling_) {
+    modelPtr_->cleanup(cleanupScaling_);
+  }
   basis_ = getBasis(modelPtr_);
   //basis_.print();
   //modelPtr_->messageHandler()->setLogLevel(saveMessageLevel);
@@ -533,7 +428,6 @@ void OsiClpSolverInterface::resolve()
   }
   //modelPtr_->setSolveType(saveSolveType);
   modelPtr_->setSpecialOptions(saveOptions); // restore
-#endif
 }
 /* Sets up solver for repeated use by Osi interface.
    The normal usage does things like keeping factorization around so can be used.
@@ -1420,6 +1314,7 @@ rowActivity_(NULL),
 columnActivity_(NULL),
 matrixByRow_(NULL),
 integerInformation_(NULL),
+cleanupScaling_(0),
 specialOptions_(-1)
 {
   modelPtr_=NULL;
@@ -1475,6 +1370,7 @@ integerInformation_(NULL)
 	   numberColumns*sizeof(char));
   }
   saveData_ = rhs.saveData_;
+  cleanupScaling_ = rhs.cleanupScaling_;
   specialOptions_ = rhs.specialOptions_;
   fillParamMaps();
   messageHandler()->setLogLevel(rhs.messageHandler()->logLevel());
@@ -1497,6 +1393,7 @@ lastAlgorithm_(0),
 notOwned_(false),
 matrixByRow_(NULL),
 integerInformation_(NULL),
+cleanupScaling_(0),
 specialOptions_(-1)
 {
   modelPtr_ = rhs;
@@ -1554,6 +1451,7 @@ OsiClpSolverInterface::operator=(const OsiClpSolverInterface& rhs)
     notOwned_=false;
     linearObjective_ = modelPtr_->objective();
     saveData_ = rhs.saveData_;
+    cleanupScaling_ = rhs.cleanupScaling_;
     specialOptions_ = rhs.specialOptions_;
     basis_ = rhs.basis_;
     if (rhs.integerInformation_) {

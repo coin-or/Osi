@@ -1137,6 +1137,7 @@ std::vector<double*> OsiCpxSolverInterface::getDualRays(int maxNumRays) const
    }
    return std::vector<double*>(1, pi);
 }
+
 //------------------------------------------------------------------
 std::vector<double*> OsiCpxSolverInterface::getPrimalRays(int maxNumRays) const
 {
@@ -1334,14 +1335,14 @@ OsiCpxSolverInterface::setRowSetTypes(const int* indexFirst,
       if (sense[i] == 'R') {
 	 assert(rangeList[i] >= 0.0);
 	 rhs[i] -= rangeList[i];
-	 rangeind[rangecnt] = i;
+	 rangeind[rangecnt] = indexFirst[i];
 	 range[rangecnt] = rangeList[i];
 	 ++rangecnt;
       }
       if (sense[i] == 'N') {
 	 sense[i] = 'R';
 	 rhs[i] = -getInfinity();
-	 rangeind[rangecnt] = i;
+	 rangeind[rangecnt] = indexFirst[i];
 	 range[rangecnt] = 2*getInfinity();
 	 ++rangecnt;
       }

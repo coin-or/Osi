@@ -816,7 +816,8 @@ OsiFactorization::factor (  )
 
 	  lastRow_[goodRow] = goodColumn;	//will now have -1 or column sequence
 	  lastColumn_[goodColumn] = goodRow;	//will now have -1 or row sequence
-	}			
+	}
+	delete [] nextRow_;
 	nextRow_ = NULL;
 	k = 0;
 	//copy back and count
@@ -831,22 +832,24 @@ OsiFactorization::factor (  )
 	for ( i = 0; i < numberColumns_; i++ ) {
 	  pivotColumn_[i] = lastColumn_[i];
 	}			
-	std::cout <<"Factorization has "<<numberRows_-k
-		  <<" singularities"<<std::endl;
+	if ((messageLevel_&1)!=0) 
+	  std::cout <<"Factorization has "<<numberRows_-k
+		    <<" singularities"<<std::endl;
 	status_ = -1;
       }				
     }
     break;
   default:
     //singular ? or some error
-    std::cout << "Error " << status_ << std::endl;
+    if ((messageLevel_&1)!=0) 
+      std::cout << "Error " << status_ << std::endl;
     break;
   }				/* endswitch */
   //clean up
   if ( !status_ ) {
     if ( messageLevel_ & 4 )
-    std::cout<<"Factorization did "<<numberCompressions_
-	     <<" compressions"<<std::endl;
+      std::cout<<"Factorization did "<<numberCompressions_
+	       <<" compressions"<<std::endl;
     if ( numberCompressions_ > 10 * numberRows_ ) {
       areaFactor_ *= 1.1;
     }
@@ -884,7 +887,8 @@ OsiFactorization::pivotRowSingleton ( int pivotRow,
 
   if ( l + numberDoColumn > lengthAreaL_ ) {
     //need more memory
-    std::cout << "more memory needed in middle of invert" << std::endl;
+    if ((messageLevel_&1)!=0) 
+      std::cout << "more memory needed in middle of invert" << std::endl;
     return false;
   }				
   pivotRowL_[numberGoodL_] = pivotRow;
@@ -1641,7 +1645,8 @@ OsiFactorization::pivotOneOtherRow ( int pivotRow,
 
   if ( l + 1 > lengthAreaL_ ) {
     //need more memory
-    std::cout << "more memory needed in middle of invert" << std::endl;
+    if ((messageLevel_&1)!=0) 
+      std::cout << "more memory needed in middle of invert" << std::endl;
     return false;
   }				
   //l+=currentAreaL_->elementByColumn-elementL_;

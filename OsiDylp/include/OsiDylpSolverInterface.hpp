@@ -1,4 +1,3 @@
-#ifdef COIN_USE_DYLP
 #ifndef OsiDylpSolverInterface_H
 #define OsiDylpSolverInterface_H
 
@@ -872,4 +871,3 @@ class OsiDylpWarmStartBasis : public CoinWarmStartBasis
 void OsiDylpSolverInterfaceUnitTest(const std::string & mpsDir) ;
 
 #endif // OsiDylpSolverInterface_H
-#endif // COIN_USE_DYLP

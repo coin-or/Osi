@@ -1,7 +1,9 @@
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
 
-//#define	CHECK_CONSISTENCY	1
+// #define CHECK_CONSISTENCY	1
+// #define DEBUG_PRESOLVE	1
+// #define PRESOLVE_SUMMARY 1
 
 #include <stdio.h>
 
@@ -32,7 +34,6 @@
 #include "CoinPresolveImpliedFree.hpp"
 #include "CoinPresolveIsolated.hpp"
 #include "CoinMessage.hpp"
-
 
 
 OsiPresolve::OsiPresolve() :
@@ -193,20 +194,22 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
       prob.update_model(presolvedModel_, nrows_, ncols_, nelems_);
       // copy status and solution
       presolvedModel_->setColSolution(prob.sol_);
-      CoinWarmStartBasis basis;
-      basis.resize(prob.nrows_,prob.ncols_);
+      CoinWarmStartBasis *basis = 
+	dynamic_cast<CoinWarmStartBasis *>(presolvedModel_->getEmptyWarmStart());
+      basis->resize(prob.nrows_,prob.ncols_);
       int i;
       for (i=0;i<prob.ncols_;i++) {
 	CoinWarmStartBasis::Status status = 
 	  (CoinWarmStartBasis::Status ) prob.getColumnStatus(i);
-	basis.setStructStatus(i,status);
+	basis->setStructStatus(i,status);
       }
       for (i=0;i<prob.nrows_;i++) {
 	CoinWarmStartBasis::Status status = 
 	  (CoinWarmStartBasis::Status ) prob.getRowStatus(i);
-	basis.setArtifStatus(i,status);
+	basis->setArtifStatus(i,status);
       }
-      presolvedModel_->setWarmStart(&basis);
+      presolvedModel_->setWarmStart(basis);
+      delete basis ;
       delete [] prob.sol_;
       delete [] prob.acts_;
       delete [] prob.colstat_;
@@ -367,21 +370,23 @@ OsiPresolve::postsolve(bool updateStatus)
   delete [] sol;
   delete [] acts;
   if (updateStatus) {
-    CoinWarmStartBasis basis;
-    basis.resize(nrows0,ncols0);
+    CoinWarmStartBasis *basis = 
+      dynamic_cast<CoinWarmStartBasis *>(presolvedModel_->getEmptyWarmStart());
+    basis->setSize(ncols0,nrows0);
     int i;
     for (i=0;i<ncols0;i++) {
       CoinWarmStartBasis::Status status = 
 	(CoinWarmStartBasis::Status ) prob.getColumnStatus(i);
-      basis.setStructStatus(i,status);
+      basis->setStructStatus(i,status);
     }
     for (i=0;i<nrows0;i++) {
       CoinWarmStartBasis::Status status = 
 	(CoinWarmStartBasis::Status ) prob.getRowStatus(i);
-      basis.setArtifStatus(i,status);
+      basis->setArtifStatus(i,status);
     }
-    originalModel_->setWarmStart(&basis);
+    originalModel_->setWarmStart(basis);
     delete [] colstat;
+    delete basis ;
   } 
 
 }
@@ -404,6 +409,7 @@ OsiPresolve::setOriginalModel(OsiSolverInterface * model)
 {
   originalModel_=model;
 }
+
 #if 0
 // A lazy way to restrict which transformations are applied
 // during debugging.
@@ -426,79 +432,328 @@ static int ATOI(const char *name)
 #endif
 }
 #endif
-//#define DEBUG_PRESOLVE 1
+
+// #define DEBUG_PRESOLVE 1
+
 #if DEBUG_PRESOLVE
-void check_sol(CoinPresolveMatrix *prob,double tol)
-{
-  double *colels	= prob->colels_;
-  int *hrow		= prob->hrow_;
-  int *mcstrt		= prob->mcstrt_;
-  int *hincol		= prob->hincol_;
-  int *hinrow		= prob->hinrow_;
-  int ncols		= prob->ncols_;
+// Anonymous namespace for debug routines
+namespace {
+/*
+  chkColSol:	check colum solution (primal variables)
+		0 - checks off
+		1 - check for NaN/Inf
+		2 - check for above/below column bounds
+  chkRowSol:	check row solution (evaluate constraint lhs)
+		0 - checks off
+		1 - check for NaN/Inf
+		2 - check for inaccurary, above/below row bounds
+  chkStatus:	check for valid status of architectural variables
+		0 - checks off
+		1 - checks on
 
+  In general, the presolve and postsolve transforms are not prepared to
+  properly adjust the row activity (reported as `inacc RSOL'). On the bright
+  side, the code seems to work just fine without maintaining row activity.
+  You probably don't want to use the level 2 checks for the row solution.
+*/
+void check_sol (const CoinPresolveMatrix *const prob, double tol,
+		int chkColSol, int chkRowSol, int chkStatus)
 
-  double * csol = prob->sol_;
-  double * acts = prob->acts_;
-  double * clo = prob->clo_;
-  double * cup = prob->cup_;
-  int nrows = prob->nrows_;
-  double * rlo = prob->rlo_;
-  double * rup = prob->rup_;
+{ double *colels = prob->colels_ ;
+  int *hrow = prob->hrow_ ;
+  int *mcstrt = prob->mcstrt_ ;
+  int *hincol = prob->hincol_ ;
+  int *hinrow = prob->hinrow_ ;
 
-  int colx;
+  int n	= prob->ncols_ ;
+  int m = prob->nrows_ ;
 
-  double * rsol = new double[nrows];
-  memset(rsol,0,nrows*sizeof(double));
+  double *csol = prob->sol_ ;
+  double *acts = prob->acts_ ;
+  double *clo = prob->clo_ ;
+  double *cup = prob->cup_ ;
+  double *rlo = prob->rlo_ ;
+  double *rup = prob->rup_ ;
 
-  for (colx = 0; colx < ncols; ++colx) {
-    if (1) {
-      CoinBigIndex k = mcstrt[colx];
-      int nx = hincol[colx];
-      double solutionValue = csol[colx];
-      for (int i=0; i<nx; ++i) {
-	int row = hrow[k];
-	double coeff = colels[k];
-	k++;
-	rsol[row] += solutionValue*coeff;
-      }
-      if (csol[colx]<clo[colx]-tol) {
-	printf("low CSOL:  %d  - %g %g %g\n",
-		   colx, clo[colx], csol[colx], cup[colx]);
-      } else if (csol[colx]>cup[colx]+tol) {
-	printf("high CSOL:  %d  - %g %g %g\n",
-		   colx, clo[colx], csol[colx], cup[colx]);
-      } 
-    }
-  }
-  int rowx;
-  for (rowx = 0; rowx < nrows; ++rowx) {
-    if (hinrow[rowx]) {
-      if (fabs(rsol[rowx]-acts[rowx])>tol)
-	printf("inacc RSOL:  %d - %g %g (acts_ %g) %g\n",
-		   rowx,  rlo[rowx], rsol[rowx], acts[rowx], rup[rowx]);
-      if (rsol[rowx]<rlo[rowx]-tol) {
-	printf("low RSOL:  %d - %g %g %g\n",
-		   rowx,  rlo[rowx], rsol[rowx], rup[rowx]);
-      } else if (rsol[rowx]>rup[rowx]+tol ) {
-	printf("high RSOL:  %d - %g %g %g\n",
-		   rowx,  rlo[rowx], rsol[rowx], rup[rowx]);
-      } 
-    }
-  }
-  delete [] rsol;
-}
+  double *rsol = 0 ;
+  if (chkRowSol)
+  { rsol = new double[m] ;
+    memset(rsol,0,m*sizeof(double)) ; }
+
+/*
+  Open a loop to scan each column. For each column, do the following:
+    * Update the row solution (lhs value) by adding the contribution from
+      this column.
+    * Check for bogus values (NaN, infinity)
+    * Check for feasibility (value within column bounds)
+    * Check that the status of the variable agrees with the value and with the
+      lower and upper bounds. Free should have no bounds, superbasic should
+      have at least one.
+*/
+  for (int j = 0 ; j < n ; ++j)
+  { CoinBigIndex v = mcstrt[j] ;
+    int colLen = hincol[j] ;
+    double xj = csol[j] ;
+    double lj = clo[j] ;
+    double uj = cup[j] ;
+
+    if (chkRowSol)
+    { for (int u = 0 ; u < colLen ; ++u)
+      { int i = hrow[v] ;
+	  double aij = colels[v] ;
+	  v++ ;
+	  rsol[i] += aij*xj ; } }
+    if (chkColSol)
+    { if (CoinIsnan(xj))
+      { printf("NaN CSOL: %d  : lb = %g x = %g ub = %g\n",j,lj,xj,uj) ; }
+      if (xj <= -PRESOLVE_INF || xj >= PRESOLVE_INF)
+      { printf("Inf CSOL: %d  : lb = %g x = %g ub = %g\n",j,lj,xj,uj) ; }
+      if (chkColSol > 1)
+      { if (xj < lj-tol)
+	{ printf("low CSOL: %d  : lb = %g x = %g ub = %g\n",j,lj,xj,uj) ; }
+	else
+	if (xj > uj+tol)
+	{ printf("high CSOL: %d  : lb = %g x = %g ub = %g\n",
+		 j,lj,xj,uj) ; } } }
+    if (chkStatus && prob->colstat_)
+    { CoinPrePostsolveMatrix::Status statj = prob->getColumnStatus(j) ;
+      switch (statj)
+      { case CoinPrePostsolveMatrix::atUpperBound:
+	{ if (uj >= PRESOLVE_INF || fabs(xj-uj) > tol)
+	  { printf("Bad status CSOL: %d : status atUpperBound : ",j) ;
+	    printf("lb = %g x = %g ub = %g\n",lj,xj,uj) ; }
+	  break ; }
+        case CoinPrePostsolveMatrix::atLowerBound:
+	{ if (lj <= -PRESOLVE_INF || fabs(xj-lj) > tol)
+	  { printf("Bad status CSOL: %d : status atLowerBound : ",j) ;
+	    printf("lb = %g x = %g ub = %g\n",lj,xj,uj) ; }
+	  break ; }
+        case CoinPrePostsolveMatrix::isFree:
+	{ if (lj > -PRESOLVE_INF || uj < PRESOLVE_INF)
+	  { printf("Bad status CSOL: %d : status isFree : ",j) ;
+	    printf("lb = %g x = %g ub = %g\n",lj,xj,uj) ; }
+	  break ; }
+        case CoinPrePostsolveMatrix::superBasic:
+	{ if (!(lj > -PRESOLVE_INF || uj < PRESOLVE_INF))
+	  { printf("Bad status CSOL: %d : status superBasic : ",j) ;
+	    printf("lb = %g x = %g ub = %g\n",lj,xj,uj) ; }
+	  break ; }
+        case CoinPrePostsolveMatrix::basic:
+	{ /* Nothing to do here. */
+	  break ; }
+	default:
+	{ printf("Bad status CSOL: %d : status unrecognized : ",j) ;
+	  break ; } } } }
+/*
+  Now check the row solution. acts[i] is what presolve thinks we have, rsol[i]
+  is what we've just calculated while scanning the columns. We need only
+  check nontrivial rows (i.e., rows with length > 0). For each row,
+    * Check for bogus values (NaN, infinity)
+    * Check for accuracy (acts == rsol)
+    * Check for feasibility (rsol within row bounds)
+*/
+  if (chkRowSol)
+  { for (int i = 0 ; i < m ; ++i)
+    { if (hinrow[i])
+      { double lhsi = acts[i] ;
+	double evali = rsol[i] ;
+	double li = rlo[i] ;
+	double ui = rup[i] ;
+	
+	if (CoinIsnan(evali) || CoinIsnan(lhsi))
+	{ printf("NaN RSOL: %d  : lb = %g eval = %g (expected %g) ub = %g\n",
+		 i,li,evali,lhsi,ui) ; }
+	if (evali <= -PRESOLVE_INF || evali >= PRESOLVE_INF ||
+	    lhsi <= -PRESOLVE_INF || lhsi >= PRESOLVE_INF)
+	{ printf("Inf RSOL: %d  : lb = %g eval = %g (expected %g) ub = %g\n",
+		 i,li,evali,lhsi,ui) ; }
+	if (chkRowSol > 1)
+	{ if (fabs(evali-lhsi) > tol)
+	  { printf("inacc RSOL: %d : lb = %g eval = %g (expected %g) ub = %g\n",
+		   i,li,evali,lhsi,ui) ; }
+	  if (evali < li-tol || lhsi < li-tol)
+	  { printf("low RSOL: %d : lb = %g eval = %g (expected %g) ub = %g\n",
+		   i,li,evali,lhsi,ui) ; }
+	  else
+	  if (evali > ui+tol || lhsi > ui+tol)
+	  { printf("high RSOL: %d : lb = %g eval = %g (expected %g) ub = %g\n",
+		   i,li,evali,lhsi,ui) ; } } } }
+    delete [] rsol ; }
+
+  
+  return ; }
+
+/*
+  check_sol overload for CoinPostsolveMatrix. Parameters and functionality
+  identical to check_sol immediately above, but we have to remember we're
+  working with a threaded column-major representation.
+*/
+void check_sol (const CoinPostsolveMatrix *const prob, double tol,
+		int chkColSol, int chkRowSol, int chkStatus)
+
+{ double *colels = prob->colels_ ;
+  int *hrow = prob->hrow_ ;
+  int *mcstrt = prob->mcstrt_ ;
+  int *hincol = prob->hincol_ ;
+  int *link = prob->link_ ;
+
+  int n	= prob->ncols_ ;
+  int m = prob->nrows_ ;
+
+  double *csol = prob->sol_ ;
+  double *acts = prob->acts_ ;
+  double *clo = prob->clo_ ;
+  double *cup = prob->cup_ ;
+  double *rlo = prob->rlo_ ;
+  double *rup = prob->rup_ ;
+
+  double *rsol = 0 ;
+  if (chkRowSol)
+  { rsol = new double[m] ;
+    memset(rsol,0,m*sizeof(double)) ; }
+
+/*
+  Open a loop to scan each column. For each column, do the following:
+    * Update the row solution (lhs value) by adding the contribution from
+      this column.
+    * Check for bogus values (NaN, infinity)
+    * check that the status of the variable agrees with the value and with the
+      lower and upper bounds. Free should have no bounds, superbasic should
+      have at least one.
+*/
+  for (int j = 0 ; j < n ; ++j)
+  { CoinBigIndex v = mcstrt[j] ;
+    int colLen = hincol[j] ;
+    double xj = csol[j] ;
+    double lj = clo[j] ;
+    double uj = cup[j] ;
+
+    if (chkRowSol)
+    { for (int u = 0 ; u < colLen ; ++u)
+      { int i = hrow[v] ;
+	  double aij = colels[v] ;
+	  v = link[v] ;
+	  rsol[i] += aij*xj ; } }
+    if (chkColSol)
+    { if (CoinIsnan(xj))
+      { printf("NaN CSOL: %d  : lb = %g x = %g ub = %g\n",j,lj,xj,uj) ; }
+      if (xj <= -PRESOLVE_INF || xj >= PRESOLVE_INF)
+      { printf("Inf CSOL: %d  : lb = %g x = %g ub = %g\n",j,lj,xj,uj) ; }
+      if (chkColSol > 1)
+      { if (xj < lj-tol)
+	{ printf("low CSOL: %d  : lb = %g x = %g ub = %g\n",j,lj,xj,uj) ; }
+	else
+	if (xj > uj+tol)
+	{ printf("high CSOL: %d  : lb = %g x = %g ub = %g\n",
+		 j,lj,xj,uj) ; } } }
+    if (chkStatus && prob->colstat_)
+    { CoinPrePostsolveMatrix::Status statj = prob->getColumnStatus(j) ;
+      switch (statj)
+      { case CoinPrePostsolveMatrix::atUpperBound:
+	{ if (uj >= PRESOLVE_INF || fabs(xj-uj) > tol)
+	  { printf("Bad status CSOL: %d : status atUpperBound : ",j) ;
+	    printf("lb = %g x = %g ub = %g\n",lj,xj,uj) ; }
+	  break ; }
+        case CoinPrePostsolveMatrix::atLowerBound:
+	{ if (lj <= -PRESOLVE_INF || fabs(xj-lj) > tol)
+	  { printf("Bad status CSOL: %d : status atLowerBound : ",j) ;
+	    printf("lb = %g x = %g ub = %g\n",lj,xj,uj) ; }
+	  break ; }
+        case CoinPrePostsolveMatrix::isFree:
+	{ if (lj > -PRESOLVE_INF || uj < PRESOLVE_INF)
+	  { printf("Bad status CSOL: %d : status isFree : ",j) ;
+	    printf("lb = %g x = %g ub = %g\n",lj,xj,uj) ; }
+	  break ; }
+        case CoinPrePostsolveMatrix::superBasic:
+	{ if (!(lj > -PRESOLVE_INF || uj < PRESOLVE_INF))
+	  { printf("Bad status CSOL: %d : status superBasic : ",j) ;
+	    printf("lb = %g x = %g ub = %g\n",lj,xj,uj) ; }
+	  break ; }
+        case CoinPrePostsolveMatrix::basic:
+	{ /* Nothing to do here. */
+	  break ; }
+	default:
+	{ printf("Bad status CSOL: %d : status unrecognized : ",j) ;
+	  break ; } } } }
+/*
+  Now check the row solution. acts[i] is what presolve thinks we have, rsol[i]
+  is what we've just calculated while scanning the columns. CoinPostsolveMatrix
+  does not contain hinrow_, so we can't check for trivial rows (cf. check_sol
+  for CoinPresolveMatrix).  For each row,
+    * Check for bogus values (NaN, infinity)
+*/
+  if (chkRowSol)
+  { for (int i = 0 ; i < m ; ++i)
+    { double lhsi = acts[i] ;
+      double evali = rsol[i] ;
+      double li = rlo[i] ;
+      double ui = rup[i] ;
+      
+      if (CoinIsnan(evali) || CoinIsnan(lhsi))
+      { printf("NaN RSOL: %d  : lb = %g eval = %g (expected %g) ub = %g\n",
+	       i,li,evali,lhsi,ui) ; }
+      if (evali <= -PRESOLVE_INF || evali >= PRESOLVE_INF ||
+	  lhsi <= -PRESOLVE_INF || lhsi >= PRESOLVE_INF)
+      { printf("Inf RSOL: %d  : lb = %g eval = %g (expected %g) ub = %g\n",
+	       i,li,evali,lhsi,ui) ; }
+      if (chkRowSol > 1)
+      { if (fabs(evali-lhsi) > tol)
+	{ printf("inacc RSOL: %d : lb = %g eval = %g (expected %g) ub = %g\n",
+		 i,li,evali,lhsi,ui) ; }
+        if (evali < li-tol || lhsi < li-tol)
+	{ printf("low RSOL: %d : lb = %g eval = %g (expected %g) ub = %g\n",
+		 i,li,evali,lhsi,ui) ; }
+	else
+	if (evali > ui+tol || lhsi > ui+tol)
+	{ printf("high RSOL: %d : lb = %g eval = %g (expected %g) ub = %g\n",
+		 i,li,evali,lhsi,ui) ; } } }
+  delete [] rsol ; }
+  
+  return ; }
+
+void check_and_tell (const CoinPresolveMatrix *const prob,
+		     const CoinPresolveAction *first,
+		     const CoinPresolveAction *&mark)
+
+{ const CoinPresolveAction *current ;
+
+  if (first != mark)
+  { printf("PRESOLVE: applied") ;
+    for (current = first ;
+	 current != mark && current != 0 ;
+	 current = current->next)
+    { printf(" %s",current->name()) ; }
+    printf("\n") ;
+
+    check_sol(prob,1.0e0,2,1,1) ;
+    mark = first ; }
+
+  return ; }
+
+} // end anonymous namespace for debug routines
 #endif
+
 // This is the presolve loop.
 // It is a separate virtual function so that it can be easily
 // customized by subclassing CoinPresolve.
+
 const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 {
   paction_ = 0;
 
   prob->status_=0; // say feasible
 
+# if DEBUG_PRESOLVE
+  const CoinPresolveAction *pactiond = 0 ;
+  check_sol(prob,1.0e0,2,1,1) ;
+# endif
+
   paction_ = make_fixed(prob, paction_);
+
+# if DEBUG_PRESOLVE
+  check_and_tell(prob,paction_,pactiond) ;
+# endif
+
   // if integers then switch off dual stuff
   // later just do individually
   bool doDualStuff = true;
@@ -511,12 +766,12 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
   }
   
 
-#if	CHECK_CONSISTENCY
+# if CHECK_CONSISTENCY
   presolve_links_ok(prob->rlink_, prob->mrstrt_, prob->hinrow_, prob->nrows_);
-#endif
+# endif
 
   if (!prob->status_) {
-#if 0
+# if 0
     const bool slackd = ATOI("SLACKD")!=0;
     //const bool forcing = ATOI("FORCING")!=0;
     const bool doubleton = ATOI("DOUBLETON")!=0;
@@ -526,9 +781,9 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
     const bool dupcol = ATOI("off")!=0;
     const bool duprow = ATOI("off")!=0;
     const bool dual = ATOI("off")!=0;
-#else
+# else
     // normal
-#if 1
+# if 1
     const bool slackd = true;
     const bool doubleton = true;
     const bool forcing = true;
@@ -537,7 +792,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
     const bool dupcol = true;
     const bool duprow = true;
     const bool dual = doDualStuff;
-#else
+# else
     const bool slackd = false;
     const bool doubleton = true;
     const bool forcing = true;
@@ -546,8 +801,8 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
     const bool dupcol = false;
     const bool duprow = false;
     const bool dual = false;
-#endif
-#endif
+# endif
+# endif
     
     // some things are expensive so just do once (normally)
 
@@ -574,23 +829,25 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 
 
     int iLoop;
-#if	DEBUG_PRESOLVE
-    check_sol(prob,1.0e0);
-#endif
 
     // Check number rows dropped
     int lastDropped=0;
     prob->pass_=0;
     for (iLoop=0;iLoop<numberPasses_;iLoop++) {
-#ifdef PRESOLVE_SUMMARY
+
+#     ifdef PRESOLVE_SUMMARY
       printf("Starting major pass %d\n",iLoop+1);
-#endif
+#     endif
+
       const CoinPresolveAction * const paction0 = paction_;
       // look for substitutions with no fill
       int fill_level=2;
       //fill_level=10;
       //printf("** fill_level == 10 !\n");
       int whichPass=0;
+/*
+  Apply inexpensive transforms until convergence.
+*/
       while (1) {
 	whichPass++;
 	const CoinPresolveAction * const paction1 = paction_;
@@ -602,48 +859,65 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 							notFinished);
 	  if (prob->status_)
 	    break;
+#	  if DEBUG_PRESOLVE
+	  check_and_tell(prob,paction_,pactiond) ;
+#	  endif
 	}
 
 	if (doubleton) {
 	  paction_ = doubleton_action::presolve(prob, paction_);
 	  if (prob->status_)
 	    break;
+#	  if DEBUG_PRESOLVE
+	  check_and_tell(prob,paction_,pactiond) ;
+#	  endif
 	}
 
 	if (zerocost) {
 	  paction_ = do_tighten_action::presolve(prob, paction_);
 	  if (prob->status_)
 	    break;
+#	  if DEBUG_PRESOLVE
+	  check_and_tell(prob,paction_,pactiond) ;
+#	  endif
 	}
 
 	if (forcing) {
 	  paction_ = forcing_constraint_action::presolve(prob, paction_);
 	  if (prob->status_)
 	    break;
+#	  if DEBUG_PRESOLVE
+	  check_and_tell(prob,paction_,pactiond) ;
+#	  endif
 	}
 
 	if (ifree) {
 	  paction_ = implied_free_action::presolve(prob, paction_,fill_level);
 	  if (prob->status_)
 	    break;
+#	  if DEBUG_PRESOLVE
+	  check_and_tell(prob,paction_,pactiond) ;
+#	  endif
 	}
 
-#if	DEBUG_PRESOLVE
-	check_sol(prob,1.0e0);
-#endif
+#	if CHECK_CONSISTENCY
+	presolve_links_ok(prob->rlink_,prob->mrstrt_,
+			  prob->hinrow_,prob->nrows_) ;
+#	endif
 
-#if	CHECK_CONSISTENCY
-	presolve_links_ok(prob->rlink_, prob->mrstrt_, prob->hinrow_, 
-			  prob->nrows_);
-#endif
+#	if 0 && DEBUG_PRESOLVE
 
-#if	DEBUG_PRESOLVE
+   << For reasons that escape me just now, the linker is unable to find
+      this function. Copying the code from CoinPresolvePsdebug to the head
+      of this routine works just fine. Library loading order looks ok. Other
+      routines from CoinPresolvePsdebug are found. I'm stumped. -- lh -- >>
+
 	presolve_no_zeros(prob->mcstrt_, prob->colels_, prob->hincol_, 
 			  prob->ncols_);
-#endif
-#if	CHECK_CONSISTENCY
+#	endif
+#	if CHECK_CONSISTENCY
 	prob->consistent();
-#endif
+#	endif
 
 	  
 	// set up for next pass
@@ -683,7 +957,8 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 	prob->numberNextColsToDo_=0;
 	if (paction_ == paction1&&fill_level>0)
 	  break;
-      }
+      } // End of inexpensive transform loop
+
       // say look at all
       int i;
       if (!prob->anyProhibited()) {
@@ -706,20 +981,27 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
       }
       // now expensive things
       // this caused world.mps to run into numerical difficulties
-#ifdef PRESOLVE_SUMMARY
+
+#     ifdef PRESOLVE_SUMMARY
       printf("Starting expensive\n");
-#endif
+#     endif
 
       if (dual) {
 	int itry;
 	for (itry=0;itry<5;itry++) {
 	  const CoinPresolveAction * const paction2 = paction_;
 	  paction_ = remove_dual_action::presolve(prob, paction_);
+#	  if DEBUG_PRESOLVE
+	  check_and_tell(prob,paction_,pactiond) ;
+#	  endif
 	  if (prob->status_)
 	    break;
 	  if (ifree) {
 	    int fill_level=0; // switches off substitution
 	    paction_ = implied_free_action::presolve(prob, paction_,fill_level);
+#	    if DEBUG_PRESOLVE
+	    check_and_tell(prob,paction_,pactiond) ;
+#	    endif
 	    if (prob->status_)
 	      break;
 	  }
@@ -727,26 +1009,25 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 	    break;
 	}
       }
-#if	DEBUG_PRESOLVE
-      check_sol(prob,1.0e0);
-#endif
+
       if (dupcol) {
 	paction_ = dupcol_action::presolve(prob, paction_);
+#	if DEBUG_PRESOLVE
+	check_and_tell(prob,paction_,pactiond) ;
+#	endif
 	if (prob->status_)
 	  break;
       }
-#if	DEBUG_PRESOLVE
-	check_sol(prob,1.0e0);
-#endif
       
       if (duprow) {
 	paction_ = duprow_action::presolve(prob, paction_);
+#	if DEBUG_PRESOLVE
+	check_and_tell(prob,paction_,pactiond) ;
+#	endif
 	if (prob->status_)
 	  break;
       }
-#if	DEBUG_PRESOLVE
-      check_sol(prob,1.0e0);
-#endif
+
       {
 	int * hinrow = prob->hinrow_;
 	int numberDropped=0;
@@ -763,19 +1044,27 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
       if (paction_ == paction0)
 	break;
 	  
-    }
+    } // End of major pass loop
   }
+/*
+  Final cleanup: drop zero coefficients from the matrix, then drop empty rows
+  and columns.
+*/
   if (!prob->status_) {
     paction_ = drop_zero_coefficients(prob, paction_);
-#if	DEBUG_PRESOLVE
-	check_sol(prob,1.0e0);
-#endif
+#   if DEBUG_PRESOLVE
+    check_and_tell(prob,paction_,pactiond) ;
+#   endif
 
     paction_ = drop_empty_cols_action::presolve(prob, paction_);
+#   if DEBUG_PRESOLVE
+    check_and_tell(prob,paction_,pactiond) ;
+#   endif
+
     paction_ = drop_empty_rows_action::presolve(prob, paction_);
-#if	DEBUG_PRESOLVE
-	check_sol(prob,1.0e0);
-#endif
+#   if DEBUG_PRESOLVE
+    check_and_tell(prob,paction_,pactiond) ;
+#   endif
   }
   
   // Messages
@@ -809,8 +1098,12 @@ void OsiPresolve::postsolve(CoinPostsolveMatrix &prob)
 {
   const CoinPresolveAction *paction = paction_;
 
+#if	DEBUG_PRESOLVE
+  printf("Begin POSTSOLVING\n") ;
   if (prob.colstat_)
-    prob.check_nbasic();
+  { prob.check_nbasic();
+    check_sol(&prob,1.0e0,2,1,1); }
+#endif
   
 #if	DEBUG_PRESOLVE
   check_djs(&prob);
@@ -818,31 +1111,38 @@ void OsiPresolve::postsolve(CoinPostsolveMatrix &prob)
   
   
   while (paction) {
-#if	DEBUG_PRESOLVE
+#   if DEBUG_PRESOLVE
     printf("POSTSOLVING %s\n", paction->name());
-#endif
+#   endif
 
     paction->postsolve(&prob);
     
-#if	DEBUG_PRESOLVE
+#   if DEBUG_PRESOLVE
     if (prob.colstat_)
-      prob.check_nbasic();
-#endif
+    { prob.check_nbasic();
+      check_sol(&prob,1.0e0,2,1,1); }
+#   endif
     paction = paction->next;
-#if	DEBUG_PRESOLVE
+#   if DEBUG_PRESOLVE
     check_djs(&prob);
-#endif
+#   endif
   }    
+# if DEBUG_PRESOLVE
+    printf("End POSTSOLVING\n") ;
+# endif
   
 #if	0 && DEBUG_PRESOLVE
+
+  << This block of checks will require some work to get it to compile. >>
+
   for (i=0; i<ncols0; i++) {
-    if (!cdone[i]) {
-      printf("!cdone[%d]\n", i);
+    if (!cdone_[i]) {
+      printf("!cdone_[%d]\n", i);
       abort();
     }
   }
   
-  for (i=0; i<nrows0; i++) {
+  for (int i=0; i<nrows0; i++) {
     if (!rdone[i]) {
       printf("!rdone[%d]\n", i);
       abort();
@@ -860,6 +1160,9 @@ void OsiPresolve::postsolve(CoinPostsolveMatrix &prob)
 #endif
   
 #if	0 && DEBUG_PRESOLVE
+
+  << This block of checks will require some work to get it to compile. >>
+
   // debug check:  make sure we ended up with same original matrix
   {
     int identical = 1;
@@ -1237,7 +1540,9 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
   if (doStatus) {
     // allow for status and solution
     sol_ = new double[ncols_];
-    memcpy(sol_,si->getColSolution(),ncols_*sizeof(double));;
+    const double *presol ;
+    presol = si->getColSolution() ;
+    memcpy(sol_,presol,ncols_*sizeof(double));;
     acts_ = new double [nrows_];
     memcpy(acts_,si->getRowActivity(),nrows_*sizeof(double));
     CoinWarmStartBasis * basis  = 
@@ -1344,7 +1649,6 @@ CoinPostsolveMatrix::CoinPostsolveMatrix(OsiSolverInterface*  si,
 			ncols0_in, nrows0_in, nelems0),
 
   free_list_(0),
-  // link, free_list, maxlink
   maxlink_(2*nelems0),
   link_(new int[/*maxlink*/ 2*nelems0]),
       
@@ -1410,6 +1714,7 @@ CoinPostsolveMatrix::CoinPostsolveMatrix(OsiSolverInterface*  si,
   rcosts_ = new double[ncols0_];
   CoinDisjointCopyN(si->getReducedCost(), ncols1, rcosts_);
 #if 0
+  // check accuracy of reduced costs (rcosts_ is recalculated reduced costs)
   si->getMatrixByCol()->transposeTimes(rowduals_,rcosts_);
   const double * obj =si->getObjCoefficients();
   const double * dj =si->getReducedCost();
@@ -1421,6 +1726,7 @@ CoinPostsolveMatrix::CoinPostsolveMatrix(OsiSolverInterface*  si,
       assert (fabs(newDj-dj[i])<1.0e-1);
     }
   }
+  // check reduced costs are 0 for basic variables
   {
     int i;
     for (i=0;i<ncols1;i++)

@@ -103,19 +103,20 @@ int main (int argc, const char *argv[])
     parms[key]=value;
   }
   
+  const char dirsep =  CoinFindDirSeparator();
   // Set directory containing mps data files.
   std::string mpsDir;
   if (parms.find("-mpsDir") != parms.end())
-    mpsDir=parms["-mpsDir"]+"/";
+    mpsDir=parms["-mpsDir"] + dirsep;
   else 
-    mpsDir = "../Mps/Sample/";  
+    mpsDir = dirsep == '/' ? "../Mps/Sample/" : "..\\Mps\\Sample\\";
  
   // Set directory containing netlib data files.
   std::string netlibDir;
   if (parms.find("-netlibDir") != parms.end())
-    netlibDir=parms["-netlibDir"]+"/";
+    netlibDir=parms["-netlibDir"] + dirsep;
   else 
-    netlibDir = "../Mps/Netlib/";  
+    netlibDir = dirsep == '/' ? "../Mps/Netlib/" : "..\\Mps\\Netlib\\";
 
   // *FIXME* : these tests should be written... 
   //  testingMessage( "Testing CoinHelperFunctions\n" );

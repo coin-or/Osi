@@ -3,7 +3,7 @@
 #define OsiDylpSolverInterface_H
 
 /*! \legal
-  Copyright (C) 2002, 2003.
+  Copyright (C) 2002, 2003, 2004.
   Lou Hafer, Stephen Tse, International Business Machines Corporation and
   others. All Rights Reserved.
 */
@@ -17,7 +17,7 @@
 */
 
 /*
-  sccs: %W%	%G%
+  sccs: @(#)OsiDylpSolverInterface.hpp	1.11	06/22/04
   cvs: $Id$
 */
 
@@ -637,15 +637,22 @@ private:
 
 /*! \name Solver instance control variables
 
-  These variables track the state of individual ODSI instances.
+  These variables maintain state for individual ODSI instances.
 */
 //@{
 
-  /*! \brief Output (solution and/or statistics) file for this ODSI instance */
+  /*! \brief Output file for this ODSI instance
+  
+    Holds the name of the file that will be used to write out the solution and
+    statistics.
+  */
 
   ioid local_outchn ;
 
-  /*! \brief Log file for this ODSI instance */
+  /*! \brief Log file for this ODSI instance
+
+    Holds the name of the file that will be used for dylp log information.
+  */
 
   ioid local_logchn ;
 
@@ -709,6 +716,28 @@ private:
     to dylp.
   */
   bool activeIsModified ;
+
+  /*! \brief Columns (variables) added during existence of this ODSI object
+
+    This variable counts the number of columns added over the lifetime of
+    this ODSI object. Used to generate unique column names, since ODSI does
+    not provide a way for the client to supply a name.  Unique names are
+    necessary in order that writeMps can dump the system in mps format.
+    Reset to 0 when the constraint system is reloaded.
+  */
+
+  int addedColCnt ;
+
+  /*! \brief Rows (constraints)  added during existence of this ODSI object
+
+    This variable counts the number of rows added over the lifetime of this
+    ODSI object. Used to generate unique rows names, since ODSI does not
+    provide a way for the client to supply a name.  Unique names are
+    necessary in order that writeMps can dump the system in mps format.
+    Reset to 0 when the constraint system is reloaded.
+  */
+
+  int addedRowCnt ;
 
 //@}
 
@@ -875,8 +904,11 @@ private:
   OsiDylpSolverInterfaceTest.cpp
 */
 
-/*! \brief Unit test for OsiDylpSolverInterface.
-    \relates OsiDylpSolverInterface
+/*! \relates OsiDylpSolverInterface
+    \brief Unit test for OsiDylpSolverInterface.
+
+    Performs various tests to see if ODSI is functioning correctly. Not
+    an exhaustive test, but it'll (usually) catch gross problems.
 */
 
 void OsiDylpSolverInterfaceUnitTest(const std::string & mpsDir) ;

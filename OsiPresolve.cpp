@@ -907,10 +907,10 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 
 #	if 0 && DEBUG_PRESOLVE
 
-	/*   << For reasons that escape me just now, the linker is unable to find
-	     this function. Copying the code from CoinPresolvePsdebug to the head
-	     of this routine works just fine. Library loading order looks ok. Other
-	     routines from CoinPresolvePsdebug are found. I'm stumped. -- lh -- >>
+	/* << For reasons that escape me just now, the linker is unable to find
+	   this function. Copying the code from CoinPresolvePsdebug to the head
+	   of this routine works just fine. Library loading order looks ok. Other
+	   routines from CoinPresolvePsdebug are found. I'm stumped. -- lh -- >>
 	*/
 
 	presolve_no_zeros(prob->mcstrt_, prob->colels_, prob->hincol_, 

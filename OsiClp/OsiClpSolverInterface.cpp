@@ -143,8 +143,7 @@ void OsiClpSolverInterface::initialSolve()
       //model2->setDualBound(1.0e11);
       model2->dual(0);
       // check if clp thought it was in a loop
-      if (model2->status()==3&&
-	  model2->numberIterations()<model2->maximumIterations()) {
+      if (model2->status()==3&&!model2->hitMaximumIterations()) {
 	// switch algorithm
 	model2->primal();
       }
@@ -153,8 +152,7 @@ void OsiClpSolverInterface::initialSolve()
       //model2->setInfeasibilityCost(1.0e10);
       model2->primal(0);
       // check if clp thought it was in a loop
-      if (model2->status()==3
-	  &&model2->numberIterations()<model2->maximumIterations()) {
+      if (model2->status()==3&&!model2->hitMaximumIterations()) {
 	// switch algorithm
 	model2->dual();
       }
@@ -186,7 +184,7 @@ void OsiClpSolverInterface::initialSolve()
       solver.dual(0);
       lastAlgorithm_=2; // dual
       // check if clp thought it was in a loop
-      if (solver.status()==3&&solver.numberIterations()<solver.maximumIterations()) {
+      if (solver.status()==3&&!solver.hitMaximumIterations()) {
 	// switch algorithm
 	solver.primal(0);
 	lastAlgorithm_=1; // primal
@@ -196,7 +194,7 @@ void OsiClpSolverInterface::initialSolve()
       solver.primal(0);
       lastAlgorithm_=1; // primal
       // check if clp thought it was in a loop
-      if (solver.status()==3&&solver.numberIterations()<solver.maximumIterations()) {
+      if (solver.status()==3&&!solver.hitMaximumIterations()) {
 	// switch algorithm
 	solver.dual(0);
 	lastAlgorithm_=2; // dual
@@ -294,8 +292,7 @@ void OsiClpSolverInterface::resolve()
       //model2->setDualBound(1.0e10);
       model2->dual();
       // check if clp thought it was in a loop
-      if (model2->status()==3&&
-	  model2->numberIterations()<model2->maximumIterations()) {
+      if (model2->status()==3&&!model2->hitMaximumIterations()) {
 	// switch algorithm
 	model2->primal();
       }
@@ -304,8 +301,7 @@ void OsiClpSolverInterface::resolve()
       //model2->setInfeasibilityCost(1.0e10);
       model2->primal();
       // check if clp thought it was in a loop
-      if (model2->status()==3
-	  &&model2->numberIterations()<model2->maximumIterations()) {
+      if (model2->status()==3&&!model2->hitMaximumIterations()) {
 	// switch algorithm
 	model2->dual();
       }
@@ -326,19 +322,17 @@ void OsiClpSolverInterface::resolve()
       solver.dual();
       lastAlgorithm_=2; // dual
       // check if clp thought it was in a loop
-      if (solver.status()==3&&solver.numberIterations()<solver.maximumIterations()) {
+      if (solver.status()==3&&!solver.hitMaximumIterations()) {
 	// switch algorithm
 	solver.primal();
 	lastAlgorithm_=1; // primal
-	if (solver.status()==3&&
-	    solver.numberIterations()<solver.maximumIterations()) {
+      if (solver.status()==3&&!solver.hitMaximumIterations()) {
 	  if (modelPtr_->messageHandler()->logLevel()>0)
 	    printf("in trouble - try all slack\n");
 	  CoinWarmStartBasis allSlack;
 	  setBasis(allSlack,&solver);
 	  solver.primal();
-	  if (solver.status()==3&&
-	      solver.numberIterations()<solver.maximumIterations()) {
+      if (solver.status()==3&&!solver.hitMaximumIterations()) {
 	    printf("Real real trouble - treat as infeasible\n");
 	    solver.setProblemStatus(1);
 	  }
@@ -349,7 +343,7 @@ void OsiClpSolverInterface::resolve()
       solver.primal();
       lastAlgorithm_=1; // primal
       // check if clp thought it was in a loop
-      if (solver.status()==3&&solver.numberIterations()<solver.maximumIterations()) {
+      if (solver.status()==3&&!solver.hitMaximumIterations()) {
 	// switch algorithm
 	solver.dual();
 	lastAlgorithm_=2; // dual
@@ -454,16 +448,14 @@ void OsiClpSolverInterface::resolve()
     if (algorithm<0) {
       model2->dual();
       // check if clp thought it was in a loop
-      if (model2->status()==3&&
-	  model2->numberIterations()<model2->maximumIterations()) {
+      if (model2->status()==3&&!model2->hitMaximumIterations()) {
 	// switch algorithm
 	model2->primal();
       }
     } else {
       model2->primal(1);
       // check if clp thought it was in a loop
-      if (model2->status()==3
-	  &&model2->numberIterations()<model2->maximumIterations()) {
+      if (model2->status()==3&&!model2->hitMaximumIterations()) {
 	// switch algorithm
 	model2->dual();
       }
@@ -489,7 +481,7 @@ void OsiClpSolverInterface::resolve()
       modelPtr_->setPerturbation(savePerturbation);
       lastAlgorithm_=2; // dual
       // check if clp thought it was in a loop
-      if (modelPtr_->status()==3&&modelPtr_->numberIterations()<modelPtr_->maximumIterations()) {
+      if (modelPtr_->status()==3&&!modelPtr_->hitMaximumIterations()) {
 	modelPtr_->setSpecialOptions(saveOptions);
 	// switch algorithm
 	//modelPtr_->messageHandler()->setLogLevel(63);
@@ -503,14 +495,12 @@ void OsiClpSolverInterface::resolve()
 	modelPtr_->primal(0,startFinishOptions);
 	modelPtr_->setMaximumIterations(saveMax);
 	lastAlgorithm_=1; // primal
-	if (modelPtr_->status()==3&&
-	    modelPtr_->numberIterations()<modelPtr_->maximumIterations()) {
+        if (modelPtr_->status()==3&&!modelPtr_->hitMaximumIterations()) {
 	  printf("in trouble - try all slack\n");
 	  CoinWarmStartBasis allSlack;
 	  setBasis(allSlack,modelPtr_);
 	  modelPtr_->dual();
-	  if (modelPtr_->status()==3&&
-	      modelPtr_->numberIterations()<modelPtr_->maximumIterations()) {
+          if (modelPtr_->status()==3&&!modelPtr_->hitMaximumIterations()) {
 	    if (modelPtr_->numberPrimalInfeasibilities()) {
 	      printf("Real real trouble - treat as infeasible\n");
 	      modelPtr_->setProblemStatus(1);
@@ -527,7 +517,7 @@ void OsiClpSolverInterface::resolve()
       modelPtr_->primal(0,startFinishOptions);
       lastAlgorithm_=1; // primal
       // check if clp thought it was in a loop
-      if (modelPtr_->status()==3&&modelPtr_->numberIterations()<modelPtr_->maximumIterations()) {
+      if (modelPtr_->status()==3&&!modelPtr_->hitMaximumIterations()) {
 	// switch algorithm
 	modelPtr_->dual();
 	lastAlgorithm_=2; // dual

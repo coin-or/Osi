@@ -1168,7 +1168,8 @@ OsiXprSolverInterface::setColLower( int elementIndex, double elementValue )
           elementIndex,boundType,elementValue);
       }
 
-      if ( vartype_[elementIndex] == 'B' && 
+      if ( vartype_ &&
+	   vartype_[elementIndex] == 'B' && 
 	   (elementValue != 0.0 && elementValue != 1.0) ) {
         char elementType = 'I';
         
@@ -1202,7 +1203,8 @@ OsiXprSolverInterface::setColUpper( int elementIndex, double elementValue )
 		elementIndex,boundType,elementValue);
       }
       chgbds(1, &elementIndex, &boundType, &elementValue);
-      if ( vartype_[elementIndex] == 'B' && 
+      if ( vartype_ &&
+	   vartype_[elementIndex] == 'B' && 
 	   (elementValue != 0.0 && elementValue != 1.0) ) {
 	 char elementType = 'I';  
          
@@ -1223,23 +1225,37 @@ OsiXprSolverInterface::setColUpper( int elementIndex, double elementValue )
 
 void OsiXprSolverInterface::setColBounds(const int elementIndex, double lower, double upper )
 {
+   activateMe();
+
    if ( isDataLoaded() ) {
      char qbtype[2] = { 'L', 'U' };
      int mindex[2];
      double bnd[2];
 
+     getVarTypes();
      mindex[0] = elementIndex;
      mindex[1] = elementIndex;
      bnd[0] = lower;
      bnd[1] = upper;
 
+     if (getLogFilePtr()!=NULL) {
+       fprintf(getLogFilePtr(),"chgbds(2, [%d %d], [%c %c], [%f %f]);\n",
+	       mindex[0], mindex[1], qbtype[0], qbtype[1], bnd[0], bnd[1]);
+     }
      chgbds(2, mindex, qbtype, bnd);
-     if ( vartype_[mindex[0]] == 'B' && 
+       
+     if ( vartype_ && 
+	  vartype_[mindex[0]] == 'B' && 
 	  !((lower == 0.0 && upper == 0.0) ||
 	    (lower == 1.0 && upper == 1.0) ||
 	    (lower == 0.0 && upper == 1.0)) ) {
        char elementType = 'I';  
          
+       if (getLogFilePtr()!=NULL) {
+	 fprintf(getLogFilePtr(),"chgcoltype(1, %d, %c );\n",
+		 mindex[0], elementType);
+       }
+
        chgcoltype(1, &mindex[0], &elementType);
      }
      freeCachedResults();

@@ -13,7 +13,7 @@
 */
 
 /*
-  sccs: @(#)OsiDylpWarmStartBasis.hpp	1.4	06/22/04
+  sccs: @(#)OsiDylpWarmStartBasis.hpp	1.5	09/16/04
   cvs: $Id$
 */
 
@@ -143,6 +143,10 @@ class OsiDylpWarmStartBasis : public CoinWarmStartBasis
 
   OsiDylpWarmStartBasis (int ns, int na, const char *sStat,
 			 const char *aStat, const char *cStat = 0) ;
+
+  /*! \brief Construct an OsiDylpWarmStartBasis from a CoinWarmStartBasis */
+
+  OsiDylpWarmStartBasis (const CoinWarmStartBasis &cwsb) ;
 
   /*! \brief Copy constructor */
 

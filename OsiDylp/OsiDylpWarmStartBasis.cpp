@@ -39,7 +39,7 @@
 */
 
 namespace {
-  char sccsid[] = "@(#)OsiDylpWarmStartBasis.cpp	1.4	06/22/04" ;
+  char sccsid[] = "@(#)OsiDylpWarmStartBasis.cpp	1.5	09/16/04" ;
   char cvsid[] = "$Id$" ;
 }
 
@@ -145,7 +145,33 @@ ODWSB::OsiDylpWarmStartBasis
   { char byteActive = 0 ;
     int i ;
     for (i = 0 ; i <= 3 ; i++) setStatus(&byteActive,i,CWSB::atLowerBound) ;
-    memset(constraintStatus_,byteActive,constatsze) ; } }
+    memset(constraintStatus_,byteActive,constatsze) ; }
+
+  return ; }
+
+/*!
+  Construct from a CoinWarmStartBasis.
+ 
+  Much as the previous constructor, but we know we'll need to build the
+  constraint status array.
+*/
+
+ODWSB::OsiDylpWarmStartBasis (const CoinWarmStartBasis &cwsb)
+
+  : CWSB(cwsb),
+    phase_(dyPRIMAL1),
+    constraintStatus_(0)
+
+{ int na = cwsb.getNumArtificial() ;
+  int constatsze = STATBYTES(na) ;
+  constraintStatus_ = new char[constatsze] ;
+  char byteActive = 0 ;
+
+  for (int i = 0 ; i <= 3 ; i++) setStatus(&byteActive,i,CWSB::atLowerBound) ;
+
+  memset(constraintStatus_,byteActive,constatsze) ;
+  
+  return ; }
 
 /*!
   Assignment of structure (parameter preserved)

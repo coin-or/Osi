@@ -1849,8 +1849,11 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     // Test that objective value is correct
     double correctObjValue = CoinPackedVector(nc,objCoef).dotProduct(cs);
     double siObjValue = exmip1Si->getObjValue();
-    if( !eq(correctObjValue,siObjValue) )
-      failureMessage(solverName,"getObjValue before solve");
+    if( !eq(correctObjValue,siObjValue) ) {
+       // FIXME: the test checks the primal value. vol fails this, because vol
+       // considers the dual value to be the objective value
+       failureMessage(solverName,"getObjValue before solve (OK for vol)");
+    }
 
 
   }
@@ -2182,7 +2185,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 
   if ( volSolverInterface ) {
      // Test for vol since it does not support this function
-     failureMessage(solverName,"column type methods all report continuous");
+     failureMessage(solverName,"column type methods all report continuous (OK for vol)");
   }
   else {
     OsiSolverInterface & fim = *(emptySi->clone());
@@ -2826,28 +2829,30 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 
 	double objective[]={5.0,6.0,5.5};
   {
-	  // Add empty rows
-	  for (i=0;i<2;i++) 
-	    si->addRow(CoinPackedVector(),2.0,100.0);
+     // Add empty rows
+     for (i=0;i<2;i++) 
+	si->addRow(CoinPackedVector(),2.0,100.0);
 
-	  // Add columns
-    if ( volSolverInterface ) {
-      failureMessage(solverName,"addCol add columns to null");
-    }
-    else {
-	    si->addCol(col1,0.0,10.0,objective[0]);
-	    si->addCol(col2,0.0,10.0,objective[1]);
-	    si->addCol(col3,0.0,10.0,objective[2]);
+     // Add columns
+     if ( volSolverInterface ) {
+	// FIXME: this test could be done w/ the volume, but the rows must not
+	// be ranged.
+	failureMessage(solverName,"addCol add columns to null");
+     }
+     else {
+	si->addCol(col1,0.0,10.0,objective[0]);
+	si->addCol(col2,0.0,10.0,objective[1]);
+	si->addCol(col3,0.0,10.0,objective[2]);
 
-	    // solve
-	    si->initialSolve();
+	// solve
+	si->initialSolve();
 
-      CoinRelFltEq eq(1.0e-7) ;      
-      double objValue = si->getObjValue();
-	    if ( !eq(objValue,2.0) )
-        failureMessage(solverName,"getObjValue after adding empty rows and then cols.");
+	CoinRelFltEq eq(1.0e-7) ;      
+	double objValue = si->getObjValue();
+	if ( !eq(objValue,2.0) )
+	   failureMessage(solverName,"getObjValue after adding empty rows and then cols.");
 
-    }
+     }
   }
 	delete si;
       }

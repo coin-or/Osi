@@ -263,7 +263,7 @@ public:
   
       /// Get objective function value
       virtual double getObjValue() const { 
-#if 0
+#if 1
         // This does not pass unitTest if getObjValue is called before solve
         return lagrangeanCost_;
 #else

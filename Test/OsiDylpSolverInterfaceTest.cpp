@@ -1,7 +1,9 @@
-//-----------------------------------------------------------------------------
-// Copyright (C) 2002, Lou Hafer, Stephen Tse, International Business Machines
-// Corporation and others.  All Rights Reserved.
-//-----------------------------------------------------------------------------
+/*! \legal
+  Copyright (C) 2002, Lou Hafer, Stephen Tse, International Business Machines
+  Corporation and others. All Rights Reserved.
+*/
+
+#ifdef COIN_USE_DYLP
 
 #if defined(_MSC_VER)
 
@@ -11,7 +13,7 @@
 #endif
 
 /* 
-  Rudimentary tests for Dylp OSI layer. The assumption is that
+  Rudimentary tests for the Dylp OSI layer. The assumption is that
   OsiSolverInterfaceCommonUnitTest checks basic functionality. The routine
   test_starts does a cursory check of cold/warm/hot starts.
 
@@ -25,7 +27,7 @@
 #include "OsiDylpSolverInterface.hpp"
 
 
-static char sccsid[] = "%W%	%G%" ;
+static char sccsid[] = "@(#)OsiDylpSolverInterfaceTest.cpp	1.4	11/02/02" ;
 
 
 void test_starts (const std::string& mpsDir)
@@ -47,7 +49,7 @@ void test_starts (const std::string& mpsDir)
   assert(fabs(val - 3.23) < 0.01) ;
 
   std::cout << "Getting a warm start ... \n" ;
-  OsiWarmStart *wsb = osi->getWarmStart() ;
+  CoinWarmStart *wsb = osi->getWarmStart() ;
   std::cout << "Setting a warm start ... \n" ;
   osi->setWarmStart(wsb) ;
   std::cout << "Resolving the lp ... \n" ;
@@ -94,3 +96,6 @@ void OsiDylpSolverInterfaceUnitTest (const std::string& mpsDir)
   std::cout << "\n dylp tests completed." ;
 
   return ; }
+
+#endif // COIN_USE_DYLP
+

@@ -1,22 +1,22 @@
-//-----------------------------------------------------------------------------
-// Copyright (C) 2002, Lou Hafer, Stephen Tse, International Business Machines
-// Corporation and others.  All Rights Reserved.
-//-----------------------------------------------------------------------------
-
+#ifdef COIN_USE_DYLP
 #ifndef OsiDylpSolverInterface_H
 #define OsiDylpSolverInterface_H
 
+/*! \legal
+  Copyright (C) 2002, Lou Hafer, Stephen Tse, International Business Machines
+  Corporation and others. All Rights Reserved.
+*/
 
 /*! \file OsiDylpSolverInterface.hpp
-    \brief Declaration of COIN/OSI interface for dylp.
+    \brief Declaration of COIN OSI layer for dylp.
 
-  This file contains the declaration of the class OsiDylpSolverInterface, an
-  implementation of the COIN-OSI interface for dylp, the lp solver for the
-  bonsaiG MILP code.
+  This file contains the declaration of the class OsiDylpSolverInterface
+  (ODSI), an implementation of the COIN OSI layer for dylp, the lp solver
+  for the bonsaiG MILP code.
 */
 
 /*
-  %W%	%G%
+  @(#)OsiDylpSolverInterface.hpp	1.5	11/02/02
 */
 
 #include <CoinPackedMatrix.hpp>
@@ -29,25 +29,25 @@ extern "C" {
 }
 
 /*! \class OsiDylpSolverInterface
-    \brief COIN-OSI interface implementation for dylp
+    \brief COIN OSI layer for dylp
 
   Very roughly: the class OsiDylpSolverInterface (ODSI) is the top level
   object. It implements the public functions defined for an OsiSolverInterface
   object.
 
-  The OSI model (at least as expressed in the test suite) expects that the
-  constraint system read back from the solver will be the same as the
-  constraint system given to the solver.  Dylp expects that any grooming of
-  the constraint system will be done before it's called, and furthermore
-  expects that this grooming will include conversion of >= constraints to <=
-  constraints. This creates a bit of a conflict. The solution here is to turn
-  off constraint system grooming normally done in mpsio.c:mpsin, and move it
-  to a wrapper, dylp.c:dylp_dolp. dylp_dolp only implements the conversion
-  from >= to <=, which is reversible. dylp can tolerate empty constraints.
-  dylp_dolp also embodies a rudimentary strategy that attempts to recover
-  from numerical inaccuracy by refactoring the basis more often (on the
-  premise that this will reduce numerical inaccuracy in calculations
-  involving the basis inverse).
+  The OSI layer (or at least the OSI test suite) expects that the constraint
+  system read back from the solver will be the same as the constraint system
+  given to the solver.  Dylp expects that any grooming of the constraint
+  system will be done before it's called, and furthermore expects that this
+  grooming will include conversion of >= constraints to <= constraints. This
+  creates a bit of a conflict. The solution here is to turn off constraint
+  system grooming normally done in mpsio.c:mpsin, and move it to a wrapper,
+  dylp.c:dylp_dolp. dylp_dolp only implements the conversion from >= to <=,
+  which is reversible. dylp can tolerate empty constraints.  dylp_dolp also
+  embodies a rudimentary strategy that attempts to recover from numerical
+  inaccuracy by refactoring the basis more often (on the premise that this
+  will reduce numerical inaccuracy in calculations involving the basis
+  inverse).
 
   Within dylp, a constraint system is held in a row- and column-linked
   structure called a consys_struct. The lp problem (constraint system plus
@@ -99,7 +99,17 @@ public:
 
   /*! \brief Read a problem description in MPS format from a file.  */
 
-  int readMps(const char *, const char* = "mps") ;
+  int readMps(const char *filename, const char *extension = "mps") ;
+
+  /*! \brief Write the problem into the specified file in MPS format. */
+
+  void writeMps(const char *basename, const char *extension = "mps") const ;
+
+  /*! \brief Write the problem into the specified file in MPS format. */
+
+  int writeMps(const char *filename,
+	       const char **rownames, const char **colnames,
+	       int formatType = 0, int numberAcross = 2 ) const ;
 
   /*! \brief Load a problem description (OSI packed matrix, row sense,
 	  parameters unaffected).
@@ -465,10 +475,6 @@ public:
   /*! \brief Get as many primal rays as the solver can provide */
 
   std::vector<double *> getPrimalRays(int) const ;
-
-  /*! \brief Write the problem into the specified file in MPS format. */
-
-  void writeMps(const char *, const char* = "mps") const ;
 //@}
 
 /*
@@ -495,7 +501,7 @@ private:
 //@{
 
   static int reference_count ;
-  static bool yla05_ready ;
+  static bool basis_ready ;
   static OsiDylpSolverInterface *dylp_owner ;
 
 //@}
@@ -700,7 +706,7 @@ private:
   static int inv(int i) ;
 
   static pkvec_struct* packed_vector(
-    const OsiShallowPackedVector vector, int dimension) ;
+    const CoinShallowPackedVector vector, int dimension) ;
 //@}
 
 /*! \name File i/o helper routines */
@@ -716,10 +722,10 @@ private:
 /*! \class OsiDylpWarmStartBasis
     \brief The dylp warm start object
 
-  This derived class is necessary because dylp does not always work with the
-  full constraint system. The warm start object needs to contain a list of
-  the active constraints in addition to the status information included in
-  CoinWarmStartBasis.
+  This derived class is necessary because dylp by default works with a subset
+  of the full constraint system. The warm start object needs to contain a
+  list of the active constraints in addition to the status information
+  included in CoinWarmStartBasis.
 
   Constraint status is coded using the CoinWarmStartBasis::Status codes. Active
   constraints are coded as atUpperBound or atLowerBound, inactive as isFree.
@@ -742,7 +748,7 @@ class OsiDylpWarmStartBasis : public CoinWarmStartBasis
 
   const char *getConstraintStatus () const { return (constraintStatus_) ; }
 
-  char *getConstraintStatus_nc () { return (constraintStatus_) ; }
+  char *getConstraintStatus () { return (constraintStatus_) ; }
 
   /*! \brief Return the status of a single constraint. */
 
@@ -866,3 +872,4 @@ class OsiDylpWarmStartBasis : public CoinWarmStartBasis
 void OsiDylpSolverInterfaceUnitTest(const std::string & mpsDir) ;
 
 #endif // OsiDylpSolverInterface_H
+#endif // COIN_USE_DYLP

@@ -1,9 +1,11 @@
-//-----------------------------------------------------------------------------
-// Copyright (C) 2002, Lou Hafer, Stephen Tse, International Business Machines
-// Corporation and others.  All Rights Reserved.
-//-----------------------------------------------------------------------------
+/*! \legal
+  Copyright (C) 2002, Lou Hafer, Stephen Tse, International Business Machines
+  Corporation and others. All Rights Reserved.
+*/
 
-#if defined(_MSC_VER)
+#ifdef COIN_USE_DYLP
+
+#ifdef _MSC_VER
 
 /* Turn off compiler warning about long names */
 #  pragma warning(disable:4786)
@@ -37,31 +39,30 @@
 /*!
    \file OsiDylpSolverInterface.cpp
 
-   \brief Implementation of COIN/OSI interface for dylp.
+   \brief Implementation of COIN OSI layer for dylp.
 
-   This file contains the implementation of a COIN OSI interface for dylp,
-   the lp solver for the bonsaiG MILP code.
+   This file contains the implementation of a COIN OSI layer for dylp, the lp
+   solver for the bonsaiG MILP code.
 
-   More information on COIN and the OSI interface can be found at
-   http://www.coin-or.org.
+   More information on the COIN/OR project and the OSI layer specification
+   can be found at http://www.coin-or.org.
 
    -- Implementation Details --
-   
-   CACHE MECHANISM: Since vectors returned by OsiSolverInterface "get"
-   functions are constant (not modifiable by users) and it is convenient
-   for users to make repeated calls for the same information, a cache
-   mechansim is used to avoid repeated expensive conversions in the
-   interface. All cache variables are prefixed with underscore (_col*,
-   _row*, _matrix*). Note, however, that we need to destroy (or modify) the
-   cache whenever the problem is modified.
 
-   OFF-BY-ONE PROBLEM: Since OsiSolverInterface indexes variables and
-   constraints from 0 (the standard approach for C/C++) while dylp indexes
-   them from 1 (for robustness; see consys.h), high caution must be paid in
-   the interface to avoid the off-by-one problem. Similarly, arrays (vectors)
-   for k elements in bonsai occupy k+1 space with vector[0] unused.
-   ODSI::idx, ODSI::inv, ODSI::inv_vec are used to make these trivial
-   conversions explicit.
+   CACHE MECHANISM: Since vectors returned by OsiSolverInterface "get"
+   functions are constant (not modifiable by users) and it is convenient for
+   users to make repeated calls for the same information, a cache mechanism
+   is used to avoid repeated expensive conversions in the interface. All
+   cache variables are prefixed with underscore (_col*, _row*, _matrix*).
+   Note, however, that we need to invalidate or update the cache whenever the
+   problem is modified.
+
+   INDEX BASE: OsiSolverInterface indexes variables and constraints from 0
+   (the standard approach for C/C++) while dylp indexes them from 1 (for
+   robustness; see consys.h). Some caution is needed in the interface to
+   avoid off-by-one errors. Similarly, arrays (vectors) for k elements in
+   bonsai occupy k+1 space with vector[0] unused.  ODSI::idx, ODSI::inv, and
+   ODSI::inv_vec are used to make these trivial conversions explicit.
 
    COPY AND ASSERT: Since OsiSolverInterface requires cloning while dylp does
    not provide that internally, a good part of this code is devoted to doing
@@ -72,7 +73,7 @@
    C++ templates.
 */
 
-static char sccsid[] = "%W%	%G%" ;
+static char sccsid[] = "@(#)OsiDylpSolverInterface.cpp	1.9	11/26/02" ;
 
 #include <string>
 #include <cassert>
@@ -80,6 +81,7 @@ static char sccsid[] = "%W%	%G%" ;
 #include <OsiRowCut.hpp>
 #include "OsiDylpSolverInterface.hpp"
 #include "CoinWarmStartBasis.hpp"
+#include "CoinMpsIO.hpp"
 
 using std::string ;
 using std::vector ;
@@ -91,8 +93,8 @@ extern "C"
 #include "bonsai.h"
 
 extern bool dy_mpsin(const char* filename, consys_struct** consys) ;
-extern void yla05_init(int concnt, int factor_freq, double zero_tol) ;
-extern void yla05_free() ;
+extern void dy_initbasis(int concnt, int factor_freq, double zero_tol) ;
+extern void dy_freebasis() ;
 extern char *stralloc(char *str) ;
 
 }
@@ -169,19 +171,19 @@ bool cmdecho = false,
   object is destroyed (destructor, reference_count == 0).
 
   The basis maintenance package is initialised at the first attempt to solve
-  an lp (initialSolve, yla05_ready == false) and shut down when the last ODSI
-  object is destroyed (destructor, reference_count == 0, yla05_ready == true).
+  an lp (initialSolve, basis_ready == false) and shut down when the last ODSI
+  object is destroyed (destructor, reference_count == 0, basis_ready == true).
 */
 
 //@{
 /*! \var int OsiDylpSolverInterface::reference_count
     \brief Tracks the number of ODSI objects in existence.
 */
-/*! \var bool OsiDylpSolverInterface::yla05_ready
-    \brief Tracks yla05 initialisation
+/*! \var bool OsiDylpSolverInterface::basis_ready
+    \brief Tracks basis initialisation
 
-    Initialisation of yla05 is delayed until the user actually attempts to
-    solve an lp.
+    Initialisation of the basis data structures is delayed until the user
+    actually attempts to solve an lp.
 */
 /*! \var OsiDylpSolverInterface *OsiDylpSolverInterface::dylp_owner
     \brief ODSI instance controlling dylp
@@ -192,7 +194,7 @@ bool cmdecho = false,
 */
 
 int ODSI::reference_count = 0 ;
-bool ODSI::yla05_ready = false ;
+bool ODSI::basis_ready = false ;
 ODSI *ODSI::dylp_owner = 0 ;
 
 //@}
@@ -239,7 +241,7 @@ template<class T> inline T* ODSI::inv_vec (T* vec) { return vec + 1 ; }
 #  define INV_VEC(zz_type_zz,zz_vec_zz) inv_vec<zz_type_zz>(zz_vec_zz)
 #endif
 
-/*! \brief Convert an OsiShallowPackedVector to a dylp pkvec.
+/*! \brief Convert an CoinShallowPackedVector to a dylp pkvec.
 
   pkvec's created with this routine must eventually be freed with pkvec_free.
   Note that 0-based indexing is used for the entries of the coeff vector
@@ -248,7 +250,7 @@ template<class T> inline T* ODSI::inv_vec (T* vec) { return vec + 1 ; }
   \param dimension The length of the vector if it were to be unpacked.
 */
 
-pkvec_struct* ODSI::packed_vector (const OsiShallowPackedVector src,
+pkvec_struct* ODSI::packed_vector (const CoinShallowPackedVector src,
 				   int dimension)
 
 { int n = src.getNumElements() ;
@@ -819,7 +821,7 @@ void ODSI::add_row (const CoinPackedVectorBase& osi_rowi, char clazzi,
 void ODSI::construct_lpprob ()
 
 {
-  dy_checkdefaults(consys, options) ;
+  dy_checkdefaults(consys, options,tolerances) ;
   lpprob = new lpprob_struct ;
   memset(lpprob, 0, sizeof(lpprob_struct)) ;
   setflg(lpprob->ctlopts,lpctlNOFREE) ;
@@ -956,7 +958,7 @@ void ODSI::load_problem (const CoinPackedMatrix& matrix,
   if (!matrix2.isColOrdered()) matrix2.reverseOrdering() ;
 
   for (int j = 0 ; j < colcnt ; j++)
-  { const OsiShallowPackedVector osi_col = matrix2.getVector(j) ;
+  { const CoinShallowPackedVector osi_col = matrix2.getVector(j) ;
     pkvec_struct* colj = packed_vector(osi_col,rowcnt) ;
     colj->nme = 0 ;
     double objj = obj?obj[j]:0 ;
@@ -1255,7 +1257,7 @@ ODSI::OsiDylpSolverInterface ()
 
   if (reference_count == 1)
   { dylp_ioinit() ;
-    OsiRelFltEq eq ;
+    CoinRelFltEq eq ;
     assert(eq(DYLP_INFINITY, DYLP_INFINITY)) ; }
 
 }
@@ -1419,9 +1421,9 @@ ODSI::~OsiDylpSolverInterface ()
 
   reference_count-- ;
   if (reference_count == 0)
-  { if (yla05_ready == true)
-    { yla05_free() ;
-      yla05_ready = false ; }
+  { if (basis_ready == true)
+    { dy_freebasis() ;
+      basis_ready = false ; }
     ioterm() ;
     errterm() ; }
   
@@ -1997,7 +1999,8 @@ lptols_struct* main_lptols ;     // just for cmdint.c::process_cmds
 /*! \brief Given `file' or `file.ext1', construct `file.ext2'
 
   A utility routine for building related file names. Either of ext1 or ext2
-  can be null, in which case nothing is stripped or added, respectively.
+  can be null or "" (the null string), in which case nothing is stripped or
+  added, respectively.
 */
 
 std::string ODSI::make_filename (const std::string filename, 
@@ -2009,21 +2012,22 @@ std::string ODSI::make_filename (const std::string filename,
 /*
   Extensions must start with ".", so fix if necessary.
 */
-  if (ext1 && ext1str[0] != '.') ext1str.insert(ext1str.begin(),'.') ;
-  if (ext2 && ext2str[0] != '.') ext2str.insert(ext2str.begin(),'.') ;
+  if (ext1 && strlen(ext1) > 0 && ext1[0] != '.')
+    ext1str.insert(ext1str.begin(),'.') ;
+  if (ext2 && strlen(ext2) > 0 && ext2[0] != '.')
+    ext2str.insert(ext2str.begin(),'.') ;
 /*
   Strip ext1 from filename, if it exists, leaving the base name.
 */
-  if (ext1)
+  basename = filename ;
+  if (ext1 && strlen(ext1) > 0)
   { string::size_type ext1pos = filename.rfind(ext1str) ;
     if (ext1pos < filename.npos)
-    { basename = filename.substr(0,ext1pos) ; }
-    else
-    { basename = filename ; } }
+    { basename = filename.substr(0,ext1pos) ; } }
 /*
   Add ext2, if it exists.
 */
-  if (ext2) basename += ext2str ;
+  if (ext2 && strlen(ext2) > 0) basename += ext2str ;
 
   return (basename) ; }
 
@@ -2054,22 +2058,33 @@ std::string ODSI::make_filename (const std::string filename,
 
 
 /*!
-  Read a problem definition from an MPS file. This routine will also look
-  in the same directory as the MPS file for a dylp options (.spc) file.
-  If the MPS file is problem.mps, the options file should be problem.spc.
-  Options and tolerances are initialised to defaults and then modified
-  according to problem.spc.
+  Read a problem definition in MPS format from the file basename.extension.
+
+  This routine will also look in the same directory as the MPS file for a
+  dylp options file `basename.spc'.  Options and tolerances are initialised to
+  defaults and then modified according to problem.spc. `extension' can be
+  null or "" (the null string).
+
+  NOTE: dylp does not support direct reading of compressed files.
 */
 
-int ODSI::readMps (const char* filename, const char* extension)
+int ODSI::readMps (const char* basename, const char* extension)
 
-{ string mps = make_filename(filename,extension,extension) ;
+{ string mps,base,ext ;
+  char *dotp ;
+
+  base = basename ;
+  ext = extension ;
+  if (ext != "")
+  { mps = make_filename(base.c_str(),"",ext.c_str()) ; }
+  else
+  { mps = base ; }
 
   destruct_problem() ;
   assert(!lpprob && !consys) ;
 
   construct_options() ;
-  string spc = make_filename(mps,extension,".spc") ;
+  string spc = make_filename(base.c_str(),ext.c_str(),".spc") ;
   dylp_controlfile(spc.c_str(),true,false) ;
   bool r = dy_mpsin(mps.c_str(),&consys) ;
   assert(r) ;
@@ -2079,6 +2094,108 @@ int ODSI::readMps (const char* filename, const char* extension)
 
   return (0) ;
 }
+
+
+/*!
+  Write a problem to the file basename.extension in MPS format.
+
+  `extension' can be null or "" (the null string).
+
+  NOTE: dylp does not support direct writing of compressed files.
+*/
+
+void ODSI::writeMps (const char *basename, const char *extension) const
+
+{ CoinMpsIO mps ;
+  int n = getNumCols(),
+      m = getNumRows() ;
+  char *vartyp = new char[n] ;
+  typedef char *charp ;
+  char **colnames = new charp[n],
+       **rownames = new charp[n] ;
+  
+  string filename = basename ;
+  if (extension && strlen(extension) > 0)
+  { filename += '.' ;
+    filename += extension ; }
+  
+  int i,j,errs ;
+
+  for (j = 0 ; j < n ; j++) vartyp[j] = isInteger(j) ;
+
+  for (i = 0 ; i < m ; i++)
+    rownames[i] = consys_nme(consys,'c',idx(i),false,0) ;
+  
+  for (j = 0 ; j < n ; j++)
+    colnames[j] = consys_nme(consys,'v',idx(j),false,0) ;
+
+  mps.setMpsData(*getMatrixByRow(),
+		 getInfinity(),
+		 getColLower(),
+		 getColUpper(),
+		 getObjCoefficients(),
+		 vartyp,
+		 getRowLower(),
+		 getRowUpper(),
+		 colnames,
+		 rownames) ;
+
+/*
+  We really need to work on symbolic names for these magic numbers.
+*/
+  errs = mps.writeMps(filename.c_str(),0,4,2) ;
+/*
+  Free up the arrays we allocated.
+*/
+  delete[] vartyp ;
+  delete[] colnames ;
+  delete[] rownames ;
+
+  return ; }
+
+
+/*!
+  Write a problem to the file basename.extension in MPS format.
+
+  `extension' can be null or "" (the null string).
+
+  NOTE: dylp does not support direct writing of compressed files.
+*/
+
+int ODSI::writeMps (const char *filename,
+		    const char **rownames, const char **colnames,
+		    int formatType, int numberAcross) const
+
+{ CoinMpsIO mps ;
+  int n = getNumCols(),
+      m = getNumRows() ;
+  char *vartyp = new char[n] ;
+  
+  int j,errs ;
+
+  for (j = 0 ; j < n ; j++) vartyp[j] = isInteger(j) ;
+
+  mps.setMpsData(*getMatrixByRow(),
+		 getInfinity(),
+		 getColLower(),
+		 getColUpper(),
+		 getObjCoefficients(),
+		 vartyp,
+		 getRowLower(),
+		 getRowUpper(),
+		 colnames,
+		 rownames) ;
+
+/*
+  We really need to work on symbolic names.
+*/
+  errs = mps.writeMps(filename,0,formatType,numberAcross) ;
+/*
+  Free up the arrays we allocated.
+*/
+  delete[] vartyp ;
+
+  return (errs) ; }
 
 
 /*!
@@ -2448,10 +2565,10 @@ void ODSI::initialSolve ()
 
   assert(lpprob && consys && options && tolerances && statistics) ;
 
-  if (yla05_ready == false)
+  if (basis_ready == false)
   { int count = static_cast<int>((1.5*getNumRows()) + 2*getNumCols()) ;
-    yla05_init(count, options->factor, tolerances->zero) ;
-    yla05_ready = true ; }
+    dy_initbasis(count,options->factor,0) ;
+    basis_ready = true ; }
   if (dylp_owner != 0 && dylp_owner != this) dylp_owner->detach_dylp() ;
 
   if (isactive(local_logchn))
@@ -3228,15 +3345,6 @@ void ODSI::branchAndBound ()
 { UNSUPPORTED ; }
 
 
-/* 
-  \todo Requires a new piece of code. Dylp only knows how to read MPS; its
-	output format conforms to no particular standard.
-*/
-
-void ODSI::writeMps (const char *, const char*) const
-
-{ UNSUPPORTED ; }
-
 //@}
 
 
@@ -3300,9 +3408,9 @@ CoinWarmStart* ODSI::getWarmStart () const
   OsiDylpWarmStartBasis *wsb = new OsiDylpWarmStartBasis ;
   wsb->setSize(consys->varcnt,consys->concnt) ;
 
-  char *const strucStatus = wsb->getStructuralStatus_nc() ;
-  char *const artifStatus = wsb->getArtificialStatus_nc() ;
-  char *const conStatus = wsb->getConstraintStatus_nc() ;
+  char *const strucStatus = wsb->getStructuralStatus() ;
+  char *const artifStatus = wsb->getArtificialStatus() ;
+  char *const conStatus = wsb->getConstraintStatus() ;
   basis_struct *basis = lpprob->basis ;
 /*
   Walk the basis and mark the active constraints and basic variables. Basic
@@ -3504,11 +3612,11 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
 void ODSI::resolve ()
 /*
   This routine simply calls the solver, after making sure that the forcecold
-  option is turned off. If we're reoptimising, then yla05 should be up and
-  running and we should have warm start information. We do need to make sure
-  the solver is ours to use.
+  option is turned off. If we're reoptimising, then the basis should be ready
+  and we should have warm start information. We do need to make sure the
+  solver is ours to use.
 */
-{ assert(lpprob && lpprob->basis && lpprob->status && yla05_ready &&
+{ assert(lpprob && lpprob->basis && lpprob->status && basis_ready &&
 	 consys && options && tolerances && statistics) ;
 
   if (dylp_owner != 0 && dylp_owner != this) dylp_owner->detach_dylp() ;
@@ -3589,8 +3697,8 @@ inline void ODSI::markHotStart ()
 void ODSI::solveFromHotStart ()
 /*
   This routine simply calls the solver, after making sure that the forcecold
-  and forcewarm options are turned off. If we're going for a hot start, yla05
-  should be up and running.
+  and forcewarm options are turned off. If we're going for a hot start, the
+  basis should be ready.
 
   Note that dylp does need to know what's changed: any of bounds, rhs &
   rhslow, or objective. The various routines that make these changes should
@@ -3599,7 +3707,7 @@ void ODSI::solveFromHotStart ()
 
 { int tmp_iterlim = -1 ;
 
-  assert(lpprob && lpprob->basis && lpprob->status && yla05_ready &&
+  assert(lpprob && lpprob->basis && lpprob->status && basis_ready &&
 	 consys && options && tolerances && statistics) ;
 
   if (isactive(local_logchn))
@@ -3671,6 +3779,7 @@ void ODSI::dylp_controlfile (const char *name,
 void ODSI::dylp_logfile (const char *name, bool echo)
 
 { if (name == 0 || *name == 0) return ;
+
   string log = make_filename(name,".mps",".log") ;
   local_logchn = openfile(const_cast<char *>(log.c_str()),
 			  const_cast<char *>("w")) ;
@@ -3678,3 +3787,5 @@ void ODSI::dylp_logfile (const char *name, bool echo)
   local_gtxecho = echo ; }
 
 //@} // DylpMethods
+
+#endif /* COIN_USE_DYLP */

@@ -849,6 +849,18 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
     expectedNumberColumns=62;
   }
 
+  // markshare2
+  else if ( modelL == "markshare2" ) {
+    probType=continuousWith0_1;
+    int intIndicesAt1[]=
+      {16 ,21 ,25 ,26 ,29 ,30 ,31 ,32 ,34 ,35 ,
+       37 ,40 ,42 ,44 ,45 ,47 ,48 ,52 ,53 ,57 ,
+       58 ,59 ,60 ,61 ,62 ,63 ,65 ,71 ,73 };
+    int numIndices = sizeof(intIndicesAt1)/sizeof(int);
+    intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    expectedNumberColumns=74;
+  }
+
   // l152lav
   else if ( modelL == "l152lav" ) {
     probType=pure0_1;

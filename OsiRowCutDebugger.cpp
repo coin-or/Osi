@@ -730,10 +730,10 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
   }
 
   // noswot
-  else if ( modelL == "noswot" ) {
+  else if ( modelL == "noswot_z" ) {
     probType=generalMip;
-    int intIndicesV[]={};
-    double intSolnV[]={};
+    int intIndicesV[]={1};
+    double intSolnV[]={1.0};
     int vecLen = sizeof(intIndicesV)/sizeof(int);
     intSoln.setVector(vecLen,intIndicesV,intSolnV);
     expectedNumberColumns=128;

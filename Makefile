@@ -45,6 +45,9 @@ endif
 ifneq ($(filter COIN_libMsk,$(CoinLibsDefined)),)
     SOLVERLIBS += libOsiMsk
 endif
+ifneq ($(filter COIN_libCbc,$(CoinLibsDefined)),)
+    SOLVERLIBS += libOsiCbc
+endif
 
 export SOLVERLIBS
 

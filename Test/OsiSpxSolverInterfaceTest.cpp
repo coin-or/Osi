@@ -23,7 +23,7 @@
 #include "OsiCuts.hpp"
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
-#include "OsiPackedMatrix.hpp"
+#include "CoinPackedMatrix.hpp"
 
 #ifdef NDEBUG
 #undef NDEBUG
@@ -87,7 +87,7 @@ void OsiSpxSolverInterfaceUnitTest( const std::string & mpsDir, const std::strin
   }
 
   {    
-    OsiRelFltEq eq;
+    CoinRelFltEq eq;
     OsiSpxSolverInterface m;
     std::string fn = mpsDir+"exmip1";
     m.readMps(fn.c_str(),"mps");
@@ -97,15 +97,15 @@ void OsiSpxSolverInterfaceUnitTest( const std::string & mpsDir, const std::strin
 
     {
       assert( m.getNumCols()==8 );
-      const OsiPackedMatrix * colCopy = m.getMatrixByCol();
+      const CoinPackedMatrix * colCopy = m.getMatrixByCol();
       assert( colCopy->getNumCols() == 8 );
       assert( colCopy->getMajorDim() == 8 );
       assert( colCopy->getNumRows() == 5 );
       assert( colCopy->getMinorDim() == 5 );
       assert (colCopy->getVectorLengths()[7] == 2 );
-      OsiPackedMatrix revColCopy;
+      CoinPackedMatrix revColCopy;
       revColCopy.reverseOrderedCopyOf(*colCopy);
-      OsiPackedMatrix rev2ColCopy;      
+      CoinPackedMatrix rev2ColCopy;      
       rev2ColCopy.reverseOrderedCopyOf(revColCopy);
       assert( rev2ColCopy.getNumCols() == 8 );
       assert( rev2ColCopy.getMajorDim() == 8 );
@@ -465,11 +465,11 @@ void OsiSpxSolverInterfaceUnitTest( const std::string & mpsDir, const std::strin
     // Test getMatrixByRow method
     { 
       const OsiSpxSolverInterface si(m);
-      const OsiPackedMatrix * smP = si.getMatrixByRow();
-      //const OsiPackedMatrix * osmP = dynamic_cast(const OsiSpxPackedMatrix*)(smP);
+      const CoinPackedMatrix * smP = si.getMatrixByRow();
+      //const CoinPackedMatrix * osmP = dynamic_cast(const OsiSpxPackedMatrix*)(smP);
       //assert( osmP!=NULL );
       
-      OsiRelFltEq eq;
+      CoinRelFltEq eq;
       const double * ev = smP->getElements();
       assert( eq(ev[0],   3.0) );
       assert( eq(ev[1],   1.0) );
@@ -548,7 +548,7 @@ void OsiSpxSolverInterfaceUnitTest( const std::string & mpsDir, const std::strin
         assert( eq(siC1rr[3],5.0-1.8) );
         assert( eq(siC1rr[4],15.0-3.0) );
         
-        const OsiPackedMatrix * siC1mbr = siC1.getMatrixByRow();
+        const CoinPackedMatrix * siC1mbr = siC1.getMatrixByRow();
         assert( siC1mbr != NULL );
         
         const double * ev = siC1mbr->getElements();
@@ -677,7 +677,7 @@ void OsiSpxSolverInterfaceUnitTest( const std::string & mpsDir, const std::strin
       assert( eq(lhsrr[4],15.0-3.0) );
       assert( eq(lhsrr[5],0.0) );      
       
-      const OsiPackedMatrix * lhsmbr = lhs.getMatrixByRow();
+      const CoinPackedMatrix * lhsmbr = lhs.getMatrixByRow();
       assert( lhsmbr != NULL );       
       const double * ev = lhsmbr->getElements();
       assert( eq(ev[0],   3.0) );

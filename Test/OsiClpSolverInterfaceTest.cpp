@@ -789,11 +789,25 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     c0.insert(0, 4);
     c0.insert(1, 1);
     m.addCol(c0, 0, inf, 3);
-    
     m.initialSolve();
+    double objValue = m.getObjValue();
+    CoinRelFltEq eq(1.0e-2);
+    assert( eq(objValue,2520.57) );
+    // Try deleting first column
+    int * d = new int[1];
+    d[0]=0;
+    m.deleteCols(1,d);
+    delete [] d;
+    d=NULL;
+    m.resolve();
+    objValue = m.getObjValue();
+    assert( eq(objValue,2520.57) );
+    // Try deleting column we added
     int iCol = m.getNumCols()-1;
     m.deleteCols(1,&iCol);
     m.resolve();
+    objValue = m.getObjValue();
+    assert( eq(objValue,2520.57) );
 
   }
 

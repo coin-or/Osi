@@ -721,6 +721,10 @@ OsiVolSolverInterface::isIterationLimitReached() const
 //#############################################################################
 
 CoinWarmStart*
+OsiVolSolverInterface::getEmptyWarmStart () const
+{ return (dynamic_cast<CoinWarmStart *>(new CoinWarmStartDual())) ; }
+
+CoinWarmStart*
 OsiVolSolverInterface::getWarmStart() const
 {
   return new CoinWarmStartDual(getNumRows(), rowprice_);

@@ -451,17 +451,6 @@ void OsiSolverInterfaceMpsUnitTest
           dynamic_cast<OsiDylpSolverInterface *>(vecSiP[i]) ;
         if (si != NULL )  {    
           siName[i]="OsiDylpSolverInterface";
-          // Is this an MPS file that OsiDylpSolverInterface handles
-          if ( mpsName[m]=="cycle" ||
-               mpsName[m]=="d6cube" ||
-               mpsName[m]=="fit1d" || 
-               mpsName[m]=="grow15" || 
-               mpsName[m]=="grow22" || 
-               mpsName[m]=="maros" || 
-               mpsName[m]=="pilot" || 
-               mpsName[m]=="pilot4" || 
-               mpsName[m]=="pilotnov" || 
-               mpsName[m]=="wood1p" )break ; 
         }
       }
 #     endif

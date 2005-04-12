@@ -2172,6 +2172,8 @@ OsiClpSolverInterface::setBasisStatus(const int* cstat, const int* rstat)
   }
   // say first time
   modelPtr_->statusOfProblem(true);
+  // Save 
+  basis_ = getBasis(modelPtr_);
   return 0;
 }
 

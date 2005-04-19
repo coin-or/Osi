@@ -871,9 +871,9 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
 
   }
   // Test matt
-  if (fopen("../Clp/matt.mps","r")) {    
+  if (fopen("../Mps/Infeas/galenet.mps","r")) {    
     OsiClpSolverInterface m;
-    m.readMps("../Clp/matt","mps");
+    m.readMps("../Mps/Infeas/galenet","mps");
     m.setHintParam(OsiDoPresolveInResolve, true, OsiHintDo);
     m.resolve();
     

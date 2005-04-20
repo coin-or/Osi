@@ -2035,7 +2035,11 @@ OsiClpSolverInterface::disableSimplexInterface()
   // declare optimality anyway  (for message handler)
   modelPtr_->setProblemStatus(0);
   modelPtr_->setSolveType(1);
+  // message will not appear anyway
+  int saveMessageLevel=modelPtr_->messageHandler()->logLevel();
+  modelPtr_->messageHandler()->setLogLevel(0);
   modelPtr_->finish();
+  modelPtr_->messageHandler()->setLogLevel(saveMessageLevel);
   modelPtr_->restoreData(saveData_);
   basis_ = getBasis(modelPtr_);
   modelPtr_->setSolveType(1);

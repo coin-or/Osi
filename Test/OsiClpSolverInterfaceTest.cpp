@@ -1095,6 +1095,7 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     // exit special mode
     m.disableSimplexInterface();
     m.getModelPtr()->messageHandler()->setLogLevel(4);
+    m.messageHandler()->setLogLevel(0);
     m.resolve();
     assert (!m.getIterationCount());
     m.setObjSense(-1.0);

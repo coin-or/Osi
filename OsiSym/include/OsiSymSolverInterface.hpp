@@ -638,9 +638,9 @@ public:
 
    void parseCommandLine(int argc, char **argv);
 
-   void readMps(char * infile);
+   virtual int readMps(const char * infile, const char *extension = "mps");
 
-   void readGmpl(char * modelFile, char * dataFile);
+   virtual int readGMPL(const char * modelFile, const char * dataFile=NULL);
 
    void findInitialBounds();
 

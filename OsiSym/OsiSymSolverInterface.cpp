@@ -701,21 +701,33 @@ void OsiSymSolverInterface::parseCommandLine(int argc, char **argv)
 /*===========================================================================*/
 /*===========================================================================*/
 
-void OsiSymSolverInterface::readMps(char * infile)
+int OsiSymSolverInterface::readMps(const char * infile, const char * extension)
 {
 
-  sym_read_mps(env_, infile);
+   int termcode = 0;
+   char *fn = new char [MAX_FILE_NAME_LENGTH+1];
+   
+   sprintf(fn, "%s%s%s", infile, ".", extension);
+   
+   termcode = sym_read_mps(env_, fn);
+   
+   delete [] fn;
+   
+   return (termcode);
 
 }
 
 /*===========================================================================*/
 /*===========================================================================*/
 
-void OsiSymSolverInterface::readGmpl(char * modelFile, char * dataFile)
+int OsiSymSolverInterface::readGMPL(const char * modelFile, 
+				    const char * dataFile)
 {
+   int termcode = 0;
+   termcode = sym_read_gmpl(env_, const_cast<char*>(modelFile), 
+			    const_cast<char*>(dataFile));
 
-  sym_read_gmpl(env_, modelFile, dataFile);
-
+   return (termcode);
 }
 
 /*===========================================================================*/

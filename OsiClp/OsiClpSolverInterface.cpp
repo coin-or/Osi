@@ -2012,13 +2012,13 @@ OsiClpSolverInterface::enableSimplexInterface(bool doingPrimal)
     modelPtr_->setAlgorithm(1);
   else
     modelPtr_->setAlgorithm(-1);
-  modelPtr_->scaling(0);
   // Do initialization
   saveData_ = modelPtr_->saveData();
+  saveData_.scalingFlag_=modelPtr_->scalingFlag();
+  modelPtr_->scaling(0);
   specialOptions_ = -1;
   // set infeasibility cost up
   modelPtr_->setInfeasibilityCost(1.0e12);
-  // probably should save and restore?
   ClpDualRowDantzig dantzig;
   modelPtr_->setDualRowPivotAlgorithm(dantzig);
   ClpPrimalColumnDantzig dantzigP;
@@ -2041,6 +2041,11 @@ OsiClpSolverInterface::disableSimplexInterface()
   modelPtr_->finish();
   modelPtr_->messageHandler()->setLogLevel(saveMessageLevel);
   modelPtr_->restoreData(saveData_);
+  modelPtr_->scaling(saveData_.scalingFlag_);
+  ClpDualRowSteepest steepest;
+  modelPtr_->setDualRowPivotAlgorithm(steepest);
+  ClpPrimalColumnSteepest steepestP;
+  modelPtr_->setPrimalColumnPivotAlgorithm(steepestP);
   basis_ = getBasis(modelPtr_);
   modelPtr_->setSolveType(1);
 }

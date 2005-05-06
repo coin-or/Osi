@@ -1056,6 +1056,8 @@ CoinPrePostsolveMatrix::CoinPrePostsolveMatrix(const OsiSolverInterface * si,
   nelems_(si->getNumElements()),
   ncols0_(ncols_in),
   nrows0_(nrows_in),
+  bulk0_(2*nelems_in),
+  bulkRatio_(2.0),
 
   mcstrt_(new CoinBigIndex[ncols_in+1]),
   hincol_(new int[ncols_in+1]),
@@ -1138,7 +1140,6 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
 
   dobias_(0.0),
 
-
   // temporary init
   mrstrt_(new CoinBigIndex[nrows_in+1]),
   hinrow_(new int[nrows_in+1]),
@@ -1149,6 +1150,7 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
   startTime_(0.0),
   feasibilityTolerance_(0.0),
   status_(-1),
+  maxSubstLevel_(3),
   colsToDo_(new int [ncols0_in]),
   numberColsToDo_(0),
   nextColsToDo_(new int[ncols0_in]),

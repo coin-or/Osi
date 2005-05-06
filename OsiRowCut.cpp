@@ -151,7 +151,9 @@ row_(),
 lb_(-/*std::numeric_limits<double>::max()*/DBL_MAX),
 ub_( /*std::numeric_limits<double>::max()*/DBL_MAX)
 {
-  // nothing to do here
+  //#ifdef NDEBUG
+  //row_.setTestForDuplicateIndex(false);
+  //#endif
 }
 //-------------------------------------------------------------------
 // Copy constructor 

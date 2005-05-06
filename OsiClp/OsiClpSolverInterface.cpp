@@ -9,11 +9,13 @@
 #include "CoinIndexedVector.hpp"
 #include "ClpDualRowSteepest.hpp"
 #include "ClpPrimalColumnSteepest.hpp"
+#include "ClpPackedMatrix.hpp"
 #include "ClpDualRowDantzig.hpp"
 #include "ClpPrimalColumnDantzig.hpp"
 #include "ClpFactorization.hpp"
 #include "ClpObjective.hpp"
 #include "ClpSimplex.hpp"
+#include "ClpSimplexOther.hpp"
 #include "ClpNonLinearCost.hpp"
 #include "OsiClpSolverInterface.hpp"
 #include "OsiCuts.hpp"
@@ -37,7 +39,7 @@ void OsiClpSolverInterface::initialSolve()
     solver.setSolveType(1);
   }
   int saveOptions = solver.specialOptions();
-  solver.setSpecialOptions(saveOptions|64); // go as far as possible
+  solver.setSpecialOptions(saveOptions|64|32768); // go as far as possible
   // Set message handler to have same levels etc
   solver.passInMessageHandler(handler_);
   // set reasonable defaults
@@ -59,7 +61,7 @@ void OsiClpSolverInterface::initialSolve()
     assert (gotHint);
     if (strength==OsiHintIgnore||takeHint) {
       if (!solver.scalingFlag())
-	solver.scaling(1);
+	solver.scaling(3);
     } else {
       solver.scaling(0);
     }
@@ -232,10 +234,20 @@ void OsiClpSolverInterface::initialSolve()
   totalTime += time1;
   //std::cout<<time1<<" seconds - total "<<totalTime<<std::endl;
 }
-
 //-----------------------------------------------------------------------------
 void OsiClpSolverInterface::resolve()
 {
+  bool takeHint;
+  OsiHintStrength strength;
+  bool gotHint = (getHintParam(OsiDoInBranchAndCut,takeHint,strength));
+  assert (gotHint);
+  if ((specialOptions_>>10)==2) {
+    // Quick check to see if optimal
+    modelPtr_->checkSolutionInternal();
+    if (modelPtr_->problemStatus()==0) {
+      return;
+    }
+  }
   int saveSolveType=modelPtr_->solveType();
   bool doingPrimal = modelPtr_->algorithm()>0;
   if (saveSolveType==2) {
@@ -243,29 +255,21 @@ void OsiClpSolverInterface::resolve()
   }
   int saveOptions = modelPtr_->specialOptions();
   int startFinishOptions=0;
-  bool takeHint;
-  OsiHintStrength strength;
-  bool gotHint = (getHintParam(OsiDoInBranchAndCut,takeHint,strength));
-  assert (gotHint);
-  if (strength!=OsiHintIgnore&&takeHint) {
-    // could do something - think about it
-    //printf("hint %d %c\n",strength,takeHint ? 'T' :'F');
-  }
   if (specialOptions_>=0) {
     if((specialOptions_&1)==0) {
       startFinishOptions=0;
-      modelPtr_->setSpecialOptions(saveOptions|(64|1024));
+      modelPtr_->setSpecialOptions(saveOptions|(64|1024|32768));
     } else {
       startFinishOptions=1+4;
       if ((specialOptions_&8)!=0)
         startFinishOptions +=2; // allow re-use of factorization
       if((specialOptions_&4)==0||!takeHint) 
-        modelPtr_->setSpecialOptions(saveOptions|(64|128|512|1024|4096));
+        modelPtr_->setSpecialOptions(saveOptions|(64|128|512|1024|4096|32768));
       else
-        modelPtr_->setSpecialOptions(saveOptions|(64|128|512|1024|2048|4096));
+        modelPtr_->setSpecialOptions(saveOptions|(64|128|512|1024|2048|4096|32768));
     }
   } else {
-    modelPtr_->setSpecialOptions(saveOptions|64);
+    modelPtr_->setSpecialOptions(saveOptions|64|32768);
   }
   //printf("options %d size %d\n",modelPtr_->specialOptions(),modelPtr_->numberColumns());
   //modelPtr_->setSolveType(1);
@@ -309,6 +313,13 @@ void OsiClpSolverInterface::resolve()
   assert (gotHint);
   if (strength!=OsiHintIgnore&&takeHint) {
     ClpPresolve pinfo;
+    if ((modelPtr_->specialOptions()&1024)!=0) {
+      pinfo.setDoDual(false);
+      pinfo.setDoTripleton(false);
+      pinfo.setDoDupcol(false);
+      pinfo.setDoDuprow(false);
+      pinfo.setDoSingletonColumn(false);
+    }
     ClpSimplex * model2 = pinfo.presolvedModel(*modelPtr_,1.0e-8);
     if (!model2) {
       // problem found to be infeasible - whats best?
@@ -320,6 +331,9 @@ void OsiClpSolverInterface::resolve()
       stats[0]=model2->numberRows();
       stats[1]=model2->numberColumns();
     }
+    //printf("rows %d -> %d, columns %d -> %d\n",
+    //     modelPtr_->numberRows(),model2->numberRows(),
+    //     modelPtr_->numberColumns(),model2->numberColumns());
     // change from 200
     model2->factorization()->maximumPivots(100+model2->numberRows()/50);
     if (algorithm<0) {
@@ -339,38 +353,49 @@ void OsiClpSolverInterface::resolve()
     }
     if (model2!=modelPtr_) {
       int numberIterations = model2->numberIterations();
+      int finalStatus=model2->status();
       pinfo.postsolve(true);
     
       delete model2;
       // later try without (1) and check duals before solve
-      modelPtr_->primal(1);
-      modelPtr_->setNumberIterations(modelPtr_->numberIterations()+numberIterations);
-      lastAlgorithm_=1; // primal
+      if (finalStatus!=3&&(finalStatus||modelPtr_->status()==-1)) {
+        modelPtr_->primal(1);
+        modelPtr_->setNumberIterations(modelPtr_->numberIterations()+numberIterations);
+        lastAlgorithm_=1; // primal
+        //if (modelPtr_->numberIterations())
+        //printf("****** iterated %d\n",modelPtr_->numberIterations());
+      }
     }
-    //if (modelPtr_->numberIterations())
-    //printf("****** iterated %d\n",modelPtr_->numberIterations());
   } else {
     //modelPtr_->setLogLevel(63);
-    modelPtr_->setDualTolerance(1.0e-8);
+    //modelPtr_->setDualTolerance(1.0e-7);
     if (algorithm<0) {
       //printf("doing dual\n");
       int savePerturbation = modelPtr_->perturbation();
       if (specialOptions_>=0&&(specialOptions_&2)!=0)
 	modelPtr_->setPerturbation(100);
-      modelPtr_->dual(0,startFinishOptions);
+      //modelPtr_->messageHandler()->setLogLevel(1);
+      
+      //writeMpsNative("bad",NULL,NULL,2,1,1.0);
+      if ((modelPtr_->specialOptions()&1024)==0)
+        modelPtr_->dual(0,startFinishOptions);
+      else
+        crunch();
       if (!modelPtr_->problemStatus()&&0) {
-        double obj1 = modelPtr_->getObjValue();
-        int its = modelPtr_->maximumIterations();
-        modelPtr_->setMaximumIterations(10000);
-        modelPtr_->allSlackBasis();
-        modelPtr_->dual();
-        int level = modelPtr_->logLevel();
-        modelPtr_->setLogLevel(63);
-        modelPtr_->dual();
-        modelPtr_->primal();
-        assert (fabs(obj1-modelPtr_->getObjValue())<1.0e-4);
-        modelPtr_->setLogLevel(level);
-        modelPtr_->setMaximumIterations(its);
+        int numberColumns = modelPtr_->numberColumns();
+        const double * columnLower = modelPtr_->columnLower();
+        const double * columnUpper = modelPtr_->columnUpper();
+        int nBad=0;
+        for (int i=0;i<numberColumns;i++) {
+          if (columnLower[i]==columnUpper[i]&&modelPtr_->getColumnStatus(i)==ClpSimplex::basic) {
+            nBad++;
+            modelPtr_->setColumnStatus(i,ClpSimplex::isFixed);
+          }
+        }
+        if (nBad) {
+          modelPtr_->primal(1);
+          printf("%d fixed basic - %d iterations\n",nBad,modelPtr_->numberIterations());
+        }
       }
       assert (modelPtr_->objectiveValue()<1.0e100);
       modelPtr_->setPerturbation(savePerturbation);
@@ -823,6 +848,7 @@ const CoinPackedMatrix * OsiClpSolverInterface::getMatrixByRow() const
     matrixByRow_ = new CoinPackedMatrix(); 
     matrixByRow_->reverseOrderedCopyOf(*modelPtr_->matrix());
     matrixByRow_->removeGaps();
+    matrixByRow_->setExtraGap(0.0);
 #if 0
     CoinPackedMatrix back;
     std::cout<<"start check"<<std::endl;
@@ -2534,8 +2560,16 @@ OsiClpSolverInterface::setHintParam(OsiHintParam key, bool yesNo,
 {
   if ( OsiSolverInterface::setHintParam(key,yesNo,strength,otherInformation)) {
     // special coding for branch and cut
-    if (yesNo&&strength == OsiHintDo&& specialOptions_==-1&&key==OsiDoInBranchAndCut) {
-      setupForRepeatedUse(0,0);
+    if (yesNo&&strength == OsiHintDo&&key==OsiDoInBranchAndCut) {
+      if ( specialOptions_==-1) 
+        setupForRepeatedUse(0,0);
+      // set normal
+      specialOptions_ &= 1023;
+      if (otherInformation!=NULL) {
+        int * array = (int *) otherInformation;
+        if (array[0]==0||array[0]==2)
+          specialOptions_ |= array[0]<<10;
+      }
     }
     return true;
   } else {
@@ -2551,4 +2585,330 @@ OsiClpSolverInterface::branchAndBound() {
 code has been much developed and moved to Sbb which is now Cbc\n\
 .  If you want a native Branch and Bound code use Cbc",
 		  "branchAndBound","OsiClpSolverInterface");
-};
+}
+// Crunch down model
+void 
+OsiClpSolverInterface::crunch()
+{
+#if 0
+  ClpPackedMatrix * matrix = (dynamic_cast< ClpPackedMatrix*>(modelPtr_->clpMatrix()));
+  assert (matrix);
+  int numberColumns = modelPtr_->numberColumns();
+  double * columnLower = modelPtr_->columnLower();
+  double * columnUpper = modelPtr_->columnUpper();
+  int numberRows = modelPtr_->numberRows();
+#if 0
+  //#ifndef NDEBUG
+  {
+    int n=0;
+    int i;
+    for (i=0;i<numberColumns;i++)
+      if (modelPtr_->getColumnStatus(i)==ClpSimplex::basic)
+        n++;
+    for (i=0;i<numberRows;i++)
+      if (modelPtr_->getRowStatus(i)==ClpSimplex::basic)
+        n++;
+    assert (n==numberRows);
+  }
+#endif
+  const double * rowLower = modelPtr_->rowLower();
+  const double * rowUpper = modelPtr_->rowUpper();
+  
+  const double * element = matrix->getElements();
+  const int * row = matrix->getIndices();
+  const CoinBigIndex * columnStart = matrix->getVectorStarts();
+  const int * columnLength = matrix->getVectorLengths();
+
+  // Use dual region
+  double * rhs = modelPtr_->dualRowSolution();
+  CoinZeroN(rhs,numberRows);
+  int iColumn;
+  int iRow;
+  int * whichRow = new int[3*numberRows];
+  CoinZeroN(whichRow,numberRows);
+  int * whichColumn = new int[2*numberColumns];
+  int * backColumn = whichColumn+numberColumns;
+  int numberRows2=0;
+  int numberColumns2=0;
+  double offset=0.0;
+  const double * objective = modelPtr_->objective();
+  double * solution = modelPtr_->primalColumnSolution();
+  for (iColumn=0;iColumn<numberColumns;iColumn++) {
+    double lower = columnLower[iColumn];
+    double upper = columnUpper[iColumn];
+    if (upper>lower||modelPtr_->getColumnStatus(iColumn)==ClpSimplex::basic) {
+      backColumn[iColumn]=numberColumns2;
+      whichColumn[numberColumns2++]=iColumn;
+      for (CoinBigIndex j = columnStart[iColumn];
+           j<columnStart[iColumn]+columnLength[iColumn];j++) {
+        int iRow = row[j];
+        int n=whichRow[iRow];
+        if (n==0)
+          whichRow[iRow]=-iColumn-1;
+        else if (n<0)
+          whichRow[iRow]=2;
+      }
+    } else {
+      // fixed
+      backColumn[iColumn]=-1;
+      solution[iColumn]=upper;
+      if (upper) {
+        offset += objective[iColumn]*upper;
+        for (CoinBigIndex j = columnStart[iColumn];
+             j<columnStart[iColumn]+columnLength[iColumn];j++) {
+          int iRow = row[j];
+          double value = element[j];
+          rhs[iRow] += upper*value;
+        }
+      }
+    }
+  }
+  int returnCode=0;
+  int numberIterations=0;
+  double tolerance = modelPtr_->primalTolerance();
+  double djTolerance = modelPtr_->dualTolerance();
+  int nBound=2*numberRows;
+  for (iRow=0;iRow<numberRows;iRow++) {
+    int n=whichRow[iRow];
+    if (n>0) {
+      whichRow[numberRows2++]=iRow;
+    } else if (n<0) {
+      //whichRow[numberRows2++]=iRow;
+      //continue;
+      // Can only do in certain circumstances as we don't know current value
+      if (rowLower[iRow]==rowUpper[iRow]||modelPtr_->getRowStatus(iRow)==ClpSimplex::basic) {
+        // save row and column for bound
+        whichRow[--nBound]=iRow;
+        whichRow[nBound+numberRows]=-n-1;
+      } else {
+        whichRow[numberRows2++]=iRow;
+      }
+    } else {
+      // empty
+      double rhsValue = rhs[iRow];
+      if (rhsValue<rowLower[iRow]-tolerance||rhsValue>rowUpper[iRow]+tolerance) {
+        returnCode=1; // infeasible
+      }
+    }
+  }
+  if (!returnCode) {
+    ClpSimplex  small(modelPtr_,numberRows2,whichRow,
+                     numberColumns2,whichColumn);
+    //printf("small %d (from %d)  %d\n",numberRows2,numberRows,numberColumns2);
+    double * rowLower2 = small.rowLower();
+    double * rowUpper2 = small.rowUpper();
+    int jRow;
+    for (jRow=0;jRow<numberRows2;jRow++) {
+      iRow = whichRow[jRow];
+      if (rowLower2[jRow]>-1.0e20)
+        rowLower2[jRow] -= rhs[iRow];
+      if (rowUpper2[jRow]<1.0e20)
+        rowUpper2[jRow] -= rhs[iRow];
+    }
+    // and bounds
+    double * columnLower2 = small.columnLower();
+    double * columnUpper2 = small.columnUpper();
+    for (jRow=nBound;jRow<2*numberRows;jRow++) {
+      iRow = whichRow[jRow];
+      iColumn = whichRow[jRow+numberRows];
+      double lowerRow = rowLower[iRow];
+      if (lowerRow>-1.0e20)
+        lowerRow -= rhs[iRow];
+      double upperRow = rowUpper[iRow];
+      if (upperRow<1.0e20)
+        upperRow -= rhs[iRow];
+      int jColumn = backColumn[iColumn];
+      double lower = columnLower2[jColumn];
+      double upper = columnUpper2[jColumn];
+      double value=0.0;
+      for (CoinBigIndex j = columnStart[iColumn];
+           j<columnStart[iColumn]+columnLength[iColumn];j++) {
+        if (iRow==row[j]) {
+          value=element[j];
+          break;
+        }
+      }
+      assert (value);
+      // convert rowLower and Upper to implied bounds on column
+      double newLower=-COIN_DBL_MAX;
+      double newUpper=COIN_DBL_MAX;
+      if (value>0.0) {
+        if (lowerRow>-1.0e20)
+          newLower = lowerRow/value;
+        if (upperRow<1.0e20)
+          newUpper = upperRow/value;
+      } else {
+        if (upperRow<1.0e20)
+          newLower = upperRow/value;
+        if (lowerRow>-1.0e20)
+          newUpper = lowerRow/value;
+      }
+      newLower = CoinMax(lower,newLower);
+      newUpper = CoinMin(upper,newUpper);
+      if (newLower>newUpper+tolerance) {
+        //printf("XXYY inf on bound\n");
+        returnCode=1;
+      }
+      columnLower2[jColumn]=newLower;
+      columnUpper2[jColumn]=CoinMax(newLower,newUpper);
+      if (modelPtr_->getRowStatus(iRow)!=ClpSimplex::basic) {
+        if (modelPtr_->getColumnStatus(iColumn)==ClpSimplex::basic) {
+          // can only get here if will be fixed
+          small.setColumnStatus(jColumn,ClpSimplex::isFixed);
+        } else {
+          printf("what now neither basic\n");
+        }
+      }
+    }
+    small.setObjectiveOffset(modelPtr_->objectiveOffset()-offset);
+    //small.setDblParam(ClpDualObjectiveLimit,COIN_DBL_MAX);
+    //small.setLogLevel(1);
+    //double objValue=0.0;
+    //ClpSimplex temp = *modelPtr_;
+    //temp.dual();
+    //objValue=temp.objectiveValue();
+    printf("small has %d rows (from %d) and %d columns\n",
+           numberRows2,numberRows,numberColumns2);
+    if (!returnCode)
+      small.dual();
+    else
+      small.setProblemStatus(1);
+    numberIterations = small.numberIterations();
+    modelPtr_->setProblemStatus(small.status());
+    //printf("small obj %g stat %d, large %g %d\n",small.objectiveValue(),
+    //     small.status(),objValue,temp.status());
+    if  (small.status()!=1) {
+      //assert (fabs(objValue-small.objectiveValue())<1.0e-3);
+      const double * solution2 = small.primalColumnSolution();
+      const double * dj2 = small.dualColumnSolution();
+      double * dj = modelPtr_->dualColumnSolution();
+      int i;
+      for ( i=0;i<numberColumns2;i++) {
+        int iColumn = whichColumn[i];
+        solution[iColumn]=solution2[i];
+        dj[iColumn]=dj2[i];
+        modelPtr_->setStatus(iColumn,small.getStatus(i));
+      }
+      double * rowSolution = modelPtr_->primalRowSolution();
+      const double * rowSolution2 = small.primalRowSolution();
+      double * dual = modelPtr_->dualRowSolution();
+      const double * dual2 = small.dualRowSolution();
+      memset(dual,0,numberRows*sizeof(double));
+      for (i=0;i<numberRows2;i++) {
+        int iRow=whichRow[i];
+        modelPtr_->setRowStatus(iRow,small.getRowStatus(i));
+        rowSolution[iRow]=rowSolution2[i]+rhs[iRow];
+        dual[iRow]=dual2[i];
+      }
+      // and deal with status for bounds
+      for (jRow=nBound;jRow<2*numberRows;jRow++) {
+        iRow = whichRow[jRow];
+        iColumn = whichRow[jRow+numberRows];
+        if (modelPtr_->getColumnStatus(iColumn)!=ClpSimplex::basic) {
+          double lower = columnLower[iColumn];
+          double upper = columnUpper[iColumn];
+          double value = solution[iColumn];
+          double djValue = dj[iColumn];
+          dual[iRow]=0.0;
+          if (upper>lower) {
+            if (value<lower+tolerance&&djValue>-djTolerance) {
+              modelPtr_->setColumnStatus(iColumn,ClpSimplex::atLowerBound);
+              modelPtr_->setRowStatus(iRow,ClpSimplex::basic);
+            } else if (value>upper-tolerance&&djValue<djTolerance) {
+              modelPtr_->setColumnStatus(iColumn,ClpSimplex::atUpperBound);
+              modelPtr_->setRowStatus(iRow,ClpSimplex::basic);
+            } else {
+              // has to be basic
+              modelPtr_->setColumnStatus(iColumn,ClpSimplex::basic);
+              double value=0.0;
+              for (CoinBigIndex j = columnStart[iColumn];
+                   j<columnStart[iColumn]+columnLength[iColumn];j++) {
+                if (iRow==row[j]) {
+                  value=element[j];
+                  break;
+                }
+              }
+              dual[iRow]=djValue/value;
+              if (rowUpper[iRow]>rowLower[iRow]) {
+                if (fabs(rowSolution[iRow]-rowLower[iRow])<
+                    fabs(rowSolution[iRow]-rowUpper[iRow]))
+                  modelPtr_->setRowStatus(iRow,ClpSimplex::atLowerBound);
+                else
+                  modelPtr_->setRowStatus(iRow,ClpSimplex::atUpperBound);
+              } else {
+                modelPtr_->setRowStatus(iRow,ClpSimplex::isFixed);
+              }
+            }
+          } else {
+            // row can always be basic
+            modelPtr_->setRowStatus(iRow,ClpSimplex::basic);
+          }
+        } else {
+          // row can always be basic
+          modelPtr_->setRowStatus(iRow,ClpSimplex::basic);
+        }
+      }
+      //CoinZeroN(rowSolution,numberRows);
+      //modelPtr_->matrix()->times(solution,rowSolution) ;
+      //modelPtr_->setLogLevel(63);
+      //modelPtr_->primal(1);
+      //modelPtr_->setLogLevel(0);
+      //modelPtr_->dual();
+      //if (modelPtr_->numberIterations())
+      //printf("iterated %d\n",modelPtr_->numberIterations());
+    } else {
+      //modelPtr_->dual();
+      //assert (modelPtr_->problemStatus()==1);
+    }
+    //#ifndef NDEBUG
+#if 0
+    if  (small.status()==0) {
+      int n=0;
+      int i;
+      for (i=0;i<numberColumns;i++)
+        if (modelPtr_->getColumnStatus(i)==ClpSimplex::basic)
+          n++;
+      for (i=0;i<numberRows;i++)
+        if (modelPtr_->getRowStatus(i)==ClpSimplex::basic)
+          n++;
+      assert (n==numberRows);
+    }
+#endif
+    modelPtr_->setSumDualInfeasibilities(small.sumDualInfeasibilities());
+    modelPtr_->setNumberDualInfeasibilities(small.numberDualInfeasibilities());
+    modelPtr_->setSumPrimalInfeasibilities(small.sumPrimalInfeasibilities());
+    modelPtr_->setNumberPrimalInfeasibilities(small.numberPrimalInfeasibilities());
+    modelPtr_->setObjectiveValue(small.objectiveValue());
+  } else {
+    //printf("XX Found to be infeasible\n");
+    modelPtr_->setProblemStatus(1);
+  }
+  //modelPtr_->dual();
+  modelPtr_->setNumberIterations(numberIterations);
+  delete [] whichRow;
+  delete [] whichColumn;
+#else
+  int numberColumns = modelPtr_->numberColumns();
+  int numberRows = modelPtr_->numberRows();
+  // Use dual region
+  double * rhs = modelPtr_->dualRowSolution();
+  int * whichRow = new int[3*numberRows];
+  int * whichColumn = new int[2*numberColumns];
+  int nBound;
+  ClpSimplex * small = ((ClpSimplexOther *) modelPtr_)->crunch(rhs,whichRow,whichColumn,nBound);
+  if (small) {
+    small->dual();
+    if (small->problemStatus()==0) {
+      modelPtr_->setProblemStatus(0);
+      ((ClpSimplexOther *) modelPtr_)->afterCrunch(*small,whichRow,whichColumn,nBound);
+    } else {
+      modelPtr_->setProblemStatus(1);
+    }
+    delete small;
+  } else {
+    modelPtr_->setProblemStatus(1);
+  }
+  delete [] whichRow;
+  delete [] whichColumn;
+#endif
+}

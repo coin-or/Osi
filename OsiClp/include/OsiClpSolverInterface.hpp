@@ -798,7 +798,8 @@ protected:
      in terms of row activities
   */
     void setBasis( const CoinWarmStartBasis & basis, ClpSimplex * model);
-
+  /// Crunch down problem a bit
+  void crunch();
   //@}
   
   /**@name Protected member data */
@@ -871,6 +872,8 @@ protected:
 	  4 allow exit before re-factorization
           8 try and re-use factorization if no cuts
          16 use standard strong branching rather than clp's
+         Bits above 1024 give where called from in Cbc
+         At present 0 is normal, 2 is can do quick check
       */
       int specialOptions_;
   //@}

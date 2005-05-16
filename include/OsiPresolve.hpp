@@ -135,6 +135,7 @@ public:
   /** Whether we want to skip dual part of presolve etc.
       1 bit allows duplicate column processing on integer columns
       and dual stuff on integers
+      2 bit set switches off actions which can change +1 to something else
   */
   inline void setPresolveActions(int action)
   { presolveActions_  = (presolveActions_&0xffff0000)|(action&0xffff);};

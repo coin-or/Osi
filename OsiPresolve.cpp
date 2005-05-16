@@ -527,40 +527,46 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
   This block is used during debugging. See ATOI to see how it works. Some
   editing will be required to turn it all on.
 */
-    const bool slackd = ATOI("SLACKD")!=0;
-    //const bool forcing = ATOI("FORCING")!=0;
-    const bool doubleton = ATOI("DOUBLETON")!=0;
-    const bool forcing = ATOI("off")!=0;
-    const bool ifree = ATOI("off")!=0;
-    const bool zerocost = ATOI("off")!=0;
-    const bool dupcol = ATOI("off")!=0;
-    const bool duprow = ATOI("off")!=0;
-    const bool dual = ATOI("off")!=0;
+    bool slackd = ATOI("SLACKD")!=0;
+    //bool forcing = ATOI("FORCING")!=0;
+    bool doubleton = ATOI("DOUBLETON")!=0;
+    bool forcing = ATOI("off")!=0;
+    bool ifree = ATOI("off")!=0;
+    bool zerocost = ATOI("off")!=0;
+    bool dupcol = ATOI("off")!=0;
+    bool duprow = ATOI("off")!=0;
+    bool dual = ATOI("off")!=0;
 # else
 # if 1
     // normal operation --- all transforms enabled
-    const bool slackd = true;
-    const bool doubleton = true;
-    const bool tripleton = true;
-    const bool forcing = true;
-    const bool ifree = true;
-    const bool zerocost = true;
-    const bool dupcol = true;
-    const bool duprow = true;
-    const bool dual = doDualStuff;
+    bool slackd = true;
+    bool doubleton = true;
+    bool tripleton = true;
+    bool forcing = true;
+    bool ifree = true;
+    bool zerocost = true;
+    bool dupcol = true;
+    bool duprow = true;
+    bool dual = doDualStuff;
 # else
     // compile time selection of transforms.
-    const bool slackd = false;
-    const bool doubleton = true;
-    const bool tripleton = true;
-    const bool forcing = true;
-    const bool ifree = false;
-    const bool zerocost = false;
-    const bool dupcol = false;
-    const bool duprow = false;
-    const bool dual = false;
+    bool slackd = false;
+    bool doubleton = true;
+    bool tripleton = true;
+    bool forcing = true;
+    bool ifree = false;
+    bool zerocost = false;
+    bool dupcol = false;
+    bool duprow = false;
+    bool dual = false;
 # endif
 # endif
+    // Switch off some stuff if would annoy set partitioning etc
+    if ((presolveActions_&2)!=0) {
+      doubleton = false;
+      tripleton = false;
+      ifree = false;
+    }
     
     /*
       The main loop (just below) starts with a minor loop that does

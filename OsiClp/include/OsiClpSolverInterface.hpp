@@ -828,6 +828,12 @@ protected:
       only used in hotstarts so can be casual */
      mutable double * rowActivity_;
      mutable double * columnActivity_;
+     /// Alternate model (hot starts)
+     ClpSimplex * smallModel_;
+     /// factorization for hot starts
+     ClpFactorization * factorization_;
+     /// Arrays for hot starts
+     char * spareArrays_;
      /** Warmstart information to be used in resolves. */
      CoinWarmStartBasis basis_;
      /** The original iteration limit before hotstarts started. */
@@ -872,8 +878,9 @@ protected:
 	  4 allow exit before re-factorization
           8 try and re-use factorization if no cuts
          16 use standard strong branching rather than clp's
+         32 Just go to first factorization in fast dual
          Bits above 1024 give where called from in Cbc
-         At present 0 is normal, 2 is can do quick check
+         At present 0 is normal, 1 doing fast hotstarts, 2 is can do quick check
       */
       int specialOptions_;
   //@}

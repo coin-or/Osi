@@ -231,6 +231,8 @@ void OsiClpSolverInterface::initialSolve()
   if (saveSolveType==2) {
     enableSimplexInterface(doingPrimal);
   }
+  // mark so we can pick up objective value quickly
+  modelPtr_->upperIn_=0.0;
   time1 = CoinCpuTime()-time1;
   totalTime += time1;
   //std::cout<<time1<<" seconds - total "<<totalTime<<std::endl;
@@ -242,6 +244,8 @@ void OsiClpSolverInterface::resolve()
   OsiHintStrength strength;
   bool gotHint = (getHintParam(OsiDoInBranchAndCut,takeHint,strength));
   assert (gotHint);
+  // mark so we can pick up objective value quickly
+  modelPtr_->upperIn_=0.0;
   if ((specialOptions_>>10)==2) {
     // Quick check to see if optimal
     modelPtr_->checkSolutionInternal();
@@ -2068,7 +2072,7 @@ OsiClpSolverInterface::getRowActivity() const
 double 
 OsiClpSolverInterface::getObjValue() const 
 {
-  if (modelPtr_->numberIterations()) {
+  if (modelPtr_->numberIterations()||modelPtr_->upperIn_!=-COIN_DBL_MAX) {
     // This does not pass unitTest when getObjValue is called before solve.
     return modelPtr_->objectiveValue();
   } else {

@@ -3177,8 +3177,10 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     const double * colSol = s->getColSolution();
     // Don't test for exact answer, because Vol algorithm
     // only returns an appoximate solution
-    assert( colSol[0]>4.5 );
-    assert( colSol[1]<0.5 );
+    if ( colSol[0]<4.5 )
+      failureMessage(*s,"colsol[0] bad value");
+    if ( colSol[1]>0.5 )
+      failureMessage(*s,"colsol[1] bad value");
     
     s->setObjCoeff(0, 1);
     s->setObjCoeff(1, 1);
@@ -3187,8 +3189,10 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     colSol = s->getColSolution();
     // Don't test for exact answer, because Vol algorithm
     // only returns an appoximate solution
-    assert( colSol[0]>2.3 && colSol[0]<3.7 );
-    assert( colSol[1]>3.5 && colSol[1]<4.5 );
+    if( colSol[0]<2.3 || colSol[0]>3.7 )
+      failureMessage(*s,"colsol[0] bad value");
+    if( colSol[1]<3.5 || colSol[1]>4.5 )
+      failureMessage(*s,"colsol[1] bad value");
     delete s;
   }
 

@@ -820,6 +820,29 @@ void OsiClpSolverInterface::markHotStart()
     int itlim;
     modelPtr_->getIntParam(ClpMaxNumIterationHotStart, itlim);
     smallModel_->setIntParam(ClpMaxNumIteration,itlim);
+    if (whichRange_&&whichRange_[0]) {
+      // get ranging information
+      int numberToDo = whichRange_[0];
+      int * which = new int [numberToDo];
+      // Convert column numbers
+      int * backColumn = whichColumn+numberColumns;
+      for (int i=0;i<numberToDo;i++) {
+        int iColumn = whichRange_[i+1];
+        which[i]=backColumn[iColumn];
+      }
+      double * downRange=new double [numberToDo];
+      double * upRange=new double [numberToDo];
+      int * whichDown = new int [numberToDo];
+      int * whichUp = new int [numberToDo];
+      small->gutsOfSolution(NULL,NULL,false);
+      ((ClpSimplexOther *) small)->dualRanging(numberToDo,which,
+                         upRange, whichUp, downRange, whichDown);
+      delete [] whichDown;
+      delete [] whichUp;
+      delete [] which;
+      rowActivity_=upRange;
+      columnActivity_=downRange;
+    }
   }
 }
 
@@ -955,11 +978,13 @@ void OsiClpSolverInterface::solveFromHotStart()
         }
         if (!smallModel_->numberPrimalInfeasibilities()&&obj<limit) { 
           problemStatus=0;
+#if 0
           ClpSimplex temp = *smallModel_;
           temp.dual();
           if (temp.numberIterations())
             printf("temp iterated\n");
           assert (temp.problemStatus()==0&&temp.objectiveValue()<limit);
+#endif
         } else if (problemStatus==10) {
           problemStatus=3;
         } else if (!smallModel_->numberPrimalInfeasibilities()) {
@@ -1027,13 +1052,13 @@ void OsiClpSolverInterface::solveFromHotStart()
 
 void OsiClpSolverInterface::unmarkHotStart()
 {
+  delete [] rowActivity_;
+  delete [] columnActivity_;
+  rowActivity_=NULL;
+  columnActivity_=NULL;
   if (smallModel_==NULL) {
     delete ws_;
     ws_ = NULL;
-    delete [] rowActivity_;
-    delete [] columnActivity_;
-    rowActivity_=NULL;
-    columnActivity_=NULL;
   } else {
     delete smallModel_;
     delete factorization_;
@@ -1592,6 +1617,7 @@ factorization_(NULL),
 spareArrays_(NULL),
 matrixByRow_(NULL),
 integerInformation_(NULL),
+whichRange_(NULL),
 cleanupScaling_(0),
 specialOptions_(-1)
 {
@@ -1634,7 +1660,8 @@ itlimOrig_(9999999),
 lastAlgorithm_(0),
 notOwned_(false),
 matrixByRow_(NULL),
-integerInformation_(NULL)
+integerInformation_(NULL),
+whichRange_(NULL)
 {
   if ( rhs.modelPtr_  ) 
     modelPtr_ = new ClpSimplex(*rhs.modelPtr_);
@@ -1677,6 +1704,7 @@ lastAlgorithm_(0),
 notOwned_(false),
 matrixByRow_(NULL),
 integerInformation_(NULL),
+whichRange_(NULL),
 cleanupScaling_(0),
 specialOptions_(-1)
 {

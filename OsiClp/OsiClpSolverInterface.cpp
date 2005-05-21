@@ -755,6 +755,7 @@ bool OsiClpSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
 
 void OsiClpSolverInterface::markHotStart()
 {
+  modelPtr_->setProblemStatus(0);
   if ((specialOptions_&1024)==0) {
     delete ws_;
     ws_ = dynamic_cast<CoinWarmStartBasis*>(getWarmStart());
@@ -810,6 +811,7 @@ void OsiClpSolverInterface::markHotStart()
       columnActivity_= new double[numberColumns];
       memcpy(columnActivity_,modelPtr_->primalColumnSolution(),
              numberColumns*sizeof(double));
+      modelPtr_->setProblemStatus(1);
       return;
     }
     int clpOptions = modelPtr_->specialOptions();
@@ -850,6 +852,8 @@ void OsiClpSolverInterface::markHotStart()
       int * whichDown = new int [numberToDo];
       int * whichUp = new int [numberToDo];
       small->gutsOfSolution(NULL,NULL,false);
+      // Tell code we can increase costs in some cases
+      small->setDualTolerance(0.0);
       ((ClpSimplexOther *) small)->dualRanging(numberToDo,which,
                          upRange, whichUp, downRange, whichDown);
       delete [] whichDown;

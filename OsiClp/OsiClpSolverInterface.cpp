@@ -796,6 +796,22 @@ void OsiClpSolverInterface::markHotStart()
     double * rhs = modelPtr_->dualRowSolution();
     int nBound;
     ClpSimplex * small = ((ClpSimplexOther *) modelPtr_)->crunch(rhs,whichRow,whichColumn,nBound,true);
+    if (!small) {
+      // should never be infeasible .... but
+      delete [] spareArrays_;
+      spareArrays_=NULL;
+      delete ws_;
+      ws_ = dynamic_cast<CoinWarmStartBasis*>(getWarmStart());
+      int numberRows = modelPtr_->numberRows();
+      rowActivity_= new double[numberRows];
+      memcpy(rowActivity_,modelPtr_->primalRowSolution(),
+             numberRows*sizeof(double));
+      int numberColumns = modelPtr_->numberColumns();
+      columnActivity_= new double[numberColumns];
+      memcpy(columnActivity_,modelPtr_->primalColumnSolution(),
+             numberColumns*sizeof(double));
+      return;
+    }
     int clpOptions = modelPtr_->specialOptions();
     if((specialOptions_&1)==0) {
       small->setSpecialOptions(clpOptions|(64|1024));
@@ -806,7 +822,6 @@ void OsiClpSolverInterface::markHotStart()
         small->setSpecialOptions(clpOptions|(64|128|512|1024|2048|4096));
     }
     arrayI[0]=nBound;
-    assert (small);
     assert (smallModel_==NULL);
     smallModel_=small;
     smallModel_->setLogLevel(0);

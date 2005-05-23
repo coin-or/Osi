@@ -85,7 +85,7 @@ void OsiClpSolverInterface::initialSolve()
   setBasis(basis_,&solver);
   // Allow for specialOptions_==1+8 forcing saving factorization
   int startFinishOptions=0;
-  if (specialOptions_==(1+8)) {
+  if (specialOptions_>=0&&(specialOptions_&9)==(1+8)) {
     startFinishOptions =1+2+4; // allow re-use of factorization
   }
 
@@ -756,7 +756,7 @@ bool OsiClpSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
 void OsiClpSolverInterface::markHotStart()
 {
   modelPtr_->setProblemStatus(0);
-  if ((specialOptions_&1024)==0) {
+  if (specialOptions_>=0&&(specialOptions_&1024)==0) {
     delete ws_;
     ws_ = dynamic_cast<CoinWarmStartBasis*>(getWarmStart());
     int numberRows = modelPtr_->numberRows();
@@ -815,7 +815,7 @@ void OsiClpSolverInterface::markHotStart()
       return;
     }
     int clpOptions = modelPtr_->specialOptions();
-    if((specialOptions_&1)==0) {
+    if(specialOptions_<0||(specialOptions_&1)==0) {
       small->setSpecialOptions(clpOptions|(64|1024));
     } else {
       if((specialOptions_&4)==0) 
@@ -951,7 +951,7 @@ void OsiClpSolverInterface::solveFromHotStart()
       }
     }
     // Start of fast iterations
-    bool alwaysFinish= ((specialOptions_&32)==0&&true) ? true : false;
+    bool alwaysFinish= (specialOptions_<0||(specialOptions_&32)==0&&true) ? true : false;
     //smallModel_->setLogLevel(1);
     int status = ((ClpSimplexDual *)smallModel_)->fastDual(alwaysFinish);
     
@@ -2870,8 +2870,10 @@ OsiClpSolverInterface::setHintParam(OsiHintParam key, bool yesNo,
   if ( OsiSolverInterface::setHintParam(key,yesNo,strength,otherInformation)) {
     // special coding for branch and cut
     if (yesNo&&strength == OsiHintDo&&key==OsiDoInBranchAndCut) {
-      if ( specialOptions_==-1) 
+      if ( specialOptions_==-1) {
         setupForRepeatedUse(0,0);
+        specialOptions_=0;
+      }
       // set normal
       specialOptions_ &= 1023;
       if (otherInformation!=NULL) {

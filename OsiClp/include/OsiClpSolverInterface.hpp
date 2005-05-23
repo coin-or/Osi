@@ -887,7 +887,7 @@ protected:
   */
   int cleanupScaling_;
   /** Special options
-      -1 off
+      0x80000000 off
       0 simple stuff for branch and bound
       1 try and keep work regions as much as possible
       2 do not use any perturbation
@@ -898,7 +898,7 @@ protected:
       Bits above 1024 give where called from in Cbc
       At present 0 is normal, 1 doing fast hotstarts, 2 is can do quick check
   */
-  int specialOptions_;
+  unsigned int specialOptions_;
   //@}
 };
 

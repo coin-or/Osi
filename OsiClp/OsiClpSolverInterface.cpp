@@ -85,7 +85,7 @@ void OsiClpSolverInterface::initialSolve()
   setBasis(basis_,&solver);
   // Allow for specialOptions_==1+8 forcing saving factorization
   int startFinishOptions=0;
-  if (specialOptions_>=0&&(specialOptions_&9)==(1+8)) {
+  if ((specialOptions_&9)==(1+8)) {
     startFinishOptions =1+2+4; // allow re-use of factorization
   }
 
@@ -260,7 +260,7 @@ void OsiClpSolverInterface::resolve()
   }
   int saveOptions = modelPtr_->specialOptions();
   int startFinishOptions=0;
-  if (specialOptions_>=0) {
+  if (specialOptions_!=0x80000000) {
     if((specialOptions_&1)==0) {
       startFinishOptions=0;
       modelPtr_->setSpecialOptions(saveOptions|(64|1024|32768));
@@ -378,7 +378,7 @@ void OsiClpSolverInterface::resolve()
     if (algorithm<0) {
       //printf("doing dual\n");
       int savePerturbation = modelPtr_->perturbation();
-      if (specialOptions_>=0&&(specialOptions_&2)!=0)
+      if ((specialOptions_&2)!=0)
 	modelPtr_->setPerturbation(100);
       //modelPtr_->messageHandler()->setLogLevel(1);
       
@@ -756,7 +756,7 @@ bool OsiClpSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
 void OsiClpSolverInterface::markHotStart()
 {
   modelPtr_->setProblemStatus(0);
-  if (specialOptions_>=0&&(specialOptions_&1024)==0) {
+  if ((specialOptions_&1024)==0) {
     delete ws_;
     ws_ = dynamic_cast<CoinWarmStartBasis*>(getWarmStart());
     int numberRows = modelPtr_->numberRows();
@@ -815,7 +815,7 @@ void OsiClpSolverInterface::markHotStart()
       return;
     }
     int clpOptions = modelPtr_->specialOptions();
-    if(specialOptions_<0||(specialOptions_&1)==0) {
+    if((specialOptions_&1)==0) {
       small->setSpecialOptions(clpOptions|(64|1024));
     } else {
       if((specialOptions_&4)==0) 
@@ -951,7 +951,7 @@ void OsiClpSolverInterface::solveFromHotStart()
       }
     }
     // Start of fast iterations
-    bool alwaysFinish= (specialOptions_<0||(specialOptions_&32)==0&&true) ? true : false;
+    bool alwaysFinish= ((specialOptions_&32)==0&&true) ? true : false;
     //smallModel_->setLogLevel(1);
     int status = ((ClpSimplexDual *)smallModel_)->fastDual(alwaysFinish);
     
@@ -1638,7 +1638,7 @@ matrixByRow_(NULL),
 integerInformation_(NULL),
 whichRange_(NULL),
 cleanupScaling_(0),
-specialOptions_(-1)
+specialOptions_(0x80000000)
 {
   modelPtr_=NULL;
   notOwned_=false;
@@ -1725,7 +1725,7 @@ matrixByRow_(NULL),
 integerInformation_(NULL),
 whichRange_(NULL),
 cleanupScaling_(0),
-specialOptions_(-1)
+specialOptions_(0x80000000)
 {
   modelPtr_ = rhs;
   linearObjective_ = modelPtr_->objective();
@@ -2348,7 +2348,7 @@ OsiClpSolverInterface::enableSimplexInterface(bool doingPrimal)
   saveData_ = modelPtr_->saveData();
   saveData_.scalingFlag_=modelPtr_->scalingFlag();
   modelPtr_->scaling(0);
-  specialOptions_ = -1;
+  specialOptions_ = 0x80000000;
   // set infeasibility cost up
   modelPtr_->setInfeasibilityCost(1.0e12);
   ClpDualRowDantzig dantzig;
@@ -2646,7 +2646,7 @@ OsiClpSolverInterface::getBInvARow(int row, double* z, double * slack)
     indexError(row,"getBInvARow");
   }
 #endif
-  assert (modelPtr_->solveType()==2||(specialOptions_&1)!=0);
+  //assert (modelPtr_->solveType()==2||(specialOptions_&1));
   CoinIndexedVector * rowArray0 = modelPtr_->rowArray(0);
   CoinIndexedVector * rowArray1 = modelPtr_->rowArray(1);
   CoinIndexedVector * columnArray0 = modelPtr_->columnArray(0);
@@ -2717,7 +2717,7 @@ OsiClpSolverInterface::getBInvRow(int row, double* z)
     indexError(row,"getBInvRow");
   }
 #endif
-  assert (modelPtr_->solveType()==2||(specialOptions_&1)!=0);
+  //assert (modelPtr_->solveType()==2||(specialOptions_&1)!=0);
   ClpFactorization * factorization = modelPtr_->factorization();
   CoinIndexedVector * rowArray0 = modelPtr_->rowArray(0);
   CoinIndexedVector * rowArray1 = modelPtr_->rowArray(1);
@@ -2737,7 +2737,7 @@ OsiClpSolverInterface::getBInvRow(int row, double* z)
 void 
 OsiClpSolverInterface::getBInvACol(int col, double* vec)
 {
-  assert (modelPtr_->solveType()==2||(specialOptions_&1)!=0);
+  //assert (modelPtr_->solveType()==2||(specialOptions_&1)!=0);
   CoinIndexedVector * rowArray0 = modelPtr_->rowArray(0);
   CoinIndexedVector * rowArray1 = modelPtr_->rowArray(1);
   rowArray0->clear();
@@ -2801,7 +2801,7 @@ OsiClpSolverInterface::getBInvACol(int col, double* vec)
 void 
 OsiClpSolverInterface::getBInvCol(int col, double* vec)
 {
-  assert (modelPtr_->solveType()==2||(specialOptions_&1)!=0);
+  //assert (modelPtr_->solveType()==2||(specialOptions_&1)!=0);
   ClpFactorization * factorization = modelPtr_->factorization();
   CoinIndexedVector * rowArray0 = modelPtr_->rowArray(0);
   CoinIndexedVector * rowArray1 = modelPtr_->rowArray(1);
@@ -2827,7 +2827,7 @@ OsiClpSolverInterface::getBInvCol(int col, double* vec)
 void 
 OsiClpSolverInterface::getBasics(int* index)
 {
-  assert (modelPtr_->solveType()==2||(specialOptions_&1)!=0);
+  //assert (modelPtr_->solveType()==2||(specialOptions_&1)!=0);
   assert (index);
   assert (modelPtr_->pivotVariable());
   memcpy(index,modelPtr_->pivotVariable(),
@@ -2870,7 +2870,7 @@ OsiClpSolverInterface::setHintParam(OsiHintParam key, bool yesNo,
   if ( OsiSolverInterface::setHintParam(key,yesNo,strength,otherInformation)) {
     // special coding for branch and cut
     if (yesNo&&strength == OsiHintDo&&key==OsiDoInBranchAndCut) {
-      if ( specialOptions_==-1) {
+      if ( specialOptions_==0x80000000) {
         setupForRepeatedUse(0,0);
         specialOptions_=0;
       }

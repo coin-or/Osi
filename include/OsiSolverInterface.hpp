@@ -950,10 +950,51 @@ public:
 
 	Returns non-zero on I/O error
     */
-    int writeMpsNative(const char *filename, 
-		  const char ** rowNames, const char ** columnNames,
-		  int formatType=0,int numberAcross=2,
-		 double objSense=0.0) const ;
+    int writeMpsNative(const char *filename,
+		       const char * const * const rowNames, 
+		       const char * const * const columnNames,
+		       int formatType=0,int numberAcross=2,
+		       double objSense=0.0) const;
+
+    /** Write the problem in LP format to the specified file.
+
+        By default this method invokes writeLpNative().
+    */
+    virtual void writeLp(const char *filename,
+			 const char *extension = "lp",
+			 const double epsilon = 1e-5,
+			 const int numberAcross = 10,
+			 const int decimals = 5,
+			 const double objSense = 0.0) const;
+
+    /** Write the problem in LP format to the specified file.
+
+        If objSense is non-zero, a value of -1.0 causes the problem to be
+        written with a maximization objective; +1.0 forces a minimization
+        objective. If objSense is zero, the choice is left to implementation.
+
+	\param epsilon zero tolerance
+	\param numberAcross the number of monomials to be printed per line
+	\param decimals the number of digits to write after the decimal point
+	\param objsense one of \{-1.0, 0.0, +1.0\}. -1.0 causes the problem to
+	be written with a maximization objective; +1.0 forces a minimization
+        objective. 0.0 leaves the choice to implementation.
+    */
+    int writeLpNative(const char *filename,
+		      char const * const * const rowNames,
+		      char const * const * const columnNames,
+		      const double epsilon,
+		      const int numberAcross,
+		      const int decimals,
+		      const double objSense = 0.0) const;
+
+    /** Read the problem in LP format from the specified file.
+
+	\param epsilon zero tolerance
+    */
+    int readLp(const char *filename, double epsilon = 1e-5);
+
+
   //@}
 
   //---------------------------------------------------------------------------

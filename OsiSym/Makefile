@@ -41,13 +41,6 @@ export MakefileDir := $(CoinDir)/Makefiles
 include ${MakefileDir}/Makefile.coin
 include ${MakefileDir}/Makefile.location
 
-ifeq ($(UNAME),CYGWIN)
-SymDefine += HAS_RANDOM HAS_SRANDOM
-endif
-ifeq ($(UNAME),Linux)
-SymDefine += HAS_RANDOM HAS_SRANDOM
-endif
-
 export ExtraIncDir  := \
     ${SymIncDir}  ${SymUserIncDir} ${OsiIncDir}  ${CoinIncDir}
 export ExtraLibDir  := \

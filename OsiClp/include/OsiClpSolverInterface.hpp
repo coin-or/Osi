@@ -77,6 +77,8 @@ public:
       1 leaves
   */
   void setupForRepeatedUse(int senseOfAdventure=0, int printOut=0);
+  /// Synchronize model (really if no cuts in tree)
+  virtual void synchronizeModel();
   
   ///Returns true if a basis is available
   virtual bool basisIsAvailable() {return true;};
@@ -895,6 +897,9 @@ protected:
       8 try and re-use factorization if no cuts
       16 use standard strong branching rather than clp's
       32 Just go to first factorization in fast dual
+      64 try and tighten bounds in crunch
+      128 Model will only change in column bounds
+      256 Clean up model before hot start
       Bits above 1024 give where called from in Cbc
       At present 0 is normal, 1 doing fast hotstarts, 2 is can do quick check
   */

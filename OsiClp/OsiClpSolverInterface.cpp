@@ -7,6 +7,7 @@
 
 #include "CoinHelperFunctions.hpp"
 #include "CoinIndexedVector.hpp"
+#include "CoinMpsIO.hpp"
 #include "ClpDualRowSteepest.hpp"
 #include "ClpPrimalColumnSteepest.hpp"
 #include "ClpPackedMatrix.hpp"
@@ -383,10 +384,21 @@ void OsiClpSolverInterface::resolve()
       //modelPtr_->messageHandler()->setLogLevel(1);
       
       //writeMpsNative("bad",NULL,NULL,2,1,1.0);
-      if ((modelPtr_->specialOptions()&1024)==0)
-        modelPtr_->dual(0,startFinishOptions);
-      else
+      if ((modelPtr_->specialOptions()&1024)==0||(specialOptions_ &128)!=0) {
+        if ((specialOptions_&128)==0) {
+          modelPtr_->dual(0,startFinishOptions);
+        } else {
+          assert (modelPtr_->auxiliaryModel_); 
+          double * rhs = modelPtr_->auxiliaryModel_->lower_;
+          int numberTightened = ((ClpSimplexOther *)modelPtr_)->tightenIntegerBounds(rhs);
+          if (numberTightened>=0)
+            modelPtr_->dual(0,0);
+          else
+            modelPtr_->setProblemStatus(1);
+        }
+      } else {
         crunch();
+      }
       if (!modelPtr_->problemStatus()&&0) {
         int numberColumns = modelPtr_->numberColumns();
         const double * columnLower = modelPtr_->columnLower();
@@ -768,6 +780,17 @@ void OsiClpSolverInterface::markHotStart()
     memcpy(columnActivity_,modelPtr_->primalColumnSolution(),
            numberColumns*sizeof(double));
   } else {
+#if 0
+    int saveLevel = modelPtr_->logLevel();
+    modelPtr_->setLogLevel(0);
+    //modelPtr_->dual();
+    OsiClpSolverInterface::resolve();
+    if (modelPtr_->numberIterations()>0)
+      printf("**** iterated large %d\n",modelPtr_->numberIterations());
+    //else
+    //printf("no iterations\n");
+    modelPtr_->setLogLevel(saveLevel);
+#endif
     // called from CbcNode
     int numberColumns = modelPtr_->numberColumns();
     int numberRows = modelPtr_->numberRows();
@@ -795,8 +818,22 @@ void OsiClpSolverInterface::markHotStart()
     //unsigned char * saveStatus = (unsigned char *) (arrayI+1);
     // Use dual region
     double * rhs = modelPtr_->dualRowSolution();
-    int nBound;
-    ClpSimplex * small = ((ClpSimplexOther *) modelPtr_)->crunch(rhs,whichRow,whichColumn,nBound,true);
+    int nBound=0;
+    bool keepModel = modelPtr_->auxiliaryModel_!=NULL;
+    ClpSimplex * small;
+    if (!keepModel) {
+      small = ((ClpSimplexOther *) modelPtr_)->crunch(rhs,whichRow,whichColumn,nBound,true);
+    } else {
+      // save stuff
+      small=modelPtr_;
+      modelPtr_->auxiliaryModel_->numberPrimalInfeasibilities_=modelPtr_->logLevel();
+      int itlim;
+      modelPtr_->getIntParam(ClpMaxNumIteration, itlim);
+      modelPtr_->auxiliaryModel_->numberDualInfeasibilities_=itlim;
+      CoinIotaN(whichRow,numberRows,0);
+      CoinIotaN(whichColumn,numberColumns,0);
+      CoinIotaN(whichColumn+numberColumns,numberColumns,0);
+    }
     if (!small) {
       // should never be infeasible .... but
       delete [] spareArrays_;
@@ -825,6 +862,14 @@ void OsiClpSolverInterface::markHotStart()
     }
     arrayI[0]=nBound;
     assert (smallModel_==NULL);
+    if ((specialOptions_&256)!=0||1) {
+      // only need to do this on second pass in CbcNode
+      small->setLogLevel(0);
+      small->dual();
+      if (small->numberIterations()>0)
+        printf("**** iterated small %d\n",small->numberIterations());
+      //small->setLogLevel(0);
+    }
     smallModel_=small;
     smallModel_->setLogLevel(0);
     // Setup for strong branching
@@ -929,7 +974,10 @@ void OsiClpSolverInterface::solveFromHotStart()
     double * upperSmallReal = smallModel_->columnUpper();
     int i;
     double rhsScale = smallModel_->rhsScale();
-    const double * columnScale = (smallModel_->scalingFlag()>0) ? smallModel_->columnScale() : NULL;
+    const double * columnScale = NULL;
+    if (smallModel_->scalingFlag()>0) 
+      columnScale = (smallModel_->auxiliaryModel_==NULL) ? smallModel_->columnScale() 
+        : smallModel_->auxiliaryModel_->columnScale();
     // and do bounds in case dual needs them
     for (i=0;i<numberColumns2;i++) {
       int iColumn = whichColumn[i];
@@ -951,7 +999,7 @@ void OsiClpSolverInterface::solveFromHotStart()
       }
     }
     // Start of fast iterations
-    bool alwaysFinish= ((specialOptions_&32)==0&&true) ? true : false;
+    bool alwaysFinish= ((specialOptions_&32)==0) ? true : false;
     //smallModel_->setLogLevel(1);
     int status = ((ClpSimplexDual *)smallModel_)->fastDual(alwaysFinish);
     
@@ -1032,8 +1080,7 @@ void OsiClpSolverInterface::solveFromHotStart()
     modelPtr_->setNumberPrimalInfeasibilities(smallModel_->numberPrimalInfeasibilities());
     double * solution = modelPtr_->primalColumnSolution();
     const double * solution2 = smallModel_->solutionRegion();
-    const double * scale = smallModel_->columnScale();
-    if (modelPtr_->scalingFlag()<=0||!scale) {
+    if (!columnScale) {
       for (i=0;i<numberColumns2;i++) {
         int iColumn = whichColumn[i];
         solution[iColumn]= solution2[i];
@@ -1043,7 +1090,7 @@ void OsiClpSolverInterface::solveFromHotStart()
     } else {
       for (i=0;i<numberColumns2;i++) {
         int iColumn = whichColumn[i];
-        solution[iColumn]= solution2[i]*scale[i];
+        solution[iColumn]= solution2[i]*columnScale[i];
         lowerSmallReal[i]=saveLowerOriginal[i];
         upperSmallReal[i]=saveUpperOriginal[i];
       }
@@ -1079,7 +1126,13 @@ void OsiClpSolverInterface::unmarkHotStart()
     delete ws_;
     ws_ = NULL;
   } else {
-    delete smallModel_;
+    if (!modelPtr_->auxiliaryModel_) {
+      delete smallModel_;
+    } else {
+      modelPtr_->deleteRim(0);
+      modelPtr_->setLogLevel(modelPtr_->auxiliaryModel_->numberPrimalInfeasibilities_);
+      modelPtr_->setIntParam(ClpMaxNumIteration,modelPtr_->auxiliaryModel_->numberDualInfeasibilities_);
+    }
     delete factorization_;
     delete [] spareArrays_;
     smallModel_=NULL;
@@ -2047,24 +2100,58 @@ OsiClpSolverInterface::readMps(const char *filename,
   delete [] integerInformation_;
   integerInformation_=NULL;
   
-  int numberErrors = OsiSolverInterface::readMps(filename,extension);
-  // move across integer information
-  int numberColumns = modelPtr_->numberColumns();
-  int i;
-  char * info = new char [numberColumns];
-  int numberIntegers=0;
-  for (i=0;i<numberColumns;i++) {
-    if (isInteger(i)) {
-      info[i]=1;
-      numberIntegers++;
-    } else {
-      info[i]=0;
+  CoinMpsIO m;
+  m.setInfinity(getInfinity());
+  
+  int numberErrors = m.readMps(filename,extension);
+  handler_->message(COIN_SOLVER_MPS,messages_)
+    <<m.getProblemName()<< numberErrors <<CoinMessageEol;
+  if (!numberErrors) {
+
+    // set objective function offest
+    setDblParam(OsiObjOffset,m.objectiveOffset());
+
+    // set problem name
+    setStrParam(OsiProbName,m.getProblemName());
+
+    // no errors
+    loadProblem(*m.getMatrixByCol(),m.getColLower(),m.getColUpper(),
+		m.getObjCoefficients(),m.getRowSense(),m.getRightHandSide(),
+		m.getRowRange());
+    const char * integer = m.integerColumns();
+    int nCols=m.getNumCols();
+    int nRows=m.getNumRows();
+    if (integer) {
+      int i,n=0;
+      int * index = new int [nCols];
+      for (i=0;i<nCols;i++) {
+	if (integer[i]) {
+	  index[n++]=i;
+        }
+      }
+      setInteger(index,n);
+      delete [] index;
+      if (n) 
+        modelPtr_->copyInIntegerInformation(integer);
     }
+    // Always keep names
+    int iRow;
+    std::vector<std::string> rowNames = std::vector<std::string> ();
+    std::vector<std::string> columnNames = std::vector<std::string> ();
+    rowNames.reserve(nRows);
+    for (iRow=0;iRow<nRows;iRow++) {
+      const char * name = m.rowName(iRow);
+      rowNames.push_back(name);
+    }
+    
+    int iColumn;
+    columnNames.reserve(nCols);
+    for (iColumn=0;iColumn<nCols;iColumn++) {
+      const char * name = m.columnName(iColumn);
+      columnNames.push_back(name);
+    }
+    modelPtr_->copyNames(rowNames,columnNames);
   }
-  if (numberIntegers) {
-    modelPtr_->copyInIntegerInformation(info);
-  }
-  delete [] info;
   return numberErrors;
 }
 // Get pointer to array[getNumCols()] of primal solution vector
@@ -2908,7 +2995,9 @@ OsiClpSolverInterface::crunch()
   int * whichRow = new int[3*numberRows];
   int * whichColumn = new int[2*numberColumns];
   int nBound;
-  ClpSimplex * small = ((ClpSimplexOther *) modelPtr_)->crunch(rhs,whichRow,whichColumn,nBound);
+  bool tightenBounds = ((specialOptions_&64)==0) ? false : true; 
+  ClpSimplex * small = ((ClpSimplexOther *) modelPtr_)->crunch(rhs,whichRow,whichColumn,
+                                                               nBound,false,tightenBounds);
   if (small) {
     small->dual();
     if (small->problemStatus()==0) {
@@ -2923,4 +3012,12 @@ OsiClpSolverInterface::crunch()
   }
   delete [] whichRow;
   delete [] whichColumn;
+}
+// Synchronize model 
+void 
+OsiClpSolverInterface::synchronizeModel() 
+{
+  if ((specialOptions_ &128)!=0) {
+    modelPtr_->auxiliaryModel(63-2);
+  }
 }

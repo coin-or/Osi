@@ -920,6 +920,7 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     int iRow;
     for (iRow=0;iRow<numberRows;iRow++) {
       build.setRowBounds(iRow,rowLower[iRow],rowUpper[iRow]);
+      build.setRowName(iRow,model.getRowName(iRow).c_str());
     }
     // Column bounds and objective
     int iColumn;
@@ -927,6 +928,7 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       build.setColumnLower(iColumn,columnLower[iColumn]);
       build.setColumnUpper(iColumn,columnUpper[iColumn]);
       build.setObjective(iColumn,columnObjective[iColumn]);
+      build.setColumnName(iColumn,model.getColName(iColumn).c_str());
     }
     // Adds elements one by one by row (backwards by row)
     for (iRow=numberRows-1;iRow>=0;iRow--) {
@@ -948,6 +950,10 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     delete [] whichInteger;
     // save - should be integer
     model2.writeMps("integer");
+    // check names are there
+    for (iColumn=0;iColumn<numberColumns;iColumn++) {
+      printf("%d name %s\n",iColumn,model2.getColName(iColumn).c_str());
+    }
     
     // Now do with strings attached
     // Save build to show how to go over rows

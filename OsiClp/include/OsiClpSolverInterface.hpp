@@ -286,6 +286,13 @@ public:
     const CoinPackedMatrix * matrix =modelPtr_->matrix();
     if ( matrix != NULL ) retVal=matrix->getNumElements();
     return retVal; }
+
+    /// Return name of row if one exists or Rnnnnnnn
+    virtual std::string getRowName(int rowIndex) const;
+    
+    /// Return name of column if one exists or Cnnnnnnn
+    virtual std::string getColName(int colIndex) const;
+    
   
   /// Get pointer to array[getNumCols()] of column lower bounds
   virtual const double * getColLower() const { return modelPtr_->columnLower(); }
@@ -480,6 +487,12 @@ public:
                               const char* senseList,
                               const double* rhsList,
                               const double* rangeList);
+      /// Set name of row
+      virtual void setRowName(int rowIndex, std::string & name) ;
+    
+      /// Set name of column
+      virtual void setColName(int colIndex, std::string & name) ;
+    
   //@}
   
   //-------------------------------------------------------------------------
@@ -660,6 +673,8 @@ public:
                            const double* obj,
                            const char* rowsen, const double* rowrhs,   
                            const double* rowrng);
+  /// This loads a model from a coinModel object - returns number of errors
+  virtual int loadFromCoinModel (  CoinModel & modelObject, bool keepSolution=false);
   /** Read an mps file from the given filename (defaults to Osi reader) - returns
       number of errors (see OsiMpsReader class) */
   virtual int readMps(const char *filename,

@@ -7,6 +7,7 @@
 
 #include "CoinHelperFunctions.hpp"
 #include "CoinIndexedVector.hpp"
+#include "CoinModel.hpp"
 #include "CoinMpsIO.hpp"
 #include "ClpDualRowSteepest.hpp"
 #include "ClpPrimalColumnSteepest.hpp"
@@ -1623,6 +1624,70 @@ OsiClpSolverInterface::loadProblem(const int numcols, const int numrows,
   delete[] rowlb;
   delete[] rowub;
 }
+// This loads a model from a coinModel object - returns number of errors
+int 
+OsiClpSolverInterface::loadFromCoinModel (  CoinModel & modelObject, bool keepSolution)
+{
+  int numberErrors = 0;
+  // Set arrays for normal use
+  double * rowLower = modelObject.rowLowerArray();
+  double * rowUpper = modelObject.rowUpperArray();
+  double * columnLower = modelObject.columnLowerArray();
+  double * columnUpper = modelObject.columnUpperArray();
+  double * objective = modelObject.objectiveArray();
+  int * integerType = modelObject.integerTypeArray();
+  double * associated = modelObject.associatedArray();
+  // If strings then do copies
+  if (modelObject.stringsExist()) {
+    numberErrors = modelObject.createArrays(rowLower, rowUpper, columnLower, columnUpper,
+                                            objective, integerType,associated);
+  }
+  CoinPackedMatrix matrix;
+  modelObject.createPackedMatrix(matrix,associated);
+  int numberRows = modelObject.numberRows();
+  int numberColumns = modelObject.numberColumns();
+  CoinWarmStart * ws = getWarmStart();
+  bool restoreBasis = keepSolution && numberRows&&numberRows==getNumRows()&&
+    numberColumns==getNumCols();
+  loadProblem(matrix, 
+              columnLower, columnUpper, objective, rowLower, rowUpper);
+  if (restoreBasis)
+    setWarmStart(ws);
+  delete ws;
+  // Do names if wanted
+  int numberItems;
+  numberItems = modelObject.rowNames()->numberItems();
+  if (numberItems) {
+    const char *const * rowNames=modelObject.rowNames()->names();
+    modelPtr_->copyRowNames(rowNames,0,numberItems);
+  }
+  numberItems = modelObject.columnNames()->numberItems();
+  if (numberItems) {
+    const char *const * columnNames=modelObject.columnNames()->names();
+    modelPtr_->copyColumnNames(columnNames,0,numberItems);
+  }
+  // Do integers if wanted
+  assert(integerType);
+  for (int iColumn=0;iColumn<numberColumns;iColumn++) {
+    if (integerType[iColumn])
+      setInteger(iColumn);
+  }
+  if (rowLower!=modelObject.rowLowerArray()||
+      columnLower!=modelObject.columnLowerArray()) {
+    delete [] rowLower;
+    delete [] rowUpper;
+    delete [] columnLower;
+    delete [] columnUpper;
+    delete [] objective;
+    delete [] integerType;
+    delete [] associated;
+    //if (numberErrors)
+    //  handler_->message(CLP_BAD_STRING_VALUES,messages_)
+    //    <<numberErrors
+    //    <<CoinMessageEol;
+  }
+  return numberErrors;
+}
 
 //-----------------------------------------------------------------------------
 // Write mps files
@@ -2344,6 +2409,33 @@ OsiClpSolverInterface::setRowType(int i, char sense, double rightHandSide,
     rowrange_[i] = range;
   }
 }
+// Set name of row
+void 
+OsiClpSolverInterface::setRowName(int rowIndex, std::string & name) 
+{
+  modelPtr_->setRowName(rowIndex,name);
+}
+// Return name of row if one exists or Rnnnnnnn
+std::string 
+OsiClpSolverInterface::getRowName(int rowIndex) const
+{
+  return modelPtr_->getRowName(rowIndex);
+}
+    
+// Set name of col
+void 
+OsiClpSolverInterface::setColName(int colIndex, std::string & name) 
+{
+  modelPtr_->setColumnName(colIndex,name);
+}
+// Return name of col if one exists or Rnnnnnnn
+std::string 
+OsiClpSolverInterface::getColName(int colIndex) const
+{
+  return modelPtr_->getColumnName(colIndex);
+}
+    
+    
 //-----------------------------------------------------------------------------
 void OsiClpSolverInterface::setRowSetBounds(const int* indexFirst,
 					    const int* indexLast,

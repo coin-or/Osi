@@ -324,6 +324,18 @@ void OsiCpxSolverInterface::branchAndBound()
 
   CPXLPptr lp = getLpPtr( OsiCpxSolverInterface::FREECACHED_RESULTS );
 
+  if (messageHandler()->logLevel() == 0)
+     CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_OFF );
+  else
+     CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_ON );
+
+  if (messageHandler()->logLevel() == 0)
+     CPXsetintparam( env_, CPX_PARAM_SIMDISPLAY, 0 );
+  else if (messageHandler()->logLevel() == 1)
+     CPXsetintparam( env_, CPX_PARAM_SIMDISPLAY, 1 );
+  else if (messageHandler()->logLevel() > 1)
+     CPXsetintparam( env_, CPX_PARAM_SIMDISPLAY, 2 );
+
   CPXmipopt( env_, lp );
 }
 

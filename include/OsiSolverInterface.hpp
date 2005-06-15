@@ -468,6 +468,13 @@ public:
   
       /// Return true if variable is binary and not fixed at either bound
       virtual bool isFreeBinary(int colIndex) const; 
+#if 0
+      /// Return name of row if one exists or Rnnnnnnn
+      virtual std::string getRowName(int rowIndex) const;
+    
+      /// Return name of column if one exists or Cnnnnnnn
+      virtual std::string getColName(int colIndex) const;
+#endif
     
       /// Get pointer to row-wise copy of matrix
       virtual const CoinPackedMatrix * getMatrixByRow() const = 0;
@@ -619,7 +626,13 @@ public:
 				  const char* senseList,
 				  const double* rhsList,
 				  const double* rangeList);
+#if 0    
+      /// Set name of row if supported
+      virtual void setRowName(int rowIndex, std::string & name) {};
     
+      /// Set name of column if supported
+      virtual void setColName(int colIndex, std::string & name) {};
+#endif
     /// Set the objective function sense.
     /// (1 for min (default), -1 for max)
     virtual void setObjSense(double s) = 0;
@@ -904,7 +917,7 @@ public:
         modelObject not const as may be changed as part of process.
         If keepSolution true will try and keep warmStart
     */
-     int loadFromCoinModel (  CoinModel & modelObject, bool keepSolution=false);
+     virtual int loadFromCoinModel (  CoinModel & modelObject, bool keepSolution=false);
 
     /** Read a problem in MPS format from the given filename.
     
@@ -950,51 +963,10 @@ public:
 
 	Returns non-zero on I/O error
     */
-    int writeMpsNative(const char *filename,
-		       const char * const * const rowNames, 
-		       const char * const * const columnNames,
-		       int formatType=0,int numberAcross=2,
-		       double objSense=0.0) const;
-
-    /** Write the problem in LP format to the specified file.
-
-        By default this method invokes writeLpNative().
-    */
-    virtual void writeLp(const char *filename,
-			 const char *extension = "lp",
-			 const double epsilon = 1e-5,
-			 const int numberAcross = 10,
-			 const int decimals = 5,
-			 const double objSense = 0.0) const;
-
-    /** Write the problem in LP format to the specified file.
-
-        If objSense is non-zero, a value of -1.0 causes the problem to be
-        written with a maximization objective; +1.0 forces a minimization
-        objective. If objSense is zero, the choice is left to implementation.
-
-	\param epsilon zero tolerance
-	\param numberAcross the number of monomials to be printed per line
-	\param decimals the number of digits to write after the decimal point
-	\param objsense one of \{-1.0, 0.0, +1.0\}. -1.0 causes the problem to
-	be written with a maximization objective; +1.0 forces a minimization
-        objective. 0.0 leaves the choice to implementation.
-    */
-    int writeLpNative(const char *filename,
-		      char const * const * const rowNames,
-		      char const * const * const columnNames,
-		      const double epsilon,
-		      const int numberAcross,
-		      const int decimals,
-		      const double objSense = 0.0) const;
-
-    /** Read the problem in LP format from the specified file.
-
-	\param epsilon zero tolerance
-    */
-    int readLp(const char *filename, double epsilon = 1e-5);
-
-
+    int writeMpsNative(const char *filename, 
+		  const char ** rowNames, const char ** columnNames,
+		  int formatType=0,int numberAcross=2,
+		 double objSense=0.0) const ;
   //@}
 
   //---------------------------------------------------------------------------

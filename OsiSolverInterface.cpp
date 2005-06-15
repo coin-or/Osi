@@ -8,7 +8,6 @@
 #include <iostream>
 
 #include "CoinHelperFunctions.hpp"
-#include "CoinLpIO.hpp"
 #include "CoinMpsIO.hpp"
 #include "CoinMessage.hpp"
 #include "CoinWarmStart.hpp"
@@ -121,6 +120,27 @@ OsiSolverInterface::isFreeBinary(int colIndex) const
     ) return true;
   else return false;
 }
+#if 0
+// Return name of row if one exists or Rnnnnnnn
+std::string 
+OsiSolverInterface::getRowName(int rowIndex) const
+{
+  char name[9];
+  sprintf(name,"R%7.7d",rowIndex);
+  std::string rowName(name);
+  return rowName;
+}
+    
+// Return name of column if one exists or Cnnnnnnn
+std::string 
+OsiSolverInterface::getColName(int colIndex) const
+{
+  char name[9];
+  sprintf(name,"C%7.7d",colIndex);
+  std::string colName(name);
+  return colName;
+}
+#endif    
 
 //#############################################################################
 // Built-in (i.e., slow) methods for problem modification
@@ -983,8 +1003,8 @@ OsiSolverInterface::readMps(const char *filename, const char*extension,
 
 int 
 OsiSolverInterface::writeMpsNative(const char *filename, 
-			     const char * const * const rowNames, 
-			     const char * const * const columnNames,
+			     const char ** rowNames, 
+			     const char ** columnNames,
 			     int formatType,
 			     int numberAcross,
 			     double objSense) const
@@ -1025,119 +1045,6 @@ OsiSolverInterface::writeMpsNative(const char *filename,
    return writer.writeMps(filename, 1 /*gzip it*/, formatType, numberAcross);
 }
 
-/***********************************************************************/
-void OsiSolverInterface::writeLp(const char * filename,
-				 const char * extension,
-				 const double epsilon,
-				 const int numberAcross,
-				 const int decimals,
-				 const double objSense) const
-{
-  const std::string f(filename);
-  const std::string e(extension);
-  std::string fullname;
-  if (e!="") {
-    fullname = f + "." + e;
-  } else {
-    // no extension so no trailing period
-    fullname = f;
-  }
-  // Fall back on Osi version - without names
-  OsiSolverInterface::writeLpNative(fullname.c_str(), 
-				    NULL, NULL, epsilon, numberAcross,
-				    decimals, objSense);
-}
-
-/***********************************************************************/
-int
-OsiSolverInterface::writeLpNative(const char *filename, 
-				  char const * const * const rowNames,
-				  char const * const * const columnNames,
-				  const double epsilon,
-				  const int numberAcross,
-				  const int decimals,
-				  const double objSense) const
-{
-   const int numcols = getNumCols();
-   char *integrality = new char[numcols];
-   bool hasInteger = false;
-
-   for (int i=0; i<numcols; i++) {
-     if (isInteger(i)) {
-       integrality[i] = 1;
-       hasInteger = true;
-     } else {
-       integrality[i] = 0;
-     }
-   }
-
-   // Get multiplier for objective function - default 1.0
-   double *objective = new double[numcols];
-   const double *curr_obj = getObjCoefficients();
-
-   if (objSense * getObjSense() < 0.0) {
-     for (int i=0; i<numcols; i++) {
-       objective[i] = - curr_obj[i];
-     }
-   }
-   else {
-     for (int i=0; i<numcols; i++) {
-       objective[i] = curr_obj[i];
-     }
-   }
-
-   CoinLpIO writer;
-   writer.setEpsilon(epsilon);
-   writer.setNumberAcross(numberAcross);
-   writer.setDecimals(decimals);
-
-   writer.setLpDataWithoutRowAndColNames(*getMatrixByRow(),
-		     getColLower(), getColUpper(),
-		     objective, hasInteger ? integrality : 0,
-		     getRowLower(), getRowUpper());
-
-   writer.setLpDataRowAndColNames(columnNames, rowNames);
-
-   //writer.print();
-   delete [] objective;
-   delete[] integrality;
-   return writer.writeLp(filename, epsilon, numberAcross, decimals);
-
-} /*writeLpNative */
-
-/*************************************************************************/
-int OsiSolverInterface::readLp(const char * filename, const double epsilon)
-{
-  CoinLpIO m;
-  m.readLp(filename);
-
-  // set objective function offest
-  setDblParam(OsiObjOffset, 0);
-
-  // set problem name
-  setStrParam(OsiProbName, m.getProblemName());
-
-  // no errors
-  loadProblem(*m.getMatrixByRow(), m.getColLower(), m.getColUpper(),
-	      m.getObjCoefficients(), m.getRowLower(), m.getRowUpper());
-
-  const char *integer = m.integerColumns();
-  if (integer) {
-    int i, n = 0;
-    int nCols = m.getNumCols();
-    int *index = new int [nCols];
-    for (i=0; i<nCols; i++) {
-      if (integer[i]) {
-	index[n++] = i;
-      }
-    }
-    setInteger(index,n);
-    delete [] index;
-  }
-  return(0);
-} /* readLp */
-
-/*************************************************************************/
 // Pass in Message handler (not deleted at end)
 void 
 OsiSolverInterface::passInMessageHandler(CoinMessageHandler * handler)

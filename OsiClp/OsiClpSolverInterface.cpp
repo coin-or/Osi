@@ -398,7 +398,11 @@ void OsiClpSolverInterface::resolve()
             modelPtr_->setProblemStatus(1);
         }
       } else {
-        crunch();
+	if((specialOptions_&1)==0) {
+          modelPtr_->dual(0,startFinishOptions);
+        } else {
+	  crunch();
+	}
       }
       if (!modelPtr_->problemStatus()&&0) {
         int numberColumns = modelPtr_->numberColumns();

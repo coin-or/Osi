@@ -738,6 +738,30 @@ public:
   */
   inline void setCleanupScaling(int value)
   { cleanupScaling_=value;};
+  /** Get smallest allowed element in cut.
+      If smaller than this then ignored */
+  inline double smallestElementInCut() const
+  { return smallestElementInCut_;};
+  /** Set smallest allowed element in cut.
+      If smaller than this then ignored */
+  inline void setSmallestElementInCut(double value)
+  { smallestElementInCut_=value;};
+  /** Get smallest change in cut.
+      If (upper-lower)*element < this then element is
+      taken out and cut relaxed. 
+      (upper-lower) is taken to be at least 1.0 and
+      this is assumed >= smallestElementInCut_
+  */
+  inline double smallestChangeInCut() const
+  { return smallestChangeInCut_;};
+  /** Set smallest change in cut.
+      If (upper-lower)*element < this then element is
+      taken out and cut relaxed. 
+      (upper-lower) is taken to be at least 1.0 and
+      this is assumed >= smallestElementInCut_
+  */
+  inline void setSmallestChangeInCut(double value)
+  { smallestChangeInCut_=value;};
   //@}
   
   //---------------------------------------------------------------------------
@@ -859,6 +883,13 @@ protected:
   ClpSimplex * smallModel_;
   /// factorization for hot starts
   ClpFactorization * factorization_;
+  /** Smallest allowed element in cut.
+      If smaller than this then ignored */
+  double smallestElementInCut_;
+  /** Smallest change in cut.
+      If (upper-lower)*element < this then element is
+      taken out and cut relaxed. */
+  double smallestChangeInCut_;
   /// Arrays for hot starts
   char * spareArrays_;
   /** Warmstart information to be used in resolves. */

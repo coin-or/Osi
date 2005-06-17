@@ -398,11 +398,11 @@ void OsiClpSolverInterface::resolve()
             modelPtr_->setProblemStatus(1);
         }
       } else {
-	if((specialOptions_&1)==0) {
+ 	if((specialOptions_&1)==0) {
           modelPtr_->dual(0,startFinishOptions);
         } else {
-	  crunch();
-	}
+          crunch();
+        }
       }
       if (!modelPtr_->problemStatus()&&0) {
         int numberColumns = modelPtr_->numberColumns();
@@ -871,8 +871,8 @@ void OsiClpSolverInterface::markHotStart()
       // only need to do this on second pass in CbcNode
       small->setLogLevel(0);
       small->dual();
-      if (small->numberIterations()>0)
-        printf("**** iterated small %d\n",small->numberIterations());
+      //if (small->numberIterations()>0)
+      //printf("**** iterated small %d\n",small->numberIterations());
       //small->setLogLevel(0);
     }
     smallModel_=small;
@@ -884,9 +884,6 @@ void OsiClpSolverInterface::markHotStart()
     int numberColumns2 = smallModel_->numberColumns();
     memcpy( saveLowerOriginal, smallModel_->columnLower(),numberColumns2*sizeof(double));
     memcpy( saveUpperOriginal, smallModel_->columnUpper(),numberColumns2*sizeof(double));
-    int itlim;
-    modelPtr_->getIntParam(ClpMaxNumIterationHotStart, itlim);
-    smallModel_->setIntParam(ClpMaxNumIteration,itlim);
     if (whichRange_&&whichRange_[0]) {
       // get ranging information
       int numberToDo = whichRange_[0];
@@ -903,7 +900,7 @@ void OsiClpSolverInterface::markHotStart()
       int * whichUp = new int [numberToDo];
       small->gutsOfSolution(NULL,NULL,false);
       // Tell code we can increase costs in some cases
-      small->setDualTolerance(0.0);
+      small->setCurrentDualTolerance(0.0);
       ((ClpSimplexOther *) small)->dualRanging(numberToDo,which,
                          upRange, whichUp, downRange, whichDown);
       delete [] whichDown;
@@ -919,6 +916,9 @@ void OsiClpSolverInterface::solveFromHotStart()
 {
   int numberRows = modelPtr_->numberRows();
   int numberColumns = modelPtr_->numberColumns();
+  modelPtr_->getIntParam(ClpMaxNumIteration,itlimOrig_);
+  int itlim;
+  modelPtr_->getIntParam(ClpMaxNumIterationHotStart, itlim);
   if (smallModel_==NULL) {
     setWarmStart(ws_);
     memcpy(modelPtr_->primalRowSolution(),
@@ -937,12 +937,8 @@ void OsiClpSolverInterface::solveFromHotStart()
     }
     messageHandler()->setLogLevel(saveMessageLevel);
     
-    modelPtr_->getIntParam(ClpMaxNumIteration,itlimOrig_);
-    int itlim;
-    modelPtr_->getIntParam(ClpMaxNumIterationHotStart, itlim);
     modelPtr_->setIntParam(ClpMaxNumIteration,itlim);
     resolve();
-    modelPtr_->setIntParam(ClpMaxNumIteration,itlimOrig_);
   } else {
     double * arrayD = (double *) spareArrays_;
     double saveObjectiveValue = arrayD[0];
@@ -1006,6 +1002,7 @@ void OsiClpSolverInterface::solveFromHotStart()
     // Start of fast iterations
     bool alwaysFinish= ((specialOptions_&32)==0) ? true : false;
     //smallModel_->setLogLevel(1);
+    smallModel_->setIntParam(ClpMaxNumIteration,itlim);
     int status = ((ClpSimplexDual *)smallModel_)->fastDual(alwaysFinish);
     
     int problemStatus = smallModel_->problemStatus();
@@ -1119,6 +1116,7 @@ void OsiClpSolverInterface::solveFromHotStart()
     memcpy(smallModel_->lowerRegion(),saveLower,number*sizeof(double));
     memcpy(smallModel_->upperRegion(),saveUpper,number*sizeof(double));
   }
+  modelPtr_->setIntParam(ClpMaxNumIteration,itlimOrig_);
 }
 
 void OsiClpSolverInterface::unmarkHotStart()
@@ -1755,6 +1753,8 @@ rowActivity_(NULL),
 columnActivity_(NULL),
 smallModel_(NULL),
 factorization_(NULL),
+smallestElementInCut_(1.0e-15),
+smallestChangeInCut_(1.0e-10),
 spareArrays_(NULL),
 matrixByRow_(NULL),
 integerInformation_(NULL),
@@ -1795,6 +1795,8 @@ rowActivity_(NULL),
 columnActivity_(NULL),
 smallModel_(NULL),
 factorization_(NULL),
+smallestElementInCut_(rhs.smallestElementInCut_),
+smallestChangeInCut_(rhs.smallestChangeInCut_),
 spareArrays_(NULL),
 basis_(),
 itlimOrig_(9999999),
@@ -1838,6 +1840,8 @@ rowActivity_(NULL),
 columnActivity_(NULL),
 smallModel_(NULL),
 factorization_(NULL),
+smallestElementInCut_(1.0e-15),
+smallestChangeInCut_(1.0e-10),
 spareArrays_(NULL),
 basis_(),
 itlimOrig_(9999999),
@@ -1924,6 +1928,8 @@ OsiClpSolverInterface::operator=(const OsiClpSolverInterface& rhs)
     columnActivity_=NULL;
     assert(smallModel_==NULL);
     assert(factorization_==NULL);
+    smallestElementInCut_ = rhs.smallestElementInCut_;
+    smallestChangeInCut_ = rhs.smallestChangeInCut_;
     assert(spareArrays_==NULL);
     basis_ = rhs.basis_;
     intParamMap_ = rhs.intParamMap_;
@@ -1981,24 +1987,87 @@ OsiClpSolverInterface::applyRowCuts(int numberCuts, const OsiRowCut ** cuts)
   int i;
   if (!numberCuts)
     return;
-
-  const CoinPackedVectorBase * * rows
-    =     new const CoinPackedVectorBase * [numberCuts];
-  double * rowlb = new double [numberCuts];
-  double * rowub = new double [numberCuts];
+  int numberRows = modelPtr_->numberRows();
+  modelPtr_->resize(numberRows+numberCuts,modelPtr_->numberColumns());
+  basis_.resize(numberRows+numberCuts,modelPtr_->numberColumns());
+  // redo as relaxed - use modelPtr_-> addRows with starts etc
+  int size = 0;
+  for (i=0;i<numberCuts;i++) 
+    size += cuts[i]->row().getNumElements();
+  CoinBigIndex * starts = new CoinBigIndex [numberCuts+1];
+  int * indices = new int[size];
+  double * elements = new double[size];
+  double * lower = modelPtr_->rowLower()+numberRows;
+  double * upper = modelPtr_->rowUpper()+numberRows;
+  const double * columnLower = modelPtr_->columnLower();
+  const double * columnUpper = modelPtr_->columnUpper();
+  size=0;
   for (i=0;i<numberCuts;i++) {
-    rowlb[i] = cuts[i]->lb();
-    rowub[i] = cuts[i]->ub();
-    rows[i] = &cuts[i]->row();
-#ifdef TAKEOUT
-    if (rows[i]->getNumElements()==10||rows[i]->getNumElements()==15)
-      printf("ApplyCuts %d size %d\n",getNumRows()+i,rows[i]->getNumElements());
-#endif
+    double rowLb = cuts[i]->lb();
+    double rowUb = cuts[i]->ub();
+    int n=cuts[i]->row().getNumElements();
+    const int * index = cuts[i]->row().getIndices();
+    const double * elem = cuts[i]->row().getElements();
+    starts[i]=size;
+    for (int j=0;j<n;j++) {
+      double value = elem[j];
+      int column = index[j];
+      if (fabs(value)>=smallestChangeInCut_) {
+        // always take
+        indices[size]=column;
+        elements[size++]=value;
+      } else if (fabs(value)>=smallestElementInCut_) {
+        double lowerValue = columnLower[column];
+        double upperValue = columnUpper[column];
+        double difference = upperValue-lowerValue;
+        if (difference<1.0e20&&difference*fabs(value)<smallestChangeInCut_&&
+            (rowLb<-1.0e20||rowUb>1.0e20)) {
+          // Take out and adjust to relax
+          //printf("small el %g adjusted\n",value);
+          if (rowLb>-1.0e20) {
+            // just lower bound on row
+            if (value>0.0) {
+              // pretend at upper
+              rowLb -= value*upperValue;
+            } else {
+              // pretend at lower
+              rowLb -= value*lowerValue;
+            }
+          } else {
+            // just upper bound on row
+            if (value>0.0) {
+              // pretend at lower
+              rowUb -= value*lowerValue;
+            } else {
+              // pretend at upper
+              rowUb -= value*upperValue;
+            }
+          }
+        } else {
+          // take (unwillingly)
+          indices[size]=column;
+          elements[size++]=value;
+        }
+      } else {
+        //printf("small el %g ignored\n",value);
+      }
+    }
+    lower[i]= forceIntoRange(rowLb, -OsiClpInfinity, OsiClpInfinity);
+    upper[i]= forceIntoRange(rowUb, -OsiClpInfinity, OsiClpInfinity);
+    if (lower[i]<-1.0e27)
+      lower[i]=-COIN_DBL_MAX;
+    if (upper[i]>1.0e27)
+      upper[i]=COIN_DBL_MAX;
   }
-  addRows(numberCuts,rows,rowlb,rowub);
-  delete [] rows;
-  delete [] rowlb;
-  delete [] rowub;
+  starts[numberCuts]=size;
+  if (!modelPtr_->clpMatrix())
+    modelPtr_->createEmptyMatrix();
+  //modelPtr_->matrix()->appendRows(numberCuts,rows);
+  modelPtr_->clpMatrix()->appendMatrix(numberCuts,0,starts,indices,elements);
+  freeCachedResults();
+  delete [] starts;
+  delete [] indices;
+  delete [] elements;
 
 }
 //-----------------------------------------------------------------------------
@@ -3029,6 +3098,8 @@ OsiClpSolverInterface::reset()
   delete [] columnActivity_;
   assert(smallModel_==NULL);
   assert(factorization_==NULL);
+  smallestElementInCut_ = 1.0e-15;
+  smallestChangeInCut_ = 1.0e-10;
   assert(spareArrays_==NULL);
   delete [] integerInformation_;
   rowActivity_ = NULL;

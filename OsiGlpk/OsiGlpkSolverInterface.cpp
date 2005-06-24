@@ -1689,6 +1689,7 @@ OsiGlpkSolverInterface::deleteCols(const int num, const int * columnIndices)
 		columnIndicesPlus1[i+1]=columnIndices[i]+1;
 	}
 	lpx_del_cols(model,num,columnIndicesPlus1);
+	delete [] columnIndicesPlus1;
 }
 
 //-----------------------------------------------------------------------------
@@ -1793,6 +1794,7 @@ OsiGlpkSolverInterface::deleteRows(const int num, const int * rowIndices)
 		rowIndicesPlus1[i+1]=rowIndices[i]+1;
 	}
 	lpx_del_rows(model, num, rowIndicesPlus1);
+	delete [] rowIndicesPlus1;
 }
 
 //#############################################################################
@@ -1984,6 +1986,9 @@ OsiGlpkSolverInterface::loadProblem(const int numcols, const int numrows,
   {
       setRowBounds( j, rowlb ? rowlb[j]:-inf, rowub ? rowub[j]:inf );
   }
+
+  delete [] index_adj;
+  delete [] value_adj;
   
 }
 //-----------------------------------------------------------------------------

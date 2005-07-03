@@ -902,6 +902,8 @@ OsiCbcSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     std::string fn = mpsDir+"p0033";
     m.readMps(fn.c_str(),"mps");
     m.initialSolve();
+    //m.messageHandler()->setLogLevel(0);
+    m.getModelPtr()->messageHandler()->setLogLevel(0);
     m.branchAndBound();
   }
   // branch and bound using CbcModel!!!!!!!

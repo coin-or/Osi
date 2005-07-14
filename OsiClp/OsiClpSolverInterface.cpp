@@ -522,8 +522,7 @@ OsiClpSolverInterface::setupForRepeatedUse(int senseOfAdventure, int printOut)
   } else if (!printOut) {
     bool takeHint;
     OsiHintStrength strength;
-    bool gotHint = (getHintParam(OsiDoReducePrint,takeHint,strength));
-    assert (gotHint);
+    getHintParam(OsiDoReducePrint,takeHint,strength);
     int messageLevel=messageHandler()->logLevel();
     if (strength!=OsiHintIgnore&&takeHint) 
       messageLevel--;
@@ -928,8 +927,7 @@ void OsiClpSolverInterface::solveFromHotStart()
     bool takeHint;
     OsiHintStrength strength;
     // Switch off printing if asked to
-    bool gotHint = (getHintParam(OsiDoReducePrint,takeHint,strength));
-    assert (gotHint);
+    getHintParam(OsiDoReducePrint,takeHint,strength);
     int saveMessageLevel=messageHandler()->logLevel();
     if (strength!=OsiHintIgnore&&takeHint) {
       if (saveMessageLevel)
@@ -1946,8 +1944,7 @@ OsiClpSolverInterface::operator=(const OsiClpSolverInterface& rhs)
 
 void OsiClpSolverInterface::applyRowCut( const OsiRowCut & rowCut )
 {
-  const CoinPackedVector & row=rowCut.row();
-  addRow(row ,  rowCut.lb(),rowCut.ub());
+  applyRowCuts(1, &rowCut);
 }
 /* Apply a collection of row cuts which are all effective.
    applyCuts seems to do one at a time which seems inefficient.
@@ -1955,28 +1952,18 @@ void OsiClpSolverInterface::applyRowCut( const OsiRowCut & rowCut )
 void 
 OsiClpSolverInterface::applyRowCuts(int numberCuts, const OsiRowCut * cuts)
 {
-  int i;
-  if (!numberCuts)
-    return;
+  if (numberCuts) {
 
-  const CoinPackedVectorBase * * rows
-    =     new const CoinPackedVectorBase * [numberCuts];
-  double * rowlb = new double [numberCuts];
-  double * rowub = new double [numberCuts];
-  for (i=0;i<numberCuts;i++) {
-    rowlb[i] = cuts[i].lb();
-    rowub[i] = cuts[i].ub();
-    rows[i] = &cuts[i].row();
-#ifdef TAKEOUT
-    if (rows[i]->getNumElements()==10||rows[i]->getNumElements()==15)
-      printf("ApplyCuts %d size %d\n",getNumRows()+i,rows[i]->getNumElements());
-#endif
+    // Thanks to js
+    const OsiRowCut * * cutsp = new const OsiRowCut * [numberCuts];
+    
+    for (int i=0;i<numberCuts;i++)
+      cutsp[i] = &cuts[i];
+    
+    applyRowCuts(numberCuts, cutsp);
+    
+    delete [] cutsp;
   }
-  addRows(numberCuts,rows,rowlb,rowub);
-  delete [] rows;
-  delete [] rowlb;
-  delete [] rowub;
-
 }
 /* Apply a collection of row cuts which are all effective.
    applyCuts seems to do one at a time which seems inefficient.
@@ -2607,8 +2594,12 @@ OsiClpSolverInterface::enableSimplexInterface(bool doingPrimal)
   modelPtr_->setDualRowPivotAlgorithm(dantzig);
   ClpPrimalColumnDantzig dantzigP;
   modelPtr_->setPrimalColumnPivotAlgorithm(dantzigP);
+#ifdef NDEBUG
+  modelPtr_->startup(0);
+#else
   int returnCode=modelPtr_->startup(0);
   assert (!returnCode);
+#endif
 }
 
 //Undo whatever setting changes the above method had to make

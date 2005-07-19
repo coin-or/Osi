@@ -1514,7 +1514,7 @@ OsiCpxSolverInterface::setRowLower( int i, double elementValue )
   double rhs   = getRightHandSide()[i];
   double range = getRowRange()[i];
   char   sense = getRowSense()[i];
-  double lower, upper;
+  double lower = 0, upper = 0;
 
   convertSenseToBound( sense, rhs, range, lower, upper );
   if( lower != elementValue ) {
@@ -1531,7 +1531,7 @@ OsiCpxSolverInterface::setRowUpper( int i, double elementValue )
   double rhs   = getRightHandSide()[i];
   double range = getRowRange()[i];
   char   sense = getRowSense()[i];
-  double lower, upper;
+  double lower = 0, upper = 0;
 
   convertSenseToBound( sense, rhs, range, lower, upper );
   if( upper != elementValue ) {

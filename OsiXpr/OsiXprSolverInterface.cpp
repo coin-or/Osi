@@ -12,7 +12,7 @@
 
 #include <cassert>
 #include <numeric>
-#include <strstream>
+#include <sstream>
 
 #ifdef _WIN32
 #define DLL
@@ -40,12 +40,12 @@ void reporterror(const char *fname, int iline, int ierr)
 	   fname, iline, ierr );
 }
 
-#define XPRS_CHECKED(function, args) { \
-  int _nReturn; \
-  if( (_nReturn = function args ) !=0 ) { \
-    reporterror (#function,__LINE__,_nReturn); \
-  } \
-}
+#define XPRS_CHECKED(function, args) do { 		\
+      int _nReturn;					\
+      if( (_nReturn = function args ) !=0 ) {		\
+	 reporterror (#function,__LINE__,_nReturn);	\
+      }							\
+   } while (0)
 
 
 
@@ -522,8 +522,10 @@ OsiXprSolverInterface::getColLower() const
 	if ( isDataLoaded() ) {
 	    int	    ncols = getNumCols();
 	    
-	    collower_ = new double[ncols];
-	    XPRS_CHECKED( XPRSgetlb, (prob_,collower_, 0, ncols - 1) );
+	    if ( ncols > 0 ) {
+	       collower_ = new double[ncols];
+	       XPRS_CHECKED( XPRSgetlb, (prob_,collower_, 0, ncols - 1) );
+	    }
 	}
     }
     
@@ -538,8 +540,10 @@ OsiXprSolverInterface::getColUpper() const
       if ( isDataLoaded() ) {
 	 int	 ncols = getNumCols();	 
 	 
-	 colupper_ = new double[ncols];
-	 XPRS_CHECKED( XPRSgetub, (prob_,colupper_, 0, ncols - 1) );
+	 if ( ncols > 0 ) {
+	    colupper_ = new double[ncols];
+	    XPRS_CHECKED( XPRSgetub, (prob_,colupper_, 0, ncols - 1) );
+	 }
       }
    }
 
@@ -552,9 +556,12 @@ OsiXprSolverInterface::getRowSense() const
     if ( rowsense_ == NULL ) {
 	if ( isDataLoaded() ) {
 	    int nrows = getNumRows();
-	    rowsense_ = new char[nrows];
-	    XPRS_CHECKED( XPRSgetrowtype, (prob_,rowsense_, 0, nrows - 1) );
-      }
+
+	    if ( nrows > 0 ) {
+	       rowsense_ = new char[nrows];
+	       XPRS_CHECKED( XPRSgetrowtype, (prob_,rowsense_, 0, nrows - 1) );
+	    }
+	}
     }
 
    return rowsense_;
@@ -566,16 +573,18 @@ OsiXprSolverInterface::getRightHandSide() const
    if ( rhs_ == NULL ) {
       if ( isDataLoaded() ) {
 	 int	 nrows = getNumRows();	
-	 
-	 rhs_ = new double[nrows];
-	 XPRS_CHECKED( XPRSgetrhs, (prob_,rhs_, 0, nrows - 1) );
 
-	 // Make sure free rows have rhs of zero
-	 const char * rs = getRowSense();
-	 int nr = getNumRows();
-	 int i;
-	 for ( i = 0;  i < nr;	i++ ) {
-	   if ( rs[i] == 'N' ) rhs_[i]=0.0;
+	 if ( nrows > 0 ) {
+	    rhs_ = new double[nrows];
+	    XPRS_CHECKED( XPRSgetrhs, (prob_,rhs_, 0, nrows - 1) );
+
+	    // Make sure free rows have rhs of zero
+	    const char * rs = getRowSense();
+	    int nr = getNumRows();
+	    int i;
+	    for ( i = 0;  i < nr;	i++ ) {
+	       if ( rs[i] == 'N' ) rhs_[i]=0.0;
+	    }
 	 }
       }
    }
@@ -590,17 +599,18 @@ OsiXprSolverInterface::getRowRange() const
       if ( isDataLoaded() ) {
 	 int	 nrows = getNumRows();
 
-	 rowrange_ = new double[nrows];
+	 if ( nrows > 0 ) {
+	    rowrange_ = new double[nrows];
+	    XPRS_CHECKED( XPRSgetrhsrange, (prob_,rowrange_, 0, nrows - 1) );
 
-	 XPRS_CHECKED( XPRSgetrhsrange, (prob_,rowrange_, 0, nrows - 1) );
-
-	 // Make sure non-R rows have range of 0.0
-	 // XPRESS seems to set N and L rows to a range of Infinity
-	 const char * rs = getRowSense();
-	 int nr = getNumRows();
-	 int i;
-	 for ( i = 0;  i < nr;	i++ ) {
-	   if ( rs[i] != 'R' ) rowrange_[i] = 0.0;
+	    // Make sure non-R rows have range of 0.0
+	    // XPRESS seems to set N and L rows to a range of Infinity
+	    const char * rs = getRowSense();
+	    int nr = getNumRows();
+	    int i;
+	    for ( i = 0;  i < nr;	i++ ) {
+	       if ( rs[i] != 'R' ) rowrange_[i] = 0.0;
+	    }
 	 }
       }
    }
@@ -661,8 +671,10 @@ OsiXprSolverInterface::getObjCoefficients() const
       if ( isDataLoaded() ) {
 	 int	 ncols = getNumCols();
 
-	 objcoeffs_ = new double[ncols];
-	 XPRS_CHECKED( XPRSgetobj, (prob_,objcoeffs_, 0, ncols - 1) );
+	 if ( ncols > 0 ) {
+	    objcoeffs_ = new double[ncols];
+	    XPRS_CHECKED( XPRSgetobj, (prob_,objcoeffs_, 0, ncols - 1) );
+	 }
       }
    }
 
@@ -758,12 +770,13 @@ OsiXprSolverInterface::getMatrixByRow() const
 
       std::adjacent_difference(start + 1, start + (nrows+1), length);
       
-      matrixByRow_ = new CoinPackedMatrix();
+      matrixByRow_ = new CoinPackedMatrix(true,0,0);	// (mjs) No gaps!
+							// Gaps =><= presolve.
       matrixByRow_->assignMatrix(false /* not column ordered */,
 				 ncols, nrows, nelems,
 				 element, index, start, length);
     } else {
-      matrixByRow_ = new CoinPackedMatrix();
+       matrixByRow_ = new CoinPackedMatrix(true,0,0);	// (mjs) No gaps!
       matrixByRow_->reverseOrdering();
     }
   }
@@ -802,10 +815,12 @@ OsiXprSolverInterface::getColSolution() const
    if ( colsol_ == NULL ) {
       if ( isDataLoaded() ) {
 
-	int nc = getNumCols();
+	 int nc = getNumCols();
 
-	 colsol_ = new double[nc];
-	 XPRS_CHECKED( XPRSgetsol, (prob_,colsol_, NULL, NULL, NULL) );
+	 if ( nc > 0 ) {
+	    colsol_ = new double[nc];
+	    XPRS_CHECKED( XPRSgetsol, (prob_,colsol_, NULL, NULL, NULL) );
+	 }
       }
    }
 
@@ -818,13 +833,16 @@ const double *
 OsiXprSolverInterface::getRowPrice() const
 {
     if ( rowprice_ == NULL ) {
-	int nr = getNumRows();
+       if ( isDataLoaded() ) {
+	  int nr = getNumRows();
 	
-	if ( isDataLoaded() ) {
-	    rowprice_ = new double[nr];
-	    XPRS_CHECKED( XPRSgetsol, (prob_,NULL, NULL, rowprice_, NULL) );
-	}
+	  if ( nr > 0 ) {
+	     rowprice_ = new double[nr];
+	     XPRS_CHECKED( XPRSgetsol, (prob_,NULL, NULL, rowprice_, NULL) );
+	  }
+       }
     }
+
     return rowprice_;
 }
 
@@ -883,12 +901,16 @@ double
 OsiXprSolverInterface::getObjValue() const
 {
    double  objvalue = 0;
+   double  objconstant = 0;
 
    if ( isDataLoaded() ) {
        XPRS_CHECKED( XPRSgetdblattrib, (prob_,XPRS_LPOBJVAL, &objvalue) );
+       OsiSolverInterface::getDblParam(OsiObjOffset, objconstant);	
+       		// Constant offset is not saved with the xpress representation,
+       		// but it has to be returned from here anyway.
    }
 
-   return objvalue;
+   return objvalue - objconstant;
 }
 
 //-----------------------------------------------------------------------------
@@ -1118,7 +1140,7 @@ OsiXprSolverInterface::setRowLower( int elementIndex, double elementValue )
   double rhs   = getRightHandSide()[elementIndex];
   double range = getRowRange()[elementIndex];
   char	 sense = getRowSense()[elementIndex];
-  double lower, upper;
+  double lower = 0, upper = 0;
 
   convertSenseToBound(sense, rhs, range, lower, upper);
   if( lower != elementValue ) {
@@ -1136,7 +1158,7 @@ OsiXprSolverInterface::setRowUpper( int elementIndex, double elementValue )
   double rhs   = getRightHandSide()[elementIndex];
   double range = getRowRange()[elementIndex];
   char	 sense = getRowSense()[elementIndex];
-  double lower, upper;
+  double lower = 0, upper = 0;
 
   convertSenseToBound( sense, rhs, range, lower, upper );
   if( upper != elementValue ) {
@@ -1555,7 +1577,7 @@ OsiXprSolverInterface::loadProblem(const CoinPackedMatrix& matrix,
   bool freeMatrixRequired = false;
   CoinPackedMatrix * m = NULL;
   if ( !matrix.isColOrdered() ) {
-    m = new CoinPackedMatrix();
+     m = new CoinPackedMatrix(true,0,0);	// (mjs) No gaps!
     m->reverseOrderedCopyOf(matrix);
     freeMatrixRequired = true;
   } else {
@@ -2252,7 +2274,9 @@ OsiXprSolverInterface::applyRowCut( const OsiRowCut & rowCut )
 
    // In XPRESS XPRSaddrows(prob_) prototype, indices and elements should be const, but
    // they're not. 
-   int rc = XPRSaddrows(prob_,1, row.getNumElements(), &sense, &rhs, &r,
+   int rc;
+
+   rc = XPRSaddrows(prob_,1, row.getNumElements(), &sense, &rhs, &r,
 			start, const_cast<int *>(row.getIndices()),
 			const_cast<double *>(row.getElements())); 
    assert( rc == 0 );
@@ -2268,12 +2292,12 @@ void
 OsiXprSolverInterface::gutsOfCopy( const OsiXprSolverInterface & source )
 {
    if ( source.xprProbname_ != "" ) {    // source has data
-     std::ostrstream pname;
+     std::ostringstream pname;
      pname << xprProbname_ << "#" << osiSerial_ <<'\0';
      xprProbname_ = pname.str();
-//     sprintf(xprProbname_, "%s#%d", source.xprProbname_, osiSerial_);
+     //     sprintf(xprProbname_, "%s#%d", source.xprProbname_, osiSerial_);
      
-     //    cout << "Problem " << xprProbname_ << " copied to matrix ";
+     //     std::cout << "Problem " << xprProbname_ << " copied to matrix ";
      
 
      XPRS_CHECKED( XPRScopyprob, ( prob_, source.prob_, xprProbname_.c_str() ) );
@@ -2298,7 +2322,10 @@ OsiXprSolverInterface::gutsOfConstructor()
 
     //OPEN: only switched off for debugging
     //XPRS_CHECKED( XPRSsetlogfile, (prob_,"xpress.log") );
-    XPRS_CHECKED( XPRSsetintcontrol, (prob_, XPRS_SOLUTIONFILE,0) );
+    // **FIXME** (mjs) Integer problems require solution file or callback to save 
+    // optimal solution.  The quick fix is to leave the default solutionfile setting,
+    // but implementing a callback would be better.
+    //    XPRS_CHECKED( XPRSsetintcontrol, (prob_, XPRS_SOLUTIONFILE,0) );
     
     //    XPRS_CHECKED( XPRSsetintcontrol, ( prob_, XPRS_PRESOLVE, 0) );
 

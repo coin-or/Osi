@@ -1723,6 +1723,16 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 #endif
   }
 
+  // Determine if this emptySi is an OsiXprSolverInterface
+  bool xprSolverInterface UNUSED = false;
+  {
+#ifdef COIN_USE_XPR
+    const OsiXprSolverInterface * si =
+      dynamic_cast<const OsiXprSolverInterface *>(emptySi);
+    if ( si != NULL ) xprSolverInterface = true;
+#endif
+  }
+
   // Determine if this is the emptySi is an OsiSymSolverInterface
   bool symSolverInterface UNUSED = false;
   {
@@ -3197,7 +3207,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   }
 
   // Test presolve
-  if ( !volSolverInterface /*&& !fmpSolverInterface*/ && !symSolverInterface) {
+  if ( !volSolverInterface /*&& !fmpSolverInterface*/ && !symSolverInterface ) {
     OsiSolverInterface * si = emptySi->clone();
     std::string fn = netlibDir+"25fv47";
     si->readMps(fn.c_str(),"mps");

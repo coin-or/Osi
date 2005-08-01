@@ -1421,7 +1421,7 @@ OsiClpSolverInterface::addRow(const CoinPackedVectorBase& vec,
   int numberRows = modelPtr_->numberRows();
   modelPtr_->resize(numberRows+1,modelPtr_->numberColumns());
   basis_.resize(numberRows+1,modelPtr_->numberColumns());
-  double rowlb, rowub;
+  double rowlb = 0, rowub = 0;
   convertSenseToBound(rowsen, rowrhs, rowrng, rowlb, rowub);
   setRowBounds(numberRows,rowlb,rowub);
   if (!modelPtr_->clpMatrix())
@@ -1468,7 +1468,7 @@ OsiClpSolverInterface::addRows(const int numrows,
   double * upper = modelPtr_->rowUpper()+numberRows;
   int iRow;
   for (iRow = 0; iRow < numrows; iRow++) {
-    double rowlb, rowub;
+    double rowlb = 0, rowub = 0;
     convertSenseToBound(rowsen[iRow], rowrhs[iRow], rowrng[iRow], 
 			rowlb, rowub);
     lower[iRow]= forceIntoRange(rowlb, -OsiClpInfinity, OsiClpInfinity);
@@ -2459,7 +2459,7 @@ OsiClpSolverInterface::setRowType(int i, char sense, double rightHandSide,
     indexError(i,"setRowType");
   }
 #endif
-  double lower, upper;
+  double lower = 0, upper = 0;
   convertSenseToBound(sense, rightHandSide, range, lower, upper);
   setRowBounds(i, lower, upper);
   // If user is using sense then set
@@ -2542,8 +2542,8 @@ OsiClpSolverInterface::setRowSetTypes(const int* indexFirst,
       indexError(iRow,"isContinuous");
     }
 #endif
-    double lowerValue;
-    double upperValue;
+    double lowerValue = 0;
+    double upperValue = 0;
     if (rangeList){
       convertSenseToBound(*senseList++, *rhsList++, *rangeList++,
 			  lowerValue, upperValue);

@@ -22,7 +22,7 @@ extern "C" {
     Instantiation of OsiGlpkSolverInterface for GPLK
 */
 
-class OsiGlpkSolverInterface : public OsiSolverInterface {
+class OsiGlpkSolverInterface : virtual public OsiSolverInterface {
   friend void OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
   
 public:
@@ -633,14 +633,15 @@ protected:
       Return true if cut was applied.
   */
   virtual void applyColCut( const OsiColCut & cc );
-  //@}
-  
-private:
-  /**@name Private methods */
-  //@{
 
   /// Pointer to the model
   LPX * getMutableModelPtr() const;
+
+  //@}
+ 
+private: 
+  /**@name Private methods */
+  //@{
     
   /// The real work of a copy constructor (used by copy and assignment)
   void gutsOfCopy( const OsiGlpkSolverInterface & source );
@@ -712,6 +713,8 @@ private:
   bool isAbandoned_;
   bool isObjLowerLimitReached_;
   bool isObjUpperLimitReached_;
+  bool isPrimInfeasible_;
+  bool isDualInfeasible_;
 
   /**@name Cached information derived from the GLPK model */
   //@{

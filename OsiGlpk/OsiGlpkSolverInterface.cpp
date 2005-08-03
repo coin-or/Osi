@@ -98,25 +98,37 @@ void OsiGlpkSolverInterface::initialSolve()
 
 	isIterationLimitReached_ = false;
 	isAbandoned_ = false;
+	isPrimInfeasible_ = false;
+	isDualInfeasible_ = false;
+
+	/* When the presolver is turned on, lpx_simplex() will not be able
+	to tell whether the objective function has hit it's upper or lower
+	limit. */
+
 	isObjLowerLimitReached_ = false;
 	isObjUpperLimitReached_ = false;
+
 	switch ( err )
 	{
 	case LPX_E_ITLIM:
 		isIterationLimitReached_ = true;
 		break;
-	case LPX_E_OBJLL:
-	  isObjLowerLimitReached_ = true;
-	  break;
-	case LPX_E_OBJUL:
-	  isObjUpperLimitReached_ = true;
-	  break;
 
-		// maybe more exit codes should count as abandoned
+	// maybe more exit codes should count as abandoned
+	case LPX_E_TMLIM:
 	case LPX_E_FAULT:
 	case LPX_E_SING:
 		isAbandoned_ = true;
 		break;
+
+	case LPX_E_NOPFS:
+		isPrimInfeasible_ = true;
+		break;
+
+	case LPX_E_NODFS:
+		isDualInfeasible_ = true;
+		break;
+		
 	}
 	// Record that simplex was most recent
 	bbWasLast_ = 0;
@@ -131,6 +143,8 @@ void OsiGlpkSolverInterface::resolve()
 
 	lpx_set_int_parm(model, LPX_K_MSGLEV, 1);  // suppress most output 
 	lpx_set_int_parm(model, LPX_K_DUAL, 1); // Use dual simplex if dual feasible
+	lpx_set_int_parm(model, LPX_K_PRESOL, 0);  // turn off presolver
+
 	// lpx_simplex will use the current basis if possible
 	int err = lpx_simplex( model );
 	iter_used_ = lpx_get_int_parm(model, LPX_K_ITCNT);
@@ -139,6 +153,8 @@ void OsiGlpkSolverInterface::resolve()
 	isAbandoned_ = false;
 	isObjLowerLimitReached_ = false;
 	isObjUpperLimitReached_ = false;
+	isPrimInfeasible_ = false;
+	isDualInfeasible_ = false;
 	switch ( err )
 	{
 	case LPX_E_ITLIM:
@@ -155,6 +171,12 @@ void OsiGlpkSolverInterface::resolve()
 	case LPX_E_FAULT:
 	case LPX_E_SING:
 		isAbandoned_ = true;
+		break;
+	case LPX_E_NOPFS:
+		isPrimInfeasible_ = true;
+		break;
+	case LPX_E_NODFS:
+		isDualInfeasible_ = true;
 		break;
 	}
 	// Record that simplex was most recent
@@ -180,6 +202,8 @@ void OsiGlpkSolverInterface::branchAndBound()
 
 		isIterationLimitReached_ = false;
 		isAbandoned_ = false;
+		isPrimInfeasible_ = false;
+		isDualInfeasible_ = false;
 		switch( err )
 		{
 		case LPX_E_ITLIM:
@@ -434,6 +458,9 @@ bool OsiGlpkSolverInterface::isProvenPrimalInfeasible() const
 {
         LPX *model = getMutableModelPtr();
 
+	if(isPrimInfeasible_==true)
+		return true;
+
 	if( bbWasLast_ == 0 )
 		return lpx_get_prim_stat( model ) == LPX_P_NOFEAS;
 	else
@@ -443,6 +470,9 @@ bool OsiGlpkSolverInterface::isProvenPrimalInfeasible() const
 bool OsiGlpkSolverInterface::isProvenDualInfeasible() const
 {
         LPX *model = getMutableModelPtr();
+	
+	if(isDualInfeasible_==true)
+		return true;
 
 	if( bbWasLast_ == 0 )
 		return lpx_get_dual_stat( model ) == LPX_D_NOFEAS;
@@ -2338,6 +2368,8 @@ void OsiGlpkSolverInterface::gutsOfConstructor()
 
 	isIterationLimitReached_ = false;
 	isAbandoned_ = false;
+	isPrimInfeasible_ = false;
+	isDualInfeasible_ = false;
 
 	lp_ = lpx_create_prob();
 	char name[] = "OSI_GLPK";
@@ -2424,6 +2456,8 @@ void OsiGlpkSolverInterface::freeCachedResults()
         iter_used_ = 0;
 	isAbandoned_ = false;
 	isIterationLimitReached_ = false;
+	isPrimInfeasible_ = false;
+	isDualInfeasible_ = false;
 	delete [] colsol_;
 	delete [] rowsol_;
 	delete [] redcost_;

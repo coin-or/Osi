@@ -96,7 +96,7 @@ typedef enum { startCold = 1, startWarm, startHot } ODSI_start_enum ;
   `make doc' in the source directory of the OsiDylp distribution.
 */
 
-class OsiDylpSolverInterface: public OsiSolverInterface
+class OsiDylpSolverInterface: virtual public OsiSolverInterface
 
 { friend void OsiDylpSolverInterfaceUnitTest(const std::string &mpsDir,
 					     const std::string &netLibDir) ;

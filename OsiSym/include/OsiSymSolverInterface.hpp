@@ -60,7 +60,7 @@ using namespace std;
   the methods that return vectors.
 */
 
-class OsiSymSolverInterface : public OsiSolverInterface {
+class OsiSymSolverInterface : virtual public OsiSolverInterface {
    friend void OsiSymSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
    
 public:

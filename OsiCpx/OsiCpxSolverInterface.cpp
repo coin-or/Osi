@@ -2421,7 +2421,8 @@ void OsiCpxSolverInterface::incrementInstanceCounter()
       checkCPXerror( err, "CPXopenCPLEXdevelop", "incrementInstanceCounter" );
       assert( env_ != NULL );
 #ifndef NDEBUG
-      CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_ON ); // for testing purposes
+      // Uncomment this to turn on verbose Cplex output
+      //CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_ON ); // for testing purposes
 #endif
       //char logfileName[]="cplex.log";
       //char filemode[]="a+";

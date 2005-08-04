@@ -19,7 +19,7 @@
 
     Instantiation of OsiSolverInterface for XPRESS-MP
  */
-class OsiXprSolverInterface : public OsiSolverInterface {
+class OsiXprSolverInterface : virtual public OsiSolverInterface {
    friend void OsiXprSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 public:
   /**@name Solve methods */

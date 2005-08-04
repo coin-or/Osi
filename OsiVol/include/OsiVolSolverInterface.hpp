@@ -22,7 +22,7 @@ static const double OsiVolInfinity = 1.0e31;
 */
 
 class OsiVolSolverInterface :
-   public OsiSolverInterface, public VOL_user_hooks {
+   virtual public OsiSolverInterface, public VOL_user_hooks {
    friend void OsiVolSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 private:

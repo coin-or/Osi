@@ -31,7 +31,7 @@ Instantiation of OsiClpSolverInterface for the Model Algorithm.
 */
 
 class OsiClpSolverInterface :
-  public OsiSolverInterface, public OsiSimplexInterface {
+  virtual public OsiSolverInterface, public OsiSimplexInterface {
   friend void OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
   
 public:
@@ -576,6 +576,12 @@ public:
                        const CoinPackedVectorBase * const * rows,
                        const char* rowsen, const double* rowrhs,   
                        const double* rowrng);
+
+  ///
+  void modifyCoefficient(int row, int column, double newElement,
+			bool keepZero=false)
+	{modelPtr_->modifyCoefficient(row,column,newElement, keepZero);}
+
   /** */
   virtual void deleteRows(const int num, const int * rowIndices);
   

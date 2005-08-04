@@ -22,7 +22,7 @@
     Instantiation of OsiFmpSolverInterface for FortMP
 */
 
-class OsiFmpSolverInterface : public OsiSolverInterface {
+class OsiFmpSolverInterface : virtual public OsiSolverInterface {
    friend void OsiFmpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 public:

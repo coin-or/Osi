@@ -22,7 +22,7 @@
 */
 
 class OsiMskSolverInterface : 
-  public OsiSolverInterface {
+  virtual public OsiSolverInterface {
   friend void OsiMskSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 public:
   

@@ -22,7 +22,7 @@
     Instantiation of OsiOslSolverInterface for OSL
 */
 
-class OsiOslSolverInterface : public OsiSolverInterface {
+class OsiOslSolverInterface : virtual public OsiSolverInterface {
    friend void OsiOslSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 public:

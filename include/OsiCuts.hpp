@@ -197,6 +197,13 @@ public:
     inline void eraseRowCut(int i);
     /// Remove i'th column cut from collection
     inline void eraseColCut(int i); 
+    /// Remove all the cuts *without* deleting them in case one wants to
+    /// use CGL without managing cuts in one of these containers.
+    void dumpCuts()
+	{
+      	while (rowCutPtrs_.size()>0)
+          rowCutPtrs_.erase(rowCutPtrs_.begin());
+    	}
   //@}
  
   /**@name Sorting collection */

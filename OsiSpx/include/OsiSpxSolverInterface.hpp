@@ -23,7 +23,7 @@
     Instantiation of OsiSpxSolverInterface for SOPLEX
 */
 
-class OsiSpxSolverInterface : public OsiSolverInterface {
+class OsiSpxSolverInterface : virtual public OsiSolverInterface {
   friend void OsiSpxSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
   
 public:
@@ -603,6 +603,13 @@ protected:
   */
   virtual void applyColCut( const OsiColCut & cc );
   //@}
+
+  /**@name Protected member data */
+  //@{
+  /// SOPLEX solver object
+  soplex::SPxSolver spxsolver_;
+  //@}
+
   
 private:
   /**@name Private methods */
@@ -659,9 +666,6 @@ private:
   
   /**@name Private member data */
   //@{
-  /// SOPLEX solver object
-  soplex::SPxSolver spxsolver_;
-
   /// indices of integer variables
   soplex::DIdxSet   spxintvars_;
 

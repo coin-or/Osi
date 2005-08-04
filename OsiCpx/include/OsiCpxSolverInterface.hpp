@@ -25,7 +25,7 @@
     Instantiation of OsiCpxSolverInterface for CPLEX
 */
 
-class OsiCpxSolverInterface : public OsiSolverInterface {
+class OsiCpxSolverInterface : virtual public OsiSolverInterface {
   friend void OsiCpxSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
   
 public:

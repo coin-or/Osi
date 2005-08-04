@@ -122,6 +122,28 @@ public:
     virtual double violated(const double * solution) const;
   //@}
 
+  /**@name Arithmetic operators. Apply CoinPackedVector methods to the vector */
+  //@{
+    /// add <code>value</code> to every vector entry
+    void operator+=(double value)
+	{ row_ += value; }
+
+    /// subtract <code>value</code> from every vector entry
+    void operator-=(double value)
+	{ row_ -= value; }
+
+    /// multiply every vector entry by <code>value</code>
+    void operator*=(double value)
+	{ row_ *= value; }
+
+    /// divide every vector entry by <code>value</code>
+    void operator/=(double value)
+	{ row_ /= value; }
+  //@}
+
+  /// Allow access row sorting function
+  void sortIncrIndex()
+	{row_.sortIncrIndex();}
 
   /**@name Constructors and destructors */
   //@{

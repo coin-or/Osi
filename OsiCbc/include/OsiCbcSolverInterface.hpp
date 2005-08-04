@@ -31,7 +31,7 @@ Instantiation of OsiCbcSolverInterface for the Model Algorithm.
 */
 
 class OsiCbcSolverInterface :
-  public OsiSolverInterface {
+  virtual public OsiSolverInterface {
   friend void OsiCbcSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
   
 public:

@@ -215,20 +215,22 @@ OsiRowCut::print() const
 {
    int i;
    std::cout << "Row cut has " << row_.getNumElements()
-	     << " cuts";
+	     << " elements";
    if ( lb_ < -1.0e20 && ub_<1.0e20 ) 
       std::cout << " with upper rhs of " << ub_;
    else if ( lb_ > -1.0e20 && ub_ > 1.0e20 ) 
       std::cout << " with lower rhs of " << lb_;
    else
-      std::cout << " !!! with lower,upper rhs of " << lb_ << " and " << ub_;
+      std::cout << " !!! with lower, upper rhs of " << lb_ << " and " << ub_;
    std::cout << std::endl;
-  for ( i = 0;  i < row_.getNumElements();  i++ ) {
-     int colIndx = row_.getIndices()[i];
-     double element= row_.getElements()[i];
-     std::cout << element << " * x" << colIndx << " ";
-  }
-  std::cout << std::endl;
+   for ( i = 0;  i < row_.getNumElements();  i++ ) {
+      int colIndx = row_.getIndices()[i];
+      double element = row_.getElements()[i];
+      if ( i > 0 && element > 0 )
+	 std::cout << " +";
+      std::cout << element << " * x" << colIndx << " ";
+   }
+   std::cout << std::endl;
 }
 
 //-------------------------------------------------------------------

@@ -321,6 +321,10 @@ void OsiClpSolverInterface::resolve()
   assert (gotHint);
   if (strength!=OsiHintIgnore&&takeHint) {
     ClpPresolve pinfo;
+    if ((specialOptions_&128)!=0) {
+      specialOptions_ &= ~128;
+      modelPtr_->deleteAuxiliaryModel();
+    }
     if ((modelPtr_->specialOptions()&1024)!=0) {
       pinfo.setDoDual(false);
       pinfo.setDoTripleton(false);
@@ -2333,6 +2337,8 @@ OsiClpSolverInterface::getObjValue() const
 {
   if (modelPtr_->numberIterations()||modelPtr_->upperIn_!=-COIN_DBL_MAX) {
     // This does not pass unitTest when getObjValue is called before solve.
+    //printf("obj a %g %g\n",modelPtr_->objectiveValue(),
+    //     OsiSolverInterface::getObjValue());
     return modelPtr_->objectiveValue();
   } else {
     return OsiSolverInterface::getObjValue();

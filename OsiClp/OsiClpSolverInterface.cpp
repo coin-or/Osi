@@ -2,6 +2,9 @@
 // Corporation and others.  All Rights Reserved.
 
 #include <cassert>
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
 
 #include "CoinTime.hpp"
 

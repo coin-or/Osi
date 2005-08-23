@@ -390,13 +390,11 @@ void OsiClpSolverInterface::resolve()
       if ((specialOptions_&2)!=0)
 	modelPtr_->setPerturbation(100);
       //modelPtr_->messageHandler()->setLogLevel(1);
-      
       //writeMpsNative("bad",NULL,NULL,2,1,1.0);
       if ((modelPtr_->specialOptions()&1024)==0||(specialOptions_ &128)!=0) {
-        if ((specialOptions_&128)==0) {
+        if ((specialOptions_&128)==0||!modelPtr_->auxiliaryModel_) {
           modelPtr_->dual(0,startFinishOptions);
         } else {
-          assert (modelPtr_->auxiliaryModel_); 
           double * rhs = modelPtr_->auxiliaryModel_->lower_;
           int numberTightened = ((ClpSimplexOther *)modelPtr_)->tightenIntegerBounds(rhs);
           if (numberTightened>=0)

@@ -2976,10 +2976,29 @@ OsiClpSolverInterface::getBInvRow(int row, double* z)
   // put +1 in row
   // But swap if pivot variable was slack as clp stores slack as -1.0
   double value = (modelPtr_->pivotVariable()[row]<modelPtr_->numberColumns()) ? 1.0 : -1.0;
-  // What about scaling ?
+  int numberRows = modelPtr_->numberRows();
+  int numberColumns = modelPtr_->numberColumns();
+  const double * rowScale = modelPtr_->rowScale();
+  const double * columnScale = modelPtr_->columnScale();
+  const int * pivotVariable = modelPtr_->pivotVariable();
+  // but scale
+  if (rowScale) {
+    int pivot = pivotVariable[row];
+    if (pivot<numberColumns) 
+      value *= columnScale[pivot];
+    else
+      value /= rowScale[pivot-numberColumns];
+  }
   rowArray1->insert(row,value);
   factorization->updateColumnTranspose(rowArray0,rowArray1);
-  memcpy(z,rowArray1->denseVector(),modelPtr_->numberRows()*sizeof(double));
+  if (!rowScale) {
+    memcpy(z,rowArray1->denseVector(),modelPtr_->numberRows()*sizeof(double));
+  } else {
+    double * array = rowArray1->denseVector();
+    for (int i=0;i<numberRows;i++) {
+      z[i] = array[i] * rowScale[i];
+    }
+  }
   rowArray1->clear();
 }
 
@@ -3064,14 +3083,42 @@ OsiClpSolverInterface::getBInvCol(int col, double* vec)
   }
 #endif
   // put +1 in row
-  rowArray1->insert(col,1.0);
+  int numberRows = modelPtr_->numberRows();
+  int numberColumns = modelPtr_->numberColumns();
+  const double * rowScale = modelPtr_->rowScale();
+  const double * columnScale = modelPtr_->columnScale();
+  const int * pivotVariable = modelPtr_->pivotVariable();
+  // but scale
+  double value;
+  if (!rowScale) {
+    value=1.0;
+  } else {
+    value = rowScale[col];
+  }
+  rowArray1->insert(col,value);
   factorization->updateColumn(rowArray0,rowArray1,false);
-  memcpy(vec,rowArray1->denseVector(),modelPtr_->numberRows()*sizeof(double));
+  // But swap if pivot variable was slack as clp stores slack as -1.0
+  double * array = rowArray1->denseVector();
+  if (!rowScale) {
+    for (int i=0;i<numberRows;i++) {
+      double multiplier = (pivotVariable[i]<numberColumns) ? 1.0 : -1.0;
+      vec[i] = multiplier * array[i];
+    }
+  } else {
+    for (int i=0;i<numberRows;i++) {
+      int pivot = pivotVariable[i];
+      double value = array[i];
+      if (pivot<numberColumns) 
+	vec[i] = value * columnScale[pivot];
+      else
+	vec[i] = - value / rowScale[pivot-numberColumns];
+    }
+  }
   rowArray1->clear();
 }
 
 /* Get basic indices (order of indices corresponds to the
-   order of elements in a vector retured by getBInvACol() and
+   order of elements in a vector returned by getBInvACol() and
    getBInvCol()).
 */
 void 

@@ -57,7 +57,7 @@ public:
      NOTE  artificials are treated as +1 elements so for <= rhs
      artificial will be at lower bound if constraint is tight
   */
-  virtual void getBasisStatus(int* cstat, int* rstat) = 0;
+  virtual void getBasisStatus(int* cstat, int* rstat) const = 0;
 
   /** Set the status of structural/artificial variables and
       factorize, update solution etc 
@@ -107,22 +107,22 @@ public:
   virtual void setObjectiveAndRefresh(double* c) = 0;
 
   ///Get a row of the tableau (slack part in slack if not NULL)
-  virtual void getBInvARow(int row, double* z, double * slack=NULL) = 0;
+  virtual void getBInvARow(int row, double* z, double * slack=NULL) const = 0;
 
   ///Get a row of the basis inverse
-  virtual void getBInvRow(int row, double* z) = 0;
+  virtual void getBInvRow(int row, double* z) const = 0;
 
   ///Get a column of the tableau
-  virtual void getBInvACol(int col, double* vec) = 0;
+  virtual void getBInvACol(int col, double* vec) const = 0;
 
   ///Get a column of the basis inverse
-  virtual void getBInvCol(int col, double* vec) = 0;
+  virtual void getBInvCol(int col, double* vec) const = 0;
 
   /** Get basic indices (order of indices corresponds to the
       order of elements in a vector retured by getBInvACol() and
       getBInvCol()).
   */
-  virtual void getBasics(int* index) = 0;
+  virtual void getBasics(int* index) const = 0;
   //@}
 
 

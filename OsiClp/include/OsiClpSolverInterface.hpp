@@ -79,7 +79,12 @@ public:
   void setupForRepeatedUse(int senseOfAdventure=0, int printOut=0);
   /// Synchronize model (really if no cuts in tree)
   virtual void synchronizeModel();
-  
+  // Sleazy methods to fool const requirements (no less safe as modelPtr_ mutable)
+    inline void setSpecialOptionsMutable(int value) const
+  { specialOptions_=value;};
+   void enableFactorization() const;
+   void disableFactorization() const;
+
   ///Returns true if a basis is available
   virtual bool basisIsAvailable() {return true;};
   
@@ -98,7 +103,7 @@ public:
       This means that Clpsimplex flips artificials as it works
       in terms of row activities
   */
-  virtual void getBasisStatus(int* cstat, int* rstat);
+  virtual void getBasisStatus(int* cstat, int* rstat) const;
   
   /** Set the status of structural/artificial variables and
       factorize, update solution etc 
@@ -151,22 +156,22 @@ public:
   virtual void setObjectiveAndRefresh(double* c);
   
   ///Get a row of the tableau (slack part in slack if not NULL)
-  virtual void getBInvARow(int row, double* z, double * slack=NULL);
+  virtual void getBInvARow(int row, double* z, double * slack=NULL) const;
   
   ///Get a row of the basis inverse
-  virtual void getBInvRow(int row, double* z);
+  virtual void getBInvRow(int row, double* z) const;
   
   ///Get a column of the tableau
-  virtual void getBInvACol(int col, double* vec);
+  virtual void getBInvACol(int col, double* vec) const ;
   
   ///Get a column of the basis inverse
-  virtual void getBInvCol(int col, double* vec);
+  virtual void getBInvCol(int col, double* vec) const ;
   
   /** Get basic indices (order of indices corresponds to the
       order of elements in a vector retured by getBInvACol() and
       getBInvCol()).
   */
-  virtual void getBasics(int* index);
+  virtual void getBasics(int* index) const;
   
   //@}
   //---------------------------------------------------------------------------
@@ -955,7 +960,7 @@ protected:
       Bits above 1024 give where called from in Cbc
       At present 0 is normal, 1 doing fast hotstarts, 2 is can do quick check
   */
-  unsigned int specialOptions_;
+  mutable unsigned int specialOptions_;
   //@}
 };
 

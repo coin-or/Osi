@@ -2631,6 +2631,29 @@ OsiClpSolverInterface::disableSimplexInterface()
   basis_ = getBasis(modelPtr_);
   modelPtr_->setSolveType(1);
 }
+void 
+OsiClpSolverInterface::enableFactorization() const
+{
+#ifdef NDEBUG
+  modelPtr_->startup(0);
+#else
+  int returnCode=modelPtr_->startup(0);
+  assert (!returnCode);
+#endif
+}
+
+//Undo whatever setting changes the above method had to make
+void 
+OsiClpSolverInterface::disableFactorization() const
+{
+  // declare optimality anyway  (for message handler)
+  modelPtr_->setProblemStatus(0);
+  // message will not appear anyway
+  int saveMessageLevel=modelPtr_->messageHandler()->logLevel();
+  modelPtr_->messageHandler()->setLogLevel(0);
+  modelPtr_->finish();
+  modelPtr_->messageHandler()->setLogLevel(saveMessageLevel);
+}
 /* The following two methods may be replaced by the
    methods of OsiSolverInterface using OsiWarmStartBasis if:
    1. OsiWarmStartBasis resize operation is implemented
@@ -2640,7 +2663,7 @@ OsiClpSolverInterface::disableSimplexInterface()
    Returns a basis status of the structural/artificial variables 
 */
 void 
-OsiClpSolverInterface::getBasisStatus(int* cstat, int* rstat)
+OsiClpSolverInterface::getBasisStatus(int* cstat, int* rstat) const
 {
   int i, n;
   n=modelPtr_->numberRows();
@@ -2888,7 +2911,7 @@ void OsiClpSolverInterface::setObjectiveAndRefresh(double* c)
 
 //Get a row of the tableau (slack part in slack if not NULL)
 void 
-OsiClpSolverInterface::getBInvARow(int row, double* z, double * slack)
+OsiClpSolverInterface::getBInvARow(int row, double* z, double * slack) const
 {
 #ifndef NDEBUG
   int n = modelPtr_->numberRows();
@@ -2958,7 +2981,7 @@ OsiClpSolverInterface::getBInvARow(int row, double* z, double * slack)
 
 //Get a row of the basis inverse
 void 
-OsiClpSolverInterface::getBInvRow(int row, double* z)
+OsiClpSolverInterface::getBInvRow(int row, double* z) const
 
 {
 #ifndef NDEBUG
@@ -3004,7 +3027,7 @@ OsiClpSolverInterface::getBInvRow(int row, double* z)
 
 //Get a column of the tableau
 void 
-OsiClpSolverInterface::getBInvACol(int col, double* vec)
+OsiClpSolverInterface::getBInvACol(int col, double* vec) const
 {
   //assert (modelPtr_->solveType()==2||(specialOptions_&1)!=0);
   CoinIndexedVector * rowArray0 = modelPtr_->rowArray(0);
@@ -3068,7 +3091,7 @@ OsiClpSolverInterface::getBInvACol(int col, double* vec)
 
 //Get a column of the basis inverse
 void 
-OsiClpSolverInterface::getBInvCol(int col, double* vec)
+OsiClpSolverInterface::getBInvCol(int col, double* vec) const
 {
   //assert (modelPtr_->solveType()==2||(specialOptions_&1)!=0);
   ClpFactorization * factorization = modelPtr_->factorization();
@@ -3122,7 +3145,7 @@ OsiClpSolverInterface::getBInvCol(int col, double* vec)
    getBInvCol()).
 */
 void 
-OsiClpSolverInterface::getBasics(int* index)
+OsiClpSolverInterface::getBasics(int* index) const
 {
   //assert (modelPtr_->solveType()==2||(specialOptions_&1)!=0);
   assert (index);

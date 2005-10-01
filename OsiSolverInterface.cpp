@@ -1095,3 +1095,202 @@ OsiSolverInterface::reset()
   throw CoinError("Needs coding for this interface", "reset",
 		  "OsiSolverInterface");
 }
+/*Enables normal operation of subsequent functions.
+  This method is supposed to ensure that all typical things (like
+  reduced costs, etc.) are updated when individual pivots are executed
+  and can be queried by other methods.  says whether will be
+  doing primal or dual
+*/
+void 
+OsiSolverInterface::enableSimplexInterface(bool doingPrimal) {}
+
+//Undo whatever setting changes the above method had to make
+void 
+OsiSolverInterface::disableSimplexInterface() {}
+// Returns true if has OsiSimplex methods
+bool 
+OsiSolverInterface::canDoSimplexInterface() const
+{
+  return false;
+}
+
+/* Tells solver that calls to getBInv etc are about to take place.
+   Underlying code may need mutable as this may be called from 
+   CglCut:;generateCuts which is const.  If that is too horrific then
+   each solver e.g. BCP or CBC will have to do something outside
+   main loop.
+*/
+void 
+OsiSolverInterface::enableFactorization() const
+{
+  // Throw an exception
+  throw CoinError("Needs coding for this interface", "enableFactorization",
+		  "OsiSolverInterface");
+}
+// and stop
+void 
+OsiSolverInterface::disableFactorization() const
+{
+  // Throw an exception
+  throw CoinError("Needs coding for this interface", "disableFactorization",
+		  "OsiSolverInterface");
+}
+
+//Returns true if a basis is available
+bool 
+OsiSolverInterface::basisIsAvailable() 
+{
+  // Throw an exception
+  throw CoinError("Needs coding for this interface", "basisIsAvailable",
+		  "OsiSolverInterface");
+}
+
+/* The following two methods may be replaced by the
+   methods of OsiSolverInterface using OsiWarmStartBasis if:
+   1. OsiWarmStartBasis resize operation is implemented
+   more efficiently and
+   2. It is ensured that effects on the solver are the same
+   
+   Returns a basis status of the structural/artificial variables 
+   At present as warm start i.e 0 free, 1 basic, 2 upper, 3 lower
+   
+   NOTE  artificials are treated as +1 elements so for <= rhs
+   artificial will be at lower bound if constraint is tight
+*/
+void 
+OsiSolverInterface::getBasisStatus(int* cstat, int* rstat) const 
+{
+  // Throw an exception
+  throw CoinError("Needs coding for this interface", "getBasisStatus",
+		  "OsiSolverInterface");
+}
+
+/* Set the status of structural/artificial variables and
+   factorize, update solution etc 
+   
+   NOTE  artificials are treated as +1 elements so for <= rhs
+   artificial will be at lower bound if constraint is tight
+*/
+int 
+OsiSolverInterface::setBasisStatus(const int* cstat, const int* rstat) 
+{
+  // Throw an exception
+  throw CoinError("Needs coding for this interface", "setBasisStatus",
+		  "OsiSolverInterface");
+}
+
+/* Perform a pivot by substituting a colIn for colOut in the basis. 
+   The status of the leaving variable is given in statOut. Where
+   1 is to upper bound, -1 to lower bound
+*/
+int 
+OsiSolverInterface::pivot(int colIn, int colOut, int outStatus) 
+{
+  // Throw an exception
+  throw CoinError("Needs coding for this interface", "pivot",
+		  "OsiSolverInterface");
+}
+
+/* Obtain a result of the primal pivot 
+   Outputs: colOut -- leaving column, outStatus -- its status,
+   t -- step size, and, if dx!=NULL, *dx -- primal ray direction.
+   Inputs: colIn -- entering column, sign -- direction of its change (+/-1).
+   Both for colIn and colOut, artificial variables are index by
+   the negative of the row index minus 1.
+   Return code (for now): 0 -- leaving variable found, 
+   -1 -- everything else?
+   Clearly, more informative set of return values is required 
+*/
+int 
+OsiSolverInterface::primalPivotResult(int colIn, int sign, 
+                                      int& colOut, int& outStatus, 
+                                      double& t, CoinPackedVector* dx) 
+{
+  // Throw an exception
+  throw CoinError("Needs coding for this interface", "primalPivotResult",
+		  "OsiSolverInterface");
+}
+
+/* Obtain a result of the dual pivot (similar to the previous method)
+   Differences: entering variable and a sign of its change are now
+   the outputs, the leaving variable and its statuts -- the inputs
+   If dx!=NULL, then *dx contains dual ray
+   Return code: same
+*/
+int 
+OsiSolverInterface::dualPivotResult(int& colIn, int& sign, 
+                                    int colOut, int outStatus, 
+                                    double& t, CoinPackedVector* dx) 
+{
+  // Throw an exception
+  throw CoinError("Needs coding for this interface", "dualPivotResult",
+		  "OsiSolverInterface");
+}
+
+//Get the reduced gradient for the cost vector c 
+void 
+OsiSolverInterface::getReducedGradient(double* columnReducedCosts, 
+                                       double * duals,
+                                       const double * c) 
+{
+  // Throw an exception
+  throw CoinError("Needs coding for this interface", "getReducedGradient",
+		  "OsiSolverInterface");
+}
+
+/* Set a new objective and apply the old basis so that the
+   reduced costs are properly updated */
+void 
+OsiSolverInterface::setObjectiveAndRefresh(double* c) 
+{
+  // Throw an exception
+  throw CoinError("Needs coding for this interface", "setObjectiveAndRefresh",
+		  "OsiSolverInterface");
+}
+
+//Get a row of the tableau (slack part in slack if not NULL)
+void 
+OsiSolverInterface::getBInvARow(int row, double* z, double * slack) const 
+{
+  // Throw an exception
+  throw CoinError("Needs coding for this interface", "getBInvARow",
+		  "OsiSolverInterface");
+}
+
+//Get a row of the basis inverse
+void OsiSolverInterface::getBInvRow(int row, double* z) const 
+{
+  // Throw an exception
+  throw CoinError("Needs coding for this interface", "getBInvRow",
+		  "OsiSolverInterface");
+}
+
+//Get a column of the tableau
+void 
+OsiSolverInterface::getBInvACol(int col, double* vec) const 
+{
+  // Throw an exception
+  throw CoinError("Needs coding for this interface", "getBInvACol",
+		  "OsiSolverInterface");
+}
+
+//Get a column of the basis inverse
+void 
+OsiSolverInterface::getBInvCol(int col, double* vec) const 
+{
+  // Throw an exception
+  throw CoinError("Needs coding for this interface", "getBInvCol",
+		  "OsiSolverInterface");
+}
+
+/* Get basic indices (order of indices corresponds to the
+   order of elements in a vector retured by getBInvACol() and
+   getBInvCol()).
+*/
+void 
+OsiSolverInterface::getBasics(int* index) const 
+{
+  // Throw an exception
+  throw CoinError("Needs coding for this interface", "getBasics",
+		  "OsiSolverInterface");
+}

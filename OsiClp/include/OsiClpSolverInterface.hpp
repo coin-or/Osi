@@ -11,7 +11,6 @@
 #include "ClpSimplex.hpp"
 #include "CoinPackedMatrix.hpp"
 #include "OsiSolverInterface.hpp"
-#include "OsiSimplexInterface.hpp"
 #include "CoinWarmStartBasis.hpp"
 
 class OsiRowCut;
@@ -31,7 +30,7 @@ Instantiation of OsiClpSolverInterface for the Model Algorithm.
 */
 
 class OsiClpSolverInterface :
-  virtual public OsiSolverInterface, public OsiSimplexInterface {
+  virtual public OsiSolverInterface {
   friend void OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
   
 public:
@@ -60,6 +59,17 @@ public:
   
   ///Undo whatever setting changes the above method had to make
   virtual void disableSimplexInterface();
+  /// Returns true if has OsiSimplex methods
+  virtual bool canDoSimplexInterface() const;
+  /** Tells solver that calls to getBInv etc are about to take place.
+      Underlying code may need mutable as this may be called from 
+      CglCut:;generateCuts which is const.  If that is too horrific then
+      each solver e.g. BCP or CBC will have to do something outside
+      main loop.
+  */
+  virtual void enableFactorization() const;
+  /// and stop
+  virtual void disableFactorization() const;
   
   /** Sets up solver for repeated use by Osi interface.
       The normal usage does things like keeping factorization around so can be used.
@@ -82,8 +92,6 @@ public:
   // Sleazy methods to fool const requirements (no less safe as modelPtr_ mutable)
     inline void setSpecialOptionsMutable(int value) const
   { specialOptions_=value;};
-   void enableFactorization() const;
-   void disableFactorization() const;
 
   ///Returns true if a basis is available
   virtual bool basisIsAvailable() {return true;};

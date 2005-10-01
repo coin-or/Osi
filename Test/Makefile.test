@@ -136,7 +136,7 @@ TESTSRC += OsiCutsTest.cpp
 TESTSRC += OsiRowCutDebuggerTest.cpp
 TESTSRC += OsiRowCutTest.cpp
 TESTSRC += OsiSolverInterfaceTest.cpp
-TESTSRC += OsiSimplexInterfaceTest.cpp
+#TESTSRC += OsiSimplexInterfaceTest.cpp
 TESTSRC += unitTest.cpp
 
 ##############################################################################

@@ -5,7 +5,7 @@ LibType := SHARED
 # highest level of optimization the compiler supports. If want something in
 # between then specify the exact level you want, e.g., -O1 or -O2
 OptLevel := -O
-#OptLevel := -g
+OptLevel := -g
 
 # Look at the ${CoinDir}/Makefiles/Makefile.location file and edit
 # the location of the various libraries
@@ -23,7 +23,7 @@ LIBSRC += OsiColCut.cpp
 LIBSRC += OsiRowCut.cpp
 LIBSRC += OsiRowCutDebugger.cpp
 LIBSRC += OsiCuts.cpp
-LIBSRC += OsiSimplexInterface.cpp
+#LIBSRC += OsiSimplexInterface.cpp
 LIBSRC += OsiPresolve.cpp
 
 LIBSRC += OsiSolverInterface.cpp

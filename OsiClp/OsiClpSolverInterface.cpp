@@ -2634,6 +2634,8 @@ OsiClpSolverInterface::disableSimplexInterface()
 void 
 OsiClpSolverInterface::enableFactorization() const
 {
+  if ((specialOptions_&&1+8)!=1+8)
+    setSpecialOptionsMutable(1+8);
 #ifdef NDEBUG
   modelPtr_->startup(0);
 #else
@@ -3255,4 +3257,10 @@ OsiClpSolverInterface::synchronizeModel()
   if ((specialOptions_ &128)!=0) {
     modelPtr_->auxiliaryModel(63-2);
   }
+}
+// Returns true if has OsiSimplex methods
+bool 
+OsiClpSolverInterface::canDoSimplexInterface() const
+{
+  return true;
 }

@@ -21,6 +21,7 @@
 #include "CoinFinite.hpp"
 #include "CoinBuild.hpp"
 #include "CoinModel.hpp"
+#include "CoinLpIO.hpp"
 
 //#############################################################################
 // Hotstart related methods (primarily used in strong branching)
@@ -1043,6 +1044,117 @@ OsiSolverInterface::writeMpsNative(const char *filename,
    delete [] objective;
    delete[] integrality;
    return writer.writeMps(filename, 1 /*gzip it*/, formatType, numberAcross);
+}
+/***********************************************************************/
+int
+OsiSolverInterface::writeLpNative(const char *filename, 
+				  char const * const * const rowNames,
+				  char const * const * const columnNames,
+				  const double epsilon,
+				  const int numberAcross,
+				  const int decimals,
+				  const double objSense) const
+{
+   const int numcols = getNumCols();
+   char *integrality = new char[numcols];
+   bool hasInteger = false;
+
+   for (int i=0; i<numcols; i++) {
+     if (isInteger(i)) {
+       integrality[i] = 1;
+       hasInteger = true;
+     } else {
+       integrality[i] = 0;
+     }
+   }
+
+   // Get multiplier for objective function - default 1.0
+   double *objective = new double[numcols];
+   const double *curr_obj = getObjCoefficients();
+
+   if (objSense * getObjSense() < 0.0) {
+     for (int i=0; i<numcols; i++) {
+       objective[i] = - curr_obj[i];
+     }
+   }
+   else {
+     for (int i=0; i<numcols; i++) {
+       objective[i] = curr_obj[i];
+     }
+   }
+
+   CoinLpIO writer;
+   writer.setEpsilon(epsilon);
+   writer.setNumberAcross(numberAcross);
+   writer.setDecimals(decimals);
+
+   writer.setLpDataWithoutRowAndColNames(*getMatrixByRow(),
+		     getColLower(), getColUpper(),
+		     objective, hasInteger ? integrality : 0,
+		     getRowLower(), getRowUpper());
+
+   writer.setLpDataRowAndColNames(columnNames, rowNames);
+
+   //writer.print();
+   delete [] objective;
+   delete[] integrality;
+   return writer.writeLp(filename, epsilon, numberAcross, decimals);
+
+} /*writeLpNative */
+
+/*************************************************************************/
+int OsiSolverInterface::readLp(const char * filename, const double epsilon)
+{
+  CoinLpIO m;
+  m.readLp(filename, epsilon);
+
+  // set objective function offest
+  setDblParam(OsiObjOffset, 0);
+
+  // set problem name
+  setStrParam(OsiProbName, m.getProblemName());
+
+  // no errors
+  loadProblem(*m.getMatrixByRow(), m.getColLower(), m.getColUpper(),
+	      m.getObjCoefficients(), m.getRowLower(), m.getRowUpper());
+
+  const char *integer = m.integerColumns();
+  if (integer) {
+    int i, n = 0;
+    int nCols = m.getNumCols();
+    int *index = new int [nCols];
+    for (i=0; i<nCols; i++) {
+      if (integer[i]) {
+	index[n++] = i;
+      }
+    }
+    setInteger(index,n);
+    delete [] index;
+  }
+  return(0);
+} /* readLp */
+
+
+void OsiSolverInterface::writeLp(const char * filename,
+				    const char * extension,
+				    const double epsilon,
+				    const int numberAcross,
+				    const int decimals,
+				    const double objSense) const
+{
+  std::string f(filename);
+  std::string e(extension);
+  std::string fullname;
+  if (e!="") {
+    fullname = f + "." + e;
+  } else {
+    // no extension so no trailing period
+    fullname = f;
+  }
+  // Fall back on Osi version - without names
+  OsiSolverInterface::writeLpNative(fullname.c_str(), 
+				    NULL, NULL, epsilon, numberAcross,
+				    decimals, objSense);
 }
 
 // Pass in Message handler (not deleted at end)

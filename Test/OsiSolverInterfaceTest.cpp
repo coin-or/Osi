@@ -2522,6 +2522,37 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 	delete si2;
       }
         
+      // Test WriteLp
+      
+      {
+
+	OsiSolverInterface *  si1 = emptySi->clone(); 
+	OsiSolverInterface *  si2 = emptySi->clone(); 
+	si1->readMps(fn.c_str(),"mps");
+	si1->writeLpNative("test.lp",NULL,NULL,1.0e-9,10,8);
+	si1->writeLp("test2");
+	si2->readLp("test.lp");
+	bool solved = true;
+	try {
+	   si1->initialSolve();
+	}
+	catch (CoinError e) {
+	   if (e.className() != "OsiVolSolverInterface") {
+	      printf("Couldn't solve initial LP in testing WriteMps\n");
+	      abort();
+	   }
+	   solved = false;
+	}
+	if (solved) {
+	   si2->initialSolve();
+	   double soln = si1->getObjValue();       
+	   CoinRelFltEq eq(1.0e-8) ;
+	   assert( eq(soln,si2->getObjValue()));       
+	}
+	delete si1;
+	delete si2;
+      }
+        
       // Test collower
       basePv.setVector(base->getNumCols(),indices,base->getColLower());
       pv.setVector( si1->getNumCols(),indices, si1->getColLower());

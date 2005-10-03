@@ -967,6 +967,32 @@ public:
 		  const char ** rowNames, const char ** columnNames,
 		  int formatType=0,int numberAcross=2,
 		 double objSense=0.0) const ;
+/***********************************************************************/
+// Lp files 
+
+/** Write the problem into an Lp file of the given filename.
+    If objSense is non zero then -1.0 forces the code to write a
+    maximization objective and +1.0 to write a minimization one.
+    If 0.0 then solver can do what it wants */
+  void writeLp(const char *filename,
+               const char *extension = "lp",
+               const double epsilon = 1e-5,
+               const int numberAcross = 10,
+               const int decimals = 5,
+               const double objSense = 0.0) const;
+
+
+  /// writeLp with names
+  int writeLpNative(const char *filename,
+                    char const * const * const rowNames,
+                    char const * const * const columnNames,
+                    const double epsilon = 1.0e-5,
+                    const int numberAcross = 10,
+                    const int decimals = 5,
+                    const double objSense = 0.0) const;
+  /// Read file in LP format
+  int readLp(const char *filename, double epsilon = 1e-5);
+
   //@}
 
   //---------------------------------------------------------------------------

@@ -973,7 +973,8 @@ public:
 /** Write the problem into an Lp file of the given filename.
     If objSense is non zero then -1.0 forces the code to write a
     maximization objective and +1.0 to write a minimization one.
-    If 0.0 then solver can do what it wants */
+    If 0.0 then solver can do what it wants.
+    This version calls writeLpNative */
   void writeLp(const char *filename,
                const char *extension = "lp",
                const double epsilon = 1e-5,

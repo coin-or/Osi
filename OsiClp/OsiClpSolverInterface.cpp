@@ -875,6 +875,10 @@ void OsiClpSolverInterface::markHotStart()
       // only need to do this on second pass in CbcNode
       small->setLogLevel(0);
       small->dual();
+      if (keepModel&&!small->auxiliaryModel_) {
+        // put back
+        synchronizeModel();
+      }
       //if (small->numberIterations()>0)
       //printf("**** iterated small %d\n",small->numberIterations());
       //small->setLogLevel(0);

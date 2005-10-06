@@ -3281,8 +3281,11 @@ OsiClpSolverInterface::synchronizeModel()
   }
 }
 // Returns true if has OsiSimplex methods
-bool 
+/* Returns 1 if can just do getBInv etc
+   2 if has all OsiSimplex methods
+   and 0 if it has none */
+int
 OsiClpSolverInterface::canDoSimplexInterface() const
 {
-  return true;
+  return 2;
 }

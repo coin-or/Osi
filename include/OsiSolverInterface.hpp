@@ -1086,8 +1086,10 @@ public:
 public:
   ///@name OsiSimplexInterface methods 
   //@{
-  /// Returns true if has OsiSimplex methods
-  virtual bool canDoSimplexInterface() const;
+  /** Returns 1 if can just do getBInv etc
+      2 if has all OsiSimplex methods
+      and 0 if it has none */
+  virtual int canDoSimplexInterface() const;
   /**Enables normal operation of subsequent functions.
      This method is supposed to ensure that all typical things (like
      reduced costs, etc.) are updated when individual pivots are executed

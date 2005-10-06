@@ -2968,7 +2968,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
         std::string solverName;
         si->getStrParam(OsiSolverName,solverName);
         
-        if (si->canDoSimplexInterface()) {
+        if (si->canDoSimplexInterface()==2) {
           // solve an lp by hand
           
           std::string fn = mpsDir+"p0033";

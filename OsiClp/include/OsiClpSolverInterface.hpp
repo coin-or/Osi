@@ -59,8 +59,10 @@ public:
   
   ///Undo whatever setting changes the above method had to make
   virtual void disableSimplexInterface();
-  /// Returns true if has OsiSimplex methods
-  virtual bool canDoSimplexInterface() const;
+  /** Returns 1 if can just do getBInv etc
+      2 if has all OsiSimplex methods
+      and 0 if it has none */
+  virtual int canDoSimplexInterface() const;
   /** Tells solver that calls to getBInv etc are about to take place.
       Underlying code may need mutable as this may be called from 
       CglCut:;generateCuts which is const.  If that is too horrific then

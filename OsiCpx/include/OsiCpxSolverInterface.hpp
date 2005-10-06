@@ -1,4 +1,5 @@
 //  LAST EDIT: Fri Aug 31 13:54:15 2001 by Tobias Pfender (opt14!bzfpfend) 
+//  Last edit to OsiSimplexMethods: 10/6/05 by F. Margot
 //-----------------------------------------------------------------------------
 // name:     OSI Interface for CPLEX
 // author:   Tobias Pfender
@@ -571,6 +572,7 @@ public:
     virtual void writeMps(const char *filename,
 			  const char *extension = "mps",
                           double objSense=0.0) const;
+
   //@}
 
   //---------------------------------------------------------------------------
@@ -662,6 +664,82 @@ public:
   virtual void reset();
   //@}
   
+/***************************************************************************/
+  ///@name OsiSimplexInterface methods 
+  //@{
+
+  /**
+    Cplex adds a slack with coeff +1 in "<=" and "=" constraints, 
+    with coeff -1 in ">=", 
+    slack being non negative. We switch in order to get a "Clp tableau" 
+    where all the slacks have coefficient +1 in the original tableau.
+
+    If a slack for ">=" is non basic, invB is not changed; 
+    column of the slack in the optimal tableau is flipped.
+
+    If a slack for ">=" is basic, corresp. row of invB is flipped; 
+    whole row of the optimal tableau is flipped; 
+    then whole column for the slack in opt tableau is flipped. 
+
+    Ranged rows are not supported. It might work, but no garantee is given.
+
+    Code implemented only for Cplex9.0 and higher, lower version number of
+    Cplex will abort the code.
+  */
+  /** Returns 1 if can just do getBInv etc
+      2 if has all OsiSimplex methods
+      and 0 if it has none */
+  virtual int canDoSimplexInterface() const;
+
+  /** Useless function, defined only for compatibility with 
+     OsiSimplexInterface
+  */
+  virtual void enableSimplexInterface(int doingPrimal) {};
+
+  /** Useless function, defined only for compatibility with 
+     OsiSimplexInterface
+  */
+  virtual void disableSimplexInterface() {};
+
+  /** Useless function, defined only for compatibility with 
+     OsiSimplexInterface
+  */
+  virtual void enableFactorization() const {};
+
+  /** Useless function, defined only for compatibility with 
+     OsiSimplexInterface
+  */
+  virtual void disableFactorization() const {};
+
+  ///Returns true if a basis is available
+  virtual bool basisIsAvailable();
+
+  /** Returns a basis status of the structural/artificial variables 
+     At present as warm start i.e 0: free, 1: basic, 2: upper, 3: lower
+  */
+   virtual void getBasisStatus(int* cstat, int* rstat) const;
+
+  ///Get a row of the tableau (slack part in slack if not NULL)
+  virtual void getBInvARow(int row, double* z, double * slack=NULL) const;
+
+  ///Get a row of the basis inverse
+  virtual void getBInvRow(int row, double* z) const;
+
+  ///Get a column of the tableau
+  virtual void getBInvACol(int col, double* vec) const;
+
+  ///Get a column of the basis inverse
+  virtual void getBInvCol(int col, double* vec) const;
+
+  /**  Get indices of the pivot variable in each row
+      (order of indices corresponds to the
+      order of elements in a vector retured by getBInvACol() and
+      getBInvCol()).
+  */
+  virtual void getBasics(int* index) const;
+  //@}
+/***************************************************************************/
+
 protected:
   
   /**@name Protected methods */

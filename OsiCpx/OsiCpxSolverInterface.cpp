@@ -1,4 +1,5 @@
 //  LAST EDIT: Tue Nov 27 16:30:04 CET 2001 by Laszlo Ladanyi
+//  Last edit to OsiSimplexMethods: 10/6/05 by F. Margot
 //-----------------------------------------------------------------------------
 // name:     OSI Interface for CPLEX
 // author:   Tobias Pfender
@@ -2903,3 +2904,384 @@ OsiCpxSolverInterface::reset()
   setInitialData(); // clear base class
   gutsOfDestructor();
 }
+#if CPX_VERSION >= 900
+/**********************************************************************/
+/* Returns 1 if can just do getBInv etc
+   2 if has all OsiSimplex methods
+   and 0 if it has none */
+int OsiCpxSolverInterface::canDoSimplexInterface() const {
+  return  1;
+}
+
+/**********************************************************************/
+bool OsiCpxSolverInterface::basisIsAvailable() {
+  CPXLPptr lp = getMutableLpPtr();
+
+  int solnmethod, solntype, pfeasind, dfeasind;
+
+  int status = CPXsolninfo (env_, lp, &solnmethod, &solntype,
+			    &pfeasind, &dfeasind);
+  if(status) {
+    return false;
+  }
+  if(solntype == CPX_BASIC_SOLN) {
+    return true;
+  }
+  return false;
+}
+
+/**********************************************************************/
+/* CPLEX return codes: 
+For cstat:
+CPX_AT_LOWER   0 : variable at lower bound 
+CPX_BASIC      1 : variable is basic 
+CPX_AT_UPPER   2 : variable at upper bound 
+CPX_FREE_SUPER 3 : variable free and non-basic 
+
+For rstat:
+
+Non ranged rows:
+CPX_AT_LOWER 0 : associated slack/surplus/artificial variable non-basic 
+                 at value 0.0 
+CPX_BASIC    1 : associated slack/surplus/artificial variable basic 
+
+Ranged rows:
+CPX_AT_LOWER 0 : associated slack/surplus/artificial variable non-basic 
+                 at its lower bound 
+CPX_BASIC    1 : associated slack/surplus/artificial variable basic 
+CPX_AT_UPPER 2 : associated slack/surplus/artificial variable non-basic 
+                 at upper bound 
+
+Cplex adds a slack with coeff +1 in <= and =, with coeff -1 in >=, slack being
+non negative. We switch in order to get a "Clp tableau" where all the
+slacks have coeff +1.
+
+If a slack for >= is non basic, invB is not changed; column of the slack in
+opt tableau is flipped.
+
+If slack for >= is basic, corresp. row of invB is flipped; whole row of opt 
+tableau is flipped; then whole column for the slack in opt tableau is flipped. 
+*/
+
+/* Osi return codes:
+0: free  
+1: basic  
+2: upper 
+3: lower
+*/
+
+void OsiCpxSolverInterface::getBasisStatus(int* cstat, int* rstat) const {
+  CPXLPptr lp = getMutableLpPtr();
+  int status = CPXgetbase(env_, lp, cstat, rstat);
+  if(status) {
+    printf("### ERROR: OsiCpxSolverInterface::getBInvARow(): Unable to get base\n");
+    exit(1);
+  }
+
+  int ncol = getNumCols();
+  int nrow = getNumRows();
+  const double *dual = getRowPrice();
+
+  char *sense = new char[nrow];
+  status = CPXgetsense(env_, lp, sense, 0, nrow-1);
+
+  if(status) {
+    printf("### ERROR: OsiCpxSolverInterface::getBInvARow(): Unable to get sense for the rows\n");
+    exit(1);
+  }
+
+  for(int i=0; i<ncol; i++) {
+    switch(cstat[i]) {
+    case 0: cstat[i] = 3; break;
+    case 1: break;
+    case 2: break;
+    case 3: cstat[i] = 0; break;
+    default: printf("### ERROR: OsiCpxSolverInterface::getBasisStatus(): unknown column status: %d\n", cstat[i]); break;
+    }
+  }
+
+  for(int i=0; i<nrow; i++) {
+    switch(rstat[i]) {
+    case 0: 
+      rstat[i] = 3;
+
+      if(sense[i] == 'E') {
+	if(dual[i] > 0) {
+	  rstat[i] = 2;
+	}
+      }
+
+      if(sense[i] == 'G') {
+	rstat[i] = 2;
+      }
+
+      break;
+
+    case 1: break;
+    case 2: 
+      if(sense[i] == 'E') {
+	if(dual[i] > 0) {
+	  rstat[i] = 2;
+	}
+	else {
+	  rstat[i] = 3;
+	}
+      }
+
+#ifdef MYOSICPX_CHECK
+      if(sense[i] == 'G') {
+	printf("### ERROR: OsiCpxSolverInterface::getBasisStatus(): unexpected sense 'G'\n");
+	exit(1);
+      }
+#endif
+
+      break;
+    default: printf("### ERROR: OsiCpxSolverInterface::getBasisStatus(): unknown row status: %d\n", rstat[i]); break;
+    }    
+  }
+  delete[] sense;
+}
+  
+/**********************************************************************/
+void OsiCpxSolverInterface::getBInvARow(int row, double* z, double * slack) 
+  const {
+
+  CPXLPptr lp = getMutableLpPtr();
+
+  int nrow = getNumRows();
+  int ncol = getNumCols();
+  char *sense =new char[nrow];
+  int status = CPXgetsense(env_, lp, sense, 0, nrow-1);
+  if(status) {
+    printf("### ERROR: OsiCpxSolverInterface::getBInvARow(): Unable to get senses for the rows\n");
+    exit(1);
+  }
+
+  status = CPXbinvarow(env_, lp, row, z);
+  if(status) {
+    printf("### ERROR: OsiCpxSolverInterface::getBInvARow(): Unable to get row %d of the tableau\n", row);
+    exit(1);
+  }
+
+  if(slack != NULL) {
+    status = CPXbinvrow(env_, lp, row, slack);
+    if(status) {
+      printf("### ERROR: OsiCpxSolverInterface::getBInvARow(): Unable to get row %d of B inverse\n", row);
+      exit(1);
+    }
+    for(int i=0; i<nrow; i++) {
+      if(sense[i] == 'G') {    // flip column of optimal tableau
+	slack[i] = -slack[i];
+      }
+    }
+  }
+
+  if(sense[row] == 'G') {
+    int *ind_bas = new int[nrow];
+    int ind_slack = ncol+row;
+    getBasics(ind_bas);
+    for(int i=0; i<nrow; i++) {
+      if(ind_bas[i] == ind_slack) {  // slack for row is basic; whole row
+                                     // must be flipped
+	for(int j=0; j<ncol; j++) {
+	  z[j] = -z[j];
+	}
+	if(slack != NULL) {
+	  for(int j=0; j<nrow; j++) {
+	    slack[j] = -slack[j];
+	  }
+	}
+      }
+      break;
+    }
+    delete[] ind_bas;
+  }
+  delete[] sense;
+} /* getBInvARow */
+
+/**********************************************************************/
+void OsiCpxSolverInterface::getBInvRow(int row, double* z) const {
+
+  CPXLPptr lp = getMutableLpPtr();
+
+  int nrow = getNumRows();
+  int ncol = getNumCols();
+
+  int status = CPXbinvrow(env_, lp, row, z);
+  if(status) {
+    printf("### ERROR: OsiCpxSolverInterface::getBInvRow(): Unable to get row %d of the basis inverse\n", row);
+    exit(1);
+  }
+  char sense;
+  status = CPXgetsense(env_, lp, &sense, row, row);
+  if(status) {
+    printf("### ERROR: OsiCpxSolverInterface::getBInvRow(): Unable to get senses for row %d\n", row);
+    exit(1);
+  }
+  
+  if(sense == 'G') {
+    int *ind_bas = new int[nrow];
+    getBasics(ind_bas);
+
+    for(int i=0; i<nrow; i++) {
+      int ind_piv = ind_bas[i] - ncol;
+      if(ind_piv == row) {  
+                           // slack has coeff -1 in Cplex and is basic; 
+                           // row of invB must be flipped
+
+	for(int j=0; j<ncol; j++) {
+	  z[j] = -z[j];
+	}
+	break;
+      }
+    }
+    delete[] ind_bas;
+  }
+} /* getBInvRow */
+ 
+/**********************************************************************/
+void OsiCpxSolverInterface::getBInvACol(int col, double* vec) const {
+
+  CPXLPptr lp = getMutableLpPtr();
+
+  int status = CPXbinvacol(env_, lp, col, vec);
+  if(status) {
+    printf("### ERROR: OsiCpxSolverInterface::getBInvACol(): Unable to get column %d of the tableau\n", col);
+    exit(1);
+  }
+
+  int nrow = getNumRows();
+  int ncol = getNumCols();
+  char *sense =new char[nrow];
+  status = CPXgetsense(env_, lp, sense, 0, nrow-1);
+  if(status) {
+    printf("### ERROR: OsiCpxSolverInterface::getBInvARow(): Unable to get senses for the rows\n");
+    exit(1);
+  }
+  int *ind_bas = new int[nrow];
+  getBasics(ind_bas);
+
+  for(int i=0; i<nrow; i++) {
+    if(sense[i] == 'G') {
+      int ind_slack = ncol+i;  
+      if(ind_bas[i] == ind_slack) {  // slack for row is basic; whole row
+                                     // must be flipped
+	vec[i] = -vec[i];
+      }
+    }
+  }
+  delete[] sense;
+  delete[] ind_bas;
+} /* getBInvACol */ 
+
+/**********************************************************************/
+void OsiCpxSolverInterface::getBInvCol(int col, double* vec) const {
+
+  CPXLPptr lp = getMutableLpPtr();
+
+  int status = CPXbinvcol(env_, lp, col, vec);
+  if(status) {
+    printf("### ERROR: OsiCpxSolverInterface::getBInvCol(): Unable to get column %d of the basis inverse\n", col);
+    exit(1);
+  }
+
+  int nrow = getNumRows();
+  int ncol = getNumCols();
+  char *sense =new char[nrow];
+  status = CPXgetsense(env_, lp, sense, 0, nrow-1);
+  if(status) {
+    printf("### ERROR: OsiCpxSolverInterface::getBInvARow(): Unable to get senses for the rows\n");
+    exit(1);
+  }
+  int *ind_bas = new int[nrow];
+  getBasics(ind_bas);
+
+  for(int i=0; i<nrow; i++) {
+    if(sense[i] == 'G') {
+      int ind_slack = ncol+i;  
+      if(ind_bas[i] == ind_slack) {  // slack for row i is basic; whole row
+                                     // must be flipped
+	vec[i] = -vec[i];
+      }
+    }
+  }
+  delete[] sense;
+  delete[] ind_bas;
+} /* getBInvCol */
+
+/**********************************************************************/
+void OsiCpxSolverInterface::getBasics(int* index) const {
+  int ncol = getNumCols();
+  int nrow = getNumRows();
+
+  CPXLPptr lp = getMutableLpPtr();
+
+  double *cplex_trash = new double[nrow];
+  int status = CPXgetbhead(env_, lp, index, cplex_trash);
+  if(status) {
+    printf("### ERROR: OsiCpxSolverInterface::getBasics(): Unable to get basis head\n");
+    exit(1);
+  }
+
+  for(int i=0; i<nrow; i++) {
+    if(index[i] < 0) {
+      index[i] = ncol - 1 - index[i];
+    }
+  }
+  delete[] cplex_trash;
+} /* getBasics */
+
+#else /* not CPX_VERSION >= 900 */
+
+/**********************************************************************/
+/* Returns 1 if can just do getBInv etc
+   2 if has all OsiSimplex methods
+   and 0 if it has none */
+int OsiCpxSolverInterface::canDoSimplexInterface() const {
+  return  0;
+}
+
+/**********************************************************************/
+bool OsiCpxSolverInterface::basisIsAvailable() {
+  printf("### ERROR: OsiCpxSolverInterface::basisIsAvailable(): Cplex version lower than 9.0\n");
+  exit(1);
+  return false;
+}
+
+/**********************************************************************/
+void OsiCpxSolverInterface::getBasisStatus(int* cstat, int* rstat) const {
+  printf("### ERROR: OsiCpxSolverInterface::getBasisStatus(): Cplex version lower than 9.0\n");
+  exit(1);
+}
+  
+/**********************************************************************/
+void OsiCpxSolverInterface::getBInvARow(int row, double* z, double * slack) 
+  const {
+  printf("### ERROR: OsiCpxSolverInterface::getBInvARow(): Cplex version lower than 9.0\n");
+  exit(1);
+} /* getBInvARow */
+
+/**********************************************************************/
+void OsiCpxSolverInterface::getBInvRow(int row, double* z) const {
+  printf("### ERROR: OsiCpxSolverInterface::getBInvRow(): Cplex version lower than 9.0\n");
+  exit(1);
+} /* getBInvRow */
+ 
+/**********************************************************************/
+void OsiCpxSolverInterface::getBInvACol(int col, double* vec) const {
+  printf("### ERROR: OsiCpxSolverInterface::getBInvACol(): Cplex version lower than 9.0\n");
+  exit(1);
+} /* getBInvACol */ 
+
+/**********************************************************************/
+void OsiCpxSolverInterface::getBInvCol(int col, double* vec) const {
+  printf("### ERROR: OsiCpxSolverInterface::getBInvCol(): Cplex version lower than 9.0\n");
+  exit(1);
+} /* getBInvCol */
+
+/**********************************************************************/
+void OsiCpxSolverInterface::getBasics(int* index) const {
+  printf("### ERROR: OsiCpxSolverInterface::getBasics(): Cplex version lower than 9.0\n");
+  exit(1);
+} /* getBasics */
+#endif /* not CPX_VERSION >= 900 */

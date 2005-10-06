@@ -2171,7 +2171,6 @@ OsiClpSolverInterface::getBasis(ClpSimplex * model) const
   int numberColumns = model->numberColumns();
   CoinWarmStartBasis basis;
   basis.setSize(numberColumns,numberRows);
-
   if (model->statusExists()) {
     // Flip slacks
     int lookupA[]={0,1,3,2,0,2};
@@ -2671,16 +2670,35 @@ OsiClpSolverInterface::disableFactorization() const
 void 
 OsiClpSolverInterface::getBasisStatus(int* cstat, int* rstat) const
 {
-  int i, n;
-  n=modelPtr_->numberRows();
+  int iRow,iColumn;
+  int numberRows = modelPtr_->numberRows();
+  int numberColumns = modelPtr_->numberColumns();
+  const double * pi = modelPtr_->dualRowSolution();
+  const double * dj = modelPtr_->dualColumnSolution();
+  double multiplier = modelPtr_->optimizationDirection();
   // Flip slacks
-  int lookupA[]={0,1,3,2,0,2};
-  for (i=0;i<n;i++) 
-    rstat[i] = lookupA[modelPtr_->getRowStatus(i)];
-  n=modelPtr_->numberColumns();
+  int lookupA[]={0,1,3,2,0,3};
+  for (iRow=0;iRow<numberRows;iRow++) {
+    int iStatus = modelPtr_->getRowStatus(iRow);
+    if (iStatus==5) {
+      // Fixed - look at reduced cost
+      if (pi[iRow]*multiplier>1.0e-7)
+        iStatus = 3;
+    }
+    iStatus = lookupA[iStatus];
+    rstat[iRow]=iStatus;
+  }
   int lookupS[]={0,1,2,3,0,3};
-  for (i=0;i<n;i++)
-    cstat[i] = lookupS[modelPtr_->getColumnStatus(i)];
+  for (iColumn=0;iColumn<numberColumns;iColumn++) {
+    int iStatus = modelPtr_->getColumnStatus(iColumn);
+    if (iStatus==5) {
+      // Fixed - look at reduced cost
+      if (dj[iColumn]*multiplier<-1.0e-7)
+        iStatus = 2;
+    }
+    iStatus = lookupS[iStatus];
+    cstat[iColumn]=iStatus;
+  }
 }
 
 //Set the status of structural/artificial variables 

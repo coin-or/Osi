@@ -74,7 +74,6 @@ void OsiClpSolverInterface::initialSolve()
         bool yesNo;
         OsiHintStrength strength;
         getHintParam((OsiHintParam) hint,yesNo,strength);
-        printf("hint %d yesNo %s strength %d\n",hint,yesNo ? "yes" : "no",strength);
         if (yesNo) {
           defaultHints=false;
           break;

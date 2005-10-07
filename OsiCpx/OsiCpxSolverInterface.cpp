@@ -2974,7 +2974,7 @@ void OsiCpxSolverInterface::getBasisStatus(int* cstat, int* rstat) const {
   CPXLPptr lp = getMutableLpPtr();
   int status = CPXgetbase(env_, lp, cstat, rstat);
   if(status) {
-    printf("### ERROR: OsiCpxSolverInterface::getBInvARow(): Unable to get base\n");
+    printf("### ERROR: OsiCpxSolverInterface::getBasisStatus(): Unable to get base\n");
     exit(1);
   }
 
@@ -2996,7 +2996,7 @@ void OsiCpxSolverInterface::getBasisStatus(int* cstat, int* rstat) const {
     case 1: break;
     case 2: break;
     case 3: cstat[i] = 0; break;
-    default: printf("### ERROR: OsiCpxSolverInterface::getBasisStatus(): unknown column status: %d\n", cstat[i]); break;
+    default: printf("### ERROR: OsiCpxSolverInterface::getBInvARow(): unknown column status: %d\n", cstat[i]); break;
     }
   }
 

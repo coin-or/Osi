@@ -59,172 +59,225 @@ void OsiClpSolverInterface::initialSolve()
     if (saveMessageLevel)
       solver.messageHandler()->setLogLevel(saveMessageLevel-1);
   }
-  // scaling
-  // save initial state
-  const double * rowScale1 = solver.rowScale();
-  if (modelPtr_->solveType()==1) {
-    gotHint = (getHintParam(OsiDoScale,takeHint,strength));
-    assert (gotHint);
-    if (strength==OsiHintIgnore||takeHint) {
-      if (!solver.scalingFlag())
-	solver.scaling(3);
-    } else {
-      solver.scaling(0);
-    }
-  } else {
-    solver.scaling(0);
-  }
-  //solver.setDualBound(1.0e6);
-  //solver.setDualTolerance(1.0e-7);
-
-  //ClpDualRowSteepest steep;
-  //solver.setDualRowPivotAlgorithm(steep);
-  //solver.setPrimalTolerance(1.0e-8);
-  //ClpPrimalColumnSteepest steepP;
-  //solver.setPrimalColumnPivotAlgorithm(steepP);
-  /*
-    If basis then do primal (as user could do dual with resolve)
-    If not then see if dual feasible (and allow for gubs etc?)
-   */
-  bool doPrimal = (basis_.numberBasicStructurals()>0);
-  setBasis(basis_,&solver);
   // Allow for specialOptions_==1+8 forcing saving factorization
   int startFinishOptions=0;
   if ((specialOptions_&9)==(1+8)) {
     startFinishOptions =1+2+4; // allow re-use of factorization
   }
-
-  // sort out hints;
-  // algorithm 0 whatever, -1 force dual, +1 force primal
-  int algorithm = 0;
-  gotHint = (getHintParam(OsiDoDualInInitial,takeHint,strength));
-  assert (gotHint);
-  if (strength!=OsiHintIgnore)
-    algorithm = takeHint ? -1 : 1;
-  // crash 0 do lightweight if all slack, 1 do, -1 don't
-  int doCrash=0;
-  gotHint = (getHintParam(OsiDoCrash,takeHint,strength));
-  assert (gotHint);
-  if (strength!=OsiHintIgnore)
-    doCrash = takeHint ? 1 : -1;
-  // doPrimal set true if any structurals in basis so switch off crash
-  if (doPrimal)
-    doCrash = -1;
-	 
-  // presolve
-  gotHint = (getHintParam(OsiDoPresolveInInitial,takeHint,strength));
-  assert (gotHint);
-  if (strength!=OsiHintIgnore&&takeHint) {
-    ClpPresolve pinfo;
-    ClpSimplex * model2 = pinfo.presolvedModel(solver,1.0e-8);
-    if (!model2) {
-      // problem found to be infeasible - whats best?
-      model2 = &solver;
+  bool defaultHints=true;
+  bool allSlack=true;
+  {
+    int hint;
+    for (hint=OsiDoPresolveInInitial;hint<OsiLastHintParam;hint++) {
+      if (hint!=OsiDoReducePrint&&
+          hint!=OsiDoInBranchAndCut) {
+        bool yesNo;
+        OsiHintStrength strength;
+        getHintParam((OsiHintParam) hint,yesNo,strength);
+        printf("hint %d yesNo %s strength %d\n",hint,yesNo ? "yes" : "no",strength);
+        if (yesNo) {
+          defaultHints=false;
+          break;
+        }
+        if (strength != OsiHintIgnore) {
+          defaultHints=false;
+          break;
+        }
+      }
     }
-      
-    // change from 200 (unless changed)
-    if (model2->factorization()->maximumPivots()==200)
-      model2->factorization()->maximumPivots(100+model2->numberRows()/50);
-    int savePerturbation = model2->perturbation();
-    if (savePerturbation==100)
-      model2->setPerturbation(50);
-    if (!doPrimal) {
-      // faster if bounds tightened
-      //int numberInfeasibilities = model2->tightenPrimalBounds();
-      model2->tightenPrimalBounds();
-      // look further
-      bool crashResult=false;
-      if (doCrash>0)
-	crashResult =  (solver.crash(1000.0,1)>0);
-      else if (doCrash==0&&algorithm>0)
-	crashResult =  (solver.crash(1000.0,1)>0);
-      doPrimal=crashResult;
+    if (defaultHints) {
+      int i;
+      int n=solver.numberRows();
+      for (i=0;i<n;i++) {
+        if (solver.getRowStatus(i)!=ClpSimplex::basic) {
+          allSlack=false;
+          break;
+        }
+      }
     }
-    if (algorithm<0)
-      doPrimal=false;
-    else if (algorithm>0)
-      doPrimal=true;
-    if (!doPrimal) {
-      //if (numberInfeasibilities)
-      //std::cout<<"** Analysis indicates model infeasible"
-      //       <<std::endl;
-      // up dual bound for safety
-      //model2->setDualBound(1.0e11);
-      model2->dual(0);
-      // check if clp thought it was in a loop
-      if (model2->status()==3&&!model2->hitMaximumIterations()) {
-	// switch algorithm
-	model2->primal();
+  }
+  if (!defaultHints||!allSlack) {
+    // scaling
+    // save initial state
+    const double * rowScale1 = solver.rowScale();
+    if (modelPtr_->solveType()==1) {
+      gotHint = (getHintParam(OsiDoScale,takeHint,strength));
+      assert (gotHint);
+      if (strength==OsiHintIgnore||takeHint) {
+        if (!solver.scalingFlag())
+          solver.scaling(3);
+      } else {
+        solver.scaling(0);
       }
     } else {
-      // up infeasibility cost for safety
-      //model2->setInfeasibilityCost(1.0e10);
-      model2->primal(1);
-      // check if clp thought it was in a loop
-      if (model2->status()==3&&!model2->hitMaximumIterations()) {
-	// switch algorithm
-	model2->dual();
-      }
+      solver.scaling(0);
     }
-    model2->setPerturbation(savePerturbation);
-    if (model2!=&solver) {
-      int numberIterations = model2->numberIterations();
-      pinfo.postsolve(true);
+    //solver.setDualBound(1.0e6);
+    //solver.setDualTolerance(1.0e-7);
     
-      delete model2;
-      //printf("Resolving from postsolved model\n");
-      // later try without (1) and check duals before solve
-      solver.primal(1);
-      solver.setNumberIterations(solver.numberIterations()+numberIterations);
-    }
-    lastAlgorithm_=1; // primal
-    //if (solver.numberIterations())
-    //printf("****** iterated %d\n",solver.numberIterations());
-  } else {
-    // do we want crash
-    if (doCrash>0)
-      solver.crash(1000.0,2);
-    else if (doCrash==0)
-      solver.crash(1000.0,0);
-    if (algorithm<0)
-      doPrimal=false;
-    else if (algorithm>0)
-      doPrimal=true;
-    if (!doPrimal) {
-      //printf("doing dual\n");
-      solver.dual(0);
-      lastAlgorithm_=2; // dual
-      // check if clp thought it was in a loop
-      if (solver.status()==3&&!solver.hitMaximumIterations()) {
-	// switch algorithm
-	solver.primal(0);
-	lastAlgorithm_=1; // primal
+    //ClpDualRowSteepest steep;
+    //solver.setDualRowPivotAlgorithm(steep);
+    //solver.setPrimalTolerance(1.0e-8);
+    //ClpPrimalColumnSteepest steepP;
+    //solver.setPrimalColumnPivotAlgorithm(steepP);
+    /*
+      If basis then do primal (as user could do dual with resolve)
+      If not then see if dual feasible (and allow for gubs etc?)
+    */
+    bool doPrimal = (basis_.numberBasicStructurals()>0);
+    setBasis(basis_,&solver);
+    
+    // sort out hints;
+    // algorithm 0 whatever, -1 force dual, +1 force primal
+    int algorithm = 0;
+    gotHint = (getHintParam(OsiDoDualInInitial,takeHint,strength));
+    assert (gotHint);
+    if (strength!=OsiHintIgnore)
+      algorithm = takeHint ? -1 : 1;
+    // crash 0 do lightweight if all slack, 1 do, -1 don't
+    int doCrash=0;
+    gotHint = (getHintParam(OsiDoCrash,takeHint,strength));
+    assert (gotHint);
+    if (strength!=OsiHintIgnore)
+      doCrash = takeHint ? 1 : -1;
+    // doPrimal set true if any structurals in basis so switch off crash
+    if (doPrimal)
+      doCrash = -1;
+    
+    // presolve
+    gotHint = (getHintParam(OsiDoPresolveInInitial,takeHint,strength));
+    assert (gotHint);
+    if (strength!=OsiHintIgnore&&takeHint) {
+      ClpPresolve pinfo;
+      ClpSimplex * model2 = pinfo.presolvedModel(solver,1.0e-8);
+      if (!model2) {
+        // problem found to be infeasible - whats best?
+        model2 = &solver;
       }
-    } else {
-      //printf("doing primal\n");
-      solver.primal(0);
+      
+      // change from 200 (unless changed)
+      if (model2->factorization()->maximumPivots()==200)
+        model2->factorization()->maximumPivots(100+model2->numberRows()/50);
+      int savePerturbation = model2->perturbation();
+      if (savePerturbation==100)
+        model2->setPerturbation(50);
+      if (!doPrimal) {
+        // faster if bounds tightened
+        //int numberInfeasibilities = model2->tightenPrimalBounds();
+        model2->tightenPrimalBounds();
+        // look further
+        bool crashResult=false;
+        if (doCrash>0)
+          crashResult =  (solver.crash(1000.0,1)>0);
+        else if (doCrash==0&&algorithm>0)
+          crashResult =  (solver.crash(1000.0,1)>0);
+        doPrimal=crashResult;
+      }
+      if (algorithm<0)
+        doPrimal=false;
+      else if (algorithm>0)
+        doPrimal=true;
+      if (!doPrimal) {
+        //if (numberInfeasibilities)
+        //std::cout<<"** Analysis indicates model infeasible"
+        //       <<std::endl;
+        // up dual bound for safety
+        //model2->setDualBound(1.0e11);
+        model2->dual(0);
+        // check if clp thought it was in a loop
+        if (model2->status()==3&&!model2->hitMaximumIterations()) {
+          // switch algorithm
+          model2->primal();
+        }
+      } else {
+        // up infeasibility cost for safety
+        //model2->setInfeasibilityCost(1.0e10);
+        model2->primal(1);
+        // check if clp thought it was in a loop
+        if (model2->status()==3&&!model2->hitMaximumIterations()) {
+          // switch algorithm
+          model2->dual();
+        }
+      }
+      model2->setPerturbation(savePerturbation);
+      if (model2!=&solver) {
+        int numberIterations = model2->numberIterations();
+        pinfo.postsolve(true);
+        
+        delete model2;
+        //printf("Resolving from postsolved model\n");
+        // later try without (1) and check duals before solve
+        solver.primal(1);
+        solver.setNumberIterations(solver.numberIterations()+numberIterations);
+      }
       lastAlgorithm_=1; // primal
-      // check if clp thought it was in a loop
-      if (solver.status()==3&&!solver.hitMaximumIterations()) {
-	// switch algorithm
-	solver.dual(0);
-	lastAlgorithm_=2; // dual
+      //if (solver.numberIterations())
+      //printf("****** iterated %d\n",solver.numberIterations());
+    } else {
+      // do we want crash
+      if (doCrash>0)
+        solver.crash(1000.0,2);
+      else if (doCrash==0)
+        solver.crash(1000.0,0);
+      if (algorithm<0)
+        doPrimal=false;
+      else if (algorithm>0)
+        doPrimal=true;
+      if (!doPrimal) {
+        //printf("doing dual\n");
+        solver.dual(0);
+        lastAlgorithm_=2; // dual
+        // check if clp thought it was in a loop
+        if (solver.status()==3&&!solver.hitMaximumIterations()) {
+          // switch algorithm
+          solver.primal(0);
+          lastAlgorithm_=1; // primal
+        }
+      } else {
+        //printf("doing primal\n");
+        solver.primal(0);
+        lastAlgorithm_=1; // primal
+        // check if clp thought it was in a loop
+        if (solver.status()==3&&!solver.hitMaximumIterations()) {
+          // switch algorithm
+          solver.dual(0);
+          lastAlgorithm_=2; // dual
+        }
       }
     }
-  }
-  // If scaled feasible but unscaled infeasible take action
-  if (!solver.status()&&cleanupScaling_) {
-    solver.cleanup(cleanupScaling_);
-  }
-  basis_ = getBasis(&solver);
-  //basis_.print();
-  solver.messageHandler()->setLogLevel(saveMessageLevel);
-  const double * rowScale2 = solver.rowScale();
-  solver.setSpecialOptions(saveOptions);
-  if (!rowScale1&&rowScale2) {
-    // need to release memory
-    solver.setRowScale(NULL);
-    solver.setColumnScale(NULL);
+    // If scaled feasible but unscaled infeasible take action
+    if (!solver.status()&&cleanupScaling_) {
+      solver.cleanup(cleanupScaling_);
+    }
+    basis_ = getBasis(&solver);
+    //basis_.print();
+    solver.messageHandler()->setLogLevel(saveMessageLevel);
+    const double * rowScale2 = solver.rowScale();
+    solver.setSpecialOptions(saveOptions);
+    if (!rowScale1&&rowScale2) {
+      // need to release memory
+      solver.setRowScale(NULL);
+      solver.setColumnScale(NULL);
+    }
+  } else {
+    // User doing nothing and all slack basis
+    ClpSolve options;
+    // But switch off odder ideas
+    options.setSpecialOption(1,4);
+    bool yesNo;
+    OsiHintStrength strength;
+    getHintParam(OsiDoInBranchAndCut,yesNo,strength);
+    if (yesNo) {
+      solver.setSpecialOptions(solver.specialOptions()|1024);
+    }
+    solver.initialSolve(options);
+    // If scaled feasible but unscaled infeasible take action
+    if (!solver.status()&&cleanupScaling_) {
+      solver.cleanup(cleanupScaling_);
+    }
+    basis_ = getBasis(&solver);
+    //basis_.print();
+    solver.messageHandler()->setLogLevel(saveMessageLevel);
   }
   solver.returnModel(*modelPtr_);
   if (startFinishOptions) {

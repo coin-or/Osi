@@ -1,5 +1,5 @@
 //  LAST EDIT: Fri Aug 31 13:54:15 2001 by Tobias Pfender (opt14!bzfpfend) 
-//  Last edit to OsiSimplexMethods: 10/6/05 by F. Margot
+//  Last edit to OsiSimplexMethods: 10/7/05 by F. Margot
 //-----------------------------------------------------------------------------
 // name:     OSI Interface for CPLEX
 // author:   Tobias Pfender
@@ -665,10 +665,7 @@ public:
   //@}
   
 /***************************************************************************/
-  ///@name OsiSimplexInterface methods 
-  //@{
-
-  /**
+  /**@name OsiSimplexInterface methods 
     Cplex adds a slack with coeff +1 in "<=" and "=" constraints, 
     with coeff -1 in ">=", 
     slack being non negative. We switch in order to get a "Clp tableau" 
@@ -686,6 +683,8 @@ public:
     Code implemented only for Cplex9.0 and higher, lower version number of
     Cplex will abort the code.
   */
+  //@{
+
   /** Returns 1 if can just do getBInv etc
       2 if has all OsiSimplex methods
       and 0 if it has none */
@@ -900,3 +899,4 @@ private:
 void OsiCpxSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 #endif
+

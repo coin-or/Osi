@@ -1053,7 +1053,8 @@ OsiSolverInterface::writeLpNative(const char *filename,
 				  const double epsilon,
 				  const int numberAcross,
 				  const int decimals,
-				  const double objSense) const
+				  const double objSense,
+                                  bool changeNameOnRange) const
 {
    const int numcols = getNumCols();
    char *integrality = new char[numcols];
@@ -1098,7 +1099,7 @@ OsiSolverInterface::writeLpNative(const char *filename,
    //writer.print();
    delete [] objective;
    delete[] integrality;
-   return writer.writeLp(filename, epsilon, numberAcross, decimals);
+   return writer.writeLp(filename, epsilon, numberAcross, decimals, changeNameOnRange);
 
 } /*writeLpNative */
 
@@ -1140,7 +1141,8 @@ void OsiSolverInterface::writeLp(const char * filename,
 				    const double epsilon,
 				    const int numberAcross,
 				    const int decimals,
-				    const double objSense) const
+				    const double objSense,
+                                 bool changeNameOnRange) const
 {
   std::string f(filename);
   std::string e(extension);
@@ -1154,7 +1156,7 @@ void OsiSolverInterface::writeLp(const char * filename,
   // Fall back on Osi version - without names
   OsiSolverInterface::writeLpNative(fullname.c_str(), 
 				    NULL, NULL, epsilon, numberAcross,
-				    decimals, objSense);
+				    decimals, objSense,changeNameOnRange);
 }
 
 // Pass in Message handler (not deleted at end)

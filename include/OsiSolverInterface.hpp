@@ -980,7 +980,8 @@ public:
                const double epsilon = 1e-5,
                const int numberAcross = 10,
                const int decimals = 5,
-               const double objSense = 0.0) const;
+               const double objSense = 0.0,
+               bool changeNameOnRange=false) const;
 
 
   /// writeLp with names
@@ -990,7 +991,8 @@ public:
                     const double epsilon = 1.0e-5,
                     const int numberAcross = 10,
                     const int decimals = 5,
-                    const double objSense = 0.0) const;
+                    const double objSense = 0.0,
+                    bool changeNameOnRange=false) const;
   /// Read file in LP format
   int readLp(const char *filename, double epsilon = 1e-5);
 

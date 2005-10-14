@@ -2986,7 +2986,7 @@ void OsiCpxSolverInterface::getBasisStatus(int* cstat, int* rstat) const {
   status = CPXgetsense(env_, lp, sense, 0, nrow-1);
 
   if(status) {
-    printf("### ERROR: OsiCpxSolverInterface::getBInvARow(): Unable to get sense for the rows\n");
+    printf("### ERROR: OsiCpxSolverInterface::getBasisStatus(): Unable to get sense for the rows\n");
     exit(1);
   }
 
@@ -2996,7 +2996,7 @@ void OsiCpxSolverInterface::getBasisStatus(int* cstat, int* rstat) const {
     case 1: break;
     case 2: break;
     case 3: cstat[i] = 0; break;
-    default: printf("### ERROR: OsiCpxSolverInterface::getBInvARow(): unknown column status: %d\n", cstat[i]); break;
+    default: printf("### ERROR: OsiCpxSolverInterface::getBasisStatus(): unknown column status: %d\n", cstat[i]); break;
     }
   }
 
@@ -3155,7 +3155,7 @@ void OsiCpxSolverInterface::getBInvACol(int col, double* vec) const {
   char *sense =new char[nrow];
   status = CPXgetsense(env_, lp, sense, 0, nrow-1);
   if(status) {
-    printf("### ERROR: OsiCpxSolverInterface::getBInvARow(): Unable to get senses for the rows\n");
+    printf("### ERROR: OsiCpxSolverInterface::getBInvACol(): Unable to get senses for the rows\n");
     exit(1);
   }
   int *ind_bas = new int[nrow];
@@ -3190,7 +3190,7 @@ void OsiCpxSolverInterface::getBInvCol(int col, double* vec) const {
   char *sense =new char[nrow];
   status = CPXgetsense(env_, lp, sense, 0, nrow-1);
   if(status) {
-    printf("### ERROR: OsiCpxSolverInterface::getBInvARow(): Unable to get senses for the rows\n");
+    printf("### ERROR: OsiCpxSolverInterface::getBInvCol(): Unable to get senses for the rows\n");
     exit(1);
   }
   int *ind_bas = new int[nrow];

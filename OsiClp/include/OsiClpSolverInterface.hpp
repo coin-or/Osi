@@ -936,9 +936,9 @@ protected:
   */
   int * whichRange_;
 
-  std::map<OsiIntParam, ClpIntParam> intParamMap_;
-  std::map<OsiDblParam, ClpDblParam> dblParamMap_;
-  std::map<OsiStrParam, ClpStrParam> strParamMap_;
+  //std::map<OsiIntParam, ClpIntParam> intParamMap_;
+  //std::map<OsiDblParam, ClpDblParam> dblParamMap_;
+  //std::map<OsiStrParam, ClpStrParam> strParamMap_;
   
   /// To save data in OsiSimplex stuff
   ClpDataSave saveData_;

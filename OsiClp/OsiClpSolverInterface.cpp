@@ -514,7 +514,7 @@ void OsiClpSolverInterface::resolve()
       assert (modelPtr_->objectiveValue()<1.0e100);
     } else {
       //printf("doing primal\n");
-      modelPtr_->primal(0,startFinishOptions);
+      modelPtr_->primal(1,startFinishOptions);
       lastAlgorithm_=1; // primal
       // check if clp thought it was in a loop
       if (modelPtr_->status()==3&&!modelPtr_->hitMaximumIterations()) {
@@ -608,12 +608,7 @@ static void indexError(int index,
 bool
 OsiClpSolverInterface::setIntParam(OsiIntParam key, int value)
 {
-   std::map<OsiIntParam, ClpIntParam>::const_iterator clpkey =
-      intParamMap_.find(key);
-   if (clpkey != intParamMap_.end() ) {
-      return modelPtr_->setIntParam(clpkey->second, value);
-   }
-   return false;
+  return modelPtr_->setIntParam((ClpIntParam) key, value);
 }
 
 //-----------------------------------------------------------------------------
@@ -621,14 +616,13 @@ OsiClpSolverInterface::setIntParam(OsiIntParam key, int value)
 bool
 OsiClpSolverInterface::setDblParam(OsiDblParam key, double value)
 {
-   std::map<OsiDblParam, ClpDblParam>::const_iterator clpkey =
-      dblParamMap_.find(key);
-   if (clpkey != dblParamMap_.end() ) {
-     if (key==OsiDualObjectiveLimit||key==OsiPrimalObjectiveLimit)
-       value = modelPtr_->optimizationDirection()*value;
-      return modelPtr_->setDblParam(clpkey->second, value);
-   }
-   return false;
+  if (key != OsiLastDblParam ) {
+    if (key==OsiDualObjectiveLimit||key==OsiPrimalObjectiveLimit)
+      value *= modelPtr_->optimizationDirection();
+    return modelPtr_->setDblParam((ClpDblParam) key, value);
+  } else {
+    return false;
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -636,12 +630,12 @@ OsiClpSolverInterface::setDblParam(OsiDblParam key, double value)
 bool
 OsiClpSolverInterface::setStrParam(OsiStrParam key, const std::string & value)
 {
-   std::map<OsiStrParam, ClpStrParam>::const_iterator clpkey =
-      strParamMap_.find(key);
-   if (clpkey != strParamMap_.end() ) {
-      return modelPtr_->setStrParam(clpkey->second, value);
-   }
-   return false;
+  assert (key!=OsiSolverName);
+  if (key != OsiLastStrParam ) {
+    return modelPtr_->setStrParam((ClpStrParam) key, value);
+  } else {
+    return false;
+  }
 }
 
 
@@ -650,12 +644,7 @@ OsiClpSolverInterface::setStrParam(OsiStrParam key, const std::string & value)
 bool
 OsiClpSolverInterface::getIntParam(OsiIntParam key, int& value) const 
 {
-   std::map<OsiIntParam, ClpIntParam>::const_iterator clpkey =
-      intParamMap_.find(key);
-   if (clpkey != intParamMap_.end() ) {
-      return modelPtr_->getIntParam(clpkey->second, value);
-   }
-   return false;
+  return modelPtr_->getIntParam((ClpIntParam) key, value);
 }
 
 //-----------------------------------------------------------------------------
@@ -663,15 +652,14 @@ OsiClpSolverInterface::getIntParam(OsiIntParam key, int& value) const
 bool
 OsiClpSolverInterface::getDblParam(OsiDblParam key, double& value) const
 {
-   std::map<OsiDblParam, ClpDblParam>::const_iterator clpkey =
-      dblParamMap_.find(key);
-   if (clpkey != dblParamMap_.end() ) {
-      bool condition =  modelPtr_->getDblParam(clpkey->second, value);
-      if (key==OsiDualObjectiveLimit||key==OsiPrimalObjectiveLimit)
-	value = modelPtr_->optimizationDirection()*value;
-      return condition;
-   }
-   return false;
+  if (key != OsiLastDblParam ) {
+    bool condition =  modelPtr_->getDblParam((ClpDblParam) key, value);
+    if (key==OsiDualObjectiveLimit||key==OsiPrimalObjectiveLimit)
+      value *= modelPtr_->optimizationDirection();
+    return condition;
+  } else {
+    return false;
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -683,12 +671,11 @@ OsiClpSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
     value = "clp";
     return true;
   }
-   std::map<OsiStrParam, ClpStrParam>::const_iterator clpkey =
-      strParamMap_.find(key);
-   if (clpkey != strParamMap_.end() ) {
-      return modelPtr_->getStrParam(clpkey->second, value);
-   }
-   return false;
+  if (key != OsiLastStrParam ) {
+    return modelPtr_->getStrParam((ClpStrParam) key, value);
+  } else {
+    return false;
+  }
 }
 
 
@@ -1991,9 +1978,7 @@ OsiClpSolverInterface::operator=(const OsiClpSolverInterface& rhs)
     smallestChangeInCut_ = rhs.smallestChangeInCut_;
     assert(spareArrays_==NULL);
     basis_ = rhs.basis_;
-    intParamMap_ = rhs.intParamMap_;
-    dblParamMap_ = rhs.dblParamMap_;
-    strParamMap_ = rhs.strParamMap_;
+    fillParamMaps();
     messageHandler()->setLogLevel(rhs.messageHandler()->logLevel());
   }
   return *this;
@@ -2200,19 +2185,19 @@ OsiClpSolverInterface::newLanguage(CoinMessages::Language language)
 void
 OsiClpSolverInterface::fillParamMaps()
 {
-   intParamMap_[OsiMaxNumIteration]         = ClpMaxNumIteration;
-   intParamMap_[OsiMaxNumIterationHotStart] = ClpMaxNumIterationHotStart;
-   intParamMap_[OsiLastIntParam]            = ClpLastIntParam;
+   assert ((int) OsiMaxNumIteration==        (int)ClpMaxNumIteration);
+   assert ((int) OsiMaxNumIterationHotStart==(int)ClpMaxNumIterationHotStart);
+   assert ((int) OsiLastIntParam==           (int)ClpLastIntParam);
 
-   dblParamMap_[OsiDualObjectiveLimit]   = ClpDualObjectiveLimit;
-   dblParamMap_[OsiPrimalObjectiveLimit] = ClpPrimalObjectiveLimit;
-   dblParamMap_[OsiDualTolerance]        = ClpDualTolerance;
-   dblParamMap_[OsiPrimalTolerance]      = ClpPrimalTolerance;
-   dblParamMap_[OsiObjOffset]            = ClpObjOffset;
-   dblParamMap_[OsiLastDblParam]         = ClpLastDblParam;
+   assert ((int) OsiDualObjectiveLimit==  (int)ClpDualObjectiveLimit);
+   assert ((int) OsiPrimalObjectiveLimit==(int)ClpPrimalObjectiveLimit);
+   assert ((int) OsiDualTolerance==       (int)ClpDualTolerance);
+   assert ((int) OsiPrimalTolerance==     (int)ClpPrimalTolerance);
+   assert ((int) OsiObjOffset==           (int)ClpObjOffset);
+   //assert ((int) OsiLastDblParam==        (int)ClpLastDblParam);
 
-   strParamMap_[OsiProbName]     = ClpProbName;
-   strParamMap_[OsiLastStrParam] = ClpLastStrParam;
+   assert ((int) OsiProbName==    (int) ClpProbName);
+   //strParamMap_[OsiLastStrParam] = ClpLastStrParam;
 }
 // Warm start
 CoinWarmStartBasis
@@ -2708,7 +2693,20 @@ OsiClpSolverInterface::disableFactorization() const
   // message will not appear anyway
   int saveMessageLevel=modelPtr_->messageHandler()->logLevel();
   modelPtr_->messageHandler()->setLogLevel(0);
+  // Should re-do - for moment save arrays 
+  double * sol = CoinCopyOfArray(modelPtr_->columnActivity_,modelPtr_->numberColumns_);
+  double * dj = CoinCopyOfArray(modelPtr_->reducedCost_,modelPtr_->numberColumns_);
+  double * rsol = CoinCopyOfArray(modelPtr_->rowActivity_,modelPtr_->numberRows_);
+  double * dual = CoinCopyOfArray(modelPtr_->dual_,modelPtr_->numberRows_);
   modelPtr_->finish();
+  memcpy(modelPtr_->columnActivity_,sol,modelPtr_->numberColumns_*sizeof(double));
+  memcpy(modelPtr_->reducedCost_,dj,modelPtr_->numberColumns_*sizeof(double));
+  memcpy(modelPtr_->rowActivity_,rsol,modelPtr_->numberRows_*sizeof(double));
+  memcpy(modelPtr_->dual_,dual,modelPtr_->numberRows_*sizeof(double));
+  delete [] sol;
+  delete [] dj;
+  delete [] rsol;
+  delete [] dual;
   modelPtr_->messageHandler()->setLogLevel(saveMessageLevel);
 }
 /* The following two methods may be replaced by the

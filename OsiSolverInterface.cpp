@@ -209,6 +209,36 @@ OsiSolverInterface::setInteger(const int* indices, int len)
     setInteger(indices[i]);
   }
 }
+/* Set the objective coefficients for all columns
+    array [getNumCols()] is an array of values for the objective.
+    This defaults to a series of set operations and is here for speed.
+*/
+void OsiSolverInterface::setObjective(const double * array)
+{
+  int n=getNumCols();
+  for (int i=0;i<n;i++)
+    setObjCoeff(i,array[i]);
+}
+/* Set the lower bounds for all columns
+    array [getNumCols()] is an array of values for the objective.
+    This defaults to a series of set operations and is here for speed.
+*/
+void OsiSolverInterface::setColLower(const double * array)
+{
+  int n=getNumCols();
+  for (int i=0;i<n;i++)
+    setColLower(i,array[i]);
+}
+/* Set the upper bounds for all columns
+    array [getNumCols()] is an array of values for the objective.
+    This defaults to a series of set operations and is here for speed.
+*/
+void OsiSolverInterface::setColUpper(const double * array)
+{
+  int n=getNumCols();
+  for (int i=0;i<n;i++)
+    setColUpper(i,array[i]);
+}
 //-----------------------------------------------------------------------------
 void
 OsiSolverInterface::addCols(const int numcols,

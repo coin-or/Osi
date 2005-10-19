@@ -1342,6 +1342,36 @@ OsiClpSolverInterface::setInteger(const int* indices, int len)
     modelPtr_->setInteger(colNumber);
   }
 }
+/* Set the objective coefficients for all columns
+    array [getNumCols()] is an array of values for the objective.
+    This defaults to a series of set operations and is here for speed.
+*/
+void 
+OsiClpSolverInterface::setObjective(const double * array)
+{
+  CoinMemcpyN(array,modelPtr_->numberColumns(),
+		    modelPtr_->objective());
+}
+/* Set the lower bounds for all columns
+    array [getNumCols()] is an array of values for the objective.
+    This defaults to a series of set operations and is here for speed.
+*/
+void 
+OsiClpSolverInterface::setColLower(const double * array)
+{
+  CoinMemcpyN(array,modelPtr_->numberColumns(),
+		    modelPtr_->columnLower());
+}
+/* Set the upper bounds for all columns
+    array [getNumCols()] is an array of values for the objective.
+    This defaults to a series of set operations and is here for speed.
+*/
+void 
+OsiClpSolverInterface::setColUpper(const double * array)
+{
+  CoinMemcpyN(array,modelPtr_->numberColumns(),
+		    modelPtr_->columnUpper());
+}
 //-----------------------------------------------------------------------------
 void OsiClpSolverInterface::setColSolution(const double * cs) 
 {
@@ -2674,6 +2704,7 @@ OsiClpSolverInterface::disableSimplexInterface()
 void 
 OsiClpSolverInterface::enableFactorization() const
 {
+  saveData_.scalingFlag_=specialOptions_;
   if ((specialOptions_&(1+8))!=1+8)
     setSpecialOptionsMutable(1+8);
 #ifdef NDEBUG
@@ -2688,6 +2719,7 @@ OsiClpSolverInterface::enableFactorization() const
 void 
 OsiClpSolverInterface::disableFactorization() const
 {
+  specialOptions_=saveData_.scalingFlag_;
   // declare optimality anyway  (for message handler)
   modelPtr_->setProblemStatus(0);
   // message will not appear anyway

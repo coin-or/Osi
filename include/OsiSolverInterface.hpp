@@ -660,6 +660,23 @@ public:
 
    virtual void setRowPrice(const double * rowprice) = 0;
 
+    /** Set the objective coefficients for all columns
+	array [getNumCols()] is an array of values for the objective.
+        This defaults to a series of set operations and is here for speed.
+    */
+    virtual void setObjective(const double * array);
+
+    /** Set the lower bounds for all columns
+	array [getNumCols()] is an array of values for the objective.
+        This defaults to a series of set operations and is here for speed.
+    */
+    virtual void setColLower(const double * array);
+
+    /** Set the upper bounds for all columns
+	array [getNumCols()] is an array of values for the objective.
+        This defaults to a series of set operations and is here for speed.
+    */
+    virtual void setColUpper(const double * array);
     //@}
 
     //-------------------------------------------------------------------------

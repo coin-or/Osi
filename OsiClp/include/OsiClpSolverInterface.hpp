@@ -502,6 +502,23 @@ public:
                               const char* senseList,
                               const double* rhsList,
                               const double* rangeList);
+    /** Set the objective coefficients for all columns
+	array [getNumCols()] is an array of values for the objective.
+        This defaults to a series of set operations and is here for speed.
+    */
+    virtual void setObjective(const double * array);
+
+    /** Set the lower bounds for all columns
+	array [getNumCols()] is an array of values for the objective.
+        This defaults to a series of set operations and is here for speed.
+    */
+    virtual void setColLower(const double * array);
+
+    /** Set the upper bounds for all columns
+	array [getNumCols()] is an array of values for the objective.
+        This defaults to a series of set operations and is here for speed.
+    */
+    virtual void setColUpper(const double * array);
       /// Set name of row
       virtual void setRowName(int rowIndex, std::string & name) ;
     
@@ -941,7 +958,7 @@ protected:
   //std::map<OsiStrParam, ClpStrParam> strParamMap_;
   
   /// To save data in OsiSimplex stuff
-  ClpDataSave saveData_;
+  mutable ClpDataSave saveData_;
   /** Scaling option
       When scaling is on it is possible that the scaled problem
       is feasible but the unscaled is not.  Clp returns a secondary

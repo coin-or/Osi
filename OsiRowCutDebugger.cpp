@@ -1260,7 +1260,7 @@ OsiRowCutDebugger::activate(const OsiSolverInterface & si, const double * soluti
       
       // Determine optimal solution value for integer i
       // from values saved in intSoln and probType.
-      double soln=solution[i];
+      double soln=floor(solution[i]+0.5); // in case just from array
       // Set bounds in copyied problem to fix variable to its solution     
       siCopy->setColUpper(i,soln);
       siCopy->setColLower(i,soln);
@@ -1277,6 +1277,7 @@ OsiRowCutDebugger::activate(const OsiSolverInterface & si, const double * soluti
   //CoinWarmStartBasis allSlack;
   //siCopy->setWarmStart(&allSlack);
   siCopy->setHintParam(OsiDoScale,false);
+  //siCopy->writeMps("bad.mps");
   siCopy->initialSolve();
   if (siCopy->isProvenOptimal()) {
     // Save column solution

@@ -492,6 +492,8 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
   const CoinPresolveAction *pactiond = 0 ;
   presolve_check_sol(prob) ;
 # endif
+  if ((presolveActions_&4)!=0)
+    transferCosts(prob);
 
 /*
   Fix variables before we get into the main transform loop.

@@ -9,6 +9,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <cstdio>
 
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
@@ -95,6 +96,7 @@ int main (int argc, const char *argv[])
   definedKeyWords.insert("-mpsDir");
   definedKeyWords.insert("-netlibDir");
   definedKeyWords.insert("-testOsiSolverInterface");
+  definedKeyWords.insert("-nobuf");
 
   // Create a map of parameter keys and associated data
   std::map<std::string,std::string> parms;
@@ -131,10 +133,28 @@ int main (int argc, const char *argv[])
       std::cerr << "  -testOsiSolverInterface\n";
       std::cerr << "        If specified, then OsiSolveInterface::unitTest\n";
       std::cerr << "        is run.\n";
+      std::cerr << "  -nobuf: unbuffered output.\n" ;
       return 1;
     }
     parms[key]=value;
   }
+
+/*
+  Use unbuffered i/o? We need to go after this through stdio --- using
+  pubsetbuf(0,0) on the C++ streams has no discernible affect. Nor, for
+  that matter, did setting the unitbuf flag on the streams. Why? At a guess,
+  sync_with_stdio connects the streams to the stdio buffers, and the C++
+  side isn't programmed to change them?
+*/
+
+  if (parms.find("-nobuf") != parms.end())
+  { // std::streambuf *coutBuf, *cerrBuf ;
+    // coutBuf = std::cout.rdbuf() ;
+    // coutBuf->pubsetbuf(0,0) ;
+    // cerrBuf = std::cerr.rdbuf() ;
+    // cerrBuf->pubsetbuf(0,0) ;
+    setbuf(stderr,0) ;
+    setbuf(stdout,0) ; }
 
   // Redirect cerr? This must occur before any i/o is performed.
   if (parms.find("-cerr2cout") != parms.end())

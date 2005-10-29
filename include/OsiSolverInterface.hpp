@@ -1011,7 +1011,7 @@ public:
                     const double objSense = 0.0,
                     bool changeNameOnRange=false) const;
   /// Read file in LP format
-  int readLp(const char *filename, double epsilon = 1e-5);
+  int readLp(const char *filename, const double epsilon = 1e-5);
 
   //@}
 

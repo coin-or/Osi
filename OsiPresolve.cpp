@@ -1466,9 +1466,10 @@ CoinPostsolveMatrix::CoinPostsolveMatrix(OsiSolverInterface*  si,
     for (CoinBigIndex k=kcs; k<kce; ++k) {
       link_[k] = k+1;
     }
-    link_[kce-1] = NO_LINK ;
+    if (kce>0)
+      link_[kce-1] = NO_LINK ;
   }
-  {
+  if (maxlink_>0) {
     int ml = maxlink_;
     for (CoinBigIndex k=nelemsr; k<ml; ++k)
       link_[k] = k+1;

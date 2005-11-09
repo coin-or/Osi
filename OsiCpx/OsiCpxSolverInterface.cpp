@@ -3069,11 +3069,12 @@ void OsiCpxSolverInterface::getBInvARow(int row, double* z, double * slack)
       printf("### ERROR: OsiCpxSolverInterface::getBInvARow(): Unable to get row %d of B inverse\n", row);
       exit(1);
     }
-    for(int i=0; i<nrow; i++) {
-      if(sense[i] == 'G') {    // flip column of optimal tableau
-	slack[i] = -slack[i];
-      }
-    }
+
+    // slack contains now the row of BInv(cplex);
+    // slack(cplex) is obtained by flipping in slack all entries for >= constr
+    // slack(clp) is obtained by flipping the same entries in slack(cplex)
+    // i.e. slack(clp) is the current slack.
+
   }
 
   if(sense[row] == 'G') {

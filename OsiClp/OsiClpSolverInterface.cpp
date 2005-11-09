@@ -281,7 +281,7 @@ void OsiClpSolverInterface::initialSolve()
   solver.returnModel(*modelPtr_);
   if (startFinishOptions) {
     int save = modelPtr_->logLevel();
-    modelPtr_->setLogLevel(0);
+    if (save<2) modelPtr_->setLogLevel(0);
     modelPtr_->dual(0,startFinishOptions);
     modelPtr_->setLogLevel(save);
   }
@@ -443,8 +443,9 @@ void OsiClpSolverInterface::resolve()
 	modelPtr_->setPerturbation(100);
       //modelPtr_->messageHandler()->setLogLevel(1);
       //writeMpsNative("bad",NULL,NULL,2,1,1.0);
-      if ((modelPtr_->specialOptions()&1024)==0||(specialOptions_ &128)!=0) {
-        if ((specialOptions_&128)==0||!modelPtr_->auxiliaryModel_) {
+      if (((modelPtr_->specialOptions()&1024)==0||(specialOptions_ &128)!=0)&&
+          modelPtr_->auxiliaryModel_) {
+        if ((specialOptions_&128)==0) {
           modelPtr_->dual(0,startFinishOptions);
         } else {
           double * rhs = modelPtr_->auxiliaryModel_->lower_;
@@ -793,7 +794,6 @@ CoinWarmStart* OsiClpSolverInterface::getWarmStart() const
 
 bool OsiClpSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
 {
-
   const CoinWarmStartBasis* ws =
     dynamic_cast<const CoinWarmStartBasis*>(warmstart);
 
@@ -912,7 +912,7 @@ void OsiClpSolverInterface::markHotStart()
     assert (smallModel_==NULL);
     if ((specialOptions_&256)!=0||1) {
       // only need to do this on second pass in CbcNode
-      small->setLogLevel(0);
+      if (modelPtr_->logLevel()<2) small->setLogLevel(0);
       small->dual();
       if (keepModel&&!small->auxiliaryModel_) {
         // put back
@@ -923,7 +923,7 @@ void OsiClpSolverInterface::markHotStart()
       //small->setLogLevel(0);
     }
     smallModel_=small;
-    smallModel_->setLogLevel(0);
+    if (modelPtr_->logLevel()<2) smallModel_->setLogLevel(0);
     // Setup for strong branching
     assert (factorization_==NULL);
     factorization_ = ((ClpSimplexDual *)smallModel_)->setupForStrongBranching(spareArrays_,numberRows,
@@ -1349,6 +1349,8 @@ OsiClpSolverInterface::setInteger(const int* indices, int len)
 void 
 OsiClpSolverInterface::setObjective(const double * array)
 {
+  // Say can't gurantee optimal basis etc
+  lastAlgorithm_=999;
   CoinMemcpyN(array,modelPtr_->numberColumns(),
 		    modelPtr_->objective());
 }
@@ -1359,6 +1361,8 @@ OsiClpSolverInterface::setObjective(const double * array)
 void 
 OsiClpSolverInterface::setColLower(const double * array)
 {
+  // Say can't gurantee optimal basis etc
+  lastAlgorithm_=999;
   CoinMemcpyN(array,modelPtr_->numberColumns(),
 		    modelPtr_->columnLower());
 }
@@ -1369,12 +1373,16 @@ OsiClpSolverInterface::setColLower(const double * array)
 void 
 OsiClpSolverInterface::setColUpper(const double * array)
 {
+  // Say can't gurantee optimal basis etc
+  lastAlgorithm_=999;
   CoinMemcpyN(array,modelPtr_->numberColumns(),
 		    modelPtr_->columnUpper());
 }
 //-----------------------------------------------------------------------------
 void OsiClpSolverInterface::setColSolution(const double * cs) 
 {
+  // Say can't gurantee optimal basis etc
+  lastAlgorithm_=999;
   CoinDisjointCopyN(cs,modelPtr_->numberColumns(),
 		    modelPtr_->primalColumnSolution());
   if (modelPtr_->solveType()==2) {
@@ -1804,7 +1812,9 @@ OsiClpSolverInterface::writeMpsNative(const char *filename,
 
 ClpSimplex * OsiClpSolverInterface::getModelPtr() const
 {
+  int saveAlgorithm = lastAlgorithm_;
   freeCachedResults();
+  lastAlgorithm_ = saveAlgorithm;
   return modelPtr_;
 }
 
@@ -2029,6 +2039,8 @@ void
 OsiClpSolverInterface::applyRowCuts(int numberCuts, const OsiRowCut * cuts)
 {
   if (numberCuts) {
+    // Say can't gurantee optimal basis etc
+    lastAlgorithm_=999;
 
     // Thanks to js
     const OsiRowCut * * cutsp = new const OsiRowCut * [numberCuts];
@@ -2050,6 +2062,8 @@ OsiClpSolverInterface::applyRowCuts(int numberCuts, const OsiRowCut ** cuts)
   int i;
   if (!numberCuts)
     return;
+  // Say can't gurantee optimal basis etc
+  lastAlgorithm_=999;
   int numberRows = modelPtr_->numberRows();
   modelPtr_->resize(numberRows+numberCuts,modelPtr_->numberColumns());
   basis_.resize(numberRows+numberCuts,modelPtr_->numberColumns());
@@ -2137,6 +2151,8 @@ OsiClpSolverInterface::applyRowCuts(int numberCuts, const OsiRowCut ** cuts)
 
 void OsiClpSolverInterface::applyColCut( const OsiColCut & cc )
 {
+  // Say can't gurantee optimal basis etc
+  lastAlgorithm_=999;
   double * lower = modelPtr_->columnLower();
   double * upper = modelPtr_->columnUpper();
   const CoinPackedVector & lbs = cc.lbs();
@@ -2165,6 +2181,8 @@ void OsiClpSolverInterface::applyColCut( const OsiColCut & cc )
 
 void OsiClpSolverInterface::freeCachedResults() const
 {  
+  // Say can't gurantee optimal basis etc
+  lastAlgorithm_=999;
   delete [] rowsense_;
   delete [] rhs_;
   delete [] rowrange_;
@@ -2261,6 +2279,8 @@ void
 OsiClpSolverInterface::setBasis ( const CoinWarmStartBasis & basis,
 				  ClpSimplex * model)
 {
+  // Say can't gurantee optimal basis etc
+  lastAlgorithm_=999;
   // transform basis to status arrays
   int iRow,iColumn;
   int numberRows = model->numberRows();
@@ -2420,6 +2440,8 @@ OsiClpSolverInterface::getObjValue() const
 void 
 OsiClpSolverInterface::setObjCoeff( int elementIndex, double elementValue )
 {
+  // Say can't gurantee optimal basis etc
+  lastAlgorithm_=999;
 #ifndef NDEBUG
   int n = modelPtr_->numberColumns();
   if (elementIndex<0||elementIndex>=n) {
@@ -2434,6 +2456,8 @@ OsiClpSolverInterface::setObjCoeff( int elementIndex, double elementValue )
 void 
 OsiClpSolverInterface::setColLower( int elementIndex, double elementValue )
 {
+  // Say can't gurantee optimal basis etc
+  lastAlgorithm_=999;
 #ifndef NDEBUG
   int n = modelPtr_->numberColumns();
   if (elementIndex<0||elementIndex>=n) {
@@ -2448,6 +2472,8 @@ OsiClpSolverInterface::setColLower( int elementIndex, double elementValue )
 void 
 OsiClpSolverInterface::setColUpper( int elementIndex, double elementValue )
 {
+  // Say can't gurantee optimal basis etc
+  lastAlgorithm_=999;
 #ifndef NDEBUG
   int n = modelPtr_->numberColumns();
   if (elementIndex<0||elementIndex>=n) {
@@ -2462,6 +2488,8 @@ void
 OsiClpSolverInterface::setColBounds( int elementIndex,
 				     double lower, double upper )
 {
+  // Say can't gurantee optimal basis etc
+  lastAlgorithm_=999;
 #ifndef NDEBUG
   int n = modelPtr_->numberColumns();
   if (elementIndex<0||elementIndex>=n) {
@@ -2474,6 +2502,8 @@ void OsiClpSolverInterface::setColSetBounds(const int* indexFirst,
 					    const int* indexLast,
 					    const double* boundList)
 {
+  // Say can't gurantee optimal basis etc
+  lastAlgorithm_=999;
 #ifndef NDEBUG
   int n = modelPtr_->numberColumns();
   const int * indexFirst2=indexFirst;
@@ -2491,6 +2521,8 @@ void OsiClpSolverInterface::setColSetBounds(const int* indexFirst,
    Use -DBL_MAX for -infinity. */
 void 
 OsiClpSolverInterface::setRowLower( int elementIndex, double elementValue ) {
+  // Say can't gurantee optimal basis etc
+  lastAlgorithm_=999;
 #ifndef NDEBUG
   int n = modelPtr_->numberRows();
   if (elementIndex<0||elementIndex>=n) {
@@ -2504,6 +2536,8 @@ OsiClpSolverInterface::setRowLower( int elementIndex, double elementValue ) {
    Use DBL_MAX for infinity. */
 void 
 OsiClpSolverInterface::setRowUpper( int elementIndex, double elementValue ) {
+  // Say can't gurantee optimal basis etc
+  lastAlgorithm_=999;
 #ifndef NDEBUG
   int n = modelPtr_->numberRows();
   if (elementIndex<0||elementIndex>=n) {
@@ -2517,6 +2551,8 @@ OsiClpSolverInterface::setRowUpper( int elementIndex, double elementValue ) {
 void 
 OsiClpSolverInterface::setRowBounds( int elementIndex,
 	      double lower, double upper ) {
+  // Say can't gurantee optimal basis etc
+  lastAlgorithm_=999;
 #ifndef NDEBUG
   int n = modelPtr_->numberRows();
   if (elementIndex<0||elementIndex>=n) {
@@ -2530,6 +2566,8 @@ void
 OsiClpSolverInterface::setRowType(int i, char sense, double rightHandSide,
 				  double range)
 {
+  // Say can't gurantee optimal basis etc
+  lastAlgorithm_=999;
 #ifndef NDEBUG
   int n = modelPtr_->numberRows();
   if (i<0||i>=n) {
@@ -2578,6 +2616,8 @@ void OsiClpSolverInterface::setRowSetBounds(const int* indexFirst,
 					    const int* indexLast,
 					    const double* boundList)
 {
+  // Say can't gurantee optimal basis etc
+  lastAlgorithm_=999;
 #ifndef NDEBUG
   int n = modelPtr_->numberRows();
   const int * indexFirst2=indexFirst;
@@ -2608,6 +2648,8 @@ OsiClpSolverInterface::setRowSetTypes(const int* indexFirst,
 				      const double* rhsList,
 				      const double* rangeList)
 {
+  // Say can't gurantee optimal basis etc
+  lastAlgorithm_=999;
 #ifndef NDEBUG
   int n = modelPtr_->numberRows();
 #endif
@@ -2787,6 +2829,8 @@ OsiClpSolverInterface::getBasisStatus(int* cstat, int* rstat) const
 int 
 OsiClpSolverInterface::setBasisStatus(const int* cstat, const int* rstat)
 {
+  // Say can't gurantee optimal basis etc
+  lastAlgorithm_=999;
   modelPtr_->createStatus();
   int i, n;
   double * lower, * upper, * solution;
@@ -3258,6 +3302,12 @@ OsiClpSolverInterface::getBasics(int* index) const
   assert (modelPtr_->pivotVariable());
   memcpy(index,modelPtr_->pivotVariable(),
 	 modelPtr_->numberRows()*sizeof(int));
+}
+//Returns true if an optimal basis is available
+bool 
+OsiClpSolverInterface::optimalBasisIsAvailable()
+{
+  return lastAlgorithm_==1||lastAlgorithm_==2;
 }
 // Resets as if default constructor
 void 

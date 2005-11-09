@@ -98,6 +98,9 @@ public:
   ///Returns true if a basis is available
   virtual bool basisIsAvailable() {return true;};
   
+  ///Returns true if an optimal basis is available
+  virtual bool optimalBasisIsAvailable();
+  
   /** The following two methods may be replaced by the
       methods of OsiSolverInterface using OsiWarmStartBasis if:
       1. OsiWarmStartBasis resize operation is implemented
@@ -936,7 +939,7 @@ protected:
   int itlimOrig_;
   
   /// Last algorithm used
-  int lastAlgorithm_;
+  mutable int lastAlgorithm_;
   
   /// To say if destructor should delete underlying model
   bool notOwned_;

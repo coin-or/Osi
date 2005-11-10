@@ -7,7 +7,6 @@
 #include <string>
 #include <cfloat>
 #include <map>
-
 #include "CbcModel.hpp"
 #include "CoinPackedMatrix.hpp"
 #include "OsiSolverInterface.hpp"

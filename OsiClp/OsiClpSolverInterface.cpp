@@ -65,7 +65,6 @@ void OsiClpSolverInterface::initialSolve()
     startFinishOptions =1+2+4; // allow re-use of factorization
   }
   bool defaultHints=true;
-  bool allSlack=true;
   {
     int hint;
     for (hint=OsiDoPresolveInInitial;hint<OsiLastHintParam;hint++) {
@@ -84,18 +83,14 @@ void OsiClpSolverInterface::initialSolve()
         }
       }
     }
-    if (defaultHints) {
-      int i;
-      int n=solver.numberRows();
-      for (i=0;i<n;i++) {
-        if (solver.getRowStatus(i)!=ClpSimplex::basic) {
-          allSlack=false;
-          break;
-        }
-      }
-    }
   }
-  if (!defaultHints||!allSlack) {
+  /*
+    If basis then do primal (as user could do dual with resolve)
+    If not then see if dual feasible (and allow for gubs etc?)
+  */
+  bool doPrimal = (basis_.numberBasicStructurals()>0);
+  setBasis(basis_,&solver);
+  if (!defaultHints||doPrimal) {
     // scaling
     // save initial state
     const double * rowScale1 = solver.rowScale();
@@ -119,12 +114,6 @@ void OsiClpSolverInterface::initialSolve()
     //solver.setPrimalTolerance(1.0e-8);
     //ClpPrimalColumnSteepest steepP;
     //solver.setPrimalColumnPivotAlgorithm(steepP);
-    /*
-      If basis then do primal (as user could do dual with resolve)
-      If not then see if dual feasible (and allow for gubs etc?)
-    */
-    bool doPrimal = (basis_.numberBasicStructurals()>0);
-    setBasis(basis_,&solver);
     
     // sort out hints;
     // algorithm 0 whatever, -1 force dual, +1 force primal
@@ -234,7 +223,7 @@ void OsiClpSolverInterface::initialSolve()
         }
       } else {
         //printf("doing primal\n");
-        solver.primal(0);
+        solver.primal(1);
         lastAlgorithm_=1; // primal
         // check if clp thought it was in a loop
         if (solver.status()==3&&!solver.hitMaximumIterations()) {

@@ -7,8 +7,8 @@
 
 #include "CoinHelperFunctions.hpp"
 #include "CoinIndexedVector.hpp"
-#include "OsiCbcSolverInterface.hpp"
 #include "OsiClpSolverInterface.hpp"
+#include "OsiCbcSolverInterface.hpp"
 #include "OsiCuts.hpp"
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"

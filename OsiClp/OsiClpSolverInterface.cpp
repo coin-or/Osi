@@ -259,6 +259,7 @@ void OsiClpSolverInterface::initialSolve()
       solver.setSpecialOptions(solver.specialOptions()|1024);
     }
     solver.initialSolve(options);
+    lastAlgorithm_ = 2; // say dual
     // If scaled feasible but unscaled infeasible take action
     if (!solver.status()&&cleanupScaling_) {
       solver.cleanup(cleanupScaling_);
@@ -281,6 +282,8 @@ void OsiClpSolverInterface::initialSolve()
   modelPtr_->upperIn_=0.0;
   time1 = CoinCpuTime()-time1;
   totalTime += time1;
+  if (lastAlgorithm_<1||lastAlgorithm_>2)
+    lastAlgorithm_=1;
   //std::cout<<time1<<" seconds - total "<<totalTime<<std::endl;
 }
 //-----------------------------------------------------------------------------
@@ -529,6 +532,8 @@ void OsiClpSolverInterface::resolve()
   }
   //modelPtr_->setSolveType(saveSolveType);
   modelPtr_->setSpecialOptions(saveOptions); // restore
+  if (lastAlgorithm_<1||lastAlgorithm_>2)
+    lastAlgorithm_=1;
 }
 /* Sets up solver for repeated use by Osi interface.
    The normal usage does things like keeping factorization around so can be used.
@@ -3304,7 +3309,7 @@ OsiClpSolverInterface::basisIsAvailable()
 bool 
 OsiClpSolverInterface::optimalBasisIsAvailable()
 {
-  return lastAlgorithm_==1||lastAlgorithm_==2;
+  return (lastAlgorithm_==1||lastAlgorithm_==2)&&(!modelPtr_->problemStatus_);
 }
 // Resets as if default constructor
 void 

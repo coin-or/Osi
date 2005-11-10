@@ -2747,6 +2747,7 @@ void
 OsiClpSolverInterface::enableFactorization() const
 {
   saveData_.scalingFlag_=specialOptions_;
+  int saveStatus = modelPtr_->problemStatus_;
   if ((specialOptions_&(1+8))!=1+8)
     setSpecialOptionsMutable(1+8);
 #ifdef NDEBUG
@@ -2755,6 +2756,7 @@ OsiClpSolverInterface::enableFactorization() const
   int returnCode=modelPtr_->startup(0);
   assert (!returnCode);
 #endif
+  modelPtr_->problemStatus_=saveStatus;
 }
 
 //Undo whatever setting changes the above method had to make
@@ -3302,6 +3304,12 @@ OsiClpSolverInterface::getBasics(int* index) const
   assert (modelPtr_->pivotVariable());
   memcpy(index,modelPtr_->pivotVariable(),
 	 modelPtr_->numberRows()*sizeof(int));
+}
+//Returns true if a basis is available
+bool 
+OsiClpSolverInterface::basisIsAvailable() 
+{
+  return true;
 }
 //Returns true if an optimal basis is available
 bool 

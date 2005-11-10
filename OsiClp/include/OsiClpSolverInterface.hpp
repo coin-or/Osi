@@ -96,7 +96,7 @@ public:
   { specialOptions_=value;};
 
   ///Returns true if a basis is available
-  virtual bool basisIsAvailable() {return true;};
+  virtual bool basisIsAvailable();
   
   ///Returns true if an optimal basis is available
   virtual bool optimalBasisIsAvailable();

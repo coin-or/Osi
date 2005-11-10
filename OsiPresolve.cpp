@@ -199,7 +199,7 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
 /*
   Nor this, assuming the si's clone function works.
 */
-    if (prob.status_ == 0 && paction_) {
+    if (prob.status_ == 0) {
       // feasible
     
       prob.update_model(presolvedModel_, nrows_, ncols_, nelems_);

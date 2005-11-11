@@ -3396,8 +3396,10 @@ OsiClpSolverInterface::crunch()
     if (small->problemStatus()==0) {
       modelPtr_->setProblemStatus(0);
       ((ClpSimplexOther *) modelPtr_)->afterCrunch(*small,whichRow,whichColumn,nBound);
-    } else {
+    } else if (small->problemStatus()!=3) {
       modelPtr_->setProblemStatus(1);
+    } else {
+      modelPtr_->setProblemStatus(3);
     }
     delete small;
   } else {

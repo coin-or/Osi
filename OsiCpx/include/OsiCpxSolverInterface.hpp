@@ -711,7 +711,7 @@ public:
   virtual void disableFactorization() const {};
 
   ///Returns true if a basis is available
-  virtual bool basisIsAvailable();
+  virtual bool basisIsAvailable() const;
 
   /** Returns a basis status of the structural/artificial variables 
      At present as warm start i.e 0: free, 1: basic, 2: upper, 3: lower

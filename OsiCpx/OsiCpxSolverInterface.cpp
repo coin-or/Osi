@@ -2914,7 +2914,7 @@ int OsiCpxSolverInterface::canDoSimplexInterface() const {
 }
 
 /**********************************************************************/
-bool OsiCpxSolverInterface::basisIsAvailable() {
+bool OsiCpxSolverInterface::basisIsAvailable() const {
   CPXLPptr lp = getMutableLpPtr();
 
   int solnmethod, solntype, pfeasind, dfeasind;
@@ -3243,7 +3243,7 @@ int OsiCpxSolverInterface::canDoSimplexInterface() const {
 }
 
 /**********************************************************************/
-bool OsiCpxSolverInterface::basisIsAvailable() {
+bool OsiCpxSolverInterface::basisIsAvailable() const {
   printf("### ERROR: OsiCpxSolverInterface::basisIsAvailable(): Cplex version lower than 9.0\n");
   exit(1);
   return false;

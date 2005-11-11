@@ -1134,7 +1134,10 @@ public:
       AND problem is optimal.  This should be used to see if
       the BInvARow type operations are possible and meaningful. 
   */
-  virtual bool basisIsAvailable() ;
+  virtual bool basisIsAvailable() const ;
+  /// Synonym for basisIsAvailable!
+  inline bool optimalBasisIsAvailable() const
+  { return basisIsAvailable();};
 
   /** The following two methods may be replaced by the
      methods of OsiSolverInterface using OsiWarmStartBasis if:

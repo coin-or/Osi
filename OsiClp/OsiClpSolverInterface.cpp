@@ -3301,7 +3301,7 @@ OsiClpSolverInterface::getBasics(int* index) const
 }
 //Returns true if a basis is available and optimal
 bool 
-OsiClpSolverInterface::basisIsAvailable() 
+OsiClpSolverInterface::basisIsAvailable() const 
 {
   return (lastAlgorithm_==1||lastAlgorithm_==2)&&(!modelPtr_->problemStatus_);
 }

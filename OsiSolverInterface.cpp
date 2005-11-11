@@ -1284,7 +1284,7 @@ OsiSolverInterface::disableFactorization() const
 
 //Returns true if a basis is available
 bool 
-OsiSolverInterface::basisIsAvailable() 
+OsiSolverInterface::basisIsAvailable() const 
 {
   // Throw an exception
   throw CoinError("Needs coding for this interface", "basisIsAvailable",

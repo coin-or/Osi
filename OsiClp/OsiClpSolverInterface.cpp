@@ -3299,15 +3299,9 @@ OsiClpSolverInterface::getBasics(int* index) const
   memcpy(index,modelPtr_->pivotVariable(),
 	 modelPtr_->numberRows()*sizeof(int));
 }
-//Returns true if a basis is available
+//Returns true if a basis is available and optimal
 bool 
 OsiClpSolverInterface::basisIsAvailable() 
-{
-  return true;
-}
-//Returns true if an optimal basis is available
-bool 
-OsiClpSolverInterface::optimalBasisIsAvailable()
 {
   return (lastAlgorithm_==1||lastAlgorithm_==2)&&(!modelPtr_->problemStatus_);
 }

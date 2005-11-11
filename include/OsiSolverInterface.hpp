@@ -1130,7 +1130,10 @@ public:
   /// and stop
   virtual void disableFactorization() const;
 
-  ///Returns true if a basis is available
+  /** Returns true if a basis is available
+      AND problem is optimal.  This should be used to see if
+      the BInvARow type operations are possible and meaningful. 
+  */
   virtual bool basisIsAvailable() ;
 
   /** The following two methods may be replaced by the

@@ -95,11 +95,11 @@ public:
     inline void setSpecialOptionsMutable(int value) const
   { specialOptions_=value;};
 
-  ///Returns true if a basis is available
+  /** Returns true if a basis is available
+      AND problem is optimal.  This should be used to see if
+      the BInvARow type operations are possible and meaningful. 
+  */
   virtual bool basisIsAvailable();
-  
-  ///Returns true if an optimal basis is available
-  virtual bool optimalBasisIsAvailable();
   
   /** The following two methods may be replaced by the
       methods of OsiSolverInterface using OsiWarmStartBasis if:

@@ -278,6 +278,8 @@ void OsiClpSolverInterface::initialSolve()
   if (saveSolveType==2) {
     enableSimplexInterface(doingPrimal);
   }
+  if (modelPtr_->problemStatus_==3&&lastAlgorithm_==2)
+    modelPtr_->computeObjectiveValue();
   // mark so we can pick up objective value quickly
   modelPtr_->upperIn_=0.0;
   time1 = CoinCpuTime()-time1;
@@ -532,6 +534,8 @@ void OsiClpSolverInterface::resolve()
   }
   //modelPtr_->setSolveType(saveSolveType);
   modelPtr_->setSpecialOptions(saveOptions); // restore
+  if (modelPtr_->problemStatus_==3&&lastAlgorithm_==2)
+    modelPtr_->computeObjectiveValue();
   if (lastAlgorithm_<1||lastAlgorithm_>2)
     lastAlgorithm_=1;
 }
@@ -1061,6 +1065,8 @@ void OsiClpSolverInterface::solveFromHotStart()
       smallModel_->checkPrimalSolution(smallModel_->solutionRegion(0),
                                      smallModel_->solutionRegion(1));
       //smallModel_->gutsOfSolution(NULL,NULL,0);
+      //if (problemStatus==3)
+      //smallModel_->computeObjectiveValue();
       objectiveValue =smallModel_->objectiveValue() *
         modelPtr_->optimizationDirection();
       obj = CoinMax(objectiveValue,saveObjectiveValue);
@@ -1101,6 +1107,8 @@ void OsiClpSolverInterface::solveFromHotStart()
         } 
       } else {
         // can't say much
+        //if (problemStatus==3)
+        //smallModel_->computeObjectiveValue();
         lastAlgorithm_=1; // so won't fail on cutoff (in CbcNode)
         problemStatus=3;
       }
@@ -1137,6 +1145,9 @@ void OsiClpSolverInterface::solveFromHotStart()
         upperSmallReal[i]=saveUpperOriginal[i];
       }
     }
+    // could combine with loop above
+    if (modelPtr_==smallModel_)
+      modelPtr_->computeObjectiveValue();
 #if 1
     if (status&&!problemStatus) {
       memset(modelPtr_->primalRowSolution(),0,numberRows*sizeof(double));
@@ -3393,6 +3404,10 @@ OsiClpSolverInterface::crunch()
     } else if (small->problemStatus()!=3) {
       modelPtr_->setProblemStatus(1);
     } else {
+      if (small->problemStatus_==3) {
+        small->computeObjectiveValue();
+        modelPtr_->setObjectiveValue(small->objectiveValue());
+      }
       modelPtr_->setProblemStatus(3);
     }
     delete small;

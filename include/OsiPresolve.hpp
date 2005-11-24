@@ -137,6 +137,7 @@ public:
       and dual stuff on integers
       2 bit set switches off actions which can change +1 to something else
       4 bit set transfers costs to integer variables
+      8 bit set stops x+y+z=1 transform
   */
   inline void setPresolveActions(int action)
   { presolveActions_  = (presolveActions_&0xffff0000)|(action&0xffff);};

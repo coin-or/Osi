@@ -2049,8 +2049,7 @@ OsiClpSolverInterface::applyRowCuts(int numberCuts, const OsiRowCut * cuts)
 
     // Thanks to js
     const OsiRowCut * * cutsp = new const OsiRowCut * [numberCuts];
-    
-    for (int i=0;i<numberCuts;i++)
+    for (int i=0;i<numberCuts;i++) 
       cutsp[i] = &cuts[i];
     
     applyRowCuts(numberCuts, cutsp);

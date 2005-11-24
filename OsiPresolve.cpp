@@ -569,6 +569,9 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
       tripleton = false;
       ifree = false;
     }
+    // stop x+y+z==1
+    if ((presolveActions_&8)!=0)
+      prob->setPresolveOptions(prob->presolveOptions()|4);
     
     /*
       The main loop (just below) starts with a minor loop that does

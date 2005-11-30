@@ -244,7 +244,6 @@ void OsiClpSolverInterface::initialSolve()
     }
     basis_ = getBasis(&solver);
     //basis_.print();
-    solver.messageHandler()->setLogLevel(saveMessageLevel);
     const double * rowScale2 = solver.rowScale();
     solver.setSpecialOptions(saveOptions);
     if (!rowScale1&&rowScale2) {
@@ -271,7 +270,6 @@ void OsiClpSolverInterface::initialSolve()
     }
     basis_ = getBasis(&solver);
     //basis_.print();
-    solver.messageHandler()->setLogLevel(saveMessageLevel);
   }
   solver.returnModel(*modelPtr_);
   if (startFinishOptions) {

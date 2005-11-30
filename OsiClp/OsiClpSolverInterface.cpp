@@ -46,19 +46,24 @@ void OsiClpSolverInterface::initialSolve()
   }
   int saveOptions = solver.specialOptions();
   solver.setSpecialOptions(saveOptions|64|32768); // go as far as possible
-  // Set message handler to have same levels etc
+  int saveMessageLevel=modelPtr_->logLevel();
+  // Set message handler
   solver.passInMessageHandler(handler_);
+  // But keep log level
+  solver.messageHandler()->setLogLevel(saveMessageLevel);
   // set reasonable defaults
   bool takeHint;
   OsiHintStrength strength;
   // Switch off printing if asked to
   bool gotHint = (getHintParam(OsiDoReducePrint,takeHint,strength));
   assert (gotHint);
-  int saveMessageLevel=messageHandler()->logLevel();
+  int messageLevel=messageHandler()->logLevel();
   if (strength!=OsiHintIgnore&&takeHint) {
-    if (saveMessageLevel)
-      solver.messageHandler()->setLogLevel(saveMessageLevel-1);
+    if (messageLevel>0)
+      messageLevel--;
   }
+  if (messageLevel<saveMessageLevel)
+    solver.messageHandler()->setLogLevel(messageLevel);
   // Allow for specialOptions_==1+8 forcing saving factorization
   int startFinishOptions=0;
   if ((specialOptions_&9)==(1+8)) {
@@ -330,6 +335,7 @@ void OsiClpSolverInterface::resolve()
   //printf("options %d size %d\n",modelPtr_->specialOptions(),modelPtr_->numberColumns());
   //modelPtr_->setSolveType(1);
   // Set message handler to have same levels etc
+  int saveMessageLevel=modelPtr_->logLevel();
   bool oldDefault;
   CoinMessageHandler * saveHandler = modelPtr_->pushMessageHandler(handler_,oldDefault);
   //printf("basis before dual\n");
@@ -339,11 +345,13 @@ void OsiClpSolverInterface::resolve()
   // Switch off printing if asked to
   gotHint = (getHintParam(OsiDoReducePrint,takeHint,strength));
   assert (gotHint);
-  int saveMessageLevel=messageHandler()->logLevel();
+  int messageLevel=messageHandler()->logLevel();
   if (strength!=OsiHintIgnore&&takeHint) {
-    if (saveMessageLevel)
-      modelPtr_->messageHandler()->setLogLevel(saveMessageLevel-1);
+    if (messageLevel>0)
+      messageLevel--;
   }
+  if (messageLevel<saveMessageLevel)
+    modelPtr_->messageHandler()->setLogLevel(messageLevel);
   // scaling
   if (modelPtr_->solveType()==1) {
     gotHint = (getHintParam(OsiDoScale,takeHint,strength));
@@ -970,17 +978,6 @@ void OsiClpSolverInterface::solveFromHotStart()
            rowActivity_,numberRows*sizeof(double));
     memcpy(modelPtr_->primalColumnSolution(),columnActivity_,
            numberColumns*sizeof(double));
-    bool takeHint;
-    OsiHintStrength strength;
-    // Switch off printing if asked to
-    getHintParam(OsiDoReducePrint,takeHint,strength);
-    int saveMessageLevel=messageHandler()->logLevel();
-    if (strength!=OsiHintIgnore&&takeHint) {
-      if (saveMessageLevel)
-        messageHandler()->setLogLevel(saveMessageLevel-1);
-    }
-    messageHandler()->setLogLevel(saveMessageLevel);
-    
     modelPtr_->setIntParam(ClpMaxNumIteration,itlim);
     resolve();
   } else {

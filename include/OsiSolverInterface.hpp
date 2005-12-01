@@ -170,8 +170,10 @@ public:
 
        This is provided so a solver can do faster.
     */
+#ifdef CBC_NEXT_VERSION
   virtual int solveBranches(int depth,const OsiSolverBranch * branch,
                             OsiSolverResult * result);
+#endif
   //@}
 
   //---------------------------------------------------------------------------

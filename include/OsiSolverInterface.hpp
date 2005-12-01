@@ -21,6 +21,8 @@ class OsiRowCutDebugger;
 class CoinSet;
 class CoinBuild;
 class CoinModel;
+class OsiSolverBranch;
+class OsiSolverResult;
 #include "CoinFinite.hpp"
 
 //#############################################################################
@@ -153,6 +155,23 @@ public:
 
     /// Invoke solver's built-in enumeration algorithm
     virtual void branchAndBound() = 0;
+
+    /**
+       Solve 2**N (N==depth) problems and return solutions and bases.
+       There are N branches each of which changes bounds on both sides
+       as given by branch.  The user should provide an array of (empty)
+       results which will be filled in.  See OsiSolveResult for more details
+       (in OsiSolveBranch.?pp) but it will include a basis and primal solution.
+
+       The order of results is left to right at leaf nodes so first one
+       is down, down, .....
+
+       Returns number of feasible leaves
+
+       This is provided so a solver can do faster.
+    */
+  virtual int solveBranches(int depth,const OsiSolverBranch * branch,
+                            OsiSolverResult * result);
   //@}
 
   //---------------------------------------------------------------------------

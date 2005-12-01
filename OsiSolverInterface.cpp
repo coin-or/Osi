@@ -13,6 +13,9 @@
 #include "CoinWarmStart.hpp"
 
 #include "OsiSolverInterface.hpp"
+#ifdef CBC_NEXT_VERSION
+#include "OsiSolverBranch.hpp"
+#endif
 #include "OsiCuts.hpp"
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
@@ -1440,3 +1443,84 @@ OsiSolverInterface::getBasics(int* index) const
   throw CoinError("Needs coding for this interface", "getBasics",
 		  "OsiSolverInterface");
 }
+#ifdef CBC_NEXT_VERSION
+/*
+  Solve 2**N (N==depth) problems and return solutions and bases.
+  There are N branches each of which changes bounds on both sides
+  as given by branch.  The user should provide an array of (empty)
+  results which will be filled in.  See OsiSolveResult for more details
+  (in OsiSolveBranch.?pp) but it will include a basis and primal solution.
+  
+  The order of results is left to right at leaf nodes so first one
+  is down, down, .....
+  
+  Returns number of feasible leaves
+
+  This is provided so a solver can do faster.
+*/
+int 
+OsiSolverInterface::solveBranches(int depth,const OsiSolverBranch * branch,
+                                  OsiSolverResult * result)
+{
+  int * stack = new int [depth];
+  CoinWarmStart ** basis = new CoinWarmStart * [depth];
+  int iDepth;
+  for (iDepth=0;iDepth<depth;iDepth++) {
+    stack[iDepth]=-1;
+    basis[iDepth]=NULL;
+  }
+  iDepth=0;
+  int numberFeasible=0;
+  int numberDone=0;
+  bool feasible=true;
+  int feasibleDepth=0;
+  bool finished=false;
+  while (!finished) {
+    if (feasible) {
+      if (stack[iDepth]==-1) {
+        delete basis[iDepth];
+        basis[iDepth]=getWarmStart();
+      } else {
+        setWarmStart(basis[iDepth]);
+      }
+      branch[iDepth].applyBounds(*this,stack[iDepth]);
+      resolve();
+      if (!isProvenOptimal()||isDualObjectiveLimitReached()) {
+        feasible=false;
+      } else {
+        feasibleDepth = iDepth;
+      }
+    }
+    iDepth++;
+    if (iDepth==depth) {
+      if (feasible) {
+        result[numberDone]=OsiSolverResult(*this);
+        numberFeasible++;
+      } else {
+        result[numberDone]=OsiSolverResult();
+      }
+      numberDone++;
+      // on to next
+      iDepth--;
+      while (stack[iDepth]==1) {
+        if (iDepth==0) {
+          // finished
+          finished=true;
+          break;
+        }
+        stack[iDepth]=-1;
+        iDepth--;
+      }
+      if (!finished) {
+        stack[iDepth]=1;
+        feasible =  (iDepth <= feasibleDepth);
+      }
+    }
+  }
+  delete [] stack;
+  for (iDepth=0;iDepth<depth;iDepth++)
+    delete basis[iDepth];
+  delete [] basis;
+  return numberFeasible;
+}
+#endif

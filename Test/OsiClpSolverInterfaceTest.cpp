@@ -1034,8 +1034,10 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     m.initialSolve();
     m.getModelPtr()->factorization()->maximumPivots(5);
     m.setObjSense(1.0);
+    OsiClpSolverInterface mm=m;
     // enable special mode
     m.enableSimplexInterface(true);
+    mm.enableSimplexInterface(true);
     // we happen to know that variables are 0-1 and rows are L
     int numberIterations=0;
     int numberColumns = m.getNumCols();
@@ -1093,6 +1095,14 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       assert (!returnCode);
       printf("out %d, direction %d theta %g\n",
              colOut,outStatus,theta);
+      if (colIn!=colOut) {
+        returnCode=mm.pivot(colIn,colOut,outStatus);
+        assert (!returnCode);
+      } else {
+        // no pivot
+        returnCode=mm.primalPivotResult(colIn,direction,colOut,outStatus,theta,NULL);
+        assert (!returnCode);
+      }
       numberIterations++;
     }
     delete [] fakeCost;

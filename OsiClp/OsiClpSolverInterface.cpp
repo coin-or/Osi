@@ -51,6 +51,10 @@ void OsiClpSolverInterface::initialSolve()
   solver.passInMessageHandler(handler_);
   // But keep log level
   solver.messageHandler()->setLogLevel(saveMessageLevel);
+  // See if user set factorization frequency
+  int userFactorizationFrequency = modelPtr_->factorization()->maximumPivots();
+  // borrowModel does not move
+  solver.factorization()->maximumPivots(userFactorizationFrequency);
   // set reasonable defaults
   bool takeHint;
   OsiHintStrength strength;
@@ -149,8 +153,10 @@ void OsiClpSolverInterface::initialSolve()
       }
       
       // change from 200 (unless changed)
-      if (model2->factorization()->maximumPivots()==200)
+      if (modelPtr_->factorization()->maximumPivots()==200)
         model2->factorization()->maximumPivots(100+model2->numberRows()/50);
+      else
+        model2->factorization()->maximumPivots(userFactorizationFrequency);
       int savePerturbation = model2->perturbation();
       if (savePerturbation==100)
         model2->setPerturbation(50);
@@ -350,6 +356,8 @@ void OsiClpSolverInterface::resolve()
   }
   if (messageLevel<saveMessageLevel)
     modelPtr_->messageHandler()->setLogLevel(messageLevel);
+  // See if user set factorization frequency
+  int userFactorizationFrequency = modelPtr_->factorization()->maximumPivots();
   // scaling
   if (modelPtr_->solveType()==1) {
     gotHint = (getHintParam(OsiDoScale,takeHint,strength));
@@ -402,7 +410,10 @@ void OsiClpSolverInterface::resolve()
     //     modelPtr_->numberRows(),model2->numberRows(),
     //     modelPtr_->numberColumns(),model2->numberColumns());
     // change from 200
-    model2->factorization()->maximumPivots(100+model2->numberRows()/50);
+    if (modelPtr_->factorization()->maximumPivots()==200)
+      model2->factorization()->maximumPivots(100+model2->numberRows()/50);
+    else
+      model2->factorization()->maximumPivots(userFactorizationFrequency);
     if (algorithm<0) {
       model2->dual();
       // check if clp thought it was in a loop

@@ -1183,8 +1183,11 @@ public:
   virtual int setBasisStatus(const int* cstat, const int* rstat) ;
 
   /** Perform a pivot by substituting a colIn for colOut in the basis. 
-     The status of the leaving variable is given in statOut. Where
+     The status of the leaving variable is given in outStatus. Where
      1 is to upper bound, -1 to lower bound
+     Return code was undefined - now for OsiClp is 0 for okay,
+     1 if inaccuracy forced re-factorization (should be okay) and
+     -1 for singular factorization
   */
   virtual int pivot(int colIn, int colOut, int outStatus) ;
 

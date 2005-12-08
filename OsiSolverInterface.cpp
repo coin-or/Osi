@@ -25,7 +25,6 @@
 #include "CoinBuild.hpp"
 #include "CoinModel.hpp"
 #include "CoinLpIO.hpp"
-
 //#############################################################################
 // Hotstart related methods (primarily used in strong branching)
 // It is assumed that only bounds (on vars/constraints) can change between
@@ -1451,16 +1450,21 @@ OsiSolverInterface::getBasics(int* index) const
   results which will be filled in.  See OsiSolveResult for more details
   (in OsiSolveBranch.?pp) but it will include a basis and primal solution.
   
-  The order of results is left to right at leaf nodes so first one
+  The order of results is left to right at feasible leaf nodes so first one
   is down, down, .....
   
-  Returns number of feasible leaves
-
+  Returns number of feasible leaves.  Also sets number of solves done and number
+  of iterations.
+  
   This is provided so a solver can do faster.
+  
+  If forceBranch true then branch done even if satisfied
 */
 int 
 OsiSolverInterface::solveBranches(int depth,const OsiSolverBranch * branch,
-                                  OsiSolverResult * result)
+                                  OsiSolverResult * result,
+                                  int & numberSolves, int & numberIterations,
+                                  bool forceBranch)
 {
   int * stack = new int [depth];
   CoinWarmStart ** basis = new CoinWarmStart * [depth];
@@ -1469,40 +1473,116 @@ OsiSolverInterface::solveBranches(int depth,const OsiSolverBranch * branch,
     stack[iDepth]=-1;
     basis[iDepth]=NULL;
   }
+  //#define PRINTALL
+#ifdef PRINTALL
+  int seq[10];
+  double val[10];
+  assert (iDepth<=10);
+  for (iDepth=0;iDepth<depth;iDepth++) {
+    assert (branch[iDepth].starts()[4]==2);
+    assert (branch[iDepth].which()[0]==branch[iDepth].which()[1]);
+    assert (branch[iDepth].bounds()[0]==branch[iDepth].bounds()[1]-1.0);
+    seq[iDepth]=branch[iDepth].which()[0];
+    val[iDepth]=branch[iDepth].bounds()[0];
+    printf("depth %d seq %d nominal value %g\n",iDepth,seq[iDepth],val[iDepth]+0.5);
+  }
+#endif  
+  int numberColumns = getNumCols();
+  double * lowerBefore = CoinCopyOfArray(getColLower(),numberColumns);
+  double * upperBefore = CoinCopyOfArray(getColUpper(),numberColumns);
   iDepth=0;
   int numberFeasible=0;
-  int numberDone=0;
-  bool feasible=true;
-  int feasibleDepth=0;
   bool finished=false;
+  bool backTrack=false;
+  bool iterated=false;
+  numberIterations=0;
+  numberSolves=0;
+  int nFeas=0;
   while (!finished) {
-    if (feasible) {
-      if (stack[iDepth]==-1) {
-        delete basis[iDepth];
-        basis[iDepth]=getWarmStart();
+    bool feasible = true;
+    if (stack[iDepth]==-1) {
+      delete basis[iDepth];
+      basis[iDepth]=getWarmStart();
+    } else {
+      setWarmStart(basis[iDepth]);
+    }
+    // may be a faster way
+    setColLower(lowerBefore);
+    setColUpper(upperBefore);
+    for (int i=0;i<iDepth;i++) {
+      // skip if values feasible and not forceBranch
+      if (stack[i])
+        branch[i].applyBounds(*this,stack[i]);
+    }
+    bool doBranch = true;
+    if (!forceBranch&&!backTrack) {
+      // see if feasible on one side
+      if (!branch[iDepth].feasibleOneWay(*this)) {
+        branch[iDepth].applyBounds(*this,stack[iDepth]);
       } else {
-        setWarmStart(basis[iDepth]);
+        doBranch=false;
+        stack[iDepth]=0;
       }
+    } else {
       branch[iDepth].applyBounds(*this,stack[iDepth]);
+    }
+    if (doBranch) {
       resolve();
+      numberIterations += getIterationCount();
+      numberSolves++;
+      iterated=true;
       if (!isProvenOptimal()||isDualObjectiveLimitReached()) {
         feasible=false;
-      } else {
-        feasibleDepth = iDepth;
+#ifdef PRINTALL
+        const double * columnLower = getColLower();
+        const double * columnUpper = getColUpper();
+        const double * columnSolution = getColSolution();
+        printf("infeas depth %d ",iDepth);
+        for (int jDepth=0;jDepth<=iDepth;jDepth++) {
+          int iColumn=seq[jDepth];
+          printf(" (%d %g, %g, %g (nom %g))",iColumn,columnLower[iColumn],
+                 columnSolution[iColumn],columnUpper[iColumn],val[jDepth]+0.5);
+        }
+        printf("\n");
+#endif
       }
+    } else {
+      // must be feasible
+      nFeas++;
+#ifdef PRINTALL
+      const double * columnLower = getColLower();
+      const double * columnUpper = getColUpper();
+      const double * columnSolution = getColSolution();
+      printf("feas depth %d ",iDepth);
+      int iColumn=seq[iDepth];
+      printf(" (%d %g, %g, %g (nom %g))",iColumn,columnLower[iColumn],
+             columnSolution[iColumn],columnUpper[iColumn],val[iDepth]+0.5);
+      printf("\n");
+#endif
     }
+    backTrack=false;
     iDepth++;
-    if (iDepth==depth) {
-      if (feasible) {
-        result[numberDone]=OsiSolverResult(*this);
-        numberFeasible++;
-      } else {
-        result[numberDone]=OsiSolverResult();
+    if (iDepth==depth||!feasible) {
+      if (feasible&&iterated) {
+        result[numberFeasible++]=OsiSolverResult(*this,lowerBefore,upperBefore);
+#ifdef PRINTALL
+        const double * columnLower = getColLower();
+        const double * columnUpper = getColUpper();
+        const double * columnSolution = getColSolution();
+        printf("sol obj %g",getObjValue());
+        for (int jDepth=0;jDepth<depth;jDepth++) {
+          int iColumn=seq[jDepth];
+          printf(" (%d %g, %g, %g (nom %g))",iColumn,columnLower[iColumn],
+                 columnSolution[iColumn],columnUpper[iColumn],val[jDepth]+0.5);
+        }
+        printf("\n");
+#endif
       }
-      numberDone++;
       // on to next
       iDepth--;
-      while (stack[iDepth]==1) {
+      iterated=false;
+      backTrack=true;
+      while (stack[iDepth]>=0) {
         if (iDepth==0) {
           // finished
           finished=true;
@@ -1513,7 +1593,6 @@ OsiSolverInterface::solveBranches(int depth,const OsiSolverBranch * branch,
       }
       if (!finished) {
         stack[iDepth]=1;
-        feasible =  (iDepth <= feasibleDepth);
       }
     }
   }
@@ -1521,6 +1600,25 @@ OsiSolverInterface::solveBranches(int depth,const OsiSolverBranch * branch,
   for (iDepth=0;iDepth<depth;iDepth++)
     delete basis[iDepth];
   delete [] basis;
+  // restore bounds
+  setColLower(lowerBefore);
+  setColUpper(upperBefore);
+  delete [] lowerBefore;
+  delete [] upperBefore;
+  static int xxxxxx=0;
+  static int yyyyyy=0;
+  static int zzzzzz=0;
+  zzzzzz += nFeas;
+  for (int j=0;j<(1<<depth);j++) {
+    xxxxxx++;
+    if ((xxxxxx%1000)==0)
+      printf("%d implicit %d feas %d sent back\n",xxxxxx,zzzzzz,yyyyyy);
+  }
+  for (int j=0;j<numberFeasible;j++) {
+    yyyyyy++;
+    if ((yyyyyy%1000)==0)
+      printf("%d implicit %d feas %d sent back\n",xxxxxx,zzzzzz,yyyyyy);
+  }
   return numberFeasible;
 }
 #endif

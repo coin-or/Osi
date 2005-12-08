@@ -163,16 +163,21 @@ public:
        results which will be filled in.  See OsiSolveResult for more details
        (in OsiSolveBranch.?pp) but it will include a basis and primal solution.
 
-       The order of results is left to right at leaf nodes so first one
+       The order of results is left to right at feasible leaf nodes so first one
        is down, down, .....
 
-       Returns number of feasible leaves
+       Returns number of feasible leaves.  Also sets number of solves done and number
+       of iterations.
 
        This is provided so a solver can do faster.
+
+       If forceBranch true then branch done even if satisfied
     */
 #ifdef CBC_NEXT_VERSION
   virtual int solveBranches(int depth,const OsiSolverBranch * branch,
-                            OsiSolverResult * result);
+                            OsiSolverResult * result,
+                            int & numberSolves, int & numberIterations,
+                            bool forceBranch=false);
 #endif
   //@}
 

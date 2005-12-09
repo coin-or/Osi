@@ -46,7 +46,9 @@ void OsiClpSolverInterface::initialSolve()
   }
   int saveOptions = solver.specialOptions();
   solver.setSpecialOptions(saveOptions|64|32768); // go as far as possible
+  // get original log levels
   int saveMessageLevel=modelPtr_->logLevel();
+  int messageLevel=messageHandler()->logLevel();
   // Set message handler
   solver.passInMessageHandler(handler_);
   // But keep log level
@@ -61,7 +63,6 @@ void OsiClpSolverInterface::initialSolve()
   // Switch off printing if asked to
   bool gotHint = (getHintParam(OsiDoReducePrint,takeHint,strength));
   assert (gotHint);
-  int messageLevel=messageHandler()->logLevel();
   if (strength!=OsiHintIgnore&&takeHint) {
     if (messageLevel>0)
       messageLevel--;
@@ -340,6 +341,7 @@ void OsiClpSolverInterface::resolve()
   //modelPtr_->setSolveType(1);
   // Set message handler to have same levels etc
   int saveMessageLevel=modelPtr_->logLevel();
+  int messageLevel=messageHandler()->logLevel();
   bool oldDefault;
   CoinMessageHandler * saveHandler = modelPtr_->pushMessageHandler(handler_,oldDefault);
   //printf("basis before dual\n");
@@ -349,7 +351,6 @@ void OsiClpSolverInterface::resolve()
   // Switch off printing if asked to
   gotHint = (getHintParam(OsiDoReducePrint,takeHint,strength));
   assert (gotHint);
-  int messageLevel=messageHandler()->logLevel();
   if (strength!=OsiHintIgnore&&takeHint) {
     if (messageLevel>0)
       messageLevel--;
@@ -2332,6 +2333,8 @@ OsiClpSolverInterface::readMps(const char *filename,
   
   CoinMpsIO m;
   m.setInfinity(getInfinity());
+  m.passInMessageHandler(modelPtr_->messageHandler());
+  *m.messagesPointer()=modelPtr_->coinMessages();
   
   int numberErrors = m.readMps(filename,extension);
   handler_->message(COIN_SOLVER_MPS,messages_)

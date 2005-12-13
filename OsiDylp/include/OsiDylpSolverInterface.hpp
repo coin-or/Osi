@@ -306,10 +306,12 @@ public:
   /*! \brief Set the lower bound on a column (variable) */
 
   void setColLower(int index, double value) ;
+  using OsiSolverInterface::setColLower ;
 
   /*! \brief Set the upper bound on a column (variable) */
 
   void setColUpper(int index, double value) ;
+  using OsiSolverInterface::setColUpper ;
 
   /*! \brief Set the lower bound on a row (constraint) */
 
@@ -539,9 +541,22 @@ public:
 /*! \name Debugging Methods */
 //@{
 
-  /*! \brief Activate the row cut debugger */
+  /*! \brief Activate the row cut debugger
+  
+    Activate the debugger for a model known to the debugger. The debugger
+    will consult an internal database for an optimal solution vector.
+  */
 
   void activateRowCutDebugger (const char * modelName) ;
+
+  /*! \brief Activate the row cut debugger
+  
+    Activate the debugger for a model not included in the debugger's internal
+    database. \p solution must be a full solution vector, but only the
+    integer values need to be correct.
+  */
+
+  void activateRowCutDebugger (const double *solution) ;
 
 //@}
 

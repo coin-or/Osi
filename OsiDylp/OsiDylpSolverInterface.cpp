@@ -52,13 +52,25 @@ const double CoinInfinity = DBL_MAX ;
 #define ODSI OsiDylpSolverInterface
 #define OSI OsiSolverInterface
 
+/*! \brief Define to enable implicit read of options file
+
+  If ODSI_IMPLICIT_SPC is defined `1' at compile time, when
+  readMps(const char*,const char*) is asked to read <problem>.mps, it will
+  first look for <problem>.spc and, if found, process it as a dylp options
+  file.
+
+  Disabled by default.
+*/
+
+#define ODSI_IMPLICIT_SPC 0
+
 /*!
   \file OsiDylpSolverInterface.cpp
 
   \brief Implementation of COIN OSI layer for dylp.
 
-  This file contains the implementation of a COIN OSI layer for dylp, the lp
-  solver for the bonsaiG MILP code.
+  This file contains the implementation of a COIN OSI layer for dylp, an lp
+  solver originally written for the bonsaiG MILP code.
 
   More information on the COIN/OR project and the OSI layer specification
   can be found at http://www.coin-or.org.
@@ -100,10 +112,7 @@ const double CoinInfinity = DBL_MAX ;
   <strong>Statistics Collection</strong>:
   Dylp can collect detailed statistics on its performance. In order to do so,
   both OsiDylpSolverInterface and the dylp library must be built with the
-  compile-time symbol \c DYLP_STATISTICS defined.  The dylp library makefile
-  is set up to define \c DYLP_STATISTICS for the debug and fast builds only;
-  check there if, for example, you want to collect statistics in an optimized
-  build.
+  compile-time symbol \c DYLP_STATISTICS defined.
 
   Statistics are collected on a per-call basis only; there is no facility to
   accumulate statistics over multiple calls to dylp. The statistics structure
@@ -144,7 +153,7 @@ const double CoinInfinity = DBL_MAX ;
   OsiSolverInterface indexes variables and constraints from 0 (the standard
   approach for C/C++) while dylp indexes them from 1 (for robustness; see
   consys.h). Some caution is needed in the interface to avoid off-by-one
-  errors. Similarly, arrays (vectors) for k elements in bonsai occupy k+1
+  errors. Similarly, arrays (vectors) for k elements in dylp occupy k+1
   space with vector[0] unused.  ODSI::idx, ODSI::inv, and ODSI::inv_vec are
   used to make these trivial conversions explicit.
 
@@ -196,10 +205,10 @@ using std::vector ;
 extern "C"
 {
 
-#include "bonsai.h"
+#include "dy_cmdint.h"
 
-#ifndef ERRMSGDIR
-# define ERRMSGDIR "."
+#ifndef DYLP_ERRMSGDIR
+# define DYLP_ERRMSGDIR "."
 #endif
 
 
@@ -225,11 +234,11 @@ extern void strfree(const char *str) ;
   \brief Variables controlling dylp file and terminal i/o.
 
   Dylp is capable of generating a great deal of output, but the control
-  mechanisms are not a good fit for C++ objects and the OSI framework.
-  Four global variables, cmdchn, cmdecho, logchn, and gtxecho, control
+  mechanisms are not a good fit for C++ objects and the OSI framework.  Four
+  global variables, dy_cmdchn, dy_cmdecho, dy_logchn, and dy_gtxecho, control
   command input/echoing and log message output/echoing.
 
-  Gtxecho can be controlled using the OsiDoReducePrint hint; it
+  dy_gtxecho can be controlled using the OsiDoReducePrint hint; it
   is set to true whenever the print level is specified as an absolute integer
   such that (print level) & 0x10 != 0
 
@@ -250,24 +259,24 @@ extern void strfree(const char *str) ;
 */
 
 //@{
-/*! \var ioid cmdchn
+/*! \var ioid dy_cmdchn
     \brief ioid used to read option (.spc) files
 */
-/*! \var ioid logchn
+/*! \var ioid dy_logchn
     \brief ioid used for logging to a file
 */
-/*! \var bool cmdecho
+/*! \var bool dy_cmdecho
     \brief controls echoing of commands from option files to the terminal
 */
-/*! \var bool gtxecho
+/*! \var bool dy_gtxecho
     \brief controls echoing of generated text to the terminal
 */
 
-ioid cmdchn = IOID_NOSTRM,
-     logchn = IOID_NOSTRM ;
+ioid dy_cmdchn = IOID_NOSTRM,
+     dy_logchn = IOID_NOSTRM ;
 
-bool cmdecho = false,
-     gtxecho = false ;
+bool dy_cmdecho = false,
+     dy_gtxecho = false ;
 
 //@}
 
@@ -1101,7 +1110,7 @@ void ODSI::dylp_ioinit ()
 
 { if (reference_count > 1) return ;
 
-  string errfile = string(ERRMSGDIR)+string("/bonsaierrs.txt") ;
+  string errfile = string(DYLP_ERRMSGDIR)+string("/dy_errmsgs.txt") ;
 # ifndef NDEBUG
   errinit(const_cast<char *>(errfile.c_str()),0,true) ;
 # else
@@ -2055,7 +2064,8 @@ inline void ODSI::setColLower (int i, double val)
 
 /*!
   See the comments with setColLower re. automatic variable type conversions.
-  In short, binary to general integer is the only one that will occur.
+  In short, binary to general integer and integer to continuous are the only
+  ones that will occur.
 */
 inline void ODSI::setColUpper (int i, double val)
 
@@ -2533,7 +2543,7 @@ void ODSI::assert_same (const conbnd_struct& c1, const conbnd_struct& c2,
 
 /*! \brief Verify copy of a dylp constraint matrix (consys_struct)
 
-  Compare two bonsai consys_struct's for equality. There are two levels of
+  Compare two consys_struct's for equality. There are two levels of
   comparison. Exact looks for exact equivalence of content and size. Inexact
   checks that each consys_struct describes the same mathematical system, but
   ignores the constraint system name, various counts, and the allocated size
@@ -2784,6 +2794,7 @@ string ODSI::make_filename (const char *filename,
 
 
 /*! \defgroup ODSILoadProb Methods to Load a Problem
+
    \brief Methods to load a problem into dylp
 
    This group of functions provides methods to load a problem from an MPS
@@ -2819,9 +2830,10 @@ string ODSI::make_filename (const char *filename,
 
   readMps will recognize continuous, binary, and general integer variables.
 
-  Before reading the MPS problem file, readMps looks for a dylp control file
-  (extension "spc"). The name is constructed by stripping the extension 
-  (if present) from the given file name and adding the extension "spc".
+  If compiled with #ODSI_IMPLICIT_SPC defined as `1', before reading the MPS
+  problem file, readMps looks for a dylp options file (extension ".spc"). The
+  name is constructed by stripping the extension (if present) from the given
+  file name and adding the extension ".spc".
 
   A `worst case' (and typically infeasible) primal solution is constructed
   which provides a valid bound on the objective.
@@ -2837,7 +2849,7 @@ int ODSI::readMps (const char* basename, const char* ext)
 
   Parameters:
     basename:	base name for mps file
-    ext:	file extension; defaults to "mps"
+    ext:	file extension (no leading `.')
 
   Returns: -1 if the MPS file could not be opened, otherwise the number of
 	   errors encountered while reading the file.
@@ -2846,17 +2858,20 @@ int ODSI::readMps (const char* basename, const char* ext)
 { int errcnt ;
   CoinMpsIO mps ;
   CoinMessageHandler *mps_handler = mps.messageHandler() ;
+  string filename ;
 
   if (mps_debug)
   { mps_handler->setLogLevel(handler_->logLevel()) ; }
   else
   { mps_handler->setLogLevel(0) ; }
 
+# if ODSI_IMPLICIT_SPC == 1
 /*
   See if there's an associated .spc file and read it first, if present.
 */
-  string filename = make_filename(basename,ext,"spc") ;
+  filename = make_filename(basename,ext,"spc") ;
   dylp_controlfile(filename.c_str(),true,false) ;
+# endif
 /*
   Make sure the MPS reader has the same idea of infinity as dylp, then
   attempt to read the MPS file.
@@ -2898,7 +2913,7 @@ int ODSI::readMps (const char* basename, const char* ext,
 
   Parameters:
     basename:	base name for mps file
-    ext:	file extension; defaults to "mps"
+    ext:	file extension (no leading `.')
     numberSets:	the number of SOS sets
     sets:	pointer to array of SOS sets
 
@@ -2909,17 +2924,20 @@ int ODSI::readMps (const char* basename, const char* ext,
 { int errcnt ;
   CoinMpsIO mps ;
   CoinMessageHandler *mps_handler = mps.messageHandler() ;
+  string filename ;
 
   if (mps_debug)
   { mps_handler->setLogLevel(handler_->logLevel()) ; }
   else
   { mps_handler->setLogLevel(0) ; }
 
+# if ODSI_IMPLICIT_SPC == 1
 /*
   See if there's an associated .spc file and read it first, if present.
 */
-  string filename = make_filename(basename,ext,"spc") ;
+  filename = make_filename(basename,ext,"spc") ;
   dylp_controlfile(filename.c_str(),true,false) ;
+# endif
 /*
   Make sure the MPS reader has the same idea of infinity as dylp, then
   attempt to read the MPS file.
@@ -3695,14 +3713,14 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
 # ifndef NDEBUG
   if (print >= 1)
   { if (lpret == lpOPTIMAL || lpret == lpINFEAS || lpret == lpUNBOUNDED)
-    { outfmt(logchn,gtxecho,"\n  success, status %s",
+    { outfmt(dy_logchn,dy_gtxecho,"\n  success, status %s",
 	     dy_prtlpret(lpprob->lpret)) ; }
     else
     if (lpret == lpITERLIM)
-    { outfmt(logchn,gtxecho,"\n  premature termination, status %s",
+    { outfmt(dy_logchn,dy_gtxecho,"\n  premature termination, status %s",
 	     dy_prtlpret(lpprob->lpret)) ; }
     else
-    { outfmt(logchn,gtxecho,"\n  failed, status %s",
+    { outfmt(dy_logchn,dy_gtxecho,"\n  failed, status %s",
 	     dy_prtlpret(lpprob->lpret)) ; } }
 # endif
   clrflg(lpprob->ctlopts,lpctlUBNDCHG|lpctlLBNDCHG|lpctlRHSCHG|lpctlOBJCHG) ;
@@ -3738,7 +3756,7 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
     level |= 0x10 ;
     setHintParam(OsiDoReducePrint,true,OsiForceDo,&level) ;
     lcl_opts.print = initialSolveOptions->print ;
-    gtxecho = initial_gtxecho ;
+    dy_gtxecho = initial_gtxecho ;
     std::cout << "Verbosity now maxed at " << level << ".\n" ;
     destruct_cache() ;
     writeMps("dylpPostmortem","mps") ;
@@ -3757,7 +3775,7 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
     { retries++ ;
 #     ifndef NDEBUG
       if (print >= 1)
-      { outfmt(logchn,gtxecho,".\n    retry %d: refactor = %d ...",
+      { outfmt(dy_logchn,dy_gtxecho,".\n    retry %d: refactor = %d ...",
 	       retries,lcl_opts.factor) ; }
 #     endif
       setflg(lpprob->ctlopts,persistent_flags) ;
@@ -3768,14 +3786,14 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
       {
 #       ifndef NDEBUG
 	if (print >= 1)
-	{ outfmt(logchn,gtxecho,"\n  success, status %s",
+	{ outfmt(dy_logchn,dy_gtxecho,"\n  success, status %s",
 		 dy_prtlpret(lpprob->lpret)) ; }
 #       endif
 	break ; }
 #     ifndef NDEBUG
       else
       { if (print >= 1)
-	{ outfmt(logchn,gtxecho,"\n  failed, status %s",
+	{ outfmt(dy_logchn,dy_gtxecho,"\n  failed, status %s",
 		 dy_prtlpret(lpprob->lpret)) ; } }
 #     endif
     }
@@ -3817,14 +3835,14 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
 # ifndef NDEBUG
   if (print >= 1)
   { if (lpprob->lpret == lpOPTIMAL)
-      outfmt(logchn,gtxecho,"; objective %.8g",lpprob->obj) ;
+      outfmt(dy_logchn,dy_gtxecho,"; objective %.8g",lpprob->obj) ;
     else
     if (lpprob->lpret == lpINFEAS)
-      outfmt(logchn,gtxecho,"; infeasibility %.4g",lpprob->obj) ;
+      outfmt(dy_logchn,dy_gtxecho,"; infeasibility %.4g",lpprob->obj) ;
     if (lpprob->phase == dyDONE)
-      outfmt(logchn,gtxecho," after %d pivots",lpprob->iters) ;
-    outchr(logchn,gtxecho,'.') ;
-    flushio(logchn,gtxecho) ; }
+      outfmt(dy_logchn,dy_gtxecho," after %d pivots",lpprob->iters) ;
+    outchr(dy_logchn,dy_gtxecho,'.') ;
+    flushio(dy_logchn,dy_gtxecho) ; }
 # endif
 
   return (lpret) ; }
@@ -3928,8 +3946,8 @@ void ODSI::initialSolve ()
 /*
   Establish logging and echo values, and invoke the solver.
 */
-  if (isactive(local_logchn)) logchn = local_logchn ;
-  gtxecho = initial_gtxecho ;
+  if (isactive(local_logchn)) dy_logchn = local_logchn ;
+  dy_gtxecho = initial_gtxecho ;
   if (presolving == true)
   { save_ctlopts = getflg(lpprob->ctlopts,lpctlNOFREE|lpctlACTVARSOUT) ;
     clrflg(lpprob->ctlopts,lpctlNOFREE|lpctlACTVARSOUT) ;
@@ -5303,8 +5321,8 @@ void ODSI::resolve ()
   crucial here --- dylp will sort it out as it starts.
 */
   assert(resolveOptions->forcecold == false) ;
-  if (isactive(local_logchn)) logchn = local_logchn ;
-  gtxecho = resolve_gtxecho ;
+  if (isactive(local_logchn)) dy_logchn = local_logchn ;
+  dy_gtxecho = resolve_gtxecho ;
   dyphase_enum phase = lpprob->phase ;
   if (!(phase == dyPRIMAL1 || phase == dyPRIMAL2 || phase == dyDUAL))
     lpprob->phase = dyINV ;
@@ -5452,8 +5470,8 @@ void ODSI::solveFromHotStart ()
     assert(lpprob && lpprob->basis && lpprob->status && basis_ready &&
 	   consys && resolveOptions && tolerances) ;
 
-    if (isactive(local_logchn)) logchn = local_logchn ;
-    gtxecho = resolve_gtxecho ;
+    if (isactive(local_logchn)) dy_logchn = local_logchn ;
+    dy_gtxecho = resolve_gtxecho ;
 /*
   Phase can be anything except dyDONE, which will cause dylp to free data
   structures and return.
@@ -5538,10 +5556,12 @@ inline void ODSI::unmarkHotStart ()
   detached.
 
   It's also conservative in the sense that unless the row cut debugger
-  recognizes the model, it won't activate.
+  recognizes the model name, it won't activate.
+  See activateRowCutDebugger(const double*) if you have a model the debugger
+  doesn't already know about.
 */
 
-void ODSI::activateRowCutDebugger (const char * modelName)
+void ODSI::activateRowCutDebugger (const char *modelName)
 
 { delete rowCutDebugger_ ;
 
@@ -5556,6 +5576,32 @@ void ODSI::activateRowCutDebugger (const char * modelName)
     delete ws ; }
   else
   { rowCutDebugger_ = new OsiRowCutDebugger(*this,modelName) ; }
+
+  return ; }
+
+/*!
+  Activate the row cut debugger for a model that's not one of the models known
+  to the debugger. You must provide a full solution vector, but only the
+  integer variables will be checked.
+
+  See also the comments for activateRowCutDebugger(const char*).
+*/
+
+void ODSI::activateRowCutDebugger (const double *solution)
+
+{ delete rowCutDebugger_ ;
+
+  if (dylp_owner && dylp_owner->lpprob &&
+      flgon(dylp_owner->lpprob->ctlopts,lpctlDYVALID))
+  { CoinWarmStart *ws = dylp_owner->getWarmStart() ;
+    ODSI *prev_owner = dylp_owner ;
+    prev_owner->detach_dylp() ;
+    rowCutDebugger_ = new OsiRowCutDebugger(*this,solution) ;
+    prev_owner->setWarmStart(ws) ;
+    prev_owner->resolve() ;
+    delete ws ; }
+  else
+  { rowCutDebugger_ = new OsiRowCutDebugger(*this,solution) ; }
 
   return ; }
 
@@ -5582,14 +5628,14 @@ void ODSI::dylp_controlfile (const char *name,
 
 { if (name == 0 || *name == 0) return ;
   string mode = (mustexist)?"r":"q" ;
-  cmdchn = openfile(name,mode.c_str()) ;
-  if (!(cmdchn == IOID_INV || cmdchn == IOID_NOSTRM))
-  { setmode (cmdchn, 'l') ;  
+  dy_cmdchn = openfile(name,mode.c_str()) ;
+  if (!(dy_cmdchn == IOID_INV || dy_cmdchn == IOID_NOSTRM))
+  { setmode (dy_cmdchn, 'l') ;  
     main_lpopts = initialSolveOptions ;
     main_lptols = tolerances ;
     bool r UNUSED = (process_cmds(silent) != 0) ;
-    (void) closefile(cmdchn) ;
-    cmdchn = IOID_NOSTRM ;
+    (void) closefile(dy_cmdchn) ;
+    dy_cmdchn = IOID_NOSTRM ;
     assert(r == cmdOK) ;
 /*
   Copy user settings into resolveOptions, except for forcecold and fullsys.
@@ -5599,7 +5645,7 @@ void ODSI::dylp_controlfile (const char *name,
     resolveOptions->forcecold = saveOptions.forcecold ;
     resolveOptions->fullsys = saveOptions.fullsys ; }
 
-  cmdchn = IOID_NOSTRM ;
+  dy_cmdchn = IOID_NOSTRM ;
 
   return ; }
   

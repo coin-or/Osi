@@ -99,7 +99,7 @@ static MsgDefn us_en_defns[] = {
   { ODSI_PRESOL_STATS, 100, 2,
     "%s %d constraints, %d variables, %d coefficients." }, 
   { ODSI_PRESOL_PASS, 101, 3,
-    "Presolve pass %d: dropped %d constraints, %d variables." },
+    "Presolve pass %d: dropped %d constraints (%.2f), %d variables (%.2f)." },
   { ODSI_POSTSOL, 200, 2, "Postsolve %s."},
   { ODSI_POSTSOL_ACT, 201, 3, "Applying postsolve transform %s."},
   { ODSI_LPRESULT, 050, 3,

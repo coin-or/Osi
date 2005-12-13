@@ -402,9 +402,11 @@ void ODSI::doPresolve ()
   if (preObj_->status() == feasibleStatus)
   { preObj_->initColsToDo() ;
     preObj_->initRowsToDo() ;
+    int colCnt,rowCnt ;
     int colsDropped,rowsDropped ;
     int lastRowsDropped = 0 ;
     int lastColsDropped = 0 ;
+    double rowShrink,colShrink ;
     preObj_->setPass(0) ;
 /*
   Open the main presolve transform loop. There are two phases to each
@@ -587,18 +589,24 @@ void ODSI::doPresolve ()
 	if (preObj_->status() != feasibleStatus)
 	  break ; }
 /*
-  See if we should continue. The requirement is that we've actuallly
-  performed some transforms (and added the matching postsolve actions).
+  See if we should continue. The requirement is that we've substantially
+  reduced the problem. Checking postActions_ == lastAction is a quick test
+  for any action at all. If there's action, see if it's enough to continue.
+  For now, make the criteria a 5% reduction in rows or columns.
 */
-
       rowsDropped = preObj_->countEmptyRows() ;
       colsDropped = preObj_->countEmptyCols() ;
-      handler_->message(ODSI_PRESOL_PASS,messages_)
-	  << currentPass << rowsDropped-lastRowsDropped
-	  << colsDropped-lastColsDropped << CoinMessageEol ;
+      colCnt = preObj_->getNumCols() ;
+      rowCnt = preObj_->getNumRows() ;
+      rowShrink = ((double) rowsDropped)/rowCnt ;
+      colShrink = ((double) colsDropped)/colCnt ;
 
-      if (postActions_ == lastAction)
-	break ;
+      handler_->message(ODSI_PRESOL_PASS,messages_)
+	  << currentPass << rowsDropped-lastRowsDropped << rowShrink
+	  << colsDropped-lastColsDropped << colShrink << CoinMessageEol ;
+
+      if (postActions_ == lastAction) break ;
+      if (rowShrink < .05 && colShrink < .05) break ;
 
       lastRowsDropped = rowsDropped ;
       lastColsDropped = colsDropped ; } }

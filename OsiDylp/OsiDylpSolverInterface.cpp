@@ -2999,9 +2999,9 @@ void ODSI::writeMps (const char *basename,
   mps.setProblemName(consys->nme) ;
 
   char *vartyp = new char[n] ;
-  typedef char *charp ;
-  char **colnames = new charp[n],
-       **rownames = new charp[m] ;
+  typedef const char *charp ;
+  const char **colnames = new charp[n],
+	     **rownames = new charp[m] ;
   int i,j ;
 
   for (j = 0 ; j < n ; j++) vartyp[j] = isInteger(j) ;

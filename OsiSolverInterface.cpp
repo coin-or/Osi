@@ -1127,6 +1127,9 @@ OsiSolverInterface::writeLpNative(const char *filename,
 		     getRowLower(), getRowUpper());
 
    writer.setLpDataRowAndColNames(columnNames, rowNames);
+   double objOffset=0.0;
+   getDblParam(OsiObjOffset,objOffset);
+   writer.setObjectiveOffset(objOffset);
 
    //writer.print();
    delete [] objective;
@@ -1142,7 +1145,7 @@ int OsiSolverInterface::readLp(const char * filename, const double epsilon)
   m.readLp(filename, epsilon);
 
   // set objective function offest
-  setDblParam(OsiObjOffset, 0);
+  setDblParam(OsiObjOffset, m.objectiveOffset());
 
   // set problem name
   setStrParam(OsiProbName, m.getProblemName());

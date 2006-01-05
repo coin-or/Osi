@@ -208,11 +208,18 @@ extern "C"
 #include "dy_cmdint.h"
 
 #ifndef DYLP_ERRMSGDIR
-# define DYLP_ERRMSGDIR "."
+/*
+  This is the correct path to find dy_errmsgs.txt, assuming the default
+  COIN directory structure for Osi and Dylp, to wit:
+    COIN
+      Osi
+	OsiDylp
+      Dylp
+	Dylp
+*/
+# define DYLP_ERRMSGDIR "../../Dylp/Dylp"
 #endif
 
-
-extern bool dy_mpsin(const char *filename, consys_struct **consys) ;
 extern void dy_initbasis(int concnt, int factor_freq, double zero_tol) ;
 extern void dy_freebasis() ;
 

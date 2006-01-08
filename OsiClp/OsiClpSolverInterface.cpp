@@ -1585,9 +1585,20 @@ OsiClpSolverInterface::addRows(const int numrows,
 void 
 OsiClpSolverInterface::deleteRows(const int num, const int * rowIndices)
 {
+  // will still be optimal if all rows basic
+  bool allBasic=true;
+  for (int i=0;i<num;i++) {
+    int iRow = rowIndices[i];
+    if (basis_.getArtifStatus(iRow)!=CoinWarmStartBasis::basic) {
+      allBasic=false;
+      break;
+    }
+  }
+  int saveAlgorithm = allBasic ? lastAlgorithm_ : 999;
   modelPtr_->deleteRows(num,rowIndices);
   basis_.deleteRows(num,rowIndices);
   freeCachedResults();
+  lastAlgorithm_ = saveAlgorithm;
 }
 
 //#############################################################################
@@ -2467,33 +2478,41 @@ OsiClpSolverInterface::setObjCoeff( int elementIndex, double elementValue )
 /* Set a single column lower bound<br>
    Use -DBL_MAX for -infinity. */
 void 
-OsiClpSolverInterface::setColLower( int elementIndex, double elementValue )
+OsiClpSolverInterface::setColLower( int index, double elementValue )
 {
-  // Say can't gurantee optimal basis etc
-  lastAlgorithm_=999;
 #ifndef NDEBUG
   int n = modelPtr_->numberColumns();
-  if (elementIndex<0||elementIndex>=n) {
-    indexError(elementIndex,"setColLower");
+  if (index<0||index>=n) {
+    indexError(index,"setColLower");
   }
 #endif
-  modelPtr_->setColumnLower(elementIndex,elementValue);
+  double currentValue = modelPtr_->columnActivity_[index];
+  bool changed=(currentValue<elementValue-modelPtr_->primalTolerance()||
+                basis_.getStructStatus(index)==CoinWarmStartBasis::atLowerBound);
+  // Say can't gurantee optimal basis etc
+  if (changed)
+    lastAlgorithm_=999;
+  modelPtr_->setColumnLower(index,elementValue);
 }
       
 /* Set a single column upper bound<br>
    Use DBL_MAX for infinity. */
 void 
-OsiClpSolverInterface::setColUpper( int elementIndex, double elementValue )
+OsiClpSolverInterface::setColUpper( int index, double elementValue )
 {
-  // Say can't gurantee optimal basis etc
-  lastAlgorithm_=999;
 #ifndef NDEBUG
   int n = modelPtr_->numberColumns();
-  if (elementIndex<0||elementIndex>=n) {
-    indexError(elementIndex,"setColUpper");
+  if (index<0||index>=n) {
+    indexError(index,"setColUpper");
   }
 #endif
-  modelPtr_->setColumnUpper(elementIndex,elementValue);
+  double currentValue = modelPtr_->columnActivity_[index];
+  bool changed=(currentValue>elementValue+modelPtr_->primalTolerance()||
+                basis_.getStructStatus(index)==CoinWarmStartBasis::atUpperBound);
+  // Say can't gurantee optimal basis etc
+  if (changed)
+    lastAlgorithm_=999;
+  modelPtr_->setColumnUpper(index,elementValue);
 }
 
 /* Set a single column lower and upper bound */

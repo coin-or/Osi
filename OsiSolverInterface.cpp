@@ -1127,9 +1127,6 @@ OsiSolverInterface::writeLpNative(const char *filename,
 		     getRowLower(), getRowUpper());
 
    writer.setLpDataRowAndColNames(columnNames, rowNames);
-   double objOffset=0.0;
-   getDblParam(OsiObjOffset,objOffset);
-   writer.setObjectiveOffset(objOffset);
 
    //writer.print();
    delete [] objective;
@@ -1145,7 +1142,7 @@ int OsiSolverInterface::readLp(const char * filename, const double epsilon)
   m.readLp(filename, epsilon);
 
   // set objective function offest
-  setDblParam(OsiObjOffset, m.objectiveOffset());
+  setDblParam(OsiObjOffset, 0);
 
   // set problem name
   setStrParam(OsiProbName, m.getProblemName());
@@ -1608,20 +1605,22 @@ OsiSolverInterface::solveBranches(int depth,const OsiSolverBranch * branch,
   setColUpper(upperBefore);
   delete [] lowerBefore;
   delete [] upperBefore;
+#if 0
   static int xxxxxx=0;
   static int yyyyyy=0;
   static int zzzzzz=0;
   zzzzzz += nFeas;
   for (int j=0;j<(1<<depth);j++) {
     xxxxxx++;
-    if ((xxxxxx%1000)==0)
+    if ((xxxxxx%10000)==0)
       printf("%d implicit %d feas %d sent back\n",xxxxxx,zzzzzz,yyyyyy);
   }
   for (int j=0;j<numberFeasible;j++) {
     yyyyyy++;
-    if ((yyyyyy%1000)==0)
+    if ((yyyyyy%10000)==0)
       printf("%d implicit %d feas %d sent back\n",xxxxxx,zzzzzz,yyyyyy);
   }
+#endif
   return numberFeasible;
 }
 #endif

@@ -1126,7 +1126,7 @@ OsiSolverInterface::writeLpNative(const char *filename,
 		     objective, hasInteger ? integrality : 0,
 		     getRowLower(), getRowUpper());
 
-   writer.setLpDataRowAndColNames(columnNames, rowNames);
+   writer.setLpDataRowAndColNames(rowNames, columnNames);
 
    //writer.print();
    delete [] objective;
@@ -1288,9 +1288,10 @@ OsiSolverInterface::disableFactorization() const
 bool 
 OsiSolverInterface::basisIsAvailable() const 
 {
-  // Throw an exception
+  return false;
+  /* // Throw an exception
   throw CoinError("Needs coding for this interface", "basisIsAvailable",
-		  "OsiSolverInterface");
+  "OsiSolverInterface"); */
 }
 
 /* The following two methods may be replaced by the

@@ -1018,7 +1018,7 @@ public:
     maximization objective and +1.0 to write a minimization one.
     If 0.0 then solver can do what it wants.
     This version calls writeLpNative */
-  void writeLp(const char *filename,
+  virtual void writeLp(const char *filename,
                const char *extension = "lp",
                const double epsilon = 1e-5,
                const int numberAcross = 10,
@@ -1037,7 +1037,7 @@ public:
                     const double objSense = 0.0,
                     bool changeNameOnRange=false) const;
   /// Read file in LP format
-  int readLp(const char *filename, const double epsilon = 1e-5);
+  virtual int readLp(const char *filename, const double epsilon = 1e-5);
 
   //@}
 

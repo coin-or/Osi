@@ -28,6 +28,7 @@
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
 #include "ClpPresolve.hpp"
+#include "CoinLpIO.hpp"
 static double totalTime=0.0;
 //#############################################################################
 // Solve methods
@@ -1815,9 +1816,17 @@ void OsiClpSolverInterface::writeMps(const char * filename,
     // no extension so no trailing period
     fullname = f;
   }
-  // Fall back on Osi version - without names
+  // get names
+  const char * const * const rowNames = modelPtr_->rowNamesAsChar();
+  const char * const * const columnNames = modelPtr_->columnNamesAsChar();
+  // Fall back on Osi version - possibly with names
   OsiSolverInterface::writeMpsNative(fullname.c_str(), 
-				     NULL, NULL,0,2,objSense);
+				     const_cast<const char **>(rowNames),
+                                     const_cast<const char **>(columnNames),0,2,objSense);
+  if (rowNames) {
+    modelPtr_->deleteNamesAsChar(rowNames, modelPtr_->numberRows_);
+    modelPtr_->deleteNamesAsChar(columnNames, modelPtr_->numberColumns_);
+  }
 }
 
 int 
@@ -2397,6 +2406,91 @@ OsiClpSolverInterface::readMps(const char *filename,
     modelPtr_->copyNames(rowNames,columnNames);
   }
   return numberErrors;
+}
+// Read file in LP format (with names)
+int 
+OsiClpSolverInterface::readLp(const char *filename, const double epsilon )
+{
+  CoinLpIO m;
+  m.readLp(filename, epsilon);
+
+  // set objective function offest
+  setDblParam(OsiObjOffset, 0);
+
+  // set problem name
+  setStrParam(OsiProbName, m.getProblemName());
+
+  // no errors
+  loadProblem(*m.getMatrixByRow(), m.getColLower(), m.getColUpper(),
+	      m.getObjCoefficients(), m.getRowLower(), m.getRowUpper());
+
+  const char *integer = m.integerColumns();
+  int nCols = m.getNumCols();
+  int nRows = m.getNumRows();
+  if (integer) {
+    int i, n = 0;
+    int *index = new int [nCols];
+    for (i=0; i<nCols; i++) {
+      if (integer[i]) {
+	index[n++] = i;
+      }
+    }
+    setInteger(index,n);
+    delete [] index;
+  }
+  // Always keep names
+  int iRow;
+  std::vector<std::string> rowNames = std::vector<std::string> ();
+  std::vector<std::string> columnNames = std::vector<std::string> ();
+  rowNames.reserve(nRows);
+  for (iRow=0;iRow<nRows;iRow++) {
+    const char * name = m.rowName(iRow);
+    rowNames.push_back(name);
+  }
+  
+  int iColumn;
+  columnNames.reserve(nCols);
+  for (iColumn=0;iColumn<nCols;iColumn++) {
+    const char * name = m.columnName(iColumn);
+    columnNames.push_back(name);
+  }
+  modelPtr_->copyNames(rowNames,columnNames);
+  return(0);
+}
+/* Write the problem into an Lp file of the given filename.
+   If objSense is non zero then -1.0 forces the code to write a
+   maximization objective and +1.0 to write a minimization one.
+   If 0.0 then solver can do what it wants.
+   This version calls writeLpNative with names */
+void 
+OsiClpSolverInterface::writeLp(const char *filename,
+                               const char *extension ,
+                               const double epsilon ,
+                               const int numberAcross ,
+                               const int decimals ,
+                               const double objSense ,
+                               bool changeNameOnRange) const
+{
+  std::string f(filename);
+  std::string e(extension);
+  std::string fullname;
+  if (e!="") {
+    fullname = f + "." + e;
+  } else {
+    // no extension so no trailing period
+    fullname = f;
+  }
+  // get names
+  const char * const * const rowNames = modelPtr_->rowNamesAsChar();
+  const char * const * const columnNames = modelPtr_->columnNamesAsChar();
+  // Fall back on Osi version - possibly with names
+  OsiSolverInterface::writeLpNative(fullname.c_str(), 
+				    rowNames,columnNames, epsilon, numberAcross,
+				    decimals, objSense,changeNameOnRange);
+  if (rowNames) {
+    modelPtr_->deleteNamesAsChar(rowNames, modelPtr_->numberRows_);
+    modelPtr_->deleteNamesAsChar(columnNames, modelPtr_->numberColumns_);
+  }
 }
 // Get pointer to array[getNumCols()] of primal solution vector
 const double * 

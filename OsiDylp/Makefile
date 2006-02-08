@@ -55,9 +55,10 @@ InstallDir := $(CoinDir)
 # In the event that we somehow arrive here without the proper Dylp defines,
 # add them.
 
-ifeq (,$(filter COIN_USE_DYLP, $(CXXFLAGS)))
-  CXXFLAGS += $(patsubst %, -D%, $(DylpDefine) $(OsiDylpDefine))
-  CXXFLAGS += $(patsubst %, -I%, $(DylpIncDir) $(OsiDylpIncDir))
+ifeq (,$(filter COIN_HAS_DYLP, $(CXXFLAGS)))
+  $(error COIN_HAS_DYLP is not defined in Makefiles/Makefile.location. Probably the line 'CoinLibsDefined += COIN_libDylp' is commented out.)
+#  CXXFLAGS += $(patsubst %, -D%, $(DylpDefine) $(OsiDylpDefine))
+#  CXXFLAGS += $(patsubst %, -I%, $(DylpIncDir) $(OsiDylpIncDir))
 endif
 
 # This bit of makefile is adapted from Utils/Makefile.Config in the dylp

@@ -22,7 +22,7 @@ ifneq ($(filter COIN_libOsiClp,$(CoinLibsDefined)),)
     IncDir  += ${OsiClpIncDir} ${ClpIncDir}
     LibDir  += ${OsiClpLibDir} ${ClpLibDir}
     LibName += ${OsiClpLibName} ${ClpLibName}
-    Define  += ${OsiClpDefine} ${ClpDefine} COIN_USE_CLP
+    Define  += ${OsiClpDefine} ${ClpDefine}
     TESTSRC += OsiClpSolverInterfaceTest.cpp
 endif
 
@@ -30,7 +30,7 @@ ifneq ($(filter COIN_libOsiCpx,$(CoinLibsDefined)),)
     IncDir  += ${OsiCpxIncDir} ${CpxIncDir}
     LibDir  += ${OsiCpxLibDir} ${CpxLibDir}
     LibName += ${OsiCpxLibName} ${CpxLibName}
-    Define  += ${OsiCpxDefine} ${CpxDefine} COIN_USE_CPX
+    Define  += ${OsiCpxDefine} ${CpxDefine}
     TESTSRC += OsiCpxSolverInterfaceTest.cpp
 endif
 
@@ -38,7 +38,7 @@ ifneq ($(filter COIN_libOsiDylp,$(CoinLibsDefined)),)
     IncDir  += ${OsiDylpIncDir} ${DylpIncDir}
     LibDir  += ${OsiDylpLibDir} ${DylpLibDir}
     LibName += ${OsiDylpLibName} ${DylpLibName}
-    Define  += ${OsiDylpDefine} ${DylpDefine} COIN_USE_DYLP
+    Define  += ${OsiDylpDefine} ${DylpDefine}
     TESTSRC += OsiDylpSolverInterfaceTest.cpp
 endif
 
@@ -46,7 +46,7 @@ ifneq ($(filter COIN_libOsiGlpk,$(CoinLibsDefined)),)
     IncDir  += ${OsiGlpkIncDir} ${GlpkIncDir}
     LibDir  += ${OsiGlpkLibDir} ${GlpkLibDir}
     LibName += ${OsiGlpkLibName} ${GlpkLibName}
-    Define  += ${OsiGlpkDefine} ${GlpkDefine} COIN_USE_GLPK
+    Define  += ${OsiGlpkDefine} ${GlpkDefine}
     TESTSRC += OsiGlpkSolverInterfaceTest.cpp
 endif
 
@@ -54,7 +54,7 @@ ifneq ($(filter COIN_libOsiOsl,$(CoinLibsDefined)),)
     IncDir  += ${OsiOslIncDir} ${OslIncDir}
     LibDir  += ${OsiOslLibDir} ${OslLibDir}
     LibName += ${OsiOslLibName} ${OslLibName}
-    Define  += ${OsiOslDefine} ${OslDefine} COIN_USE_OSL
+    Define  += ${OsiOslDefine} ${OslDefine}
     TESTSRC += OsiOslSolverInterfaceTest.cpp
 endif
 
@@ -62,7 +62,7 @@ ifneq ($(filter COIN_libOsiSpx,$(CoinLibsDefined)),)
     IncDir  += ${OsiSpxIncDir} ${SpxIncDir}
     LibDir  += ${OsiSpxLibDir} ${SpxLibDir}
     LibName += ${OsiSpxLibName} ${SpxLibName}
-    Define  += ${OsiSpxDefine} ${SpxDefine} COIN_USE_SPX
+    Define  += ${OsiSpxDefine} ${SpxDefine}
     TESTSRC += OsiSpxSolverInterfaceTest.cpp
 endif
 
@@ -70,7 +70,7 @@ ifneq ($(filter COIN_libOsiSym,$(CoinLibsDefined)),)
     IncDir  += ${OsiSymIncDir} ${SymIncDir}
     LibDir  += ${OsiSymLibDir} ${SymLibDir}
     LibName += ${OsiSymLibName} ${SymLibName} libCgl.so 
-    Define  += ${OsiSymDefine} ${SymDefine} COIN_USE_SYM
+    Define  += ${OsiSymDefine} ${SymDefine}
     TESTSRC += OsiSymSolverInterfaceTest.cpp
     ifeq ($(UNAME),CYGWIN)
     Define += HAS_RANDOM HAS_SRANDOM
@@ -84,7 +84,7 @@ ifneq ($(filter COIN_libOsiVol,$(CoinLibsDefined)),)
     IncDir  += ${OsiVolIncDir} ${VolIncDir}
     LibDir  += ${OsiVolLibDir} ${VolLibDir}
     LibName += ${OsiVolLibName} ${VolLibName}
-    Define  += ${OsiVolDefine} ${VolDefine} COIN_USE_VOL
+    Define  += ${OsiVolDefine} ${VolDefine}
     TESTSRC += OsiVolSolverInterfaceTest.cpp
 endif
 
@@ -92,7 +92,7 @@ ifneq ($(filter COIN_libOsiXpr,$(CoinLibsDefined)),)
     IncDir  += ${OsiXprIncDir} ${XprIncDir}
     LibDir  += ${OsiXprLibDir} ${XprLibDir}
     LibName += ${OsiXprLibName} ${XprLibName}
-    Define  += ${OsiXprDefine} ${XprDefine} COIN_USE_XPR
+    Define  += ${OsiXprDefine} ${XprDefine}
     TESTSRC += OsiXprSolverInterfaceTest.cpp
 endif
 
@@ -100,7 +100,7 @@ ifneq ($(filter COIN_libOsiMsk,$(CoinLibsDefined)),)
     IncDir  += ${OsiMskIncDir} ${MskIncDir}
     LibDir  += ${OsiMskLibDir} ${MskLibDir}
     LibName += ${OsiMskLibName} ${MskLibName}
-    Define  += ${OsiMskDefine} ${MskDefine} COIN_USE_MSK
+    Define  += ${OsiMskDefine} ${MskDefine}
     TESTSRC += OsiMskSolverInterfaceTest.cpp
 endif
 ifneq ($(filter COIN_libOsiCbc,$(CoinLibsDefined)),)
@@ -109,7 +109,7 @@ ifneq ($(filter COIN_libOsiCbc,$(CoinLibsDefined)),)
     LibName += ${OsiCbcLibName} ${CbcLibName}
 #   and CGL
     LibName += ${CglLibName}
-    Define  += ${OsiCbcDefine} ${CbcDefine} COIN_USE_CBC
+    Define  += ${OsiCbcDefine} ${CbcDefine}
     TESTSRC += OsiCbcSolverInterfaceTest.cpp
 endif
 

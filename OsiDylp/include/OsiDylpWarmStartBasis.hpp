@@ -1,4 +1,4 @@
-#ifdef COIN_USE_DYLP
+#ifdef COIN_HAS_DYLP
 #ifndef OsiDylpWarmStartBasis_H
 #define OsiDylpWarmStartBasis_H
 
@@ -287,4 +287,4 @@ class OsiDylpWarmStartBasisDiff : public CoinWarmStartBasisDiff
 
 
 #endif // OsiDylpWarmStartBasis_H
-#endif // COIN_USE_DYLP
+#endif // COIN_HAS_DYLP

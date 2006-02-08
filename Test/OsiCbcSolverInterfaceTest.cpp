@@ -17,7 +17,7 @@
 #include "OsiColCut.hpp"
 #include "CoinMessage.hpp"
 #include "CoinModel.hpp"
-#ifdef COIN_USE_OSL
+#ifdef COIN_HAS_OSL
 #include "OsiOslSolverInterface.hpp"
 #endif
 
@@ -915,7 +915,7 @@ OsiCbcSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     m.initialSolve();
     m.branchAndBound();
   }
-#ifdef COIN_USE_OSL
+#ifdef COIN_HAS_OSL
   // branch and bound using OSL
   {    
     OsiOslSolverInterface mmm;
@@ -938,7 +938,7 @@ OsiCbcSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     OsiCbcSolverInterface m(&mm);
     OsiSolverInterfaceCommonUnitTest(&m, mpsDir,netlibDir);
   }
-#ifdef COIN_USE_OSL
+#ifdef COIN_HAS_OSL
   {
     OsiOslSolverInterface mm;
     OsiCbcSolverInterface m(&mm);

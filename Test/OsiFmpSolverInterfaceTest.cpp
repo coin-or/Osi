@@ -23,7 +23,7 @@
 
 // Added so build windows build with dsp files works,
 // when not building with cplex.
-#ifdef COIN_USE_FMP
+#ifdef COIN_HAS_FMP
 
 //#############################################################################
 

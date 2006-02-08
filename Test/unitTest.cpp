@@ -19,40 +19,40 @@
 #include "OsiSolverInterface.hpp"
 #include "OsiRowCutDebugger.hpp"
 
-#ifdef COIN_USE_OSL
+#ifdef COIN_HAS_OSL
 #include "OsiOslSolverInterface.hpp"
 #endif
-#ifdef COIN_USE_XPR
+#ifdef COIN_HAS_XPR
 #include "OsiXprSolverInterface.hpp"
 #endif
-#ifdef COIN_USE_CPX
+#ifdef COIN_HAS_CPX
 #include "OsiCpxSolverInterface.hpp"
 #endif
-#ifdef COIN_USE_SPX
+#ifdef COIN_HAS_SPX
 #include "OsiSpxSolverInterface.hpp"
 #endif
-#ifdef COIN_USE_VOL
+#ifdef COIN_HAS_VOL
 #include "OsiVolSolverInterface.hpp"
 #endif
-#ifdef COIN_USE_DYLP
+#ifdef COIN_HAS_DYLP
 #include "OsiDylpSolverInterface.hpp"
 #endif
-#ifdef COIN_USE_GLPK
+#ifdef COIN_HAS_GLPK
 #include "OsiGlpkSolverInterface.hpp"
 #endif
-#ifdef COIN_USE_FMP
+#ifdef COIN_HAS_FMP
 #include "OsiFmpSolverInterface.hpp"
 #endif
-#ifdef COIN_USE_CLP
+#ifdef COIN_HAS_CLP
 #include "OsiClpSolverInterface.hpp"
 #endif
-#ifdef COIN_USE_SYM
+#ifdef COIN_HAS_SYM
 #include "OsiSymSolverInterface.hpp"
 #endif
-#ifdef COIN_USE_MSK
+#ifdef COIN_HAS_MSK
 #include "OsiMskSolverInterface.hpp"
 #endif
-#ifdef COIN_USE_CBC
+#ifdef COIN_HAS_CBC
 #include "OsiCbcSolverInterface.hpp"
 #endif
 
@@ -86,7 +86,7 @@ int main (int argc, const char *argv[])
   */
   std::ios::sync_with_stdio() ;
 
-#ifdef COIN_USE_XPR
+#ifdef COIN_HAS_XPR
   OsiXprSolverInterface::setLogFileName("xprCallTrace.txt");
 #endif
 
@@ -175,7 +175,7 @@ int main (int argc, const char *argv[])
   else 
     netlibDir = dirsep == '/' ? "../Mps/Netlib/" : "..\\Mps\\Netlib\\";
 
-#ifdef COIN_USE_OSL  
+#ifdef COIN_HAS_OSL  
   {
     OsiOslSolverInterface oslSi;
     testingMessage( "Testing OsiRowCut with OsiOslSolverInterface\n" );
@@ -194,7 +194,7 @@ int main (int argc, const char *argv[])
 
 #endif
 
-#ifdef COIN_USE_XPR  
+#ifdef COIN_HAS_XPR  
   {
     OsiXprSolverInterface xprSi;
     testingMessage( "Testing OsiRowCut with OsiXprSolverInterface\n" );
@@ -212,7 +212,7 @@ int main (int argc, const char *argv[])
   }
 #endif
 
-#ifdef COIN_USE_CPX
+#ifdef COIN_HAS_CPX
   {
     OsiCpxSolverInterface cpxSi;
     testingMessage( "Testing OsiRowCut with OsiCpxSolverInterface\n" );
@@ -230,7 +230,7 @@ int main (int argc, const char *argv[])
   }
 #endif
 
-#ifdef COIN_USE_SPX
+#ifdef COIN_HAS_SPX
   {
     OsiSpxSolverInterface spxSi;
     testingMessage( "Testing OsiRowCut with OsiSpxSolverInterface\n" );
@@ -248,7 +248,7 @@ int main (int argc, const char *argv[])
   }
 #endif
 
-#ifdef COIN_USE_VOL
+#ifdef COIN_HAS_VOL
   {
     OsiVolSolverInterface volSi;
     testingMessage( "Testing OsiRowCut with OsiVolSolverInterface\n" );
@@ -261,7 +261,7 @@ int main (int argc, const char *argv[])
   }
 #endif
 
-#ifdef COIN_USE_DYLP
+#ifdef COIN_HAS_DYLP
   {
     OsiDylpSolverInterface dylpSi;
     testingMessage( "Testing OsiRowCut with OsiDylpSolverInterface\n" );
@@ -280,7 +280,7 @@ int main (int argc, const char *argv[])
 #endif
   
 
-#ifdef COIN_USE_FMP
+#ifdef COIN_HAS_FMP
   {
     OsiFmpSolverInterface fmpSi;
     testingMessage( "Testing OsiRowCut with OsiFmpSolverInterface\n" );
@@ -299,7 +299,7 @@ int main (int argc, const char *argv[])
   }
 #endif
 
-#ifdef COIN_USE_GLPK
+#ifdef COIN_HAS_GLPK
   {
     OsiGlpkSolverInterface glpkSi;
     testingMessage( "Testing OsiRowCut with OsiGlpkSolverInterface\n" );
@@ -317,7 +317,7 @@ int main (int argc, const char *argv[])
   }
 #endif
 
-#ifdef COIN_USE_CLP  
+#ifdef COIN_HAS_CLP  
   {
     OsiClpSolverInterface clpSi;
     testingMessage( "Testing OsiRowCut with OsiClpSolverInterface\n" );
@@ -335,7 +335,7 @@ int main (int argc, const char *argv[])
   }
 #endif
 
-#ifdef COIN_USE_SYM  
+#ifdef COIN_HAS_SYM  
   {
     OsiSymSolverInterface symSi;
     testingMessage( "Testing OsiRowCut with OsiSymSolverInterface\n" );
@@ -353,7 +353,7 @@ int main (int argc, const char *argv[])
   }
 #endif
 
-#ifdef COIN_USE_MSK  
+#ifdef COIN_HAS_MSK  
   {
     OsiMskSolverInterface MskSi;
     testingMessage( "Testing OsiRowCut with OsiMskSolverInterface\n" );
@@ -370,7 +370,7 @@ int main (int argc, const char *argv[])
     OsiRowCutDebuggerUnitTest(&MskSi,mpsDir);
   }
 #endif
-#ifdef COIN_USE_CBC
+#ifdef COIN_HAS_CBC
   {
     OsiCbcSolverInterface cbcSi;
     testingMessage( "Testing OsiRowCut with OsiCbcSolverInterface\n" );
@@ -391,60 +391,60 @@ int main (int argc, const char *argv[])
   testingMessage( "Testing OsiCuts\n" );
   OsiCutsUnitTest();
 
-#ifdef COIN_USE_OSL
+#ifdef COIN_HAS_OSL
   testingMessage( "Testing OsiOslSolverInterface\n" );
   OsiOslSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
-#ifdef COIN_USE_XPR
+#ifdef COIN_HAS_XPR
   testingMessage( "Testing OsiXprSolverInterface\n" );
   OsiXprSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
-#ifdef COIN_USE_CPX
+#ifdef COIN_HAS_CPX
   testingMessage( "Testing OsiCpxSolverInterface\n" );
   OsiCpxSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
-#ifdef COIN_USE_SPX
+#ifdef COIN_HAS_SPX
   testingMessage( "Testing OsiSpxSolverInterface\n" );
   OsiSpxSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
-#ifdef COIN_USE_VOL
+#ifdef COIN_HAS_VOL
   testingMessage( "Testing OsiVolSolverInterface\n" );
   OsiVolSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
-#ifdef COIN_USE_DYLP
+#ifdef COIN_HAS_DYLP
   testingMessage( "Testing OsiDylpSolverInterface\n" );
   OsiDylpSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
   
-#ifdef COIN_USE_GLPK
+#ifdef COIN_HAS_GLPK
   testingMessage( "Testing OsiGlpkSolverInterface\n" );
   OsiGlpkSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
   
-#ifdef COIN_USE_FMP
+#ifdef COIN_HAS_FMP
   testingMessage( "Testing OsiFmpSolverInterface\n" );
   OsiFmpSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
   
-#ifdef COIN_USE_CLP
+#ifdef COIN_HAS_CLP
   testingMessage( "Testing OsiClpSolverInterface\n" );
   OsiClpSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
-#ifdef COIN_USE_MSK
+#ifdef COIN_HAS_MSK
   testingMessage( "Testing OsiMskSolverInterface\n" );
   OsiMskSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
-#ifdef COIN_USE_CBC
+#ifdef COIN_HAS_CBC
   testingMessage( "Testing OsiCbcSolverInterface\n" );
   OsiCbcSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
-#ifdef COIN_USE_SYM
+#ifdef COIN_HAS_SYM
   testingMessage( "Testing OsiSymSolverInterface\n" );
   OsiSymSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
@@ -453,60 +453,60 @@ int main (int argc, const char *argv[])
   {
     // Create vector of solver interfaces
     std::vector<OsiSolverInterface*> vecSi;
-#   if COIN_USE_OSL
+#   if COIN_HAS_OSL
     OsiSolverInterface * oslSi = new OsiOslSolverInterface;
     vecSi.push_back(oslSi);
 #endif
-#   if COIN_USE_XPR
+#   if COIN_HAS_XPR
     OsiSolverInterface * xprSi = new OsiXprSolverInterface;
     vecSi.push_back(xprSi);
 #endif
-#   if COIN_USE_CPX
+#   if COIN_HAS_CPX
     OsiSolverInterface * cpxSi = new OsiCpxSolverInterface;
     vecSi.push_back(cpxSi);
 #endif
-#   if COIN_USE_SPX
+#   if COIN_HAS_SPX
     OsiSolverInterface * spxSi = new OsiSpxSolverInterface;
     vecSi.push_back(spxSi);
 #endif
-#   if COIN_USE_CLP
+#   if COIN_HAS_CLP
     OsiSolverInterface * clpSi = new OsiClpSolverInterface;
     // Okay this is where John Forrest cheats by giving hints
     clpSi->setHintParam(OsiDoPresolveInInitial,true,OsiHintTry);
     clpSi->setHintParam(OsiDoReducePrint,true,OsiHintTry);
     vecSi.push_back(clpSi);
 #endif
-#   if COIN_USE_SYM
+#   if COIN_HAS_SYM
     OsiSolverInterface * symSi = new OsiSymSolverInterface;
     vecSi.push_back(symSi);
 #endif
-#   if COIN_USE_DYLP
+#   if COIN_HAS_DYLP
     OsiSolverInterface * dylpSi = new OsiDylpSolverInterface;
     // Heh, if it's good enough for John ...
     dylpSi->setHintParam(OsiDoPresolveInInitial,true,OsiHintTry) ;
     dylpSi->setHintParam(OsiDoReducePrint,false,OsiHintDo) ;
     vecSi.push_back(dylpSi);
 #endif
-#   if COIN_USE_GLPK
+#   if COIN_HAS_GLPK
     OsiSolverInterface * glpkSi = new OsiGlpkSolverInterface;
     vecSi.push_back(glpkSi);
 #endif
-#   if COIN_USE_FMP
+#   if COIN_HAS_FMP
     OsiSolverInterface * fmpSi = new OsiFmpSolverInterface;
     vecSi.push_back(fmpSi);
 #endif
-#   if COIN_USE_MSK
+#   if COIN_HAS_MSK
     OsiSolverInterface * MskSi = new OsiMskSolverInterface;
     vecSi.push_back(MskSi);
 #endif
-#   if COIN_USE_CBC
+#   if COIN_HAS_CBC
     OsiSolverInterface * cbcSi = new OsiCbcSolverInterface;
     // Okay this is where John Forrest cheats by giving hints
     cbcSi->setHintParam(OsiDoPresolveInInitial,true,OsiHintTry);
     cbcSi->setHintParam(OsiDoReducePrint,true,OsiHintTry);
     vecSi.push_back(cbcSi);
 #endif
-#   if COIN_USE_VOL
+#   if COIN_HAS_VOL
     OsiSolverInterface * volSi = new OsiVolSolverInterface;
     vecSi.push_back(volSi);
 #endif

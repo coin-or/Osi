@@ -1,4 +1,4 @@
-#ifdef COIN_USE_DYLP
+#ifdef COIN_HAS_DYLP
 #ifndef OsiDylpSolverInterface_H
 #define OsiDylpSolverInterface_H
 
@@ -1004,4 +1004,4 @@ private:
 void OsiDylpSolverInterfaceUnitTest(const std::string & mpsDir) ;
 
 #endif // OsiDylpSolverInterface_H
-#endif // COIN_USE_DYLP
+#endif // COIN_HAS_DYLP

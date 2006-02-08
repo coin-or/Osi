@@ -6,7 +6,7 @@
   This file is a portion of the COIN/OSI interface for dylp.
 */
 
-#ifdef COIN_USE_DYLP
+#ifdef COIN_HAS_DYLP
 
 #if defined(_MSC_VER)
 
@@ -277,5 +277,5 @@ void OsiDylpSolverInterfaceUnitTest (const std::string &mpsDir,
 
   return ; }
 
-#endif // COIN_USE_DYLP
+#endif // COIN_HAS_DYLP
 

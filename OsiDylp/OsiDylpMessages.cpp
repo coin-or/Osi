@@ -1,4 +1,4 @@
-#ifdef COIN_USE_DYLP
+#ifdef COIN_HAS_DYLP
 
 /*! \legal
   Copyright (C) 2004.
@@ -188,4 +188,4 @@ void ODSI::setOsiDylpMessages (CoinMessages::Language local_language)
   return ; }
 
 
-#endif /* COIN_USE_DYLP */
+#endif /* COIN_HAS_DYLP */

@@ -30,37 +30,37 @@
 #endif
 
 #include "OsiSolverInterface.hpp"
-#ifdef COIN_USE_VOL
+#ifdef COIN_HAS_VOL
 #include "OsiVolSolverInterface.hpp"
 #endif
-#ifdef COIN_USE_DYLP
+#ifdef COIN_HAS_DYLP
 #include "OsiDylpSolverInterface.hpp"
 #endif
-#ifdef COIN_USE_GLPK
+#ifdef COIN_HAS_GLPK
 #include "OsiGlpkSolverInterface.hpp"
 #endif
-#ifdef COIN_USE_XPR
+#ifdef COIN_HAS_XPR
 #include "OsiXprSolverInterface.hpp"
 #endif
-#ifdef COIN_USE_CPX
+#ifdef COIN_HAS_CPX
 #include "OsiCpxSolverInterface.hpp"
 #endif
-#ifdef COIN_USE_SPX
+#ifdef COIN_HAS_SPX
 #include "OsiSpxSolverInterface.hpp"
 #endif
-#ifdef COIN_USE_OSL
+#ifdef COIN_HAS_OSL
 #include "OsiOslSolverInterface.hpp"
 #endif
-#ifdef COIN_USE_CLP
+#ifdef COIN_HAS_CLP
 #include "OsiClpSolverInterface.hpp"
 #endif
-#ifdef COIN_USE_SYM
+#ifdef COIN_HAS_SYM
 #include "OsiSymSolverInterface.hpp"
 #endif
-#ifdef COIN_USE_FMP
+#ifdef COIN_HAS_FMP
 #include "OsiFmpSolverInterface.hpp"
 #endif
-#ifdef COIN_USE_CBC
+#ifdef COIN_HAS_CBC
 #include "OsiCbcSolverInterface.hpp"
 #endif
 #include "CoinFloatEqual.hpp"
@@ -1432,7 +1432,7 @@ void OsiSolverInterfaceMpsUnitTest
       for (i = 0 ; i < static_cast<int>(vecSiP.size()) ; ++i) {
         double startTime = CoinCpuTime();
         
-#     ifdef COIN_USE_VOL
+#     ifdef COIN_HAS_VOL
         { 
           OsiVolSolverInterface * si =
             dynamic_cast<OsiVolSolverInterface *>(vecSiP[i]) ;
@@ -1466,7 +1466,7 @@ void OsiSolverInterfaceMpsUnitTest
         } else {
 	   if (vecSiP[i]->isProvenPrimalInfeasible()) 
 	      std::cerr << "error; primal infeasible" ;
-#ifndef COIN_USE_SYM 
+#ifndef COIN_HAS_SYM 
 	   else if (vecSiP[i]->isProvenDualInfeasible())
 	      std::cerr << "error; dual infeasible" ;
 #endif
@@ -1676,7 +1676,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   // Determine if this emptySi is an OsiVolSolverInterface
   bool volSolverInterface UNUSED = false;
   {
-#ifdef COIN_USE_VOL
+#ifdef COIN_HAS_VOL
     const OsiVolSolverInterface * si =
       dynamic_cast<const OsiVolSolverInterface *>(emptySi);
     if ( si != NULL ) volSolverInterface = true;
@@ -1686,7 +1686,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   // Determine if this emptySi is an OsiOslSolverInterface
   bool oslSolverInterface UNUSED = false;
   {
-#ifdef COIN_USE_OSL
+#ifdef COIN_HAS_OSL
     const OsiOslSolverInterface * si =
       dynamic_cast<const OsiOslSolverInterface *>(emptySi);
     if ( si != NULL ) oslSolverInterface = true;
@@ -1696,7 +1696,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   // Determine if this emptySi is an OsiDylpSolverInterface
   bool dylpSolverInterface UNUSED = false;
   {
-#ifdef COIN_USE_DYLP
+#ifdef COIN_HAS_DYLP
     const OsiDylpSolverInterface * si =
       dynamic_cast<const OsiDylpSolverInterface *>(emptySi);
     if ( si != NULL ) dylpSolverInterface = true;
@@ -1706,7 +1706,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   // Determine if this emptySi is an OsiGlpkSolverInterface
   bool glpkSolverInterface UNUSED = false;
   {
-#ifdef COIN_USE_GLPK
+#ifdef COIN_HAS_GLPK
     const OsiGlpkSolverInterface * si =
       dynamic_cast<const OsiGlpkSolverInterface *>(emptySi);
     if ( si != NULL ) glpkSolverInterface = true;
@@ -1716,7 +1716,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   // Determine if this emptySi is an OsiFmpSolverInterface
   bool fmpSolverInterface UNUSED = false;
   {
-#ifdef COIN_USE_FMP
+#ifdef COIN_HAS_FMP
     const OsiFmpSolverInterface * si =
       dynamic_cast<const OsiFmpSolverInterface *>(emptySi);
     if ( si != NULL ) fmpSolverInterface = true;
@@ -1726,7 +1726,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   // Determine if this emptySi is an OsiXprSolverInterface
   bool xprSolverInterface UNUSED = false;
   {
-#ifdef COIN_USE_XPR
+#ifdef COIN_HAS_XPR
     const OsiXprSolverInterface * si =
       dynamic_cast<const OsiXprSolverInterface *>(emptySi);
     if ( si != NULL ) xprSolverInterface = true;
@@ -1736,7 +1736,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   // Determine if this is the emptySi is an OsiSymSolverInterface
   bool symSolverInterface UNUSED = false;
   {
-#ifdef COIN_USE_SYM
+#ifdef COIN_HAS_SYM
      const OsiSymSolverInterface * si =
 	dynamic_cast<const OsiSymSolverInterface *>(emptySi);
      if ( si != NULL ) symSolverInterface = true;
@@ -2473,7 +2473,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 	si8->initialSolve();
       }        
       catch (CoinError e) {
-#ifdef COIN_USE_VOL
+#ifdef COIN_HAS_VOL
 	// Vol solver interface is expected to throw
 	// an error if the data has a ranged row.
           

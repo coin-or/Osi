@@ -6,7 +6,7 @@
   This file is a portion of the COIN/OSI interface for dylp.
 */
 
-#ifdef COIN_USE_DYLP
+#ifdef COIN_HAS_DYLP
 
 #ifdef _MSC_VER
 
@@ -5711,4 +5711,4 @@ void ODSI::dylp_printsoln (bool wantSoln, bool wantStats)
 
 //@} // DylpMethods
 
-#endif /* COIN_USE_DYLP */
+#endif /* COIN_HAS_DYLP */

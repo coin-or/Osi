@@ -1,4 +1,4 @@
-#ifdef COIN_USE_DYLP
+#ifdef COIN_HAS_DYLP
 #ifndef OsiDylpMessages_H
 #define OsiDylpMessages_H
 
@@ -32,4 +32,4 @@ typedef enum { ODSI_TEST_MSG,
 	       ODSI_DUMMY_END } OsiDylpMessageID_enum ;
 
 #endif /* OsiDylpMessages_H */
-#endif /* COIN_USE_DYLP */
+#endif /* COIN_HAS_DYLP */

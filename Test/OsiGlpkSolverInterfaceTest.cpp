@@ -27,7 +27,7 @@
 
 // Added so build windows build with dsp files works,
 // when not building with cplex.
-#ifdef COIN_USE_GLPK
+#ifdef COIN_HAS_GLPK
 
 //#############################################################################
 

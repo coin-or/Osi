@@ -24,7 +24,7 @@
   
 // Added so build windows build with dsp files works,
 // when not building with cplex.
-#ifdef COIN_USE_OSL
+#ifdef COIN_HAS_OSL
 
 // Trivial class for Branch and Bound
 

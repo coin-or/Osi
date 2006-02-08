@@ -32,7 +32,7 @@
 
 // Added so build windows build with dsp files works,
 // when not building with cplex.
-#ifdef COIN_USE_CPX
+#ifdef COIN_HAS_CPX
 
 void OsiCpxSolverInterface::printBounds()
 {

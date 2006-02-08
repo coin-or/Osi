@@ -1972,6 +1972,7 @@ cleanupScaling_(0),
 specialOptions_(0x80000000)
 {
   modelPtr_ = rhs;
+  basis_.resize(modelPtr_->numberRows(),modelPtr_->numberColumns());
   linearObjective_ = modelPtr_->objective();
   if (rhs) {
     notOwned_=!reallyOwn;

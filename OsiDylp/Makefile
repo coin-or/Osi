@@ -15,16 +15,22 @@ export LibType ?= SHARED
 
 export OptLevel ?= -O
 
-# If OsiDylp is being built as a dependency for the Dylp sample main programs,
-# this symbol will be defined. If it's not defined, the two options that make
-# a difference for OsiDylp are stats and info. Define info if you want
-# information prints, and stats if you want statistics. Note that both OsiDylp
-# and dylp must be built with statistics enabled. dylp will ignore an incoming
-# statistics structure if built without statistics, and OsiDylp will not supply
-# one if built without statistics. The default is neither. To get both, use
-# DYLP_OPTIONS ?= stats info. (Use `:=' to override an existing definition.)
+# If OsiDylp is being built as a dependency for the Dylp sample programs, this
+# symbol will be defined on entry to this makefile (but may well be defined to
+# be empty, hence the use of the origin function). If it's not defined, the two
+# options that make a difference for OsiDylp are stats and info. Request info
+# if you want information prints, and stats if you want statistics. Note that
+# both OsiDylp and dylp must be built with statistics enabled before you'll
+# actually see any stats. dylp will ignore an incoming statistics structure if
+# built without statistics, and OsiDylp will not supply one if built without
+# statistics. The default is neither info or stats.
 
-export DYLP_OPTIONS ?= stats info
+# To get both, you would use
+#   DYLP_OPTIONS ?= stats info
+
+ifeq ("$(origin DYLP_OPTIONS)","undefined")
+  export DYLP_OPTIONS ?=
+endif
 
 
 ##############################################################################
@@ -52,30 +58,43 @@ include ${MakefileDir}/Makefile.coin
 
 InstallDir := $(CoinDir)
 
-ifeq (,$(filter COIN_HAS_DYLP, $(CXXFLAGS)))
-  $(error COIN_HAS_DYLP is not defined in Makefiles/Makefile.location. Probably the line 'CoinLibsDefined += COIN_libDylp' is commented out.)
+# Having trouble with the build? Changes to .hpp files don't seem to be
+# taking effect? That's because by default you're building with the cached
+# copies of the include files stashed in ${CoinDir}/include. Generally, this
+# is a good thing --- this build sees the same .hpp files the rest of COIN is
+# using.  If you'd like to play with changes before exposing them to the world,
+# uncomment the following line.
+
+# CXXFLAGS += -I./include
+
+ifeq (,$(filter COIN_libDylp, $(CoinLibsDefined)))
+  NO_DYLP_MSG := COIN_HAS_DYLP is not defined in Makefiles/Makefile.location.
+  NO_DYLP_MSG += Probably the line 'CoinLibsDefined += COIN_libDylp' is
+  NO_DYLP_MSG += commented out.
+  $(error $(NO_DYLP_MSG))
 endif
+
+# Add the defines and includes for Dylp and OsiDylp.
 
 CXXFLAGS += $(patsubst %, -D%, $(DylpDefine) $(OsiDylpDefine))
 CXXFLAGS += $(patsubst %, -I%, $(DylpIncDir) $(OsiDylpIncDir))
 
 # This bit of makefile is adapted from Utils/Makefile.Config in the dylp
-# distribution. It's duplicated here because we're not guaranteed that dylp
-# is actually present.
-
-# Adjust CXXFLAGS correspond to possible OsiDylp compile time
+# distribution.
+# Adjust CXXFLAGS to correspond to the possible OsiDylp compile time
 # options as requested by DYLP_OPTIONS. Known keywords are:
 #  * stats	enable statistics collection
 #  * info	enable informational printing
 
 # info is a bit tricky --- enabling info in dylp means *not* defining NDEBUG.
 # Since COIN boilerplate will insert -DNDEBUG in CXXFLAGS when the user asks
-# for optimisation, we need to strip it. In the case where we don't want
-# info prints, no need to add it twice.
+# for optimisation, we need to strip it. Avoid duplicating existing defines.
 
 ifdef DYLP_OPTIONS
   ifeq ($(filter stats,$(DYLP_OPTIONS)),stats)
-    CXXFLAGS += -DDYLP_STATISTICS
+    ifeq ($(filter -DDYLP_STATISTICS, $CXXFLAGS)),)
+      CXXFLAGS += -DDYLP_STATISTICS
+    endif
   endif
   ifeq ($(filter info,$(DYLP_OPTIONS)),info)
     CXXFLAGS := $(filter-out -DNDEBUG, $(CXXFLAGS))
@@ -85,7 +104,6 @@ ifdef DYLP_OPTIONS
     endif
   endif
 endif
-
 
 ###############################################################################
 

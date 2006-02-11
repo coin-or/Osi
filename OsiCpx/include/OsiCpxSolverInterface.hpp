@@ -21,6 +21,12 @@
 #include "CoinPackedMatrix.hpp"
 #include "CoinWarmStartBasis.hpp"
 
+// CPLEX 10.0 removed CPXERR_NO_INT_SOLN
+#if !defined(CPXERR_NO_INT_SOLN)
+#define CPXERR_NO_INT_SOLN CPXERR_NO_SOLN
+#endif
+
+
 /** CPLEX Solver Interface
 
     Instantiation of OsiCpxSolverInterface for CPLEX

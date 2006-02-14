@@ -25,6 +25,7 @@ LIBSRC += OsiRowCutDebugger.cpp
 LIBSRC += OsiCuts.cpp
 LIBSRC += OsiSolverBranch.cpp
 LIBSRC += OsiPresolve.cpp
+LIBSRC += OsiOpbdpSolve.cpp
 
 LIBSRC += OsiSolverInterface.cpp
 

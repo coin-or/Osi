@@ -69,7 +69,9 @@
 #include "OsiRowCut.hpp"
 #include "OsiCuts.hpp"
 #include "OsiPresolve.hpp"
-
+#ifdef OPBDP
+#include "OsiOpbdpSolve.hpp"
+#endif
 //--------------------------------------------------------------------------
 // A helper function to write out a message about a test failure
 static void
@@ -3098,6 +3100,32 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       }
     }
   }
+#ifdef OPBDP
+  // test Opbdp interface
+  {
+    OsiSolverInterface * si = emptySi->clone();
+    std::string solverName;
+    si->getStrParam(OsiSolverName,solverName);
+    std::string fn = mpsDir+"p0033";
+    si->readMps(fn.c_str(),"mps");
+    int numberFound = solveOpbdp(si);
+    assert (numberFound==1);
+    printf("Objective value %g\n",si->getObjValue());
+    unsigned int ** array = solveOpbdp(si,numberFound);
+    printf("%d solutions found\n",numberFound);
+    int numberColumns = si->getNumCols();
+    for (int i=0;i<numberFound;i++) {
+      unsigned int * thisArray = array[i];
+      for (int j=0;j<numberColumns;j++) 
+        if (atOne(j,thisArray))
+          printf(" %d",j);
+      printf("\n");
+      delete [] thisArray;
+    }
+    delete [] array;
+    delete si;
+  }
+#endif
 
   // Add a Laci suggested test case
   // Load in a problem as column ordered matrix, 

@@ -1,6 +1,6 @@
 // Copyright (C) 2006, International Business Machines
 // Corporation and others.  All Rights Reserved.
-#ifdef OPBDP
+#ifdef COIN_OPBDP
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)

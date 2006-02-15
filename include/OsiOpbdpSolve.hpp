@@ -16,6 +16,21 @@ int solveOpbdp(OsiSolverInterface * model);
     Returns an array of bit solution vectors.
     i is 1 if bit set (see below) 
     If no solution then numberFound will be 0, if not suitable -1
+
+    This needs the line at about 206 of EnumerateOpt.cpp
+
+      local_maximum = value + 1; // try to reach that one!
+
+    replaced by
+
+      if (verbosity!=-1) {
+        local_maximum = value + 1; // try to reach that one!
+      } else {
+        local_maximum = 0;
+        void opbdp_save_solution(OrdInt & sol);
+        OrdInt sol = last_solution.to_OrdInt();
+        opbdp_save_solution(sol); // save solution
+      }
  */
 unsigned int ** solveOpbdp(const OsiSolverInterface * model,int & numberFound);
 

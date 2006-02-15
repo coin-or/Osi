@@ -69,7 +69,7 @@
 #include "OsiRowCut.hpp"
 #include "OsiCuts.hpp"
 #include "OsiPresolve.hpp"
-#ifdef OPBDP
+#ifdef COIN_OPBDP
 #include "OsiOpbdpSolve.hpp"
 #endif
 //--------------------------------------------------------------------------
@@ -3100,7 +3100,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       }
     }
   }
-#ifdef OPBDP
+#ifdef COIN_OPBDP
   // test Opbdp interface
   {
     OsiSolverInterface * si = emptySi->clone();

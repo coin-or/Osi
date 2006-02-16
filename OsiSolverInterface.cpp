@@ -1036,11 +1036,11 @@ OsiSolverInterface::readMps(const char *filename, const char*extension,
 
 int 
 OsiSolverInterface::writeMpsNative(const char *filename, 
-			     const char ** rowNames, 
-			     const char ** columnNames,
-			     int formatType,
-			     int numberAcross,
-			     double objSense) const
+				   const char ** rowNames, 
+				   const char ** columnNames,
+				   int formatType,
+				   int numberAcross,
+				   double objSense) const
 {
    const int numcols = getNumCols();
    char* integrality = new char[numcols];
@@ -1086,7 +1086,7 @@ OsiSolverInterface::writeLpNative(const char *filename,
 				  const int numberAcross,
 				  const int decimals,
 				  const double objSense,
-                                  bool changeNameOnRange) const
+				  const bool useRowNames) const
 {
    const int numcols = getNumCols();
    char *integrality = new char[numcols];
@@ -1117,6 +1117,7 @@ OsiSolverInterface::writeLpNative(const char *filename,
    }
 
    CoinLpIO writer;
+   writer.setInfinity(getInfinity());
    writer.setEpsilon(epsilon);
    writer.setNumberAcross(numberAcross);
    writer.setDecimals(decimals);
@@ -1126,12 +1127,13 @@ OsiSolverInterface::writeLpNative(const char *filename,
 		     objective, hasInteger ? integrality : 0,
 		     getRowLower(), getRowUpper());
 
-   writer.setLpDataRowAndColNames(rowNames, columnNames);
+   writer.setLpDataRowAndColNames(columnNames, rowNames);
 
    //writer.print();
    delete [] objective;
    delete[] integrality;
-   return writer.writeLp(filename, epsilon, numberAcross, decimals, changeNameOnRange);
+   return writer.writeLp(filename, epsilon, numberAcross, decimals, 
+			 useRowNames);
 
 } /*writeLpNative */
 
@@ -1169,12 +1171,12 @@ int OsiSolverInterface::readLp(const char * filename, const double epsilon)
 
 
 void OsiSolverInterface::writeLp(const char * filename,
-				    const char * extension,
-				    const double epsilon,
-				    const int numberAcross,
-				    const int decimals,
-				    const double objSense,
-                                 bool changeNameOnRange) const
+				 const char * extension,
+				 const double epsilon,
+				 const int numberAcross,
+				 const int decimals,
+				 const double objSense,
+				 const bool useRowNames) const
 {
   std::string f(filename);
   std::string e(extension);
@@ -1188,7 +1190,7 @@ void OsiSolverInterface::writeLp(const char * filename,
   // Fall back on Osi version - without names
   OsiSolverInterface::writeLpNative(fullname.c_str(), 
 				    NULL, NULL, epsilon, numberAcross,
-				    decimals, objSense,changeNameOnRange);
+				    decimals, objSense, useRowNames);
 }
 
 // Pass in Message handler (not deleted at end)

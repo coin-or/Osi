@@ -1010,34 +1010,56 @@ public:
 		  const char ** rowNames, const char ** columnNames,
 		  int formatType=0,int numberAcross=2,
 		 double objSense=0.0) const ;
+
 /***********************************************************************/
 // Lp files 
 
-/** Write the problem into an Lp file of the given filename.
+/** Write the problem into an Lp file of the given filename with the specified
+    extension.
+    Coefficients with value less than epsilon away from an integer value
+    are written as integers.
+    Write at most numberAcross monomials on a line.
+    Write non integer numbers with decimals digits after the decimal point.
     If objSense is non zero then -1.0 forces the code to write a
     maximization objective and +1.0 to write a minimization one.
     If 0.0 then solver can do what it wants.
+    Write objective function name and constraint names if useRowNames is true.
     This version calls writeLpNative */
-  virtual void writeLp(const char *filename,
+  void writeLp(const char *filename,
                const char *extension = "lp",
                const double epsilon = 1e-5,
                const int numberAcross = 10,
                const int decimals = 5,
                const double objSense = 0.0,
-               bool changeNameOnRange=false) const;
+	       const bool useRowNames = true) const;
 
+  /** Write the problem into an Lp file. Parameters are similar to 
+      those of writeLp(), but in addition row names and column names
+      may be given. 
 
-  /// writeLp with names
+      Parameter rowNames may be NULL, in which case default row names 
+      are used. If rowNames is not NULL, it must have exactly one entry
+      per row in the problem as returned by getNumRows() and all these
+      entries must be distinct. If this is not the case, default row names
+      are used. In addition, format restrictions are imposed on names
+      (see CoinLpIO::is_invalid_name() for details).
+
+      Similar remarks can be made for the parameter columnNames.
+
+      Write objective function name and constraint names if 
+      useRowNames is true. */
   int writeLpNative(const char *filename,
-                    char const * const * const rowNames,
-                    char const * const * const columnNames,
-                    const double epsilon = 1.0e-5,
+		    char const * const * const rowNames,
+		    char const * const * const columnNames,
+		    const double epsilon = 1.0e-5,
                     const int numberAcross = 10,
                     const int decimals = 5,
                     const double objSense = 0.0,
-                    bool changeNameOnRange=false) const;
-  /// Read file in LP format
-  virtual int readLp(const char *filename, const double epsilon = 1e-5);
+		    const bool useRowNames = true) const;
+
+  /// Read file in LP format. See class CoinLpIO for description of 
+  /// this format.
+  int readLp(const char *filename, const double epsilon = 1e-5);
 
   //@}
 

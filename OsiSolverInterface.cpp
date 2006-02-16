@@ -1127,7 +1127,7 @@ OsiSolverInterface::writeLpNative(const char *filename,
 		     objective, hasInteger ? integrality : 0,
 		     getRowLower(), getRowUpper());
 
-   writer.setLpDataRowAndColNames(columnNames, rowNames);
+   writer.setLpDataRowAndColNames(rowNames, columnNames);
 
    //writer.print();
    delete [] objective;

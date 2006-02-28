@@ -1082,13 +1082,9 @@ public:
         designed for one user while this can be extended to cope
         with more general extensions.
     */
-    void setAuxiliaryInfo(OsiAuxInfo * auxiliaryInfo);
 
     /// Get application data
     void * getApplicationData() const;
-    /// Get pointer to auxiliary info object
-    inline OsiAuxInfo * getAuxiliaryInfo() const
-    { return appDataEtc_;};
   //@}
   //---------------------------------------------------------------------------
 
@@ -1362,7 +1358,7 @@ private:
   ///@name Private member data 
   //@{
     /// Pointer to user-defined data structure - and more if user wants
-    OsiAuxInfo * appDataEtc_;
+    void * appDataEtc_;
     /// Array of integer parameters
     int intParam_[OsiLastIntParam];
     /// Array of double parameters

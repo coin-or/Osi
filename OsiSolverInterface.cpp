@@ -20,7 +20,7 @@
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
 #include "OsiRowCutDebugger.hpp"
-#include "OsiAuxInfo.hpp"
+//#include "OsiAuxInfo.hpp"
 #include <cassert>
 #include "CoinFinite.hpp"
 #include "CoinBuild.hpp"
@@ -723,19 +723,12 @@ OsiSolverInterface::applyRowCuts(int numberCuts, const OsiRowCut ** cuts)
 
 void OsiSolverInterface::setApplicationData(void * appData)
 {
-  delete appDataEtc_;
-  appDataEtc_ = new OsiAuxInfo(appData);
+  appDataEtc_ = appData;
 }
 //-----------------------------------------------------------------------------
 void * OsiSolverInterface::getApplicationData() const
 {
-  return appDataEtc_->getApplicationData();
-}
-void 
-OsiSolverInterface::setAuxiliaryInfo(OsiAuxInfo * auxiliaryInfo)
-{
-  delete appDataEtc_;
-  appDataEtc_ = auxiliaryInfo->clone();
+  return appDataEtc_;
 }
 
 //#############################################################################
@@ -811,7 +804,7 @@ OsiSolverInterface::setInitialData()
   rowCutDebugger_ = NULL;
   delete ws_;
   ws_ = NULL;
-  appDataEtc_ = new OsiAuxInfo(); 
+  appDataEtc_ = NULL;
   if (defaultHandler_) {
     delete handler_;
     handler_ = NULL;
@@ -846,7 +839,7 @@ OsiSolverInterface::OsiSolverInterface (const OsiSolverInterface & rhs) :
   rowCutDebugger_(NULL),
   ws_(NULL)
 {  
-  appDataEtc_ = rhs.appDataEtc_->clone();
+  appDataEtc_ = rhs.appDataEtc_;
   if ( rhs.rowCutDebugger_!=NULL )
     rowCutDebugger_ = new OsiRowCutDebugger(*rhs.rowCutDebugger_);
   defaultHandler_ = rhs.defaultHandler_;
@@ -873,7 +866,6 @@ OsiSolverInterface::~OsiSolverInterface ()
   rowCutDebugger_ = NULL;
   delete ws_;
   ws_ = NULL;
-  delete appDataEtc_;
   if (defaultHandler_) {
     delete handler_;
     handler_ = NULL;
@@ -887,8 +879,7 @@ OsiSolverInterface &
 OsiSolverInterface::operator=(const OsiSolverInterface& rhs)
 {
   if (this != &rhs) {
-    delete appDataEtc_;
-    appDataEtc_ = rhs.appDataEtc_->clone();
+    appDataEtc_ = rhs.appDataEtc_;
     delete rowCutDebugger_;
     if ( rhs.rowCutDebugger_!=NULL )
       rowCutDebugger_ = new OsiRowCutDebugger(*rhs.rowCutDebugger_);
@@ -1223,8 +1214,7 @@ OsiSolverInterface::newLanguage(CoinMessages::Language language)
 void 
 OsiSolverInterface::copyParameters(OsiSolverInterface & rhs)
 {
-  delete appDataEtc_;
-  appDataEtc_ = rhs.appDataEtc_->clone();
+  appDataEtc_ = rhs.appDataEtc_;
   delete rowCutDebugger_;
   if ( rhs.rowCutDebugger_!=NULL )
     rowCutDebugger_ = new OsiRowCutDebugger(*rhs.rowCutDebugger_);

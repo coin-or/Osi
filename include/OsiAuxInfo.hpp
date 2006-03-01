@@ -44,7 +44,7 @@ protected:
     You can derive from this although at present I can't see the need.
 */
 
-class OsiBabSolver : virtual public OsiAuxInfo {
+class OsiBabSolver : public OsiAuxInfo {
 public:
   // Default Constructor 
   OsiBabSolver (int solverType=0);

@@ -60,8 +60,11 @@ public:
   OsiBabSolver & operator=(const OsiBabSolver& rhs);
   
   /// Update solver 
-  inline void setSolver(OsiSolverInterface * solver)
+  inline void setSolver(const OsiSolverInterface * solver)
   { solver_ = solver;};
+  /// Update solver 
+  inline void setSolver(const OsiSolverInterface & solver)
+  { solver_ = &solver;};
 
   /** returns 0 if no heuristic solution, 1 if valid solution
       with better objective value than one passed in

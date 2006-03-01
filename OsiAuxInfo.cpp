@@ -48,7 +48,7 @@ OsiAuxInfo::operator=(const OsiAuxInfo &rhs)
 OsiBabSolver::OsiBabSolver(int solverType) 
   :OsiAuxInfo(),
    solver_(NULL),
-   solverType_(0),
+   solverType_(solverType),
    bestObjectiveValue_(1.0e100),
    bestSolution_(NULL),
    mipBound_(-1.0e100)

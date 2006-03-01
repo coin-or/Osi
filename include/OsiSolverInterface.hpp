@@ -16,9 +16,9 @@ class CoinPackedMatrix;
 class CoinWarmStart;
 
 class OsiCuts;
+class OsiAuxInfo;
 class OsiRowCut;
 class OsiRowCutDebugger;
-class OsiAuxInfo;
 class CoinSet;
 class CoinBuild;
 class CoinModel;
@@ -1082,9 +1082,12 @@ public:
         designed for one user while this can be extended to cope
         with more general extensions.
     */
+    void setAuxiliaryInfo(OsiAuxInfo * auxiliaryInfo);
 
     /// Get application data
     void * getApplicationData() const;
+    /// Get pointer to auxiliary info object
+    OsiAuxInfo * getAuxiliaryInfo() const;
   //@}
   //---------------------------------------------------------------------------
 
@@ -1358,7 +1361,7 @@ private:
   ///@name Private member data 
   //@{
     /// Pointer to user-defined data structure - and more if user wants
-    void * appDataEtc_;
+    OsiAuxInfo * appDataEtc_;
     /// Array of integer parameters
     int intParam_[OsiLastIntParam];
     /// Array of double parameters

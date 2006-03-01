@@ -18,7 +18,7 @@ LIBNAME := Osi
 
 LIBSRC =
 
-#LIBSRC += OsiAuxInfo.cpp
+LIBSRC += OsiAuxInfo.cpp
 LIBSRC += OsiCut.cpp
 LIBSRC += OsiColCut.cpp
 LIBSRC += OsiRowCut.cpp

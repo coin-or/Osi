@@ -62,7 +62,7 @@ OsiBabSolver::~OsiBabSolver ()
 }
 
 // Clone
-OsiBabSolver *
+OsiAuxInfo *
 OsiBabSolver::clone() const
 {
   return new OsiBabSolver(*this);
@@ -78,7 +78,6 @@ OsiBabSolver::OsiBabSolver(const OsiBabSolver & rhs)
   bestSolution_(NULL),
   mipBound_(rhs.mipBound_)
 {
-  
   if (rhs.bestSolution_) {
     assert (solver_);
     bestSolution_ = CoinCopyOfArray(rhs.bestSolution_,solver_->getNumCols());

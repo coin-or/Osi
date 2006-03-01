@@ -55,7 +55,7 @@ public:
   virtual ~OsiBabSolver();
   
   /// Clone
-  virtual OsiBabSolver * clone() const;
+  virtual OsiAuxInfo * clone() const;
   /// Assignment operator 
   OsiBabSolver & operator=(const OsiBabSolver& rhs);
   
@@ -122,6 +122,9 @@ public:
   { return solverType_==3 && bestSolution_;};
   /// Says whether we want to try cuts at all
   inline bool tryCuts() const
+  { return solverType_!=2;};
+  /// Says whether we have a warm start (so can do strong branching)
+  inline bool warmStart() const
   { return solverType_!=2;};
 protected:
   /// Solver to use for getting/setting solutions etc

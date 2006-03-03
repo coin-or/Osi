@@ -122,6 +122,19 @@ OsiBabSolver::solution(double & solutionValue,
     return 0;
   }
 }
+
+bool
+OsiBabSolver::hasSolution(double & solutionValue, double * solution)
+{
+	if (! bestSolution_)
+		return false;
+
+	int numberColumns = solver_->getNumCols();
+	memcpy(solution,bestSolution_,numberColumns*sizeof(double));
+	solutionValue = bestObjectiveValue_;
+	return true;
+}
+
 // set solution
 void
 OsiBabSolver::setSolution(const OsiSolverInterface * solver)

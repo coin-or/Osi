@@ -73,6 +73,13 @@ public:
   */
   int solution(double & objectiveValue,
 		       double * newSolution);
+  /** returns true if the object stores a solution, false otherwise. If there
+	  is a solution then solutionValue and solution will be filled out as well.
+      In that case the user needs to allocate solution to be a big enough
+	  array.
+  */
+  bool hasSolution(double & solutionValue, double * solution);
+
   /// Set solution (and replace solver pointer if not null)
   void setSolution(const OsiSolverInterface * solver=NULL);
 

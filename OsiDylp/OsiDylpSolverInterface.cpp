@@ -565,18 +565,6 @@ inline basis_struct* ODSI::copy_basis (const basis_struct* src, int dstsze)
   return dst ; }
 
 
-/*! \brief Specialised copy function for the constraint matrix of a
-	   consys_struct
-
-  The algorithm creates an empty row for each constraint, then adds the
-  coefficients column by column.
-
-  \todo This could be done more efficiently as a primitive routine in
-	consys_utils.c. The column additions aren't so bad, but the row
-	additions are incurring unnecessary overhead.
-*/
-
-
 /*! \brief Specialised copy function for a dylp lpprob_struct */
 
 lpprob_struct* ODSI::copy_lpprob (const lpprob_struct* src)
@@ -1620,7 +1608,7 @@ ODSI::OsiDylpSolverInterface ()
   { dylp_ioinit() ;
     CoinRelFltEq eq ;
     assert(eq(odsiInfinity, odsiInfinity)) ; }
-  
+
   return ; }
 
 
@@ -1628,8 +1616,7 @@ ODSI::OsiDylpSolverInterface ()
   A true copy --- no data structures are shared with the original. The
   statistics structure, hot start structure, and presolve structures are not
   copied (but presolve control information is copied). The copy does not
-  inherit open files from the original. Cached information is not
-  replicated.
+  inherit open files from the original. Cached information is not replicated.
 */
 
 ODSI::OsiDylpSolverInterface (const OsiDylpSolverInterface& src)
@@ -1939,7 +1926,7 @@ ODSI::~OsiDylpSolverInterface ()
       basis_ready = false ; }
     ioterm() ;
     errterm() ; }
-  
+
   return ; }
 
 /*! \ingroup ODSIConstructorsDestructors
@@ -2002,8 +1989,23 @@ inline void ODSI::setContinuous (int j)
   { bool r UNUSED = consys_attach(consys,CONSYS_VTYP,sizeof(vartyp_enum),
 				  reinterpret_cast<void **>(&consys->vtyp)) ;
     assert(r) ; }
+/*
+  Keep up with the bookkeeping.
+*/
+  vartyp_enum vtyp = consys->vtyp[idx(j)] ;
+  switch (vtyp)
+  { case vartypBIN:
+    { consys->binvcnt-- ;
+      break ; }
+    case vartypINT:
+    { consys->intvcnt-- ;
+      break ; }
+    default:
+    { break ; } }
 
-  consys->vtyp[idx(j)] = vartypCON ; }
+  consys->vtyp[idx(j)] = vartypCON ;
+  
+  return ; }
 
 
 inline void ODSI::setContinuous (const int* indices, int len)
@@ -2013,9 +2015,8 @@ inline void ODSI::setContinuous (const int* indices, int len)
 				  reinterpret_cast<void **>(&consys->vtyp)) ;
     assert(r) ; }
 
-  for (int i = 0 ; i < len ; i++)
-    consys->vtyp[idx(indices[i])] = vartypCON ; }
-
+  for (int i = 0 ; i < len ; i++) setContinuous(indices[i]) ; }
+  
 
 inline void ODSI::setInteger (int j)
 
@@ -2023,11 +2024,28 @@ inline void ODSI::setInteger (int j)
   { bool r UNUSED = consys_attach(consys,CONSYS_VTYP,sizeof(vartyp_enum),
 				  reinterpret_cast<void **>(&consys->vtyp)) ;
     assert(r) ; }
+/*
+  Keep up with the bookkeeping.
+*/
+  vartyp_enum vtyp = consys->vtyp[idx(j)] ;
+  switch (vtyp)
+  { case vartypBIN:
+    { consys->binvcnt-- ;
+      break ; }
+    case vartypINT:
+    { consys->intvcnt-- ;
+      break ; }
+    default:
+    { break ; } }
 
   if (getColLower()[j] == 0.0 && getColUpper()[j] == 1.0)
-    consys->vtyp[idx(j)] = vartypBIN ;
+  { consys->vtyp[idx(j)] = vartypBIN ;
+    consys->binvcnt++ ; }
   else
-    consys->vtyp[idx(j)] = vartypINT ; }
+  { consys->vtyp[idx(j)] = vartypINT ;
+    consys->intvcnt++ ; }
+
+  return ; }
 
 
 inline void ODSI::setInteger (const int* indices, int len)
@@ -3909,8 +3927,8 @@ void ODSI::initialSolve ()
   it. We're doing an initial solve and we'll want to start fresh.
 */
   if (dylp_owner != 0)
-  { dylp_owner->detach_dylp() ;
-    clrflg(lpprob->ctlopts,lpctlDYVALID) ; }
+  { dylp_owner->detach_dylp() ; }
+  clrflg(lpprob->ctlopts,lpctlDYVALID) ;
 /*
   Are we going to do presolve and postsolve? If so, now's the time to presolve
   the constraint system.
@@ -5279,11 +5297,11 @@ void ODSI::resolve ()
 	 consys && resolveOptions && tolerances) ;
 
 /*
-  Does some other ODSI object own the solver? If so, detach it. This surely
-  means that we no longer have retained data structures.
+  Does some other ODSI object own the solver? If so, detach it. If we don't
+  own the solver, we surely don't have retained data structures.
 */
-  if (dylp_owner != 0 && dylp_owner != this)
-  { dylp_owner->detach_dylp() ;
+  if (dylp_owner != this)
+  { if (dylp_owner != 0) dylp_owner->detach_dylp() ;
     clrflg(lpprob->ctlopts,lpctlDYVALID) ; }
 /*
   We're reoptimising, so you might ask ``Why should we need to initialise the

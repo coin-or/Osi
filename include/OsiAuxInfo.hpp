@@ -69,19 +69,21 @@ public:
   /** returns 0 if no heuristic solution, 1 if valid solution
       with better objective value than one passed in
       Sets solution values if good, sets objective value 
-      Frees internal solution
+      numberColumns is size of newSolution
   */
   int solution(double & objectiveValue,
-		       double * newSolution);
+		       double * newSolution, int numberColumns);
+  /** Set solution and objective value.
+      Number of columns and optimization direction taken from current solver.
+      Size of solution is numberColumns (may be padded or truncated in function) */
+  void setSolution(const double * solution, int numberColumns, double objectiveValue);
+
   /** returns true if the object stores a solution, false otherwise. If there
 	  is a solution then solutionValue and solution will be filled out as well.
       In that case the user needs to allocate solution to be a big enough
 	  array.
   */
   bool hasSolution(double & solutionValue, double * solution);
-
-  /// Set solution (and replace solver pointer if not null)
-  void setSolution(const OsiSolverInterface * solver=NULL);
 
   /** Sets solver type
       0 - normal LP solver
@@ -127,9 +129,9 @@ public:
   /// Set mip bound (only used for some solvers)
   inline void setMipBound(double value)
   { mipBound_ = value;};
-  /// Says whether to get solution from this
-  inline bool getSolutionFromInfo() const
-  { return solverType_==3 && bestSolution_;};
+  /// Get objective value of saved solution
+  inline double bestObjectiveValue() const
+  { return bestObjectiveValue_;};
   /// Says whether we want to try cuts at all
   inline bool tryCuts() const
   { return solverType_!=2;};
@@ -157,6 +159,8 @@ protected:
   double * bestSolution_;
   /// Current lower bound on solution ( if > 1.0e50 infeasible)
   double mipBound_;
+  /// Size of solution
+  int sizeSolution_;
 };
 
 #endif

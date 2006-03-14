@@ -302,6 +302,8 @@ void OsiClpSolverInterface::initialSolve()
 //-----------------------------------------------------------------------------
 void OsiClpSolverInterface::resolve()
 {
+  //void pclp(char *);
+  //pclp("res");
   bool takeHint;
   OsiHintStrength strength;
   bool gotHint = (getHintParam(OsiDoInBranchAndCut,takeHint,strength));
@@ -1880,6 +1882,7 @@ whichRange_(NULL),
 cleanupScaling_(0),
 specialOptions_(0x80000000)
 {
+  //printf("in default %x\n",this);
   modelPtr_=NULL;
   notOwned_=false;
   reset();
@@ -1890,6 +1893,7 @@ specialOptions_(0x80000000)
 //-------------------------------------------------------------------
 OsiSolverInterface * OsiClpSolverInterface::clone(bool CopyData) const
 {
+  //printf("in clone %x\n",this);
    if (CopyData) {
       return new OsiClpSolverInterface(*this);
    } else {
@@ -1924,6 +1928,7 @@ matrixByRow_(NULL),
 integerInformation_(NULL),
 whichRange_(NULL)
 {
+  //printf("in copy %x - > %x\n",&rhs,this);
   if ( rhs.modelPtr_  ) 
     modelPtr_ = new ClpSimplex(*rhs.modelPtr_);
   else
@@ -1971,6 +1976,7 @@ whichRange_(NULL),
 cleanupScaling_(0),
 specialOptions_(0x80000000)
 {
+  //printf("in borrow %x - > %x\n",&rhs,this);
   modelPtr_ = rhs;
   basis_.resize(modelPtr_->numberRows(),modelPtr_->numberColumns());
   linearObjective_ = modelPtr_->objective();
@@ -2001,6 +2007,7 @@ OsiClpSolverInterface::releaseClp()
 //-------------------------------------------------------------------
 OsiClpSolverInterface::~OsiClpSolverInterface ()
 {
+  //printf("in destructor %x\n",this);
   freeCachedResults();
   if (!notOwned_)
     delete modelPtr_;
@@ -2020,6 +2027,7 @@ OsiClpSolverInterface &
 OsiClpSolverInterface::operator=(const OsiClpSolverInterface& rhs)
 {
   if (this != &rhs) {    
+    //printf("in = %x - > %x\n",&rhs,this);
     OsiSolverInterface::operator=(rhs);
     freeCachedResults();
     if (!notOwned_)
@@ -3497,15 +3505,6 @@ OsiClpSolverInterface::setHintParam(OsiHintParam key, bool yesNo,
   }
 }
 
-
-// Invoke solver's built-in enumeration algorithm
-void 
-OsiClpSolverInterface::branchAndBound() {
-  throw CoinError("Sorry, Clp doesn't implement B&B.  This is because the original Simple Branch and Bound\n\
-code has been much developed and moved to Sbb which is now Cbc\n\
-.  If you want a native Branch and Bound code use Cbc",
-		  "branchAndBound","OsiClpSolverInterface");
-}
 // Crunch down model
 void 
 OsiClpSolverInterface::crunch()
@@ -3557,4 +3556,462 @@ int
 OsiClpSolverInterface::canDoSimplexInterface() const
 {
   return 2;
+}
+// below needed for pathetic branch and bound code
+#include <vector>
+#include <map>
+
+// Trivial class for Branch and Bound
+
+class OsiNodeSimple  {
+  
+public:
+    
+  // Default Constructor 
+  OsiNodeSimple ();
+
+  // Constructor from current state (and list of integers)
+  // Also chooses branching variable (if none set to -1)
+  OsiNodeSimple (OsiSolverInterface &model,
+	   int numberIntegers, int * integer);
+  
+  // Copy constructor 
+  OsiNodeSimple ( const OsiNodeSimple &);
+   
+  // Assignment operator 
+  OsiNodeSimple & operator=( const OsiNodeSimple& rhs);
+
+  // Destructor 
+  ~OsiNodeSimple ();
+  
+  // Public data
+  // Basis (should use tree, but not as wasteful as bounds!)
+  CoinWarmStartBasis basis_;
+  // Objective value
+  double objectiveValue_;
+  // Branching variable (0 is first integer)
+  int variable_;
+  // Way to branch - -1 down (first), 1 up, -2 down (second), 2 up (second)
+  int way_;
+  // Number of integers (for length of arrays)
+  int numberIntegers_;
+  // Current value
+  double value_;
+  // Now I must use tree
+  // Bounds stored in full (for integers)
+  int * lower_;
+  int * upper_;
+};
+
+
+OsiNodeSimple::OsiNodeSimple() :
+  basis_(CoinWarmStartBasis()),
+  objectiveValue_(1.0e100),
+  variable_(-100),
+  way_(-1),
+  numberIntegers_(0),
+  value_(0.5),
+  lower_(NULL),
+  upper_(NULL)
+{
+}
+OsiNodeSimple::OsiNodeSimple(OsiSolverInterface & model,
+		 int numberIntegers, int * integer)
+{
+  const CoinWarmStartBasis* ws =
+    dynamic_cast<const CoinWarmStartBasis*>(model.getWarmStart());
+
+  assert (ws!=NULL); // make sure not volume
+  basis_ = CoinWarmStartBasis(*ws);
+  variable_=-1;
+  way_=-1;
+  numberIntegers_=numberIntegers;
+  value_=0.0;
+  if (model.isProvenOptimal()&&!model.isDualObjectiveLimitReached()) {
+    objectiveValue_ = model.getObjSense()*model.getObjValue();
+  } else {
+    objectiveValue_ = 1.0e100;
+    lower_ = NULL;
+    upper_ = NULL;
+    return; // node cutoff
+  }
+  lower_ = new int [numberIntegers_];
+  upper_ = new int [numberIntegers_];
+  assert (upper_!=NULL);
+  const double * lower = model.getColLower();
+  const double * upper = model.getColUpper();
+  const double * solution = model.getColSolution();
+  int i;
+  // Hard coded integer tolerance
+#define INTEGER_TOLERANCE 1.0e-6
+  // Number of strong branching candidates
+#define STRONG_BRANCHING 5
+#ifdef STRONG_BRANCHING
+  double upMovement[STRONG_BRANCHING];
+  double downMovement[STRONG_BRANCHING];
+  double solutionValue[STRONG_BRANCHING];
+  int chosen[STRONG_BRANCHING];
+  int iSmallest=0;
+  // initialize distance from integer
+  for (i=0;i<STRONG_BRANCHING;i++) {
+    upMovement[i]=0.0;
+    chosen[i]=-1;
+  }
+#endif
+  variable_=-1;
+  // This has hard coded integer tolerance
+  double mostAway=INTEGER_TOLERANCE;
+  for (i=0;i<numberIntegers;i++) {
+    int iColumn = integer[i];
+    lower_[i]=(int)lower[iColumn];
+    upper_[i]=(int)upper[iColumn];
+    double value = solution[iColumn];
+    value = max(value,(double) lower_[i]);
+    value = min(value,(double) upper_[i]);
+    double nearest = floor(value+0.5);
+    if (fabs(value-nearest)>mostAway) {
+#ifdef STRONG_BRANCHING
+      double away = fabs(value-nearest);
+      if (away>upMovement[iSmallest]) {
+	//add to list
+	upMovement[iSmallest]=away;
+	solutionValue[iSmallest]=value;
+	chosen[iSmallest]=i;
+	int j;
+	iSmallest=-1;
+	double smallest = 1.0;
+	for (j=0;j<STRONG_BRANCHING;j++) {
+	  if (upMovement[j]<smallest) {
+	    smallest=upMovement[j];
+	    iSmallest=j;
+	  }
+	}
+      }
+#else
+      mostAway=fabs(value-nearest);
+      variable_=i;
+      value_=value;
+      if (value<=nearest)
+	way_=1; // up
+      else
+	way_=-1; // down
+#endif
+    }
+  }
+#ifdef STRONG_BRANCHING
+  int numberStrong=0;
+  for (i=0;i<STRONG_BRANCHING;i++) {
+    if (chosen[i]>=0) { 
+      numberStrong ++;
+      variable_ = chosen[i];
+    }
+  }
+  if (numberStrong==1) {
+    // just one - makes it easy
+    int iColumn = integer[variable_];
+    double value = solution[iColumn];
+    value = max(value,(double) lower_[variable_]);
+    value = min(value,(double) upper_[variable_]);
+    double nearest = floor(value+0.5);
+    value_=value;
+    if (value<=nearest)
+      way_=1; // up
+    else
+      way_=-1; // down
+  } else if (numberStrong) {
+    // more than one - choose
+    bool chooseOne=true;
+    model.markHotStart();
+    for (i=0;i<STRONG_BRANCHING;i++) {
+      int iInt = chosen[i];
+      if (iInt>=0) {
+	int iColumn = integer[iInt];
+	double value = solutionValue[i]; // value of variable in original
+	double objectiveChange;
+	value = max(value,(double) lower_[iInt]);
+	value = min(value,(double) upper_[iInt]);
+
+	// try down
+
+	model.setColUpper(iColumn,floor(value));
+	model.solveFromHotStart();
+	model.setColUpper(iColumn,upper_[iInt]);
+	if (model.isProvenOptimal()&&!model.isDualObjectiveLimitReached()) {
+	  objectiveChange = model.getObjSense()*model.getObjValue()
+	    - objectiveValue_;
+	} else {
+	  objectiveChange = 1.0e100;
+	}
+	downMovement[i]=objectiveChange;
+
+	// try up
+
+	model.setColLower(iColumn,ceil(value));
+	model.solveFromHotStart();
+	model.setColLower(iColumn,lower_[iInt]);
+	if (model.isProvenOptimal()&&!model.isDualObjectiveLimitReached()) {
+	  objectiveChange = model.getObjSense()*model.getObjValue()
+	    - objectiveValue_;
+	} else {
+	  objectiveChange = 1.0e100;
+	}
+	upMovement[i]=objectiveChange;
+	
+	/* Possibilities are:
+	   Both sides feasible - store
+	   Neither side feasible - set objective high and exit
+	   One side feasible - change bounds and resolve
+	*/
+	bool solveAgain=false;
+	if (upMovement[i]<1.0e100) {
+	  if(downMovement[i]<1.0e100) {
+	    // feasible - no action
+	  } else {
+	    // up feasible, down infeasible
+	    solveAgain = true;
+	    model.setColLower(iColumn,ceil(value));
+	  }
+	} else {
+	  if(downMovement[i]<1.0e100) {
+	    // down feasible, up infeasible
+	    solveAgain = true;
+	    model.setColUpper(iColumn,floor(value));
+	  } else {
+	    // neither side feasible
+	    objectiveValue_=1.0e100;
+	    chooseOne=false;
+	    break;
+	  }
+	}
+	if (solveAgain) {
+	  // need to solve problem again - signal this
+	  variable_ = numberIntegers;
+	  chooseOne=false;
+	  break;
+	}
+      }
+    }
+    if (chooseOne) {
+      // choose the one that makes most difference both ways
+      double best = -1.0;
+      double best2 = -1.0;
+      for (i=0;i<STRONG_BRANCHING;i++) {
+	int iInt = chosen[i];
+	if (iInt>=0) {
+	  //std::cout<<"Strong branching on "
+          //   <<i<<""<<iInt<<" down "<<downMovement[i]
+          //   <<" up "<<upMovement[i]
+          //   <<" value "<<solutionValue[i]
+          //   <<std::endl;
+	  bool better = false;
+	  if (min(upMovement[i],downMovement[i])>best) {
+	    // smaller is better
+	    better=true;
+	  } else if (min(upMovement[i],downMovement[i])>best-1.0e-5) {
+	    if (max(upMovement[i],downMovement[i])>best2+1.0e-5) {
+	      // smaller is about same, but larger is better
+	      better=true;
+	    }
+	  }
+	  if (better) {
+	    best = min(upMovement[i],downMovement[i]);
+	    best2 = max(upMovement[i],downMovement[i]);
+	    variable_ = iInt;
+	    double value = solutionValue[i];
+	    value = max(value,(double) lower_[variable_]);
+	    value = min(value,(double) upper_[variable_]);
+	    value_=value;
+	    if (upMovement[i]<=downMovement[i])
+	      way_=1; // up
+	    else
+	      way_=-1; // down
+	  }
+	}
+      }
+    }
+    // Delete the snapshot
+    model.unmarkHotStart();
+  }
+#endif
+}
+
+OsiNodeSimple::OsiNodeSimple(const OsiNodeSimple & rhs) 
+{  
+  basis_=rhs.basis_;
+  objectiveValue_=rhs.objectiveValue_;
+  variable_=rhs.variable_;
+  way_=rhs.way_;
+  numberIntegers_=rhs.numberIntegers_;
+  value_=rhs.value_;
+  lower_=NULL;
+  upper_=NULL;
+  if (rhs.lower_!=NULL) {
+    lower_ = new int [numberIntegers_];
+    upper_ = new int [numberIntegers_];
+    assert (upper_!=NULL);
+    memcpy(lower_,rhs.lower_,numberIntegers_*sizeof(int));
+    memcpy(upper_,rhs.upper_,numberIntegers_*sizeof(int));
+  }
+}
+
+OsiNodeSimple &
+OsiNodeSimple::operator=(const OsiNodeSimple & rhs)
+{
+  if (this != &rhs) {
+    basis_=rhs.basis_;
+    objectiveValue_=rhs.objectiveValue_;
+    variable_=rhs.variable_;
+    way_=rhs.way_;
+    numberIntegers_=rhs.numberIntegers_;
+    value_=rhs.value_;
+    delete [] lower_;
+    delete [] upper_;
+    lower_=NULL;
+    upper_=NULL;
+    if (rhs.lower_!=NULL) {
+      lower_ = new int [numberIntegers_];
+      upper_ = new int [numberIntegers_];
+      assert (upper_!=NULL);
+      memcpy(lower_,rhs.lower_,numberIntegers_*sizeof(int));
+      memcpy(upper_,rhs.upper_,numberIntegers_*sizeof(int));
+    }
+  }
+  return *this;
+}
+
+
+OsiNodeSimple::~OsiNodeSimple ()
+{
+  delete [] lower_;
+  delete [] upper_;
+}
+
+#include <vector>
+
+// Vector of OsiNodeSimples 
+typedef std::vector<OsiNodeSimple>    OsiVectorNode;
+
+// Invoke solver's built-in enumeration algorithm
+void 
+OsiClpSolverInterface::branchAndBound() {
+  // solve LP
+  initialSolve();
+
+  if (isProvenOptimal()&&!isDualObjectiveLimitReached()) {
+    int numberIntegers=0;
+    int numberColumns = getNumCols();
+    int iColumn;
+    int i;
+    for (iColumn=0;iColumn<numberColumns;iColumn++) {
+      if( isInteger(iColumn))
+        numberIntegers++;
+    }
+    if (!numberIntegers) {
+      std::cout<<"No integer variables"
+               <<std::endl;
+      return;
+    }
+    int * which = new int[numberIntegers]; // which variables are integer
+    numberIntegers=0;
+    for (iColumn=0;iColumn<numberColumns;iColumn++) {
+      if( isInteger(iColumn))
+        which[numberIntegers++]=iColumn;
+    }
+    
+    // empty tree
+    OsiVectorNode branchingTree;
+    
+    // Add continuous to it;
+    branchingTree.push_back(OsiNodeSimple(*this,numberIntegers,which));
+    
+    // For printing totals
+    int numberIterations=0;
+    int numberNodes =0;
+    
+    OsiNodeSimple bestNode;
+    // while until nothing on stack
+    while (branchingTree.size()) {
+      // last node
+      OsiNodeSimple node = branchingTree.back();
+      branchingTree.pop_back();
+      numberNodes++;
+      if (node.variable_>=0) {
+        // branch - do bounds
+        for (i=0;i<numberIntegers;i++) {
+          iColumn=which[i];
+          setColBounds( iColumn,node.lower_[i],node.upper_[i]);
+        }
+        // move basis
+        setWarmStart(&node.basis_);
+        // do branching variable
+        if (node.way_<0) {
+          setColUpper(which[node.variable_],floor(node.value_));
+          // now push back node if more to come
+          if (node.way_==-1) { 
+            node.way_=+2;	  // Swap direction
+            branchingTree.push_back(node);
+          }
+        } else {
+          setColLower(which[node.variable_],ceil(node.value_));
+          // now push back node if more to come
+          if (node.way_==1) { 
+            node.way_=-2;	  // Swap direction
+            branchingTree.push_back(node);
+          }
+        }
+        // solve
+        resolve();
+        numberIterations += getIterationCount();
+        if (!isIterationLimitReached()) {
+          OsiNodeSimple newNode(*this,numberIntegers,which);
+          // something extra may have been fixed by strong branching
+          // if so go round again
+          while (newNode.variable_==numberIntegers) {
+            resolve();
+            newNode = OsiNodeSimple(*this,numberIntegers,which);
+          }
+          if (newNode.objectiveValue_<1.0e100) {
+            // push on stack
+            branchingTree.push_back(newNode);
+          }
+        } else {
+          // maximum iterations - exit
+          std::cout<<"Exiting on maximum iterations"
+                   <<std::endl;
+	  break;
+        }
+      } else {
+        // integer solution - save
+        bestNode = node;
+        // set cutoff (hard coded tolerance)
+        setDblParam(OsiDualObjectiveLimit,bestNode.objectiveValue_-1.0e-5);
+        std::cout<<"Integer solution of "
+                 <<bestNode.objectiveValue_
+                 <<" found after "<<numberIterations
+                 <<" iterations and "<<numberNodes<<" nodes"
+                 <<std::endl;
+      }
+    }
+    std::cout<<"Search took "
+             <<numberIterations
+             <<" iterations and "<<numberNodes<<" nodes"
+             <<std::endl;
+    if (bestNode.numberIntegers_) {
+      // we have a solution restore
+      // do bounds
+      for (i=0;i<numberIntegers;i++) {
+        iColumn=which[i];
+        setColBounds( iColumn,bestNode.lower_[i],bestNode.upper_[i]);
+      }
+      // move basis
+      setWarmStart(&bestNode.basis_);
+      resolve();
+    }
+    delete [] which;
+  } else {
+    std::cout<<"The LP relaxation is infeasible"
+             <<std::endl;
+    throw CoinError("The LP relaxation is infeasible or too expensive",
+                    "branchAndBound", "OsiClpSolverInterface");
+  }
 }

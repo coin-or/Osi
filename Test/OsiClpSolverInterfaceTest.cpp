@@ -870,6 +870,24 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     assert( eq(objValue,2520.57) );
 
   }
+  // Test branch and bound
+  {    
+    OsiClpSolverInterface m;
+    std::string fn = mpsDir+"p0033";
+    m.readMps(fn.c_str(),"mps");
+    // reduce printout
+    m.setHintParam(OsiDoReducePrint,true,OsiHintTry);
+    m.branchAndBound();
+    double objValue = m.getObjValue();
+    CoinRelFltEq eq(1.0e-2);
+    assert( eq(objValue,3089) );
+    const double * cs = m.getColSolution();
+    int n  = m.getNumCols();
+    for (int i=0;i<n;i++) {
+      if (cs[i]>1.0e-7)
+        printf("%d has value %g\n",i,cs[i]);
+    }
+  }
   // Test matt
   if (fopen("../Mps/Infeas/galenet.mps","r")) {    
     OsiClpSolverInterface m;

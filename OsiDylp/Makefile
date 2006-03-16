@@ -15,20 +15,25 @@ export LibType ?= SHARED
 
 export OptLevel ?= -O
 
-# If OsiDylp is being built as a dependency for the Dylp sample programs, this
-# symbol will be defined on entry to this makefile (but may well be defined to
-# be empty, hence the use of the origin function). If it's not defined, the two
-# options that make a difference for OsiDylp are stats and info. Request info
-# if you want information prints, and stats if you want statistics. Note that
-# both OsiDylp and dylp must be built with statistics enabled before you'll
-# actually see any stats. dylp will ignore an incoming statistics structure if
-# built without statistics, and OsiDylp will not supply one if built without
-# statistics. The default is neither info or stats.
+# If OsiDylp is being built as a dependency for the Dylp sample programs, the
+# symbol DYLP_OPTIONS will be defined on entry to this makefile (but may well
+# be defined to be empty, hence the use of the origin function). If it's not
+# defined, the two options that make a difference for OsiDylp are stats and
+# info. Request info if you want information prints, and stats if you want
+# statistics. Note that both OsiDylp and dylp must be built with statistics
+# enabled before you'll actually see any stats. dylp will ignore an incoming
+# statistics structure if built without statistics, and OsiDylp will not supply
+# one if built without statistics. The default is neither info or stats.
 
-# To get both, you would use
-#   DYLP_OPTIONS ?= stats info
+# If you are triggering the build of Dylp from here (in other words, if you
+# haven't already issued a `make samples' command in the Dylp distribution
+# directory), the entire Dylp build will be controlled by the options you
+# request here. So, if you want dylp to be paranoid, add it to the list for
+# DYLP_OPTIONS. The default (the uncommented line below) is no optional
+# capabilities.
 
 ifeq ("$(origin DYLP_OPTIONS)","undefined")
+# export DYLP_OPTIONS ?= paranoia stats info
   export DYLP_OPTIONS ?=
 endif
 

@@ -68,9 +68,9 @@ enum OsiHintParam {
   OsiDoScale,
   /** Whether to create a non-slack basis (only in initialSolve) */
   OsiDoCrash,
-  /*** Whether to reduce amount of printout e.g. for branch and cut */
+  /** Whether to reduce amount of printout, e.g., for branch and cut */
   OsiDoReducePrint,
-  /*** Whether we are in branch and cut - so can modify behavior */
+  /** Whether we are in branch and cut - so can modify behavior */
   OsiDoInBranchAndCut,
   /** Just a marker, so that OsiSolverInterface can allocate a static sized
       array to store parameters. */

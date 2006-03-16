@@ -30,6 +30,18 @@ export ExtraLibName := \
 export ExtraDefine  := \
     ${CbcDefine}  ${OsiDefine}  ${CoinDefine}  ${zlibDefine}  ${bzlibDefine} 
 
+# By default, OsiCbc uses OsiClp as the underlying OSI solver. You can change
+# that here. If you want OsiClp, LEAVE THESE LINES COMMENTED OUT AND DO
+# NOTHING ELSE. If you want a solver other than dylp, change as appropriate.
+# Consult Makefiles/Makefile.location for your solver.
+
+# ExtraDefine += OSICBC_DFLT_SOLVER=OsiDylpSolverInterface
+# ExtraDefine += OSICBC_DFLT_SOLVER_HPP=\"OsiDylpSolverInterface.hpp\"
+# ExtraIncDir += $(DylpIncDir) $(OsiDylpIncDir)
+# ExtraLibDir += $(DylpLibDir) $(OsiDylpLibDir)
+# ExtraLibName += $(DylpLibName) $(OsiDylpLibName)
+# ExtraDefine += $(DylpDefine) $(OsiDylpDefine)
+
 export LibType OptLevel LIBNAME LIBSRC
 
 ###############################################################################

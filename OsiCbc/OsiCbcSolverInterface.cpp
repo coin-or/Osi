@@ -5,14 +5,22 @@
 
 #include "CoinTime.hpp"
 
+#ifndef OSICBC_DFLT_SOLVER
+#define OSICBC_CLP_DFLT_SOLVER
+#define OSICBC_DFLT_SOLVER OsiClpSolverInterface
+#define OSICBC_DFLT_SOLVER_HPP "OsiClpSolverInterface.hpp"
+#endif
+
 #include "CoinHelperFunctions.hpp"
 #include "CoinIndexedVector.hpp"
-#include "OsiClpSolverInterface.hpp"
+#include OSICBC_DFLT_SOLVER_HPP
 #include "OsiCbcSolverInterface.hpp"
 #include "OsiCuts.hpp"
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
+#ifdef OSICBC_CLP_DFLT_SOLVER
 #include "ClpPresolve.hpp"
+#endif
 //#############################################################################
 // Solve methods
 //#############################################################################
@@ -430,8 +438,8 @@ OsiSolverInterface()
   if (solver) {
     modelPtr_=new CbcModel(*solver);
   } else {
-    OsiClpSolverInterface solverClp;
-    modelPtr_=new CbcModel(solverClp);
+    OSICBC_DFLT_SOLVER solverDflt;
+    modelPtr_=new CbcModel(solverDflt);
   }
   if (strategy) {
     modelPtr_->setStrategy(*strategy);

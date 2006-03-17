@@ -87,8 +87,17 @@ typedef struct { OsiDylpMessageID_enum inID ;
 static MsgDefn us_en_defns[] = {
   { ODSI_TEST_MSG, 0001, 2, "This is the us_en test message, eh." },
   { ODSI_MPSFILEIO, 0010, 2, "MPS file %s %s with %d errors." },
-  { ODSI_UNSUPFORCEDO, 6001, 1, "Attempt to force unsupported hint; %s." },
+  { ODSI_LPRESULT, 0050, 3, "dylp result %s, z = %g, iters = %d." },
+  { ODSI_PRESOL_STATS, 0100, 2,
+    "%s %d constraints, %d variables, %d coefficients." }, 
+  { ODSI_PRESOL_PASS, 0101, 3,
+    "Presolve pass %d: dropped %d constraints (%.2f), %d variables (%.2f)." },
+  { ODSI_POSTSOL, 0200, 2, "Postsolve %s."},
+  { ODSI_POSTSOL_ACT, 0201, 3, "Applying postsolve transform %s."},
   { ODSI_IGNORED, 3001, 2, "Ignored unsupported hint; %s." },
+  { ODSI_ODWSBSHORTBASIS, 3100, 1,
+    "[%s]: basis has only %d variables for %d constraints." },
+  { ODSI_UNSUPFORCEDO, 6001, 1, "Attempt to force unsupported hint; %s." },
   { ODSI_EMPTYODWSB, 6101, 1, "Empty warm start basis object." },
   { ODSI_NOTODWSB, 6102, 1,
     "The warm start basis object is not a %sWarmStartBasis object." },
@@ -96,14 +105,6 @@ static MsgDefn us_en_defns[] = {
     "Basis size %d x %d does not match constraint system size %d x %d." },
   { ODSI_ODWSBBADSTATUS, 6104, 1,
     "Flipping %s (%d) from %s to %s; lack of finite bound." },
-  { ODSI_PRESOL_STATS, 100, 2,
-    "%s %d constraints, %d variables, %d coefficients." }, 
-  { ODSI_PRESOL_PASS, 101, 3,
-    "Presolve pass %d: dropped %d constraints (%.2f), %d variables (%.2f)." },
-  { ODSI_POSTSOL, 200, 2, "Postsolve %s."},
-  { ODSI_POSTSOL_ACT, 201, 3, "Applying postsolve transform %s."},
-  { ODSI_LPRESULT, 050, 3,
-    "dylp result %s, z = %g, iters = %d." },
   { ODSI_DUMMY_END, 999999, 0, "" }
 } ;
 

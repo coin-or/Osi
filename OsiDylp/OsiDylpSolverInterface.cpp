@@ -5030,13 +5030,21 @@ CoinWarmStart* ODSI::getWarmStart () const
   A basis with 0 rows and 0 columns, or a null parameter, is taken as a
   request to delete the existing warm start information held in activeBasis.
 
-  Note that the size (rows x columns) of the CoinWarmSTart information should
+  Note that the size (rows x columns) of the CoinWarmStart information should
   match the size of the constraint system. The final basis built for dylp can
   be smaller, as inactive constraints will not be included. A basis with 0
   active constraints is legal. (In fact, fairly common. When a B&C code fixes
   all integer variables to confirm or regenerate a solution, a problem with
   only integer variables may have all variables fixed and no tight
   architectural constraints.)
+
+  It can happen that the client will, for one reason or another, fix a basic
+  variable. The symptom here is that we end up short a few basic variables.
+  Unfortunately, the COIN data structures do not contain enough information
+  for setWarmStart to tell whether this is intentional or an error. In the
+  case of cbc, this does occur intentionally. So we compensate, and promote
+  some random nonbasic variable to basic status. If the log level is
+  sufficiently high, you'll get a message.
 */
 
 bool ODSI::setWarmStart (const CoinWarmStart *ws)
@@ -5202,6 +5210,24 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
     { k++ ;
       assert(k <= actcons) ;
       basis.el[k].vndx = -i ; } }
+/*
+  Up to now we've worried about too many basic variables. Time to check to see
+  if we have enough. If we're short, it could be an error, or it could be
+  intentional. We can't tell from here (see note at head of routine). Fill
+  out the basis by grabbing nonbasic logicals and declaring them basic. Such
+  variables must exist. It'd be nice to correct the warm start, but we've
+  been handed a const object, so we can't do that.
+*/
+  if (k < actcons)
+  { handler_->message(ODSI_ODWSBSHORTBASIS,messages_)
+      << consys->nme << k << actcons << CoinMessageEol ;
+    for (i = 1 ; i <= concnt ; i++)
+    { osi_statlogi = getStatus(artifStatus,inv(i)) ;
+      if (osi_statlogi != CoinWarmStartBasis::basic)
+      { k++ ;
+	basis.el[k].vndx = -i ;
+	if (k >= actcons) break ; } } }
+  assert(k == actcons) ;
 /*
   Now install the new basis in the lpprob_struct. If the present allocated
   capacity is sufficient, we can just copy over the existing information. If

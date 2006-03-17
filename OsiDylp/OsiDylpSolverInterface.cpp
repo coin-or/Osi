@@ -1591,9 +1591,11 @@ ODSI::OsiDylpSolverInterface ()
 */
   setOsiDylpMessages(CoinMessages::us_en) ;
 /*
-  Clear the hint info_ array.
+  Clear the hint info_ array, then turn on the hints that should be on by
+  default.
 */
   for (int i = 0 ; i < OsiLastHintParam ; i++) info_[i] = 0 ;
+  setHintParam(OsiDoPresolveInInitial,true,OsiForceDo,0) ;
 /*
   Acquire the default options and tolerances.
 */
@@ -1970,6 +1972,7 @@ void ODSI::reset ()
   construct_options() ;
   setOsiDylpMessages(CoinMessages::us_en) ;
   for (int i = 0 ; i < OsiLastHintParam ; i++) info_[i] = 0 ;
+  setHintParam(OsiDoPresolveInInitial,true,OsiForceDo,0) ;
 
   return ; }
 
@@ -3524,7 +3527,7 @@ bool ODSI::setHintParam (OsiHintParam key, bool sense,
   Dylp can suppress the dual, but cannot suppress the primal. Requesting
   OsiDoDual* with (true, OsiHint*) is ignored; (true,OsiForceDo) will throw
   an exception. On the other hand, suppressing the dual is generally not a
-  good idea, so the hint is ignored at (true,OsiHintTry).
+  good idea, so the hint is ignored at (false,OsiHintTry).
 */
     case OsiDoDualInInitial:
     case OsiDoDualInResolve:

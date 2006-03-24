@@ -1195,25 +1195,45 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
   for (icol=0;icol<ncols_;icol++) {
     int j;
     for (j=start[icol];j<start[icol]+length[icol];j++) {
-      hrow_[nel]=row[j];
-      colels_[nel++]=element[j];
+      if (element[j]) {
+        hrow_[nel]=row[j];
+        colels_[nel++]=element[j];
+      }
     }
+    hincol_[icol]=nel-mcstrt_[icol];
     mcstrt_[icol+1]=nel;
   }
-  assert(mcstrt_[ncols_] == nelems_);
-  CoinDisjointCopyN(m1->getVectorLengths(),ncols_,  hincol_);
+  assert (nelems_>=nel);
 
   // same thing for row rep
   CoinPackedMatrix * m = new CoinPackedMatrix();
   m->reverseOrderedCopyOf(*si->getMatrixByCol());
-  m->removeGaps();
-
-
+  // do by hand because of zeros m->removeGaps();
   CoinDisjointCopyN(m->getVectorStarts(),  nrows_,  mrstrt_);
   mrstrt_[nrows_] = nelems_;
   CoinDisjointCopyN(m->getVectorLengths(), nrows_,  hinrow_);
   CoinDisjointCopyN(m->getIndices(),       nelems_, hcol_);
   CoinDisjointCopyN(m->getElements(),      nelems_, rowels_);
+  start = m->getVectorStarts();
+  length = m->getVectorLengths();
+  const int * column = m->getIndices();
+  element = m->getElements();
+  // out zeros
+  int irow;
+  nel=0;
+  mrstrt_[0]=0;
+  for (irow=0;irow<nrows_;irow++) {
+    int j;
+    for (j=start[irow];j<start[irow]+length[irow];j++) {
+      if (element[j]) {
+        hcol_[nel]=column[j];
+        rowels_[nel++]=element[j];
+      }
+    }
+    hinrow_[irow]=nel-mrstrt_[irow];
+    mrstrt_[irow+1]=nel;
+  }
+  nelems_=nel;
 
   delete m;
   {

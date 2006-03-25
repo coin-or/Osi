@@ -84,10 +84,12 @@ public:
    /// Get an upper bound for the new rhs problem using the warm start tree.
    virtual double getUbForNewRhs(int cnt, int *index, 
 				 double * value);
+#if 0
    /// Get a lower bound for the new obj problem using the warm start tree.
    virtual double getLbForNewObj(int cnt, int *index, 
 				 double * value);
    /// Get an upper bound for the new obj problem using the warm start tree.
+#endif
    virtual double getUbForNewObj(int cnt, int *index, 
 				 double * value);
 

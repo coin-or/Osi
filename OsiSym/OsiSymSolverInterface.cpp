@@ -118,7 +118,6 @@ double OsiSymSolverInterface::getLbForNewRhs(int cnt, int *index,
    }
 }
 
-
 /*===========================================================================*/
 /*===========================================================================*/
 
@@ -136,6 +135,7 @@ double OsiSymSolverInterface::getUbForNewRhs(int cnt, int *index,
 /*===========================================================================*/
 /*===========================================================================*/
 
+#if 0
 double OsiSymSolverInterface::getLbForNewObj(int cnt, int *index, 
 					     double * value)
 {
@@ -146,6 +146,7 @@ double OsiSymSolverInterface::getLbForNewObj(int cnt, int *index,
       return (-sym_get_infinity());
    }
 }
+#endif
 
 /*===========================================================================*/
 /*===========================================================================*/

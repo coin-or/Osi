@@ -1015,19 +1015,38 @@ public:
 /***********************************************************************/
 // Lp files 
 
-/** Write the problem into an Lp file of the given filename with the specified
-    extension.
-    Coefficients with value less than epsilon away from an integer value
-    are written as integers.
-    Write at most numberAcross monomials on a line.
-    Write non integer numbers with decimals digits after the decimal point.
-    If objSense is non zero then -1.0 forces the code to write a
-    maximization objective and +1.0 to write a minimization one.
-    If 0.0 then solver can do what it wants.
-    Write objective function name and constraint names if useRowNames is true.
-    This version calls writeLpNative */
+  /** Write the problem into an Lp file of the given filename with the 
+      specified extension.
+      Coefficients with value less than epsilon away from an integer value
+      are written as integers.
+      Write at most numberAcross monomials on a line.
+      Write non integer numbers with decimals digits after the decimal point.
+
+      The written problem is always a minimization problem.
+      If the current problem is a maximization problem, the 
+      intended objective function for the written problem is the current
+      objective function multiplied by -1. If the current problem is a
+      minimization problem, the intended objective function for the
+      written problem is the current objective function.
+      If objSense < 0, the intended objective function is multiplied by -1
+      before writing the problem. It is left unchanged otherwise.
+
+      Write objective function name and constraint names if useRowNames is 
+      true. This version calls writeLpNative().
+  */
   void writeLp(const char *filename,
                const char *extension = "lp",
+               const double epsilon = 1e-5,
+               const int numberAcross = 10,
+               const int decimals = 5,
+               const double objSense = 0.0,
+	       const bool useRowNames = true) const;
+
+  /** Write the problem into the file pointed to by the parameter fp. 
+      Other parameters are similar to 
+      those of writeLp() with first parameter filename.
+  */
+  void writeLp(FILE *fp,
                const double epsilon = 1e-5,
                const int numberAcross = 10,
                const int decimals = 5,
@@ -1040,12 +1059,15 @@ public:
 
       Parameter rowNames may be NULL, in which case default row names 
       are used. If rowNames is not NULL, it must have exactly one entry
-      per row in the problem as returned by getNumRows() and all these
-      entries must be distinct. If this is not the case, default row names
+      per row in the problem and one additional
+      entry (rowNames[getNumRows()] with the objective function name.
+      These getNumRows()+1 entries must be distinct. If this is not the 
+      case, default row names
       are used. In addition, format restrictions are imposed on names
       (see CoinLpIO::is_invalid_name() for details).
 
-      Similar remarks can be made for the parameter columnNames.
+      Similar remarks can be made for the parameter columnNames which
+      must either be NULL or have exactly getNumCols() distinct entries.
 
       Write objective function name and constraint names if 
       useRowNames is true. */
@@ -1058,9 +1080,26 @@ public:
                     const double objSense = 0.0,
 		    const bool useRowNames = true) const;
 
-  /// Read file in LP format. See class CoinLpIO for description of 
-  /// this format.
+  /** Write the problem into the file pointed to by the parameter fp. 
+      Other parameters are similar to 
+      those of writeLpNative() with first parameter filename.
+  */
+  int writeLpNative(FILE *fp,
+		    char const * const * const rowNames,
+		    char const * const * const columnNames,
+		    const double epsilon = 1.0e-5,
+                    const int numberAcross = 10,
+                    const int decimals = 5,
+                    const double objSense = 0.0,
+		    const bool useRowNames = true) const;
+
+  /// Read file in LP format from file with name filename. 
+  /// See class CoinLpIO for description of this format.
   int readLp(const char *filename, const double epsilon = 1e-5);
+
+  /// Read file in LP format from the file pointed to by fp. 
+  /// See class CoinLpIO for description of this format.
+  int readLp(FILE *fp, const double epsilon = 1e-5);
 
   //@}
 

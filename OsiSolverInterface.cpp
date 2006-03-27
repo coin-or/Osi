@@ -1095,8 +1095,71 @@ OsiSolverInterface::writeMpsNative(const char *filename,
    return writer.writeMps(filename, 1 /*gzip it*/, formatType, numberAcross);
 }
 /***********************************************************************/
+void OsiSolverInterface::writeLp(const char * filename,
+				 const char * extension,
+				 const double epsilon,
+				 const int numberAcross,
+				 const int decimals,
+				 const double objSense,
+				 const bool useRowNames) const
+{
+  std::string f(filename);
+  std::string e(extension);
+  std::string fullname;
+  if (e!="") {
+    fullname = f + "." + e;
+  } else {
+    // no extension so no trailing period
+    fullname = f;
+  }
+  // Fall back on Osi version - without names
+  OsiSolverInterface::writeLpNative(fullname.c_str(), 
+				    NULL, NULL, epsilon, numberAcross,
+				    decimals, objSense, useRowNames);
+}
+
+/*************************************************************************/
+void OsiSolverInterface::writeLp(FILE *fp,
+				 const double epsilon,
+				 const int numberAcross,
+				 const int decimals,
+				 const double objSense,
+				 const bool useRowNames) const
+{
+  // Fall back on Osi version - without names
+  OsiSolverInterface::writeLpNative(fp, 
+				    NULL, NULL, epsilon, numberAcross,
+				    decimals, objSense, useRowNames);
+}
+
+/***********************************************************************/
 int
-OsiSolverInterface::writeLpNative(const char *filename, 
+OsiSolverInterface::writeLpNative(const char *filename,
+				  char const * const * const rowNames,
+				  char const * const * const columnNames,
+				  const double epsilon,
+			 	  const int numberAcross,
+				  const int decimals,
+				  const double objSense,
+				  const bool useRowNames) const
+{
+  FILE *fp = NULL;
+  fp = fopen(filename,"w");
+  if (!fp) {
+    printf("### ERROR: in OsiSolverInterface::writeLpNative(): unable to open file %s\n",
+	   filename);
+    exit(1);
+  }
+  int nerr = writeLpNative(fp,rowNames, columnNames,
+			   epsilon, numberAcross, decimals, 
+			   objSense, useRowNames);
+  fclose(fp);
+  return(nerr);
+}
+
+/***********************************************************************/
+int
+OsiSolverInterface::writeLpNative(FILE *fp,
 				  char const * const * const rowNames,
 				  char const * const * const columnNames,
 				  const double epsilon,
@@ -1122,7 +1185,7 @@ OsiSolverInterface::writeLpNative(const char *filename,
    double *objective = new double[numcols];
    const double *curr_obj = getObjCoefficients();
 
-   if (objSense * getObjSense() < 0.0) {
+   if(getObjSense() * objSense < 0.0) {
      for (int i=0; i<numcols; i++) {
        objective[i] = - curr_obj[i];
      }
@@ -1149,16 +1212,30 @@ OsiSolverInterface::writeLpNative(const char *filename,
    //writer.print();
    delete [] objective;
    delete[] integrality;
-   return writer.writeLp(filename, epsilon, numberAcross, decimals, 
+   return writer.writeLp(fp, epsilon, numberAcross, decimals, 
 			 useRowNames);
 
 } /*writeLpNative */
 
 /*************************************************************************/
-int OsiSolverInterface::readLp(const char * filename, const double epsilon)
-{
+int OsiSolverInterface::readLp(const char * filename, const double epsilon) {
+  FILE *fp = fopen(filename, "r");
+
+  if(!fp) {
+    printf("### ERROR: OsiSolverInterface::readLp():  Unable to open file %s for reading\n",
+	   filename);
+    return(1);
+  }
+
+  int nerr = readLp(fp, epsilon);
+  fclose(fp);
+  return(nerr);
+}
+
+/*************************************************************************/
+int OsiSolverInterface::readLp(FILE *fp, const double epsilon) {
   CoinLpIO m;
-  m.readLp(filename, epsilon);
+  m.readLp(fp, epsilon);
 
   // set objective function offest
   setDblParam(OsiObjOffset, 0);
@@ -1180,35 +1257,14 @@ int OsiSolverInterface::readLp(const char * filename, const double epsilon)
 	index[n++] = i;
       }
     }
-    setInteger(index,n);
+    setInteger(index, n);
     delete [] index;
   }
+  setObjSense(1);
   return(0);
 } /* readLp */
 
-
-void OsiSolverInterface::writeLp(const char * filename,
-				 const char * extension,
-				 const double epsilon,
-				 const int numberAcross,
-				 const int decimals,
-				 const double objSense,
-				 const bool useRowNames) const
-{
-  std::string f(filename);
-  std::string e(extension);
-  std::string fullname;
-  if (e!="") {
-    fullname = f + "." + e;
-  } else {
-    // no extension so no trailing period
-    fullname = f;
-  }
-  // Fall back on Osi version - without names
-  OsiSolverInterface::writeLpNative(fullname.c_str(), 
-				    NULL, NULL, epsilon, numberAcross,
-				    decimals, objSense, useRowNames);
-}
+/*************************************************************************/
 
 // Pass in Message handler (not deleted at end)
 void 

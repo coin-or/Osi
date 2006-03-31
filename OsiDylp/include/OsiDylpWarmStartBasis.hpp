@@ -184,6 +184,10 @@ class OsiDylpWarmStartBasis : public CoinWarmStartBasis
 
   void print () const ;
 
+  /*! \brief Performs basis consistency checks (for debug) */
+
+  void checkBasis () const ;
+
 //@}
 
   private:

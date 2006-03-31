@@ -32,12 +32,13 @@
   constraints are active in the basis.
   
   For ease of use, constraint status is handled like variable status. There's
-  an array, one entry per constraint, coded using
-  CoinWarmStartBasis::Status.  Inactive constraints are marked with isFree,
-  active constraints with atLowerBound. Note that active/inactive is not
-  equivalent to tight/loose.  The default behaviour in dynamic mode is to
-  purge constraints which are strictly loose, but dylp can be instructed to
-  also purge tight constraints when the associated dual variable is zero.
+  an array, one entry per constraint, coded using CoinWarmStartBasis::Status.
+  Inactive constraints are marked with isFree, active constraints with
+  atLowerBound. Note that active/inactive is not equivalent to tight/loose.
+  The default behaviour in dynamic mode is to purge constraints which are
+  strictly loose, but dylp can be instructed to also purge tight constraints
+  when the associated dual variable is zero.
+
 */
 
 #include <vector>
@@ -84,7 +85,11 @@ ODWSB::OsiDylpWarmStartBasis ()
     phase_(dyINV),
     constraintStatus_(0)
 
-{ /* intentionally left blank */ }
+{ 
+# ifdef PARANOIA
+  checkBasis() ;
+# endif
+}
 
 
 /*!
@@ -102,6 +107,11 @@ ODWSB::OsiDylpWarmStartBasis (const OsiDylpWarmStartBasis &ws)
     constraintStatus_ = new char[constatsze] ;
     memcpy(constraintStatus_,ws.constraintStatus_,constatsze) ; }
   
+# ifdef PARANOIA
+  ws.checkBasis() ;
+  checkBasis() ;
+# endif
+
   return ; }
 
 
@@ -116,6 +126,12 @@ CoinWarmStart *ODWSB::clone () const
   ODWSB *odwsb_new = 0 ;
   if (odwsb_orig)
   { odwsb_new = new OsiDylpWarmStartBasis(*odwsb_orig) ; }
+
+# ifdef PARANOIA
+  checkBasis() ;
+  odwsb_new->checkBasis() ;
+# endif
+
   return (dynamic_cast<CoinWarmStart *>(odwsb_new)) ; }
 
 /*!
@@ -149,6 +165,10 @@ ODWSB::OsiDylpWarmStartBasis
     for (i = 0 ; i <= 3 ; i++) setStatus(&byteActive,i,CWSB::atLowerBound) ;
     memset(constraintStatus_,byteActive,constatsze) ; }
 
+# ifdef PARANOIA
+  checkBasis() ;
+# endif
+
   return ; }
 
 /*!
@@ -173,6 +193,10 @@ ODWSB::OsiDylpWarmStartBasis (const CoinWarmStartBasis &cwsb)
 
   memset(constraintStatus_,byteActive,constatsze) ;
   
+# ifdef PARANOIA
+  checkBasis() ;
+# endif
+
   return ; }
 
 /*!
@@ -192,6 +216,10 @@ OsiDylpWarmStartBasis& ODWSB::operator= (const OsiDylpWarmStartBasis &rhs)
     else
     { constraintStatus_ = 0 ; } }
   
+# ifdef PARANOIA
+  checkBasis() ;
+# endif
+
   return *this ; }
 
 
@@ -220,7 +248,11 @@ void ODWSB::assignBasisStatus
   phase_ = dyPRIMAL1 ;
   delete[] constraintStatus_ ;
   constraintStatus_ = cStat ;
-  cStat = 0 ; }
+  cStat = 0 ;
+# ifdef PARANOIA
+  checkBasis() ;
+# endif
+}
 
 /*!
   Assignment of status arrays (parameters destroyed). When no constraint status
@@ -253,13 +285,21 @@ void ODWSB::assignBasisStatus (int ns, int na, char *&sStat, char *&aStat)
   delete[] constraintStatus_ ;
   constraintStatus_ = new char[constatsze] ;
   for (i = 0 ; i <= 3 ; i++) setStatus(&byteActive,i,CWSB::atLowerBound) ;
-  memset(constraintStatus_,byteActive,constatsze) ; }
+  memset(constraintStatus_,byteActive,constatsze) ;
+# ifdef PARANOIA
+  checkBasis() ;
+# endif
+}
 
 ODWSB::~OsiDylpWarmStartBasis () { delete[] constraintStatus_ ; }
 
 /*!
-  This routine sets the capacity of the warm start object.
-  Any existing basis information is lost.
+  This routine sets the capacity of the warm start object. Any existing basis
+  information is lost.
+
+  The basis is inconsistent at the end of this routine: All constraints are
+  active, but there are no basic variables (the status arrays are initialised
+  to isFree by CWSB::setSize).
 */
 
 void ODWSB::setSize (int ns, int na)
@@ -279,26 +319,31 @@ void ODWSB::setSize (int ns, int na)
   return ; }
 
 /*!
-  This routine sets the capacity of the warm start object.
-  Any existing basis information is retained. If the new size is smaller
-  than the existing basis, the existing basis is truncated to fit.
-  If the new size is larger than the existing basis, additional structural
-  variables are given the status nonbasic at lower bound, additional artificial
-  variables are given the status basic, and additional constraints
-  are given the status active.
+  This routine sets the capacity of the warm start object.  Any existing
+  basis information is retained. If the new size is smaller than the existing
+  basis, the existing basis is truncated to fit.  If the new size is larger
+  than the existing basis, additional structural variables are given the
+  status nonbasic at lower bound, additional artificial variables are given
+  the status basic, and additional constraints are given the status active.
 
-  We need to allow for the possibility that the client will create an empty
-  basis and then resize() it, rather than using setSize().
+  We need to allow for the possibility that the client has created an empty
+  basis and is using resize instead of setSize to get the proper final size.
+
+  The basis is consistent after this routine, even if it starts out as an
+  empty basis.
 */
 
 void ODWSB::resize (int numRows, int numCols)
 
 { int concnt = getNumArtificial() ;
   int varcnt = getNumStructural() ;
+  bool empty ;
 
-  if (concnt == 0 && varcnt == 0) setSize(numCols,numRows) ;
-
-  assert(constraintStatus_) ;
+  if (concnt == 0 && varcnt == 0)
+  { empty = true ; }
+  else
+  { empty = false ;
+    assert(constraintStatus_) ; }
   
   CWSB::resize(numRows,numCols) ;
 
@@ -322,15 +367,22 @@ void ODWSB::resize (int numRows, int numCols)
       int i,actualBytes ;
       actualBytes = concnt/STATPERBYTE ;
       for (i = 0 ; i <= 3 ; i++) setStatus(&byteActive,i,CWSB::atLowerBound) ;
-      memcpy(newStat,constraintStatus_,oldsze) ;
-      memset(newStat+actualBytes,byteActive,newsze-actualBytes) ;
-      for (i = 0 ; i < concnt%STATPERBYTE ; i++)
-	setStatus(newStat+actualBytes,i,
-		  getStatus(constraintStatus_+actualBytes,i)) ; }
+      if (empty == false)
+      { memcpy(newStat,constraintStatus_,oldsze) ;
+	memset(newStat+actualBytes,byteActive,newsze-actualBytes) ;
+	for (i = 0 ; i < concnt%STATPERBYTE ; i++)
+	{ setStatus(newStat+actualBytes,i,
+		    getStatus(constraintStatus_+actualBytes,i)) ; } }
+      else
+      { memset(newStat,byteActive,newsze) ; } }
 
     delete [] constraintStatus_ ;
     constraintStatus_ = newStat ; }
   
+# ifdef PARANOIA
+  checkBasis() ;
+# endif
+
   return ; }
 
 
@@ -378,7 +430,13 @@ void ODWSB::deleteRows (int number, const int *which)
       k++ ; } }
   
   delete [] constraintStatus_ ;
-  constraintStatus_ = newStat ; }
+  constraintStatus_ = newStat ;
+
+# ifdef PARANOIA
+  checkBasis() ;
+# endif
+
+}
 
 /*
   The good news is that CWSB::deleteColumns works just fine for ODWSB.
@@ -435,6 +493,10 @@ CoinWarmStartDiff *ODWSB::generateDiff
   { throw CoinError("Old basis not OsiDylpWarmStartBasis.",
 		    "generateDiff","OsiDylpWarmStartBasis") ; }
   const OsiDylpWarmStartBasis *newBasis = this ;
+# ifdef PARANOIA
+  oldBasis->checkBasis() ;
+  checkBasis() ;
+# endif
 /*
   Make sure newBasis is equal or bigger than oldBasis. Calculate the worst case
   number of diffs and allocate vectors to hold them.
@@ -509,6 +571,9 @@ void ODWSB::applyDiff (const CoinWarmStartDiff *const cwsdDiff)
   if (!diff)
   { throw CoinError("Diff not OsiDylpWarmStartBasisDiff.",
 		    "applyDiff","OsiDylpWarmStartBasis") ; }
+# ifdef PARANOIA
+  checkBasis() ;
+# endif
 /*
   Call CWSB::applyDiff to deal with the logical and structural status.
 */
@@ -527,6 +592,10 @@ void ODWSB::applyDiff (const CoinWarmStartDiff *const cwsdDiff)
   { unsigned int diffNdx = diffNdxs[i] ;
     unsigned int diffVal = diffVals[i] ;
     constraintStatus[diffNdx] = diffVal ; }
+
+# ifdef PARANOIA
+  checkBasis() ;
+# endif
 
   return ; }
 
@@ -578,6 +647,61 @@ void ODWSB::print () const
   std::cout << std::endl ;
   
   return ; }
+
+/*!
+  Check the basis to make sure it's properly formed. The routine tests that
+  the number of basic variables matches the number of active constraints, and
+  that the logical variables associated with inactive constraints are basic.
+*/
+
+void ODWSB::checkBasis () const
+
+{ int i,j ;
+  bool retval = true ;
+  int numBasicStruct,numBasicLog,numCons,numActCons ;
+  Status conStat,logStat ;
+
+  numBasicStruct = numberBasicStructurals() ;
+  numBasicLog = 0 ;
+  numCons = getNumArtificial() ;
+  numActCons = numberActiveConstraints() ;
+/*
+  Scan the constraint status vector. Check that the logical associated with
+  an inactive constraint is basic. Count the number of basic logicals
+  associated with active constraints --- these will be part of dylp's basis.
+*/
+  for (i = 0 ; i < numCons ; i++)
+  { conStat = getConStatus(i) ;
+    logStat = getArtifStatus(i) ;
+    if (conStat == CWSB::isFree)
+    { if (logStat != CWSB::basic)
+      { std::cerr << "Basis error! Logical for constraint " << i
+		  << " is basic, but constraint is inactive."
+		  << std::endl ;
+	retval = false ; } }
+    else
+    if (conStat == CWSB::atLowerBound)
+    { if (logStat == CWSB::basic)
+      { numBasicLog++ ; } }
+    else
+    { std::cerr << "Basis error! Status of constraint " << i
+		<< " is " << conStat << ". Should be isFree or atLowerBound."
+		<< std::endl ;
+      retval = false ; } }
+/*
+  The number of basic variables should equal the number of active constraints.
+*/
+  if (numBasicStruct+numBasicLog != numActCons)
+  { std::cerr << "Basis error! " << numActCons << " active constraints but ("
+	      << numBasicStruct << "+" << numBasicLog << ") basic variables."
+	      << std::endl ;
+    retval = false ; }
+
+  if (retval == false)
+  { std::cerr << "Basis consistency check failed!" << std::endl ; }
+  
+  return ; }
+
 
 //@}
 

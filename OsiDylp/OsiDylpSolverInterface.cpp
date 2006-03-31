@@ -36,6 +36,8 @@
   infinity. Portions of COIN code depend on having a finite infinity ---
   specifically, DBL_MAX --- and this is hardwired into the code. This
   definition tries to anticipate the future, when one can inquire.
+  CoinFinite.hpp defines COIN_DBL_MAX, CoinFinite, and CoinIsnan, hiding
+  platform idiosyncracies.
 
   Dylp can work with both finite infinity (DBL_MAX) and infinite infinity (IEEE
   infinity).
@@ -44,8 +46,8 @@
   is told to use odsiInfinity as its internal value for infinity.
 */
 
-#include<cfloat>
-const double CoinInfinity = DBL_MAX ;
+#include "CoinFinite.hpp"
+const double CoinInfinity = COIN_DBL_MAX ;
 
 /* Cut name lengths for readability. */
 
@@ -2492,16 +2494,25 @@ void ODSI::setRowPrice (const double* price)
 /*! \brief Compare two double values for equality.
 
   Exact bit-for-bit equality (i.e., d1 == d2) is usually not what is wanted
-  when comparing floating point values. The inexact test looks for equality
-  within a tolerance of 1.0e-10, scaled by the maximum of the two values.  To
-  do a toleranced test, both values must be finite.
+  when comparing floating point values. And even when it is, NaN doesn't
+  equal NaN. Why is NaN not simply an error? It happens on occasion that we're
+  cloning some structure and, for one reason or another, some values are
+  essentially uninitialised. For example, we've added cuts but not yet
+  reoptimised. The dual vector has been extended, but the values are junk.
+  On occasion, dylp will deliberately initialise parts of a vector with NaN
+  as a guard, and check later to see if it shows up in honest values.
+
+  The inexact test looks for equality within a tolerance of 1.0e-10, scaled
+  by the maximum of the two values.  To do a toleranced test, both values
+  must be finite.
 */
 
 void ODSI::assert_same (double d1, double d2, bool exact)
 
 { if (d1 == d2) return ;
+  if (CoinIsnan(d1) && CoinIsnan(d2)) return ;
 
-  assert(!exact && finite(d1) && finite(d2)) ;
+  assert(!exact && CoinFinite(d1) && CoinFinite(d2)) ;
 
   static const double epsilon UNUSED = 1.e-10 ;
   double tol UNUSED = std::max(fabs(d1),fabs(d2))+1 ;
@@ -3516,8 +3527,7 @@ bool ODSI::setHintParam (OsiHintParam key, bool sense,
   Nothing more to do here, as presolve is handled within ODSI.
 */
     case OsiDoPresolveInInitial:
-    { // unimp_hint(false,sense,strength,"presolve for initialSolve") ;
-      retval = true ;
+    { retval = true ;
       break ; }
     case OsiDoPresolveInResolve:
     { unimp_hint(false,sense,strength,"presolve for resolve") ;
@@ -3551,11 +3561,40 @@ bool ODSI::setHintParam (OsiHintParam key, bool sense,
       resolveOptions->scaling = initialSolveOptions->scaling ;
       break ; }
 /*
-  Dylp knows only one crash, which preferably uses slacks, then architecturals,
-  and artificials as a last resort.
+  Dylp can construct a basis using only slacks and artificials (ibLOGICAL),
+  or it can prefer architecturals over artificials (ibSLACK) or prefer
+  architecturals over both slacks and artificials (ibARCH). The default is
+  ibLOGICAL, so nothing happens if the hint sense is false. For true, change
+  to ibSLACK, then ibARCH depending on strength.
 */
     case OsiDoCrash:
-    { unimp_hint(true,sense,strength,"basis crash") ;
+    { if (sense == true)
+      { if (strength >= OsiHintDo)
+	{ initialSolveOptions->coldbasis = ibARCH ; }
+	else
+	{ initialSolveOptions->coldbasis = ibSLACK ; } }
+      else
+      { initialSolveOptions->coldbasis = ibLOGICAL ; }
+      retval = true ;
+      break ; }
+/*
+  What to do with OsiDoInBranchAndCut? Try a context option for dylp, and see
+  how it goes. If sense = true, BANDC is the right context for resolve,
+  INITIALLP for initialSolve. If sense is false, go for INITIALLP for low
+  strength, SINGLELP at ForceDo. In theory, resolve() should never see
+  SINGLELP.
+*/
+    case OsiDoInBranchAndCut:
+    { if (sense == true)
+      { resolveOptions->context = cxBANDC ;
+	initialSolveOptions->context = cxINITIALLP ; }
+      else
+      { if (strength < OsiForceDo)
+	{ resolveOptions->context = cxINITIALLP ;
+	  initialSolveOptions->context = cxINITIALLP ; }
+	else
+	{ resolveOptions->context = cxSINGLELP ;
+	  initialSolveOptions->context = cxSINGLELP ; } }
       retval = true ;
       break ; }
 /*
@@ -5021,7 +5060,15 @@ CoinWarmStart* ODSI::getWarmStart () const
 	  break ; }
 	default:
 	{ delete wsb ;
-	  wsb = 0 ; } } } }
+	  wsb = 0 ;
+	  throw CoinError("Warm start construction failed --- "
+			  "invalid status in dylp basis.",
+			  "getWarmStart","OsiDylpSolverInterface") ; } } } }
+
+# ifdef PARANOIA
+  if (wsb)
+  { wsb->checkBasis() ; }
+# endif
 
   return (wsb) ; }
 
@@ -5089,6 +5136,9 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
   if (!wsb)
   { wsb = new OsiDylpWarmStartBasis(*cwsb) ;
     ourBasis = true ; }
+# ifdef PARANOIA
+  wsb->checkBasis() ;
+# endif
   varcnt = wsb->getNumStructural() ;
   concnt = wsb->getNumArtificial() ;
   if (varcnt == 0 && concnt == 0)
@@ -5219,7 +5269,10 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
   intentional. We can't tell from here (see note at head of routine). Fill
   out the basis by grabbing nonbasic logicals and declaring them basic. Such
   variables must exist. It'd be nice to correct the warm start, but we've
-  been handed a const object, so we can't do that.
+  been handed a const object, so we can't do that. If I was being picky here,
+  I'd look for inequalities (slacks) in preference to equalities (artificials).
+  But that would require keeping an artificial in reserve in case we didn't
+  find a slack. My initial reaction is ``More trouble than it's worth.''
 */
   if (k < actcons)
   { handler_->message(ODSI_ODWSBSHORTBASIS,messages_)

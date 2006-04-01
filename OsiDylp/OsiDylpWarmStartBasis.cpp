@@ -559,6 +559,10 @@ CoinWarmStartDiff *ODWSB::generateDiff
 
    We use CWSB::applyDiff to deal with the logical and structural status
    vectors, then apply the diffs for the constraint status vector.
+   Unfortunately, it's not really possible to verify the basis as diffs are
+   applied. The typical approach is to blow out the basis to full size and
+   apply diffs as we go. Intermediate stages can have inconsistencies because
+   they aren't yet at full size.
 */
 
 void ODWSB::applyDiff (const CoinWarmStartDiff *const cwsdDiff)
@@ -571,9 +575,6 @@ void ODWSB::applyDiff (const CoinWarmStartDiff *const cwsdDiff)
   if (!diff)
   { throw CoinError("Diff not OsiDylpWarmStartBasisDiff.",
 		    "applyDiff","OsiDylpWarmStartBasis") ; }
-# ifdef PARANOIA
-  checkBasis() ;
-# endif
 /*
   Call CWSB::applyDiff to deal with the logical and structural status.
 */
@@ -592,10 +593,6 @@ void ODWSB::applyDiff (const CoinWarmStartDiff *const cwsdDiff)
   { unsigned int diffNdx = diffNdxs[i] ;
     unsigned int diffVal = diffVals[i] ;
     constraintStatus[diffNdx] = diffVal ; }
-
-# ifdef PARANOIA
-  checkBasis() ;
-# endif
 
   return ; }
 

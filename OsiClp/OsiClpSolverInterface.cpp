@@ -3984,7 +3984,7 @@ OsiClpSolverInterface::branchAndBound() {
         // integer solution - save
         bestNode = node;
         // set cutoff (hard coded tolerance)
-        setDblParam(OsiDualObjectiveLimit,bestNode.objectiveValue_-1.0e-5);
+        setDblParam(OsiDualObjectiveLimit,(bestNode.objectiveValue_-1.0e-5)*getObjSense());
         std::cout<<"Integer solution of "
                  <<bestNode.objectiveValue_
                  <<" found after "<<numberIterations

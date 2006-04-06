@@ -385,7 +385,79 @@ void ODWSB::resize (int numRows, int numCols)
 
   return ; }
 
+/*
+  compressRows takes an ordered list of target indices without duplicates and
+  removes them, compressing the artificialStatus_ and constraintStatus_
+  arrays in place. It will fail spectacularly if the indices are not sorted.
+  Use deleteRows if you need to preprocess the target indices to satisfy the
+  conditions.
+*/
+void ODWSB::compressRows (int tgtCnt, const int *tgts)
+{ 
+/*
+  Bail out if we're called with nothing to do.
+*/
+  if (tgtCnt <= 0) return ;
 
+  int i,keep,t,tgt,blkStart,blkEnd ;
+  Status stati ;
+
+# ifdef COIN_DEBUG
+/*
+  If we're debugging, scan to see if we're deleting nonbasic artificials.
+  (In other words, are we deleting tight constraints?) Easiest to just do this
+  up front as opposed to integrating it with the loops below.
+*/
+  int nbCnt = 0 ;
+  for (t = 0 ; t < tgtCnt ; t++)
+  { i = tgts[t] ;
+    stati = getStatus(artificialStatus_,i) ;
+    if (status != CoinWarmStartBasis::basic)
+    { nbCnt++ ; } }
+  if (nbCnt > 0)
+  { std::cout << nbCnt << " nonbasic artificials deleted." << std::endl ; }
+# endif
+
+/*
+  We preserve all entries before the first target. Skip across consecutive
+  target indices to establish the start of the first block to be retained.
+  By testing for tgts[t]+1 >= tgts[t+1], we're robust against duplicate
+  indices.
+*/
+  keep = tgts[0] ;
+  for (t = 0 ; t < tgtCnt-1 && tgts[t]+1 == tgts[t+1] ; t++) ;
+  blkStart = tgts[t]+1 ;
+/*
+  Outer loop works through the indices to be deleted. Inner loop copies runs
+  of indices to keep.
+*/
+  while (t < tgtCnt-1)
+  { blkEnd = tgts[t+1]-1 ;
+    for (i = blkStart ; i <= blkEnd ; i++)
+    { stati = getStatus(artificialStatus_,i) ;
+      setStatus(artificialStatus_,keep,stati) ;
+      stati = getStatus(constraintStatus_,i) ;
+      setStatus(constraintStatus_,keep++,stati) ; }
+    for (t++ ; t < tgtCnt-1 && tgts[t]+1 == tgts[t+1] ; t++) ;
+    blkStart = tgts[t]+1 ; }
+/*
+  Finish off by copying from last deleted index to end of the status arrays.
+*/
+  for (i = blkStart ; i < numArtificial_ ; i++)
+  { stati = getStatus(artificialStatus_,i) ;
+    setStatus(artificialStatus_,keep,stati) ;
+    stati = getStatus(constraintStatus_,i) ;
+    setStatus(constraintStatus_,keep++,stati) ; }
+
+  numArtificial_ -= tgtCnt ;
+
+  return ; }
+
+/*
+  deleteRows takes an unordered list of target indices with duplicates and
+  removes them from the basis. The strategy is to preprocesses the list into
+  an ordered list without duplicates, suitable for compressRows.
+*/
 /*!
    Removal of a tight constraint with a nonbasic logical implies that some
    basic variable must be kicked out of the basis. There's no cheap, efficient
@@ -400,43 +472,29 @@ void ODWSB::resize (int numRows, int numCols)
   work, and on balance best left to the client to decide if it's appropriate,
   or if something else should be done.
 */
+void ODWSB::deleteRows (int rawTgtCnt, const int *rawTgts)
+{ 
+/*
+  Bail out if we're called with nothing to do.
+*/
+  if (rawTgtCnt <= 0) return ;
 
-void ODWSB::deleteRows (int number, const int *which)
-
-{ int oldconcnt = getNumArtificial() ;
-  int i,k ;
-
-  CWSB::deleteRows(number,which) ;
-
-  int delcnt = 0 ;
-  vector<bool> deleted = vector<bool>(oldconcnt) ;
-  for (k = 0 ; k < number ; k++)
-  { i = which[k] ;
-    if (i >= 0 && i < oldconcnt && !deleted[i])
-    { delcnt++ ;
-      deleted[i] = true ; } }
-
-  int newsze = STATBYTES(oldconcnt-delcnt) ;
-  char *newStat = new char[newsze] ;
-# ifndef NDEBUG
-  memset(newStat,0,(newsze*sizeof(char))) ;
-# endif
-
-  k = 0 ;
-  for (i = 0 ; i < oldconcnt ; i++)
-  { Status status = getConStatus(i);
-    if (!deleted[i])
-    { setStatus(newStat,k,status) ;
-      k++ ; } }
-  
-  delete [] constraintStatus_ ;
-  constraintStatus_ = newStat ;
+  int *tgts = new int[rawTgtCnt] ;
+  memcpy(tgts,rawTgts,rawTgtCnt*sizeof(int)) ;
+  int *first = &tgts[0] ;
+  int *last = &tgts[rawTgtCnt] ;
+  int *endUnique ;
+  std::sort(first,last) ;
+  endUnique = std::unique(first,last) ;
+  int tgtCnt = endUnique-first ;
+  compressRows(tgtCnt,tgts) ;
+  delete [] tgts ;
 
 # ifdef PARANOIA
   checkBasis() ;
 # endif
 
-}
+  return  ; }
 
 /*
   The good news is that CWSB::deleteColumns works just fine for ODWSB.
@@ -642,13 +700,18 @@ void ODWSB::print () const
   std::cout << std::endl << "	basic: ("
 	    << basic_structurals << " + " << basic_logicals << ")" ;
   std::cout << std::endl ;
+
+# ifdef PARANOIA
+  checkBasis() ;
+# endif
   
   return ; }
 
 /*!
-  Check the basis to make sure it's properly formed. The routine tests that
-  the number of basic variables matches the number of active constraints, and
-  that the logical variables associated with inactive constraints are basic.
+  Check the basis to make sure it's properly formed. The convention adopted
+  for inactive constraints in an ODWSB is that the logical should be basic.
+  After subtracting the basic logicals associated with inactive constraints,
+  there should be exactly enough basic variables for the active constraints.
 */
 
 void ODWSB::checkBasis () const
@@ -664,17 +727,22 @@ void ODWSB::checkBasis () const
   numActCons = numberActiveConstraints() ;
 /*
   Scan the constraint status vector. Check that the logical associated with
-  an inactive constraint is basic. Count the number of basic logicals
+  an inactive constraint is basic.  Count the number of basic logicals
   associated with active constraints --- these will be part of dylp's basis.
+
+  The notion that the logical associated with an inactive constraint should be
+  basic is a convention adopted by ODWSB when it must synthesize a full basis
+  for use by COIN. Dylp simply doesn't see the problem --- the constraint is
+  inactive and does not require a basic variable. If the logical is not basic,
+  it indicates a logical error in the code.
 */
   for (i = 0 ; i < numCons ; i++)
   { conStat = getConStatus(i) ;
     logStat = getArtifStatus(i) ;
     if (conStat == CWSB::isFree)
     { if (logStat != CWSB::basic)
-      { std::cerr << "Basis error! Logical for constraint " << i
-		  << " is basic, but constraint is inactive."
-		  << std::endl ;
+      { std::cerr << "Basis error! Logical for inactive constraint " << i
+		  << " is nonbasic." << std::endl ;
 	retval = false ; } }
     else
     if (conStat == CWSB::atLowerBound)
@@ -686,13 +754,22 @@ void ODWSB::checkBasis () const
 		<< std::endl ;
       retval = false ; } }
 /*
-  The number of basic variables should equal the number of active constraints.
+  The number of basic variables (basic structural, plus basic logicals
+  associated with active constraints) should equal the number of active
+  constraints. ODSI can easily cope with too few basic variables, and it will
+  happen on occasion, depending on how the client code implements fixing of
+  basic variables. ODSI can't deal with too many basic variables (in general,
+  there's no guarantee we can find a basic variable that's at bound).
 */
   if (numBasicStruct+numBasicLog != numActCons)
-  { std::cerr << "Basis error! " << numActCons << " active constraints but ("
-	      << numBasicStruct << "+" << numBasicLog << ") basic variables."
-	      << std::endl ;
-    retval = false ; }
+  { if (numBasicStruct+numBasicLog < numActCons)
+    { std::cerr << "Basis warning! " ; }
+    else
+    { std::cerr << "Basis error! " ;
+      retval = false ; }
+    std::cerr << numActCons << " active constraints but ("
+	      << numBasicStruct << "+" << numBasicLog
+	      << ") basic variables." << std::endl ; }
 
   if (retval == false)
   { std::cerr << "Basis consistency check failed!" << std::endl ; }

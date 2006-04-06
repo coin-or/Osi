@@ -122,6 +122,20 @@ class OsiDylpWarmStartBasis : public CoinWarmStartBasis
   void resize (int numRows, int numCols) ;
 
   /*! \brief Delete a set of rows from the basis
+
+    \warning
+    This routine assumes that the set of indices to be deleted is sorted
+    in ascending order and is free from duplicates. Use deleteRows if
+    this is not guaranteed.
+
+    \warning
+    The resulting basis is guaranteed valid only if all deleted
+    constraints are slack (hence the associated logicals are basic).
+  */
+
+  void compressRows (int tgtCnt, const int *tgts) ;
+
+  /*! \brief Delete a set of rows from the basis
   
     \warning
     The resulting basis is guaranteed valid only if all deleted

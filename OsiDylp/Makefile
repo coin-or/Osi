@@ -13,6 +13,7 @@ export LibType ?= SHARED
 # the highest level of optimization the compiler supports. If want something in
 # between then specify the exact level you want, e.g., -O1, -O2, etc.
 
+# export OptLevel ?= -g
 export OptLevel ?= -O
 
 # If OsiDylp is being built as a dependency for the Dylp sample programs, the
@@ -28,9 +29,9 @@ export OptLevel ?= -O
 # If you are triggering the build of Dylp from here (in other words, if you
 # haven't already issued a `make samples' command in the Dylp distribution
 # directory), the entire Dylp build will be controlled by the options you
-# request here. So, if you want dylp to be paranoid, add it to the list for
-# DYLP_OPTIONS. The default (the uncommented line below) is no optional
-# capabilities.
+# request here. If you want separate build options for the two, the best way
+# is to build dylp first (but *not* the sample programs, which require
+# OsiDylp). Then build OsiDylp, etc.
 
 ifeq ("$(origin DYLP_OPTIONS)","undefined")
 # export DYLP_OPTIONS ?= paranoia stats info
@@ -90,14 +91,20 @@ CXXFLAGS += $(patsubst %, -I%, $(DylpIncDir) $(OsiDylpIncDir))
 # options as requested by DYLP_OPTIONS. Known keywords are:
 #  * stats	enable statistics collection
 #  * info	enable informational printing
+#  * paranoia	enable paranoid checks
 
 # info is a bit tricky --- enabling info in dylp means *not* defining NDEBUG.
 # Since COIN boilerplate will insert -DNDEBUG in CXXFLAGS when the user asks
 # for optimisation, we need to strip it. Avoid duplicating existing defines.
 
 ifdef DYLP_OPTIONS
+  ifeq ($(filter paranoia,$(DYLP_OPTIONS)),paranoia)
+    ifeq ($(filter -DPARANOIA, $(CXXFLAGS)),)
+      CXXFLAGS += -DPARANOIA
+    endif
+  endif
   ifeq ($(filter stats,$(DYLP_OPTIONS)),stats)
-    ifeq ($(filter -DDYLP_STATISTICS, $CXXFLAGS)),)
+    ifeq ($(filter -DDYLP_STATISTICS, $(CXXFLAGS)),)
       CXXFLAGS += -DDYLP_STATISTICS
     endif
   endif

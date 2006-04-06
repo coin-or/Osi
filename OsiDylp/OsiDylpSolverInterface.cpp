@@ -2279,7 +2279,7 @@ void ODSI::deleteRows (int count, const int* rows)
       { allslack = false ;
 	break ; } }
     if (allslack == true)
-    { odwsb->deleteRows(count,rows) ;
+    { odwsb->compressRows(count,rows) ;
       activeIsModified = true ;
       resolveOptions->forcewarm = true ; }
     else
@@ -5521,9 +5521,12 @@ inline void ODSI::markHotStart ()
 /*
   If we're attempting this, then it should be true that this OSI object
   owns the solver, has successfully solved an lp, and has left dylp's data
-  structures intact.
+  structures intact. Should be, but who knows where dylp's been in the
+  meantime. Applications written to a generic OSI interface don't tend to worry
+  about these niceties. If we don't own the solver, try for a resolve.
 */
-  assert(dylp_owner == this) ;
+  if (dylp_owner != this)
+  { resolve() ; }
   assert(lpprob && resolveOptions) ;
   assert(flgon(lpprob->ctlopts,lpctlDYVALID)) ;
 /*

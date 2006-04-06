@@ -5,7 +5,7 @@ LibType := SHARED
 # highest level of optimization the compiler supports. If want something in
 # between then specify the exact level you want, e.g., -O1 or -O2
 OptLevel := -O
-OptLevel := -g
+# OptLevel := -g
 
 LIBNAME := OsiCbc
 
@@ -61,5 +61,19 @@ libOsiCbc :
 	(cd $(CoinDir)/Osi && $(MAKE) libOsi)
 	$(MAKE) -f ${MakefileDir}/Makefile.lib $*
 
-clean doc : % :
-	$(MAKE) -f ${MakefileDir}/Makefile.lib $*
+# Make a decent clean that works for just OsiCbc. Running clean up in Osi will
+# work, but it also cleans out all other solvers and the main OSI.  We must
+# remove the libraries and include files from from the central COIN
+# directories, otherwise changes will not be seen.
+
+clean : 
+	@ rm -rf $(UNAME)*
+	@ rm -rf dep
+	@ rm -rf Doc
+	@ (cd $(CoinLibDir) && rm -f libOsiCbc*)
+	@ (cd $(CoinIncDir) && rm -f OsiCbc*.hpp)
+
+# Make a doc target that works.
+
+doc :
+	@ doxygen $(MakefileDir)/doxygen.conf

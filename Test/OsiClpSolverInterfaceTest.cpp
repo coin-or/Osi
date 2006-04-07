@@ -888,6 +888,17 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     m.setObjective(obj2);
     delete [] obj2;
     m.setObjSense(-1.0);
+    // Save bounds
+    double * saveUpper = CoinCopyOfArray(m.getColUpper(),n);
+    double * saveLower = CoinCopyOfArray(m.getColLower(),n);
+    m.branchAndBound();
+    // reset bounds
+    m.setColUpper(saveUpper);
+    m.setColLower(saveLower);
+    delete [] saveUpper;
+    delete [] saveLower;
+    // reset cutoff - otherwise we won't get solution
+    m.setDblParam(OsiDualObjectiveLimit,-COIN_DBL_MAX);
     m.branchAndBound();
     double objValue = m.getObjValue();
     CoinRelFltEq eq(1.0e-2);

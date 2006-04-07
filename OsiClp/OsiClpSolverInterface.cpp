@@ -452,7 +452,7 @@ void OsiClpSolverInterface::resolve()
     //modelPtr_->setLogLevel(63);
     //modelPtr_->setDualTolerance(1.0e-7);
     if (algorithm<0) {
-      //printf("doing dual\n");
+      //writeMps("try1");
       int savePerturbation = modelPtr_->perturbation();
       if ((specialOptions_&2)!=0)
 	modelPtr_->setPerturbation(100);
@@ -738,7 +738,7 @@ bool OsiClpSolverInterface::isPrimalObjectiveLimitReached() const
 {
   double limit = 0.0;
   modelPtr_->getDblParam(ClpPrimalObjectiveLimit, limit);
-  if (limit > 1e30) {
+  if (fabs(limit) > 1e30) {
     // was not ever set
     return false;
   }
@@ -767,7 +767,7 @@ bool OsiClpSolverInterface::isDualObjectiveLimitReached() const
   return true;
   double limit = 0.0;
   modelPtr_->getDblParam(ClpDualObjectiveLimit, limit);
-  if (limit > 1e30) {
+  if (fabs(limit) > 1e30) {
     // was not ever set
     return false;
   }
@@ -1826,7 +1826,7 @@ void OsiClpSolverInterface::writeMps(const char * filename,
 				     const_cast<const char **>(rowNames),
                                      const_cast<const char **>(columnNames),0,2,objSense);
   if (rowNames) {
-    modelPtr_->deleteNamesAsChar(rowNames, modelPtr_->numberRows_);
+    modelPtr_->deleteNamesAsChar(rowNames, modelPtr_->numberRows_+1);
     modelPtr_->deleteNamesAsChar(columnNames, modelPtr_->numberColumns_);
   }
 }
@@ -2497,9 +2497,56 @@ OsiClpSolverInterface::writeLp(const char *filename,
 				    rowNames,columnNames, epsilon, numberAcross,
 				    decimals, objSense,changeNameOnRange);
   if (rowNames) {
-    modelPtr_->deleteNamesAsChar(rowNames, modelPtr_->numberRows_);
+    modelPtr_->deleteNamesAsChar(rowNames, modelPtr_->numberRows_+1);
     modelPtr_->deleteNamesAsChar(columnNames, modelPtr_->numberColumns_);
   }
+}
+void 
+OsiClpSolverInterface::writeLp(FILE * fp,
+                               const double epsilon ,
+                               const int numberAcross ,
+                               const int decimals ,
+                               const double objSense ,
+                               bool changeNameOnRange) const
+{
+  // get names
+  const char * const * const rowNames = modelPtr_->rowNamesAsChar();
+  const char * const * const columnNames = modelPtr_->columnNamesAsChar();
+  // Fall back on Osi version - possibly with names
+  OsiSolverInterface::writeLpNative(fp,
+				    rowNames,columnNames, epsilon, numberAcross,
+				    decimals, objSense,changeNameOnRange);
+  if (rowNames) {
+    modelPtr_->deleteNamesAsChar(rowNames, modelPtr_->numberRows_+1);
+    modelPtr_->deleteNamesAsChar(columnNames, modelPtr_->numberColumns_);
+  }
+}
+/*
+  I (JJF) am getting incredibly annoyed because I can't just replace a matrix.
+  The default behavior of this is do nothing so only use where that would not matter
+  e.g. strengthening a matrix for MIP
+*/
+void 
+OsiClpSolverInterface::replaceMatrixOptional(const CoinPackedMatrix & matrix)
+{
+  replaceMatrix(matrix);
+}
+// And if it does matter (not used at present)
+void 
+OsiClpSolverInterface::replaceMatrix(const CoinPackedMatrix & matrix)
+{
+  delete modelPtr_->matrix_;
+  delete modelPtr_->rowCopy_;
+  modelPtr_->rowCopy_=NULL;
+  if (matrix.isColOrdered()) {
+    modelPtr_->matrix_=new ClpPackedMatrix(matrix);
+  } else {
+    CoinPackedMatrix matrix2;
+    matrix2.reverseOrderedCopyOf(matrix);
+    modelPtr_->matrix_=new ClpPackedMatrix(matrix2);
+  }    
+  modelPtr_->matrix_->setDimensions(modelPtr_->numberRows_,modelPtr_->numberColumns_);
+  freeCachedResults();
 }
 // Get pointer to array[getNumCols()] of primal solution vector
 const double * 

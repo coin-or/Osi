@@ -756,7 +756,25 @@ public:
                        const int numberAcross = 10,
                        const int decimals = 5,
                        const double objSense = 0.0,
-                       bool changeNameOnRange=false) const;
+                       const bool useRowNames = true) const;
+  /** Write the problem into the file pointed to by the parameter fp. 
+      Other parameters are similar to 
+      those of writeLp() with first parameter filename.
+  */
+  virtual void writeLp(FILE *fp,
+               const double epsilon = 1e-5,
+               const int numberAcross = 10,
+               const int decimals = 5,
+               const double objSense = 0.0,
+	       const bool useRowNames = true) const;
+  /**
+     I (JJF) am getting annoyed because I can't just replace a matrix.
+     The default behavior of this is do nothing so only use where that would not matter
+     e.g. strengthening a matrix for MIP
+  */
+  virtual void replaceMatrixOptional(const CoinPackedMatrix & matrix);
+  /// And if it does matter (not used at present)
+  virtual void replaceMatrix(const CoinPackedMatrix & matrix) ;
   //@}
   
   /**@name Message handling (extra for Clp messages).

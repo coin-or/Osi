@@ -1034,7 +1034,7 @@ public:
       Write objective function name and constraint names if useRowNames is 
       true. This version calls writeLpNative().
   */
-  void writeLp(const char *filename,
+  virtual void writeLp(const char *filename,
                const char *extension = "lp",
                const double epsilon = 1e-5,
                const int numberAcross = 10,
@@ -1046,7 +1046,7 @@ public:
       Other parameters are similar to 
       those of writeLp() with first parameter filename.
   */
-  void writeLp(FILE *fp,
+  virtual void writeLp(FILE *fp,
                const double epsilon = 1e-5,
                const int numberAcross = 10,
                const int decimals = 5,
@@ -1101,6 +1101,14 @@ public:
   /// See class CoinLpIO for description of this format.
   int readLp(FILE *fp, const double epsilon = 1e-5);
 
+  /**
+     I (JJF) am getting annoyed because I can't just replace a matrix.
+     The default behavior of this is do nothing so only use where that would not matter
+     e.g. strengthening a matrix for MIP
+  */
+  virtual void replaceMatrixOptional(const CoinPackedMatrix & matrix) {};
+  /// And if it does matter (not used at present)
+  virtual void replaceMatrix(const CoinPackedMatrix & matrix) {abort();};
   //@}
 
   //---------------------------------------------------------------------------

@@ -4052,13 +4052,18 @@ OsiClpSolverInterface::branchAndBound() {
       }
       // move basis
       setWarmStart(&bestNode.basis_);
+      // set cutoff so will be good (hard coded tolerance)
+      setDblParam(OsiDualObjectiveLimit,(bestNode.objectiveValue_+1.0e-5)*getObjSense());
       resolve();
+    } else {
+      modelPtr_->setProblemStatus(1);
     }
     delete [] which;
   } else {
     std::cout<<"The LP relaxation is infeasible"
              <<std::endl;
-    throw CoinError("The LP relaxation is infeasible or too expensive",
-                    "branchAndBound", "OsiClpSolverInterface");
+    modelPtr_->setProblemStatus(1);
+    //throw CoinError("The LP relaxation is infeasible or too expensive",
+    //"branchAndBound", "OsiClpSolverInterface");
   }
 }

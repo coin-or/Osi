@@ -152,10 +152,8 @@ OsiBabSolver::setSolution(const double * solution, int numberColumns, double obj
   sizeSolution_ = CoinMin(solver_->getNumCols(),numberColumns);
   bestSolution_ = new double [sizeSolution_];
   CoinZeroN(bestSolution_,sizeSolution_);
-  bestSolution_ = CoinCopyOfArray(solution,CoinMin(sizeSolution_,numberColumns));
+  CoinMemcpyN(solution,CoinMin(sizeSolution_,numberColumns),bestSolution_);
   bestObjectiveValue_ = objectiveValue*solver_->getObjSense();
-  //printf("setSol %x solution_address %x\n",
-  //       this,bestSolution_);
 }
 // Get objective  (well mip bound)
 double 

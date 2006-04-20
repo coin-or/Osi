@@ -1,11 +1,11 @@
-/* Osi interface for Mosek ver. 3.1
+/* Osi interface for Mosek ver. 4.0
    Lower versions are not supported
  -----------------------------------------------------------------------------
   name:     OSI Interface for MOSEK
-  author:   Bo Jensen
+  author:   Bo Jensen, Mads Jepsen
             
-            email: bo.jensen@MOSEK.com
-  date:     ?
+            email: support@MOSEK.com 
+  date:     22 Dec 2005
  -----------------------------------------------------------------------------
 */
    
@@ -35,14 +35,19 @@
   
 // Choose algorithm to be default in initial solve
 // Only one of these flags should be set
-//#define INITIAL_SOLVE MSK_OPTIMIZER_PRIMAL_SIMPLEX
+//#define INITIAL_SOLVE MSK_OPTIMIZER_FREE_SIMPLEX
+//#define INITIAL_SOLVE MSK_OPTIMIZER_DUAL_SIMPLEX
 //#define INITIAL_SOLVE MSK_OPTIMIZER_PRIMAL_SIMPLEX
 #define INITIAL_SOLVE MSK_OPTIMIZER_INTPNT
 
-
+//Choose algorithm to be default in resolve
+#define SOLVER MSK_OPTIMIZER_FREE_SIMPLEX
+//#define SOLVER MSK_OPTIMIZER_INTPNT 
+//#define SOLVER MSK_OPTIMIZER_DUAL_SIMPLEX
+//#define INITIAL_SOLVE MSK_OPTIMIZER_PRIMAL_SIMPLEX
 // Unset this flag to disable the warnings from interface.
 
-#define MSK_WARNING_ON
+//#define MSK_WARNING_ON
 
 #undef getc
 
@@ -189,13 +194,14 @@ MskConvertColBoundToTag(const double collb, const double colub, double &clb, dou
 }
 
 // Returns true if "solution" is defined in MOSEK, where solution can be basic, interior or 
-// integer resp. (MSK_SOL_BAS), (MSK_SOL_ITR) or (MSK_SOL_INT).
+// integer resp. (MSK_SOL_BAS), (MSK_SOL_ITR) or (MSK_SOL_ITG).
 
 bool OsiMskSolverInterface::definedSolution(int solution) const
 {
    int err, res;
-   err = MSK_->solutiondef(getMutableLpPtr(), solution, &res);
+   err = MSK_solutiondef(getMutableLpPtr(), solution, &res);
    checkMSKerror(err,"MSK_solutiondef","definedSolution");
+
    return ( res != MSK_RES_OK);
 }
 
@@ -207,7 +213,7 @@ bool OsiMskSolverInterface::definedSolution(int solution) const
 int OsiMskSolverInterface::solverUsed() const
 {
    int err, res;
-   err = MSK_->getintparam(getMutableLpPtr(), MSK_IPAR_OPTIMIZER, &res);
+   err = MSK_getintparam(getMutableLpPtr(), MSK_IPAR_OPTIMIZER, &res);
    checkMSKerror(err,"MSK_getintparam","definedSolution");
    return res;
 }
@@ -218,7 +224,7 @@ void
 OsiMskSolverInterface::switchToLP( void )
 {
   debugMessage("OsiMskSolverInterface::switchToLP()\n");
-  int err = MSK_->putintparam(getMutableLpPtr(), MSK_IPAR_OPTIMIZER, InitialSolver);
+  int err = MSK_putintparam(getMutableLpPtr(), MSK_IPAR_OPTIMIZER, InitialSolver);
   checkMSKerror(err,"MSK_putintparam","switchToLP");
   probtypemip_ = false;
 }
@@ -229,7 +235,7 @@ void
 OsiMskSolverInterface::switchToMIP( void )
 {
   debugMessage("OsiMskSolverInterface::switchToMIP()\n");
-  int err = MSK_->putintparam(getMutableLpPtr(), MSK_IPAR_OPTIMIZER, MSK_OPTIMIZER_MIXED_INT);
+  int err = MSK_putintparam(getMutableLpPtr(), MSK_IPAR_OPTIMIZER, MSK_OPTIMIZER_MIXED_INT);
   checkMSKerror(err,"MSK_putintparam","switchToMIP");
   probtypemip_ = true;
 }
@@ -288,20 +294,20 @@ void OsiMskSolverInterface::initialSolve()
        switchToLP();
   else
   {
-          if( definedSolution( MSK_SOL_BAS ) == true )
-          {
-            // Since the dual solver is not released yet, we choose primal simplex
-            int err = MSK_->putintparam(getMutableLpPtr(), MSK_IPAR_OPTIMIZER, MSK_OPTIMIZER_PRIMAL_SIMPLEX);
-            checkMSKerror(err,"MSK_putintparam","initialSolve");
-          }
-          else
-          {
-            // No reoptimize possible use interior
-            int err = MSK_->putintparam(getMutableLpPtr(), MSK_IPAR_OPTIMIZER, MSK_OPTIMIZER_INTPNT);
-            checkMSKerror(err,"MSK_putintparam","initialSolve");
-          }
+    if( definedSolution( MSK_SOL_BAS ) == true )
+      {
+        // Since the dual solver is not released yet, we choose primal simplex
+        int err = MSK_putintparam(getMutableLpPtr(), MSK_IPAR_OPTIMIZER, SOLVER);
+        checkMSKerror(err,"MSK_putintparam","initialSolve");
+      }
+    else
+      {
+        // No reoptimize possible use interior
+        int err = MSK_putintparam(getMutableLpPtr(), MSK_IPAR_OPTIMIZER, MSK_OPTIMIZER_INTPNT);
+        checkMSKerror(err,"MSK_putintparam","initialSolve");
+      }
   }
-  Mskerr = MSK_->optimize(getLpPtr( OsiMskSolverInterface::FREECACHED_RESULTS ));
+  Mskerr = MSK_optimize(getLpPtr( OsiMskSolverInterface::FREECACHED_RESULTS ));
 }
 
 //-----------------------------------------------------------------------------
@@ -310,14 +316,17 @@ void OsiMskSolverInterface::initialSolve()
  
 void OsiMskSolverInterface::resolve()
 {
+  debugMessage("OsiMskSolverInterface::resolve\n");
+  
   if( probtypemip_ == true )  
-      switchToLP();
+    switchToLP();
 
-  // Since the dual solver is not released yet, we choose primal simplex
-  int err = MSK_->putintparam(getMutableLpPtr(), MSK_IPAR_OPTIMIZER, MSK_OPTIMIZER_PRIMAL_SIMPLEX);
+  // We use free simplex since ??? 
+  int err = MSK_putintparam(getMutableLpPtr(), MSK_IPAR_OPTIMIZER, SOLVER);
   checkMSKerror(err,"MSK_putintparam","initialSolve");
 
-  Mskerr = MSK_->optimize(getLpPtr( OsiMskSolverInterface::FREECACHED_RESULTS ));
+  Mskerr = MSK_optimize(getLpPtr( OsiMskSolverInterface::FREECACHED_RESULTS ));
+  MSK_solutionsummary(getMutableLpPtr(),0);
 }
 
 //-----------------------------------------------------------------------------
@@ -327,7 +336,7 @@ void OsiMskSolverInterface::branchAndBound()
 {
   debugMessage("OsiMskSolverInterface::branchAndBound()\n");
   switchToMIP();
-  Mskerr = MSK_->optimize(getLpPtr( OsiMskSolverInterface::FREECACHED_RESULTS ));
+  Mskerr = MSK_optimize(getLpPtr( OsiMskSolverInterface::FREECACHED_RESULTS ));
 }
 
 //#############################################################################
@@ -342,7 +351,6 @@ bool
 OsiMskSolverInterface::setIntParam(OsiIntParam key, int value)
 {
   debugMessage("OsiMskSolverInterface::setIntParam(%d, %d)\n", key, value);
-
   bool retval = false;
   int solver;
 
@@ -356,14 +364,15 @@ OsiMskSolverInterface::setIntParam(OsiIntParam key, int value)
         // and not 100 in total since first time you invoked the optimizer.
         solver = solverUsed();
 	    if( solver == MSK_OPTIMIZER_INTPNT )
-          retval = (MSK_->putintparam(
+          retval = (MSK_putintparam(
                getMutableLpPtr(), 
                MSK_IPAR_INTPNT_MAX_ITERATIONS, 
               value
           ) == MSK_RES_OK);
 	   else if( solver == MSK_OPTIMIZER_PRIMAL_SIMPLEX 
-             || solver == MSK_OPTIMIZER_DUAL_SIMPLEX )
-          retval = (MSK_->putintparam(
+             || solver == MSK_OPTIMIZER_DUAL_SIMPLEX 
+	     || solver == MSK_OPTIMIZER_FREE_SIMPLEX )
+          retval = (MSK_putintparam(
               getMutableLpPtr(), 
               MSK_IPAR_SIM_MAX_ITERATIONS, 
               value
@@ -394,48 +403,47 @@ bool
 OsiMskSolverInterface::setDblParam(OsiDblParam key, double value)
 {
   debugMessage("OsiMskSolverInterface::setDblParam(%d, %g)\n", key, value);
-
   bool retval = false;
-
+  return true;
   switch (key) 
   {
     case OsiDualObjectiveLimit:
       if( getObjSense() == +1 )
-	   retval = ( MSK_->putdouparam( 
+	   retval = ( MSK_putdouparam( 
                        getMutableLpPtr(), 
-                       MSK_DPAR_LOWER_OBJ_CUT, 
+                       MSK_DPAR_UPPER_OBJ_CUT, 
                        value 
        ) == MSK_RES_OK ); // min
       else
-	   retval = ( MSK_->putdouparam( 
-                      getMutableLpPtr(), 
-                      MSK_DPAR_UPPER_OBJ_CUT, 
-                      value 
-       ) == MSK_RES_OK ); // max
-      break;
-    case OsiPrimalObjectiveLimit:
-      if( getObjSense() == +1 )
-	   retval = ( MSK_->putdouparam( 
-                      getMutableLpPtr(), 
-                      MSK_DPAR_UPPER_OBJ_CUT, 
-                      value 
-       ) == MSK_RES_OK ); // min
-      else
-	   retval = ( MSK_->putdouparam( 
+	   retval = ( MSK_putdouparam( 
                       getMutableLpPtr(), 
                       MSK_DPAR_LOWER_OBJ_CUT, 
                       value 
        ) == MSK_RES_OK ); // max
       break;
+    case OsiPrimalObjectiveLimit:
+      if( getObjSense() == +1 )
+	   retval = ( MSK_putdouparam( 
+                      getMutableLpPtr(), 
+                      MSK_DPAR_LOWER_OBJ_CUT, 
+                      value 
+       ) == MSK_RES_OK ); // min
+      else
+	   retval = ( MSK_putdouparam( 
+                      getMutableLpPtr(), 
+                      MSK_DPAR_UPPER_OBJ_CUT, 
+                      value 
+       ) == MSK_RES_OK ); // max
+      break;
     case OsiDualTolerance:
-      retval = ( MSK_->putdouparam( 
+      retval = ( MSK_putdouparam( 
                       getMutableLpPtr(), 
                       MSK_DPAR_BASIS_TOL_S, 
                       value 
        ) == MSK_RES_OK );
       break;
 	case OsiPrimalTolerance:
-      retval = ( MSK_->putdouparam( 
+      retval = ( MSK_putdouparam( 
                       getMutableLpPtr(), 
                       MSK_DPAR_BASIS_TOL_X, 
                       value 
@@ -492,14 +500,15 @@ OsiMskSolverInterface::getIntParam(OsiIntParam key, int& value) const
     case OsiMaxNumIteration:
        solver = solverUsed();
 	   if( solver == MSK_OPTIMIZER_INTPNT )
-          retval = (MSK_->getintparam(
+          retval = (MSK_getintparam(
                         getMutableLpPtr(), 
                         MSK_IPAR_INTPNT_MAX_ITERATIONS,  
                         &value
          ) == MSK_RES_OK);
 	   else if( solver == MSK_OPTIMIZER_PRIMAL_SIMPLEX 
-             || solver == MSK_OPTIMIZER_DUAL_SIMPLEX )
-          retval = (MSK_->getintparam(
+             || solver == MSK_OPTIMIZER_DUAL_SIMPLEX 
+	     || solver == MSK_OPTIMIZER_DUAL_SIMPLEX  )
+          retval = (MSK_getintparam(
                         getMutableLpPtr(), 
                         MSK_IPAR_SIM_MAX_ITERATIONS, 
                         &value
@@ -530,13 +539,13 @@ OsiMskSolverInterface::getDblParam(OsiDblParam key, double& value) const
     {
     case OsiDualObjectiveLimit:
       if( getObjSense() == +1 )
-	   retval = ( MSK_->getdouparam( 
+	   retval = ( MSK_getdouparam( 
                       getMutableLpPtr(), 
                       MSK_DPAR_LOWER_OBJ_CUT, 
                       &value 
         ) == MSK_RES_OK ); // min
       else
-	   retval = ( MSK_->getdouparam( 
+	   retval = ( MSK_getdouparam( 
                       getMutableLpPtr(), 
                       MSK_DPAR_UPPER_OBJ_CUT, 
                       &value 
@@ -544,27 +553,27 @@ OsiMskSolverInterface::getDblParam(OsiDblParam key, double& value) const
       break;
     case OsiPrimalObjectiveLimit:
       if( getObjSense() == +1 )
-	   retval = ( MSK_->getdouparam(  
+	   retval = ( MSK_getdouparam(  
                       getMutableLpPtr(), 
                       MSK_DPAR_UPPER_OBJ_CUT, 
                       &value 
        ) == MSK_RES_OK ); // min
       else
-	   retval = ( MSK_->getdouparam(  
+	   retval = ( MSK_getdouparam(  
                       getMutableLpPtr(), 
                       MSK_DPAR_LOWER_OBJ_CUT, 
                       &value 
        ) == MSK_RES_OK ); // max
       break;
     case OsiDualTolerance:
-      retval = ( MSK_->getdouparam( 
+      retval = ( MSK_getdouparam( 
                       getMutableLpPtr(), 
                       MSK_DPAR_BASIS_TOL_S, 
                       &value 
        ) == MSK_RES_OK );
       break;
 	case OsiPrimalTolerance:
-      retval = ( MSK_->getdouparam( 
+      retval = ( MSK_getdouparam( 
                       getMutableLpPtr(), 
                       MSK_DPAR_BASIS_TOL_X, 
                       &value 
@@ -610,11 +619,14 @@ OsiMskSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
 
 //-----------------------------------------------------------------------------
 // Returns true if solver abandoned in last call to solver.
+// Mosek does not use this functionality
 
 bool OsiMskSolverInterface::isAbandoned() const
 {
   debugMessage("OsiMskSolverInterface::isAbandoned()\n");
-  return (Mskerr == MSK_RES_OK);
+  debugMessage("isAbandoned() %d\n",(Mskerr != MSK_RES_OK));
+  return 0;
+  //return (Mskerr != MSK_RES_OK);
 }
 
 //-----------------------------------------------------------------------------
@@ -639,12 +651,12 @@ bool OsiMskSolverInterface::isProvenOptimal() const
   }
   else
   {
-	 if( definedSolution( MSK_SOL_INT ) == true )
-		solution = MSK_SOL_INT;
+         if( definedSolution( MSK_SOL_ITG ) == true )
+		solution = MSK_SOL_ITG;
 	 else
 		return false;     
   }
-  err = MSK_->getsolution(
+  err = MSK_getsolution(
 	  getMutableLpPtr(),
 	  solution,
 	  NULL, 
@@ -661,8 +673,9 @@ bool OsiMskSolverInterface::isProvenOptimal() const
 	  NULL,
 	  NULL
 	  );
-  checkMSKerror(err,"MSK_getsolution","isProvenOptimal");
 
+  checkMSKerror(err,"MSK_getsolution","isProvenOptimal");
+  debugMessage("Solution type , %d \n ",(status == MSK_SOL_STA_OPTIMAL)) ;
   return ( status == MSK_SOL_STA_OPTIMAL ); 	
 }
 
@@ -687,13 +700,13 @@ bool OsiMskSolverInterface::isProvenPrimalInfeasible() const
   }
   else
   {
-	 if(  definedSolution( MSK_SOL_INT ) == true)
-		solution = MSK_SOL_INT;
+	 if(  definedSolution( MSK_SOL_ITG ) == true)
+		solution = MSK_SOL_ITG;
 	 else
 		return false;     
   }
 
-  err = MSK_->getsolution(
+  err = MSK_getsolution(
 	  getMutableLpPtr(),
 	  solution,
 	  NULL, 
@@ -712,16 +725,18 @@ bool OsiMskSolverInterface::isProvenPrimalInfeasible() const
 	  );
 
   checkMSKerror(err,"MSK_getsolution","isProvenPrimalInfeasible");
-
+  debugMessage("isProvenPrimalInfeasible %d \n",(status == MSK_SOL_STA_PRIM_INFEAS_CER));
   return ( status == MSK_SOL_STA_PRIM_INFEAS_CER ); 	
 }
 
 //-----------------------------------------------------------------------------
-// Returns true if a certificate of dual inf. exits
+// Should return true if a certificate of dual inf. exits
+// But COIN does not support this feature thus we return false
 
 bool OsiMskSolverInterface::isProvenDualInfeasible() const
 {
   debugMessage("OsiMskSolverInterface::isProvenDualInfeasible()\n");
+
   int err, status, solution;
   if( probtypemip_ == false)
   {
@@ -737,13 +752,13 @@ bool OsiMskSolverInterface::isProvenDualInfeasible() const
   }
   else
   {
-	 if(  definedSolution( MSK_SOL_INT ) == true)
-		solution = MSK_SOL_INT;
+	 if(  definedSolution( MSK_SOL_ITG ) == true)
+		solution = MSK_SOL_ITG;
 	 else
 		return false;     
   }
 
-  err = MSK_->getsolution(
+  err = MSK_getsolution(
 	  getMutableLpPtr(),
 	  solution,
 	  NULL, 
@@ -762,7 +777,7 @@ bool OsiMskSolverInterface::isProvenDualInfeasible() const
 	  );
 
   checkMSKerror(err,"MSK_getsolution","isProvenDualInfeasible");
-
+  debugMessage("isProvenDualInfeasible %d \n",(status == MSK_SOL_STA_DUAL_INFEAS_CER));
   return ( status == MSK_SOL_STA_DUAL_INFEAS_CER ); 	
 }
 
@@ -776,25 +791,26 @@ bool OsiMskSolverInterface::isPrimalObjectiveLimitReached() const
   int err;
   double obj = getObjValue(),value;
   if( getObjSense() == +1 )
-	 err = MSK_->getdouparam( 
-                getMutableLpPtr(), 
-                MSK_DPAR_UPPER_OBJ_CUT, 
-                &value 
-    ); 
+    {
+	 err = MSK_getdouparam( 
+				 getMutableLpPtr(), 
+				 MSK_DPAR_UPPER_OBJ_CUT, 
+				 &value);
+    } 
   else
   {
-	 err = MSK_->getdouparam( 
-                getMutableLpPtr(), 
-                MSK_DPAR_LOWER_OBJ_CUT, 
-                &value 
-    );
-    obj = -obj;
-    value = -value;
+	 err = MSK_getdouparam( 
+				 getMutableLpPtr(), 
+				 MSK_DPAR_LOWER_OBJ_CUT, 
+				 &value 
+				 );
+	 obj = -obj;
+	 value = -value;
   }
-
-  checkMSKerror( err, "MSK_getdouparam", "isPrimalObjectiveLimitReached" );
   
-  return ( obj <= value ); 	
+  checkMSKerror( err, "MSK_getdouparam", "isPrimalObjectiveLimitReached" );
+  debugMessage("primal objective value  %f , lowerbound %f , reached %i \n",obj,value,(value <= obj));
+  return ( value <= obj ); 	
 }
 
 //-----------------------------------------------------------------------------
@@ -807,24 +823,26 @@ bool OsiMskSolverInterface::isDualObjectiveLimitReached() const
   int err;
   double obj = getObjValue(),value;
   if( getObjSense() == +1 )
-	 err = MSK_->getdouparam( 
-                getMutableLpPtr(), 
-                MSK_DPAR_LOWER_OBJ_CUT, 
-                &value 
-    ); 
+    {
+	 err = MSK_getdouparam( 
+				 getMutableLpPtr(), 
+				 MSK_DPAR_UPPER_OBJ_CUT, 
+				 &value); 
+    }
   else
   {
-	 err = MSK_->getdouparam( 
-                getMutableLpPtr(), 
-                MSK_DPAR_UPPER_OBJ_CUT, 
-                &value 
+	 err = MSK_getdouparam( 
+				 getMutableLpPtr(), 
+				 MSK_DPAR_LOWER_OBJ_CUT, 
+				 &value 
     );
     obj = -obj;
     value = -value;
   }
   checkMSKerror( err, "MSK_getdouparam", "isPrimalObjectiveLimitReached" );
-
-  return ( obj <= value ); 	
+  debugMessage("dual objective value  %f , lowerbound %f , reached %i \n",obj,value,(value <= obj));
+  //debugMessage("dual obj reached %i \n",(obj <= value));
+  return ( value <= obj ); 	
 }
 
 //-----------------------------------------------------------------------------
@@ -837,21 +855,24 @@ bool OsiMskSolverInterface::isIterationLimitReached() const
   int solver = solverUsed(), err = MSK_RES_OK, value = 0, iter;
   iter = getIterationCount();
   if( solver == MSK_OPTIMIZER_INTPNT )
-     err = MSK_->getintparam(
+     err = MSK_getintparam(
                 getMutableLpPtr(), 
                 MSK_IPAR_INTPNT_MAX_ITERATIONS, 
                 &value
     );
-  else if( solver == MSK_OPTIMIZER_PRIMAL_SIMPLEX )
-     err = MSK_->getintparam(
+  else if( solver == MSK_OPTIMIZER_PRIMAL_SIMPLEX ||
+	   solver == MSK_OPTIMIZER_DUAL_SIMPLEX   ||
+	   solver == MSK_OPTIMIZER_FREE_SIMPLEX 
+	   )
+     err = MSK_getintparam(
                getMutableLpPtr(), 
                MSK_IPAR_SIM_MAX_ITERATIONS, 
                &value
     );
 
   checkMSKerror( err, "MSK_getintparam", "isIterationLimitReached" );
-
-  return (value == iter);
+  debugMessage("iteration limit reached %i \n",(value <= iter));
+  return (value <= iter);
 }
 
 //#############################################################################
@@ -880,7 +901,7 @@ CoinWarmStart* OsiMskSolverInterface::getWarmStart() const
       cstat = new int[numcols];
       rstat = new int[numrows];
 
-      err  =   MSK_->getsolution(getMutableLpPtr(),
+      err  =   MSK_getsolution(getMutableLpPtr(),
 	                             MSK_SOL_BAS,
                                  NULL,
                                  NULL,
@@ -911,7 +932,7 @@ CoinWarmStart* OsiMskSolverInterface::getWarmStart() const
       for( i = 0; i < numrows; ++i )
 	      ws->setArtifStatus( i, CoinWarmStartBasis::basic );
 
-      err = MSK_->getboundslice(getMutableLpPtr(),
+      err = MSK_getboundslice(getMutableLpPtr(),
                                 0,
                                 0,
                                 numcols,
@@ -948,58 +969,58 @@ CoinWarmStart* OsiMskSolverInterface::getWarmStart() const
   
   if( err == MSK_RES_OK )
   {
-      ws = new CoinWarmStartBasis;
-      ws->setSize( numcols, numrows );
-      
-      for( i = 0; i < numrows; ++i )
-	  {
-	    switch( rstat[i] )
-	    {
-	      case MSK_SK_BAS:
-	      ws->setArtifStatus( i, CoinWarmStartBasis::basic );
-	      break;
-	      case MSK_SK_LOW:
-	      ws->setArtifStatus( i, CoinWarmStartBasis::atLowerBound );
-	      break;
-          case MSK_SK_FIX:
-	      case MSK_SK_UPR:
-	      ws->setArtifStatus( i, CoinWarmStartBasis::atUpperBound );
-	      break;
-          case MSK_SK_SUPBAS:
-          ws->setArtifStatus( i, CoinWarmStartBasis::isFree );
-          break;
-	      default:  // unknown row status
-	      delete ws;
-	      ws   = NULL;
-          skip = true;
-          break;
-	    }
-	  }
-      if( skip == false )
+    ws = new CoinWarmStartBasis;
+    ws->setSize( numcols, numrows );
+    
+    for( i = 0; i < numrows; ++i )
       {
-              for( i = 0; i < numcols; ++i )
+        switch( rstat[i] )
+          {
+          case MSK_SK_BAS:
+            ws->setArtifStatus( i, CoinWarmStartBasis::basic );
+            break;
+          case MSK_SK_LOW:
+            ws->setArtifStatus( i, CoinWarmStartBasis::atLowerBound );
+            break;
+          case MSK_SK_FIX:
+          case MSK_SK_UPR:
+            ws->setArtifStatus( i, CoinWarmStartBasis::atUpperBound );
+            break;
+          case MSK_SK_SUPBAS:
+            ws->setArtifStatus( i, CoinWarmStartBasis::isFree );
+            break;
+          default:  // unknown row status
+            delete ws;
+            ws   = NULL;
+            skip = true;
+            break;
+          }
+      }
+    if( skip == false )
+      {
+        for( i = 0; i < numcols; ++i )
+          {
+            switch( cstat[i] )
               {
-                switch( cstat[i] )
-                {
-                  case MSK_SK_BAS:
-                  ws->setStructStatus( i, CoinWarmStartBasis::basic );
-                  break;
-                  case MSK_SK_LOW:
-                  ws->setStructStatus( i, CoinWarmStartBasis::atLowerBound );
-                  break;
-                  case MSK_SK_FIX:
-                  case MSK_SK_UPR:
-                  ws->setStructStatus( i, CoinWarmStartBasis::atUpperBound );
-                  break;
-                  case MSK_SK_SUPBAS:
-                  ws->setStructStatus( i, CoinWarmStartBasis::isFree );
-                  break;
-                  default:  // unknown column status
-                  delete ws;
-                  ws = NULL;
-                  break;
-                }
+              case MSK_SK_BAS:
+                ws->setStructStatus( i, CoinWarmStartBasis::basic );
+                break;
+              case MSK_SK_LOW:
+                ws->setStructStatus( i, CoinWarmStartBasis::atLowerBound );
+                break;
+              case MSK_SK_FIX:
+              case MSK_SK_UPR:
+                ws->setStructStatus( i, CoinWarmStartBasis::atUpperBound );
+                break;
+              case MSK_SK_SUPBAS:
+                ws->setStructStatus( i, CoinWarmStartBasis::isFree );
+                break;
+              default:  // unknown column status
+                delete ws;
+                ws = NULL;
+                break;
               }
+          }
       }
  }
 
@@ -1036,7 +1057,7 @@ bool OsiMskSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
   rstat = new int[numrows];
   bkc   = new int[numrows];
       
-  restat = MSK_->getboundslice(getMutableLpPtr(),
+  restat = MSK_getboundslice(getMutableLpPtr(),
                                1,
                                0,
                                numrows,
@@ -1101,7 +1122,7 @@ bool OsiMskSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
   {
           bkx = new int[numcols];
       
-          restat = MSK_->getboundslice(getMutableLpPtr(),
+          restat = MSK_getboundslice(getMutableLpPtr(),
                                        0,
                                        0,
                                        numcols,
@@ -1165,7 +1186,7 @@ bool OsiMskSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
 
   if( skip == false )
   {
-          restat = MSK_->putsolution( 
+          restat = MSK_putsolution( 
               getLpPtr( OsiMskSolverInterface::FREECACHED_RESULTS ),
               MSK_SOL_BAS,
               rstat, 
@@ -1227,7 +1248,7 @@ void OsiMskSolverInterface::markHotStart()
       hotStartRStat_ = new int[hotStartRStatSize_];
   }
 
-  err = MSK_->getsolution( 	  
+  err = MSK_getsolution( 	  
 	  getMutableLpPtr(),
 	  MSK_SOL_BAS,
 	  NULL,
@@ -1263,7 +1284,7 @@ void OsiMskSolverInterface::solveFromHotStart()
   assert( getNumCols() <= hotStartCStatSize_ );
   assert( getNumRows() <= hotStartRStatSize_ );
 
-  err = MSK_->putsolution( 
+  err = MSK_putsolution( 
 	  getLpPtr( OsiMskSolverInterface::FREECACHED_RESULTS ),
 	  MSK_SOL_BAS,
 	  hotStartRStat_, 
@@ -1282,15 +1303,15 @@ void OsiMskSolverInterface::solveFromHotStart()
   checkMSKerror( err, "MSK_putsolution", "solveFromHotStart" );
   MSKtask_t task = getLpPtr( OsiMskSolverInterface::FREECACHED_RESULTS );
 
-  err = MSK_->getintparam( task, MSK_IPAR_SIM_MAX_ITERATIONS, &maxiter );
+  err = MSK_getintparam( task, MSK_IPAR_SIM_MAX_ITERATIONS, &maxiter );
   checkMSKerror( err, "MSK_getintparam", "solveFromHotStart" );
 
-  err = MSK_->putintparam( task, MSK_IPAR_SIM_MAX_ITERATIONS, hotStartMaxIteration_ );
+  err = MSK_putintparam( task, MSK_IPAR_SIM_MAX_ITERATIONS, hotStartMaxIteration_ );
   checkMSKerror( err, "MSK_putintparam", "solveFromHotStart" );
   
   resolve();
 
-  err = MSK_->putintparam( task, MSK_IPAR_SIM_MAX_ITERATIONS, maxiter );
+  err = MSK_putintparam( task, MSK_IPAR_SIM_MAX_ITERATIONS, maxiter );
   checkMSKerror( err, "MSK_putintparam", "solveFromHotStart" );
 }
 
@@ -1314,7 +1335,7 @@ int OsiMskSolverInterface::getNumCols() const
 {
   debugMessage("OsiMskSolverInterface::getNumCols()\n");
   int numcol, err;
-  err = MSK_->getnumvar(getMutableLpPtr(),&numcol);
+  err = MSK_getnumvar(getMutableLpPtr(),&numcol);
   checkMSKerror( err, "MSK_getnumvar", "getNumCols" );
   return numcol;
 }
@@ -1326,7 +1347,7 @@ int OsiMskSolverInterface::getNumRows() const
 {
   debugMessage("OsiMskSolverInterface::getNumRows()\n");
   int numrow, err;
-  err = MSK_->getnumcon(getMutableLpPtr(),&numrow);
+  err = MSK_getnumcon(getMutableLpPtr(),&numrow);
   checkMSKerror( err, "MSK_getnumcon", "getNumRows" );
   return numrow;
 }
@@ -1338,7 +1359,7 @@ int OsiMskSolverInterface::getNumElements() const
 {
   debugMessage("OsiMskSolverInterface::getNumElements()\n");
   int numnon, err;
-  err = MSK_->getnumanz(getMutableLpPtr(),&numnon);
+  err = MSK_getnumanz(getMutableLpPtr(),&numnon);
   checkMSKerror( err, "MSK_getnumanz", "getNumElements" );
   return numnon;
 }
@@ -1360,7 +1381,7 @@ const double * OsiMskSolverInterface::getColLower() const
 	   colupper_       = new double[ncols];
 	   collower_       = new double[ncols];
 	   int *dummy_tags = new int[ncols];
-	   int err = MSK_->getboundslice( 
+	   int err = MSK_getboundslice( 
 		 getMutableLpPtr(), 
 		 0, 
 		 0, 
@@ -1393,7 +1414,7 @@ const double * OsiMskSolverInterface::getColUpper() const
 	   colupper_       = new double[ncols];
 	   collower_       = new double[ncols];
 	   int *dummy_tags = new int[ncols];
-	   int err = MSK_->getboundslice( 
+	   int err = MSK_getboundslice( 
 		 getMutableLpPtr(), 
 		 0, 
 		 0, 
@@ -1491,7 +1512,7 @@ const double * OsiMskSolverInterface::getRowLower() const
 		rowupper_       = new double[nrows];
 	    int *dummy_tags = new int[nrows];
         
-	    int err = MSK_->getboundslice(
+	    int err = MSK_getboundslice(
 		  getMutableLpPtr(), 
 		  1, 
 		  0, 
@@ -1528,7 +1549,7 @@ const double * OsiMskSolverInterface::getRowUpper() const
 		rowlower_       = new double[nrows];
 	    int *dummy_tags = new int[nrows];
         
-	    int err = MSK_->getboundslice(
+	    int err = MSK_getboundslice(
 		  getMutableLpPtr(), 
 		  1, 
 		  0,
@@ -1562,7 +1583,7 @@ const double * OsiMskSolverInterface::getObjCoefficients() const
       if( ncols > 0 )
 	  {
 	    obj_    = new double[ncols]; 
-   	    int err = MSK_->getc( getMutableLpPtr(), obj_ );
+   	    int err = MSK_getc( getMutableLpPtr(), obj_ );
 	    checkMSKerror( err, "MSK_getc", "getObjCoefficients" );
 	  }
   }
@@ -1579,7 +1600,7 @@ double OsiMskSolverInterface::getObjSense() const
   debugMessage("OsiMskSolverInterface::getObjSense()\n");
   int sense,err;
   
-  err = MSK_->getintparam(
+  err = MSK_getintparam(
               getMutableLpPtr(),
               MSK_IPAR_OBJECTIVE_SENSE,
               &sense
@@ -1625,7 +1646,7 @@ const CoinPackedMatrix * OsiMskSolverInterface::getMatrixByRow() const
     len      = new int[nr];
     ptrb[nr] = nz;
 
-	int err = MSK_->getaslice(
+	int err = MSK_getaslice(
 		getMutableLpPtr(),
         1,
 	    0,
@@ -1679,7 +1700,7 @@ const CoinPackedMatrix * OsiMskSolverInterface::getMatrixByCol() const
     len      = new int[nc];
     ptrb[nc] = nz;
 
-	int err = MSK_->getaslice(
+	int err = MSK_getaslice(
 		getMutableLpPtr(),
         0,
 	    0,
@@ -1730,33 +1751,36 @@ double OsiMskSolverInterface::getInfinity() const
 const double * OsiMskSolverInterface::getColSolution() const
 {
   debugMessage("OsiMskSolverInterface::getColSolution()\n");
-  if( colsol_ == NULL )
-  {
-      int i;
-      int nc = getNumCols();
-      if( nc > 0 )
-	  {
-		int solution = MSK_RES_ERR_UNDEF_SOLUTION;
-		colsol_ = new double[nc];
-
-		if( probtypemip_ == false)
-		{
-			if( definedSolution( MSK_SOL_BAS ) == true )
-				solution = MSK_SOL_BAS;
-			else if( definedSolution( MSK_SOL_ITR) == true )
-				solution = MSK_SOL_ITR;
-		}
-		else if( definedSolution( MSK_SOL_INT ) == true )
-            solution = MSK_SOL_INT;  
-        
-	    if ( solution == MSK_RES_ERR_UNDEF_SOLUTION )
+  if( colsol_ != NULL )
+    {
+      debugMessage("colsol_ != NULL"); 
+      delete[] colsol_;
+    }
+  int i;
+  int nc = getNumCols();
+  if( nc > 0 )
+    {
+      int solution = MSK_RES_ERR_UNDEF_SOLUTION;
+      colsol_ = new double[nc];
+      
+      if( probtypemip_ == false)
+	{
+	  if( definedSolution( MSK_SOL_BAS ) == true )
+	    solution = MSK_SOL_BAS;
+	  else if( definedSolution( MSK_SOL_ITR) == true )
+	    solution = MSK_SOL_ITR;
+	}
+      else if( definedSolution( MSK_SOL_ITG ) == true )
+	solution = MSK_SOL_ITG;  
+      
+      if ( solution == MSK_RES_ERR_UNDEF_SOLUTION )
         {
-            for( i = 0; i < nc; ++i )
-               colsol_[i] = 0.0;
-            
-            return colsol_;
+	  for( i = 0; i < nc; ++i )
+	    colsol_[i] = 0.0;
+	  
+	  return colsol_;
         }
-        int err = MSK_->getsolution( 	  
+      int err = MSK_getsolution( 	  
 				  getMutableLpPtr(),
 				  solution,
 				  NULL,
@@ -1772,12 +1796,10 @@ const double * OsiMskSolverInterface::getColSolution() const
 				  NULL,
 				  NULL,
 				  NULL
-			  );
-
-		    checkMSKerror(err,"MSK_getsolution","getColSolution");
-	  }
-  }
-
+				  );
+      
+      checkMSKerror(err,"MSK_getsolution","getColSolution");
+    }
   return colsol_;
 }
 
@@ -1804,8 +1826,8 @@ const double * OsiMskSolverInterface::getRowPrice() const
 			else if( definedSolution( MSK_SOL_ITR) == true )
 				solution = MSK_SOL_ITR;
 		 }
-		 else if( definedSolution( MSK_SOL_INT ) == true )
-				solution = MSK_SOL_INT;  
+		 else if( definedSolution( MSK_SOL_ITG ) == true )
+				solution = MSK_SOL_ITG;  
          
 	     if ( solution == MSK_RES_ERR_UNDEF_SOLUTION )
          {
@@ -1815,7 +1837,7 @@ const double * OsiMskSolverInterface::getRowPrice() const
 			return rowsol_;
          }
 
-		int err = MSK_->getsolution( 	  
+		int err = MSK_getsolution( 	  
 				  getMutableLpPtr(),
 				  solution,
 				  NULL,
@@ -1860,8 +1882,8 @@ const double * OsiMskSolverInterface::getReducedCost() const
             else if( definedSolution( MSK_SOL_ITR) == true )
 				solution = MSK_SOL_ITR;
 		 }
-         else if( definedSolution( MSK_SOL_INT ) == true )
-				solution = MSK_SOL_INT;  
+         else if( definedSolution( MSK_SOL_ITG ) == true )
+				solution = MSK_SOL_ITG;  
 	     if ( solution == MSK_RES_ERR_UNDEF_SOLUTION )
 			return NULL;
 		 
@@ -1869,7 +1891,7 @@ const double * OsiMskSolverInterface::getReducedCost() const
 		double *slx = new double[ncols];
 		double *sux = new double[ncols];
 
-        int err = MSK_->getsolution( 	  
+        int err = MSK_getsolution( 	  
 				  getMutableLpPtr(),
 				  solution,
 				  NULL,
@@ -1923,8 +1945,8 @@ const double * OsiMskSolverInterface::getRowActivity() const
 			else if( definedSolution( MSK_SOL_ITR) == true )
 				solution = MSK_SOL_ITR;
 		 }
-		 else if( definedSolution( MSK_SOL_INT ) == true )
-				solution = MSK_SOL_INT;
+		 else if( definedSolution( MSK_SOL_ITG ) == true )
+				solution = MSK_SOL_ITG;
          
 	     if ( solution == MSK_RES_ERR_UNDEF_SOLUTION )
          {
@@ -1934,7 +1956,7 @@ const double * OsiMskSolverInterface::getRowActivity() const
 			return rowact_;
          }
 
-		int err = MSK_->getsolution( 	  
+		int err = MSK_getsolution( 	  
 				  getMutableLpPtr(),
 				  solution,
 				  NULL,
@@ -1974,8 +1996,8 @@ double OsiMskSolverInterface::getObjValue() const
 	 else if( definedSolution( MSK_SOL_ITR) == true )
 		solution = MSK_SOL_ITR;
   }
-  else if( definedSolution( MSK_SOL_INT ) == true )
-	 solution = MSK_SOL_INT;  
+  else if( definedSolution( MSK_SOL_ITG ) == true )
+	 solution = MSK_SOL_ITG;  
 
   if ( solution == MSK_RES_ERR_UNDEF_SOLUTION )
   {
@@ -1986,7 +2008,7 @@ double OsiMskSolverInterface::getObjValue() const
      return 0.0;
   }
 
-  int err = MSK_->getprimalobj( getMutableLpPtr(), solution, &value );
+  int err = MSK_getprimalobj( getMutableLpPtr(), solution, &value );
   checkMSKerror(err,"MSK_getprimalobj","getObjValue");
 
   return value;
@@ -2002,18 +2024,36 @@ int OsiMskSolverInterface::getIterationCount() const
   debugMessage("OsiMskSolverInterface::getIterationCount()\n");
 
   int nr = 0, solver, err;
+  int nrp=0;
   solver = solverUsed();
   if( solver == MSK_OPTIMIZER_PRIMAL_SIMPLEX )
-  {
-    err = MSK_->getintinf(getMutableLpPtr(), MSK_IINF_SIM_ITER, &nr);
-    checkMSKerror(err,"MSK_getintinf","getIterationsCount");
-  }
-  else if( solver == MSK_OPTIMIZER_INTPNT )
-  {
-    err = MSK_->getintinf(getMutableLpPtr(), MSK_IINF_INTPNT_ITER, &nr);
-    checkMSKerror(err,"MSK_getintinf","getIterationsCount");
-  }
+    {
+      err = MSK_getintinf(getMutableLpPtr(), MSK_IINF_SIM_PRIMAL_ITER, &nr);
+      checkMSKerror(err,"MSK_getintinf","getIterationsCount");
+    }
+  
+  if( solver == MSK_OPTIMIZER_DUAL_SIMPLEX  )
+    {
+      err = MSK_getintinf(getMutableLpPtr(), MSK_IINF_SIM_DUAL_ITER, &nr);
+      checkMSKerror(err,"MSK_getintinf","getIterationsCount");
+    }
 
+  if( solver == MSK_OPTIMIZER_FREE_SIMPLEX  )
+    {
+      err = MSK_getintinf(getMutableLpPtr(), MSK_IINF_SIM_DUAL_ITER, &nr);
+      checkMSKerror(err,"MSK_getintinf","getIterationsCount");
+      err = MSK_getintinf(getMutableLpPtr(), MSK_IINF_SIM_PRIMAL_ITER, &nrp);
+      checkMSKerror(err,"MSK_getintinf","getIterationsCount");
+      nr = nr+nrp;
+    }
+
+  if( solver == MSK_OPTIMIZER_INTPNT )
+    {
+      err = MSK_getintinf(getMutableLpPtr(), MSK_IINF_INTPNT_ITER, &nr);
+      checkMSKerror(err,"MSK_getintinf","getIterationsCount");
+    }
+  
+  
   return nr;
 }
 
@@ -2041,14 +2081,14 @@ std::vector<double*> OsiMskSolverInterface::getDualRays(int maxNumRays) const
    }
    else
    {
-	 if( definedSolution( MSK_SOL_INT ) == true )
-		solution = MSK_SOL_INT;
+	 if( definedSolution( MSK_SOL_ITG ) == true )
+		solution = MSK_SOL_ITG;
 	 else
         return std::vector<double*>();     
    }
 
    double *farkasray = new double[numrows];
-   r = MSK_->getsolution(
+   r = MSK_getsolution(
 	      getMutableLpPtr(),
 	      solution,
 	      NULL, 
@@ -2100,14 +2140,14 @@ std::vector<double*> OsiMskSolverInterface::getPrimalRays(int maxNumRays) const
    }
    else
    {
-	 if( definedSolution( MSK_SOL_INT ) == true )
-		solution = MSK_SOL_INT;
+	 if( definedSolution( MSK_SOL_ITG ) == true )
+		solution = MSK_SOL_ITG;
 	 else
         return std::vector<double*>();     
    }
 
    double *farkasray = new double[numrows];
-   r = MSK_->getsolution(
+   r = MSK_getsolution(
 	      getMutableLpPtr(),
 	      solution,
 	      NULL, 
@@ -2147,7 +2187,7 @@ void OsiMskSolverInterface::setObjCoeff( int elementIndex, double elementValue )
 {
   debugMessage("OsiMskSolverInterface::setObjCoeff(%d, %g)\n", elementIndex, elementValue);
 
-  int err = MSK_->putclist(
+  int err = MSK_putclist(
 	  getLpPtr( OsiMskSolverInterface::FREECACHED_COLUMN ), 
 	  1, 
 	  &elementIndex, 
@@ -2167,7 +2207,7 @@ void OsiMskSolverInterface::setObjCoeffSet(const int* indexFirst,
   debugMessage("OsiMskSolverInterface::setObjCoeffSet(%p, %p, %p)\n", indexFirst, indexLast, coeffList);
 
    const int cnt = indexLast - indexFirst;
-   int err = MSK_->putclist(
+   int err = MSK_putclist(
 		getLpPtr(OsiMskSolverInterface::FREECACHED_COLUMN), cnt,
 		const_cast<int*>(indexFirst),
 		const_cast<double*>(coeffList)
@@ -2187,7 +2227,7 @@ void OsiMskSolverInterface::setColLower(int elementIndex, double elementValue)
   if( elementValue <= -getInfinity() )
 	  finite = 0;
   
-  int err = MSK_->chgbound(  
+  int err = MSK_chgbound(  
         getMutableLpPtr(), 
 		0,
 		elementIndex,
@@ -2213,7 +2253,7 @@ void OsiMskSolverInterface::setColUpper(int elementIndex, double elementValue)
   if( elementValue >= getInfinity() )
 	  finite = 0;
 
-  int err = MSK_->chgbound( 
+  int err = MSK_chgbound( 
 		getMutableLpPtr(), 
 		0,
 		elementIndex,
@@ -2322,7 +2362,7 @@ OsiMskSolverInterface::setRowType(int i, char sense, double rightHandSide,
 
   MskConvertSenseToBound(sense, range, rightHandSide, rlb, rub, rtag); 
 
-  int err = MSK_->putbound(
+  int err = MSK_putbound(
                   getMutableLpPtr(),
                   1, 
                   i, 
@@ -2397,7 +2437,7 @@ OsiMskSolverInterface::setContinuous(int index)
 
   coltype_[index] = 'C';
   
-  int err = MSK_->putvartype( getMutableLpPtr(), index, MSK_VAR_TYPE_CONT);
+  int err = MSK_putvartype( getMutableLpPtr(), index, MSK_VAR_TYPE_CONT);
   checkMSKerror( err, "MSK_putvartype", "setContinuous" );    
 }
 
@@ -2414,7 +2454,7 @@ OsiMskSolverInterface::setInteger(int index)
   
   coltype_[index] = 'I';
   
-  int err = MSK_->putvartype( getMutableLpPtr(), index, MSK_VAR_TYPE_INT);
+  int err = MSK_putvartype( getMutableLpPtr(), index, MSK_VAR_TYPE_INT);
   
   checkMSKerror( err, "MSK_putvartype", "setInteger" );
 }
@@ -2452,13 +2492,13 @@ void OsiMskSolverInterface::setObjSense(double s)
 
 	int err;
 	if( s == +1.0 )
-		err = MSK_->putintparam(
+		err = MSK_putintparam(
                   getMutableLpPtr(),
                   MSK_IPAR_OBJECTIVE_SENSE,
                   MSK_OBJECTIVE_SENSE_MIN
       );
 	else
-		err = MSK_->putintparam(
+		err = MSK_putintparam(
                   getMutableLpPtr(),
                   MSK_IPAR_OBJECTIVE_SENSE,
                   MSK_OBJECTIVE_SENSE_MAX
@@ -2555,7 +2595,7 @@ OsiMskSolverInterface::addCol(const CoinPackedVectorBase& vec,
   else
     throw CoinError("Bound error", "addCol", "OsiMSKSolverInterface");
 
-  int err = MSK_->appendvars(
+  int err = MSK_appendvars(
 	  getLpPtr(),
 	  1,
 	  const_cast<double*> (&obj),
@@ -2585,7 +2625,7 @@ OsiMskSolverInterface::addCols(const int numcols,
   int i, nz = 0, err = MSK_RES_OK;
   
   // For efficiency we put hints on the total future size
-  err = MSK_->getmaxnumanz(
+  err = MSK_getmaxnumanz(
                      getLpPtr(),
                      &nz);
                      
@@ -2594,13 +2634,13 @@ OsiMskSolverInterface::addCols(const int numcols,
   for( i = 0; i < numcols; ++i)
     nz += cols[i]->getNumElements();
   
-  err = MSK_->putmaxnumanz(
+  err = MSK_putmaxnumanz(
                      getLpPtr(),
                      nz);
                      
   checkMSKerror( err, "MSK_putmaxanz", "addCols" );
           
-  err = MSK_->putmaxnumvar(
+  err = MSK_putmaxnumvar(
                      getLpPtr(),
                      numcols+getNumCols());
                      
@@ -2618,7 +2658,7 @@ OsiMskSolverInterface::deleteCols(const int num, const int * columnIndices)
 {
   debugMessage("OsiMskSolverInterface::deleteCols(%d, %p)\n", num, columnIndices);
   int err;
-  err = MSK_->remove(
+  err = MSK_remove(
            getLpPtr( OsiMskSolverInterface::KEEPCACHED_ROW ),
            0,
            num,
@@ -2652,7 +2692,7 @@ OsiMskSolverInterface::addRow(const CoinPackedVectorBase& vec,
   else
     throw CoinError("Bound error", "addRow", "OsiMSKSolverInterface");
 
-  int err = MSK_->appendcons(
+  int err = MSK_appendcons(
 	  getLpPtr( OsiMskSolverInterface::KEEPCACHED_COLUMN ),
 	  1,
 	  &start,
@@ -2695,7 +2735,7 @@ OsiMskSolverInterface::addRows(const int numrows,
   int i,nz = 0, err = MSK_RES_OK;
   
   // For efficiency we put hints on the total future size
-  err = MSK_->getmaxnumanz(
+  err = MSK_getmaxnumanz(
                      getLpPtr(),
                      &nz);
                      
@@ -2705,13 +2745,13 @@ OsiMskSolverInterface::addRows(const int numrows,
   for( i = 0; i < numrows; ++i)
     nz += rows[i]->getNumElements();
   
-  err = MSK_->putmaxnumanz(
+  err = MSK_putmaxnumanz(
                      getLpPtr(),
                      nz);
                      
   checkMSKerror( err, "MSK_putmaxanz", "addRows" );
           
-  err = MSK_->putmaxnumcon(
+  err = MSK_putmaxnumcon(
                      getLpPtr(),
                      numrows+getNumRows());
                     
@@ -2738,13 +2778,13 @@ OsiMskSolverInterface::addRows(const int numrows,
   for( i = 0; i < numrows; ++i)
     nz += rows[i]->getNumElements();
   
-  err = MSK_->putmaxnumanz(
+  err = MSK_putmaxnumanz(
                      getLpPtr(),
                      nz);
                      
   checkMSKerror( err, "MSK_putmaxanz", "addRows" );
           
-  err = MSK_->putmaxnumcon(
+  err = MSK_putmaxnumcon(
                      getLpPtr(),
                      numrows);
                      
@@ -2762,7 +2802,7 @@ OsiMskSolverInterface::deleteRows(const int num, const int * rowIndices)
 {
   debugMessage("OsiMskSolverInterface::deleteRows(%d, %p)\n", num, rowIndices);
   int err;
-  err = MSK_->remove(
+  err = MSK_remove(
            getLpPtr( OsiMskSolverInterface::KEEPCACHED_COLUMN ),
            1,
            num,
@@ -2943,7 +2983,7 @@ OsiMskSolverInterface::loadProblem(
          MskConvertColBoundToTag( collb[j], colub[j], clb[j], cub[j], ctag[j]);
       }
 
-  int err=MSK_->inputdata(
+  int err=MSK_inputdata(
 	getLpPtr( OsiMskSolverInterface::FREECACHED_RESULTS ),
 	nr,
 	nc,
@@ -3133,7 +3173,7 @@ OsiMskSolverInterface::loadProblem(
          MskConvertColBoundToTag( collb[j], colub[j], clb[j], cub[j], ctag[j]);
       }
 
-  int err=MSK_->inputdata(
+  int err=MSK_inputdata(
     getLpPtr( OsiMskSolverInterface::FREECACHED_RESULTS ),
 	nr,
 	nc,
@@ -3182,8 +3222,8 @@ int OsiMskSolverInterface::readMps( const char * filename,
   std::string f(filename);
   std::string e(extension);
   std::string fullname = f + "." + e;
-  int err=MSK_->readdata(getMutableLpPtr(),const_cast<char*>(fullname.c_str()));
-  checkMSKerror(err, "MSK_readdata", "readMps" );
+  int err=MSK_readdata(getMutableLpPtr(),const_cast<char*>(fullname.c_str()));
+  checkMSKerror(err, "MSK_readdatafile", "readMps" );
   return err;
   #else
   return OsiSolverInterface::readMps(filename,extension);
@@ -3200,10 +3240,10 @@ void OsiMskSolverInterface::writeMps( const char * filename,
 {
   debugMessage("OsiMskSolverInterface::writeMps(%s, %s, %g)\n", filename, extension, objSense);
   std::string f(filename);
-  std::string e(extension);
+  std::string e(extension);  
   std::string fullname = f + "." + e;
-  int err = MSK_->writedata( getMutableLpPtr(), const_cast<char*>( fullname.c_str() ) );
-  checkMSKerror( err, "MSK_writedata", "writeMps" );
+  int err = MSK_writedata( getMutableLpPtr(), const_cast<char*>( fullname.c_str() ));
+  checkMSKerror( err, "MSK_writedatafile", "writeMps" );
 }
 
 //#############################################################################
@@ -3250,17 +3290,15 @@ void OsiMskSolverInterface::incrementInstanceCounter()
 
     if ( numInstances_ == 0 )
     {
-        int err;
-        char file[] = "mosek.alloc";
-        err = MSK_openmosek(NULL,NULL,MSK_VERSION_MAJOR,MSK_VERSION_MINOR,NULL,NULL,&MSK_);
-        printf("%s\n",MSK_dlerrmsg(MSK_));
-        checkMSKerror( err, "MSK_openmosek", "incrementInstanceCounter" );
-        err = MSK_->makeenv(&env_,NULL, NULL,file);
-        checkMSKerror( err, "MSK_makeenv", "incrementInstanceCounter" );
-        err = MSK_->linkfunctoenvstream(env_, MSK_STREAM_LOG, NULL, printlog); 
-        checkMSKerror( err, "MSK_linkfunctoenvstream", "incrementInstanceCounter" );
-        err = MSK_->initenv(env_);
-        checkMSKerror( err, "MSK_initenv", "incrementInstanceCounter" );
+      int err=0;
+      char file[] = "mosek.alloc";
+      checkMSKerror( err, "MSK_openmosek", "incrementInstanceCounter" );
+      err = MSK_makeenv(&env_,NULL, NULL,NULL,file);
+      checkMSKerror( err, "MSK_makeenv", "incrementInstanceCounter" );
+      err = MSK_linkfunctoenvstream(env_, MSK_STREAM_LOG, NULL, printlog); 
+      checkMSKerror( err, "MSK_linkfunctoenvstream", "incrementInstanceCounter" );
+      err = MSK_initenv(env_);
+      checkMSKerror( err, "MSK_initenv", "incrementInstanceCounter" );
     }
     numInstances_++;
 }
@@ -3276,9 +3314,8 @@ void OsiMskSolverInterface::decrementInstanceCounter()
   numInstances_--;
   if ( numInstances_ == 0 )
   {
-     int err = MSK_->deleteenv(&env_);
+     int err = MSK_deleteenv(&env_);
      checkMSKerror( err, "MSK_deleteenv", "decrementInstanceCounter" );
-     MSK_closemosek( &MSK_);
      env_ = NULL;
      MSK_ = NULL;
   }
@@ -3470,38 +3507,51 @@ MSKenv_t OsiMskSolverInterface::env_=NULL;
 
 MSKtask_t OsiMskSolverInterface::getMutableLpPtr() const
 {
-	debugMessage("OsiMskSolverInterface::getMutableLpPtr()\n");
-
+	//std::cout << "Task " << task_ << std::endl;
 	if ( task_ == NULL )
-        {
-      char file[] = "MOSEK.log";          
-	  assert(env_ != NULL);
+	  {
+	    debugMessage("OsiMskSolverInterface::getMutableLpPtr()\n");
+	    char file[] = "MOSEK.log";          
+	    assert(env_ != NULL);
 
-	  int err = MSK_->makeemptytask(env_,&task_);
-          checkMSKerror(err, "MSK_makeemptytask","getMutableLpPtr");
+	    int err = MSK_makeemptytask(env_,&task_);
+	    checkMSKerror(err, "MSK_makeemptytask","getMutableLpPtr");
 
-      err = MSK_->linkfunctotaskstream(task_, MSK_STREAM_LOG, NULL, printlog); 
-          checkMSKerror( err, "MSK_linkfunctotaskstream", "getMutableLpPtr" );
+	    err = MSK_linkfunctotaskstream(task_, MSK_STREAM_LOG, NULL, printlog); 
+	    checkMSKerror( err, "MSK_linkfunctotaskstream", "getMutableLpPtr" );
 
-      err = MSK_->linkfiletotaskstream(task_, MSK_STREAM_LOG, file, 0);
-          checkMSKerror( err, "MSK_linkfiletotaskstream", "getMutableLpPtr" );
+	    err = MSK_linkfiletotaskstream(task_, MSK_STREAM_LOG, file, 0);
+	    checkMSKerror( err, "MSK_linkfiletotaskstream", "getMutableLpPtr" );
 
-	  err = MSK_->putdouparam( task_, MSK_DPAR_BASIS_REL_TOL_S, 0 );
-          checkMSKerror(err,"MSK_putdouparam","getMutableLpPtr()");
+	    err = MSK_putdouparam( task_, MSK_DPAR_BASIS_REL_TOL_S, 0 );
+	    checkMSKerror(err,"MSK_putdouparam","getMutableLpPtr()");
 
-	  err = MSK_->putintparam(task_, MSK_IPAR_OPTIMIZER, MSK_OPTIMIZER_INTPNT);
-          checkMSKerror(err,"MSK_putintparam","getMutableLpPtr()");
+	    err = MSK_putintparam(task_, MSK_IPAR_OPTIMIZER, SOLVER);
+	    checkMSKerror(err,"MSK_putintparam","getMutableLpPtr()");
 
-	  err = MSK_->putintparam(task_, MSK_IPAR_WRITE_GENERIC_NAMES, MSK_ON);
-          checkMSKerror(err,"MSK_putintparam","getMutableLpPtr()");  
+	    // 	  err = MSK_putintparam(task_, MSK_IPAR_WRITE_GENERIC_NAMES, MSK_ON);
+	    //           checkMSKerror(err,"MSK_putintparam","getMutableLpPtr()");  
 
-	  std::string pn;
-          getStrParam(OsiProbName,pn);
-
-	  MSK_->puttaskname( task_, const_cast<char*>(pn.c_str()) );
-          checkMSKerror(err,"MSK_puttaskname","getMutableLpPtr()");   
-        }
-
+	    err = MSK_putintparam(task_, MSK_IPAR_PRESOLVE_USE, MSK_ON);
+	    checkMSKerror(err,"MSK_putintparam","getMutableLpPtr()");  
+	    
+	    err = MSK_putintparam(task_, MSK_IPAR_WRITE_DATA_FORMAT, MSK_DATA_FORMAT_MPS);
+	    checkMSKerror(err,"MSK_putintparam","getMutableLpPtr()");  
+	    
+	    err = MSK_putintparam(task_, MSK_IPAR_WRITE_GENERIC_NAMES, MSK_ON);
+	    checkMSKerror(err,"MSK_putintparam","getMutableLpPtr()");  
+	    
+ 	    err = MSK_putintparam(task_, MSK_IPAR_LOG, MSK_OFF);
+ 	    checkMSKerror(err,"MSK_putintparam","getMutableLpPtr()");  
+	    
+	    std::string pn;
+	    getStrParam(OsiProbName,pn);
+	    MSK_puttaskname( task_, const_cast<char*>(pn.c_str()) );
+	    checkMSKerror(err,"MSK_puttaskname","getMutableLpPtr()");   
+	  }
+	//int err= MSK_writedata(task_, "tmp.mbt");
+	//checkMSKerror(err,"MSK_puttaskname","getMutableLpPtr()");   
+	
 	return task_;
 }
 
@@ -3553,7 +3603,7 @@ void OsiMskSolverInterface::gutsOfDestructor()
 {  
   if ( task_ != NULL )
   {
-      int err = MSK_->deletetask(&task_);
+      int err = MSK_deletetask(&task_);
       checkMSKerror( err, "MSK_deletetask", "gutsOfDestructor" );
       task_ = NULL;
       freeAllMemory();

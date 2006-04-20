@@ -18,7 +18,6 @@ export CoinDir := $(shell cd ../..; pwd)
 export MakefileDir := $(CoinDir)/Makefiles
 include ${MakefileDir}/Makefile.coin
 include ${MakefileDir}/Makefile.location
-
 export ExtraIncDir  := \
     ${MskIncDir}  ${OsiIncDir}  ${CoinIncDir}  ${zlibIncDir}  ${bzlibIncDir} 
 export ExtraLibDir  := \
@@ -34,11 +33,12 @@ export LibType OptLevel LIBNAME LIBSRC
 
 .DELETE_ON_ERROR:
 
-.PHONY: default install libosi library clean doc
+.PHONY: default install libosi library clean doc libname
 
 default: install
  
 install library : % :
+	echo ${MskIncDir}		
 	(cd $(CoinDir)/Osi && $(MAKE) -f Makefile.Osi install)
 	$(MAKE) -f ${MakefileDir}/Makefile.lib $*
 
@@ -48,3 +48,5 @@ libOsiMsk :
 
 clean doc : % :
 	$(MAKE) -f ${MakefileDir}/Makefile.lib $*
+libname:
+	echo ${MskLibDir}

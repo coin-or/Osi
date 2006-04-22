@@ -1095,7 +1095,7 @@ public:
 
   /// Read file in LP format from file with name filename. 
   /// See class CoinLpIO for description of this format.
-  int readLp(const char *filename, const double epsilon = 1e-5);
+  virtual int readLp(const char *filename, const double epsilon = 1e-5);
 
   /// Read file in LP format from the file pointed to by fp. 
   /// See class CoinLpIO for description of this format.

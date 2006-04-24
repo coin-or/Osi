@@ -22,6 +22,9 @@ ifneq ($(filter COIN_libOsiClp,$(CoinLibsDefined)),)
     IncDir  += ${OsiClpIncDir} ${ClpIncDir}
     LibDir  += ${OsiClpLibDir} ${ClpLibDir}
     LibName += ${OsiClpLibName} ${ClpLibName}
+    ifeq ($(VolDefine),COIN_HAS_VOL)
+      LibName += $(VolLibName)
+    endif
     Define  += ${OsiClpDefine} ${ClpDefine}
     TESTSRC += OsiClpSolverInterfaceTest.cpp
 endif

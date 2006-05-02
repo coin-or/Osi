@@ -558,6 +558,19 @@ public:
 
   void activateRowCutDebugger (const double *solution) ;
 
+# ifdef ODSI_PARANOIA
+  /*! \brief Check that a row or column index is in range
+
+    Check that a row or column index is in range for the current constraint
+    system. This routine will throw an error if there is no constraint system
+    or if the index is out of range.
+
+    NOTE that ODSI_PARANOIA must be defined in order for OsiCbc(dylp) to pass
+    the OsiCbc unit test.
+  */
+  void ODSI::indexCheck (int k, bool isCol, std::string rtnnme) ;
+# endif
+
 //@}
 
 /*! \name Dylp-specific methods */
@@ -681,7 +694,14 @@ private:
 
   bool resolve_gtxecho ;
 
-  /*! \brief Result of last call to solver for this ODSI instance */
+  /*! \brief Result of last call to solver for this ODSI instance
+  
+    The default value is lpINV (<i>i.e.</i>, the code is not valid). A call
+    to dylp will set lp_retval to the dylp return code. Errors in the
+    interface's interaction with other dylp routines will set this value to
+    the return code given by the routine, or lpFATAL if the routine does not
+    return anything more specific.
+  */
 
   lpret_enum lp_retval ;
 
@@ -715,10 +735,10 @@ private:
   /*! \brief Current basis
   
     Set with each successful return from the solver (where successful means a
-    result of optimal, infeasible, or unbounded), or by an explicit call to
-    #setWarmStart() with a valid basis. Note that calling #setWarmStart() with
-    an empty basis or a null parameter is taken as a request to delete
-    activeBasis.
+    result of optimal, infeasible, unbounded, or iterlim), or by an explicit
+    call to #setWarmStart() with a valid basis. Note that calling
+    #setWarmStart() with an empty basis or a null parameter is taken as a
+    request to delete activeBasis.
   */
 
   CoinWarmStart *activeBasis ;
@@ -729,6 +749,13 @@ private:
     to dylp.
   */
   bool activeIsModified ;
+
+  /*! \brief The most recent solution from dylp is valid.
+
+    True if the solution held in #lpprob is valid. False if changes to the
+    constraint system have rendered the solution invalid.
+  */
+  bool solnIsFresh ;
 
   /*! \brief Columns (variables) added during existence of this ODSI object
 
@@ -764,18 +791,20 @@ private:
 //@{
 
   mutable double _objval ;
-  mutable double* _col_x ;
   mutable double* _col_obj ;
+  mutable double* _col_x ;
   mutable double* _col_cbar ;
-  mutable double* _row_lhs ;
-  mutable double* _row_lower ;
-  mutable double* _row_price ;
-  mutable double* _row_range ;
+
   mutable double* _row_rhs ;
-  mutable char* _row_sense ;
+  mutable double* _row_lower ;
   mutable double* _row_upper ;
-  mutable CoinPackedMatrix* _matrix_by_row ;
+  mutable char* _row_sense ;
+  mutable double* _row_range ;
+  mutable double* _row_lhs ;
+  mutable double* _row_price ;
+
   mutable CoinPackedMatrix* _matrix_by_col ;
+  mutable CoinPackedMatrix* _matrix_by_row ;
 
 //@}
 
@@ -792,6 +821,7 @@ private:
   transformations are applied to convert it to a presolved system.
 */
   CoinPresolveMatrix *preObj_ ;
+
 /*! \brief List of postsolve actions
 
   The list of postsolve (reverse) transformations required to convert the
@@ -799,6 +829,7 @@ private:
   transformations are applied.
 */
   const CoinPresolveAction *postActions_ ;
+
 /*! \brief The postsolve object
 
   In more detail, #postObj_ is loaded with the presolved system and its
@@ -808,13 +839,25 @@ private:
 */
   CoinPostsolveMatrix *postObj_ ;
 
+  /// Limit for iterations of the major presolve loop
+  int passLimit_ ;
+
+  /// true if presolve should consider integrality
+  bool keepIntegers_ ;
+
   /// Saved copy of original problem
   consys_struct *savedConsys_ ;
 
-  /// Limit for iterations of the major presolve loop
-  int passLimit_ ;
-  /// true if presolve should consider integrality
-  bool keepIntegers_ ;
+  /// Saved pointers to cached structural vectors
+  mutable double* saved_col_obj ;
+  mutable double* saved_row_rhs ;
+  mutable double* saved_row_lower ;
+  mutable double* saved_row_upper ;
+  mutable char* saved_row_sense ;
+  mutable double* saved_row_range ;
+  mutable CoinPackedMatrix* saved_matrix_by_col ;
+  mutable CoinPackedMatrix* saved_matrix_by_row ;
+
 //@}
 
 /*! \name Helper functions for presolve
@@ -888,9 +931,9 @@ private:
 
 /*! \name Destructor helpers */
 //@{
-  void destruct_col_cache() ;
-  void destruct_row_cache() ;
-  void destruct_cache() ;
+  void destruct_col_cache(bool structure) ;
+  void destruct_row_cache(bool structure) ;
+  void destruct_cache(bool rowStructure, bool colStructure) ;
   void destruct_problem(bool preserve_interface) ;
   void detach_dylp() ;
 //@}

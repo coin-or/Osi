@@ -29,7 +29,7 @@
   instantiations.
 */
 
-#endif
+#endif	// _MSC_VER
 
 /*
   Right now, there's no way to ask (or set) the value that COIN uses for
@@ -65,6 +65,30 @@ const double CoinInfinity = COIN_DBL_MAX ;
 */
 
 #define ODSI_IMPLICIT_SPC 0
+
+/*! \brief Define to control refresh of solution after problem modification
+
+  A solution is `fresh' if the problem has not been modified since the most
+  recent call to dylp. The OSI specification says that problem modifications
+  should invalidate the current solution. In practice (particularly in Cbc)
+  this nicety is sometimes stretched a bit. Defining ODSI_STRICTLY_FRESH will
+  cause ODSI to throw an exception if asked for stale solution data. Otherise,
+  it will simply cope, refreshing the solution by calling dylp. At any log
+  level greater than 0, you'll get a warning.
+*/
+
+#define ODSI_STRICTLY_FRESH
+
+/*! \brief Define to enable paranoid checks.
+
+  Enables various paranoid checks, including bounds checks on indices. An
+  error will cause a throw.
+  
+  In particular, this symbol must be defined in order for OsiCbc(dylp) to
+  pass the OsiCbc unit test.
+*/
+
+#define ODSI_PARANOIA
 
 /*!
   \file OsiDylpSolverInterface.cpp
@@ -151,6 +175,38 @@ const double CoinInfinity = COIN_DBL_MAX ;
   be copied because the functions #setColSolution() and #setRowPrice() use
   them directly to hold the values specified by the client.
 
+  <strong>`Fresh' Solutions</strong>
+
+  The OSI specification says that changes to the problem structure should
+  invalidate the current solution. However, the de facto standards (the
+  OSI unitTest and the OsiClp implementation) are more relevant, particularly
+  for solvers that expect to work in Cbc. Clp bends the rules pretty badly.
+  OsiDylp offers a compile-time option, ODSI_STRICTLY_FRESH. When this symbol
+  is defined, ODSI will throw an exception if the user tries to use a stale
+  solution. If it's not defined, ODSI will cope by calling dylp to refresh the
+  solution on the spot.
+
+  The actual behaviour is a bit more complicated, due to the extreme cases.
+  The OSI unitTest requires that an empty solver (no constraint system) return
+  null when asked for solution vectors. Also, the client can load in a primal
+  or dual solution. ODSI keeps these in the cached solution vectors (and they
+  are totally irrelevant to dylp). Similarly, when a problem is loaded, a
+  pessimal primal solution is generated and cached. The actual tests are:
+  <ul>
+    <li>
+    If a cached solution vector exists, return it. This implies that ODSI
+    must be scrupulous about invalidating the cache when changes occur.
+    </li>
+    <li>
+    If the solver is empty (no consys), return null.
+    </li>
+    <li>
+    If #solnIsFresh is true, rebuild cached solution data as needed from
+    lpprob and return it. If #solnIsFresh is false, act according to
+    ODSI_STRICTLY_FRESH, as described above.
+    </li>
+  </ul>
+
   <strong>Index Base</strong>:
   OsiSolverInterface indexes variables and constraints from 0 (the standard
   approach for C/C++) while dylp indexes them from 1 (for robustness; see
@@ -182,7 +238,6 @@ const double CoinInfinity = COIN_DBL_MAX ;
 
 */
 
-
 #include <string>
 #include <cassert>
 #include <sstream>
@@ -198,7 +253,7 @@ const double CoinInfinity = COIN_DBL_MAX ;
 namespace {
   char sccsid[] UNUSED = "@(#)OsiDylpSolverInterface.cpp	1.20	11/13/04" ;
   char cvsid[] UNUSED = "$Id$" ;
-}
+}	// end unnamed file-local namespace
 
 using std::string ;
 using std::vector ;
@@ -604,53 +659,65 @@ lpprob_struct* ODSI::copy_lpprob (const lpprob_struct* src)
 /*! \brief Destroy cached values
     \ingroup DestructorHelpers
 
-  Destroy cached copies of computed values for columns.
+  Destroy cached copies of computed values for columns. If structure is true,
+  structural values are destroyed along with solution values.
   See the \link OsiDylpSolverInterface.cpp comments \endlink at the head of
   the file for a brief description of the ODSI cache mechanism.
 */
 
-inline void ODSI::destruct_col_cache ()
+inline void ODSI::destruct_col_cache (bool structure)
 
 { delete [] _col_x ; _col_x = 0 ;
-  delete [] _col_obj ; _col_obj = 0 ;
   delete [] _col_cbar ; _col_cbar = 0 ;
-}
+  if (structure == true)
+  { delete [] _col_obj ; _col_obj = 0 ; }
+
+  return ; }
 
 
 /*! \brief Destroy cached values
     \ingroup DestructorHelpers
 
-  Destroy cached copies of computed values for rows.
+  Destroy cached copies of computed values for rows. If structure is true,
+  structural values are destroyed along with solution values.
   See the \link OsiDylpSolverInterface.cpp comments \endlink at the head of
   the file for a brief description of the ODSI cache mechanism.
 */
 
-void ODSI::destruct_row_cache ()
+void ODSI::destruct_row_cache (bool structure)
 
-{ delete [] _row_lhs ; _row_lhs = 0 ;
-  delete [] _row_lower ; _row_lower = 0 ;
-  delete [] _row_price ; _row_price = 0 ;
-  delete [] _row_range ; _row_range = 0 ;
-  delete [] _row_rhs ; _row_rhs = 0 ;
-  delete [] _row_sense ; _row_sense = 0 ;
-  delete [] _row_upper ; _row_upper = 0 ;
-}
+{ delete [] _row_price ; _row_price = 0 ;
+  delete [] _row_lhs ; _row_lhs = 0 ;
+
+  if (structure == true)
+  { delete [] _row_lower ; _row_lower = 0 ;
+    delete [] _row_range ; _row_range = 0 ;
+    delete [] _row_rhs ; _row_rhs = 0 ;
+    delete [] _row_sense ; _row_sense = 0 ;
+    delete [] _row_upper ; _row_upper = 0 ; }
+  
+  return ; }
 
 /*! \brief Destroy cached values
     \ingroup DestructorHelpers
 
-  Destroy cached copies of computed values.
+  Destroy cached copies of computed values. If either rowStructure or
+  colStructure is true, take it as an indication we need to delete the cached
+  copies of the constraint system. If you want to remove structural aspects
+  of the row or column cache, without affecting the matrices, call them
+  individually.
   See the \link OsiDylpSolverInterface.cpp file comments \endlink
   for a brief description of the ODSI cache mechanism.
 */
   
-inline void ODSI::destruct_cache ()
+inline void ODSI::destruct_cache (bool rowStructure, bool colStructure)
 
-{ destruct_row_cache() ;
-  destruct_col_cache() ;
+{ destruct_row_cache(rowStructure) ;
+  destruct_col_cache(colStructure) ;
 
-  delete _matrix_by_row ; _matrix_by_row = 0 ;
-  delete _matrix_by_col ; _matrix_by_col = 0 ;
+  if (rowStructure == true || colStructure == true)
+  { delete _matrix_by_row ; _matrix_by_row = 0 ;
+    delete _matrix_by_col ; _matrix_by_col = 0 ; }
 
   return ; }
 
@@ -821,15 +888,19 @@ void ODSI::add_col (const CoinPackedVectorBase& coin_colj,
 /*
   Add the column.
 */
-  bool r UNUSED = consys_addcol_pk(consys,vtypj,pk_colj,objj,vlbj,vubj) ;
+  bool r = consys_addcol_pk(consys,vtypj,pk_colj,objj,vlbj,vubj) ;
   pkvec_free(pk_colj) ;
-  assert(r) ;
+  if (!r)
+  { lp_retval = lpFATAL ; }
 /*
-  After adding a column, the best we can do is a warm start.
+  After adding a column, the best we can do is a warm start. Any current
+  solution is no longer valid, and we need to delete the structural side
+  of the column cache.
 */
   resolveOptions->forcewarm = true ;
+  solnIsFresh = false ;
 
-  destruct_cache() ; }
+  destruct_cache(false,true) ; }
 
 
 /*! \brief Add a row to the constraint matrix.
@@ -865,16 +936,20 @@ void ODSI::add_row (const CoinPackedVectorBase &coin_rowi, char clazzi,
 /*
   Add the row.
 */
-  bool r UNUSED = consys_addrow_pk(consys,clazzi,ctypi,
+  bool r = consys_addrow_pk(consys,clazzi,ctypi,
 				   pk_rowi,rhsi,rhslowi,0,0) ;
   pkvec_free(pk_rowi) ;
-  assert(r) ;
+  if (!r)
+  { lp_retval = lpFATAL ; }
 /*
-  After adding a constraint, the best we can do is a warm start.
+  After adding a constraint, the best we can do is a warm start. Any current
+  solution is no longer valid, and we need to delete the structural side of the
+  row cache.
 */
   resolveOptions->forcewarm = true ;
+  solnIsFresh = false ;
 
-  destruct_cache() ; }
+  destruct_cache(true,false) ; }
 
 
 /*! \brief Establish a pessimistic primal solution.
@@ -1008,11 +1083,7 @@ void ODSI::calc_objval ()
 /*! \defgroup ConstructorHelpers Helper functions for problem construction */
 //@{
 
-/*! \brief Construct a dylp lpprob_struct (LP problem).
-
-    \todo Remove the call to dy_setprintopts, once I've figured out a better
-	  scheme for handling dylp parameters.
-*/
+/*! \brief Construct a dylp lpprob_struct (LP problem).  */
 
 void ODSI::construct_lpprob ()
 
@@ -1092,7 +1163,8 @@ void ODSI::construct_consys (int cols, int rows)
   never conveniently available in the OSI frame.
 */
   consys = consys_create(0,parts,opts,rows,cols,odsiInfinity) ;
-  assert(consys) ;
+  if (consys == 0)
+  { lp_retval = lpFATAL ; }
 
   return ; }
 
@@ -1180,16 +1252,21 @@ void ODSI::load_problem (const CoinMpsIO &mps)
   pkvec_struct* rowi = pkvec_new(0) ;
   assert(rowi) ;
 
+  bool r = true ;
   for (int i = 0 ; i < m ; i++)
   { rowi->nme = const_cast<char *>(mps.rowName(i)) ;
-    bool r UNUSED = consys_addrow_pk(consys,'a',
-				     ctyp[i],rowi,rhs[i],rhslow[i],0,0) ;
-    assert(r) ; }
+    r = consys_addrow_pk(consys,'a',ctyp[i],rowi,rhs[i],rhslow[i],0,0) ;
+    if (!r)
+    { lp_retval = lpFATAL ;
+      break ; } }
   
   if (rowi) pkvec_free(rowi) ;
   delete[] rhs ;
   delete[] rhslow ;
   delete[] ctyp ;
+  if (!r)
+  { lp_retval = lpFATAL ;
+    return ; }
 /*
   Take a moment and set up a vector of variable types. It's a bit of a pain
   that CoinMpsIO doesn't distinguish binary from general integer, but we can
@@ -1228,12 +1305,16 @@ void ODSI::load_problem (const CoinMpsIO &mps)
   { const CoinShallowPackedVector coin_col = matrix2->getVector(j) ;
     packed_vector(coin_col,n,colj) ;
     colj->nme = const_cast<char *>(mps.columnName(j)) ;
-    bool r UNUSED = consys_addcol_pk(consys,vtyp[j],colj,obj[j],
-				     col_lower[j],col_upper[j]) ;
-    assert(r) ; }
+    r = consys_addcol_pk(consys,vtyp[j],
+			 colj,obj[j],col_lower[j],col_upper[j]) ;
+    if (!r)
+    { break ; } }
 
   pkvec_free(colj) ;
   delete[] vtyp ;
+  if (!r)
+  { lp_retval = lpFATAL ;
+    return ; }
   assert(matrix2->isEquivalent(*getMatrixByCol())) ;
 
 /*
@@ -1297,13 +1378,17 @@ void ODSI::load_problem (const CoinPackedMatrix& matrix,
   pkvec_struct* rowi = pkvec_new(0) ;
   assert(rowi) ;
 
+  bool r = true ;
   for (int i = 0 ; i < m ; i++)
   { rowi->nme = 0 ;
-    bool r UNUSED = consys_addrow_pk(consys,'a',
-				     ctyp[i],rowi,rhs[i],rhslow[i],0,0) ;
-    assert(r) ; }
+    r = consys_addrow_pk(consys,'a',ctyp[i],rowi,rhs[i],rhslow[i],0,0) ;
+    if (!r)
+    { break ; } }
 
   if (rowi) pkvec_free(rowi) ;
+  if (!r)
+  { lp_retval = lpFATAL ;
+    return ; }
 /*
   Second loop. Insert the coefficients by column.
 */
@@ -1316,10 +1401,14 @@ void ODSI::load_problem (const CoinPackedMatrix& matrix,
     double vlbj = col_lower?col_lower[j]:0 ;
     double vubj = col_upper?col_upper[j]:odsiInfinity ;
     colj->nme = 0 ;
-    bool r UNUSED = consys_addcol_pk(consys,vartypCON,colj,objj,vlbj,vubj) ;
-    assert(r) ; }
+    r = consys_addcol_pk(consys,vartypCON,colj,objj,vlbj,vubj) ;
+    if (!r)
+    { break ; } }
 
   pkvec_free(colj) ;
+  if (!r)
+  { lp_retval = lpFATAL ;
+    return ; }
   assert(matrix2->isEquivalent(*getMatrixByCol())) ;
 /*
   Construct a pessimal solution and we're done.
@@ -1382,14 +1471,17 @@ void ODSI::load_problem (const int colcnt, const int rowcnt,
   pkvec_struct* rowi = pkvec_new(0) ;
   assert(rowi) ;
 
+  bool r = true ;
   for (int i = 0 ; i < rowcnt ; i++)
   { rowi->nme = 0 ;
-    bool r UNUSED = consys_addrow_pk(consys,'a',
-				     ctyp[i],rowi,rhs[i],rhslow[i],0,0) ;
-    assert(r) ;
-  }
+    r = consys_addrow_pk(consys,'a',ctyp[i],rowi,rhs[i],rhslow[i],0,0) ;
+    if (!r)
+    { break ; } }
 
   if (rowi) pkvec_free(rowi) ;
+  if (!r)
+  { lp_retval = lpFATAL ;
+    return ; }
 /*
   Second loop. Insert the coefficients by column. The size of colj is a gross
   overestimate, but it saves the trouble of constantly reallocating it.
@@ -1412,11 +1504,14 @@ void ODSI::load_problem (const int colcnt, const int rowcnt,
     double vlbj = col_lower?col_lower[j]:0 ;
     double vubj = col_upper?col_upper[j]:odsiInfinity ;
     colj->nme = 0 ;
-    bool r UNUSED = consys_addcol_pk(consys,vartypCON,colj,objj,vlbj,vubj) ;
-    assert(r) ;
-  }
+    r = consys_addcol_pk(consys,vartypCON,colj,objj,vlbj,vubj) ;
+    if (!r)
+    { break ; } }
 
   if (colj) pkvec_free(colj) ;
+  if (!r)
+  { lp_retval = lpFATAL ;
+    return ; }
 /*
   Construct a pessimal solution and we're done.
 */
@@ -1563,29 +1658,38 @@ ODSI::OsiDylpSolverInterface ()
     hotstart_fallback(0),
     activeBasis(0),
     activeIsModified(false),
+    solnIsFresh(false),
     addedColCnt(0),
     addedRowCnt(0),
 
     _objval(0),
-    _col_x(0),
     _col_obj(0),
+    _col_x(0),
     _col_cbar(0),
-    _row_lhs(0),
-    _row_lower(0),
-    _row_price(0),
-    _row_range(0),
     _row_rhs(0),
-    _row_sense(0),
+    _row_lower(0),
     _row_upper(0),
-    _matrix_by_row(0),
+    _row_sense(0),
+    _row_range(0),
+    _row_price(0),
+    _row_lhs(0),
     _matrix_by_col(0),
+    _matrix_by_row(0),
 
     preObj_(0),
     postActions_(0),
     postObj_(0),
-    savedConsys_(0),
     passLimit_(5),
-    keepIntegers_(false)
+    keepIntegers_(false),
+    savedConsys_(0),
+    saved_col_obj(0),
+    saved_row_rhs(0),
+    saved_row_lower(0),
+    saved_row_upper(0),
+    saved_row_sense(0),
+    saved_row_range(0),
+    saved_matrix_by_col(0),
+    saved_matrix_by_row(0)
 
 {
 /*
@@ -1644,25 +1748,33 @@ ODSI::OsiDylpSolverInterface (const OsiDylpSolverInterface& src)
     addedRowCnt(src.addedRowCnt),
   
     _objval(src._objval),
-    _col_x(0),
     _col_obj(0),
+    _col_x(0),
     _col_cbar(0),
-    _row_lhs(0),
-    _row_lower(0),
-    _row_price(0),
-    _row_range(0),
     _row_rhs(0),
-    _row_sense(0),
+    _row_lower(0),
     _row_upper(0),
-    _matrix_by_row(0),
+    _row_sense(0),
+    _row_range(0),
+    _row_price(0),
+    _row_lhs(0),
     _matrix_by_col(0),
+    _matrix_by_row(0),
 
     preObj_(0),			// do not copy presolve structures
     postActions_(0),
     postObj_(0),
-    savedConsys_(0),
     passLimit_(src.passLimit_),
-    keepIntegers_(src.keepIntegers_)
+    keepIntegers_(src.keepIntegers_),
+    savedConsys_(0),
+    saved_col_obj(0),
+    saved_row_rhs(0),
+    saved_row_lower(0),
+    saved_row_upper(0),
+    saved_row_sense(0),
+    saved_row_range(0),
+    saved_matrix_by_col(0),
+    saved_matrix_by_row(0)
 
 { if (src.consys)
   { bool r UNUSED = consys_dupsys(src.consys,&consys,src.consys->parts) ;
@@ -1674,6 +1786,7 @@ ODSI::OsiDylpSolverInterface (const OsiDylpSolverInterface& src)
     lpprob->consys = consys ; }
   else
   { lpprob = 0 ; }
+  solnIsFresh = src.solnIsFresh ;
 
   CLONE(lpopts_struct,src.initialSolveOptions,initialSolveOptions) ;
   CLONE(lpopts_struct,src.resolveOptions,resolveOptions) ;
@@ -1718,6 +1831,8 @@ inline OsiSolverInterface* ODSI::clone (bool copyData) const
   lhs object before we start. As with copy, statistics and hot start
   information are not copied over to the assignment target, nor does it inherit
   open files or terminal echo settings. Cached information is not replicated.
+  Presolve information simply should not exist at any point where one can
+  assign one ODSI object to another.
 */
 
 OsiDylpSolverInterface &ODSI::operator= (const OsiDylpSolverInterface &rhs)
@@ -1737,6 +1852,7 @@ OsiDylpSolverInterface &ODSI::operator= (const OsiDylpSolverInterface &rhs)
       lpprob->consys = consys ; }
     else
     { lpprob = 0 ; }
+    solnIsFresh = rhs.solnIsFresh ;
 
     CLONE(lpopts_struct,rhs.initialSolveOptions,initialSolveOptions) ;
     CLONE(lpopts_struct,rhs.resolveOptions,resolveOptions) ;
@@ -1755,18 +1871,33 @@ OsiDylpSolverInterface &ODSI::operator= (const OsiDylpSolverInterface &rhs)
     addedRowCnt = rhs.addedRowCnt ;
 
     _objval = rhs._objval ;
-    _col_x = 0 ;
     _col_obj = 0 ;
+    _col_x = 0 ;
     _col_cbar = 0 ;
-    _row_lhs = 0 ;
-    _row_lower = 0 ;
-    _row_price = 0 ;
-    _row_range = 0 ;
     _row_rhs = 0 ;
-    _row_sense = 0 ;
+    _row_lower = 0 ;
     _row_upper = 0 ;
-    _matrix_by_row = 0 ;
+    _row_sense = 0 ;
+    _row_range = 0 ;
+    _row_price = 0 ;
+    _row_lhs = 0 ;
     _matrix_by_col = 0 ;
+    _matrix_by_row = 0 ;
+
+    preObj_ = 0 ;
+    postActions_ = 0 ;
+    postObj_ = 0 ;
+    passLimit_ = rhs.passLimit_ ;
+    keepIntegers_ = rhs.keepIntegers_ ;
+    savedConsys_ = 0 ;
+    saved_col_obj = 0 ;
+    saved_row_rhs = 0 ;
+    saved_row_lower = 0 ;
+    saved_row_upper = 0 ;
+    saved_row_sense = 0 ;
+    saved_row_range = 0 ;
+    saved_matrix_by_col = 0 ;
+    saved_matrix_by_row = 0 ;
 
     int n = getNumCols() ;
     int m = getNumRows() ;
@@ -1842,6 +1973,7 @@ void ODSI::destruct_problem (bool preserve_interface)
   if (consys)
   { consys_free(consys) ;
     consys = 0 ; }
+  solnIsFresh = false ;
   addedColCnt = 0 ;
   addedRowCnt = 0 ;
  
@@ -1853,7 +1985,7 @@ void ODSI::destruct_problem (bool preserve_interface)
     activeBasis = 0 ;
     activeIsModified = false ; }
 
-  destruct_cache() ;
+  destruct_cache(true,true) ;
 
   if (preserve_interface == false)
   { if (initialSolveOptions)
@@ -1990,10 +2122,14 @@ void ODSI::reset ()
 
 inline void ODSI::setContinuous (int j)
 
-{ if (!consys->vtyp)
-  { bool r UNUSED = consys_attach(consys,CONSYS_VTYP,sizeof(vartyp_enum),
-				  reinterpret_cast<void **>(&consys->vtyp)) ;
-    assert(r) ; }
+{ indexCheck(j,true,"setContinuous") ;
+
+  if (!consys->vtyp)
+  { bool r = consys_attach(consys,CONSYS_VTYP,sizeof(vartyp_enum),
+			   reinterpret_cast<void **>(&consys->vtyp)) ;
+    if (!r)
+    { lp_retval = lpFATAL ;
+      return ; } }
 /*
   Keep up with the bookkeeping.
 */
@@ -2007,28 +2143,33 @@ inline void ODSI::setContinuous (int j)
       break ; }
     default:
     { break ; } }
-
+/*
+  Set the new type. In general, changing the type can result in a change in
+  the optimal solution.
+*/
   consys->vtyp[idx(j)] = vartypCON ;
+  solnIsFresh = false ;
   
   return ; }
 
 
 inline void ODSI::setContinuous (const int* indices, int len)
 
-{ if (!consys->vtyp)
-  { bool r UNUSED = consys_attach(consys,CONSYS_VTYP,sizeof(vartyp_enum),
-				  reinterpret_cast<void **>(&consys->vtyp)) ;
-    assert(r) ; }
+{ for (int i = 0 ; i < len ; i++) setContinuous(indices[i]) ;
 
-  for (int i = 0 ; i < len ; i++) setContinuous(indices[i]) ; }
+  return ; }
   
 
 inline void ODSI::setInteger (int j)
 
-{ if (!consys->vtyp)
-  { bool r UNUSED = consys_attach(consys,CONSYS_VTYP,sizeof(vartyp_enum),
-				  reinterpret_cast<void **>(&consys->vtyp)) ;
-    assert(r) ; }
+{ indexCheck(j,true,"setInteger") ;
+
+  if (!consys->vtyp)
+  { bool r = consys_attach(consys,CONSYS_VTYP,sizeof(vartyp_enum),
+			   reinterpret_cast<void **>(&consys->vtyp)) ;
+    if (!r)
+    { lp_retval = lpFATAL ;
+      return ; } }
 /*
   Keep up with the bookkeeping.
 */
@@ -2042,25 +2183,26 @@ inline void ODSI::setInteger (int j)
       break ; }
     default:
     { break ; } }
-
+/*
+  Set the new type. In general, changing the type can result in a change in
+  the optimal solution.
+*/
   if (getColLower()[j] == 0.0 && getColUpper()[j] == 1.0)
   { consys->vtyp[idx(j)] = vartypBIN ;
     consys->binvcnt++ ; }
   else
   { consys->vtyp[idx(j)] = vartypINT ;
     consys->intvcnt++ ; }
+  solnIsFresh = false ;
 
   return ; }
 
 
 inline void ODSI::setInteger (const int* indices, int len)
 
-{ if (!consys->vtyp)
-  { bool r UNUSED = consys_attach(consys,CONSYS_VTYP,sizeof(vartyp_enum),
-				  reinterpret_cast<void **>(&consys->vtyp)) ;
-    assert(r) ; }
+{ for (int i = 0 ; i < len ; i++) setInteger(indices[i]) ;
 
-  for (int i = 0 ; i < len ; i++) setInteger(indices[i]) ; }
+  return ; }
 
 
 /*!
@@ -2077,13 +2219,21 @@ inline void ODSI::setInteger (const int* indices, int len)
 
 inline void ODSI::setColLower (int i, double val)
 
-{ if (!consys->vlb)
-  { bool r UNUSED = consys_attach(consys,CONSYS_VLB,sizeof(double),
-				  reinterpret_cast<void **>(&consys->vlb)) ;
-    assert(r) ; }
+{ indexCheck(i,true,"setColLower") ;
 
+  if (!consys->vlb)
+  { bool r = consys_attach(consys,CONSYS_VLB,sizeof(double),
+				  reinterpret_cast<void **>(&consys->vlb)) ;
+    if (!r)
+    { lp_retval = lpFATAL ;
+      return ; } }
+/*
+  Change the bound. In general, this can result in a change in the optimal
+  solution.
+*/
   consys->vlb[idx(i)] = val ;
   if (lpprob) setflg(lpprob->ctlopts,lpctlLBNDCHG) ;
+  solnIsFresh = false ;
 
   if (isInteger(i))
   { if (floor(val) != val)
@@ -2099,13 +2249,21 @@ inline void ODSI::setColLower (int i, double val)
 */
 inline void ODSI::setColUpper (int i, double val)
 
-{ if (!consys->vub)
-  { bool r UNUSED = consys_attach(consys,CONSYS_VUB,sizeof(double),
-				  reinterpret_cast<void **>(&consys->vub)) ;
-    assert(r) ; }
+{ indexCheck(i,true,"setColUpper") ;
 
+  if (!consys->vub)
+  { bool r = consys_attach(consys,CONSYS_VUB,sizeof(double),
+			   reinterpret_cast<void **>(&consys->vub)) ;
+    if (!r)
+    { lp_retval = lpFATAL ;
+      return ; } }
+/*
+  Change the bound. In general, this can result in a change in the optimal
+  solution.
+*/
   consys->vub[idx(i)] = val ;
   if (lpprob) setflg(lpprob->ctlopts,lpctlUBNDCHG) ;
+  solnIsFresh = false ;
 
   if (isInteger(i))
   { if (floor(val) != val)
@@ -2116,27 +2274,39 @@ inline void ODSI::setColUpper (int i, double val)
 
 
 /*!
-  A call to this routine destroys all cached row values.
+  A call to this routine destroys all cached row values and any cached
+  solution.
 */
 
 void ODSI::setRowType (int i, char sense, double rhs, double range)
 
-{ int k = idx(i) ;
-
+{ indexCheck(i,false,"setRowType") ;
+/*
+  Install the change. In general, this can change the optimal solution.
+*/
+  int k = idx(i) ;
   gen_rowiparms(&consys->ctyp[k],&consys->rhs[k],&consys->rhslow[k],
 		sense,rhs,range) ;
   if (resolveOptions) resolveOptions->forcewarm = true ;
-
-  destruct_row_cache() ; }
+  solnIsFresh = false ;
+/*
+  Destroy cached values. We need to clear the structural side of the row
+  cache.
+*/
+  destruct_row_cache(true) ;
+  destruct_col_cache(false) ; }
 
 
 /*!
-  A call to this routine destroys all cached row values.
+  A call to this routine destroys all cached row values and any cached solution
+  values.
 */
 
 void ODSI::setRowUpper (int i, double val)
 
-{ int k = idx(i) ;
+{ indexCheck(i,false,"setRowUpper") ;
+
+  int k = idx(i) ;
   double clbi = -odsiInfinity ;
 
   switch (consys->ctyp[k])
@@ -2153,21 +2323,28 @@ void ODSI::setRowUpper (int i, double val)
       break ; }
     default:
     { assert(false) ; } }
-  
+/*
+  Install the change. In general, this can change the optimal solution.
+*/
   gen_rowiparms(&consys->ctyp[k],&consys->rhs[k],&consys->rhslow[k],
 		clbi,val) ;
   if (lpprob) setflg(lpprob->ctlopts,lpctlRHSCHG) ;
+  solnIsFresh = false ;
 
-  destruct_row_cache() ; }
+  destruct_row_cache(true) ;
+  destruct_col_cache(false) ; }
 
 
 /*!
-  A call to this routine destroys all cached row values.
+  A call to this routine destroys all cached row values and any cached solution
+  values.
 */
 
 void ODSI::setRowLower (int i, double val)
 
-{ int k = idx(i) ;
+{ indexCheck(i,false,"setRowLower") ;
+
+  int k = idx(i) ;
   double cubi ;
   contyp_enum ctypi = consys->ctyp[k] ;
 
@@ -2175,19 +2352,25 @@ void ODSI::setRowLower (int i, double val)
     cubi = odsiInfinity ;
   else
     cubi = consys->rhs[k] ;
-
+/*
+  Install the change. In general, this can change the optimal solution.
+*/
   gen_rowiparms(&consys->ctyp[k],&consys->rhs[k],&consys->rhslow[k],
 		val,cubi) ;
   if (lpprob) setflg(lpprob->ctlopts,lpctlRHSCHG) ;
+  solnIsFresh = false ;
 
-  destruct_row_cache() ; }
+  destruct_row_cache(true) ;
+  destruct_col_cache(false) ; }
 
 
 /*!
   Add a row to the constraint system given the coefficients and upper and lower
   bounds on the left-hand-side.
 
-  A call to this routine destroys all cached values.
+  A call to this routine destroys all cached values. Unlike deleteRows,
+  however, we don't need to fiddle with the basis, as dylp will automatically
+  pick up the added constraints.
 */
 
 inline void ODSI::addRow (const CoinPackedVectorBase &row,
@@ -2206,7 +2389,9 @@ inline void ODSI::addRow (const CoinPackedVectorBase &row,
   Add a row to the constraint system given the coefficients, constraint sense,
   right-hand-side value, and range.
 
-  A call to this routine destroys all cached values.
+  A call to this routine destroys all cached values. Unlike deleteRows,
+  however, we don't need to fiddle with the basis, as dylp will automatically
+  pick up the added constraints.
 */
 
 inline void ODSI::addRow (const CoinPackedVectorBase &coin_row, 
@@ -2224,7 +2409,9 @@ inline void ODSI::addRow (const CoinPackedVectorBase &coin_row,
 /*!
   One cut at a time, please, when it comes to rows.
 
-  A call to this routine destroys all cached values.
+  A call to this routine destroys all cached values. Unlike deleteRows,
+  however, we don't need to fiddle with the basis, as dylp will automatically
+  pick up the added constraints.
 */
 
 void ODSI::applyRowCut (const OsiRowCut &cut)
@@ -2254,7 +2441,8 @@ void ODSI::deleteRows (int count, const int* rows)
 
 { if (count <= 0) return ;
 /*
-  Sort the indices and do the deletions, one by one.
+  Sort the indices and do the deletions, one by one. This invalidates any
+  existing solution in lpprob.
 */
   vector<int> lclrows = vector<int>(&rows[0],&rows[count]) ;
 
@@ -2262,8 +2450,11 @@ void ODSI::deleteRows (int count, const int* rows)
 
   for (int k = count-1 ; k >= 0 ; k--)
   { int i = idx(lclrows[k]) ;
-    bool r UNUSED = consys_delrow_stable(consys,i) ;
-    assert(r) ; }
+    bool r = consys_delrow_stable(consys,i) ;
+    if (!r)
+    { lp_retval = lpFATAL ;
+      return ; } }
+  solnIsFresh = false ;
 /*
   Now, see if there's an active basis. If so, check that all the constraints
   to be deleted are slack. If they are, we can delete them from activeBasis
@@ -2287,22 +2478,24 @@ void ODSI::deleteRows (int count, const int* rows)
       activeBasis = 0 ;
       activeIsModified = false ; } }
 
-  destruct_cache() ; }
+  destruct_cache(true,false) ; }
 
 
 
 /*!
-  Change a coefficient in the objective function.
+  Change a coefficient in the objective function. In general, this can change
+  the optimal solution.
 */
 
 void ODSI::setObjCoeff (int j, double objj)
 
-{ if (j >= getNumCols()) return ;
-
+{ indexCheck(j,true,"setObjCoeff") ;
+  
   consys->obj[idx(j)] = getObjSense()*objj ;
   if (_col_obj) _col_obj[j] = objj ;
   if (lpprob) setflg(lpprob->ctlopts,lpctlOBJCHG) ;
-  calc_objval() ; }
+
+  return ; }
   
 
 /*!
@@ -2315,6 +2508,8 @@ void ODSI::setObjSense (double val)
   The `natural' action of OSI (and dylp) is minimisation. Maximisation is
   accomplished as min -cx. So using -1 for maximisation is more natural
   than you'd think at first glance.
+
+  Changing the objective sense will in general change the optimal solution.
 */
 
 { int n = getNumCols() ;
@@ -2322,7 +2517,8 @@ void ODSI::setObjSense (double val)
   if (n > 0 && val != obj_sense)
   { double *tmpobj = INV_VEC(double,consys->obj) ;
     std::transform(tmpobj,tmpobj+n,tmpobj,std::negate<double>()) ;
-    if (lpprob) setflg(lpprob->ctlopts,lpctlOBJCHG) ; }
+    if (lpprob) setflg(lpprob->ctlopts,lpctlOBJCHG) ;
+    solnIsFresh = false ; }
   
   obj_sense = val ;
   
@@ -2388,7 +2584,8 @@ void ODSI::deleteCols (int count, const int* cols)
 
 { if (count <= 0) return ;
 /*
-  Sort the indices and do the deletions, one by one.
+  Sort the indices and do the deletions, one by one. This invalidates the
+  current optimal solution.
 */
   vector<int> lclcols = vector<int>(&cols[0],&cols[count]) ;
 
@@ -2396,8 +2593,11 @@ void ODSI::deleteCols (int count, const int* cols)
 
   for (int k = 0 ; k < count ; k++)
   { int j = idx(lclcols[k]) ;
-    bool r UNUSED = consys_delcol(consys, j) ;
-    assert(r) ; }
+    bool r = consys_delcol(consys, j) ;
+    if (!r)
+    { lp_retval = lpFATAL ;
+      return ; } }
+  solnIsFresh = false ;
 /*
   Now, see if there's an active basis. If so, check that all the variables to
   be deleted are nonbasic. If they are, we can delete them from activeBasis
@@ -2421,7 +2621,7 @@ void ODSI::deleteCols (int count, const int* cols)
       activeBasis = 0 ;
       activeIsModified = false ; } }
 
-  destruct_cache() ; }
+  destruct_cache(false,true) ; }
 
 
 /*!
@@ -3719,6 +3919,14 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
 # endif
 
 /*
+  Check for constraint system corruption, and set lp_retval to lpFATAL if
+  we find it. If we currently own the solver, release it.
+*/
+  if (flgon(consys->opts,CONSYS_CORRUPT))
+  { if (dylp_owner == this)
+    { detach_dylp() ; }
+    return (lpFATAL) ; }
+/*
   Set up options and tolerances, make sure the phase isn't dyDONE, and
   reinitialise the statistics if we're collecting them.
 */
@@ -3806,10 +4014,15 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
   { 
 #   ifdef DYLP_POSTMORTEM
 /*
-  Write an mps file with the failed problem.
-  This is the hard way to do this, given how close we are to dylp. But I wanted
-  to try it to exercise the code. Calling destruct_cache() is necessary to make
-  sure that writeMps sees any constraint flips.
+  Write an mps file with the failed problem.  This is the hard way to do
+  this, given how close we are to dylp. But I wanted to try it to exercise
+  the code. Arguably I should call destruct_*_cache in order that writeMps
+  sees any constraint flips. But that's a consistency problem. Cached
+  structural vectors (including row descriptions and matrices) are normally
+  preserved across a call to a solve routine. If presolve is active, then
+  they are saved in the presolve cache area, but if we're solving without
+  presolve, they are still in the main cache area. Right now, seems more
+  trouble to sort out than it's worth.
 */
     int saveInfo ;
     void *foo = &saveInfo ;
@@ -3825,7 +4038,6 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
     lcl_opts.print = initialSolveOptions->print ;
     dy_gtxecho = initial_gtxecho ;
     std::cout << "Verbosity now maxed at " << level << ".\n" ;
-    destruct_cache() ;
     writeMps("dylpPostmortem","mps") ;
 #   endif
     if (lcl_opts.forcecold == true) lcl_opts.factor /= 2 ;
@@ -3896,6 +4108,7 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
       { cndx = basis->el[ndx].cndx ;
 	if (flipped[cndx] == true) lpprob->y[ndx] = -lpprob->y[ndx] ; } } }
   FREE(flipped) ;
+  solnIsFresh = true ;
 /*
   That's it, we've done our best. Do a little printing and return.
 */
@@ -4003,13 +4216,16 @@ void ODSI::initialSolve ()
 #   endif
   }
 /*
-  Remove any active basis and trash any cached solution.
+  Remove any active basis and trash any cached solution. The calls to
+  destruct_*_cache remove only the cached solution vectors. If we're
+  presolving, saveOriginalSys has moved the cached structural vectors and
+  matrices to a save place, otherwise they'll be unaffected.
 */
   delete activeBasis ;
   activeBasis = 0 ;
   activeIsModified = false ;
-  destruct_col_cache() ;
-  destruct_row_cache() ;
+  destruct_col_cache(false) ;
+  destruct_row_cache(false) ;
 /*
   Establish logging and echo values, and invoke the solver.
 */
@@ -4030,61 +4246,90 @@ void ODSI::initialSolve ()
 # ifndef NDEBUG
   double firstLPTime = CoinCpuTime() ;
 # endif
+
   hdl->message(ODSI_LPRESULT,messages_)
     << dy_prtlpret(lp_retval)
     << getObjSense()*(lpprob->obj+bias) << lpprob->iters
     << CoinMessageEol ;
-  if (!(lp_retval == lpOPTIMAL || lp_retval == lpINFEAS ||
-	lp_retval == lpUNBOUNDED || lp_retval == lpITERLIM))
-  { throw CoinError("Call to dylp failed (cold).",
-		    "initialSolve","OsiDylpSolverInterface") ; }
+/*
+  Separate the failure cases from the successful cases. lpITERLIM is
+  questionable in this context (initial solution to the lp) but it's
+  considered ok in warm and hot start (in particular, for strong branching).
+  Since we can't tell from here, include it in the successes.
+*/
+  bool lpOK ;
+  if ((lp_retval == lpOPTIMAL || lp_retval == lpINFEAS ||
+       lp_retval == lpUNBOUNDED || lp_retval == lpITERLIM))
+  { lpOK = true ; }
+  else
+  { lpOK = false ; }
+
 # ifndef NDEBUG
   dylp_printsoln(true,true) ;
 # endif
 /*
   If we did presolve, we now need to do a postsolve, install a warm start,
-  and call dylp one more time to set up the optimal solution with the original
-  constraint system. Note that assignPresolveToPostsolve destroys the presolve
-  object. When we're done, we again need to clean out the active basis and
-  cached solution established as we set up for the second call to dylp.
+  and call dylp one more time to set up the optimal solution with the
+  original constraint system. Note that initialisePostsolve destroys the
+  presolve object (by converting it to the postsolve object).
+  installPostsolve brings back the cached original constraint system, the
+  cached structural vectors and matrices, and creates a warm start
+  appropriate for the original system.
+
+  When we're done, we again need to clean out the active basis that was
+  established as we set up for the second call to dylp.
 */
-# ifndef NDEBUG
-  double postsolveTime = firstLPTime ;
-  double secondLPTime = firstLPTime ;
-# endif
-  int presolIters = lpprob->iters ;
-  if (presolving == true)
-  { postObj_ = initialisePostsolve(preObj_) ;
-    doPostsolve() ;
-    installPostsolve() ;
+  if (lpOK)
+  {
 #   ifndef NDEBUG
-    postsolveTime = CoinCpuTime() ;
+    double postsolveTime = firstLPTime ;
+    double secondLPTime = firstLPTime ;
 #   endif
-    lp_retval = do_lp(startWarm) ;
+    int presolIters = lpprob->iters ;
+    if (presolving == true)
+    { postObj_ = initialisePostsolve(preObj_) ;
+      doPostsolve() ;
+      installPostsolve() ;
+#     ifndef NDEBUG
+      postsolveTime = CoinCpuTime() ;
+#     endif
+      lp_retval = do_lp(startWarm) ;
+#     ifndef NDEBUG
+      secondLPTime = CoinCpuTime() ;
+#     endif
+      hdl->message(ODSI_LPRESULT,messages_)
+	<< dy_prtlpret(lp_retval) << getObjSense()*lpprob->obj << lpprob->iters
+	<< CoinMessageEol ;
+      if (!(lp_retval == lpOPTIMAL || lp_retval == lpINFEAS ||
+	    lp_retval == lpUNBOUNDED))
+      { throw CoinError("Call to dylp failed (postsolve).",
+			"initialSolve","OsiDylpSolverInterface") ; }
+      lpprob->iters += presolIters ;
+      delete activeBasis ;
+      activeBasis = 0 ;
+      activeIsModified = false ; }
 #   ifndef NDEBUG
-    secondLPTime = CoinCpuTime() ;
+    printf("Problem %s: tot %.4f pre %.4f lp1 %d %.4f post %.4f lp2 %d %.4f\n",
+	   consys->nme,secondLPTime-startTime,
+	   presolveTime-startTime,
+	   presolIters,firstLPTime-presolveTime,
+	   postsolveTime-firstLPTime,
+	   lpprob->iters-presolIters,secondLPTime-postsolveTime) ;
 #   endif
-    hdl->message(ODSI_LPRESULT,messages_)
-      << dy_prtlpret(lp_retval) << getObjSense()*lpprob->obj << lpprob->iters
-      << CoinMessageEol ;
-    if (!(lp_retval == lpOPTIMAL || lp_retval == lpINFEAS ||
-	  lp_retval == lpUNBOUNDED))
-    { throw CoinError("Call to dylp failed (postsolve).",
-		      "initialSolve","OsiDylpSolverInterface") ; }
-    lpprob->iters += presolIters ;
-    delete activeBasis ;
-    activeBasis = 0 ;
-    activeIsModified = false ;
-    destruct_col_cache() ;
-    destruct_row_cache() ; }
-# ifndef NDEBUG
-  printf("Problem %s: tot %.4f pre %.4f lp1 %d %.4f post %.4f lp2 %d %.4f\n",
-	 consys->nme,secondLPTime-startTime,
-	 presolveTime-startTime,
-	 presolIters,firstLPTime-presolveTime,
-	 postsolveTime-firstLPTime,
-	 lpprob->iters-presolIters,secondLPTime-postsolveTime) ;
-# endif
+  }
+/*
+  LP failure. Destroy the presolve object.
+*/
+  else
+  { if (presolving == true)
+    { destruct_presolve() ; } }
+/*
+  There should be no cached solution vectors at this point.
+*/
+  assert(_col_x == 0) ;
+  assert(_col_cbar == 0) ;
+  assert(_row_lhs == 0) ;
+  assert(_row_price == 0) ;
 /*
   Tidy up. If all went well, indicate this object owns the solver, set the
   objective, and set the active basis. If we've failed, do the opposite.
@@ -4094,7 +4339,7 @@ void ODSI::initialSolve ()
   dylp overloads lpprob->obj with the index of the unbounded variable when
   returning lpUNBOUNDED, so we need to fake the objective.
 */
-  if (flgon(lpprob->ctlopts,lpctlDYVALID))
+  if (lpOK && flgon(lpprob->ctlopts,lpctlDYVALID))
   { dylp_owner = this ;
     if (lpprob->lpret == lpUNBOUNDED)
     { _objval = -getObjSense()*getInfinity() ; }
@@ -4135,7 +4380,8 @@ inline bool ODSI::isProvenPrimalInfeasible () const
 
 
 /*!
-  Aka primal unbounded.
+  Aka primal unbounded. There is some loss here, as dylp does not have
+  a way to indicate both primal and dual infeasibility.
 */
 
 inline bool ODSI::isProvenDualInfeasible () const
@@ -4151,13 +4397,16 @@ inline bool ODSI::isProvenDualInfeasible () const
 /*
   As implemented here, we simply look for the standard codes that indicate
   optimality, unboundedness, or infeasibility. Anything else qualifies as
-  abandoned.
+  abandoned.  Hitting the iteration limit is specifically not included here
+  --- use isIterationLimitReached to check that. There are applications
+  (e.g., strong branching) that deliberately use an artificially low
+  iteration limit.
 */
 
 inline bool ODSI::isAbandoned () const
 
 { if (lp_retval == lpOPTIMAL || lp_retval == lpUNBOUNDED ||
-      lp_retval == lpINFEAS)
+      lp_retval == lpINFEAS || lp_retval == lpITERLIM)
     return (false) ;
   else
     return (true) ; }
@@ -4172,6 +4421,7 @@ inline bool ODSI::isAbandoned () const
 
 /*!
   Returns the objective function value.
+
   The default implementation calculates the dot product of the objective
   and the current primal solution, then subtracts any constant offset.
   Note that if there is no current solution, the objective will be zero in the
@@ -4210,9 +4460,11 @@ const double* ODSI::getColSolution () const
 
   If we have a cached solution in _col_x, we'll use it. setColSolution writes
   the solution directly into _col_x, as does pessimal_primal().
+
+  If the solver is empty (no consys), return null.
   
-  If an lpprob exists, then we have a solution from dylp.  Calls to the
-  solver will invalidate cached data, including _col_x, but will not
+  If an lpprob exists and is fresh, then we have a solution from dylp.  Calls
+  to the solver will invalidate cached data, including _col_x, but will not
   regenerate it, hence we may need to do that here.  Dylp returns a vector x
   of basic variables, in basis order, and a status vector. To assemble a
   complete primal solution, it's necessary to construct one vector that
@@ -4228,38 +4480,46 @@ const double* ODSI::getColSolution () const
 */
 { if (_col_x)
   { return _col_x ; }
+  if (consys == 0)
+  { return (0) ; }
 
-  if (lpprob)
-  { assert(lpprob->status && lpprob->x) ;
+# ifdef ODSI_STRICTLY_FRESH
+  if (!solnIsFresh)
+  { throw CoinError("Constraint system has changed since last call to solver.",
+		    "getColSolution","OsiDylpSolverInterface") ;
+    return (0) ; }
+# endif
 
-    int n = getNumCols() ;
-    flags statj ;
-    _col_x = new double[n] ;
+  assert(lpprob->status && lpprob->x) ;
+
+  int n = getNumCols() ;
+  flags statj ;
+  _col_x = new double[n] ;
 
 /*
   Walk the status vector, taking values for basic variables from lpprob.x and
   values for nonbasic variables from the appropriate bounds vector.
 */
-    for (int j = 0 ; j < n ; j++)
-    { statj = lpprob->status[idx(j)] ;
-      if (((int) statj) < 0)
-      { int k = -((int) statj) ;
-	_col_x[j] = lpprob->x[k] ; }
-      else
-      { switch (statj)
-	{ case vstatNBLB:
-	  case vstatNBFX:
-	  { _col_x[j] = consys->vlb[idx(j)] ;
-	    break ; }
-	  case vstatNBUB:
-	  { _col_x[j] = consys->vub[idx(j)] ;
-	    break ; }
-	  case vstatNBFR:
-	  { _col_x[j] = 0 ;
-	    break ; }
-	  case vstatSB:
-	  { _col_x[j] = -odsiInfinity ;
-	    break ; } } } } }
+  for (int j = 0 ; j < n ; j++)
+  { statj = lpprob->status[idx(j)] ;
+    if (((int) statj) < 0)
+    { int k = -((int) statj) ;
+      _col_x[j] = lpprob->x[k] ; }
+    else
+    { switch (statj)
+      { case vstatNBLB:
+	case vstatNBFX:
+	{ _col_x[j] = consys->vlb[idx(j)] ;
+	  break ; }
+	case vstatNBUB:
+	{ _col_x[j] = consys->vub[idx(j)] ;
+	  break ; }
+	case vstatNBFR:
+	{ _col_x[j] = 0 ;
+	  break ; }
+	case vstatSB:
+	{ _col_x[j] = -odsiInfinity ;
+	  break ; } } } }
 
   return (_col_x) ; }
 
@@ -4277,25 +4537,36 @@ const double* ODSI::getRowPrice () const
   If we have a cached solution in _row_price, we'll use it.  setRowPrice
   writes the duals directly into _row_price.
 
+  If the solver is empty (no consys), return null.
+
   If an lpprob exists, we have a solution from dylp.  Dylp reports dual
   variables in basis order, so we need to write a vector with the duals
   dropped into position by row index.
 */
 
-{ if (_row_price) return (_row_price) ;
+{ if (_row_price)
+  { return (_row_price) ; }
+  if (consys == 0)
+  { return (0) ; }
 
-  if (lpprob)
-  { assert(lpprob->basis && lpprob->y) ;
+# ifdef ODSI_STRICTLY_FRESH
+  if (!solnIsFresh)
+  { throw CoinError("Constraint system has changed since last call to solver.",
+		    "getRowPrice","OsiDylpSolverInterface") ;
+    return (0) ; }
+# endif
 
-    int m = getNumRows() ;
-    _row_price = new double[m] ;
-    basis_struct* basis = lpprob->basis ;
+  assert(lpprob->basis && lpprob->y) ;
 
-    memset(_row_price,0,m*sizeof(double)) ;
+  int m = getNumRows() ;
+  _row_price = new double[m] ;
+  basis_struct* basis = lpprob->basis ;
 
-    for (int k = 1 ; k <= basis->len ; k++)
-    { int i = inv(basis->el[k].cndx) ;
-      _row_price[i] = lpprob->y[k]*getObjSense() ; } }
+  memset(_row_price,0,m*sizeof(double)) ;
+
+  for (int k = 1 ; k <= basis->len ; k++)
+  { int i = inv(basis->el[k].cndx) ;
+    _row_price[i] = lpprob->y[k]*getObjSense() ; }
 
   return (_row_price) ; }
 
@@ -4341,6 +4612,7 @@ const double *ODSI::getRowActivity () const
       { bool r = consys_getcol_pk(consys,idx(j),&aj) ;
 	if (!r)
 	{ delete[] _row_lhs ;
+	  _row_lhs = 0 ;
 	  if (aj) pkvec_free(aj) ;
 	  return (0) ; }
 	if (fabs(xj) >= odsiInfinity)
@@ -5434,17 +5706,25 @@ void ODSI::resolve ()
   if (!(phase == dyPRIMAL1 || phase == dyPRIMAL2 || phase == dyDUAL))
     lpprob->phase = dyINV ;
   lp_retval = do_lp(startWarm) ;
-  if (!(lp_retval == lpOPTIMAL || lp_retval == lpINFEAS ||
-	lp_retval == lpUNBOUNDED || lp_retval == lpITERLIM))
-  { throw CoinError("Call to dylp failed (warm).",
-		    "resolve","OsiDylpSolverInterface") ; }
+/*
+  Separate the failure cases from the successful cases. lpITERLIM is
+  considered ok in warm and hot start (in particular, for strong branching).
+  Since we can't tell from here, include it in the successes.
+*/
+  bool lpOK ;
+  if ((lp_retval == lpOPTIMAL || lp_retval == lpINFEAS ||
+       lp_retval == lpUNBOUNDED || lp_retval == lpITERLIM))
+  { lpOK = true ; }
+  else
+  { lpOK = false ; }
 /*
   Trash the cached solution. This needs to happen regardless of how the lp
   turned out. It needs to be done ahead of getWarmStart, which will try to
-  access reduced costs.
+  access reduced costs. We should only need to empty the solution vectors, not
+  the structural vectors.
 */
-  destruct_col_cache() ;
-  destruct_row_cache() ;
+  destruct_col_cache(false) ;
+  destruct_row_cache(false) ;
 /*
   Tidy up. If all went well, indicate this object owns the solver, set the
   objective, and set the active basis. If we've failed, do the opposite.
@@ -5459,7 +5739,7 @@ void ODSI::resolve ()
   delete activeBasis ;
   activeBasis = 0 ;
   activeIsModified = false ;
-  if (flgon(lpprob->ctlopts,lpctlDYVALID))
+  if (lpOK && flgon(lpprob->ctlopts,lpctlDYVALID))
   { dylp_owner = this ;
     if (lpprob->lpret == lpUNBOUNDED)
     { _objval = -getObjSense()*getInfinity() ; }
@@ -5567,11 +5847,10 @@ void ODSI::solveFromHotStart ()
     { throw CoinError("Hot start failed --- invalid/missing hot start object.",
 		      "solveFromHotStart","OsiDylpSolverInterface") ; } }
 /*
-  If no other ODSI object has used the solver, all we need to do is
-  make sure forcecold and forcewarm are off. The basis should be ready.
-  Note that dylp does need to know what's changed: any of bounds, rhs &
-  rhslow, or objective. The various routines that make these changes
-  set the flags.
+  If no other ODSI object has used the solver, all we need to do is check the
+  iteration limit. The basis should be ready.  Note that dylp does need to
+  know what's changed: any of bounds, rhs & rhslow, or objective. The various
+  routines that make these changes set the flags.
 */
   else
   { int tmp_iterlim = -1 ;
@@ -5593,17 +5872,25 @@ void ODSI::solveFromHotStart ()
       resolveOptions->iterlim = (hotlim/3 > 0)?hotlim/3:1 ; }
 
     lp_retval = do_lp(startHot) ;
-    if (!(lp_retval == lpOPTIMAL || lp_retval == lpINFEAS ||
-	  lp_retval == lpUNBOUNDED || lp_retval == lpITERLIM))
-    { throw CoinError("Call to dylp failed (hot).",
-		      "solveFromHotStart","OsiDylpSolverInterface") ; }
+/*
+  Separate the failure cases from the successful cases. lpITERLIM is
+  considered ok in warm and hot start (in particular, for strong branching).
+  Since we can't tell from here, include it in the successes.
+*/
+  bool lpOK ;
+  if ((lp_retval == lpOPTIMAL || lp_retval == lpINFEAS ||
+       lp_retval == lpUNBOUNDED || lp_retval == lpITERLIM))
+  { lpOK = true ; }
+  else
+  { lpOK = false ; }
 /*
   Trash the cached solution. This needs to happen regardless of how the lp
   turned out. It needs to be done ahead of getWarmStart, which will try to
-  access reduced costs.
+  access reduced costs. We should only need to empty the solution vectors, not
+  the structural vectors.
 */
-    destruct_col_cache() ;
-    destruct_row_cache() ;
+    destruct_col_cache(false) ;
+    destruct_row_cache(false) ;
 /*
   Tidy up. If all went well, indicate this object owns the solver, set the
   objective, and set the active basis. If we've failed, do the opposite.
@@ -5618,7 +5905,7 @@ void ODSI::solveFromHotStart ()
     delete activeBasis ;
     activeBasis = 0 ;
     activeIsModified = false ;
-    if (flgon(lpprob->ctlopts,lpctlDYVALID))
+    if (lpOK && flgon(lpprob->ctlopts,lpctlDYVALID))
     { if (lpprob->lpret == lpUNBOUNDED)
       { _objval = -getObjSense()*getInfinity() ; }
       else
@@ -5714,6 +6001,45 @@ void ODSI::activateRowCutDebugger (const double *solution)
   { rowCutDebugger_ = new OsiRowCutDebugger(*this,solution) ; }
 
   return ; }
+
+
+# ifdef ODSI_PARANOIA
+/*!
+  This routine will check that the index passed as a parameter is a valid
+  variable (isCol == true) or constraint (isCol == false) index and throw an
+  error if it's out of bounds. The index is assumed to be zero-based, which is
+  appropriate for indices specified by an ODSI client.
+
+  This routine must be active (i.e., ODSI_PARANOIA must be defined) in order
+  for OsiCbc(dylp) to pass the OsiCbc unit test.
+*/
+inline void ODSI::indexCheck (int k, bool isCol, std::string rtnnme)
+
+{ std::string message ;
+
+  if (!consys)
+  { message = "No constraint system!" ;
+    throw CoinError(message,rtnnme,"OsiDylpSolverInterface") ; }
+
+  int m = getNumRows() ;
+  int n = getNumCols() ;
+
+  if (isCol)
+  { if (0 > k || k > n)
+    { message = "Column index out of range!" ;
+      throw CoinError(message,rtnnme,"OsiDylpSolverInterface") ; } }
+  else
+  { if (0 > k || k > m)
+    { message = "Row index out of range!" ;
+      throw CoinError(message,rtnnme,"OsiDylpSolverInterface") ; } }
+  
+  return ; }
+
+#else
+
+inline void ODSI::indexCheck (int k, bool isCol, std::string rtnnme) {} ;
+
+#endif
 
 //@} // DebugMethods
 

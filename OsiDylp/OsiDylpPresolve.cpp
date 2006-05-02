@@ -598,8 +598,8 @@ void ODSI::doPresolve ()
       colsDropped = preObj_->countEmptyCols() ;
       colCnt = preObj_->getNumCols() ;
       rowCnt = preObj_->getNumRows() ;
-      rowShrink = ((double) rowsDropped)/rowCnt ;
-      colShrink = ((double) colsDropped)/colCnt ;
+      rowShrink = ((double) (rowsDropped-lastRowsDropped))/rowCnt ;
+      colShrink = ((double) (colsDropped-lastColsDropped))/colCnt ;
 
       handler_->message(ODSI_PRESOL_PASS,messages_)
 	  << currentPass << rowsDropped-lastRowsDropped << rowShrink
@@ -721,6 +721,21 @@ void ODSI::saveOriginalSys ()
   savedConsys_ = consys ;
   consys = 0 ;
   if (lpprob) lpprob->consys = 0 ;
+/*
+  Presolve should be invisible to clients, and one reasonable expectation is
+  that pointers to structural vectors obtained from ODSI will remain constant
+  across calls to the solver. However, the presolved problem is structurally
+  different, so we need to hide these while dylp works on the presolved
+  problem.
+*/
+  saved_col_obj = _col_obj ; _col_obj = 0 ;
+  saved_row_rhs = _row_rhs ; _row_rhs = 0 ;
+  saved_row_lower = _row_lower ; _row_lower = 0 ;
+  saved_row_upper = _row_upper ; _row_upper = 0 ;
+  saved_row_sense = _row_sense ; _row_sense = 0 ;
+  saved_row_range = _row_range ; _row_range = 0 ;
+  saved_matrix_by_col = _matrix_by_col ; _matrix_by_col = 0 ;
+  saved_matrix_by_row = _matrix_by_row ; _matrix_by_row = 0 ;
 
   return ; }
 
@@ -867,6 +882,17 @@ void ODSI::installPostsolve ()
   consys = savedConsys_ ;
   savedConsys_ = 0 ;
 /*
+  Restore cached structural vectors.
+*/
+  _col_obj = saved_col_obj ; saved_col_obj = 0 ;
+  _row_rhs = saved_row_rhs ; saved_row_rhs = 0 ;
+  _row_lower = saved_row_lower ; saved_row_lower = 0 ;
+  _row_upper = saved_row_upper ; saved_row_upper = 0 ;
+  _row_sense = saved_row_sense ; saved_row_sense = 0 ;
+  _row_range = saved_row_range ; saved_row_range = 0 ;
+  _matrix_by_col = saved_matrix_by_col ; saved_matrix_by_col = 0 ;
+  _matrix_by_row = saved_matrix_by_row ; saved_matrix_by_row = 0 ;
+/*
   Set the basis.
 */
   CoinWarmStart *postBasis =
@@ -903,10 +929,19 @@ void ODSI::destruct_presolve ()
   { const CoinPresolveAction *postAction = postActions_ ;
     postActions_ = postAction->next ;
     delete postAction ; }
-
+/*
+  Presence of savedConsys_ means that we called saveOriginalSys.
+*/
   if (savedConsys_)
-  { consys_free(savedConsys_) ;
-    savedConsys_ = 0 ; }
+  { consys_free(savedConsys_) ; savedConsys_ = 0 ;
+    _col_obj = saved_col_obj ; saved_col_obj = 0 ;
+    _row_rhs = saved_row_rhs ; saved_row_rhs = 0 ;
+    _row_lower = saved_row_lower ; saved_row_lower = 0 ;
+    _row_upper = saved_row_upper ; saved_row_upper = 0 ;
+    _row_sense = saved_row_sense ; saved_row_sense = 0 ;
+    _row_range = saved_row_range ; saved_row_range = 0 ;
+    _matrix_by_col = saved_matrix_by_col ; saved_matrix_by_col = 0 ;
+    _matrix_by_row = saved_matrix_by_row ; saved_matrix_by_row = 0 ; }
 
   return ; }
 

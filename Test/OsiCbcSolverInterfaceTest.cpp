@@ -27,6 +27,39 @@
 #undef NDEBUG
 #endif
 
+namespace {
+CoinPackedMatrix &BuildExmip1Mtx ()
+/*
+  Simple function to build a packed matrix for the exmip1 example used in
+  tests. The function exists solely to hide the intermediate variables.
+  Probably could be written as an initialised declaration.
+  See COIN/Mps/Sample/exmip1.mps for a human-readable presentation.
+
+  Ordered triples seem easiest. They're listed in row-major order.
+*/
+
+{ int rowndxs[] = { 0, 0, 0, 0, 0,
+		    1, 1,
+		    2, 2,
+		    3, 3,
+		    4, 4, 4 } ;
+  int colndxs[] = { 0, 1, 3, 4, 7,
+		    1, 2,
+		    2, 5,
+		    3, 6,
+		    0, 4, 7 } ;
+  double coeffs[] = { 3.0, 1.0, -2.0, -1.0, -1.0,
+		      2.0, 1.1,
+		      1.0, 1.0,
+		      2.8, -1.2,
+		      5.6, 1.0, 1.9 } ;
+
+  static CoinPackedMatrix exmip1mtx =
+    CoinPackedMatrix(true,&rowndxs[0],&colndxs[0],&coeffs[0],14) ;
+
+  return (exmip1mtx) ; }
+}
+
 //--------------------------------------------------------------------------
 // test solution methods.
 void
@@ -39,7 +72,7 @@ OsiCbcSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     OsiCbcSolverInterface m;
     std::string fn = mpsDir+"exmip1";
     m.readMps(fn.c_str(),"mps");
-    
+
     {
       OsiCbcSolverInterface im;    
       
@@ -150,14 +183,19 @@ OsiCbcSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
 
     }
     // Test some catches
-    {
+    { bool thrown ;
+
+      thrown = false ;
       OsiCbcSolverInterface solver;
       try {
         solver.setObjCoeff(0,0.0);
       }
       catch (CoinError e) {
         std::cout<<"Correct throw"<<std::endl;
+	thrown = true ;
       }
+      assert( thrown == true ) ;
+
       std::string fn = mpsDir+"exmip1";
       solver.readMps(fn.c_str(),"mps");
       try {
@@ -167,6 +205,8 @@ OsiCbcSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
         std::cout<<"** Incorrect throw"<<std::endl;
         abort();
       }
+
+      thrown = false ;
       try {
         int index[]={0,20};
         double value[]={0.0,0.0,0.0,0.0};
@@ -174,7 +214,9 @@ OsiCbcSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       }
       catch (CoinError e) {
         std::cout<<"Correct throw"<<std::endl;
+	thrown = true ;
       }
+      assert( thrown == true ) ;
     }
     // Test apply cuts method
     {      
@@ -345,9 +387,10 @@ OsiCbcSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       assert( !eq(cu[4],10.2345) );
       oslSi.setColUpper( 4, 10.2345 );
       assert( eq(oslSi.getColUpper()[4],10.2345) );
-
+      // LH: Objective will depend on how underlying solver constructs and
+      // LH: maintains initial solution.
       double objValue = oslSi.getObjValue();
-      assert( eq(objValue,3.5) );
+      assert( eq(objValue,3.5) || eq(objValue,10.5) );
 
       assert( eq( oslSi.getObjCoefficients()[0],  1.0) );
       assert( eq( oslSi.getObjCoefficients()[1],  0.0) );
@@ -365,7 +408,9 @@ OsiCbcSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       const CoinPackedMatrix * smP = si.getMatrixByRow();
       // LL:      const OsiCbcPackedMatrix * osmP = dynamic_cast<const OsiCbcPackedMatrix*>(smP);
       // LL: assert( osmP!=NULL );
-      
+
+#ifdef OSICBC_TEST_MTX_STRUCTURE
+
       CoinRelFltEq eq;
       const double * ev = smP->getElements();
       assert( eq(ev[0],   3.0) );
@@ -406,12 +451,23 @@ OsiCbcSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       assert( ei[11] ==  0 );
       assert( ei[12] ==  4 );
       assert( ei[13] ==  7 );    
-      
-      assert( smP->getMajorDim() == 5 ); 
+
+#else	// OSICBC_TEST_MTX_STRUCTURE
+
+      CoinPackedMatrix exmip1Mtx ;
+      exmip1Mtx.reverseOrderedCopyOf(BuildExmip1Mtx()) ;
+      assert( exmip1Mtx.isEquivalent(*smP) ) ;
+
+#endif	// OSICBC_TEST_MTX_STRUCTURE
+
+      assert( smP->getMajorDim() == 5 );
+      assert( smP->getMinorDim() == 8 );
       assert( smP->getNumElements() == 14 );
-      
+      assert( smP->getSizeVectorStarts() == 6 );
     }
-    // Test adding several cuts
+
+    // Test adding several cuts, and handling of a coefficient of infinity
+    // in the constraint matrix.
     {
       OsiCbcSolverInterface fim;
       std::string fn = mpsDir+"exmip1";
@@ -468,6 +524,7 @@ OsiCbcSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       delete[]el;
       delete[]inx;
     }
+
         // Test matrixByCol method
     {
   
@@ -476,6 +533,8 @@ OsiCbcSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       // LL:      const OsiCbcPackedMatrix * osmP = dynamic_cast<const OsiCbcPackedMatrix*>(smP);
       // LL: assert( osmP!=NULL );
       
+#ifdef OSICBC_TEST_MTX_STRUCTURE
+
       CoinRelFltEq eq;
       const double * ev = smP->getElements();
       assert( eq(ev[0],   3.0) );
@@ -520,15 +579,21 @@ OsiCbcSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       assert( ei[12] ==  0 );
       assert( ei[13] ==  4 );    
       
-      assert( smP->getMajorDim() == 8 ); 
-      assert( smP->getNumElements() == 14 );
+#else // OSICBC_TEST_MTX_STRUCTURE
 
-      assert( smP->getSizeVectorStarts()==9 );
+      CoinPackedMatrix &exmip1Mtx = BuildExmip1Mtx() ;
+      assert( exmip1Mtx.isEquivalent(*smP) ) ;
+
+#endif	// OSICBC_TEST_MTX_STRUCTURE     
+
+      assert( smP->getMajorDim() == 8 ); 
       assert( smP->getMinorDim() == 5 );
-      
+      assert( smP->getNumElements() == 14 );
+      assert( smP->getSizeVectorStarts() == 9 );
     }
+
     //--------------
-    // Test rowsense, rhs, rowrange, matrixByRow
+    // Test rowsense, rhs, rowrange, matrixByRow, solver assignment
     {
       OsiCbcSolverInterface lhs;
       {      
@@ -557,7 +622,9 @@ OsiCbcSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
         
         const CoinPackedMatrix * siC1mbr = siC1.getMatrixByRow();
         assert( siC1mbr != NULL );
-        
+
+#ifdef OSICBC_TEST_MTX_STRUCTURE
+
         const double * ev = siC1mbr->getElements();
         assert( eq(ev[0],   3.0) );
         assert( eq(ev[1],   1.0) );
@@ -597,10 +664,19 @@ OsiCbcSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
         assert( ei[11] ==  0 );
         assert( ei[12] ==  4 );
         assert( ei[13] ==  7 );    
-        
+
+#else	// OSICBC_TEST_MTX_STRUCTURE
+
+	CoinPackedMatrix exmip1Mtx ;
+	exmip1Mtx.reverseOrderedCopyOf(BuildExmip1Mtx()) ;
+	assert( exmip1Mtx.isEquivalent(*siC1mbr) ) ;
+
+#endif	// OSICBC_TEST_MTX_STRUCTURE
+
         assert( siC1mbr->getMajorDim() == 5 ); 
+	assert( siC1mbr->getMinorDim() == 8 );
         assert( siC1mbr->getNumElements() == 14 );
-        
+	assert( siC1mbr->getSizeVectorStarts()==6 );
 
         assert( siC1rs  == siC1.getRowSense() );
         assert( siC1rhs == siC1.getRightHandSide() );
@@ -669,6 +745,9 @@ OsiCbcSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       
       const CoinPackedMatrix * lhsmbr = lhs.getMatrixByRow();
       assert( lhsmbr != NULL );       
+
+#ifdef OSICBC_TEST_MTX_STRUCTURE
+
       const double * ev = lhsmbr->getElements();
       assert( eq(ev[0],   3.0) );
       assert( eq(ev[1],   1.0) );
@@ -708,6 +787,21 @@ OsiCbcSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       assert( ei[11] ==  0 );
       assert( ei[12] ==  4 );
       assert( ei[13] ==  7 );    
+
+#else	// OSICBC_TEST_MTX_STRUCTURE
+
+/*
+  This admittedly looks bogus, but it's the equivalent operation on the matrix
+  for inserting a cut of the form -Inf <= +Inf (i.e., a cut with no
+  coefficients).
+*/
+      CoinPackedMatrix exmip1Mtx ;
+      exmip1Mtx.reverseOrderedCopyOf(BuildExmip1Mtx()) ;
+      CoinPackedVector freeRow ;
+      exmip1Mtx.appendRow(freeRow) ;
+      assert( exmip1Mtx.isEquivalent(*lhsmbr) ) ;
+
+#endif	// OSICBC_TEST_MTX_STRUCTURE
       
       int md = lhsmbr->getMajorDim();
       assert(  md == 6 ); 
@@ -731,19 +825,33 @@ OsiCbcSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     double objValue = m.getObjValue();
     CoinRelFltEq eq(1.0e-2);
     assert( eq(objValue,2520.57) );
-    // Try deleting first column
+    // Try deleting first column that's nonbasic at lower bound (0).
     int * d = new int[1];
-    d[0]=0;
+    CoinWarmStartBasis *cwsb =
+	dynamic_cast<CoinWarmStartBasis *>(m.getWarmStart()) ;
+    assert(cwsb) ;
+    CoinWarmStartBasis::Status stati ;
+    int iCol ;
+    for (iCol = 0 ;  iCol < cwsb->getNumStructural() ; iCol++)
+    { stati = cwsb->getStructStatus(iCol) ;
+      if (stati == CoinWarmStartBasis::atLowerBound) break ; }
+    d[0]=iCol;
     m.deleteCols(1,d);
     delete [] d;
     d=NULL;
     m.resolve();
     objValue = m.getObjValue();
     assert( eq(objValue,2520.57) );
-    // Try deleting column we added
-    int iCol = m.getNumCols()-1;
+    // Try deleting column we added. If basic, go to initialSolve as deleting
+    // basic variable trashes basis required for warm start.
+    iCol = m.getNumCols()-1;
+    cwsb = dynamic_cast<CoinWarmStartBasis *>(m.getWarmStart()) ;
+    stati =  cwsb->getStructStatus(iCol) ;
     m.deleteCols(1,&iCol);
-    m.resolve();
+    if (stati == CoinWarmStartBasis::basic)
+    { m.initialSolve() ; }
+    else
+    { m.resolve(); }
     objValue = m.getObjValue();
     assert( eq(objValue,2520.57) );
 

@@ -1,1 +1,8 @@
 * text=auto !eol
+/Externals -text
+/config.guess -text
+/config.sub -text
+/configure.ac -text
+/depcomp -text
+/install-sh -text
+/missing -text

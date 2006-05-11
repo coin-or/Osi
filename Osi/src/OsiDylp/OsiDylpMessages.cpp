@@ -1,5 +1,3 @@
-#ifdef COIN_HAS_DYLP
-
 /*! \legal
   Copyright (C) 2004.
   Lou Hafer, International Business Machines Corporation and others. All
@@ -188,5 +186,3 @@ void ODSI::setOsiDylpMessages (CoinMessages::Language local_language)
   messages_ = odsiMessages ;
   return ; }
 
-
-#endif /* COIN_HAS_DYLP */

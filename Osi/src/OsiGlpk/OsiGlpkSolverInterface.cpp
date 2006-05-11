@@ -49,7 +49,6 @@
 // for more efficient implementations.
 //
 
-//#ifdef COIN_HAS_GLPK
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
@@ -2494,4 +2493,3 @@ void OsiGlpkSolverInterface::freeAllMemory()
 	hotStartRStat_ = NULL;
 	hotStartRStatSize_ = 0;
 }
-//#endif // COIN_HAS_GLPK

@@ -1,0 +1,45 @@
+# Copyright (C) 2006 International Business Machines and others.
+# All Rights Reserved.
+# This file is distributed under the Common Public License.
+
+## $Id$
+
+# Author:  Andreas Waechter           IBM    2006-04-13
+
+AUTOMAKE_OPTIONS = foreign
+
+########################################################################
+#                             libOsiDylp                               #
+########################################################################
+
+# Name of the library compiled in this directory.
+lib_LTLIBRARIES = libOsiDylp.la
+
+# List all source files for this library, including headers
+libOsiDylp_la_SOURCES = \
+	OsiDylpMessages.cpp OsiDylpMessages.hpp \
+	OsiDylpPresolve.cpp \
+	OsiDylpSolverInterface.cpp OsiDylpSolverInterface.hpp \
+	OsiDylpWarmStartBasis.cpp OsiDylpWarmStartBasis.hpp
+
+# This is for libtool (on Windows)
+libOsiDylp_la_LDFLAGS = -no-undefined
+
+# Here list all include flags, relative to this "srcdir" directory.  This
+# "cygpath" stuff is necessary to compile with native compilers on Windows.
+# "top_srcdir" refers to the basic directory for the main package that is
+# being compiled.
+CXXFLAGS += \
+	-I`$(CYGPATH_W) $(COINBASESRCCDIR)/src` \
+	-I`$(CYGPATH_W) $(DYLPSRCDIR)/src` \
+	-I`$(CYGPATH_W) $(srcdir)/..`
+
+########################################################################
+#                Headers that need to be installed                     #
+########################################################################
+
+# Here list all the header files that are required by a user of the library,
+# and that therefore should be installed in 'install'
+include_HEADERS = OsiDylpMessages.hpp \
+	OsiDylpSolverInterface.hpp \
+	OsiDylpWarmStartBasis.hpp

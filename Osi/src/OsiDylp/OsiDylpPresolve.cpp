@@ -6,8 +6,6 @@
   This file is a portion of the COIN/OSI interface for dylp.
 */
 
-#ifdef COIN_HAS_DYLP
-
 #ifdef _MSC_VER
 
 /* Turn off compiler warning about long names */
@@ -944,5 +942,3 @@ void ODSI::destruct_presolve ()
     _matrix_by_row = saved_matrix_by_row ; saved_matrix_by_row = 0 ; }
 
   return ; }
-
-#endif

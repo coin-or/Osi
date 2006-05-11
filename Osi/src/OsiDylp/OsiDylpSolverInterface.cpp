@@ -6,8 +6,6 @@
   This file is a portion of the COIN/OSI interface for dylp.
 */
 
-#ifdef COIN_HAS_DYLP
-
 #ifdef _MSC_VER
 
 /* Turn off compiler warning about long names */
@@ -6139,5 +6137,3 @@ void ODSI::dylp_printsoln (bool wantSoln, bool wantStats)
   return ; }
 
 //@} // DylpMethods
-
-#endif /* COIN_HAS_DYLP */

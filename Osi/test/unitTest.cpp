@@ -7,6 +7,8 @@
 #  pragma warning(disable:4786)
 #endif
 
+#include "config_osi.h"
+
 #include <cassert>
 #include <iostream>
 #include <cstdio>
@@ -66,9 +68,9 @@ void testingMessage( const char * const msg );
 //   -nobuf: remove buffering on cout (stdout); useful to keep cout and cerr
 //	 messages synchronised when redirecting output to a file or pipe.
 //   -mpsDir: directory containing mps test files
-//       Default value V1="../Mps/Sample"    
+//       Default value V1="../../Data/Sample"    
 //   -netlibDir: directory containing netlib files
-//       Default value V2="../Mps/Netlib"
+//       Default value V2="../../Data/Netlib"
 //   -testOsiSolverInterface
 //       If specified, then OsiSolveInterface::unitTest
 //       is skipped over and not run.
@@ -127,9 +129,9 @@ int main (int argc, const char *argv[])
       std::cerr << "  -cerr2cout: redirect cerr to cout; sometimes useful\n" ;
       std::cerr << "	    to synchronise cout & cerr.\n" ;
       std::cerr << "  -mpsDir: directory containing mps test files\n";
-      std::cerr << "        Default value V1=\"../Mps/Sample\"\n";
+      std::cerr << "        Default value V1=\"../../Data/Sample\"\n";
       std::cerr << "  -netlibDir: directory containing netlib files\n";
-      std::cerr << "        Default value V2=\"../Mps/Netlib\"\n";
+      std::cerr << "        Default value V2=\"../../Data/Netlib\"\n";
       std::cerr << "  -testOsiSolverInterface\n";
       std::cerr << "        If specified, then OsiSolveInterface::unitTest\n";
       std::cerr << "        is run.\n";
@@ -166,14 +168,14 @@ int main (int argc, const char *argv[])
   if (parms.find("-mpsDir") != parms.end())
     mpsDir=parms["-mpsDir"] + dirsep;
   else 
-    mpsDir = dirsep == '/' ? "../Mps/Sample/" : "..\\Mps\\Sample\\";
+    mpsDir = dirsep == '/' ? "../../Data/Sample/" : "..\\..\\Data\\Sample\\";
  
   // Set directory containing netlib data files.
   std::string netlibDir;
   if (parms.find("-netlibDir") != parms.end())
     netlibDir=parms["-netlibDir"] + dirsep;
   else 
-    netlibDir = dirsep == '/' ? "../Mps/Netlib/" : "..\\Mps\\Netlib\\";
+    netlibDir = dirsep == '/' ? "../../Data/Netlib/" : "..\\..\\Data\\Netlib\\";
 
 #ifdef COIN_HAS_OSL  
   {

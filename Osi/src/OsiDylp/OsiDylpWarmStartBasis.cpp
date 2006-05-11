@@ -6,8 +6,6 @@
   This file is a portion of the COIN/OSI interface for dylp.
 */
 
-#ifdef COIN_HAS_DYLP
-
 #ifdef _MSC_VER
 
 /* Turn off compiler warning about long names */
@@ -847,7 +845,4 @@ OsiDylpWarmStartBasisDiff::operator= (const OsiDylpWarmStartBasisDiff &rhs)
       condiffVals_ = 0 ; } }
   
   return (*this) ; }
-
-
-#endif // COIN_HAS_DYLP
 

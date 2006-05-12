@@ -44,11 +44,12 @@ AC_COIN_INIT_AUTOMAKE
 #############################################################################
 
 AC_COIN_MAIN_SUBDIRS(CoinBase)
-AC_COIN_MAIN_SUBDIRS(Clp)
 AC_COIN_MAIN_SUBDIRS(Data/Netlib)
 AC_COIN_MAIN_SUBDIRS(Data/Sample)
-AC_COIN_MAIN_SUBDIRS(Osi)
+AC_COIN_MAIN_SUBDIRS(Clp)
+AC_COIN_MAIN_SUBDIRS(Dylp)
 AC_COIN_MAIN_SUBDIRS(Vol)
+AC_COIN_MAIN_SUBDIRS(Osi)
 
 ##############################################################################
 #                   Finishing up by writing all the output                   #

@@ -5,6 +5,9 @@
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
 #endif
+
+#include "OsiConfig.hpp"
+
 #include <cstdlib>
 #include <cstdio>
 #include <cassert>

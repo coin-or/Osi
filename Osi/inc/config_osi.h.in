@@ -6,6 +6,9 @@
 /* Define to 1 if the Cbc package is used */
 #undef COIN_HAS_CBC
 
+/* Define to 1 if the Cgl package is used */
+#undef COIN_HAS_CGL
+
 /* Define to 1 if the Clp package is used */
 #undef COIN_HAS_CLP
 
@@ -26,6 +29,9 @@
 
 /* Define to 1 if the Mosek package is used */
 #undef COIN_HAS_MSK
+
+/* Define to 1 if the Osi package is used */
+#undef COIN_HAS_OSI
 
 /* Define to 1 if the Osl package is used */
 #undef COIN_HAS_OSL

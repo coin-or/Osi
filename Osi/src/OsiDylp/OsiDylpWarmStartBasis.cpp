@@ -6,6 +6,8 @@
   This file is a portion of the COIN/OSI interface for dylp.
 */
 
+#include "OsiConfig.hpp"
+
 #ifdef _MSC_VER
 
 /* Turn off compiler warning about long names */

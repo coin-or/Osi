@@ -30,6 +30,7 @@ libOsiClp_la_LDFLAGS = -no-undefined
 CXXFLAGS += \
 	-I`$(CYGPATH_W) $(COINBASESRCDIR)/src` \
 	-I`$(CYGPATH_W) $(CLPSRCDIR)/src` \
+	-I`$(CYGPATH_W) $(CLPOBJDIR)/inc` \
 	-I`$(CYGPATH_W) $(srcdir)/..`
 
 ########################################################################

@@ -118,7 +118,7 @@ nodist_include_HEADERS = ../inc/$(CONFIG_DIST)
 	echo "/** Required defines from $(CONFIG_H) */" >bla.tmp
 	echo "#ifndef __$(CONFIG_DIST)__" | sed -e 's/\./_/g' >>bla.tmp
 	echo "#define __$(CONFIG_DIST)__" | sed -e 's/\./_/g' >>bla.tmp
-	$(EGREP) 'HAVE_|COIN_HAS' $< >>bla.tmp
+	$(EGREP) 'COIN_' $< >>bla.tmp
 	echo "#endif" >>bla.tmp
 	if test -r ../inc/$(CONFIG_DIST); then \
 	  if diff ./inc/$(CONFIG_DIST) bla.tmp >/dev/null 2>1 ; then \

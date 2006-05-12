@@ -59,6 +59,7 @@ AC_COIN_INIT_AUTO_TOOLS
 #############################################################################
 
 AC_COIN_HAS_PROJECT(Cbc)
+AC_COIN_HAS_PROJECT(Cgl)
 AC_COIN_HAS_PROJECT(Clp)
 AC_COIN_HAS_PROJECT(CoinBase)
 AC_COIN_HAS_PROJECT(Dylp)

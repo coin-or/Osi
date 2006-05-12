@@ -29,7 +29,10 @@ libOsiCbc_la_LDFLAGS = -no-undefined
 CXXFLAGS += \
 	-I`$(CYGPATH_W) $(COINBASESRCDIR)/src` \
 	-I`$(CYGPATH_W) $(CBCSRCDIR)/src` \
-	-I`$(CYGPATH_W) $(srcdir)/..`
+	-I`$(CYGPATH_W) $(srcdir)/..` \
+	-I`$(CYGPATH_W) $(srcdir)/../OsiClp` \
+	-I`$(CYGPATH_W) $(CLPSRCDIR)/src` \
+	-I`$(CYGPATH_W) $(CLPOBJDIR)/inc`
 
 ########################################################################
 #                Headers that need to be installed                     #

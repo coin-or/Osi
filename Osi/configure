@@ -19555,7 +19555,7 @@ _ACEOF
 
   CBCSRCDIR=`cd $srcdir/$coin_has_cbc; pwd`
 
-  CBCOBJDIR=`cd $coin_has_cbc; pwd`
+  CBCOBJDIR=`pwd`/$coin_has_cbc
 fi
 
   # Define the Makefile conditional
@@ -19599,7 +19599,7 @@ _ACEOF
 
   CLPSRCDIR=`cd $srcdir/$coin_has_clp; pwd`
 
-  CLPOBJDIR=`cd $coin_has_clp; pwd`
+  CLPOBJDIR=`pwd`/$coin_has_clp
 fi
 
   # Define the Makefile conditional
@@ -19643,7 +19643,7 @@ _ACEOF
 
   COINBASESRCDIR=`cd $srcdir/$coin_has_coinbase; pwd`
 
-  COINBASEOBJDIR=`cd $coin_has_coinbase; pwd`
+  COINBASEOBJDIR=`pwd`/$coin_has_coinbase
 fi
 
   # Define the Makefile conditional
@@ -19687,7 +19687,7 @@ _ACEOF
 
   DYLPSRCDIR=`cd $srcdir/$coin_has_dylp; pwd`
 
-  DYLPOBJDIR=`cd $coin_has_dylp; pwd`
+  DYLPOBJDIR=`pwd`/$coin_has_dylp
 fi
 
   # Define the Makefile conditional
@@ -19731,7 +19731,7 @@ _ACEOF
 
   SYMSRCDIR=`cd $srcdir/$coin_has_sym; pwd`
 
-  SYMOBJDIR=`cd $coin_has_sym; pwd`
+  SYMOBJDIR=`pwd`/$coin_has_sym
 fi
 
   # Define the Makefile conditional
@@ -19775,7 +19775,7 @@ _ACEOF
 
   VOLSRCDIR=`cd $srcdir/$coin_has_vol; pwd`
 
-  VOLOBJDIR=`cd $coin_has_vol; pwd`
+  VOLOBJDIR=`pwd`/$coin_has_vol
 fi
 
   # Define the Makefile conditional
@@ -19937,7 +19937,7 @@ if test $ac_cv_lib_dl_dlopen = yes; then
 fi
 
 
-# Check with third party solvers are available ToDO!
+# Check which third party solvers are available ToDo!
 
 echo "$as_me:$LINENO: checking if user provides library for Cplex" >&5
 echo $ECHO_N "checking if user provides library for Cplex... $ECHO_C" >&6

@@ -26,7 +26,7 @@ unitTest_SOURCES = \
 unitTest_LDADD = ../src/libOsi.la
 
 # List additional libraries
-unitTest_LDFLAGS =
+#LIBS +=
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows
@@ -42,7 +42,7 @@ if COIN_HAS_CLP
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiClp`
   unitTest_LDADD += ../src/OsiClp/libOsiClp.la \
 	$(CLPOBJDIR)/src/libClp.la
-  unitTest_LDFLAGS  += `cat $(CLPOBJDIR)/clp_addlibs.txt`
+  LIBS  += `cat $(CLPOBJDIR)/clp_addlibs.txt`
 endif
 
 if COIN_HAS_CBC
@@ -51,7 +51,7 @@ if COIN_HAS_CBC
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiCbc`
   unitTest_LDADD += ../src/OsiCbc/libOsiCbc.la \
 	$(CBCOBJDIR)/src/libCbc.la
-  unitTest_LDFLAGS += `cat $(CBCOBJDIR)/cbc_addlibs.txt`
+  LIBS += `cat $(CBCOBJDIR)/cbc_addlibs.txt`
 endif
 
 if COIN_HAS_CPX
@@ -67,7 +67,7 @@ if COIN_HAS_DYLP
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiDylp`
   unitTest_LDADD += ../src/OsiDylp/libOsiDylp.la \
 	$(DYLPOBJDIR)/src/libDylp.la
-  unitTest_LDFLAGS += `cat $(DYLPOBJDIR)/dylp_addlibs.txt`
+  LIBS += `cat $(DYLPOBJDIR)/dylp_addlibs.txt`
 endif
 
 if COIN_HAS_FMP
@@ -110,7 +110,7 @@ if COIN_HAS_SYM
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiSym`
   unitTest_LDADD += ../src/OsiSym/libOsiSym.la \
 	$(SYMOBJDIR)/src/libSym.la
-  unitTest_LDFLAGS += `cat $(SYMOBJDIR)/sym_addlibs.txt`
+  LIBS += `cat $(SYMOBJDIR)/sym_addlibs.txt`
 endif
 
 if COIN_HAS_VOL
@@ -119,7 +119,7 @@ if COIN_HAS_VOL
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiVol`
   unitTest_LDADD += ../src/OsiVol/libOsiVol.la \
 	$(VOLOBJDIR)/src/libVol.la
-  unitTest_LDFLAGS += `cat $(VOLOBJDIR)/vol_addlibs.txt`
+  LIBS += `cat $(VOLOBJDIR)/vol_addlibs.txt`
 endif
 
 if COIN_HAS_XPR
@@ -131,7 +131,7 @@ endif
 
 # Finally the Coin library (many of the above need it)
 unitTest_LDADD += $(COINBASEOBJDIR)/src/libCoinBase.la
-unitTest_LDFLAGS += `cat $(COINBASEOBJDIR)/coinbase_addlibs.txt` $(ADDLIBS)
+LIBS += `cat $(COINBASEOBJDIR)/coinbase_addlibs.txt` $(ADDLIBS)
 
 
 test: unitTest

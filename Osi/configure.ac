@@ -77,7 +77,7 @@ AC_CHECK_LIB([pthread],[pthread_create],
 AC_CHECK_LIB([dl],[dlopen],
              [ADDLIBS="-ldl $ADDLIBS"])
 
-# Check with third party solvers are available ToDO!
+# Check which third party solvers are available ToDo!
 AC_COIN_HAS_USER_LIBRARY([Cplex],[CPX],[cplex],[cplex.h],[CPXgetstat])
 AC_COIN_HAS_USER_LIBRARY([Glpk],[GLPK],[glpk],[glpk.h],[glp_lpx_simplex])
 AC_COIN_HAS_USER_LIBRARY([FortMP],[FMP],[fmp])  #ToDo! is Fortran?

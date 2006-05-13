@@ -27,7 +27,7 @@ libOsiCpx_la_LDFLAGS = -no-undefined
 # "top_srcdir" refers to the basic directory for the main package that is
 # being compiled.
 CXXFLAGS += \
-	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)` \
+	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(CPXINCDIR)` \
 	-I`$(CYGPATH_W) $(srcdir)/..`
 

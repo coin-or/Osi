@@ -199,7 +199,7 @@ unitTest_DEPENDENCIES = ../src/libOsi.la $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_8) $(am__DEPENDENCIES_9) \
 	$(am__DEPENDENCIES_10) $(am__DEPENDENCIES_11) \
 	$(am__DEPENDENCIES_12) $(am__DEPENDENCIES_13) \
-	$(COINBASEOBJDIR)/src/libCoinBase.la
+	$(COINUTILSOBJDIR)/src/libCoinUtils.la
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/inc
 depcomp = $(SHELL) $(top_srcdir)/../depcomp
 am__depfiles_maybe = depfiles
@@ -239,8 +239,8 @@ CGLOBJDIR = @CGLOBJDIR@
 CGLSRCDIR = @CGLSRCDIR@
 CLPOBJDIR = @CLPOBJDIR@
 CLPSRCDIR = @CLPSRCDIR@
-COINBASEOBJDIR = @COINBASEOBJDIR@
-COINBASESRCDIR = @COINBASESRCDIR@
+COINUTILSOBJDIR = @COINUTILSOBJDIR@
+COINUTILSSRCDIR = @COINUTILSSRCDIR@
 COIN_DEBUG_FALSE = @COIN_DEBUG_FALSE@
 COIN_DEBUG_TRUE = @COIN_DEBUG_TRUE@
 COIN_HAS_CBC_FALSE = @COIN_HAS_CBC_FALSE@
@@ -249,8 +249,8 @@ COIN_HAS_CGL_FALSE = @COIN_HAS_CGL_FALSE@
 COIN_HAS_CGL_TRUE = @COIN_HAS_CGL_TRUE@
 COIN_HAS_CLP_FALSE = @COIN_HAS_CLP_FALSE@
 COIN_HAS_CLP_TRUE = @COIN_HAS_CLP_TRUE@
-COIN_HAS_COINBASE_FALSE = @COIN_HAS_COINBASE_FALSE@
-COIN_HAS_COINBASE_TRUE = @COIN_HAS_COINBASE_TRUE@
+COIN_HAS_COINUTILS_FALSE = @COIN_HAS_COINUTILS_FALSE@
+COIN_HAS_COINUTILS_TRUE = @COIN_HAS_COINUTILS_TRUE@
 COIN_HAS_CPX_FALSE = @COIN_HAS_CPX_FALSE@
 COIN_HAS_CPX_TRUE = @COIN_HAS_CPX_TRUE@
 COIN_HAS_DYLP_FALSE = @COIN_HAS_DYLP_FALSE@
@@ -287,7 +287,7 @@ CXXDEPMODE = @CXXDEPMODE@
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows
-CXXFLAGS = @CXXFLAGS@ -I`$(CYGPATH_W) $(COINBASESRCDIR)/src` \
+CXXFLAGS = @CXXFLAGS@ -I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(srcdir)/../src` $(am__append_2) \
 	$(am__append_6) $(am__append_12) $(am__append_15) \
 	$(am__append_19) $(am__append_22) $(am__append_25) \
@@ -320,7 +320,7 @@ LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@ $(am__append_4) $(am__append_8) $(am__append_10) \
 	$(am__append_17) $(am__append_36) $(am__append_40) `cat \
-	$(COINBASEOBJDIR)/coinbase_addlibs.txt` $(ADDLIBS)
+	$(COINUTILSOBJDIR)/coinutils_addlibs.txt` $(ADDLIBS)
 LIBTOOL = @LIBTOOL@
 LIBTOOLM4 = @LIBTOOLM4@
 LN_S = @LN_S@
@@ -423,7 +423,7 @@ unitTest_LDADD = ../src/libOsi.la $(am__append_3) $(am__append_7) \
 	$(am__append_20) $(am__append_23) $(am__append_26) \
 	$(am__append_29) $(am__append_32) $(am__append_35) \
 	$(am__append_39) $(am__append_43) \
-	$(COINBASEOBJDIR)/src/libCoinBase.la
+	$(COINUTILSOBJDIR)/src/libCoinUtils.la
 
 ########################################################################
 #                          Cleaning stuff                              #

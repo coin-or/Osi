@@ -1,6 +1,6 @@
 BuildTools    https://www.coin-or.org/svn/BuildTools/trunk
 Data/Netlib   https://www.coin-or.org/svn/Data/trunk/Netlib
 Data/Sample   https://www.coin-or.org/svn/Data/trunk/Sample
-CoinBase      https://www.coin-or.org/svn/CoinBase/trunk/CoinBase
+CoinUtils     https://www.coin-or.org/svn/CoinUtils/trunk/CoinUtils
 Clp           https://www.coin-or.org/svn/Clp/trunk/Clp
 Vol           https://www.coin-or.org/svn/Vol/trunk/Vol

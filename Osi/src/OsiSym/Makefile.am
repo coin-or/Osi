@@ -29,7 +29,7 @@ libOsiSym_la_LDFLAGS = -no-undefined
 # "top_srcdir" refers to the basic directory for the main package that is
 # being compiled.
 CXXFLAGS += \
-	-I`$(CYGPATH_W) $(COINBASESRCDIR)/src` \
+	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(SYMSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(srcdir)/..`
 

@@ -30,7 +30,7 @@ unitTest_LDADD = ../src/libOsi.la
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows
-CXXFLAGS += -I`$(CYGPATH_W) $(COINBASESRCDIR)/src` \
+CXXFLAGS += -I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(srcdir)/../src`
 
 # Depending of what solvers are available, we add the corresponding files,
@@ -136,8 +136,8 @@ if COIN_HAS_XPR
 endif
 
 # Finally the Coin library (many of the above need it)
-unitTest_LDADD += $(COINBASEOBJDIR)/src/libCoinBase.la
-LIBS += `cat $(COINBASEOBJDIR)/coinbase_addlibs.txt` $(ADDLIBS)
+unitTest_LDADD += $(COINUTILSOBJDIR)/src/libCoinUtils.la
+LIBS += `cat $(COINUTILSOBJDIR)/coinutils_addlibs.txt` $(ADDLIBS)
 
 
 test: unitTest

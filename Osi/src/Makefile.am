@@ -39,7 +39,7 @@ libOsi_la_LDFLAGS = -no-undefined
 # "top_srcdir" refers to the basic directory for the main package that is
 # being compiled.
 CXXFLAGS += \
-	-I`$(CYGPATH_W) $(COINBASESRCDIR)/src`
+	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src`
 
 # Now we check into which directories to recurse, and which subdirectory
 # libraries to include

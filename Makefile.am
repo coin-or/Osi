@@ -22,12 +22,12 @@ SUBDIRS = $(subdirs)
 #                           Extra Targets                              #
 ########################################################################
 
-test:
+test: all
 	cd Osi; make test
 
 unitTest: test
 
-tests:
+tests: all
 	for dir in $(subdirs); do \
 	  if test -r $$dir/test/Makefile; then \
 	    (cd $$dir; make test) \

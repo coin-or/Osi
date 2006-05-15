@@ -137,7 +137,8 @@ endif
 
 # Finally the Coin library (many of the above need it)
 unitTest_LDADD += ../src/libOsi.la $(COINUTILSOBJDIR)/src/libCoinUtils.la
-LIBS += `cat $(COINUTILSOBJDIR)/coinutils_addlibs.txt` $(ADDLIBS)
+LIBS += `cat $(OSIOBJDIR)/osi_addlibs.txt` \
+	`cat $(COINUTILSOBJDIR)/coinutils_addlibs.txt` $(ADDLIBS)
 
 test: unitTest$(EXEEXT)
 	./unitTest$(EXEEXT) -testOsiSolverInterface

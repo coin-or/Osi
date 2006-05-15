@@ -325,7 +325,7 @@ libOsi_la_SOURCES = \
 
 
 # This is for libtool (on Windows)
-libOsi_la_LDFLAGS = -no-undefined
+libOsi_la_LDFLAGS = # -no-undefined
 
 # Now we check into which directories to recurse, and which subdirectory
 # libraries to include

@@ -64,7 +64,7 @@ noinst_PROGRAMS = unitTest$(EXEEXT)
 
 @COIN_HAS_CBC_TRUE@am__append_8 = `cat $(CBCOBJDIR)/cbc_addlibs.txt`
 @COIN_HAS_CGL_TRUE@am__append_9 = $(CGLOBJDIR)/src/libCgl.la
-@COIN_HAS_CGL_TRUE@am__append_10 = `cat $(CBCOBJDIR)/cgl_addlibs.txt`
+@COIN_HAS_CGL_TRUE@am__append_10 = `cat $(CGLOBJDIR)/cgl_addlibs.txt`
 @COIN_HAS_CPX_TRUE@am__append_11 = OsiCpxSolverInterfaceTest.cpp
 @COIN_HAS_CPX_TRUE@am__append_12 = -I`$(CYGPATH_W) $(CPXINCDIR)` \
 @COIN_HAS_CPX_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiCpx`
@@ -192,13 +192,13 @@ unitTest_OBJECTS = $(am_unitTest_OBJECTS)
 @COIN_HAS_VOL_TRUE@am__DEPENDENCIES_12 = ../src/OsiVol/libOsiVol.la \
 @COIN_HAS_VOL_TRUE@	$(VOLOBJDIR)/src/libVol.la
 @COIN_HAS_XPR_TRUE@am__DEPENDENCIES_13 = ../src/OsiXpr/libOsiXpr.la
-unitTest_DEPENDENCIES = ../src/libOsi.la $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_2) $(am__DEPENDENCIES_3) \
-	$(am__DEPENDENCIES_4) $(am__DEPENDENCIES_5) \
-	$(am__DEPENDENCIES_6) $(am__DEPENDENCIES_7) \
-	$(am__DEPENDENCIES_8) $(am__DEPENDENCIES_9) \
-	$(am__DEPENDENCIES_10) $(am__DEPENDENCIES_11) \
-	$(am__DEPENDENCIES_12) $(am__DEPENDENCIES_13) \
+unitTest_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2) \
+	$(am__DEPENDENCIES_3) $(am__DEPENDENCIES_4) \
+	$(am__DEPENDENCIES_5) $(am__DEPENDENCIES_6) \
+	$(am__DEPENDENCIES_7) $(am__DEPENDENCIES_8) \
+	$(am__DEPENDENCIES_9) $(am__DEPENDENCIES_10) \
+	$(am__DEPENDENCIES_11) $(am__DEPENDENCIES_12) \
+	$(am__DEPENDENCIES_13) ../src/libOsi.la \
 	$(COINUTILSOBJDIR)/src/libCoinUtils.la
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/inc
 depcomp = $(SHELL) $(top_srcdir)/../depcomp
@@ -418,11 +418,11 @@ unitTest_SOURCES = OsiColCutTest.cpp OsiCutsTest.cpp \
 # List libraries of COIN projects
 
 # Finally the Coin library (many of the above need it)
-unitTest_LDADD = ../src/libOsi.la $(am__append_3) $(am__append_7) \
-	$(am__append_9) $(am__append_13) $(am__append_16) \
-	$(am__append_20) $(am__append_23) $(am__append_26) \
-	$(am__append_29) $(am__append_32) $(am__append_35) \
-	$(am__append_39) $(am__append_43) \
+unitTest_LDADD = $(am__append_3) $(am__append_7) $(am__append_9) \
+	$(am__append_13) $(am__append_16) $(am__append_20) \
+	$(am__append_23) $(am__append_26) $(am__append_29) \
+	$(am__append_32) $(am__append_35) $(am__append_39) \
+	$(am__append_43) ../src/libOsi.la \
 	$(COINUTILSOBJDIR)/src/libCoinUtils.la
 
 ########################################################################
@@ -700,8 +700,10 @@ uninstall-am: uninstall-info-am
 	uninstall-info-am
 
 
-test: unitTest
-	./unitTest -testOsiSolverInterface
+test: unitTest$(EXEEXT)
+	./unitTest$(EXEEXT) -testOsiSolverInterface
+
+.PHONY: test
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

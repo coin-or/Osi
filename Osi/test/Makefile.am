@@ -23,7 +23,7 @@ unitTest_SOURCES = \
 	unitTest.cpp
 
 # List libraries of COIN projects
-unitTest_LDADD = ../src/libOsi.la
+unitTest_LDADD =
 
 # List additional libraries
 #LIBS +=
@@ -57,7 +57,7 @@ endif
 
 if COIN_HAS_CGL
   unitTest_LDADD += $(CGLOBJDIR)/src/libCgl.la
-  LIBS += `cat $(CBCOBJDIR)/cgl_addlibs.txt`
+  LIBS += `cat $(CGLOBJDIR)/cgl_addlibs.txt`
 endif
 
 if COIN_HAS_CPX
@@ -136,12 +136,13 @@ if COIN_HAS_XPR
 endif
 
 # Finally the Coin library (many of the above need it)
-unitTest_LDADD += $(COINUTILSOBJDIR)/src/libCoinUtils.la
+unitTest_LDADD += ../src/libOsi.la $(COINUTILSOBJDIR)/src/libCoinUtils.la
 LIBS += `cat $(COINUTILSOBJDIR)/coinutils_addlibs.txt` $(ADDLIBS)
 
+test: unitTest$(EXEEXT)
+	./unitTest$(EXEEXT) -testOsiSolverInterface
 
-test: unitTest
-	./unitTest -testOsiSolverInterface
+.PHONY: test
 
 ########################################################################
 #                          Cleaning stuff                              #

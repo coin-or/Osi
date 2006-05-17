@@ -67,7 +67,6 @@ libOsiVol_la_LIBADD =
 am_libOsiVol_la_OBJECTS = OsiVolSolverInterface.lo \
 	OsiVolSolverInterfaceIO.lo
 libOsiVol_la_OBJECTS = $(am_libOsiVol_la_OBJECTS)
-DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/inc
 depcomp = $(SHELL) $(top_srcdir)/../depcomp
 am__depfiles_maybe = depfiles
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
@@ -294,6 +293,10 @@ libOsiVol_la_SOURCES = \
 
 # This is for libtool (on Windows)
 libOsiVol_la_LDFLAGS = -no-undefined
+
+# This line is necessary to allow VPATH compilation with MS compilers
+# on Cygwin
+DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/inc
 
 ########################################################################
 #                Headers that need to be installed                     #

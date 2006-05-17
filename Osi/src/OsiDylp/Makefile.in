@@ -67,7 +67,6 @@ libOsiDylp_la_LIBADD =
 am_libOsiDylp_la_OBJECTS = OsiDylpMessages.lo OsiDylpPresolve.lo \
 	OsiDylpSolverInterface.lo OsiDylpWarmStartBasis.lo
 libOsiDylp_la_OBJECTS = $(am_libOsiDylp_la_OBJECTS)
-DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/inc
 depcomp = $(SHELL) $(top_srcdir)/../depcomp
 am__depfiles_maybe = depfiles
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
@@ -296,6 +295,10 @@ libOsiDylp_la_SOURCES = \
 
 # This is for libtool (on Windows)
 libOsiDylp_la_LDFLAGS = -no-undefined
+
+# This line is necessary to allow VPATH compilation with MS compilers
+# on Cygwin
+DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/inc
 
 ########################################################################
 #                Headers that need to be installed                     #

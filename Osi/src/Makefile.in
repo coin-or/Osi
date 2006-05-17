@@ -81,7 +81,6 @@ am_libOsi_la_OBJECTS = OsiAuxInfo.lo OsiColCut.lo OsiCut.lo OsiCuts.lo \
 	OsiOpbdpSolve.lo OsiPresolve.lo OsiRowCut.lo \
 	OsiRowCutDebugger.lo OsiSolverBranch.lo OsiSolverInterface.lo
 libOsi_la_OBJECTS = $(am_libOsi_la_OBJECTS)
-DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/inc
 depcomp = $(SHELL) $(top_srcdir)/../depcomp
 am__depfiles_maybe = depfiles
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
@@ -326,6 +325,10 @@ libOsi_la_SOURCES = \
 
 # This is for libtool (on Windows)
 libOsi_la_LDFLAGS = # -no-undefined
+
+# This line is necessary to allow VPATH compilation with MS compilers
+# on Cygwin
+DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/inc
 
 # Now we check into which directories to recurse, and which subdirectory
 # libraries to include

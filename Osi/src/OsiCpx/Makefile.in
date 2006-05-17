@@ -66,7 +66,6 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 libOsiCpx_la_LIBADD =
 am_libOsiCpx_la_OBJECTS = OsiCpxSolverInterface.lo
 libOsiCpx_la_OBJECTS = $(am_libOsiCpx_la_OBJECTS)
-DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/inc
 depcomp = $(SHELL) $(top_srcdir)/../depcomp
 am__depfiles_maybe = depfiles
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
@@ -291,6 +290,10 @@ libOsiCpx_la_SOURCES = \
 
 # This is for libtool (on Windows)
 libOsiCpx_la_LDFLAGS = -no-undefined
+
+# This line is necessary to allow VPATH compilation with MS compilers
+# on Cygwin
+DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/inc
 
 ########################################################################
 #                Headers that need to be installed                     #

@@ -66,7 +66,6 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 libOsiXpr_la_LIBADD =
 am_libOsiXpr_la_OBJECTS = OsiXprSolverInterface.lo
 libOsiXpr_la_OBJECTS = $(am_libOsiXpr_la_OBJECTS)
-DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/inc
 depcomp = $(SHELL) $(top_srcdir)/../depcomp
 am__depfiles_maybe = depfiles
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
@@ -291,6 +290,10 @@ libOsiXpr_la_SOURCES = \
 
 # This is for libtool (on Windows)
 libOsiXpr_la_LDFLAGS = -no-undefined
+
+# This line is necessary to allow VPATH compilation with MS compilers
+# on Cygwin
+DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/inc
 
 ########################################################################
 #                Headers that need to be installed                     #

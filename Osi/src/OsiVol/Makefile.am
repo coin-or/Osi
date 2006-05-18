@@ -21,7 +21,7 @@ libOsiVol_la_SOURCES = \
 	OsiVolSolverInterfaceIO.cpp
 
 # This is for libtool (on Windows)
-libOsiVol_la_LDFLAGS = -no-undefined
+libOsiVol_la_LDFLAGS = # -no-undefined
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows.

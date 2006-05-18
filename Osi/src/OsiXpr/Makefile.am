@@ -20,7 +20,7 @@ libOsiXpr_la_SOURCES = \
 	OsiXprSolverInterface.cpp OsiXprSolverInterface.hpp
 
 # This is for libtool (on Windows)
-libOsiXpr_la_LDFLAGS = -no-undefined
+libOsiXpr_la_LDFLAGS = # -no-undefined
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows.

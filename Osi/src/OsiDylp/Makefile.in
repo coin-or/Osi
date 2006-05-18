@@ -110,6 +110,7 @@ CBCOBJDIR = @CBCOBJDIR@
 CBCSRCDIR = @CBCSRCDIR@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
+CDEFS = @CDEFS@
 CFLAGS = @CFLAGS@
 CGLOBJDIR = @CGLOBJDIR@
 CGLSRCDIR = @CGLSRCDIR@
@@ -294,7 +295,7 @@ libOsiDylp_la_SOURCES = \
 
 
 # This is for libtool (on Windows)
-libOsiDylp_la_LDFLAGS = -no-undefined
+libOsiDylp_la_LDFLAGS = # -no-undefined
 
 # This line is necessary to allow VPATH compilation with MS compilers
 # on Cygwin

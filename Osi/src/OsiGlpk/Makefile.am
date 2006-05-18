@@ -20,7 +20,7 @@ libOsiGlpk_la_SOURCES = \
 	OsiGlpkSolverInterface.cpp OsiGlpkSolverInterface.hpp
 
 # This is for libtool (on Windows)
-libOsiGlpk_la_LDFLAGS = -no-undefined
+libOsiGlpk_la_LDFLAGS = # -no-undefined
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows.

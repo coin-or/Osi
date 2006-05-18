@@ -109,6 +109,7 @@ CBCOBJDIR = @CBCOBJDIR@
 CBCSRCDIR = @CBCSRCDIR@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
+CDEFS = @CDEFS@
 CFLAGS = @CFLAGS@
 CGLOBJDIR = @CGLOBJDIR@
 CGLSRCDIR = @CGLSRCDIR@
@@ -289,7 +290,7 @@ libOsiMsk_la_SOURCES = \
 
 
 # This is for libtool (on Windows)
-libOsiMsk_la_LDFLAGS = -no-undefined
+libOsiMsk_la_LDFLAGS = # -no-undefined
 
 # This line is necessary to allow VPATH compilation with MS compilers
 # on Cygwin

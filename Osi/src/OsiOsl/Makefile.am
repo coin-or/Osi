@@ -20,7 +20,7 @@ libOsiOsl_la_SOURCES = \
 	OsiOslSolverInterface.cpp OsiOslSolverInterface.hpp
 
 # This is for libtool (on Windows)
-libOsiOsl_la_LDFLAGS = -no-undefined
+libOsiOsl_la_LDFLAGS = # -no-undefined
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows.

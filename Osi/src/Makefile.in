@@ -72,8 +72,7 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)" \
-	"$(DESTDIR)$(includedir)"
+am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libOsi_la_LIBADD =
@@ -108,8 +107,7 @@ RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	pdf-recursive ps-recursive uninstall-info-recursive \
 	uninstall-recursive
 includeHEADERS_INSTALL = $(INSTALL_HEADER)
-nodist_includeHEADERS_INSTALL = $(INSTALL_HEADER)
-HEADERS = $(include_HEADERS) $(nodist_include_HEADERS)
+HEADERS = $(include_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DIST_SUBDIRS = OsiCbc OsiClp OsiCpx OsiDylp OsiFmp OsiGlpk OsiMsk \
@@ -359,16 +357,12 @@ include_HEADERS = \
 #OsiAuxInfo.hpp
 #OsiOpbdpSolve.hpp
 
-########################################################################
-#     Generating the configure header that is to be distributed        #
-########################################################################
+#############################################################################
+# Create the Config.h file that always defines HAVE_CONFIG_H and install it #
+#############################################################################
 
-# You should only need to adapt the following two lines
-CONFIG_DIST = OsiConfig.hpp
-CONFIG_H = config_osi.h
-nodist_include_HEADERS = ../inc/$(CONFIG_DIST)
-CLEANFILES = bla.tmp
-DISTCLEANFILES = ../inc/$(CONFIG_DIST)
+# You only need to adapt the following line
+ConfigHeader = OsiConfig.h
 all: all-recursive
 
 .SUFFIXES:
@@ -492,23 +486,6 @@ install-includeHEADERS: $(include_HEADERS)
 uninstall-includeHEADERS:
 	@$(NORMAL_UNINSTALL)
 	@list='$(include_HEADERS)'; for p in $$list; do \
-	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(includedir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(includedir)/$$f"; \
-	done
-install-nodist_includeHEADERS: $(nodist_include_HEADERS)
-	@$(NORMAL_INSTALL)
-	test -z "$(includedir)" || $(mkdir_p) "$(DESTDIR)$(includedir)"
-	@list='$(nodist_include_HEADERS)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f=$(am__strip_dir) \
-	  echo " $(nodist_includeHEADERS_INSTALL) '$$d$$p' '$(DESTDIR)$(includedir)/$$f'"; \
-	  $(nodist_includeHEADERS_INSTALL) "$$d$$p" "$(DESTDIR)$(includedir)/$$f"; \
-	done
-
-uninstall-nodist_includeHEADERS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(nodist_include_HEADERS)'; for p in $$list; do \
 	  f=$(am__strip_dir) \
 	  echo " rm -f '$(DESTDIR)$(includedir)/$$f'"; \
 	  rm -f "$(DESTDIR)$(includedir)/$$f"; \
@@ -693,7 +670,7 @@ check: check-recursive
 all-am: Makefile $(LTLIBRARIES) $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)" "$(DESTDIR)$(includedir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-recursive
@@ -713,11 +690,9 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
-	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
-	-test -z "$(DISTCLEANFILES)" || rm -f $(DISTCLEANFILES)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -743,9 +718,9 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-includeHEADERS install-nodist_includeHEADERS
+install-data-am: install-includeHEADERS
 
-install-exec-am: install-libLTLIBRARIES
+install-exec-am: install-exec-local install-libLTLIBRARIES
 
 install-info: install-info-recursive
 
@@ -772,7 +747,7 @@ ps: ps-recursive
 ps-am:
 
 uninstall-am: uninstall-includeHEADERS uninstall-info-am \
-	uninstall-libLTLIBRARIES uninstall-nodist_includeHEADERS
+	uninstall-libLTLIBRARIES uninstall-local
 
 uninstall-info: uninstall-info-recursive
 
@@ -783,35 +758,27 @@ uninstall-info: uninstall-info-recursive
 	distclean-recursive distclean-tags distdir dvi dvi-am html \
 	html-am info info-am install install-am install-data \
 	install-data-am install-exec install-exec-am \
-	install-includeHEADERS install-info install-info-am \
-	install-libLTLIBRARIES install-man \
-	install-nodist_includeHEADERS install-strip installcheck \
-	installcheck-am installdirs installdirs-am maintainer-clean \
-	maintainer-clean-generic maintainer-clean-recursive \
-	mostlyclean mostlyclean-compile mostlyclean-generic \
-	mostlyclean-libtool mostlyclean-recursive pdf pdf-am ps ps-am \
-	tags tags-recursive uninstall uninstall-am \
+	install-exec-local install-includeHEADERS install-info \
+	install-info-am install-libLTLIBRARIES install-man \
+	install-strip installcheck installcheck-am installdirs \
+	installdirs-am maintainer-clean maintainer-clean-generic \
+	maintainer-clean-recursive mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool mostlyclean-recursive \
+	pdf pdf-am ps ps-am tags tags-recursive uninstall uninstall-am \
 	uninstall-includeHEADERS uninstall-info-am \
-	uninstall-libLTLIBRARIES uninstall-nodist_includeHEADERS
+	uninstall-libLTLIBRARIES uninstall-local
 
-$(libOsi_la_OBJECTS): ../inc/$(CONFIG_DIST)
 
-../inc/$(CONFIG_DIST): ../inc/$(CONFIG_H)
-	echo "/** Required defines from $(CONFIG_H) */" >bla.tmp
-	echo "#ifndef __$(CONFIG_DIST)__" | sed -e 's/\./_/g' >>bla.tmp
-	echo "#define __$(CONFIG_DIST)__" | sed -e 's/\./_/g' >>bla.tmp
-	$(EGREP) 'COIN_' $< >>bla.tmp
-	echo "#endif" >>bla.tmp
-	if test -r ../inc/$(CONFIG_DIST); then \
-	  if diff ../inc/$(CONFIG_DIST) bla.tmp >/dev/null 2>&1 ; then \
-	    rm -f bla.tmp; \
-	  else \
-	    rm -f ../inc/$(CONFIG_DIST); \
-	    mv bla.tmp ../inc/$(CONFIG_DIST); \
-	  fi; \
-	else \
-	  mv bla.tmp ../inc/$(CONFIG_DIST); \
-	fi
+install-exec-local:
+	echo "#ifndef HAVE_CONFIG_H" >bla
+	echo "#define HAVE_CONFIG_H" >>bla
+	echo "#endif" >> bla
+	cat $(srcdir)/$(ConfigHeader) >> bla
+	$(install_sh_DATA) bla $(DESTDIR)$(includedir)/$(ConfigHeader)
+	rm -f bla
+
+uninstall-local:
+	rm -f $(DESTDIR)$(includedir)/$(ConfigHeader)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

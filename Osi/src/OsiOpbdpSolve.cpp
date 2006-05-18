@@ -6,7 +6,7 @@
 #  pragma warning(disable:4786)
 #endif
 
-#include "OsiConfig.hpp"
+#include "OsiConfig.h"
 
 #include <cstdlib>
 #include <cstdio>

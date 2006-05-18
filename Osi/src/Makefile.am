@@ -106,35 +106,20 @@ include_HEADERS = \
 #OsiAuxInfo.hpp
 #OsiOpbdpSolve.hpp
 
-########################################################################
-#     Generating the configure header that is to be distributed        #
-########################################################################
+#############################################################################
+# Create the Config.h file that always defines HAVE_CONFIG_H and install it #
+#############################################################################
 
-# You should only need to adapt the following two lines
-CONFIG_DIST = OsiConfig.hpp
-CONFIG_H = config_osi.h
-$(libOsi_la_OBJECTS): ../inc/$(CONFIG_DIST)
+# You only need to adapt the following line
+ConfigHeader = OsiConfig.h
 
-nodist_include_HEADERS = ../inc/$(CONFIG_DIST)
+install-exec-local:
+	echo "#ifndef HAVE_CONFIG_H" >bla
+	echo "#define HAVE_CONFIG_H" >>bla
+	echo "#endif" >> bla
+	cat $(srcdir)/$(ConfigHeader) >> bla
+	$(install_sh_DATA) bla $(DESTDIR)$(includedir)/$(ConfigHeader)
+	rm -f bla
 
-
-../inc/$(CONFIG_DIST): ../inc/$(CONFIG_H)
-	echo "/** Required defines from $(CONFIG_H) */" >bla.tmp
-	echo "#ifndef __$(CONFIG_DIST)__" | sed -e 's/\./_/g' >>bla.tmp
-	echo "#define __$(CONFIG_DIST)__" | sed -e 's/\./_/g' >>bla.tmp
-	$(EGREP) 'COIN_' $< >>bla.tmp
-	echo "#endif" >>bla.tmp
-	if test -r ../inc/$(CONFIG_DIST); then \
-	  if diff ../inc/$(CONFIG_DIST) bla.tmp >/dev/null 2>&1 ; then \
-	    rm -f bla.tmp; \
-	  else \
-	    rm -f ../inc/$(CONFIG_DIST); \
-	    mv bla.tmp ../inc/$(CONFIG_DIST); \
-	  fi; \
-	else \
-	  mv bla.tmp ../inc/$(CONFIG_DIST); \
-	fi
-
-CLEANFILES = bla.tmp
-
-DISTCLEANFILES = ../inc/$(CONFIG_DIST)
+uninstall-local:
+	rm -f $(DESTDIR)$(includedir)/$(ConfigHeader)

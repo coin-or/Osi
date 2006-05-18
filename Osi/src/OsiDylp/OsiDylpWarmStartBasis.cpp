@@ -6,7 +6,7 @@
   This file is a portion of the COIN/OSI interface for dylp.
 */
 
-#include "OsiConfig.hpp"
+#include "OsiConfig.h"
 
 #ifdef _MSC_VER
 

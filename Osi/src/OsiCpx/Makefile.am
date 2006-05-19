@@ -20,7 +20,7 @@ libOsiCpx_la_SOURCES = \
 	OsiCpxSolverInterface.cpp OsiCpxSolverInterface.hpp
 
 # This is for libtool (on Windows)
-libOsiCpx_la_LDFLAGS = # -no-undefined
+libOsiCpx_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows.

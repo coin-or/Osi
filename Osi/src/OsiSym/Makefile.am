@@ -22,7 +22,7 @@ libOsiSym_la_SOURCES = \
 	SymWarmStart.cpp SymWarmStart.hpp
 
 # This is for libtool (on Windows)
-libOsiSym_la_LDFLAGS = # -no-undefined
+libOsiSym_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows.

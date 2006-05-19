@@ -14,7 +14,7 @@
 #  pragma warning(disable:4786)
 #endif
 
-#include "config_osi.h"
+#include "OsiConfig.h"
 
 #include <cassert>
 #include <iostream>

@@ -6,7 +6,7 @@
   This file is a portion of the COIN/OSI interface for dylp.
 */
 
-#include "config_osi.h"
+#include "OsiConfig.h"
 
 #ifdef COIN_HAS_DYLP
 

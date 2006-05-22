@@ -18,6 +18,7 @@ lib_LTLIBRARIES = libOsi.la
 
 # List all source files for this library, including headers
 libOsi_la_SOURCES = \
+	OsiConfig.h \
 	OsiAuxInfo.cpp OsiAuxInfo.hpp \
 	OsiColCut.cpp OsiColCut.hpp \
 	OsiCollections.hpp \

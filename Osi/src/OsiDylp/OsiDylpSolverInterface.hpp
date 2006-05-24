@@ -33,7 +33,8 @@ extern "C" {
 
 /*! \brief Enum to specify cold/warm/hot start */
 
-typedef enum { startCold = 1, startWarm, startHot } ODSI_start_enum ;
+typedef enum { startInvalid = 0,
+	       startCold = 1, startWarm, startHot } ODSI_start_enum ;
 
 
 /*! \class OsiDylpSolverInterface
@@ -517,7 +518,7 @@ public:
 
   /*! \brief Return the vector of primal variables for the solution */
 
-  const double* getColSolution() const ;
+  const double* getColSolution() const ; 
 
   /*! \brief Return the vector of dual variables for the solution */
 
@@ -567,7 +568,7 @@ public:
     NOTE that ODSI_PARANOIA must be defined in order for OsiCbc(dylp) to pass
     the OsiCbc unit test.
   */
-  void ODSI::indexCheck (int k, bool isCol, std::string rtnnme) ;
+  void indexCheck (int k, bool isCol, std::string rtnnme) ;
 # endif
 
 //@}
@@ -924,7 +925,6 @@ private:
 /*! \name Helper functions for invoking dylp */
 //@{
   /*! \brief Common core method to invoke dylp */
-
   lpret_enum do_lp (ODSI_start_enum start) ;
 //@}
 

@@ -30,8 +30,10 @@ libOsiDylp_la_LDFLAGS = $(LT_LDFLAGS)
 # "top_srcdir" refers to the basic directory for the main package that is
 # being compiled.
 CXXFLAGS += \
-	-I`$(CYGPATH_W) $(COINBASESRCCDIR)/src` \
-	-I`$(CYGPATH_W) $(DYLPSRCDIR)/src` \
+	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
+	-I`$(CYGPATH_W) $(DYLPSRCDIR)/src/DylpStdLib` \
+	-I`$(CYGPATH_W) $(DYLPSRCDIR)/src/Dylp` \
+	-I`$(CYGPATH_W) $(DYLPOBJDIR)/inc` \
 	-I`$(CYGPATH_W) $(srcdir)/..`
 
 # This line is necessary to allow VPATH compilation with MS compilers

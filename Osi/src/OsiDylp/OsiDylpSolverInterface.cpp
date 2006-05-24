@@ -73,20 +73,23 @@ const double CoinInfinity = COIN_DBL_MAX ;
   cause ODSI to throw an exception if asked for stale solution data. Otherise,
   it will simply cope, refreshing the solution by calling dylp. At any log
   level greater than 0, you'll get a warning.
+
+  #define ODSI_STRICTLY_FRESH
 */
 
-#define ODSI_STRICTLY_FRESH
 
 /*! \brief Define to enable paranoid checks.
 
   Enables various paranoid checks, including bounds checks on indices. An
-  error will cause a throw.
+  error will cause a throw. Normally this will be defined by requesting the
+  paranoia option in the makefile.
   
   In particular, this symbol must be defined in order for OsiCbc(dylp) to
   pass the OsiCbc unit test.
+
+  #define ODSI_PARANOIA
 */
 
-#define ODSI_PARANOIA
 
 /*!
   \file OsiDylpSolverInterface.cpp
@@ -178,11 +181,11 @@ const double CoinInfinity = COIN_DBL_MAX ;
   The OSI specification says that changes to the problem structure should
   invalidate the current solution. However, the de facto standards (the
   OSI unitTest and the OsiClp implementation) are more relevant, particularly
-  for solvers that expect to work in Cbc. Clp bends the rules pretty badly.
+  for solvers that expect to work in Cbc. Clp bends the rules pretty far.
   OsiDylp offers a compile-time option, ODSI_STRICTLY_FRESH. When this symbol
   is defined, ODSI will throw an exception if the user tries to use a stale
-  solution. If it's not defined, ODSI will cope by calling dylp to refresh the
-  solution on the spot.
+  solution. If it's not defined, ODSI will quietly return whatever information
+  it has. ODSI_STRICTLY_FRESH is enabled by default.
 
   The actual behaviour is a bit more complicated, due to the extreme cases.
   The OSI unitTest requires that an empty solver (no constraint system) return
@@ -251,6 +254,23 @@ const double CoinInfinity = COIN_DBL_MAX ;
 namespace {
   char sccsid[] UNUSED = "@(#)OsiDylpSolverInterface.cpp	1.20	11/13/04" ;
   char cvsid[] UNUSED = "$Id$" ;
+
+/*
+  A little print helper routine for the ODSI_start_enum type.
+*/
+
+const char *startString (ODSI_start_enum start)
+
+{ switch (start)
+  { case startCold:
+    { return ("cold") ; }
+    case startWarm:
+    { return ("warm") ; }
+    case startHot:
+    { return ("hot") ; }
+    default:
+    { return ("!invalid!") ; } } }
+
 }	// end unnamed file-local namespace
 
 using std::string ;
@@ -289,7 +309,6 @@ extern char *stralloc(const char *str) ;
 extern void strfree(const char *str) ;
 
 }
-
 
 /*!
   \defgroup DylpIO dylp i/o control variables
@@ -593,7 +612,7 @@ inline void ODSI::copy_basis (const basis_struct* src, basis_struct* dst)
 		    "copy_basis","OsiDylpSolverInterface") ; }
   memcpy(dst->el,src->el,idx(src->len)*sizeof(basisel_struct)) ;
 
-# ifndef NDEBUG
+# ifdef ODSI_PARANOIA
   assert_same(*dst, *src, true) ;
 # endif
 
@@ -638,7 +657,7 @@ lpprob_struct* ODSI::copy_lpprob (const lpprob_struct* src)
   CLONE_VEC(double,src->y,dst->y,row_count);
   CLONE_VEC(bool,src->actvars,dst->actvars,col_count);
 
-# ifndef NDEBUG
+# ifdef ODSI_PARANOIA
   assert_same(*dst, *src, true) ;
 # endif
 
@@ -1178,7 +1197,7 @@ void ODSI::dylp_ioinit ()
 { if (reference_count > 1) return ;
 
   string errfile = string(DYLP_ERRMSGDIR)+string("/dy_errmsgs.txt") ;
-# ifndef NDEBUG
+# ifdef ODSI_INFOMSGS
   errinit(const_cast<char *>(errfile.c_str()),0,true) ;
 # else
   errinit(const_cast<char *>(errfile.c_str()),0,false) ;
@@ -1803,7 +1822,7 @@ ODSI::OsiDylpSolverInterface (const OsiDylpSolverInterface& src)
 
   reference_count++ ;
 
-# ifndef NDEBUG
+# ifdef ODSI_PARANOIA
   assert_same(*this, src, true) ;
 # endif
 
@@ -1906,7 +1925,7 @@ OsiDylpSolverInterface &ODSI::operator= (const OsiDylpSolverInterface &rhs)
 
     reference_count++ ;
 
-#   ifndef NDEBUG
+#   ifdef ODSI_PARANOIA
     assert_same(*this, rhs, true) ;
 #   endif
   }
@@ -1957,7 +1976,8 @@ void ODSI::destruct_problem (bool preserve_interface)
 */
   assert((dylp_owner != this) || (dylp_owner == this && lpprob)) ;
 
-  if (dylp_owner == this) detach_dylp() ;
+  if (dylp_owner == this)
+  { detach_dylp() ; }
 
   if (lpprob)
   { assert(lpprob->consys == consys) ;
@@ -2026,6 +2046,12 @@ void ODSI::detach_dylp ()
   Either of the initialSolve or resolve option blocks are ok here; dylp does
   not look.
 */
+# ifdef ODSI_INFOMSGS
+  CoinMessageHandler *hdl = messageHandler() ; 
+  hdl->message(ODSI_DETACH,messages_)
+    << reinterpret_cast<int>(this)
+    << CoinMessageEol ;
+# endif
   dylp(lpprob,initialSolveOptions,tolerances,statistics) ;
   clrflg(lpprob->ctlopts,lpctlONLYFREE) ;
   setflg(lpprob->ctlopts,save_flags) ;
@@ -2120,7 +2146,10 @@ void ODSI::reset ()
 
 inline void ODSI::setContinuous (int j)
 
-{ indexCheck(j,true,"setContinuous") ;
+{ 
+# ifdef ODSI_PARANOIA
+  indexCheck(j,true,"setContinuous") ;
+# endif
 
   if (!consys->vtyp)
   { bool r = consys_attach(consys,CONSYS_VTYP,sizeof(vartyp_enum),
@@ -2142,11 +2171,11 @@ inline void ODSI::setContinuous (int j)
     default:
     { break ; } }
 /*
-  Set the new type. In general, changing the type can result in a change in
-  the optimal solution.
+  Set the new type. Changing the variable type should not affect the value of
+  the current lp solution (which sees everything as continuous) hence there's
+  no need to mark the solution as stale.
 */
   consys->vtyp[idx(j)] = vartypCON ;
-  solnIsFresh = false ;
   
   return ; }
 
@@ -2160,7 +2189,10 @@ inline void ODSI::setContinuous (const int* indices, int len)
 
 inline void ODSI::setInteger (int j)
 
-{ indexCheck(j,true,"setInteger") ;
+{ 
+# ifdef ODSI_PARANOIA
+  indexCheck(j,true,"setInteger") ;
+# endif
 
   if (!consys->vtyp)
   { bool r = consys_attach(consys,CONSYS_VTYP,sizeof(vartyp_enum),
@@ -2182,8 +2214,9 @@ inline void ODSI::setInteger (int j)
     default:
     { break ; } }
 /*
-  Set the new type. In general, changing the type can result in a change in
-  the optimal solution.
+  Set the new type. Changing the variable type should not affect the value of
+  the current lp solution (which sees everything as continuous) hence there's
+  no need to mark the solution as stale.
 */
   if (getColLower()[j] == 0.0 && getColUpper()[j] == 1.0)
   { consys->vtyp[idx(j)] = vartypBIN ;
@@ -2191,7 +2224,6 @@ inline void ODSI::setInteger (int j)
   else
   { consys->vtyp[idx(j)] = vartypINT ;
     consys->intvcnt++ ; }
-  solnIsFresh = false ;
 
   return ; }
 
@@ -2217,7 +2249,10 @@ inline void ODSI::setInteger (const int* indices, int len)
 
 inline void ODSI::setColLower (int i, double val)
 
-{ indexCheck(i,true,"setColLower") ;
+{ 
+# ifdef ODSI_PARANOIA
+  indexCheck(i,true,"setColLower") ;
+# endif
 
   if (!consys->vlb)
   { bool r = consys_attach(consys,CONSYS_VLB,sizeof(double),
@@ -2227,11 +2262,15 @@ inline void ODSI::setColLower (int i, double val)
       return ; } }
 /*
   Change the bound. In general, this can result in a change in the optimal
-  solution.
+  solution, but we'll be punctilious and only mark the solution as stale if the
+  new bound conflicts with the primal solution value.
 */
   consys->vlb[idx(i)] = val ;
   if (lpprob) setflg(lpprob->ctlopts,lpctlLBNDCHG) ;
-  solnIsFresh = false ;
+
+  const double *xvals = getColSolution() ;
+  if (xvals[i] < val)
+  { solnIsFresh = false ; }
 
   if (isInteger(i))
   { if (floor(val) != val)
@@ -2247,7 +2286,10 @@ inline void ODSI::setColLower (int i, double val)
 */
 inline void ODSI::setColUpper (int i, double val)
 
-{ indexCheck(i,true,"setColUpper") ;
+{ 
+# ifdef ODSI_PARANOIA
+  indexCheck(i,true,"setColUpper") ;
+# endif
 
   if (!consys->vub)
   { bool r = consys_attach(consys,CONSYS_VUB,sizeof(double),
@@ -2257,11 +2299,14 @@ inline void ODSI::setColUpper (int i, double val)
       return ; } }
 /*
   Change the bound. In general, this can result in a change in the optimal
-  solution.
+  solution, but we'll be punctilious and only mark the solution as stale if the
+  new bound conflicts with the primal solution value.
 */
   consys->vub[idx(i)] = val ;
   if (lpprob) setflg(lpprob->ctlopts,lpctlUBNDCHG) ;
-  solnIsFresh = false ;
+  const double *xvals = getColSolution() ;
+  if (xvals[i] > val)
+  { solnIsFresh = false ; }
 
   if (isInteger(i))
   { if (floor(val) != val)
@@ -2278,7 +2323,10 @@ inline void ODSI::setColUpper (int i, double val)
 
 void ODSI::setRowType (int i, char sense, double rhs, double range)
 
-{ indexCheck(i,false,"setRowType") ;
+{ 
+# ifdef ODSI_PARANOIA
+  indexCheck(i,false,"setRowType") ;
+# endif
 /*
   Install the change. In general, this can change the optimal solution.
 */
@@ -2302,7 +2350,10 @@ void ODSI::setRowType (int i, char sense, double rhs, double range)
 
 void ODSI::setRowUpper (int i, double val)
 
-{ indexCheck(i,false,"setRowUpper") ;
+{ 
+# ifdef ODSI_PARANOIA
+  indexCheck(i,false,"setRowUpper") ;
+# endif
 
   int k = idx(i) ;
   double clbi = -odsiInfinity ;
@@ -2340,7 +2391,10 @@ void ODSI::setRowUpper (int i, double val)
 
 void ODSI::setRowLower (int i, double val)
 
-{ indexCheck(i,false,"setRowLower") ;
+{ 
+# ifdef ODSI_PARANOIA
+  indexCheck(i,false,"setRowLower") ;
+# endif
 
   int k = idx(i) ;
   double cubi ;
@@ -2487,7 +2541,10 @@ void ODSI::deleteRows (int count, const int* rows)
 
 void ODSI::setObjCoeff (int j, double objj)
 
-{ indexCheck(j,true,"setObjCoeff") ;
+{ 
+# ifdef ODSI_PARANOIA
+  indexCheck(j,true,"setObjCoeff") ;
+# endif
   
   consys->obj[idx(j)] = getObjSense()*objj ;
   if (_col_obj) _col_obj[j] = objj ;
@@ -3912,8 +3969,13 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
 
   bool *flipped ;
 
-# ifndef NDEBUG
+# ifdef ODSI_INFOMSGS
   int print = 1 ;
+
+  CoinMessageHandler *hdl = messageHandler() ; 
+  hdl->message(ODSI_ALLDYLP,messages_)
+    << startString(start) << reinterpret_cast<int>(this)
+    << CoinMessageEol ;
 # endif
 
 /*
@@ -3983,7 +4045,7 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
   change flags (they're only relevant to a hot start).
 */
   lpret = dylp(lpprob,&lcl_opts,&lcl_tols,statistics) ;
-# ifndef NDEBUG
+# ifdef ODSI_INFOMSGS
   if (print >= 1)
   { if (lpret == lpOPTIMAL || lpret == lpINFEAS || lpret == lpUNBOUNDED)
     { outfmt(dy_logchn,dy_gtxecho,"\n  success, status %s",
@@ -4050,7 +4112,7 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
 */
     for ( ; lcl_opts.factor >= 10 ; lcl_opts.factor /= 2)
     { retries++ ;
-#     ifndef NDEBUG
+#     ifdef ODSI_INFOMSGS
       if (print >= 1)
       { outfmt(dy_logchn,dy_gtxecho,".\n    retry %d: refactor = %d ...",
 	       retries,lcl_opts.factor) ; }
@@ -4061,13 +4123,13 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
 
       if (lpret == lpOPTIMAL || lpret == lpINFEAS || lpret == lpUNBOUNDED)
       {
-#       ifndef NDEBUG
+#       ifdef ODSI_INFOMSGS
 	if (print >= 1)
 	{ outfmt(dy_logchn,dy_gtxecho,"\n  success, status %s",
 		 dy_prtlpret(lpprob->lpret)) ; }
 #       endif
 	break ; }
-#     ifndef NDEBUG
+#     ifdef ODSI_INFOMSGS
       else
       { if (print >= 1)
 	{ outfmt(dy_logchn,dy_gtxecho,"\n  failed, status %s",
@@ -4110,7 +4172,7 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
 /*
   That's it, we've done our best. Do a little printing and return.
 */
-# ifndef NDEBUG
+# ifdef ODSI_INFOMSGS
   if (print >= 1)
   { if (lpprob->lpret == lpOPTIMAL)
       outfmt(dy_logchn,dy_gtxecho,"; objective %.8g",lpprob->obj) ;
@@ -4186,7 +4248,7 @@ void ODSI::initialSolve ()
   Are we going to do presolve and postsolve? If so, now's the time to presolve
   the constraint system.
 */
-# ifndef NDEBUG
+# ifdef ODSI_INFOMSGS
   double startTime = CoinCpuTime() ;
   double presolveTime = startTime ;
 # endif
@@ -4209,7 +4271,7 @@ void ODSI::initialSolve ()
     else
     { destruct_presolve() ;
       presolving = false ; }
-#   ifndef NDEBUG
+#   ifdef ODSI_INFOMSGS
     presolveTime = CoinCpuTime() ;
 #   endif
   }
@@ -4241,14 +4303,17 @@ void ODSI::initialSolve ()
   { lpprob->ctlopts = setflg(lpprob->ctlopts,save_ctlopts) ;
     initialSolveOptions->finpurge.vars = save_finpurge_vars ;
     initialSolveOptions->finpurge.cons = save_finpurge_cons ; }
-# ifndef NDEBUG
+# ifdef ODSI_INFOMSGS
   double firstLPTime = CoinCpuTime() ;
-# endif
 
-  hdl->message(ODSI_LPRESULT,messages_)
+  hdl->message(ODSI_COLD,messages_) ;
+  hdl->printing(presolving)
+    << "presol" ;
+  hdl->printing(true)
     << dy_prtlpret(lp_retval)
     << getObjSense()*(lpprob->obj+bias) << lpprob->iters
     << CoinMessageEol ;
+# endif
 /*
   Separate the failure cases from the successful cases. lpITERLIM is
   questionable in this context (initial solution to the lp) but it's
@@ -4262,7 +4327,7 @@ void ODSI::initialSolve ()
   else
   { lpOK = false ; }
 
-# ifndef NDEBUG
+# ifdef ODSI_INFOMSGS
   dylp_printsoln(true,true) ;
 # endif
 /*
@@ -4279,7 +4344,7 @@ void ODSI::initialSolve ()
 */
   if (lpOK)
   {
-#   ifndef NDEBUG
+#   ifdef ODSI_INFOMSGS
     double postsolveTime = firstLPTime ;
     double secondLPTime = firstLPTime ;
 #   endif
@@ -4288,16 +4353,19 @@ void ODSI::initialSolve ()
     { postObj_ = initialisePostsolve(preObj_) ;
       doPostsolve() ;
       installPostsolve() ;
-#     ifndef NDEBUG
+#     ifdef ODSI_INFOMSGS
       postsolveTime = CoinCpuTime() ;
 #     endif
       lp_retval = do_lp(startWarm) ;
-#     ifndef NDEBUG
+#     ifdef ODSI_INFOMSGS
       secondLPTime = CoinCpuTime() ;
-#     endif
-      hdl->message(ODSI_LPRESULT,messages_)
+      hdl->message(ODSI_COLD,messages_) ;
+      hdl->printing(true)
+	<< "postsol" ;
+      hdl->printing(true)
 	<< dy_prtlpret(lp_retval) << getObjSense()*lpprob->obj << lpprob->iters
 	<< CoinMessageEol ;
+#     endif
       if (!(lp_retval == lpOPTIMAL || lp_retval == lpINFEAS ||
 	    lp_retval == lpUNBOUNDED))
       { throw CoinError("Call to dylp failed (postsolve).",
@@ -4306,13 +4374,14 @@ void ODSI::initialSolve ()
       delete activeBasis ;
       activeBasis = 0 ;
       activeIsModified = false ; }
-#   ifndef NDEBUG
-    printf("Problem %s: tot %.4f pre %.4f lp1 %d %.4f post %.4f lp2 %d %.4f\n",
-	   consys->nme,secondLPTime-startTime,
-	   presolveTime-startTime,
-	   presolIters,firstLPTime-presolveTime,
-	   postsolveTime-firstLPTime,
-	   lpprob->iters-presolIters,secondLPTime-postsolveTime) ;
+#   ifdef ODSI_INFOMSGS
+    hdl->message(ODSI_SHORTSTATS,messages_)
+      << consys->nme << secondLPTime-startTime
+      << presolveTime-startTime
+      << presolIters << firstLPTime-presolveTime
+      << postsolveTime-firstLPTime
+      << lpprob->iters-presolIters << secondLPTime-postsolveTime
+      << CoinMessageEol ;
 #   endif
   }
 /*
@@ -4339,6 +4408,11 @@ void ODSI::initialSolve ()
 */
   if (lpOK && flgon(lpprob->ctlopts,lpctlDYVALID))
   { dylp_owner = this ;
+#   ifdef ODSI_INFOMSGS
+    hdl->message(ODSI_ATTACH,messages_)
+      << "initialSolve" << reinterpret_cast<int>(this)
+      << CoinMessageEol ;
+#   endif
     if (lpprob->lpret == lpUNBOUNDED)
     { _objval = -getObjSense()*getInfinity() ; }
     else
@@ -5335,7 +5409,7 @@ CoinWarmStart* ODSI::getWarmStart () const
 			  "invalid status in dylp basis.",
 			  "getWarmStart","OsiDylpSolverInterface") ; } } } }
 
-# ifdef PARANOIA
+# ifdef ODSI_PARANOIA
   if (wsb)
   { wsb->checkBasis() ; }
 # endif
@@ -5406,7 +5480,7 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
   if (!wsb)
   { wsb = new OsiDylpWarmStartBasis(*cwsb) ;
     ourBasis = true ; }
-# ifdef PARANOIA
+# ifdef ODSI_PARANOIA
   wsb->checkBasis() ;
 # endif
   varcnt = wsb->getNumStructural() ;
@@ -5645,7 +5719,8 @@ void ODSI::resolve ()
   basis here. Similarly, setWarmStart will force a warm start. But if we have
   an unmodified active basis, dylp should be able to manage a hot start.
 */
-{ assert(lpprob && lpprob->basis && lpprob->status &&
+{ CoinMessageHandler *hdl = messageHandler() ; 
+  assert(lpprob && lpprob->basis && lpprob->status &&
 	 consys && resolveOptions && tolerances) ;
 
 /*
@@ -5709,6 +5784,12 @@ void ODSI::resolve ()
   considered ok in warm and hot start (in particular, for strong branching).
   Since we can't tell from here, include it in the successes.
 */
+# ifdef ODSI_INFOMSGS
+  hdl->message(ODSI_WARM,messages_)
+    << dy_prtlpret(lp_retval)
+    << getObjSense()*(lpprob->obj) << lpprob->iters
+    << CoinMessageEol ;
+# endif
   bool lpOK ;
   if ((lp_retval == lpOPTIMAL || lp_retval == lpINFEAS ||
        lp_retval == lpUNBOUNDED || lp_retval == lpITERLIM))
@@ -5739,6 +5820,11 @@ void ODSI::resolve ()
   activeIsModified = false ;
   if (lpOK && flgon(lpprob->ctlopts,lpctlDYVALID))
   { dylp_owner = this ;
+#   ifdef ODSI_INFOMSGS
+    hdl->message(ODSI_ATTACH,messages_)
+      << "resolve" << reinterpret_cast<int>(this)
+      << CoinMessageEol ;
+#   endif
     if (lpprob->lpret == lpUNBOUNDED)
     { _objval = -getObjSense()*getInfinity() ; }
     else
@@ -5833,43 +5919,52 @@ void ODSI::solveFromHotStart ()
 { 
 /*
   If some other ODSI object has used the solver, then fall back to a warm
-  start. Throw an error if there's no warm start object to fall back on.
-  (The throw message lies a little, for the benefit of users who haven't
-  checked the details of the code.)
+  start. Similarly, if the last call to dylp failed and the solver does not
+  hold retained data structures, we need to fall back to a warm start.  Throw
+  an error if there's no warm start object to fall back on.  (The throw
+  message lies a little, for the benefit of users who haven't checked the
+  details of the code.)
 */
 
-  if (dylp_owner != this)
+  if (dylp_owner != this || flgoff(lpprob->ctlopts,lpctlDYVALID))
   { if (hotstart_fallback && setWarmStart(hotstart_fallback))
     { resolve() ; }
     else
     { throw CoinError("Hot start failed --- invalid/missing hot start object.",
-		      "solveFromHotStart","OsiDylpSolverInterface") ; } }
+		      "solveFromHotStart","OsiDylpSolverInterface") ; }
+    return ; }
 /*
   If no other ODSI object has used the solver, all we need to do is check the
   iteration limit. The basis should be ready.  Note that dylp does need to
   know what's changed: any of bounds, rhs & rhslow, or objective. The various
   routines that make these changes set the flags.
 */
-  else
-  { int tmp_iterlim = -1 ;
-    int hotlim ;
+  int tmp_iterlim = -1 ;
+  int hotlim ;
 
-    assert(lpprob && lpprob->basis && lpprob->status && basis_ready &&
-	   consys && resolveOptions && tolerances) ;
+  assert(lpprob && lpprob->basis && lpprob->status && basis_ready &&
+	 consys && resolveOptions && tolerances) ;
 
-    if (isactive(local_logchn)) dy_logchn = local_logchn ;
-    dy_gtxecho = resolve_gtxecho ;
+  if (isactive(local_logchn)) dy_logchn = local_logchn ;
+  dy_gtxecho = resolve_gtxecho ;
 /*
   Phase can be anything except dyDONE, which will cause dylp to free data
   structures and return.
 */
-    lpprob->phase = dyINV ;
-    getIntParam(OsiMaxNumIterationHotStart,hotlim) ;
-    if (hotlim > 0)
-    { tmp_iterlim = resolveOptions->iterlim ;
-      resolveOptions->iterlim = (hotlim/3 > 0)?hotlim/3:1 ; }
+  lpprob->phase = dyINV ;
+  getIntParam(OsiMaxNumIterationHotStart,hotlim) ;
+  if (hotlim > 0)
+  { tmp_iterlim = resolveOptions->iterlim ;
+    resolveOptions->iterlim = (hotlim/3 > 0)?hotlim/3:1 ; }
 
-    lp_retval = do_lp(startHot) ;
+  lp_retval = do_lp(startHot) ;
+# ifdef ODSI_INFOMSGS
+  CoinMessageHandler *hdl = messageHandler() ; 
+  hdl->message(ODSI_HOT,messages_)
+    << dy_prtlpret(lp_retval)
+    << getObjSense()*(lpprob->obj) << lpprob->iters
+    << CoinMessageEol ;
+# endif
 /*
   Separate the failure cases from the successful cases. lpITERLIM is
   considered ok in warm and hot start (in particular, for strong branching).
@@ -5887,31 +5982,29 @@ void ODSI::solveFromHotStart ()
   access reduced costs. We should only need to empty the solution vectors, not
   the structural vectors.
 */
-    destruct_col_cache(false) ;
-    destruct_row_cache(false) ;
+  destruct_col_cache(false) ;
+  destruct_row_cache(false) ;
 /*
-  Tidy up. If all went well, indicate this object owns the solver, set the
-  objective, and set the active basis. If we've failed, do the opposite.
-  Note that we have to remove any current active basis first, or getWarmStart
-  will hand it back to us.
+  Tidy up. If all went well, set the objective and set the active basis (we
+  already own the solver). If we've failed, do the opposite.  Note that we
+  have to remove any current active basis first, or getWarmStart will hand it
+  back to us.
 
-  Any of lpOPTIMAL, lpINFEAS, or lpUNBOUNDED can (in theory) be hot started
-  after allowable problem modifications, hence can be flagged lpctlDYVALID.
   dylp overloads lpprob->obj with the index of the unbounded variable when
   returning lpUNBOUNDED, so we need to fake the objective.
 */
-    delete activeBasis ;
-    activeBasis = 0 ;
-    activeIsModified = false ;
-    if (lpOK && flgon(lpprob->ctlopts,lpctlDYVALID))
-    { if (lpprob->lpret == lpUNBOUNDED)
-      { _objval = -getObjSense()*getInfinity() ; }
-      else
-      { _objval = getObjSense()*lpprob->obj ; }
-      activeBasis = this->getWarmStart() ; }
+  delete activeBasis ;
+  activeBasis = 0 ;
+  activeIsModified = false ;
+  if (lpOK && flgon(lpprob->ctlopts,lpctlDYVALID))
+  { if (lpprob->lpret == lpUNBOUNDED)
+    { _objval = -getObjSense()*getInfinity() ; }
     else
-    { dylp_owner = 0 ; }
-    if (tmp_iterlim > 0) resolveOptions->iterlim = tmp_iterlim ; }
+    { _objval = getObjSense()*lpprob->obj ; }
+    activeBasis = this->getWarmStart() ; }
+  else
+  { dylp_owner = 0 ; }
+  if (tmp_iterlim > 0) resolveOptions->iterlim = tmp_iterlim ;
 
   return ; }
 
@@ -6032,10 +6125,6 @@ inline void ODSI::indexCheck (int k, bool isCol, std::string rtnnme)
       throw CoinError(message,rtnnme,"OsiDylpSolverInterface") ; } }
   
   return ; }
-
-#else
-
-inline void ODSI::indexCheck (int k, bool isCol, std::string rtnnme) {} ;
 
 #endif
 

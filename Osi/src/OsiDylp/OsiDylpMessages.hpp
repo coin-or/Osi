@@ -15,6 +15,12 @@
 
 #include "CoinMessageHandler.hpp"
 
+/*
+  Enum used to specify ODSI messages to the message handler. There is no
+  need for the order here to match the order of message definition in
+  OsiDylpMessages.cpp, but all enum values must be here.
+*/
+
 typedef enum { ODSI_TEST_MSG,
 	       ODSI_MPSFILEIO,
 	       ODSI_UNSUPFORCEDO,
@@ -28,7 +34,14 @@ typedef enum { ODSI_TEST_MSG,
 	       ODSI_PRESOL_PASS,
 	       ODSI_POSTSOL,
 	       ODSI_POSTSOL_ACT,
-	       ODSI_LPRESULT,
+	       ODSI_COLD,
+	       ODSI_WARM,
+	       ODSI_HOT,
+	       ODSI_ALLDYLP,
+	       ODSI_DETACH,
+	       ODSI_ATTACH,
+	       ODSI_NOSOLVE,
+	       ODSI_SHORTSTATS,
 	       ODSI_DUMMY_END } OsiDylpMessageID_enum ;
 
 #endif /* OsiDylpMessages_H */

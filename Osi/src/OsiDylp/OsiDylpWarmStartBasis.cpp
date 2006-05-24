@@ -86,7 +86,7 @@ ODWSB::OsiDylpWarmStartBasis ()
     constraintStatus_(0)
 
 { 
-# ifdef PARANOIA
+# ifdef ODSI_PARANOIA
   checkBasis() ;
 # endif
 }
@@ -107,7 +107,7 @@ ODWSB::OsiDylpWarmStartBasis (const OsiDylpWarmStartBasis &ws)
     constraintStatus_ = new char[constatsze] ;
     memcpy(constraintStatus_,ws.constraintStatus_,constatsze) ; }
   
-# ifdef PARANOIA
+# ifdef ODSI_PARANOIA
   ws.checkBasis() ;
   checkBasis() ;
 # endif
@@ -127,7 +127,7 @@ CoinWarmStart *ODWSB::clone () const
   if (odwsb_orig)
   { odwsb_new = new OsiDylpWarmStartBasis(*odwsb_orig) ; }
 
-# ifdef PARANOIA
+# ifdef ODSI_PARANOIA
   checkBasis() ;
   odwsb_new->checkBasis() ;
 # endif
@@ -165,7 +165,7 @@ ODWSB::OsiDylpWarmStartBasis
     for (i = 0 ; i <= 3 ; i++) setStatus(&byteActive,i,CWSB::atLowerBound) ;
     memset(constraintStatus_,byteActive,constatsze) ; }
 
-# ifdef PARANOIA
+# ifdef ODSI_PARANOIA
   checkBasis() ;
 # endif
 
@@ -193,7 +193,7 @@ ODWSB::OsiDylpWarmStartBasis (const CoinWarmStartBasis &cwsb)
 
   memset(constraintStatus_,byteActive,constatsze) ;
   
-# ifdef PARANOIA
+# ifdef ODSI_PARANOIA
   checkBasis() ;
 # endif
 
@@ -216,7 +216,7 @@ OsiDylpWarmStartBasis& ODWSB::operator= (const OsiDylpWarmStartBasis &rhs)
     else
     { constraintStatus_ = 0 ; } }
   
-# ifdef PARANOIA
+# ifdef ODSI_PARANOIA
   checkBasis() ;
 # endif
 
@@ -249,7 +249,7 @@ void ODWSB::assignBasisStatus
   delete[] constraintStatus_ ;
   constraintStatus_ = cStat ;
   cStat = 0 ;
-# ifdef PARANOIA
+# ifdef ODSI_PARANOIA
   checkBasis() ;
 # endif
 }
@@ -286,7 +286,7 @@ void ODWSB::assignBasisStatus (int ns, int na, char *&sStat, char *&aStat)
   constraintStatus_ = new char[constatsze] ;
   for (i = 0 ; i <= 3 ; i++) setStatus(&byteActive,i,CWSB::atLowerBound) ;
   memset(constraintStatus_,byteActive,constatsze) ;
-# ifdef PARANOIA
+# ifdef ODSI_PARANOIA
   checkBasis() ;
 # endif
 }
@@ -379,7 +379,7 @@ void ODWSB::resize (int numRows, int numCols)
     delete [] constraintStatus_ ;
     constraintStatus_ = newStat ; }
   
-# ifdef PARANOIA
+# ifdef ODSI_PARANOIA
   checkBasis() ;
 # endif
 
@@ -490,7 +490,7 @@ void ODWSB::deleteRows (int rawTgtCnt, const int *rawTgts)
   compressRows(tgtCnt,tgts) ;
   delete [] tgts ;
 
-# ifdef PARANOIA
+# ifdef ODSI_PARANOIA
   checkBasis() ;
 # endif
 
@@ -551,7 +551,7 @@ CoinWarmStartDiff *ODWSB::generateDiff
   { throw CoinError("Old basis not OsiDylpWarmStartBasis.",
 		    "generateDiff","OsiDylpWarmStartBasis") ; }
   const OsiDylpWarmStartBasis *newBasis = this ;
-# ifdef PARANOIA
+# ifdef ODSI_PARANOIA
   oldBasis->checkBasis() ;
   checkBasis() ;
 # endif
@@ -701,7 +701,7 @@ void ODWSB::print () const
 	    << basic_structurals << " + " << basic_logicals << ")" ;
   std::cout << std::endl ;
 
-# ifdef PARANOIA
+# ifdef ODSI_PARANOIA
   checkBasis() ;
 # endif
   

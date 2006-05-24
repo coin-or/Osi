@@ -83,18 +83,29 @@ typedef struct { OsiDylpMessageID_enum inID ;
 		 const char *fmt ; } MsgDefn ;
 
 static MsgDefn us_en_defns[] = {
-  { ODSI_TEST_MSG, 0001, 2, "This is the us_en test message, eh." },
-  { ODSI_MPSFILEIO, 0010, 2, "MPS file %s %s with %d errors." },
-  { ODSI_LPRESULT, 0050, 3, "dylp result %s, z = %g, iters = %d." },
-  { ODSI_PRESOL_STATS, 0100, 2,
+  // informational (0 -- 2999)
+  { ODSI_TEST_MSG, 1, 2, "This is the us_en test message, eh." },
+  { ODSI_MPSFILEIO, 10, 5, "MPS file %s %s with %d errors." },
+  { ODSI_COLD, 50, 3, "dylp cold start%? (%s)%? result %s, z = %g, iters = %d." },
+  { ODSI_WARM, 51, 3, "dylp warm start result %s, z = %g, iters = %d." },
+  { ODSI_HOT, 52, 3, "dylp hot start result %s, z = %g, iters = %d." },
+  { ODSI_ALLDYLP, 53, 4, "dylp %s start odsi object %#x." },
+  { ODSI_DETACH, 54, 5, "dylp detach from %#x." },
+  { ODSI_ATTACH, 55, 5, "dylp attach in %s by %#x." },
+  { ODSI_SHORTSTATS, 56, 4,
+    "Problem %s: tot %.4f pre %.4f lp1 %d %.4f post %.4f lp2 %d %.4f" },
+  { ODSI_PRESOL_STATS, 100, 3,
     "%s %d constraints, %d variables, %d coefficients." }, 
-  { ODSI_PRESOL_PASS, 0101, 3,
+  { ODSI_PRESOL_PASS, 101, 6,
     "Presolve pass %d: dropped %d constraints (%.2f), %d variables (%.2f)." },
-  { ODSI_POSTSOL, 0200, 2, "Postsolve %s."},
-  { ODSI_POSTSOL_ACT, 0201, 3, "Applying postsolve transform %s."},
+  { ODSI_POSTSOL, 200, 3, "Postsolve %s."},
+  { ODSI_POSTSOL_ACT, 201, 6, "Applying postsolve transform %s."},
+  // warning (3000 -- 5999)
   { ODSI_IGNORED, 3001, 2, "Ignored unsupported hint; %s." },
   { ODSI_ODWSBSHORTBASIS, 3100, 1,
     "[%s]: basis has only %d variables for %d constraints." },
+  { ODSI_NOSOLVE, 3200, 1, "Impossible to call dylp; %s." },
+  // Non-fatal errors (6000 -- 8999)
   { ODSI_UNSUPFORCEDO, 6001, 1, "Attempt to force unsupported hint; %s." },
   { ODSI_EMPTYODWSB, 6101, 1, "Empty warm start basis object." },
   { ODSI_NOTODWSB, 6102, 1,
@@ -103,11 +114,12 @@ static MsgDefn us_en_defns[] = {
     "Basis size %d x %d does not match constraint system size %d x %d." },
   { ODSI_ODWSBBADSTATUS, 6104, 1,
     "Flipping %s (%d) from %s to %s; lack of finite bound." },
+  // Fatal errors (9000 and up)
   { ODSI_DUMMY_END, 999999, 0, "" }
 } ;
 
 static MsgDefn uk_en_defns[] = {
-  { ODSI_TEST_MSG, 0001, 2, "Blimey, this must be the uk_en test message" },
+  { ODSI_TEST_MSG, 1, 2, "Blimey, this must be the uk_en test message" },
   { ODSI_DUMMY_END, 999999, 0, "" }
 } ;
 
@@ -185,4 +197,3 @@ void ODSI::setOsiDylpMessages (CoinMessages::Language local_language)
 
   messages_ = odsiMessages ;
   return ; }
-

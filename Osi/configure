@@ -19904,8 +19904,8 @@ fi
 echo "$as_me:$LINENO: result: $coin_has_coinutils" >&5
 echo "${ECHO_T}$coin_has_coinutils" >&6
 
-echo "$as_me:$LINENO: checking for COIN project Dylp" >&5
-echo $ECHO_N "checking for COIN project Dylp... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for COIN project DyLP" >&5
+echo $ECHO_N "checking for COIN project DyLP... $ECHO_C" >&6
 
 # First check, if the sub-project is actually available (ToDo: allow
 # other locations)
@@ -19914,8 +19914,8 @@ coin_has_dylp=unavailable
 if test $PACKAGE_TARNAME = dylp; then
   coin_has_dylp=.
 else
-  if test -d $srcdir/../Dylp; then
-    coin_has_dylp=../Dylp
+  if test -d $srcdir/../DyLP; then
+    coin_has_dylp=../DyLP
   fi
 fi
 

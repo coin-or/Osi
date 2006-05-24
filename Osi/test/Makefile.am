@@ -73,10 +73,12 @@ endif
 
 if COIN_HAS_DYLP
   unitTest_SOURCES += OsiDylpSolverInterfaceTest.cpp
-  CXXFLAGS += -I`$(CYGPATH_W) $(DYLPSRCDIR)/src` \
+  CXXFLAGS += -I`$(CYGPATH_W) $(DYLPSRCDIR)/src/DylpStdLib` \
+	-I`$(CYGPATH_W) $(DYLPSRCDIR)/src/Dylp` \
+	-I`$(CYGPATH_W) $(DYLPOBJDIR)/inc` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiDylp`
   unitTest_LDADD += ../src/OsiDylp/libOsiDylp.la \
-	$(DYLPOBJDIR)/src/libDylp.la
+	$(DYLPOBJDIR)/src/Dylp/libDylp.la
   LIBS += `cat $(DYLPOBJDIR)/dylp_addlibs.txt`
 endif
 

@@ -71,11 +71,13 @@ noinst_PROGRAMS = unitTest$(EXEEXT)
 
 @COIN_HAS_CPX_TRUE@am__append_13 = ../src/OsiCpx/libOsiCpx.la
 @COIN_HAS_DYLP_TRUE@am__append_14 = OsiDylpSolverInterfaceTest.cpp
-@COIN_HAS_DYLP_TRUE@am__append_15 = -I`$(CYGPATH_W) $(DYLPSRCDIR)/src` \
+@COIN_HAS_DYLP_TRUE@am__append_15 = -I`$(CYGPATH_W) $(DYLPSRCDIR)/src/DylpStdLib` \
+@COIN_HAS_DYLP_TRUE@	-I`$(CYGPATH_W) $(DYLPSRCDIR)/src/Dylp` \
+@COIN_HAS_DYLP_TRUE@	-I`$(CYGPATH_W) $(DYLPOBJDIR)/inc` \
 @COIN_HAS_DYLP_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiDylp`
 
 @COIN_HAS_DYLP_TRUE@am__append_16 = ../src/OsiDylp/libOsiDylp.la \
-@COIN_HAS_DYLP_TRUE@	$(DYLPOBJDIR)/src/libDylp.la
+@COIN_HAS_DYLP_TRUE@	$(DYLPOBJDIR)/src/Dylp/libDylp.la
 
 @COIN_HAS_DYLP_TRUE@am__append_17 = `cat $(DYLPOBJDIR)/dylp_addlibs.txt`
 @COIN_HAS_FMP_TRUE@am__append_18 = OsiFmpSolverInterfaceTest.cpp
@@ -181,7 +183,7 @@ unitTest_OBJECTS = $(am_unitTest_OBJECTS)
 @COIN_HAS_CGL_TRUE@am__DEPENDENCIES_3 = $(CGLOBJDIR)/src/libCgl.la
 @COIN_HAS_CPX_TRUE@am__DEPENDENCIES_4 = ../src/OsiCpx/libOsiCpx.la
 @COIN_HAS_DYLP_TRUE@am__DEPENDENCIES_5 = ../src/OsiDylp/libOsiDylp.la \
-@COIN_HAS_DYLP_TRUE@	$(DYLPOBJDIR)/src/libDylp.la
+@COIN_HAS_DYLP_TRUE@	$(DYLPOBJDIR)/src/Dylp/libDylp.la
 @COIN_HAS_FMP_TRUE@am__DEPENDENCIES_6 = ../src/OsiFmp/libOsiFmp.la
 @COIN_HAS_GLPK_TRUE@am__DEPENDENCIES_7 = ../src/OsiGlpk/libOsiGlpk.la
 @COIN_HAS_MSK_TRUE@am__DEPENDENCIES_8 = ../src/OsiMsk/libOsiMsk.la

@@ -8,16 +8,6 @@
 
 AUTOMAKE_OPTIONS = foreign
 
-EXTRA_DIST = \
-	examples/basic2.cpp \
-	examples/basic.cpp \
-	examples/build.cpp \
-	examples/Makefile.in \
-	examples/parameters.cpp \
-	examples/query.cpp \
-	examples/README \
-	examples/specific.cpp
-
 ########################################################################
 #                          Subdirectories                              #
 ########################################################################
@@ -38,7 +28,16 @@ endif
 
 # Here we need include all files that are not mentioned in other Makefiles
 
-EXTRA_DIST = TODO
+EXTRA_DIST = \
+	TODO \
+	examples/basic2.cpp \
+	examples/basic.cpp \
+	examples/build.cpp \
+	examples/Makefile.in \
+	examples/parameters.cpp \
+	examples/query.cpp \
+	examples/README \
+	examples/specific.cpp
 
 ########################################################################
 #                           Extra Targets                              #

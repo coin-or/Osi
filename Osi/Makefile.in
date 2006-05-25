@@ -280,16 +280,19 @@ target_alias = @target_alias@
 AUTOMAKE_OPTIONS = foreign
 
 ########################################################################
+#                          Subdirectories                              #
+########################################################################
+SUBDIRS = src $(am__append_1)
+
+########################################################################
 #             Additional files to be included in tarball               #
 ########################################################################
 
 # Here we need include all files that are not mentioned in other Makefiles
-EXTRA_DIST = TODO $(am__append_3)
-
-########################################################################
-#                          Subdirectories                              #
-########################################################################
-SUBDIRS = src $(am__append_1)
+EXTRA_DIST = TODO examples/basic2.cpp examples/basic.cpp \
+	examples/build.cpp examples/Makefile.in \
+	examples/parameters.cpp examples/query.cpp examples/README \
+	examples/specific.cpp $(am__append_3)
 
 ########################################################################
 #                  Installation of the addlibs file                    #

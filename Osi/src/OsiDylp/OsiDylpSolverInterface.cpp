@@ -3867,7 +3867,7 @@ bool ODSI::setHintParam (OsiHintParam key, bool sense,
     0x10	Echo to terminal
 */
     case OsiDoReducePrint:
-    { int verbosity = reinterpret_cast<int>(info_[key]) ;
+    { int verbosity = reinterpret_cast<long>(info_[key]) ;
       mps_debug = false ;
       if (info)
       { verbosity = *reinterpret_cast<int *>(info) ;

@@ -2,6 +2,14 @@
 /Externals -text
 Osi/configure -text
 Osi/configure.ac -text
+Osi/examples/Makefile.in -text
+Osi/examples/README -text
+Osi/examples/basic.cpp -text
+Osi/examples/basic2.cpp -text
+Osi/examples/build.cpp -text
+Osi/examples/parameters.cpp -text
+Osi/examples/query.cpp -text
+Osi/examples/specific.cpp -text
 Osi/inc/config_osi.h.in -text
 Osi/osi_addlibs.txt.in -text
 /config.guess -text

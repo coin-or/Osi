@@ -8,6 +8,16 @@
 
 AUTOMAKE_OPTIONS = foreign
 
+EXTRA_DIST = \
+	examples/basic2.cpp \
+	examples/basic.cpp \
+	examples/build.cpp \
+	examples/Makefile.in \
+	examples/parameters.cpp \
+	examples/query.cpp \
+	examples/README \
+	examples/specific.cpp
+
 ########################################################################
 #                          Subdirectories                              #
 ########################################################################

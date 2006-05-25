@@ -21007,7 +21007,7 @@ fi
 
 # Here list all the files that configure should create (except for the
 # configuration header file)
-                                                                                                                                                                ac_config_files="$ac_config_files Makefile src/Makefile src/OsiCbc/Makefile src/OsiClp/Makefile src/OsiCpx/Makefile src/OsiDylp/Makefile src/OsiFmp/Makefile src/OsiGlpk/Makefile src/OsiMsk/Makefile src/OsiOsl/Makefile src/OsiSpx/Makefile src/OsiSym/Makefile src/OsiVol/Makefile src/OsiXpr/Makefile test/Makefile osi_addlibs.txt"
+                                                                                                                                                                          ac_config_files="$ac_config_files Makefile examples/Makefile src/Makefile src/OsiCbc/Makefile src/OsiClp/Makefile src/OsiCpx/Makefile src/OsiDylp/Makefile src/OsiFmp/Makefile src/OsiGlpk/Makefile src/OsiMsk/Makefile src/OsiOsl/Makefile src/OsiSpx/Makefile src/OsiSym/Makefile src/OsiVol/Makefile src/OsiXpr/Makefile test/Makefile osi_addlibs.txt"
 
 
 # Here put the location and name of the configuration header file
@@ -21705,6 +21705,7 @@ do
   case "$ac_config_target" in
   # Handling of arguments.
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
+  "examples/Makefile" ) CONFIG_FILES="$CONFIG_FILES examples/Makefile" ;;
   "src/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
   "src/OsiCbc/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/OsiCbc/Makefile" ;;
   "src/OsiClp/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/OsiClp/Makefile" ;;

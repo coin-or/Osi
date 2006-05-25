@@ -87,6 +87,7 @@ AC_COIN_HAS_USER_LIBRARY([Xpress],[XPR],[xprs.h],[XPRSsetintcontrol])
 # Here list all the files that configure should create (except for the
 # configuration header file)
 AC_CONFIG_FILES([Makefile
+                 examples/Makefile
                  src/Makefile
                  src/OsiCbc/Makefile
                  src/OsiClp/Makefile

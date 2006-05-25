@@ -93,6 +93,7 @@ endif
 # Here list all the header files that are required by a user of the library,
 # and that therefore should be installed in 'install'
 include_HEADERS = \
+	../inc/config_osi.h \
 	OsiColCut.hpp \
 	OsiCollections.hpp \
 	OsiCut.hpp \

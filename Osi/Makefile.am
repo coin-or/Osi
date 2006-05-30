@@ -30,6 +30,7 @@ endif
 
 EXTRA_DIST = \
 	TODO \
+	doc/doxygen.conf \
 	examples/basic2.cpp \
 	examples/basic.cpp \
 	examples/build.cpp \
@@ -48,13 +49,16 @@ test: all
 
 unitTest: test
 
+doc:
+	cd $(srcdir); doxygen doc/doxygen.conf
+
 clean-local:
 	if test -r test/Makefile; then cd test; make clean; fi
 
 distclean-local:
 	if test -r test/Makefile; then cd test; make distclean; fi
 
-.PHONY: test unitTest
+.PHONY: test unitTest doc
 
 ########################################################################
 #                  Installation of the addlibs file                    #

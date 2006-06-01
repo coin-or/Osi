@@ -2,7 +2,7 @@
 # All Rights Reserved.
 # This file is distributed under the Common Public License.
 
-## $Id: configure.ac,v 1.1.2.1 2006/04/19 23:25:12 andreasw Exp $
+## $Id$
 
 # Author:  Andreas Waechter            IBM    2006-04-13
 
@@ -60,7 +60,4 @@ AC_COIN_MAIN_SUBDIRS(Osi)
 AC_CONFIG_FILES([Makefile])
 
 # Finally, we let configure write all the output...
-AC_OUTPUT
-
-# ...and tell the user, that the configuration finished
-AC_MSG_NOTICE([Osi main configuration successful])
+AC_COIN_FINALIZE

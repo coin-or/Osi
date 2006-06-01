@@ -3,4 +3,5 @@ Data/Netlib   https://www.coin-or.org/svn/Data/trunk/Netlib
 Data/Sample   https://www.coin-or.org/svn/Data/trunk/Sample
 CoinUtils     https://www.coin-or.org/svn/CoinUtils/trunk/CoinUtils
 Clp           https://www.coin-or.org/svn/Clp/trunk/Clp
+DyLP          https://www.coin-or.org/svn/DyLP/AutotoolsTrial/DyLP
 Vol           https://www.coin-or.org/svn/Vol/trunk/Vol

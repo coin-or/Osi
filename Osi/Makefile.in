@@ -64,8 +64,8 @@ DIST_COMMON = $(am__configure_deps) \
 	$(srcdir)/osi_addlibs.txt.in $(top_srcdir)/configure \
 	$(top_srcdir)/examples/Makefile.in \
 	$(top_srcdir)/inc/config_osi.h.in AUTHORS INSTALL TODO
-@HAVE_EXTERNALS_TRUE@@MAINTAINER_MODE_TRUE@am__append_2 = .Externals-stamp
-@HAVE_EXTERNALS_TRUE@@MAINTAINER_MODE_TRUE@am__append_3 = Externals
+@HAVE_EXTERNALS_TRUE@am__append_2 = Externals
+@HAVE_EXTERNALS_TRUE@am__append_3 = .Externals-stamp
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
@@ -227,6 +227,7 @@ SYMSRCDIR = @SYMSRCDIR@
 VERSION = @VERSION@
 VOLOBJDIR = @VOLOBJDIR@
 VOLSRCDIR = @VOLSRCDIR@
+VPATH_DISTCLEANFILES = @VPATH_DISTCLEANFILES@
 XPRINCDIR = @XPRINCDIR@
 XPRLIB = @XPRLIB@
 abs_bin_dir = @abs_bin_dir@
@@ -292,7 +293,7 @@ SUBDIRS = src $(am__append_1)
 EXTRA_DIST = TODO doc/doxygen.conf examples/basic2.cpp \
 	examples/basic.cpp examples/build.cpp examples/Makefile.in \
 	examples/parameters.cpp examples/query.cpp examples/README \
-	examples/specific.cpp $(am__append_3)
+	examples/specific.cpp $(am__append_2)
 
 ########################################################################
 #                  Installation of the addlibs file                    #
@@ -304,7 +305,7 @@ addlibsfile = osi_addlibs.txt
 ########################################################################
 
 # Files that are generated and should be cleaned with make distclean
-DISTCLEANFILES = $(am__append_2)
+DISTCLEANFILES = $(am__append_3) $(VPATH_DISTCLEANFILES)
 all: all-recursive
 
 .SUFFIXES:

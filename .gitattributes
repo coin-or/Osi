@@ -2,7 +2,6 @@
 /Externals -text
 Osi/configure -text
 Osi/configure.ac -text
-Osi/doc/doxygen.conf -text
 Osi/examples/Makefile.in -text
 Osi/examples/README -text
 Osi/examples/basic.cpp -text
@@ -18,5 +17,6 @@ Osi/osi_addlibs.txt.in -text
 /configure -text
 /configure.ac -text
 /depcomp -text
+doxydoc/doxygen.conf -text
 /install-sh -text
 /missing -text

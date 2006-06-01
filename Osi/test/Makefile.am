@@ -30,7 +30,7 @@ unitTest_LDADD =
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows
-CXXFLAGS += -I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
+AM_CPPFLAGS = -I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(srcdir)/../src`
 
 # This line is necessary to allow VPATH compilation with MS compilers
@@ -42,7 +42,7 @@ DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/inc
 
 if COIN_HAS_CLP
   unitTest_SOURCES += OsiClpSolverInterfaceTest.cpp
-  CXXFLAGS += -I`$(CYGPATH_W) $(CLPSRCDIR)/src` \
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(CLPSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(CLPOBJDIR)/inc` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiClp`
   unitTest_LDADD += ../src/OsiClp/libOsiClp.la \
@@ -52,7 +52,7 @@ endif
 
 if COIN_HAS_CBC
   unitTest_SOURCES += OsiCbcSolverInterfaceTest.cpp
-  CXXFLAGS += -I`$(CYGPATH_W) $(CBCSRCDIR)/src` \
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(CBCSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiCbc`
   unitTest_LDADD += ../src/OsiCbc/libOsiCbc.la \
 	$(CBCOBJDIR)/src/libCbc.la
@@ -66,14 +66,14 @@ endif
 
 if COIN_HAS_CPX
   unitTest_SOURCES += OsiCpxSolverInterfaceTest.cpp
-  CXXFLAGS += -I`$(CYGPATH_W) $(CPXINCDIR)` \
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(CPXINCDIR)` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiCpx`
   unitTest_LDADD += ../src/OsiCpx/libOsiCpx.la
 endif
 
 if COIN_HAS_DYLP
   unitTest_SOURCES += OsiDylpSolverInterfaceTest.cpp
-  CXXFLAGS += -I`$(CYGPATH_W) $(DYLPSRCDIR)/src/DylpStdLib` \
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(DYLPSRCDIR)/src/DylpStdLib` \
 	-I`$(CYGPATH_W) $(DYLPSRCDIR)/src/Dylp` \
 	-I`$(CYGPATH_W) $(DYLPOBJDIR)/inc` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiDylp`
@@ -84,41 +84,41 @@ endif
 
 if COIN_HAS_FMP
   unitTest_SOURCES += OsiFmpSolverInterfaceTest.cpp
-  CXXFLAGS += -I`$(CYGPATH_W) $(srcdir)/../src/OsiFmp`
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(srcdir)/../src/OsiFmp`
   unitTest_LDADD += ../src/OsiFmp/libOsiFmp.la
 endif
 
 if COIN_HAS_GLPK
   unitTest_SOURCES += OsiGlpkSolverInterfaceTest.cpp
-  CXXFLAGS += -I`$(CYGPATH_W) $(GLPKINCDIR)` \
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(GLPKINCDIR)` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiGlpk`
   unitTest_LDADD += ../src/OsiGlpk/libOsiGlpk.la
 endif
 
 if COIN_HAS_MSK
   unitTest_SOURCES += OsiMskSolverInterfaceTest.cpp
-  CXXFLAGS += -I`$(CYGPATH_W) $(MSKINCDIR)` \
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(MSKINCDIR)` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiMsk`
   unitTest_LDADD += ../src/OsiMsk/libOsiMsk.la
 endif
 
 if COIN_HAS_OSL
   unitTest_SOURCES += OsiOslSolverInterfaceTest.cpp
-  CXXFLAGS += -I`$(CYGPATH_W) $(OSLINCDIR)` \
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(OSLINCDIR)` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiOsl`
   unitTest_LDADD += ../src/OsiOsl/libOsiOsl.la
 endif
 
 if COIN_HAS_SPX
   unitTest_SOURCES += OsiSpxSolverInterfaceTest.cpp
-  CXXFLAGS += -I`$(CYGPATH_W) $(SPXINCDIR)` \
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(SPXINCDIR)` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiSpx`
   unitTest_LDADD += ../src/OsiSpx/libOsiSpx.la
 endif
 
 if COIN_HAS_SYM
   unitTest_SOURCES += OsiSymSolverInterfaceTest.cpp
-  CXXFLAGS += -I`$(CYGPATH_W) $(SYMSRCDIR)/src` \
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(SYMSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiSym`
   unitTest_LDADD += ../src/OsiSym/libOsiSym.la \
 	$(SYMOBJDIR)/src/libSym.la
@@ -127,7 +127,7 @@ endif
 
 if COIN_HAS_VOL
   unitTest_SOURCES += OsiVolSolverInterfaceTest.cpp
-  CXXFLAGS += -I`$(CYGPATH_W) $(VOLSRCDIR)/src` \
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(VOLSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiVol`
   unitTest_LDADD += ../src/OsiVol/libOsiVol.la \
 	$(VOLOBJDIR)/src/libVol.la
@@ -136,7 +136,7 @@ endif
 
 if COIN_HAS_XPR
   unitTest_SOURCES += OsiXprSolverInterfaceTest.cpp
-  CXXFLAGS += -I`$(CYGPATH_W) $(XPRINCDIR)` \
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(XPRINCDIR)` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiXpr`
   unitTest_LDADD += ../src/OsiXpr/libOsiXpr.la
 endif

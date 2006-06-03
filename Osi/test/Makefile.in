@@ -283,18 +283,7 @@ CXX = @CXX@
 CXXCPP = @CXXCPP@
 CXXDEFS = @CXXDEFS@
 CXXDEPMODE = @CXXDEPMODE@
-
-# List additional libraries
-#LIBS +=
-
-# Here list all include flags, relative to this "srcdir" directory.  This
-# "cygpath" stuff is necessary to compile with native compilers on Windows
-CXXFLAGS = @CXXFLAGS@ -I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
-	-I`$(CYGPATH_W) $(srcdir)/../src` $(am__append_2) \
-	$(am__append_6) $(am__append_12) $(am__append_15) \
-	$(am__append_19) $(am__append_22) $(am__append_25) \
-	$(am__append_28) $(am__append_31) $(am__append_34) \
-	$(am__append_38) $(am__append_42)
+CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -428,6 +417,18 @@ unitTest_LDADD = $(am__append_3) $(am__append_7) $(am__append_9) \
 	$(am__append_32) $(am__append_35) $(am__append_39) \
 	$(am__append_43) ../src/libOsi.la \
 	$(COINUTILSOBJDIR)/src/libCoinUtils.la
+
+# List additional libraries
+#LIBS +=
+
+# Here list all include flags, relative to this "srcdir" directory.  This
+# "cygpath" stuff is necessary to compile with native compilers on Windows
+AM_CPPFLAGS = -I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` -I`$(CYGPATH_W) \
+	$(srcdir)/../src` $(am__append_2) $(am__append_6) \
+	$(am__append_12) $(am__append_15) $(am__append_19) \
+	$(am__append_22) $(am__append_25) $(am__append_28) \
+	$(am__append_31) $(am__append_34) $(am__append_38) \
+	$(am__append_42)
 
 # This line is necessary to allow VPATH compilation with MS compilers
 # on Cygwin

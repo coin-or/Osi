@@ -1,5 +1,4 @@
 * text=auto !eol
-/Externals -text
 Osi/configure -text
 Osi/configure.ac -text
 Osi/examples/Makefile.in -text

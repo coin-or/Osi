@@ -1425,12 +1425,11 @@ OsiSolverInterface::pivot(int colIn, int colOut, int outStatus)
    Return code (for now): 0 -- leaving variable found, 
    -1 -- everything else?
    Clearly, more informative set of return values is required 
-   Primal and dual solutions are updated
 */
 int 
 OsiSolverInterface::primalPivotResult(int colIn, int sign, 
                                       int& colOut, int& outStatus, 
-                                      double& t, CoinPackedVector* dx)
+                                      double& t, CoinPackedVector* dx) 
 {
   // Throw an exception
   throw CoinError("Needs coding for this interface", "primalPivotResult",

@@ -32,13 +32,10 @@ OsiCutsUnitTest()
   // Create some cuts
   OsiRowCut rcv[5];
   OsiColCut ccv[5];
-  OsiCuts cuts;
   int i;
   for ( i=0; i<5; i++ ) {
     rcv[i].setEffectiveness(100.+i);
     ccv[i].setEffectiveness(200.+i);
-    cuts.insert(rcv[i]);
-    cuts.insert(ccv[i]);
   }
   
   OsiCuts rhs;
@@ -77,37 +74,14 @@ OsiCutsUnitTest()
       assert( *ccP == ccv[i] );
 #endif
       assert( eq(cs.mostEffectiveCutPtr()->effectiveness(),200.0+i) );
+    }   
 
-    }  
-    
-    // Test inserting collection of OsiCuts
     {
       OsiCuts cs;
-      cs.insert(cuts);
-      assert(cs.sizeColCuts()==5);
-      assert(cs.sizeRowCuts()==5);
-      assert(cs.sizeCuts()==10);
-    }
-/*
-  Test handling of cut pointers. Create a vector of cut pointers, then add
-  them to the collection. Dump the row cuts, then add again. The cut
-  objects should be deleted when the OsiCuts object is deleted at the end of
-  the block.  This test should be monitored with some flavour of runtime
-  access checking to be sure that cuts are not freed twice or not freed at
-  all.
-*/
-    {
-      OsiCuts cs;
-      OsiRowCut *rcPVec[5] ;
-      OsiColCut *ccPVec[5] ;
-      for (i = 0 ; i < 5 ; i++) {
-	rcPVec[i] = rcv[i].clone() ;
-	ccPVec[i] = ccv[i].clone() ;
-      }
       // test inserting cut ptr & accessing cut
       for ( i=0; i<5; i++ ) {
         assert( cs.sizeRowCuts()==i);
-        OsiRowCut * rcP = rcPVec[i] ;
+        OsiRowCut * rcP = rcv[i].clone();
         assert( rcP != NULL );
         cs.insert(rcP);
         assert( rcP == NULL );
@@ -115,7 +89,7 @@ OsiCutsUnitTest()
         assert( cs.rowCut(i)==rcv[i] );
         
         
-        OsiColCut * ccP = ccPVec[i] ;
+        OsiColCut * ccP = ccv[i].clone();
         assert( ccP != NULL );
         assert( cs.sizeColCuts()==i);
         cs.insert(ccP);
@@ -124,18 +98,6 @@ OsiCutsUnitTest()
         assert( cs.colCut(i)==ccv[i] );
 
         assert( eq(cs.mostEffectiveCutPtr()->effectiveness(),200.0+i) );
-      }
-      cs.dumpCuts() ;		// row cuts only
-      for ( i=0; i<5; i++ ) {
-        assert( cs.sizeRowCuts()==i);
-        OsiRowCut * rcP = rcPVec[i] ;
-        assert( rcP != NULL );
-        cs.insert(rcP);
-        assert( rcP == NULL );
-        assert( cs.sizeRowCuts()==i+1);
-        assert( cs.rowCut(i)==rcv[i] );
-        
-        assert( cs.sizeColCuts()==5);
       }
     }
     

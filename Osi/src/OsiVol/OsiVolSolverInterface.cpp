@@ -42,7 +42,7 @@ OsiVolSolverInterface::updateColMatrix_() const
 //-----------------------------------------------------------------------------
 
 void
-OsiVolSolverInterface::checkData_() const
+OsiVolSolverInterface::checkData_() const throw(CoinError)
 {
    int i;
    for (i = getNumRows() - 1; i >= 0; --i) {

@@ -61,7 +61,6 @@
 // Function Prototypes. Function definitions is in this file.
 void testingMessage( const char * const msg );
 
-//	    [-cutsOnly]
 //----------------------------------------------------------------
 // unitTest [-nobuf] [-mpsDir=V1] [-netlibDir=V2] [-testOsiSolverInterface]
 // 
@@ -73,8 +72,6 @@ void testingMessage( const char * const msg );
 //   -netlibDir: directory containing netlib files
 //       Default value V2="../../Data/Netlib"
 //   -testOsiSolverInterface
-//   -cutsOnly
-//	 If specified, only OsiCut tests are run.
 //       If specified, then OsiSolveInterface::unitTest
 //       is skipped over and not run.
 //
@@ -100,7 +97,6 @@ int main (int argc, const char *argv[])
   definedKeyWords.insert("-cerr2cout");
   definedKeyWords.insert("-mpsDir");
   definedKeyWords.insert("-netlibDir");
-  definedKeyWords.insert("-cutsOnly");
   definedKeyWords.insert("-testOsiSolverInterface");
   definedKeyWords.insert("-nobuf");
 
@@ -128,7 +124,7 @@ int main (int argc, const char *argv[])
       std::cerr << "Undefined parameter \"" <<key <<"\".\n";
       std::cerr << "Correct usage: \n";
       std::cerr << "  unitTest [-nobuf] [-mpsDir=V1] [-netlibDir=V2]" ;
-      std::cerr << " [-testOsiSolverInterface] [-cutsOnly]\n";
+      std::cerr << " [-testOsiSolverInterface]\n";
       std::cerr << "where:\n";
       std::cerr << "  -cerr2cout: redirect cerr to cout; sometimes useful\n" ;
       std::cerr << "	    to synchronise cout & cerr.\n" ;
@@ -139,7 +135,6 @@ int main (int argc, const char *argv[])
       std::cerr << "  -testOsiSolverInterface\n";
       std::cerr << "        If specified, then OsiSolveInterface::unitTest\n";
       std::cerr << "        is run.\n";
-      std::cerr << "  -cutsOnly: If specified, only OsiCut tests are run.\n";
       std::cerr << "  -nobuf: unbuffered output.\n" ;
       return 1;
     }
@@ -397,15 +392,6 @@ int main (int argc, const char *argv[])
 
   testingMessage( "Testing OsiCuts\n" );
   OsiCutsUnitTest();
-
-/*
-  Testing OsiCuts only? A useful option when doing memory access and leak
-  checks. Keeps the run time to something reasonable.
-*/
-  if (parms.find("-cutsOnly") != parms.end()) {
-    testingMessage( "Stopping after OsiCuts tests.\n" );
-    return 0;
-  }
 
 #ifdef COIN_HAS_OSL
   testingMessage( "Testing OsiOslSolverInterface\n" );

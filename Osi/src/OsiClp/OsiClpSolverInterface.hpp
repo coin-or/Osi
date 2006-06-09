@@ -92,7 +92,8 @@ public:
   /// Synchronize model (really if no cuts in tree)
   virtual void synchronizeModel();
   // Sleazy methods to fool const requirements (no less safe as modelPtr_ mutable)
-  void setSpecialOptionsMutable(unsigned int value) const;
+    inline void setSpecialOptionsMutable(int value) const
+  { specialOptions_=value;};
 
   /** Returns true if a basis is available
       AND problem is optimal.  This should be used to see if
@@ -146,7 +147,6 @@ public:
       Return code (for now): 0 -- leaving variable found, 
       -1 -- everything else?
       Clearly, more informative set of return values is required 
-      Primal and dual solutions are updated
   */
   virtual int primalPivotResult(int colIn, int sign, 
 				int& colOut, int& outStatus, 
@@ -785,8 +785,6 @@ public:
   void newLanguage(CoinMessages::Language language);
   void setLanguage(CoinMessages::Language language)
   {newLanguage(language);};
-    /// Create C++ lines to get to current state
-    void generateCpp( FILE * fp);
   //@}
   //---------------------------------------------------------------------------
   
@@ -797,7 +795,8 @@ public:
   /// Get special options
   inline unsigned int specialOptions() const
   { return specialOptions_;};
-  void setSpecialOptions(unsigned int value);
+  inline void setSpecialOptions(unsigned int value)
+  { specialOptions_=value;};
   /// Get scaling action option
   inline int cleanupScaling() const
   { return cleanupScaling_;};
@@ -1023,8 +1022,7 @@ protected:
       64 try and tighten bounds in crunch
       128 Model will only change in column bounds
       256 Clean up model before hot start
-      512 Give user direct access to Clp regions in getBInvARow etc
-      Bits above 8192 give where called from in Cbc
+      Bits above 1024 give where called from in Cbc
       At present 0 is normal, 1 doing fast hotstarts, 2 is can do quick check
   */
   mutable unsigned int specialOptions_;

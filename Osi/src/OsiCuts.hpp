@@ -26,7 +26,7 @@ public:
   //@{
     /** Iterator
 
-      This a class for interating over the collection of cuts.
+      This is a class for iterating over the collection of cuts.
     */
     class iterator {
       friend class OsiCuts;
@@ -70,12 +70,19 @@ public:
    
     /** Const Iterator
 
-      This a class for interating over the collection of cuts.
+      This is a class for iterating over the collection of cuts.
     */ 
     class const_iterator {
       friend class OsiCuts;
     public:
-      const_iterator(const OsiCuts& cuts);
+      typedef std::bidirectional_iterator_tag iterator_category;
+      typedef OsiCut* value_type;
+      typedef size_t difference_type;
+      typedef OsiCut ** pointer;
+      typedef OsiCut *& reference;
+
+    public:
+const_iterator(const OsiCuts& cuts);
       const_iterator(const const_iterator & src);
       const_iterator & operator=( const const_iterator& rhs);     
       ~const_iterator ();
@@ -147,6 +154,10 @@ public:
 #if 0
   inline void insert( OsiCut    * & cPtr  );
 #endif
+    
+  /** \brief Insert a set of cuts */
+   inline void insert(const OsiCuts & cs);
+
   //@}
 
   /**@name Number of cuts in collection */
@@ -197,13 +208,21 @@ public:
     inline void eraseRowCut(int i);
     /// Remove i'th column cut from collection
     inline void eraseColCut(int i); 
-    /// Remove all the cuts *without* deleting them in case one wants to
-    /// use CGL without managing cuts in one of these containers.
-    void dumpCuts()
-	{
-      	while (rowCutPtrs_.size()>0)
-          rowCutPtrs_.erase(rowCutPtrs_.begin());
-    	}
+    /*! \brief Clear all row cuts without deleting them
+    
+         Handy in case one wants to use CGL without managing cuts in one of
+	 the OSI containers. Client is ultimately responsible for deleting the
+	 data structures holding the row cuts.
+    */
+    inline void dumpCuts() ;
+    /*! \brief Selective delete and clear for row cuts.
+
+        Deletes the cuts specified in \p to_erase then clears remaining cuts
+	without deleting them. A hybrid of eraseRowCut(int) and dumpCuts().
+	Client is ultimately responsible for deleting the data structures
+	for row cuts not specified in \p to_erase.
+    */
+    inline void eraseAndDumpCuts(const std::vector<int> to_erase) ;
   //@}
  
   /**@name Sorting collection */
@@ -323,6 +342,21 @@ void OsiCuts::insert( OsiCut* & cPtr )
 }
 #endif
 
+// LANNEZ SEBASTIEN added Thu May 25 01:22:51 EDT 2006
+void OsiCuts::insert(const OsiCuts & cs)
+{
+  for (OsiCuts::const_iterator it = cs.begin (); it != cs.end (); it++)
+  {
+    const OsiRowCut * rCut = dynamic_cast <const OsiRowCut * >(*it);
+    const OsiColCut * cCut = dynamic_cast <const OsiColCut * >(*it);
+    assert (rCut || cCut);
+    if (rCut)
+      insert (*rCut);
+    else
+      insert (*cCut);
+  }
+}
+
 //-------------------------------------------------------------------
 // sort
 //------------------------------------------------------------------- 
@@ -410,6 +444,17 @@ void OsiCuts::eraseColCut(int i)
 {   
   delete colCutPtrs_[i];
   colCutPtrs_.erase( colCutPtrs_.begin()+i );
+}
+void OsiCuts::dumpCuts()
+{
+  rowCutPtrs_.clear() ;
+}
+void OsiCuts::eraseAndDumpCuts(const std::vector<int> to_erase)
+{
+  for (unsigned i=0; i<to_erase.size(); i++) {
+    delete rowCutPtrs_[to_erase[i]];
+  }
+  rowCutPtrs_.clear();
 }
 
 //#############################################################################

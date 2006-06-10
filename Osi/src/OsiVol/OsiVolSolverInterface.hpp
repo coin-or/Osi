@@ -726,7 +726,7 @@ private:
 
     /** Test whether the Volume Algorithm can be applied to the given problem.
      */
-    void checkData_() const throw(CoinError);
+    void checkData_() const;
     /** Compute the reduced costs (<code>rc</code>) with respect to the dual
         values given in <code>u</code>. */
     void compute_rc_(const double* u, double* rc) const;

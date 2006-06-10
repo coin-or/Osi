@@ -158,6 +158,16 @@ public:
   
     /// Default Constructor 
     OsiRowCut ();
+
+    /** \brief Ownership Constructor
+
+      This constructor assumes ownership of the vectors passed as parameters
+      for indices and elements. \p colIndices and \p elements will be NULL
+      on return.
+    */
+    OsiRowCut(double cutlb, double cutub,
+ 		     int capacity, int size,
+ 		     int *&colIndices, double *&elements);
   
     /// Destructor 
     virtual ~OsiRowCut ();

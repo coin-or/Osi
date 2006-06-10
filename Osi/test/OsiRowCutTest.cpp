@@ -72,6 +72,49 @@ OsiRowCutUnitTest(const OsiSolverInterface * baseSiP,
     }
   } 
 
+  // Repeat test with ownership constructor
+  {
+    int *inxo = new int[ne];
+    double *elo = new double[ne];
+    double lb = 65.432;
+    double ub = 123.45;
+
+    int i;
+    for ( i = 0 ; i < ne ; i++) inxo[i] = inx[i] ;
+    for ( i = 0 ; i < ne ; i++) elo[i] = el[i] ;
+    OsiRowCut r(lb,ub,ne,ne,inxo,elo);    
+
+    assert( r.row().getNumElements()==ne );
+    assert( r.effectiveness()==0. );
+    //assert( r.timesUsed()==0 );
+    //assert( r.timesTested()==0 );
+
+    // Test getting bounds
+    assert( r.lb()==lb );
+    assert( r.ub()==ub );
+
+    // Test setting/getting of effectiveness,timesUsed,timesTested
+    r.setEffectiveness(45.);
+    assert( r.effectiveness()==45. );
+#if 0
+    r.setTimesUsed(11);
+    assert( r.timesUsed()==11 );
+    r.incrementTimesUsed();
+    assert( r.timesUsed()==12 );
+    r.setTimesTested(111);
+    assert( r.timesTested()==111 );
+    r.incrementTimesTested();
+    assert( r.timesTested()==112 );
+#endif
+    
+    // Test getting elements with int* & float* vectors
+    assert( r.row().getNumElements()==ne );
+    for ( i=0; i<ne; i++ ) {
+      assert( r.row().getIndices()[i] == inx[i] );
+      assert( r.row().getElements()[i] == el[i] );
+    }
+  } 
+
   // Test sense, rhs, range
   {
     {

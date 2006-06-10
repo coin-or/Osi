@@ -1284,10 +1284,11 @@ public:
       Return code (for now): 0 -- leaving variable found, 
       -1 -- everything else?
       Clearly, more informative set of return values is required 
+      Primal and dual solutions are updated
   */
   virtual int primalPivotResult(int colIn, int sign, 
 				int& colOut, int& outStatus, 
-				double& t, CoinPackedVector* dx) ;
+				double& t, CoinPackedVector* dx);
 
   /** Obtain a result of the dual pivot (similar to the previous method)
       Differences: entering variable and a sign of its change are now

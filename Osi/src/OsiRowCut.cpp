@@ -164,6 +164,19 @@ OsiRowCut::OsiRowCut () : OsiCut(),
 }
 
 //-------------------------------------------------------------------
+// Ownership constructor 
+//-------------------------------------------------------------------
+
+OsiRowCut::OsiRowCut(double cutlb, double cutub,
+ 		     int capacity, int size,
+ 		     int *&colIndices, double *&elements):
+   OsiCut(),
+   row_(capacity, size, colIndices, elements),
+   lb_(cutlb),
+   ub_(cutub)
+{}
+
+//-------------------------------------------------------------------
 // Copy constructor 
 //-------------------------------------------------------------------
 OsiRowCut::OsiRowCut (const OsiRowCut & source) :

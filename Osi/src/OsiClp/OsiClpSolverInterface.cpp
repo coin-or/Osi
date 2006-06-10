@@ -21,6 +21,7 @@
 #include "ClpObjective.hpp"
 #include "ClpSimplex.hpp"
 #include "ClpSimplexOther.hpp"
+#include "ClpSimplexPrimal.hpp"
 #include "ClpSimplexDual.hpp"
 #include "ClpNonLinearCost.hpp"
 #include "OsiClpSolverInterface.hpp"
@@ -835,7 +836,7 @@ bool OsiClpSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
 void OsiClpSolverInterface::markHotStart()
 {
   modelPtr_->setProblemStatus(0);
-  if ((specialOptions_&1024)==0) {
+  if ((specialOptions_&8192)==0) {
     delete ws_;
     ws_ = dynamic_cast<CoinWarmStartBasis*>(getWarmStart());
     int numberRows = modelPtr_->numberRows();
@@ -2638,6 +2639,7 @@ OsiClpSolverInterface::setColLower( int index, double elementValue )
 #endif
   double currentValue = modelPtr_->columnActivity_[index];
   bool changed=(currentValue<elementValue-modelPtr_->primalTolerance()||
+                index>=basis_.getNumStructural()||
                 basis_.getStructStatus(index)==CoinWarmStartBasis::atLowerBound);
   // Say can't gurantee optimal basis etc
   if (changed)
@@ -2658,6 +2660,7 @@ OsiClpSolverInterface::setColUpper( int index, double elementValue )
 #endif
   double currentValue = modelPtr_->columnActivity_[index];
   bool changed=(currentValue>elementValue+modelPtr_->primalTolerance()||
+                index>=basis_.getNumStructural()||
                 basis_.getStructStatus(index)==CoinWarmStartBasis::atUpperBound);
   // Say can't gurantee optimal basis etc
   if (changed)
@@ -2894,6 +2897,7 @@ OsiClpSolverInterface::enableSimplexInterface(bool doingPrimal)
   ClpDualRowDantzig dantzig;
   modelPtr_->setDualRowPivotAlgorithm(dantzig);
   ClpPrimalColumnDantzig dantzigP;
+  dantzigP.saveWeights(modelPtr_,0); // set modelPtr 
   modelPtr_->setPrimalColumnPivotAlgorithm(dantzigP);
 #ifdef NDEBUG
   modelPtr_->startup(0);
@@ -2931,7 +2935,7 @@ OsiClpSolverInterface::enableFactorization() const
   saveData_.scalingFlag_=specialOptions_;
   int saveStatus = modelPtr_->problemStatus_;
   if ((specialOptions_&(1+8))!=1+8)
-    setSpecialOptionsMutable(1+8);
+    setSpecialOptionsMutable((1+8)|specialOptions_);
 #ifdef NDEBUG
   modelPtr_->startup(0);
 #else
@@ -3160,6 +3164,7 @@ OsiClpSolverInterface::pivot(int colIn, int colOut, int outStatus)
    Return code (for now): 0 -- leaving variable found, 
    -1 -- everything else?
    Clearly, more informative set of return values is required 
+   Primal and dual solutions are updated
 */
 int 
 OsiClpSolverInterface::primalPivotResult(int colIn, int sign, 
@@ -3290,28 +3295,32 @@ OsiClpSolverInterface::getBInvARow(int row, double* z, double * slack) const
   // put row of tableau in rowArray1 and columnArray0
   modelPtr_->clpMatrix()->transposeTimes(modelPtr_,1.0,
                                          rowArray1,columnArray1,columnArray0);
-  if (!rowScale) {
-    memcpy(z,columnArray0->denseVector(),
-           numberColumns*sizeof(double));
-  } else {
-    double * array = columnArray0->denseVector();
-    for (int i=0;i<numberColumns;i++)
-      z[i] = array[i]/columnScale[i];
-  }
-  if (slack) {
+  // If user is sophisticated then let her/him do work
+  if ((specialOptions_&512)==0) {
+    // otherwise copy and clear
     if (!rowScale) {
-      memcpy(slack,rowArray1->denseVector(),
-             numberRows*sizeof(double));
+      memcpy(z,columnArray0->denseVector(),
+             numberColumns*sizeof(double));
     } else {
-      double * array = rowArray1->denseVector();
+      double * array = columnArray0->denseVector();
+      for (int i=0;i<numberColumns;i++)
+        z[i] = array[i]/columnScale[i];
+    }
+    if (slack) {
+      if (!rowScale) {
+        memcpy(slack,rowArray1->denseVector(),
+               numberRows*sizeof(double));
+      } else {
+        double * array = rowArray1->denseVector();
       for (int i=0;i<numberRows;i++)
         slack[i] = array[i]*rowScale[i];
+      }
     }
+    columnArray0->clear();
+    rowArray1->clear();
   }
   // don't need to clear everything always, but doesn't cost
   rowArray0->clear();
-  rowArray1->clear();
-  columnArray0->clear();
   columnArray1->clear();
 }
 
@@ -3350,15 +3359,19 @@ OsiClpSolverInterface::getBInvRow(int row, double* z) const
   }
   rowArray1->insert(row,value);
   factorization->updateColumnTranspose(rowArray0,rowArray1);
-  if (!rowScale) {
-    memcpy(z,rowArray1->denseVector(),modelPtr_->numberRows()*sizeof(double));
-  } else {
-    double * array = rowArray1->denseVector();
-    for (int i=0;i<numberRows;i++) {
-      z[i] = array[i] * rowScale[i];
+  // If user is sophisticated then let her/him do work
+  if ((specialOptions_&512)==0) {
+    // otherwise copy and clear
+    if (!rowScale) {
+      memcpy(z,rowArray1->denseVector(),modelPtr_->numberRows()*sizeof(double));
+    } else {
+      double * array = rowArray1->denseVector();
+      for (int i=0;i<numberRows;i++) {
+        z[i] = array[i] * rowScale[i];
+      }
     }
+    rowArray1->clear();
   }
-  rowArray1->clear();
 }
 
 //Get a column of the tableau
@@ -3406,23 +3419,27 @@ OsiClpSolverInterface::getBInvACol(int col, double* vec) const
     }
   }
   modelPtr_->factorization()->updateColumn(rowArray0,rowArray1,false);
-  // But swap if pivot variable was slack as clp stores slack as -1.0
-  double * array = rowArray1->denseVector();
-  if (!rowScale) {
-    for (int i=0;i<numberRows;i++) {
-      double multiplier = (pivotVariable[i]<numberColumns) ? 1.0 : -1.0;
-      vec[i] = multiplier * array[i];
+  // If user is sophisticated then let her/him do work
+  if ((specialOptions_&512)==0) {
+    // otherwise copy and clear
+    // But swap if pivot variable was slack as clp stores slack as -1.0
+    double * array = rowArray1->denseVector();
+    if (!rowScale) {
+      for (int i=0;i<numberRows;i++) {
+        double multiplier = (pivotVariable[i]<numberColumns) ? 1.0 : -1.0;
+        vec[i] = multiplier * array[i];
+      }
+    } else {
+      for (int i=0;i<numberRows;i++) {
+        int pivot = pivotVariable[i];
+        if (pivot<numberColumns)
+          vec[i] = array[i] * columnScale[pivot];
+        else
+          vec[i] = - array[i] / rowScale[pivot-numberColumns];
+      }
     }
-  } else {
-    for (int i=0;i<numberRows;i++) {
-      int pivot = pivotVariable[i];
-      if (pivot<numberColumns)
-	vec[i] = array[i] * columnScale[pivot];
-      else
-	vec[i] = - array[i] / rowScale[pivot-numberColumns];
-    }
+    rowArray1->clear();
   }
-  rowArray1->clear();
 }
 
 //Get a column of the basis inverse
@@ -3456,24 +3473,28 @@ OsiClpSolverInterface::getBInvCol(int col, double* vec) const
   }
   rowArray1->insert(col,value);
   factorization->updateColumn(rowArray0,rowArray1,false);
-  // But swap if pivot variable was slack as clp stores slack as -1.0
-  double * array = rowArray1->denseVector();
-  if (!rowScale) {
-    for (int i=0;i<numberRows;i++) {
-      double multiplier = (pivotVariable[i]<numberColumns) ? 1.0 : -1.0;
-      vec[i] = multiplier * array[i];
+  // If user is sophisticated then let her/him do work
+  if ((specialOptions_&512)==0) {
+    // otherwise copy and clear
+    // But swap if pivot variable was slack as clp stores slack as -1.0
+    double * array = rowArray1->denseVector();
+    if (!rowScale) {
+      for (int i=0;i<numberRows;i++) {
+        double multiplier = (pivotVariable[i]<numberColumns) ? 1.0 : -1.0;
+        vec[i] = multiplier * array[i];
+      }
+    } else {
+      for (int i=0;i<numberRows;i++) {
+        int pivot = pivotVariable[i];
+        double value = array[i];
+        if (pivot<numberColumns) 
+          vec[i] = value * columnScale[pivot];
+        else
+          vec[i] = - value / rowScale[pivot-numberColumns];
+      }
     }
-  } else {
-    for (int i=0;i<numberRows;i++) {
-      int pivot = pivotVariable[i];
-      double value = array[i];
-      if (pivot<numberColumns) 
-	vec[i] = value * columnScale[pivot];
-      else
-	vec[i] = - value / rowScale[pivot-numberColumns];
-    }
+    rowArray1->clear();
   }
-  rowArray1->clear();
 }
 
 /* Get basic indices (order of indices corresponds to the
@@ -3620,7 +3641,8 @@ public:
   // Constructor from current state (and list of integers)
   // Also chooses branching variable (if none set to -1)
   OsiNodeSimple (OsiSolverInterface &model,
-	   int numberIntegers, int * integer);
+                 int numberIntegers, int * integer,
+                 CoinWarmStart * basis);
   
   // Copy constructor 
   OsiNodeSimple ( const OsiNodeSimple &);
@@ -3633,7 +3655,7 @@ public:
   
   // Public data
   // Basis (should use tree, but not as wasteful as bounds!)
-  CoinWarmStartBasis basis_;
+  CoinWarmStart * basis_;
   // Objective value
   double objectiveValue_;
   // Branching variable (0 is first integer)
@@ -3652,7 +3674,7 @@ public:
 
 
 OsiNodeSimple::OsiNodeSimple() :
-  basis_(CoinWarmStartBasis()),
+  basis_(NULL),
   objectiveValue_(1.0e100),
   variable_(-100),
   way_(-1),
@@ -3663,13 +3685,9 @@ OsiNodeSimple::OsiNodeSimple() :
 {
 }
 OsiNodeSimple::OsiNodeSimple(OsiSolverInterface & model,
-		 int numberIntegers, int * integer)
+		 int numberIntegers, int * integer,CoinWarmStart * basis)
 {
-  const CoinWarmStartBasis* ws =
-    dynamic_cast<const CoinWarmStartBasis*>(model.getWarmStart());
-
-  assert (ws!=NULL); // make sure not volume
-  basis_ = CoinWarmStartBasis(*ws);
+  basis_ = basis;
   variable_=-1;
   way_=-1;
   numberIntegers_=numberIntegers;
@@ -3708,6 +3726,7 @@ OsiNodeSimple::OsiNodeSimple(OsiSolverInterface & model,
   variable_=-1;
   // This has hard coded integer tolerance
   double mostAway=INTEGER_TOLERANCE;
+  int numberAway=0;
   for (i=0;i<numberIntegers;i++) {
     int iColumn = integer[i];
     lower_[i]=(int)lower[iColumn];
@@ -3716,6 +3735,8 @@ OsiNodeSimple::OsiNodeSimple(OsiSolverInterface & model,
     value = max(value,(double) lower_[i]);
     value = min(value,(double) upper_[i]);
     double nearest = floor(value+0.5);
+    if (fabs(value-nearest)>INTEGER_TOLERANCE)
+      numberAway++;
     if (fabs(value-nearest)>mostAway) {
 #ifdef STRONG_BRANCHING
       double away = fabs(value-nearest);
@@ -3752,6 +3773,22 @@ OsiNodeSimple::OsiNodeSimple(OsiSolverInterface & model,
       numberStrong ++;
       variable_ = chosen[i];
     }
+  }
+  // out strong branching if bit set
+  OsiClpSolverInterface* clp =
+    dynamic_cast<OsiClpSolverInterface*>(&model);
+  if (clp&&(clp->specialOptions()&16)!=0&&numberStrong>1) {
+    int j;
+    int iBest=-1;
+    double best = 0.0;
+    for (j=0;j<STRONG_BRANCHING;j++) {
+      if (upMovement[j]>best) {
+        best=upMovement[j];
+        iBest=j;
+      }
+    }
+    numberStrong=1;
+    variable_=chosen[iBest];
   }
   if (numberStrong==1) {
     // just one - makes it easy
@@ -3884,7 +3921,7 @@ OsiNodeSimple::OsiNodeSimple(OsiSolverInterface & model,
 
 OsiNodeSimple::OsiNodeSimple(const OsiNodeSimple & rhs) 
 {  
-  basis_=rhs.basis_;
+  basis_=rhs.basis_->clone();
   objectiveValue_=rhs.objectiveValue_;
   variable_=rhs.variable_;
   way_=rhs.way_;
@@ -3905,7 +3942,8 @@ OsiNodeSimple &
 OsiNodeSimple::operator=(const OsiNodeSimple & rhs)
 {
   if (this != &rhs) {
-    basis_=rhs.basis_;
+    delete basis_;
+    basis_=rhs.basis_->clone();
     objectiveValue_=rhs.objectiveValue_;
     variable_=rhs.variable_;
     way_=rhs.way_;
@@ -3931,6 +3969,7 @@ OsiNodeSimple::~OsiNodeSimple ()
 {
   delete [] lower_;
   delete [] upper_;
+  delete basis_;
 }
 
 #include <vector>
@@ -3964,12 +4003,13 @@ OsiClpSolverInterface::branchAndBound() {
       if( isInteger(iColumn))
         which[numberIntegers++]=iColumn;
     }
-    
+    double direction = getObjSense();
     // empty tree
     OsiVectorNode branchingTree;
     
     // Add continuous to it;
-    branchingTree.push_back(OsiNodeSimple(*this,numberIntegers,which));
+    OsiNodeSimple rootNode(*this,numberIntegers,which,getWarmStart());
+    branchingTree.push_back(rootNode);
     
     // For printing totals
     int numberIterations=0;
@@ -3989,7 +4029,7 @@ OsiClpSolverInterface::branchAndBound() {
           setColBounds( iColumn,node.lower_[i],node.upper_[i]);
         }
         // move basis
-        setWarmStart(&node.basis_);
+        setWarmStart(node.basis_);
         // do branching variable
         if (node.way_<0) {
           setColUpper(which[node.variable_],floor(node.value_));
@@ -4008,14 +4048,45 @@ OsiClpSolverInterface::branchAndBound() {
         }
         // solve
         resolve();
+        CoinWarmStart * ws = getWarmStart();
+        const CoinWarmStartBasis* wsb =
+          dynamic_cast<const CoinWarmStartBasis*>(ws);
+        assert (wsb!=NULL); // make sure not volume
         numberIterations += getIterationCount();
+        // fix on djs
+        int nFixed0=0,nFixed1=0;
+        double cutoff;
+        getDblParam(OsiDualObjectiveLimit,cutoff);
+        double gap=(cutoff-getObjValue())*direction+1.0e-4;
+        if (gap<1.0e10&&isProvenOptimal()&&!isDualObjectiveLimitReached()) {
+          const double * dj = getReducedCost();
+          const double * lower = getColLower();
+          const double * upper = getColUpper();
+          for (i=0;i<numberIntegers;i++) {
+            iColumn=which[i];
+            if (upper[iColumn]>lower[iColumn]) {
+              double djValue = dj[iColumn]*direction;
+              if (wsb->getStructStatus(iColumn)==CoinWarmStartBasis::atLowerBound&&
+                  djValue>gap) {
+                nFixed0++;
+                setColUpper(iColumn,lower[iColumn]);
+              } else if (wsb->getStructStatus(iColumn)==CoinWarmStartBasis::atUpperBound&&
+                         -djValue>gap) {
+                nFixed1++;
+                setColLower(iColumn,upper[iColumn]);
+              }
+            }
+          }
+          //if (nFixed0+nFixed1)
+          //printf("%d fixed to lower, %d fixed to upper\n",nFixed0,nFixed1);
+        }
         if (!isIterationLimitReached()) {
-          OsiNodeSimple newNode(*this,numberIntegers,which);
+          OsiNodeSimple newNode(*this,numberIntegers,which,ws);
           // something extra may have been fixed by strong branching
           // if so go round again
           while (newNode.variable_==numberIntegers) {
             resolve();
-            newNode = OsiNodeSimple(*this,numberIntegers,which);
+            newNode = OsiNodeSimple(*this,numberIntegers,which,getWarmStart());
           }
           if (newNode.objectiveValue_<1.0e100) {
             // push on stack
@@ -4031,7 +4102,7 @@ OsiClpSolverInterface::branchAndBound() {
         // integer solution - save
         bestNode = node;
         // set cutoff (hard coded tolerance)
-        setDblParam(OsiDualObjectiveLimit,(bestNode.objectiveValue_-1.0e-5)*getObjSense());
+        setDblParam(OsiDualObjectiveLimit,(bestNode.objectiveValue_-1.0e-5)*direction);
         std::cout<<"Integer solution of "
                  <<bestNode.objectiveValue_
                  <<" found after "<<numberIterations
@@ -4051,9 +4122,9 @@ OsiClpSolverInterface::branchAndBound() {
         setColBounds( iColumn,bestNode.lower_[i],bestNode.upper_[i]);
       }
       // move basis
-      setWarmStart(&bestNode.basis_);
+      setWarmStart(bestNode.basis_);
       // set cutoff so will be good (hard coded tolerance)
-      setDblParam(OsiDualObjectiveLimit,(bestNode.objectiveValue_+1.0e-5)*getObjSense());
+      setDblParam(OsiDualObjectiveLimit,(bestNode.objectiveValue_+1.0e-5)*direction);
       resolve();
     } else {
       modelPtr_->setProblemStatus(1);
@@ -4066,4 +4137,142 @@ OsiClpSolverInterface::branchAndBound() {
     //throw CoinError("The LP relaxation is infeasible or too expensive",
     //"branchAndBound", "OsiClpSolverInterface");
   }
+}
+void 
+OsiClpSolverInterface::setSpecialOptions(unsigned int value)
+{ 
+  specialOptions_=value;
+  if ((specialOptions_&0x80000000)!=0) {
+    // unset top bit if anything set
+    if (specialOptions_!=0x80000000) 
+      specialOptions_ &= 0x7fffffff;
+  }
+}
+void 
+OsiClpSolverInterface::setSpecialOptionsMutable(unsigned int value) const
+{ 
+  specialOptions_=value;
+  if ((specialOptions_&0x80000000)!=0) {
+    // unset top bit if anything set
+    if (specialOptions_!=0x80000000) 
+      specialOptions_ &= 0x7fffffff;
+  }
+}
+// Create C++ lines to get to current state
+void 
+OsiClpSolverInterface::generateCpp( FILE * fp)
+{
+  modelPtr_->generateCpp(fp,true);
+  // Stuff that can't be done easily
+  // setupForRepeatedUse here
+  if (!messageHandler()->prefix())
+    fprintf(fp,"3  clpModel->messageHandler()->setPrefix(false);\n");
+  OsiClpSolverInterface defaultModel;
+  OsiClpSolverInterface * other = &defaultModel;
+  int iValue1, iValue2;
+  double dValue1, dValue2;
+  bool takeHint1,takeHint2;
+  int add;
+  OsiHintStrength strength1,strength2;
+  std::string strengthName[] = {"OsiHintIgnore","OsiHintTry","OsiHintDo",
+				"OsiForceDo"};
+  iValue1 = this->specialOptions();
+  iValue2 = other->specialOptions();
+  fprintf(fp,"%d  int save_specialOptions = osiclpModel->specialOptions();\n",iValue1==iValue2 ? 2 : 1);
+  fprintf(fp,"%d  osiclpModel->setSpecialOptions(%d);\n",iValue1==iValue2 ? 4 : 3,iValue1);
+  fprintf(fp,"%d  osiclpModel->setSpecialOptions(save_specialOptions);\n",iValue1==iValue2 ? 7 : 6);
+  iValue1 = this->messageHandler()->logLevel();
+  iValue2 = other->messageHandler()->logLevel();
+  fprintf(fp,"%d  int save_messageHandler = osiclpModel->messageHandler()->logLevel();\n",iValue1==iValue2 ? 2 : 1);
+  fprintf(fp,"%d  osiclpModel->messageHandler()->setLogLevel(%d);\n",iValue1==iValue2 ? 4 : 3,iValue1);
+  fprintf(fp,"%d  osiclpModel->messageHandler()->setLogLevel(save_messageHandler);\n",iValue1==iValue2 ? 7 : 6);
+  iValue1 = this->cleanupScaling();
+  iValue2 = other->cleanupScaling();
+  fprintf(fp,"%d  int save_cleanupScaling = osiclpModel->cleanupScaling();\n",iValue1==iValue2 ? 2 : 1);
+  fprintf(fp,"%d  osiclpModel->setCleanupScaling(%d);\n",iValue1==iValue2 ? 4 : 3,iValue1);
+  fprintf(fp,"%d  osiclpModel->setCleanupScaling(save_cleanupScaling);\n",iValue1==iValue2 ? 7 : 6);
+  dValue1 = this->smallestElementInCut();
+  dValue2 = other->smallestElementInCut();
+  fprintf(fp,"%d  double save_smallestElementInCut = osiclpModel->smallestElementInCut();\n",dValue1==dValue2 ? 2 : 1);
+  fprintf(fp,"%d  osiclpModel->setSmallestElementInCut(%g);\n",dValue1==dValue2 ? 4 : 3,dValue1);
+  fprintf(fp,"%d  osiclpModel->setSmallestElementInCut(save_smallestElementInCut);\n",dValue1==dValue2 ? 7 : 6);
+  dValue1 = this->smallestChangeInCut();
+  dValue2 = other->smallestChangeInCut();
+  fprintf(fp,"%d  double save_smallestChangeInCut = osiclpModel->smallestChangeInCut();\n",dValue1==dValue2 ? 2 : 1);
+  fprintf(fp,"%d  osiclpModel->setSmallestChangeInCut(%g);\n",dValue1==dValue2 ? 4 : 3,dValue1);
+  fprintf(fp,"%d  osiclpModel->setSmallestChangeInCut(save_smallestChangeInCut);\n",dValue1==dValue2 ? 7 : 6);
+  this->getIntParam(OsiMaxNumIterationHotStart,iValue1);
+  other->getIntParam(OsiMaxNumIterationHotStart,iValue2);
+  fprintf(fp,"%d  int save_OsiMaxNumIterationHotStart;\n",iValue1==iValue2 ? 2 : 1);
+  fprintf(fp,"%d  osiclpModel->getIntParam(OsiMaxNumIterationHotStart,save_OsiMaxNumIterationHotStart);\n",iValue1==iValue2 ? 2 : 1);
+  fprintf(fp,"%d  osiclpModel->setIntParam(OsiMaxNumIterationHotStart,%d);\n",iValue1==iValue2 ? 4 : 3,iValue1);
+  fprintf(fp,"%d  osiclpModel->setIntParam(OsiMaxNumIterationHotStart,save_OsiMaxNumIterationHotStart);\n",iValue1==iValue2 ? 7 : 6);
+  this->getDblParam(OsiDualObjectiveLimit,dValue1);
+  other->getDblParam(OsiDualObjectiveLimit,dValue2);
+  fprintf(fp,"%d  double save_OsiDualObjectiveLimit;\n",dValue1==dValue2 ? 2 : 1);
+  fprintf(fp,"%d  osiclpModel->getDblParam(OsiDualObjectiveLimit,save_OsiDualObjectiveLimit);\n",dValue1==dValue2 ? 2 : 1);
+  fprintf(fp,"%d  osiclpModel->setDblParam(OsiDualObjectiveLimit,%g);\n",dValue1==dValue2 ? 4 : 3,dValue1);
+  fprintf(fp,"%d  osiclpModel->setDblParam(OsiDualObjectiveLimit,save_OsiDualObjectiveLimit);\n",dValue1==dValue2 ? 7 : 6);
+  this->getDblParam(OsiPrimalObjectiveLimit,dValue1);
+  other->getDblParam(OsiPrimalObjectiveLimit,dValue2);
+  fprintf(fp,"%d  double save_OsiPrimalObjectiveLimit;\n",dValue1==dValue2 ? 2 : 1);
+  fprintf(fp,"%d  osiclpModel->getDblParam(OsiPrimalObjectiveLimit,save_OsiPrimalObjectiveLimit);\n",dValue1==dValue2 ? 2 : 1);
+  fprintf(fp,"%d  osiclpModel->setDblParam(OsiPrimalObjectiveLimit,%g);\n",dValue1==dValue2 ? 4 : 3,dValue1);
+  fprintf(fp,"%d  osiclpModel->setDblParam(OsiPrimalObjectiveLimit,save_OsiPrimalObjectiveLimit);\n",dValue1==dValue2 ? 7 : 6);
+  this->getHintParam(OsiDoPresolveInInitial,takeHint1,strength1);
+  other->getHintParam(OsiDoPresolveInInitial,takeHint2,strength2);
+  add = ((takeHint1==takeHint2)&&(strength1==strength2)) ? 1 : 0;
+  fprintf(fp,"%d  bool saveHint_OsiDoPresolveInInitial;\n",add+1);
+  fprintf(fp,"%d  OsiHintStrength saveStrength_OsiDoPresolveInInitial;\n",add+1);
+  fprintf(fp,"%d  osiclpModel->getHintParam(OsiDoPresolveInInitial,saveHint_OsiDoPresolveInInitial,saveStrength_OsiDoPresolveInInitial);\n",add+1);
+  fprintf(fp,"%d  osiclpModel->setHintParam(OsiDoPresolveInInitial,%s,%s);\n",add+3,takeHint1 ? "true" : "false",strengthName[strength1].c_str());
+  fprintf(fp,"%d  osiclpModel->setHintParam(OsiDoPresolveInInitial,saveHint_OsiDoPresolveInInitial,saveStrength_OsiDoPresolveInInitial);\n",add+6);
+  this->getHintParam(OsiDoDualInInitial,takeHint1,strength1);
+  other->getHintParam(OsiDoDualInInitial,takeHint2,strength2);
+  add = ((takeHint1==takeHint2)&&(strength1==strength2)) ? 1 : 0;
+  fprintf(fp,"%d  bool saveHint_OsiDoDualInInitial;\n",add+1);
+  fprintf(fp,"%d  OsiHintStrength saveStrength_OsiDoDualInInitial;\n",add+1);
+  fprintf(fp,"%d  osiclpModel->getHintParam(OsiDoDualInInitial,saveHint_OsiDoDualInInitial,saveStrength_OsiDoDualInInitial);\n",add+1);
+  fprintf(fp,"%d  osiclpModel->setHintParam(OsiDoDualInInitial,%s,%s);\n",add+3,takeHint1 ? "true" : "false",strengthName[strength1].c_str());
+  fprintf(fp,"%d  osiclpModel->setHintParam(OsiDoDualInInitial,saveHint_OsiDoDualInInitial,saveStrength_OsiDoDualInInitial);\n",add+6);
+  this->getHintParam(OsiDoPresolveInResolve,takeHint1,strength1);
+  other->getHintParam(OsiDoPresolveInResolve,takeHint2,strength2);
+  add = ((takeHint1==takeHint2)&&(strength1==strength2)) ? 1 : 0;
+  fprintf(fp,"%d  bool saveHint_OsiDoPresolveInResolve;\n",add+1);
+  fprintf(fp,"%d  OsiHintStrength saveStrength_OsiDoPresolveInResolve;\n",add+1);
+  fprintf(fp,"%d  osiclpModel->getHintParam(OsiDoPresolveInResolve,saveHint_OsiDoPresolveInResolve,saveStrength_OsiDoPresolveInResolve);\n",add+1);
+  fprintf(fp,"%d  osiclpModel->setHintParam(OsiDoPresolveInResolve,%s,%s);\n",add+3,takeHint1 ? "true" : "false",strengthName[strength1].c_str());
+  fprintf(fp,"%d  osiclpModel->setHintParam(OsiDoPresolveInResolve,saveHint_OsiDoPresolveInResolve,saveStrength_OsiDoPresolveInResolve);\n",add+6);
+  this->getHintParam(OsiDoDualInResolve,takeHint1,strength1);
+  other->getHintParam(OsiDoDualInResolve,takeHint2,strength2);
+  add = ((takeHint1==takeHint2)&&(strength1==strength2)) ? 1 : 0;
+  fprintf(fp,"%d  bool saveHint_OsiDoDualInResolve;\n",add+1);
+  fprintf(fp,"%d  OsiHintStrength saveStrength_OsiDoDualInResolve;\n",add+1);
+  fprintf(fp,"%d  osiclpModel->getHintParam(OsiDoDualInResolve,saveHint_OsiDoDualInResolve,saveStrength_OsiDoDualInResolve);\n",add+1);
+  fprintf(fp,"%d  osiclpModel->setHintParam(OsiDoDualInResolve,%s,%s);\n",add+3,takeHint1 ? "true" : "false",strengthName[strength1].c_str());
+  fprintf(fp,"%d  osiclpModel->setHintParam(OsiDoDualInResolve,saveHint_OsiDoDualInResolve,saveStrength_OsiDoDualInResolve);\n",add+6);
+  this->getHintParam(OsiDoScale,takeHint1,strength1);
+  other->getHintParam(OsiDoScale,takeHint2,strength2);
+  add = ((takeHint1==takeHint2)&&(strength1==strength2)) ? 1 : 0;
+  fprintf(fp,"%d  bool saveHint_OsiDoScale;\n",add+1);
+  fprintf(fp,"%d  OsiHintStrength saveStrength_OsiDoScale;\n",add+1);
+  fprintf(fp,"%d  osiclpModel->getHintParam(OsiDoScale,saveHint_OsiDoScale,saveStrength_OsiDoScale);\n",add+1);
+  fprintf(fp,"%d  osiclpModel->setHintParam(OsiDoScale,%s,%s);\n",add+3,takeHint1 ? "true" : "false",strengthName[strength1].c_str());
+  fprintf(fp,"%d  osiclpModel->setHintParam(OsiDoScale,saveHint_OsiDoScale,saveStrength_OsiDoScale);\n",add+6);
+  this->getHintParam(OsiDoCrash,takeHint1,strength1);
+  other->getHintParam(OsiDoCrash,takeHint2,strength2);
+  add = ((takeHint1==takeHint2)&&(strength1==strength2)) ? 1 : 0;
+  fprintf(fp,"%d  bool saveHint_OsiDoCrash;\n",add+1);
+  fprintf(fp,"%d  OsiHintStrength saveStrength_OsiDoCrash;\n",add+1);
+  fprintf(fp,"%d  osiclpModel->getHintParam(OsiDoCrash,saveHint_OsiDoCrash,saveStrength_OsiDoCrash);\n",add+1);
+  fprintf(fp,"%d  osiclpModel->setHintParam(OsiDoCrash,%s,%s);\n",add+3,takeHint1 ? "true" : "false",strengthName[strength1].c_str());
+  fprintf(fp,"%d  osiclpModel->setHintParam(OsiDoCrash,saveHint_OsiDoCrash,saveStrength_OsiDoCrash);\n",add+6);
+  this->getHintParam(OsiDoReducePrint,takeHint1,strength1);
+  other->getHintParam(OsiDoReducePrint,takeHint2,strength2);
+  add = ((takeHint1==takeHint2)&&(strength1==strength2)) ? 1 : 0;
+  fprintf(fp,"%d  bool saveHint_OsiDoReducePrint;\n",add+1);
+  fprintf(fp,"%d  OsiHintStrength saveStrength_OsiDoReducePrint;\n",add+1);
+  fprintf(fp,"%d  osiclpModel->getHintParam(OsiDoReducePrint,saveHint_OsiDoReducePrint,saveStrength_OsiDoReducePrint);\n",add+1);
+  fprintf(fp,"%d  osiclpModel->setHintParam(OsiDoReducePrint,%s,%s);\n",add+3,takeHint1 ? "true" : "false",strengthName[strength1].c_str());
+  fprintf(fp,"%d  osiclpModel->setHintParam(OsiDoReducePrint,saveHint_OsiDoReducePrint,saveStrength_OsiDoReducePrint);\n",add+6);
 }

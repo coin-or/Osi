@@ -156,7 +156,7 @@ OsiCuts::iterator OsiCuts::iterator::operator++() {
     // Only update cutP if there is a column cut.
     // This is necessary for the iterator to work for
     // OsiCuts that don't have any cuts.
-    if ( cuts_.sizeRowCuts() > 0 && colCutIndex_<cuts_.sizeRowCuts() ) 
+    if ( cuts_.sizeColCuts() > 0 && colCutIndex_<cuts_.sizeColCuts() ) 
       cutP_= cuts_.colCutPtr(colCutIndex_);
   }
 
@@ -253,7 +253,7 @@ OsiCuts::const_iterator OsiCuts::const_iterator::operator++() {
     // Only update cutP if there is a column cut.
     // This is necessary for the iterator to work for
     // OsiCuts that don't have any cuts.
-    if ( cutsPtr_->sizeRowCuts() > 0 && colCutIndex_<cutsPtr_->sizeRowCuts() ) 
+    if ( cutsPtr_->sizeRowCuts() > 0 && colCutIndex_<cutsPtr_->sizeColCuts() ) 
       cutP_= cutsPtr_->colCutPtr(colCutIndex_);
   }
 

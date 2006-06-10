@@ -21,6 +21,7 @@
 #include "ClpMessage.hpp"
 #include "ClpFactorization.hpp"
 #include "CoinModel.hpp"
+#include "CoinIndexedVector.hpp"
 
 //#############################################################################
 
@@ -932,6 +933,18 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     delete [] rays[0];
     
   }
+  // Test infeasible bounds
+  {
+    OsiClpSolverInterface solver;
+    std::string fn = mpsDir+"exmip1";
+    solver.readMps(fn.c_str(),"mps");
+    int index[]={0};
+    double value[]={1.0,0.0};
+    solver.setColSetBounds(index,index+1,value);
+    solver.setHintParam(OsiDoPresolveInInitial, false, OsiHintDo);
+    solver.initialSolve();
+    assert (!solver.isProvenOptimal());
+  }
 
   // Build a model
   {    
@@ -1134,7 +1147,8 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       int colOut;
       int outStatus;
       double theta;
-      int returnCode=m.primalPivotResult(colIn,direction,colOut,outStatus,theta,NULL);
+      int returnCode=m.primalPivotResult(colIn,direction,
+					 colOut,outStatus,theta,NULL);
       assert (!returnCode);
       printf("out %d, direction %d theta %g\n",
              colOut,outStatus,theta);
@@ -1143,7 +1157,8 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
         assert (returnCode>=0);
       } else {
         // bound flip (so pivot does not make sense)
-        returnCode=mm->primalPivotResult(colIn,direction,colOut,outStatus,theta,NULL);
+        returnCode=mm->primalPivotResult(colIn,direction,
+					 colOut,outStatus,theta,NULL);
         assert (!returnCode);
       }
       numberIterations++;
@@ -1352,7 +1367,118 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       }
     }
     printf("\n");
-    m.disableSimplexInterface();
+    // and when doing as expert
+    m.setSpecialOptions(m.specialOptions()|512);
+    ClpSimplex * clp = m.getModelPtr();
+    /* Do twice -
+       first time with enableSimplexInterface still set
+       then without and with scaling
+    */
+    for (int iPass=0;iPass<2;iPass++) {
+      const double * rowScale = clp->rowScale();
+      const double * columnScale = clp->columnScale();
+      if (!iPass)
+        assert (!rowScale);
+      else
+        assert (rowScale); // only true for this example
+      /* has to be exactly correct as in OsiClpsolverInterface.cpp
+         (also redo each pass as may change
+      */
+      CoinIndexedVector * rowArray = clp->rowArray(1);
+      CoinIndexedVector * columnArray = clp->columnArray(0);
+      int n;
+      int * which;
+      double * array;
+      printf("B-1 A");
+      for( i = 0; i < n_rows; i++){
+        m.getBInvARow(i, binvA,binvA+n_cols);
+        printf("\nrow: %d -> ",i);
+        int j;
+        // First columns
+        n = columnArray->getNumElements();
+        which = columnArray->getIndices();
+        array = columnArray->denseVector();
+        for(j=0; j < n; j++){
+          int k=which[j];
+          if (!columnScale) {
+            printf("(%d %g), ", k, array[k]);
+          } else {
+            printf("(%d %g), ", k, array[k]/columnScale[k]);
+          }
+          // zero out
+          array[k]=0.0;
+        }
+        // say empty
+        columnArray->setNumElements(0);
+        // and check (would not be in any production code)
+        columnArray->checkClear();
+        // now rows
+        n = rowArray->getNumElements();
+        which = rowArray->getIndices();
+        array = rowArray->denseVector();
+        for(j=0; j < n; j++){
+          int k=which[j];
+          if (!rowScale) {
+            printf("(%d %g), ", k+n_cols, array[k]);
+          } else {
+            printf("(%d %g), ", k+n_cols, array[k]*rowScale[k]);
+          }
+          // zero out
+          array[k]=0.0;
+        }
+        // say empty
+        rowArray->setNumElements(0);
+        // and check (would not be in any production code)
+        rowArray->checkClear();
+      }
+      printf("\n");
+      printf("And by column (trickier)");
+      const int * pivotVariable = clp->pivotVariable();
+      for( i = 0; i < n_cols+n_rows; i++){
+        m.getBInvACol(i, binvA);
+        printf("\ncolumn: %d -> ",i);
+        n = rowArray->getNumElements();
+        which = rowArray->getIndices();
+        array = rowArray->denseVector();
+        for(int j=0; j < n; j++){
+          int k=which[j];
+          // need to know pivot variable for +1/-1 (slack) and row/column scaling
+          int pivot = pivotVariable[k];
+          if (pivot<n_cols) {
+            // scaled coding is in just in case 
+            if (!columnScale) {
+              printf("(%d %g), ", k, array[k]);
+            } else {
+              printf("(%d %g), ", k, array[k]*columnScale[pivot]);
+            }
+          } else {
+            if (!rowScale) {
+              printf("(%d %g), ", k, -array[k]);
+            } else {
+              printf("(%d %g), ", k, -array[k]/rowScale[pivot-n_cols]);
+            }
+          }
+          // zero out
+          array[k]=0.0;
+        }
+        // say empty
+        rowArray->setNumElements(0);
+        // and check (would not be in any production code)
+        rowArray->checkClear();
+      }
+      printf("\n");
+      // now deal with next pass
+      if (!iPass) {
+        m.disableSimplexInterface();
+        // see if we can get scaling for testing
+        clp->scaling(1);
+        m.enableFactorization();
+      } else {
+        // may not be needed - but cleaner
+        m.disableFactorization();
+      }
+    }
+    m.setSpecialOptions(m.specialOptions()&~512);
     free(binvA);
   }
   // Check tableau stuff when simplex interface is off

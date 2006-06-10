@@ -238,7 +238,7 @@ void test_starts (const std::string& mpsDir)
 
   delete osi ;
 
-  return ; } ;
+  return ; }
 
 
 /*!

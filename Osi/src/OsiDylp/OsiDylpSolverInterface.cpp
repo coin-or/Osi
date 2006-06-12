@@ -6153,7 +6153,7 @@ void ODSI::dylp_controlfile (const char *name,
   string mode = (mustexist)?"r":"q" ;
   dy_cmdchn = openfile(name,mode.c_str()) ;
   if (!(dy_cmdchn == IOID_INV || dy_cmdchn == IOID_NOSTRM))
-  { setmode (dy_cmdchn, 'l') ;  
+  { DyLPsetmode (dy_cmdchn, 'l') ;  
     main_lpopts = initialSolveOptions ;
     main_lptols = tolerances ;
     bool r UNUSED = (process_cmds(silent) != 0) ;

@@ -50,6 +50,8 @@ public:
       Returns true if debugger activated (i.e. solution was valid).
   */
   bool activate(const OsiSolverInterface & si, const double * solution);
+  /// Redo solution after preprocessing
+  void redoSolution(int numberColumns,const int * originalColumns);
   //@}
 
   /**@name Test if on Optimal Path */

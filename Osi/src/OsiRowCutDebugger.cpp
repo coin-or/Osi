@@ -1371,3 +1371,25 @@ OsiRowCutDebugger::operator=(const OsiRowCutDebugger& rhs)
   }
   return *this;
 }
+// Redo solution after preprocessing
+void 
+OsiRowCutDebugger::redoSolution(int numberColumns,const int * originalColumns)
+{
+  assert (numberColumns<=numberColumns_);
+  if (numberColumns<numberColumns_) {
+    char * mark = new char[numberColumns_];
+    memset (mark,0,numberColumns_);
+    int i;
+    for (i=0;i<numberColumns;i++)
+      mark[originalColumns[i]]=1;
+    numberColumns=0;
+    for (i=0;i<numberColumns_;i++) {
+      if (mark[i]) {
+        integerVariable_[numberColumns]=integerVariable_[i];
+        optimalSolution_[numberColumns++]=optimalSolution_[i];
+      }
+    }
+    delete [] mark;
+    numberColumns_=numberColumns;
+  }
+}

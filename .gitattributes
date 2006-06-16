@@ -12,6 +12,7 @@ Osi/examples/query.cpp -text
 Osi/examples/specific.cpp -text
 Osi/inc/config_osi.h.in -text
 Osi/osi_addlibs.txt.in -text
+/README -text
 /config.guess -text
 /config.sub -text
 /configure -text

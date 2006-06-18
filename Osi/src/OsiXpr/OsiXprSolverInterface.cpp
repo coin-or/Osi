@@ -2063,7 +2063,7 @@ void OsiXprSolverInterface::setLogFileName( const char * filename )
 //-----------------------------------------------------------------------------
 
 int OsiXprSolverInterface::iXprCallCount_ = 1;
-;
+
 unsigned int OsiXprSolverInterface::numInstances_ = 0;
 
 unsigned int OsiXprSolverInterface::osiSerial_ = 0;  

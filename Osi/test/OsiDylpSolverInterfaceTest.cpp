@@ -17,6 +17,14 @@
 
 #endif
 
+/*
+  Unset NDEBUG, if it happens to be set. This code needs to be rewritten if
+  it's going to run without assert.
+*/
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
+
 /* 
   Rudimentary tests for the Dylp OSI layer. The assumption is that
   OsiSolverInterfaceCommonUnitTest checks basic functionality. The routine

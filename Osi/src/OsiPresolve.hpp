@@ -80,7 +80,7 @@ public:
     This should be paired with postsolve(). It is up to the client to
     destroy the returned OsiSolverInterface, <i>after</i> calling postsolve().
     
-    This is method is virtual. Override this method if you need to customize
+    This method is virtual. Override this method if you need to customize
     the steps of creating a model to apply presolve transformations.
 
     In some sense, a wrapper for presolve(CoinPresolveMatrix*).
@@ -88,7 +88,8 @@ public:
   virtual OsiSolverInterface *presolvedModel(OsiSolverInterface & origModel,
 					     double feasibilityTolerance=0.0,
 					     bool keepIntegers=true,
-					     int numberPasses=5);
+					     int numberPasses=5,
+                                             const char * prohibited=NULL);
 
   /*! \brief Restate the solution to the presolved problem in terms of the
 	     original problem and load it into the original model.

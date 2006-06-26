@@ -80,7 +80,8 @@ OsiSolverInterface *
 OsiPresolve::presolvedModel(OsiSolverInterface & si,
 			 double feasibilityTolerance,
 			 bool keepIntegers,
-			    int numberPasses)
+			    int numberPasses,
+                            const char * prohibited)
 {
   ncols_ = si.getNumCols();
   nrows_ = si.getNumRows();
@@ -123,7 +124,7 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
     CoinPresolveMatrix prob(ncols_,
 			maxmin,
 			presolvedModel_,
-			nrows_, nelems_,true,nonLinearValue_);
+			nrows_, nelems_,true,nonLinearValue_,prohibited);
     // make sure row solution correct
     {
       double *colels	= prob.colels_;
@@ -1142,7 +1143,8 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
 				     int nrows_in,
 				     CoinBigIndex nelems_in,
 			       bool doStatus,
-			       double nonLinearValue) :
+			       double nonLinearValue,
+                                       const char * prohibited) :
 
   CoinPrePostsolveMatrix(si,
 			ncols0_in, nrows_in, nelems_in),
@@ -1260,6 +1262,12 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
 	}
       }
       if (nonLinearColumn)
+	setColProhibited(icol);
+    }
+  } else if (prohibited) {
+    anyProhibited_ = true;
+    for (icol=0;icol<ncols_;icol++) {
+      if (prohibited[icol])
 	setColProhibited(icol);
     }
   } else {

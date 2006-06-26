@@ -357,6 +357,7 @@ SUBDIRS = $(am__append_1) $(am__append_2) $(am__append_3) \
 # and that therefore should be installed in 'install'
 include_HEADERS = \
 	../inc/config_osi.h \
+	OsiAuxInfo.hpp \
 	OsiColCut.hpp \
 	OsiCollections.hpp \
 	OsiCut.hpp \

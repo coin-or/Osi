@@ -94,6 +94,7 @@ endif
 # and that therefore should be installed in 'install'
 include_HEADERS = \
 	../inc/config_osi.h \
+	OsiAuxInfo.hpp \
 	OsiColCut.hpp \
 	OsiCollections.hpp \
 	OsiCut.hpp \

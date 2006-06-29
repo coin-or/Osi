@@ -1202,7 +1202,7 @@ void ODSI::dylp_ioinit ()
 # else
   errinit(const_cast<char *>(errfile.c_str()),0,false) ;
 # endif
-  bool r1 UNUSED = ioinit() ;
+  bool r1 UNUSED = dyio_ioinit() ;
   assert(r1) ;
 }
 
@@ -2076,15 +2076,15 @@ ODSI::~OsiDylpSolverInterface ()
 */
   destruct_presolve() ;
   destruct_problem(false) ;
-  if (isactive(local_logchn)) (void) closefile(local_logchn) ;
-  if (isactive(local_outchn)) (void) closefile(local_outchn) ;
+  if (dyio_isactive(local_logchn)) (void) dyio_closefile(local_logchn) ;
+  if (dyio_isactive(local_outchn)) (void) dyio_closefile(local_outchn) ;
 
   reference_count-- ;
   if (reference_count == 0)
   { if (basis_ready == true)
     { dy_freebasis() ;
       basis_ready = false ; }
-    ioterm() ;
+    dyio_ioterm() ;
     errterm() ; }
 
   return ; }
@@ -2106,11 +2106,11 @@ void ODSI::reset ()
 */
   destruct_presolve() ;
   destruct_problem(false) ;
-  if (isactive(local_logchn))
-  { (void) closefile(local_logchn) ;
+  if (dyio_isactive(local_logchn))
+  { (void) dyio_closefile(local_logchn) ;
     local_logchn = IOID_NOSTRM ; }
-  if (isactive(local_outchn))
-  { (void) closefile(local_outchn) ;
+  if (dyio_isactive(local_outchn))
+  { (void) dyio_closefile(local_outchn) ;
     local_outchn = IOID_NOSTRM ; }
 /*
   That takes care of cleaning out the ODSI object. Call setInitialData to
@@ -4289,7 +4289,7 @@ void ODSI::initialSolve ()
 /*
   Establish logging and echo values, and invoke the solver.
 */
-  if (isactive(local_logchn)) dy_logchn = local_logchn ;
+  if (dyio_isactive(local_logchn)) dy_logchn = local_logchn ;
   dy_gtxecho = initial_gtxecho ;
   if (presolving == true)
   { save_ctlopts = getflg(lpprob->ctlopts,lpctlNOFREE|lpctlACTVARSOUT) ;
@@ -5773,7 +5773,7 @@ void ODSI::resolve ()
   crucial here --- dylp will sort it out as it starts.
 */
   assert(resolveOptions->forcecold == false) ;
-  if (isactive(local_logchn)) dy_logchn = local_logchn ;
+  if (dyio_isactive(local_logchn)) dy_logchn = local_logchn ;
   dy_gtxecho = resolve_gtxecho ;
   dyphase_enum phase = lpprob->phase ;
   if (!(phase == dyPRIMAL1 || phase == dyPRIMAL2 || phase == dyDUAL))
@@ -5945,7 +5945,7 @@ void ODSI::solveFromHotStart ()
   assert(lpprob && lpprob->basis && lpprob->status && basis_ready &&
 	 consys && resolveOptions && tolerances) ;
 
-  if (isactive(local_logchn)) dy_logchn = local_logchn ;
+  if (dyio_isactive(local_logchn)) dy_logchn = local_logchn ;
   dy_gtxecho = resolve_gtxecho ;
 /*
   Phase can be anything except dyDONE, which will cause dylp to free data
@@ -6151,13 +6151,13 @@ void ODSI::dylp_controlfile (const char *name,
 
 { if (name == 0 || *name == 0) return ;
   string mode = (mustexist)?"r":"q" ;
-  dy_cmdchn = openfile(name,mode.c_str()) ;
+  dy_cmdchn = dyio_openfile(name,mode.c_str()) ;
   if (!(dy_cmdchn == IOID_INV || dy_cmdchn == IOID_NOSTRM))
-  { DyLPsetmode (dy_cmdchn, 'l') ;  
+  { dyio_setmode (dy_cmdchn, 'l') ;  
     main_lpopts = initialSolveOptions ;
     main_lptols = tolerances ;
     bool r UNUSED = (process_cmds(silent) != 0) ;
-    (void) closefile(dy_cmdchn) ;
+    (void) dyio_closefile(dy_cmdchn) ;
     dy_cmdchn = IOID_NOSTRM ;
     assert(r == cmdOK) ;
 /*
@@ -6184,11 +6184,11 @@ void ODSI::dylp_logfile (const char *name, bool echo)
 { if (name == 0 || *name == 0) return ;
 
   string lognme = make_filename(name,".mps",".log") ;
-  local_logchn = openfile(lognme.c_str(),"w") ;
+  local_logchn = dyio_openfile(lognme.c_str(),"w") ;
   if (local_logchn == IOID_INV)
   { local_logchn = IOID_NOSTRM ; }
   else
-  { (void) chgerrlog(lognme.c_str(),true) ; }
+  { (void) dyio_chgerrlog(lognme.c_str(),true) ; }
   initial_gtxecho = echo ;
   resolve_gtxecho = echo ;
 
@@ -6205,7 +6205,7 @@ void ODSI::dylp_outfile (const char *name)
 { if (name == 0 || *name == 0) return ;
 
   string outnme = make_filename(name,".mps",".out") ;
-  local_outchn = openfile(outnme.c_str(),"w") ;
+  local_outchn = dyio_openfile(outnme.c_str(),"w") ;
   if (local_outchn == IOID_INV) local_outchn = IOID_NOSTRM ;
   
   return ; }
@@ -6219,7 +6219,7 @@ void ODSI::dylp_outfile (const char *name)
 
 void ODSI::dylp_printsoln (bool wantSoln, bool wantStats)
 
-{ if (isactive(local_outchn))
+{ if (dyio_isactive(local_outchn))
   { if (wantStats) dy_dumpstats(local_outchn,false,statistics,consys) ;
     if (wantSoln) dy_dumpcompact(local_outchn,false,lpprob,false) ; }
 

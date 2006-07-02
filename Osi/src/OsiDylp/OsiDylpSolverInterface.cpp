@@ -4878,6 +4878,14 @@ inline int ODSI::getNumCols () const
     return (consys->varcnt) ; }
 
 
+inline int ODSI::getNumIntegers () const
+
+{ if (!consys)
+    return (0) ;
+  else
+    return (consys->intvcnt+consys->binvcnt) ; }
+
+
 inline int ODSI::getNumElements () const
 
 { if (!consys)

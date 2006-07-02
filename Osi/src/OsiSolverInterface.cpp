@@ -104,6 +104,24 @@ OsiSolverInterface::isInteger(int colIndex) const
    return !isContinuous(colIndex);
 }
 //-----------------------------------------------------------------------------
+/*
+  Return number of integer variables. OSI implementors really should replace
+  this one, it's generally trivial from within the OSI, but this is the only
+  safe way to do it generically.
+*/
+int
+OsiSolverInterface::getNumIntegers () const
+{
+  const int numCols = getNumCols() ;
+  int numIntegers = 0 ;
+  for (int i = 0 ; i < numCols ; ++i) {
+    if (!isContinuous(i)) {
+       numIntegers++ ;
+    }
+  }
+  return (numIntegers) ;
+}
+//-----------------------------------------------------------------------------
 bool 
 OsiSolverInterface::isIntegerNonBinary(int colIndex) const
 {

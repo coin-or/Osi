@@ -2226,13 +2226,17 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 
   if ( volSolverInterface ) {
      // Test for vol since it does not support this function
-     failureMessage(solverName,"column type methods all report continuous (OK for vol)");
+     failureMessage(solverName,
+		    "column type methods all report continuous (OK for vol)");
   }
   else {
     OsiSolverInterface & fim = *(emptySi->clone());
     std::string fn = mpsDir+"exmip1";
     fim.readMps(fn.c_str(),"mps");
+
     // exmip1.mps has 2 integer variables with index 2 & 3
+    assert(  fim.getNumIntegers() == 2 ) ;
+
     assert(  fim.isContinuous(0) );
     assert(  fim.isContinuous(1) );
     assert( !fim.isContinuous(2) );
@@ -2296,6 +2300,9 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       failureMessage(solverName,"isBinary or setColUpper");
     assert( !fim.isBinary(4) );
     
+    if (fim.getNumIntegers() != 2)
+      failureMessage(solverName,"getNumIntegers");
+
     assert( !fim.isIntegerNonBinary(0) );
     assert( !fim.isIntegerNonBinary(1) );
     if( !fim.isIntegerNonBinary(2) )

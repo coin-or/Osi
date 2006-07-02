@@ -424,6 +424,9 @@ public:
   
       /// Get number of nonzero elements
       virtual int getNumElements() const = 0;
+
+      /// Get number of integer variables
+      virtual int getNumIntegers() const ;
   
       /// Get pointer to array[getNumCols()] of column lower bounds
       virtual const double * getColLower() const = 0;

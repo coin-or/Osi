@@ -223,6 +223,13 @@ public:
 
   int getNumElements() const ;
 
+  /*! \brief Get the number of integer variables
+
+    Counts both binary and general integer variables.
+  */
+
+  int getNumIntegers() const ;
+
   /*! \brief Get the column (variable) lower bound vector */
 
   const double* getColLower() const ;

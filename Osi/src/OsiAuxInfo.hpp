@@ -95,6 +95,7 @@ public:
           check this (rather than solver) to see if feasible and what objective value is.
           Using Outer Approximation so called lp based
           - may also return heuristic solution
+      4 - normal solver but cuts are needed for integral solution    
   */
   inline void setSolverType(int value)
   { solverType_=value;};
@@ -115,13 +116,16 @@ public:
       be obsolete */
   inline bool solutionAddsCuts() const
   { return solverType_==3;};
+  /// Return true if we should try cuts at root even if looks satisfied
+  inline bool alwaysTryCutsAtRootNode() const
+  { return solverType_==4;};
   /** Returns true if can use solver objective or feasible values,
       otherwise use mipBound etc */
   inline bool solverAccurate() const
-  { return solverType_==0||solverType_==2;};
+  { return solverType_==0||solverType_==2||solverType_==4;};
   /// Returns true if can use reduced costs for fixing
   inline bool reducedCostsAccurate() const
-  { return solverType_==0;};
+  { return solverType_==0||solverType_==4;};
   /// Get objective  (well mip bound)
   double mipBound() const;
   /// Returns true if node feasible

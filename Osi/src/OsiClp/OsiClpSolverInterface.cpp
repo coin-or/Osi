@@ -2475,10 +2475,10 @@ OsiClpSolverInterface::readLp(const char *filename, const double epsilon )
 void 
 OsiClpSolverInterface::writeLp(const char *filename,
                                const char *extension ,
-                               const double epsilon ,
-                               const int numberAcross ,
-                               const int decimals ,
-                               const double objSense ,
+                               double epsilon ,
+                               int numberAcross ,
+                               int decimals ,
+                               double objSense ,
                                bool changeNameOnRange) const
 {
   std::string f(filename);
@@ -2504,10 +2504,10 @@ OsiClpSolverInterface::writeLp(const char *filename,
 }
 void 
 OsiClpSolverInterface::writeLp(FILE * fp,
-                               const double epsilon ,
-                               const int numberAcross ,
-                               const int decimals ,
-                               const double objSense ,
+                               double epsilon ,
+                               int numberAcross ,
+                               int decimals ,
+                               double objSense ,
                                bool changeNameOnRange) const
 {
   // get names

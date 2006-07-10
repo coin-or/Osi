@@ -1,8 +1,5 @@
 /* inc/config_osi.h.in.  Generated from configure.ac by autoheader.  */
 
-/* If defined, debug sanity checks are performed during runtime */
-#undef COIN_DEBUG
-
 /* Define to 1 if the Cbc package is used */
 #undef COIN_HAS_CBC
 
@@ -48,6 +45,12 @@
 /* Define to 1 if the Xpress package is used */
 #undef COIN_HAS_XPR
 
+/* Define to the debug sanity check level (0 is no test) */
+#undef COIN_OSI_CHECKLEVEL
+
+/* Define to the debug verbosity level (0 is no output) */
+#undef COIN_OSI_VERBOSITY
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
@@ -77,6 +80,29 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* Define this variable to enable OsiDylp's informational printing features.
+   */
+#undef ODSI_INFOMSGS
+
+/* Control OsiDylp's paranoid checks. Legal values: 0 - off; 1 - normal; 2 -
+   consistency (expensive) */
+#undef ODSI_PARANOIA
+
+/* Define this variable to enable support for dylp's statistics collection
+   features. */
+#undef ODSI_STATISTICS
+
+/* define to the name of the default solver interface class, e.g.,
+   OsiClpSolverInterface */
+#undef OSICBC_DFLT_SOLVER
+
+/* define this symbol if clp is the default solver */
+#undef OSICBC_DFLT_SOLVER_CLP
+
+/* define to the name of the .hpp file for the default solver interface class,
+   e.g., "OsiClpSolverInterface.hpp" (include quotes) */
+#undef OSICBC_DFLT_SOLVER_HPP
 
 /* Name of package */
 #undef PACKAGE

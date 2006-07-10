@@ -12,6 +12,9 @@ Osi/examples/parameters.cpp -text
 Osi/examples/query.cpp -text
 Osi/examples/specific.cpp -text
 Osi/inc/config_osi.h.in -text
+Osi/m4/ac_osi_canonical.m4 -text
+Osi/m4/ac_osicbc_config.m4 -text
+Osi/m4/ac_osidylp_options.m4 -text
 Osi/osi_addlibs.txt.in -text
 /README -text
 /config.guess -text

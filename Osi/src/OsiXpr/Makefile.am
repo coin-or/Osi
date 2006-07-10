@@ -28,6 +28,7 @@ libOsiXpr_la_LDFLAGS = $(LT_LDFLAGS)
 # being compiled.
 AM_CPPFLAGS = \
 	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
+	-I`$(CYGPATH_W) $(COINUTILSOBJDIR)/inc` \
 	-I`$(CYGPATH_W) $(XPRINCDIR)` \
 	-I`$(CYGPATH_W) $(srcdir)/..`
 

@@ -26,13 +26,32 @@ libOsiCbc_la_LDFLAGS = $(LT_LDFLAGS)
 # "cygpath" stuff is necessary to compile with native compilers on Windows.
 # "top_srcdir" refers to the basic directory for the main package that is
 # being compiled.
+
+# Needed by any OsiCbc configuration.
+
 AM_CPPFLAGS = \
 	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
+	-I`$(CYGPATH_W) $(COINUTILSOBJDIR)/inc` \
 	-I`$(CYGPATH_W) $(CBCSRCDIR)/src` \
-	-I`$(CYGPATH_W) $(srcdir)/..` \
-	-I`$(CYGPATH_W) $(srcdir)/../OsiClp` \
+	-I`$(CYGPATH_W) $(srcdir)/..`
+
+# Plus the appropriate include directories for the default solver. The
+# underlying configuration macro (Osi/m4/ac_osicbc_config.m4) is set up to
+# handle any Osi solver, but I'll leave it to individual OsiXxx maintainers to
+# add their solver here when they've done the testing.  -- lh, July 2006 --
+
+if OSICBC_DFLT_SOLVER_CLP
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(srcdir)/../OsiClp` \
 	-I`$(CYGPATH_W) $(CLPSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(CLPOBJDIR)/inc`
+endif
+
+if OSICBC_DFLT_SOLVER_DYLP
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(srcdir)/../OsiDylp` \
+	-I`$(CYGPATH_W) $(DYLPSRCDIR)/src/Dylp` \
+	-I`$(CYGPATH_W) $(DYLPSRCDIR)/src/DylpStdLib` \
+	-I`$(CYGPATH_W) $(DYLPOBJDIR)/inc`
+endif
 
 # This line is necessary to allow VPATH compilation with MS compilers
 # on Cygwin

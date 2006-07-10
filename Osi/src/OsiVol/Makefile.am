@@ -29,6 +29,7 @@ libOsiVol_la_LDFLAGS = $(LT_LDFLAGS)
 # being compiled.
 AM_CPPFLAGS = \
 	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
+	-I`$(CYGPATH_W) $(COINUTILSOBJDIR)/inc` \
 	-I`$(CYGPATH_W) $(VOLSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(srcdir)/..`
 

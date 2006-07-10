@@ -72,6 +72,10 @@ uninstall-local:
 #                         Maintainer Stuff                             #
 ########################################################################
 
+# So aclocal can find the local macros
+
+ACLOCAL_AMFLAGS = -I m4
+
 # Files that are generated and should be cleaned with make distclean
 DISTCLEANFILES =
 

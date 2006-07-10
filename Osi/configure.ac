@@ -44,7 +44,7 @@ AC_CANONICAL_BUILD
 AC_COIN_PROJECTDIR_INIT
 
 # Check if user wants to produce debugging code
-AC_COIN_DEBUG_COMPILE
+AC_COIN_DEBUG_COMPILE(Osi)
 
 # Get the name of the C++ compiler and appropriate compiler options
 AC_COIN_PROG_CXX
@@ -77,6 +77,15 @@ AC_COIN_HAS_USER_LIBRARY([Mosek],[MSK],[mosekdl.h],[MSK_openmosek])
 AC_COIN_HAS_USER_LIBRARY([Osl],[OSL],[ekk_c_api.h],[ekk_simplex])
 AC_COIN_HAS_USER_LIBRARY([Soplex],[SPX],[spxsolver.h]) # ToDo
 AC_COIN_HAS_USER_LIBRARY([Xpress],[XPR],[xprs.h],[XPRSsetintcontrol])
+
+#############################################################################
+#                 Configuration options for individual OSIs                 #
+#############################################################################
+
+AC_OSICBC_CONFIG(clp)
+AC_ODSI_INFO(yes)
+AC_ODSI_STATISTICS(no)
+AC_ODSI_PARANOIA(1)
 
 ##############################################################################
 #                   Finishing up by writing all the output                   #

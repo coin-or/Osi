@@ -40,7 +40,8 @@ libOsi_la_LDFLAGS = $(LT_LDFLAGS)
 # "top_srcdir" refers to the basic directory for the main package that is
 # being compiled.
 AM_CPPFLAGS = \
-	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src`
+	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
+	-I`$(CYGPATH_W) $(COINUTILSOBJDIR)/inc`
 
 # This line is necessary to allow VPATH compilation with MS compilers
 # on Cygwin
@@ -48,7 +49,7 @@ DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/inc
 
 # Now we check into which directories to recurse, and which subdirectory
 # libraries to include
-SUBDIRS =
+SUBDIRS = .
 if COIN_HAS_CBC
   SUBDIRS += OsiCbc
 endif

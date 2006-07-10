@@ -472,7 +472,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os ADDLIBS FADDLIBS ALWAYS_FALSE_TRUE ALWAYS_FALSE_FALSE COIN_DEBUG_TRUE COIN_DEBUG_FALSE CDEFS CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT ADD_CFLAGS MPICC CXXDEFS CXX CXXFLAGS ac_ct_CXX ADD_CXXFLAGS MPICXX EGREP INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT LIBTOOLM4 have_autoconf have_automake have_svn BUILDTOOLSDIR AUX_DIR abs_source_dir abs_lib_dir abs_include_dir abs_bin_dir HAVE_EXTERNALS_TRUE HAVE_EXTERNALS_FALSE host host_cpu host_vendor host_os LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CPP CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL LT_LDFLAGS RPATH_FLAGS CBCSRCDIR CBCOBJDIR COIN_HAS_CBC_TRUE COIN_HAS_CBC_FALSE CGLSRCDIR CGLOBJDIR COIN_HAS_CGL_TRUE COIN_HAS_CGL_FALSE CLPSRCDIR CLPOBJDIR COIN_HAS_CLP_TRUE COIN_HAS_CLP_FALSE COINUTILSSRCDIR COINUTILSOBJDIR COIN_HAS_COINUTILS_TRUE COIN_HAS_COINUTILS_FALSE DYLPSRCDIR DYLPOBJDIR COIN_HAS_DYLP_TRUE COIN_HAS_DYLP_FALSE OSISRCDIR OSIOBJDIR COIN_HAS_OSI_TRUE COIN_HAS_OSI_FALSE SYMSRCDIR SYMOBJDIR COIN_HAS_SYM_TRUE COIN_HAS_SYM_FALSE VOLSRCDIR VOLOBJDIR COIN_HAS_VOL_TRUE COIN_HAS_VOL_FALSE CPXINCDIR CPXLIB COIN_HAS_CPX_TRUE COIN_HAS_CPX_FALSE GLPKINCDIR GLPKLIB COIN_HAS_GLPK_TRUE COIN_HAS_GLPK_FALSE FMPINCDIR FMPLIB COIN_HAS_FMP_TRUE COIN_HAS_FMP_FALSE MSKINCDIR MSKLIB COIN_HAS_MSK_TRUE COIN_HAS_MSK_FALSE OSLINCDIR OSLLIB COIN_HAS_OSL_TRUE COIN_HAS_OSL_FALSE SPXINCDIR SPXLIB COIN_HAS_SPX_TRUE COIN_HAS_SPX_FALSE XPRINCDIR XPRLIB COIN_HAS_XPR_TRUE COIN_HAS_XPR_FALSE LIBEXT VPATH_DISTCLEANFILES LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os ADDLIBS FADDLIBS ALWAYS_FALSE_TRUE ALWAYS_FALSE_FALSE CDEFS ADD_CFLAGS DBG_CFLAGS OPT_CFLAGS CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT MPICC CXXDEFS ADD_CXXFLAGS DBG_CXXFLAGS OPT_CXXFLAGS CXX CXXFLAGS ac_ct_CXX MPICXX EGREP INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT LIBTOOLM4 have_autoconf have_automake have_svn BUILDTOOLSDIR AUX_DIR abs_source_dir abs_lib_dir abs_include_dir abs_bin_dir HAVE_EXTERNALS_TRUE HAVE_EXTERNALS_FALSE host host_cpu host_vendor host_os LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CPP CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL LT_LDFLAGS RPATH_FLAGS CBCSRCDIR CBCOBJDIR COIN_HAS_CBC_TRUE COIN_HAS_CBC_FALSE CGLSRCDIR CGLOBJDIR COIN_HAS_CGL_TRUE COIN_HAS_CGL_FALSE CLPSRCDIR CLPOBJDIR COIN_HAS_CLP_TRUE COIN_HAS_CLP_FALSE COINUTILSSRCDIR COINUTILSOBJDIR COIN_HAS_COINUTILS_TRUE COIN_HAS_COINUTILS_FALSE DYLPSRCDIR DYLPOBJDIR COIN_HAS_DYLP_TRUE COIN_HAS_DYLP_FALSE OSISRCDIR OSIOBJDIR COIN_HAS_OSI_TRUE COIN_HAS_OSI_FALSE SYMSRCDIR SYMOBJDIR COIN_HAS_SYM_TRUE COIN_HAS_SYM_FALSE VOLSRCDIR VOLOBJDIR COIN_HAS_VOL_TRUE COIN_HAS_VOL_FALSE CPXINCDIR CPXLIB COIN_HAS_CPX_TRUE COIN_HAS_CPX_FALSE GLPKINCDIR GLPKLIB COIN_HAS_GLPK_TRUE COIN_HAS_GLPK_FALSE FMPINCDIR FMPLIB COIN_HAS_FMP_TRUE COIN_HAS_FMP_FALSE MSKINCDIR MSKLIB COIN_HAS_MSK_TRUE COIN_HAS_MSK_FALSE OSLINCDIR OSLLIB COIN_HAS_OSL_TRUE COIN_HAS_OSL_FALSE SPXINCDIR SPXLIB COIN_HAS_SPX_TRUE COIN_HAS_SPX_FALSE XPRINCDIR XPRLIB COIN_HAS_XPR_TRUE COIN_HAS_XPR_FALSE OSICBC_DFLT_SOLVER_CLP_TRUE OSICBC_DFLT_SOLVER_CLP_FALSE OSICBC_DFLT_SOLVER_CPX_TRUE OSICBC_DFLT_SOLVER_CPX_FALSE OSICBC_DFLT_SOLVER_DYLP_TRUE OSICBC_DFLT_SOLVER_DYLP_FALSE OSICBC_DFLT_SOLVER_FMP_TRUE OSICBC_DFLT_SOLVER_FMP_FALSE OSICBC_DFLT_SOLVER_GLPK_TRUE OSICBC_DFLT_SOLVER_GLPK_FALSE OSICBC_DFLT_SOLVER_MSK_TRUE OSICBC_DFLT_SOLVER_MSK_FALSE OSICBC_DFLT_SOLVER_OSL_TRUE OSICBC_DFLT_SOLVER_OSL_FALSE OSICBC_DFLT_SOLVER_SPX_TRUE OSICBC_DFLT_SOLVER_SPX_FALSE OSICBC_DFLT_SOLVER_SYM_TRUE OSICBC_DFLT_SOLVER_SYM_FALSE OSICBC_DFLT_SOLVER_VOL_TRUE OSICBC_DFLT_SOLVER_VOL_FALSE OSICBC_DFLT_SOLVER_XPR_TRUE OSICBC_DFLT_SOLVER_XPR_FALSE LIBEXT VPATH_DISTCLEANFILES LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -917,6 +917,18 @@ ac_env_CDEFS_set=${CDEFS+set}
 ac_env_CDEFS_value=$CDEFS
 ac_cv_env_CDEFS_set=${CDEFS+set}
 ac_cv_env_CDEFS_value=$CDEFS
+ac_env_ADD_CFLAGS_set=${ADD_CFLAGS+set}
+ac_env_ADD_CFLAGS_value=$ADD_CFLAGS
+ac_cv_env_ADD_CFLAGS_set=${ADD_CFLAGS+set}
+ac_cv_env_ADD_CFLAGS_value=$ADD_CFLAGS
+ac_env_DBG_CFLAGS_set=${DBG_CFLAGS+set}
+ac_env_DBG_CFLAGS_value=$DBG_CFLAGS
+ac_cv_env_DBG_CFLAGS_set=${DBG_CFLAGS+set}
+ac_cv_env_DBG_CFLAGS_value=$DBG_CFLAGS
+ac_env_OPT_CFLAGS_set=${OPT_CFLAGS+set}
+ac_env_OPT_CFLAGS_value=$OPT_CFLAGS
+ac_cv_env_OPT_CFLAGS_set=${OPT_CFLAGS+set}
+ac_cv_env_OPT_CFLAGS_value=$OPT_CFLAGS
 ac_env_CC_set=${CC+set}
 ac_env_CC_value=$CC
 ac_cv_env_CC_set=${CC+set}
@@ -933,10 +945,6 @@ ac_env_CPPFLAGS_set=${CPPFLAGS+set}
 ac_env_CPPFLAGS_value=$CPPFLAGS
 ac_cv_env_CPPFLAGS_set=${CPPFLAGS+set}
 ac_cv_env_CPPFLAGS_value=$CPPFLAGS
-ac_env_ADD_CFLAGS_set=${ADD_CFLAGS+set}
-ac_env_ADD_CFLAGS_value=$ADD_CFLAGS
-ac_cv_env_ADD_CFLAGS_set=${ADD_CFLAGS+set}
-ac_cv_env_ADD_CFLAGS_value=$ADD_CFLAGS
 ac_env_MPICC_set=${MPICC+set}
 ac_env_MPICC_value=$MPICC
 ac_cv_env_MPICC_set=${MPICC+set}
@@ -945,6 +953,18 @@ ac_env_CXXDEFS_set=${CXXDEFS+set}
 ac_env_CXXDEFS_value=$CXXDEFS
 ac_cv_env_CXXDEFS_set=${CXXDEFS+set}
 ac_cv_env_CXXDEFS_value=$CXXDEFS
+ac_env_ADD_CXXFLAGS_set=${ADD_CXXFLAGS+set}
+ac_env_ADD_CXXFLAGS_value=$ADD_CXXFLAGS
+ac_cv_env_ADD_CXXFLAGS_set=${ADD_CXXFLAGS+set}
+ac_cv_env_ADD_CXXFLAGS_value=$ADD_CXXFLAGS
+ac_env_DBG_CXXFLAGS_set=${DBG_CXXFLAGS+set}
+ac_env_DBG_CXXFLAGS_value=$DBG_CXXFLAGS
+ac_cv_env_DBG_CXXFLAGS_set=${DBG_CXXFLAGS+set}
+ac_cv_env_DBG_CXXFLAGS_value=$DBG_CXXFLAGS
+ac_env_OPT_CXXFLAGS_set=${OPT_CXXFLAGS+set}
+ac_env_OPT_CXXFLAGS_value=$OPT_CXXFLAGS
+ac_cv_env_OPT_CXXFLAGS_set=${OPT_CXXFLAGS+set}
+ac_cv_env_OPT_CXXFLAGS_value=$OPT_CXXFLAGS
 ac_env_CXX_set=${CXX+set}
 ac_env_CXX_value=$CXX
 ac_cv_env_CXX_set=${CXX+set}
@@ -953,10 +973,6 @@ ac_env_CXXFLAGS_set=${CXXFLAGS+set}
 ac_env_CXXFLAGS_value=$CXXFLAGS
 ac_cv_env_CXXFLAGS_set=${CXXFLAGS+set}
 ac_cv_env_CXXFLAGS_value=$CXXFLAGS
-ac_env_ADD_CXXFLAGS_set=${ADD_CXXFLAGS+set}
-ac_env_ADD_CXXFLAGS_value=$ADD_CXXFLAGS
-ac_cv_env_ADD_CXXFLAGS_set=${ADD_CXXFLAGS+set}
-ac_cv_env_ADD_CXXFLAGS_value=$ADD_CXXFLAGS
 ac_env_MPICXX_set=${MPICXX+set}
 ac_env_MPICXX_value=$MPICXX
 ac_cv_env_MPICXX_set=${MPICXX+set}
@@ -1058,7 +1074,8 @@ if test -n "$ac_init_help"; then
 Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --enable-debug          compile with debug options and runtime tests
+  --enable-debug          compile all projects with debug options tests
+  --enable-debug-osi compile this project (Osi) with debug options
   --enable-static[=PKGS]
                           build static libraries [default=no]
   --disable-dependency-tracking  speeds up one-time build
@@ -1087,10 +1104,19 @@ Optional Features:
   --enable-xpress-libcheck
                           use disable-xpress-libcheck to skip the
                           link check at configuration time
+  --with-osidylp-info     Enable OsiDylp's informational printing (output will
+                          depend on log level) (default=yes)
+  --with-osidylp-stats    Enable OsiDylp's support for dylp's statistics
+                          collection features (default=no)
+  --with-osidylp-paranoia Control osidylp's paranoid checks. 0 is off, 1 is
+                          index checks, 2 is consistency checks (expensive)
+                          (default=1)
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+  --with-osi-verbosity specify the debug verbosity level for project Osi
+  --with-osi-checklevel specify the sanity check level for project Osi
   --with-gnu-ld           assume the C compiler uses GNU ld [default=no]
   --with-pic              try to use only PIC/non-PIC objects [default=use
                           both]
@@ -1117,22 +1143,30 @@ Optional Packages:
   --with-xpress-incdir specify the directory with the header files for library
                           Xpress
   --with-xpress-lib specify the flags to link with the library Xpress
+  --with-osicbc-default-solver
+                          specify underlying solver for OsiCbc (default clp)
 
 Some influential environment variables:
   CDEFS       Additional -D flags to be used when compiling C code.
+  ADD_CFLAGS  Additional C compiler options
+  DBG_CFLAGS  Debug C compiler options
+  OPT_CFLAGS  Optimize C compiler options
   CC          C compiler command
   CFLAGS      C compiler flags
   LDFLAGS     linker flags, e.g. -L<lib dir> if you have libraries in a
               nonstandard directory <lib dir>
   CPPFLAGS    C/C++ preprocessor flags, e.g. -I<include dir> if you have
               headers in a nonstandard directory <include dir>
-  ADD_CFLAGS  Additional C compiler options
   MPICC       C MPI Compiler
   CXXDEFS     Additional -D flags to be used when compiling C++ code.
-  CXX         C++ compiler command
-  CXXFLAGS    C++ compiler flags
   ADD_CXXFLAGS
               Additional C++ compiler options
+  DBG_CXXFLAGS
+              Debug C++ compiler options
+  OPT_CXXFLAGS
+              Optimize C++ compiler options
+  CXX         C++ compiler command
+  CXXFLAGS    C++ compiler flags
   MPICXX      C++ MPI Compiler
   CPP         C preprocessor
   CXXCPP      C++ preprocessor
@@ -1709,24 +1743,39 @@ echo $ECHO_N "checking whether we want to compile in debug mode... $ECHO_C" >&6
 if test "${enable_debug+set}" = set; then
   enableval="$enable_debug"
   case "${enableval}" in
-                   yes) coin_debug_compile=true
-
-cat >>confdefs.h <<\_ACEOF
-#define COIN_DEBUG 1
-_ACEOF
-
-                     enable_shared=no
-                     ;;
-                   no)  coin_debug_compile=false
-                     ;;
-                    *) { { echo "$as_me:$LINENO: error: bad value ${enableval} for --enable-debug" >&5
+   yes) coin_debug_compile=true
+        enable_shared=no
+        ;;
+   no)  coin_debug_compile=false
+        ;;
+   *) { { echo "$as_me:$LINENO: error: bad value ${enableval} for --enable-debug" >&5
 echo "$as_me: error: bad value ${enableval} for --enable-debug" >&2;}
    { (exit 1); exit 1; }; }
-                     ;;
-                 esac
+        ;;
+esac
 else
   coin_debug_compile=false
 fi;
+
+# Check whether --enable-debug-osi or --disable-debug-osi was given.
+if test "${enable_debug_osi+set}" = set; then
+  enableval="$enable_debug_osi"
+  case "${enableval}" in
+    yes) coin_debug_compile=true
+         enable_shared=no
+         ;;
+    no)  coin_debug_compile=false
+         ;;
+    *) { { echo "$as_me:$LINENO: error: bad value ${enableval} for --enable-debug-osi" >&5
+echo "$as_me: error: bad value ${enableval} for --enable-debug-osi" >&2;}
+   { (exit 1); exit 1; }; }
+         ;;
+ esac
+else
+  :
+fi;
+
+ # m4_ifvaln([Osi],
 
 if test $coin_debug_compile = true; then
   echo "$as_me:$LINENO: result: yes" >&5
@@ -1737,14 +1786,39 @@ echo "${ECHO_T}no" >&6
 fi
 
 
-
-if test "$coin_debug_compile" = true; then
-  COIN_DEBUG_TRUE=
-  COIN_DEBUG_FALSE='#'
+# Check whether --with-osi-verbosity or --without-osi-verbosity was given.
+if test "${with_osi_verbosity+set}" = set; then
+  withval="$with_osi_verbosity"
+  coin_osi_verbosity=$withval
 else
-  COIN_DEBUG_TRUE='#'
-  COIN_DEBUG_FALSE=
-fi
+  coin_osi_verbosity=0
+fi;
+
+cat >>confdefs.h <<_ACEOF
+#define COIN_OSI_VERBOSITY $coin_osi_verbosity
+_ACEOF
+
+
+
+# Check whether --with-osi-checklevel or --without-osi-checklevel was given.
+if test "${with_osi_checklevel+set}" = set; then
+  withval="$with_osi_checklevel"
+  coin_osi_checklevel=$withval
+else
+  coin_osi_checklevel=0
+fi;
+
+cat >>confdefs.h <<_ACEOF
+#define COIN_OSI_CHECKLEVEL $coin_osi_checklevel
+_ACEOF
+
+
+# We use the following variable to have a string with the upper case
+# version of the project name
+COIN_PRJCT=OSI
+
+
+ # m4_ifvaln([Osi],
 
 
 
@@ -1782,6 +1856,9 @@ fi
 
 
 
+
+
+
 coin_has_cc=yes
 
 save_cflags="$CFLAGS"
@@ -1789,12 +1866,12 @@ case $build in
   *-cygwin* | *-mingw*)
              comps="gcc cl" ;;
   *-linux-*) comps="xlc gcc cc pgcc icc" ;;
-  *)         comps="xlc cc gcc pgcc icc" ;;
+  *)         comps="xlc_r xlc cc gcc pgcc icc" ;;
 esac
 
 # We delete the cached value, since the test might not have been
 # performed with out choise of compilers earlier
-ac_cv_prog_CC=
+$as_unset ac_cv_prog_CC || test "${ac_cv_prog_CC+set}" != set || { ac_cv_prog_CC=; export ac_cv_prog_CC; }
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -2510,12 +2587,15 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 CFLAGS="$save_cflags"
 
-echo "$as_me:$LINENO: checking for C compiler options" >&5
-echo $ECHO_N "checking for C compiler options... $ECHO_C" >&6
-if test "${coin_cv_cflags+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  if test x"$CFLAGS" = x; then
+# Check if a project specific CFLAGS variable has been set
+if test x$COIN_PRJCT != x; then
+  eval coin_tmp=\${${COIN_PRJCT}_CFLAGS+set}
+  if test x$coin_tmp = xset; then
+    eval CFLAGS=\${${COIN_PRJCT}_CFLAGS}
+  fi
+fi
+
+if test x"$CFLAGS" = x; then
 
   coin_add_cflags=
   coin_opt_cflags=
@@ -2688,13 +2768,10 @@ rm -f conftest.err conftest.$ac_objext \
     coin_dbg_cflags="-g"
   fi
 
-  if test "$coin_debug_compile" = "true"; then
-    CFLAGS="$coin_dbg_cflags $coin_add_cflags $CDEFS $coin_warn_cflags"
-  else
-    if test -z "$coin_opt_cflags"; then
-      # Try if -O option works if nothing else is set
-      CFLAGS="-O"
-      cat >conftest.$ac_ext <<_ACEOF
+  if test -z "$coin_opt_cflags"; then
+    # Try if -O option works if nothing else is set
+    CFLAGS="-O"
+    cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
 cat confdefs.h >>conftest.$ac_ext
@@ -2739,8 +2816,30 @@ sed 's/^/| /' conftest.$ac_ext >&5
 fi
 rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
-    fi
-    CFLAGS="$coin_opt_cflags $coin_add_cflags -DNDEBUG $CDEFS $coin_warn_cflags"
+  fi
+
+  if test x${DBG_CFLAGS+set} != xset; then
+    DBG_CFLAGS="$coin_dbg_cflags $coin_add_cflags $coin_warn_cflags"
+  fi
+  if test x${OPT_CFLAGS+set} != xset; then
+    OPT_CFLAGS="$coin_opt_cflags $coin_add_cflags -DNDEBUG $coin_warn_cflags"
+  fi
+
+  DBG_CFLAGS="$DBG_CFLAGS $ADD_CFLAGS $CDEFS"
+  OPT_CFLAGS="$OPT_CFLAGS $ADD_CFLAGS $CDEFS"
+
+  if test "$coin_debug_compile" = "true"; then
+    CFLAGS="$DBG_CFLAGS"
+  else
+    CFLAGS="$OPT_CFLAGS"
+  fi
+else
+  CFLAGS="$CFLAGS $ADD_CFLAGS $CDEFS"
+  if test x${DBG_CFLAGS+set} != xset; then
+    DBG_CFLAGS="$CFLAGS"
+  fi
+  if test x${OPT_CFLAGS+set} != xset; then
+    OPT_CFLAGS="$CFLAGS"
   fi
 fi
 
@@ -2751,6 +2850,7 @@ if test x"$ADD_CFLAGS" != x; then
 fi
 
 # Try if CFLAGS works
+save_CFLAGS="$CFLAGS"
 cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -2798,8 +2898,8 @@ fi
 rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 if test -z "$CFLAGS"; then
-  { echo "$as_me:$LINENO: WARNING: The value CFLAGS=\"$CFLAGS\" do not work.  I will now just try '-O', but you might want to set CFLAGS manually." >&5
-echo "$as_me: WARNING: The value CFLAGS=\"$CFLAGS\" do not work.  I will now just try '-O', but you might want to set CFLAGS manually." >&2;}
+  { echo "$as_me:$LINENO: WARNING: The value CFLAGS=\"$save_CFLAGS\" do not work.  I will now just try '-O', but you might want to set CFLAGS manually." >&5
+echo "$as_me: WARNING: The value CFLAGS=\"$save_CFLAGS\" do not work.  I will now just try '-O', but you might want to set CFLAGS manually." >&2;}
   CFLAGS='-O'
   cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
@@ -2852,12 +2952,9 @@ rm -f conftest.err conftest.$ac_objext \
 echo "$as_me: WARNING: This value for CFLAGS does not work.  I will continue with empty CFLAGS, but you might want to set CFLAGS manually." >&2;}
   fi
 fi
-coin_cv_cflags="$CFLAGS"
 
-fi
-echo "$as_me:$LINENO: result: $coin_cv_cflags" >&5
-echo "${ECHO_T}$coin_cv_cflags" >&6 # AC_CACHE_CHECK([for C compiler options CXXFLAGS]
-CFLAGS="$coin_cv_cflags"
+{ echo "$as_me:$LINENO: C compiler options are: $CFLAGS" >&5
+echo "$as_me: C compiler options are: $CFLAGS" >&6;}
 
 
 if test x"$MPICC" = x; then :; else
@@ -2899,6 +2996,9 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 
 
+
+
+
 coin_has_cxx=yes
 
 save_cxxflags="$CXXFLAGS"
@@ -2906,12 +3006,12 @@ case $build in
   *-cygwin* | *-mingw*)
              comps="g++ cl" ;;
   *-darwin*) comps="g++ c++ CC" ;;
-          *) comps="xlC aCC CC g++ c++ pgCC icpc" ;;
+          *) comps="xlC aCC CC g++ c++ pgCC icpc gpp cxx cc++ cl FCC KCC RCC" ;;
 esac
 
 # We delete the cached value, since the test might not have been
 # performed with out choise of compilers earlier
-ac_cv_prog_CXX=
+$as_unset ac_cv_prog_CXX || test "${ac_cv_prog_CXX+set}" != set || { ac_cv_prog_CXX=; export ac_cv_prog_CXX; }
 ac_ext=cc
 ac_cpp='$CXXCPP $CPPFLAGS'
 ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -3269,12 +3369,15 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 CXXFLAGS="$save_cxxflags"
 
-echo "$as_me:$LINENO: checking for C++ compiler options" >&5
-echo $ECHO_N "checking for C++ compiler options... $ECHO_C" >&6
-if test "${coin_cv_cxxflags+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  if test x"$CXXFLAGS" = x; then
+# Check if a project specific CXXFLAGS variable has been set
+if test x$COIN_PRJCT != x; then
+  eval coin_tmp=\${${COIN_PRJCT}_CXXFLAGS+set}
+  if test x$coin_tmp = xset; then
+    eval CXXFLAGS=\${${COIN_PRJCT}_CXXFLAGS}
+  fi
+fi
+
+if test x"$CXXFLAGS" = x; then
 
 # ToDo decide whether we want -DNDEBUG for optimization
   coin_add_cxxflags=
@@ -3449,13 +3552,10 @@ rm -f conftest.err conftest.$ac_objext \
     coin_dbg_cxxflags="-g"
   fi
 
-  if test "$coin_debug_compile" = "true"; then
-    CXXFLAGS="$coin_dbg_cxxflags $coin_add_cxxflags $CXXDEFS $coin_warn_cxxflags"
-  else
-    if test -z "$coin_opt_cxxflags"; then
-      # Try if -O option works if nothing else is set
-      CXXFLAGS="-O"
-      cat >conftest.$ac_ext <<_ACEOF
+  if test -z "$coin_opt_cxxflags"; then
+    # Try if -O option works if nothing else is set
+    CXXFLAGS=-O
+    cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
 cat confdefs.h >>conftest.$ac_ext
@@ -3500,18 +3600,35 @@ sed 's/^/| /' conftest.$ac_ext >&5
 fi
 rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
-    fi
-    CXXFLAGS="$coin_opt_cxxflags $coin_add_cxxflags -DNDEBUG $CXXDEFS $coin_warn_cxxflags"
+  fi
+
+  if test x${DBG_CXXFLAGS+set} != xset; then
+    DBG_CXXFLAGS="$coin_dbg_cxxflags $coin_add_cxxflags $coin_warn_cxxflags"
+  fi
+  if test x${OPT_CXXFLAGS+set} != xset; then
+    OPT_CXXFLAGS="$coin_opt_cxxflags $coin_add_cxxflags -DNDEBUG $coin_warn_cxxflags"
+  fi
+
+  DBG_CXXFLAGS="$DBG_CXXFLAGS $ADD_CXXFLAGS $CXXDEFS"
+  OPT_CXXFLAGS="$OPT_CXXFLAGS $ADD_CXXFLAGS $CXXDEFS"
+
+  if test "$coin_debug_compile" = "true"; then
+    CXXFLAGS="$DBG_CXXFLAGS"
+  else
+    CXXFLAGS="$OPT_CXXFLAGS"
+  fi
+else
+  CXXFLAGS="$CXXFLAGS $ADD_CXXFLAGS $CXXDEFS"
+  if test x${DBG_CXXFLAGS+set} != xset; then
+    DBG_CXXFLAGS="$CXXFLAGS"
+  fi
+  if test x${OPT_CXXFLAGS+set} != xset; then
+    OPT_CXXFLAGS="$CXXFLAGS"
   fi
 fi
 
-# Check if user wants to have additional CXXFLAGS options
-
-if test x"$ADD_CXXFLAGS" != x; then
-  CXXFLAGS="$CXXFLAGS $ADD_CXXFLAGS"
-fi
-
 # Try if CXXFLAGS works
+save_CXXFLAGS="$CXXFLAGS"
 cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -3559,8 +3676,8 @@ fi
 rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 if test -z "$CXXFLAGS"; then
-  { echo "$as_me:$LINENO: WARNING: The flags CXXFLAGS=\"$CXXFLAGS\" do not work.  I will now just try '-O', but you might want to set CXXFLAGS manually." >&5
-echo "$as_me: WARNING: The flags CXXFLAGS=\"$CXXFLAGS\" do not work.  I will now just try '-O', but you might want to set CXXFLAGS manually." >&2;}
+  { echo "$as_me:$LINENO: WARNING: The flags CXXFLAGS=\"$save_CXXFLAGS\" do not work.  I will now just try '-O', but you might want to set CXXFLAGS manually." >&5
+echo "$as_me: WARNING: The flags CXXFLAGS=\"$save_CXXFLAGS\" do not work.  I will now just try '-O', but you might want to set CXXFLAGS manually." >&2;}
   CXXFLAGS='-O'
   cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
@@ -3613,12 +3730,9 @@ rm -f conftest.err conftest.$ac_objext \
 echo "$as_me: WARNING: This value for CXXFLAGS does not work.  I will continue with empty CXXFLAGS, but you might want to set CXXFLAGS manually." >&2;}
   fi
 fi
-coin_cv_cxxflags="$CXXFLAGS"
 
-fi
-echo "$as_me:$LINENO: result: $coin_cv_cxxflags" >&5
-echo "${ECHO_T}$coin_cv_cxxflags" >&6 # AC_CACHE_CHECK([for C++ compiler options CXXFLAGS]
-CXXFLAGS="$coin_cv_cxxflags"
+{ echo "$as_me:$LINENO: C++ compiler options are: $CXXFLAGS" >&5
+echo "$as_me: C++ compiler options are: $CXXFLAGS" >&6;}
 
 
 if test x"$MPICXX" = x; then :; else
@@ -4671,7 +4785,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 4674 "configure"' > conftest.$ac_ext
+  echo '#line 4788 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -5805,7 +5919,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:5808:" \
+echo "$as_me:5922:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -6872,11 +6986,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:6875: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:6989: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:6879: \$? = $ac_status" >&5
+   echo "$as_me:6993: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7140,11 +7254,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7143: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7257: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7147: \$? = $ac_status" >&5
+   echo "$as_me:7261: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7244,11 +7358,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7247: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7361: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:7251: \$? = $ac_status" >&5
+   echo "$as_me:7365: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -9589,7 +9703,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9592 "configure"
+#line 9706 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -9689,7 +9803,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9692 "configure"
+#line 9806 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12033,11 +12147,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12036: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12150: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:12040: \$? = $ac_status" >&5
+   echo "$as_me:12154: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -12137,11 +12251,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12140: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12254: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:12144: \$? = $ac_status" >&5
+   echo "$as_me:12258: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -13707,11 +13821,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13710: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13824: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:13714: \$? = $ac_status" >&5
+   echo "$as_me:13828: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -13811,11 +13925,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13814: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13928: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:13818: \$? = $ac_status" >&5
+   echo "$as_me:13932: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -16018,11 +16132,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16021: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16135: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16025: \$? = $ac_status" >&5
+   echo "$as_me:16139: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -16286,11 +16400,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16289: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16403: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16293: \$? = $ac_status" >&5
+   echo "$as_me:16407: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -16390,11 +16504,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16393: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16507: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:16397: \$? = $ac_status" >&5
+   echo "$as_me:16511: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -21358,6 +21472,346 @@ fi
 
 
 
+#############################################################################
+#                 Configuration options for individual OSIs                 #
+#############################################################################
+
+
+# Check whether --with-osicbc-default-solver or --without-osicbc-default-solver was given.
+if test "${with_osicbc_default_solver+set}" = set; then
+  withval="$with_osicbc_default_solver"
+  osicbc_with_solver=$withval
+else
+  osicbc_with_solver=clp
+fi;
+
+# Get canonical forms of the solver name and an existence variable.
+
+
+
+# Convert to canonical values. Unfortunately, there's no easy way to do this in
+# sh and/or sed. Assuming the existence of `tr' seems risky --- highly probable
+# in any environment that supports configure, but not guaranteed.  If this list
+# starts to get any longer, tr deserves a harder look. Not to mention that m4
+# eats square braces for all three meals, hence the ugly quadrigraphs: [ for
+# open square bracket, ] for close square bracket.  Of course, that last
+# sentence will be completely opaque to people reading the configure script,
+# 'cause the quadrigraphs will be replaced with brackets, even in a comment!
+
+  case $osicbc_with_solver in
+    clp)
+      osi_lc_solver=clp ;
+      osi_mc_solver=Clp ;
+      osi_uc_solver=CLP ;
+      osi_exists_solver=${coin_has_clp-"unavailable"}
+      ;;
+    dylp)
+      osi_lc_solver=dylp ;
+      osi_mc_solver=Dylp
+      osi_uc_solver=DYLP
+      osi_exists_solver=${coin_has_dylp-"unavailable"}
+      ;;
+    cpx)
+      osi_lc_solver=cpx ;
+      osi_mc_solver=Cpx
+      osi_uc_solver=CPX
+      osi_exists_solver=${coin_has_cpx-"unavailable"}
+      ;;
+    fmp)
+      osi_lc_solver=fmp ;
+      osi_mc_solver=Fmp
+      osi_uc_solver=FMP
+      osi_exists_solver=${coin_has_fmp-"unavailable"}
+      ;;
+    glpk)
+      osi_lc_solver=glpk ;
+      osi_mc_solver=Glpk
+      osi_uc_solver=GLPK
+      osi_exists_solver=${coin_has_glpk-"unavailable"}
+      ;;
+    msk)
+      osi_lc_solver=msk ;
+      osi_mc_solver=Msk
+      osi_uc_solver=MSK
+      osi_exists_solver=${coin_has_msk-"unavailable"}
+      ;;
+    osl)
+      osi_lc_solver=osl ;
+      osi_mc_solver=Osl
+      osi_mc_solver=OSL
+      osi_exists_solver=${coin_has_osl-"unavailable"}
+      ;;
+    spx)
+      osi_lc_solver=spx ;
+      osi_mc_solver=Spx
+      osi_uc_solver=SPX
+      osi_exists_solver=${coin_has_spx-"unavailable"}
+      ;;
+    sym)
+      osi_lc_solver=sym ;
+      osi_mc_solver=Sym
+      osi_uc_solver=SYM
+      osi_exists_solver=${coin_has_sym-"unavailable"}
+      ;;
+    vol)
+      osi_lc_solver=vol ;
+      osi_mc_solver=Vol
+      osi_uc_solver=VOL
+      osi_exists_solver=${coin_has_vol-"unavailable"}
+      ;;
+    xpr)
+      osi_lc_solver=xpr ;
+      osi_mc_solver=Xpr
+      osi_uc_solver=XPR
+      osi_exists_solver=${coin_has_xpr-"unavailable"}
+      ;;
+    cbc)
+      osi_lc_solver=cbc ;
+      osi_mc_solver=Cbc
+      osi_uc_solver=CBC
+      osi_exists_solver=${coin_has_cbc-"unavailable"}
+      ;;
+    *)
+      osi_lc_solver=clp ;
+      osi_mc_solver=Clp ;
+      osi_uc_solver=CLP ;
+      osi_exists_solver=${coin_has_clp-"unavailable"}
+      { echo "$as_me:$LINENO: WARNING: Unrecognised solver $osicbc_with_solver; defaulting to $osi_lc_solver." >&5
+echo "$as_me: WARNING: Unrecognised solver $osicbc_with_solver; defaulting to $osi_lc_solver." >&2;}
+      ;;
+  esac
+
+# Now that we have something in standard form, turn the result on solver
+# availability into something easy to test.
+
+  if test $osi_exists_solver = unavailable || \
+     test $osi_exists_solver = skipping || \
+     test $osi_exists_solver = false ; then
+    osi_exists_solver=no
+  else
+    osi_exists_solver=yes
+  fi
+
+
+  if test $osi_exists_solver = no; then
+    { { echo "$as_me:$LINENO: error: selected default solver $osicbc_with_solver is unavailable.
+      Please select an available solver." >&5
+echo "$as_me: error: selected default solver $osicbc_with_solver is unavailable.
+      Please select an available solver." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
+# State the result.
+
+  { echo "$as_me:$LINENO: OsiCbc default solver is $osi_lc_solver" >&5
+echo "$as_me: OsiCbc default solver is $osi_lc_solver" >&6;}
+
+# And set the configuration variables.
+
+
+cat >>confdefs.h <<_ACEOF
+#define OSICBC_DFLT_SOLVER Osi${osi_mc_solver}SolverInterface
+_ACEOF
+
+
+cat >>confdefs.h <<_ACEOF
+#define OSICBC_DFLT_SOLVER_HPP "Osi${osi_mc_solver}SolverInterface.hpp"
+_ACEOF
+
+  if test $osi_mc_solver = "Clp"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define OSICBC_DFLT_SOLVER_CLP 1
+_ACEOF
+
+  fi
+
+# Last but not least, we need automake conditionals.
+
+
+
+if test $osi_mc_solver = Clp; then
+  OSICBC_DFLT_SOLVER_CLP_TRUE=
+  OSICBC_DFLT_SOLVER_CLP_FALSE='#'
+else
+  OSICBC_DFLT_SOLVER_CLP_TRUE='#'
+  OSICBC_DFLT_SOLVER_CLP_FALSE=
+fi
+
+
+
+if test $osi_mc_solver = Cpx; then
+  OSICBC_DFLT_SOLVER_CPX_TRUE=
+  OSICBC_DFLT_SOLVER_CPX_FALSE='#'
+else
+  OSICBC_DFLT_SOLVER_CPX_TRUE='#'
+  OSICBC_DFLT_SOLVER_CPX_FALSE=
+fi
+
+
+
+if test $osi_mc_solver = Dylp; then
+  OSICBC_DFLT_SOLVER_DYLP_TRUE=
+  OSICBC_DFLT_SOLVER_DYLP_FALSE='#'
+else
+  OSICBC_DFLT_SOLVER_DYLP_TRUE='#'
+  OSICBC_DFLT_SOLVER_DYLP_FALSE=
+fi
+
+
+
+if test $osi_mc_solver = Fmp; then
+  OSICBC_DFLT_SOLVER_FMP_TRUE=
+  OSICBC_DFLT_SOLVER_FMP_FALSE='#'
+else
+  OSICBC_DFLT_SOLVER_FMP_TRUE='#'
+  OSICBC_DFLT_SOLVER_FMP_FALSE=
+fi
+
+
+
+if test $osi_mc_solver = Glpk; then
+  OSICBC_DFLT_SOLVER_GLPK_TRUE=
+  OSICBC_DFLT_SOLVER_GLPK_FALSE='#'
+else
+  OSICBC_DFLT_SOLVER_GLPK_TRUE='#'
+  OSICBC_DFLT_SOLVER_GLPK_FALSE=
+fi
+
+
+
+if test $osi_mc_solver = Msk; then
+  OSICBC_DFLT_SOLVER_MSK_TRUE=
+  OSICBC_DFLT_SOLVER_MSK_FALSE='#'
+else
+  OSICBC_DFLT_SOLVER_MSK_TRUE='#'
+  OSICBC_DFLT_SOLVER_MSK_FALSE=
+fi
+
+
+
+if test $osi_mc_solver = Osl; then
+  OSICBC_DFLT_SOLVER_OSL_TRUE=
+  OSICBC_DFLT_SOLVER_OSL_FALSE='#'
+else
+  OSICBC_DFLT_SOLVER_OSL_TRUE='#'
+  OSICBC_DFLT_SOLVER_OSL_FALSE=
+fi
+
+
+
+if test $osi_mc_solver = Spx; then
+  OSICBC_DFLT_SOLVER_SPX_TRUE=
+  OSICBC_DFLT_SOLVER_SPX_FALSE='#'
+else
+  OSICBC_DFLT_SOLVER_SPX_TRUE='#'
+  OSICBC_DFLT_SOLVER_SPX_FALSE=
+fi
+
+
+
+if test $osi_mc_solver = Sym; then
+  OSICBC_DFLT_SOLVER_SYM_TRUE=
+  OSICBC_DFLT_SOLVER_SYM_FALSE='#'
+else
+  OSICBC_DFLT_SOLVER_SYM_TRUE='#'
+  OSICBC_DFLT_SOLVER_SYM_FALSE=
+fi
+
+
+
+if test $osi_mc_solver = Vol; then
+  OSICBC_DFLT_SOLVER_VOL_TRUE=
+  OSICBC_DFLT_SOLVER_VOL_FALSE='#'
+else
+  OSICBC_DFLT_SOLVER_VOL_TRUE='#'
+  OSICBC_DFLT_SOLVER_VOL_FALSE=
+fi
+
+
+
+if test $osi_mc_solver = Xpr; then
+  OSICBC_DFLT_SOLVER_XPR_TRUE=
+  OSICBC_DFLT_SOLVER_XPR_FALSE='#'
+else
+  OSICBC_DFLT_SOLVER_XPR_TRUE='#'
+  OSICBC_DFLT_SOLVER_XPR_FALSE=
+fi
+
+
+ # Check whether --enable-osidylp-info or --disable-osidylp-info was given.
+if test "${enable_osidylp_info+set}" = set; then
+  enableval="$enable_osidylp_info"
+  osidylp_info=$enableval
+else
+  osidylp_info=yes
+fi;
+  if test "$osidylp_info" = "yes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define ODSI_INFOMSGS 1
+_ACEOF
+
+    { echo "$as_me:$LINENO: OsiDylp informational printing enabled." >&5
+echo "$as_me: OsiDylp informational printing enabled." >&6;}
+  else
+    { echo "$as_me:$LINENO: OsiDylp informational printing disabled." >&5
+echo "$as_me: OsiDylp informational printing disabled." >&6;}
+  fi
+
+ # Check whether --enable-osidylp-stats or --disable-osidylp-stats was given.
+if test "${enable_osidylp_stats+set}" = set; then
+  enableval="$enable_osidylp_stats"
+  osidylp_stats=$enableval
+else
+  osidylp_stats=no
+fi;
+  if test "$osidylp_stats" = "yes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define ODSI_STATISTICS 1
+_ACEOF
+
+    { echo "$as_me:$LINENO: OsiDylp support for dylp statistics collection enabled." >&5
+echo "$as_me: OsiDylp support for dylp statistics collection enabled." >&6;}
+  else
+    { echo "$as_me:$LINENO: OsiDylp support for dylp statistics collection disabled." >&5
+echo "$as_me: OsiDylp support for dylp statistics collection disabled." >&6;}
+  fi
+
+ # Check whether --enable-osidylp-paranoia or --disable-osidylp-paranoia was given.
+if test "${enable_osidylp_paranoia+set}" = set; then
+  enableval="$enable_osidylp_paranoia"
+  osidylp_paranoia=$enableval
+else
+  osidylp_paranoia=1
+fi;
+  if test "$osidylp_paranoia" = "yes"; then
+    osidylp_paranoia=1
+  elif test "$osidylp_paranoia" = "no"; then
+    osidylp_paranoia=0
+  fi
+
+cat >>confdefs.h <<_ACEOF
+#define ODSI_PARANOIA $osidylp_paranoia
+_ACEOF
+
+  case $osidylp_paranoia in
+    0)
+      { echo "$as_me:$LINENO: OsiDylp paranoid checks disabled." >&5
+echo "$as_me: OsiDylp paranoid checks disabled." >&6;}
+      ;;
+    1)
+      { echo "$as_me:$LINENO: OsiDylp paranoid checks at normal level." >&5
+echo "$as_me: OsiDylp paranoid checks at normal level." >&6;}
+      ;;
+    *)
+      { echo "$as_me:$LINENO: OsiDylp paranoid checks at level $osidylp_paranoia." >&5
+echo "$as_me: OsiDylp paranoid checks at level $osidylp_paranoia." >&6;}
+      ;;
+  esac
+
+
 ##############################################################################
 #                   Finishing up by writing all the output                   #
 ##############################################################################
@@ -21485,13 +21939,6 @@ if test -z "${ALWAYS_FALSE_TRUE}" && test -z "${ALWAYS_FALSE_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"ALWAYS_FALSE\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"ALWAYS_FALSE\" was never defined.
-Usually this means the macro was only invoked conditionally." >&2;}
-   { (exit 1); exit 1; }; }
-fi
-if test -z "${COIN_DEBUG_TRUE}" && test -z "${COIN_DEBUG_FALSE}"; then
-  { { echo "$as_me:$LINENO: error: conditional \"COIN_DEBUG\" was never defined.
-Usually this means the macro was only invoked conditionally." >&5
-echo "$as_me: error: conditional \"COIN_DEBUG\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -21632,6 +22079,83 @@ if test -z "${COIN_HAS_XPR_TRUE}" && test -z "${COIN_HAS_XPR_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"COIN_HAS_XPR\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"COIN_HAS_XPR\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${OSICBC_DFLT_SOLVER_CLP_TRUE}" && test -z "${OSICBC_DFLT_SOLVER_CLP_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"OSICBC_DFLT_SOLVER_CLP\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"OSICBC_DFLT_SOLVER_CLP\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${OSICBC_DFLT_SOLVER_CPX_TRUE}" && test -z "${OSICBC_DFLT_SOLVER_CPX_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"OSICBC_DFLT_SOLVER_CPX\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"OSICBC_DFLT_SOLVER_CPX\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${OSICBC_DFLT_SOLVER_DYLP_TRUE}" && test -z "${OSICBC_DFLT_SOLVER_DYLP_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"OSICBC_DFLT_SOLVER_DYLP\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"OSICBC_DFLT_SOLVER_DYLP\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${OSICBC_DFLT_SOLVER_FMP_TRUE}" && test -z "${OSICBC_DFLT_SOLVER_FMP_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"OSICBC_DFLT_SOLVER_FMP\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"OSICBC_DFLT_SOLVER_FMP\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${OSICBC_DFLT_SOLVER_GLPK_TRUE}" && test -z "${OSICBC_DFLT_SOLVER_GLPK_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"OSICBC_DFLT_SOLVER_GLPK\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"OSICBC_DFLT_SOLVER_GLPK\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${OSICBC_DFLT_SOLVER_MSK_TRUE}" && test -z "${OSICBC_DFLT_SOLVER_MSK_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"OSICBC_DFLT_SOLVER_MSK\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"OSICBC_DFLT_SOLVER_MSK\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${OSICBC_DFLT_SOLVER_OSL_TRUE}" && test -z "${OSICBC_DFLT_SOLVER_OSL_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"OSICBC_DFLT_SOLVER_OSL\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"OSICBC_DFLT_SOLVER_OSL\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${OSICBC_DFLT_SOLVER_SPX_TRUE}" && test -z "${OSICBC_DFLT_SOLVER_SPX_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"OSICBC_DFLT_SOLVER_SPX\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"OSICBC_DFLT_SOLVER_SPX\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${OSICBC_DFLT_SOLVER_SYM_TRUE}" && test -z "${OSICBC_DFLT_SOLVER_SYM_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"OSICBC_DFLT_SOLVER_SYM\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"OSICBC_DFLT_SOLVER_SYM\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${OSICBC_DFLT_SOLVER_VOL_TRUE}" && test -z "${OSICBC_DFLT_SOLVER_VOL_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"OSICBC_DFLT_SOLVER_VOL\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"OSICBC_DFLT_SOLVER_VOL\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${OSICBC_DFLT_SOLVER_XPR_TRUE}" && test -z "${OSICBC_DFLT_SOLVER_XPR_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"OSICBC_DFLT_SOLVER_XPR\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"OSICBC_DFLT_SOLVER_XPR\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -22191,9 +22715,10 @@ s,@ADDLIBS@,$ADDLIBS,;t t
 s,@FADDLIBS@,$FADDLIBS,;t t
 s,@ALWAYS_FALSE_TRUE@,$ALWAYS_FALSE_TRUE,;t t
 s,@ALWAYS_FALSE_FALSE@,$ALWAYS_FALSE_FALSE,;t t
-s,@COIN_DEBUG_TRUE@,$COIN_DEBUG_TRUE,;t t
-s,@COIN_DEBUG_FALSE@,$COIN_DEBUG_FALSE,;t t
 s,@CDEFS@,$CDEFS,;t t
+s,@ADD_CFLAGS@,$ADD_CFLAGS,;t t
+s,@DBG_CFLAGS@,$DBG_CFLAGS,;t t
+s,@OPT_CFLAGS@,$OPT_CFLAGS,;t t
 s,@CC@,$CC,;t t
 s,@CFLAGS@,$CFLAGS,;t t
 s,@LDFLAGS@,$LDFLAGS,;t t
@@ -22201,13 +22726,14 @@ s,@CPPFLAGS@,$CPPFLAGS,;t t
 s,@ac_ct_CC@,$ac_ct_CC,;t t
 s,@EXEEXT@,$EXEEXT,;t t
 s,@OBJEXT@,$OBJEXT,;t t
-s,@ADD_CFLAGS@,$ADD_CFLAGS,;t t
 s,@MPICC@,$MPICC,;t t
 s,@CXXDEFS@,$CXXDEFS,;t t
+s,@ADD_CXXFLAGS@,$ADD_CXXFLAGS,;t t
+s,@DBG_CXXFLAGS@,$DBG_CXXFLAGS,;t t
+s,@OPT_CXXFLAGS@,$OPT_CXXFLAGS,;t t
 s,@CXX@,$CXX,;t t
 s,@CXXFLAGS@,$CXXFLAGS,;t t
 s,@ac_ct_CXX@,$ac_ct_CXX,;t t
-s,@ADD_CXXFLAGS@,$ADD_CXXFLAGS,;t t
 s,@MPICXX@,$MPICXX,;t t
 s,@EGREP@,$EGREP,;t t
 s,@INSTALL_PROGRAM@,$INSTALL_PROGRAM,;t t
@@ -22337,6 +22863,28 @@ s,@XPRINCDIR@,$XPRINCDIR,;t t
 s,@XPRLIB@,$XPRLIB,;t t
 s,@COIN_HAS_XPR_TRUE@,$COIN_HAS_XPR_TRUE,;t t
 s,@COIN_HAS_XPR_FALSE@,$COIN_HAS_XPR_FALSE,;t t
+s,@OSICBC_DFLT_SOLVER_CLP_TRUE@,$OSICBC_DFLT_SOLVER_CLP_TRUE,;t t
+s,@OSICBC_DFLT_SOLVER_CLP_FALSE@,$OSICBC_DFLT_SOLVER_CLP_FALSE,;t t
+s,@OSICBC_DFLT_SOLVER_CPX_TRUE@,$OSICBC_DFLT_SOLVER_CPX_TRUE,;t t
+s,@OSICBC_DFLT_SOLVER_CPX_FALSE@,$OSICBC_DFLT_SOLVER_CPX_FALSE,;t t
+s,@OSICBC_DFLT_SOLVER_DYLP_TRUE@,$OSICBC_DFLT_SOLVER_DYLP_TRUE,;t t
+s,@OSICBC_DFLT_SOLVER_DYLP_FALSE@,$OSICBC_DFLT_SOLVER_DYLP_FALSE,;t t
+s,@OSICBC_DFLT_SOLVER_FMP_TRUE@,$OSICBC_DFLT_SOLVER_FMP_TRUE,;t t
+s,@OSICBC_DFLT_SOLVER_FMP_FALSE@,$OSICBC_DFLT_SOLVER_FMP_FALSE,;t t
+s,@OSICBC_DFLT_SOLVER_GLPK_TRUE@,$OSICBC_DFLT_SOLVER_GLPK_TRUE,;t t
+s,@OSICBC_DFLT_SOLVER_GLPK_FALSE@,$OSICBC_DFLT_SOLVER_GLPK_FALSE,;t t
+s,@OSICBC_DFLT_SOLVER_MSK_TRUE@,$OSICBC_DFLT_SOLVER_MSK_TRUE,;t t
+s,@OSICBC_DFLT_SOLVER_MSK_FALSE@,$OSICBC_DFLT_SOLVER_MSK_FALSE,;t t
+s,@OSICBC_DFLT_SOLVER_OSL_TRUE@,$OSICBC_DFLT_SOLVER_OSL_TRUE,;t t
+s,@OSICBC_DFLT_SOLVER_OSL_FALSE@,$OSICBC_DFLT_SOLVER_OSL_FALSE,;t t
+s,@OSICBC_DFLT_SOLVER_SPX_TRUE@,$OSICBC_DFLT_SOLVER_SPX_TRUE,;t t
+s,@OSICBC_DFLT_SOLVER_SPX_FALSE@,$OSICBC_DFLT_SOLVER_SPX_FALSE,;t t
+s,@OSICBC_DFLT_SOLVER_SYM_TRUE@,$OSICBC_DFLT_SOLVER_SYM_TRUE,;t t
+s,@OSICBC_DFLT_SOLVER_SYM_FALSE@,$OSICBC_DFLT_SOLVER_SYM_FALSE,;t t
+s,@OSICBC_DFLT_SOLVER_VOL_TRUE@,$OSICBC_DFLT_SOLVER_VOL_TRUE,;t t
+s,@OSICBC_DFLT_SOLVER_VOL_FALSE@,$OSICBC_DFLT_SOLVER_VOL_FALSE,;t t
+s,@OSICBC_DFLT_SOLVER_XPR_TRUE@,$OSICBC_DFLT_SOLVER_XPR_TRUE,;t t
+s,@OSICBC_DFLT_SOLVER_XPR_FALSE@,$OSICBC_DFLT_SOLVER_XPR_FALSE,;t t
 s,@LIBEXT@,$LIBEXT,;t t
 s,@VPATH_DISTCLEANFILES@,$VPATH_DISTCLEANFILES,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t

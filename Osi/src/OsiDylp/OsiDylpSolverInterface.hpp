@@ -1050,6 +1050,7 @@ private:
     an exhaustive test, but it'll (usually) catch gross problems.
 */
 
-void OsiDylpSolverInterfaceUnitTest(const std::string & mpsDir) ;
+void OsiDylpSolverInterfaceUnitTest(const std::string & mpsDir,
+				    const std::string &netLibDir) ;
 
 #endif // OsiDylpSolverInterface_H

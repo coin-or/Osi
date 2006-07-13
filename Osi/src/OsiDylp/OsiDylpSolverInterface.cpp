@@ -59,37 +59,63 @@ const double CoinInfinity = COIN_DBL_MAX ;
   first look for <problem>.spc and, if found, process it as a dylp options
   file.
 
-  Disabled by default.
+  Disabled by default. Guaranteed not to work in Windows environments.
 */
 
 #define ODSI_IMPLICIT_SPC 0
 
-/*! \brief Define to control refresh of solution after problem modification
+/*! \brief Define to control behaviour when a request is made to access a
+	   stale solution.
 
   A solution is `fresh' if the problem has not been modified since the most
   recent call to dylp. The OSI specification says that problem modifications
-  should invalidate the current solution. In practice (particularly in Cbc)
-  this nicety is sometimes stretched a bit. Defining ODSI_STRICTLY_FRESH will
-  cause ODSI to throw an exception if asked for stale solution data. Otherise,
-  it will simply cope, refreshing the solution by calling dylp. At any log
-  level greater than 0, you'll get a warning.
-
-  #define ODSI_STRICTLY_FRESH
+  should invalidate the current solution. In practice this nicety is
+  sometimes stretched a bit. Defining ODSI_STRICTLY_FRESH will cause ODSI to
+  throw an exception if asked for stale solution data. Otherise, it will
+  ignore the problem and return stale data. At any log level greater than 0,
+  you'll get a warning.
 */
 
+#define ODSI_STRICTLY_FRESH
 
 /*! \brief Define to enable paranoid checks.
 
-  Enables various paranoid checks, including bounds checks on indices. An
-  error will cause a throw. Normally this will be defined by requesting the
-  paranoia option in the makefile.
-  
+  When non-zero, enables various paranoid checks. 
+    1: bounds checks on indices
+    2: test for equality after structure copy operations and test for
+       basis internal consistency.
+
+  An error will cause a throw. Configuration should set this symbol to 0 for
+  an optimised build, 2 if --enable-osidylp-paranoia is requested.
+
   In particular, this symbol must be defined in order for OsiCbc(dylp) to
   pass the OsiCbc unit test.
-
-  #define ODSI_PARANOIA
 */
 
+#ifndef ODSI_PARANOIA
+# define ODSI_PARANOIA 1
+#endif
+
+/*! \brief Define to enable statistics collection in dylp
+
+  When defined, ODSI will pass an lpstats_struct to dylp to be filled with
+  statistics. Information is collected on a per-call basis only.  In order to
+  do so, OsiDylpSolverInterface must be built with the compile-time symbol \c
+  ODSI_STATISTICS defined and the dylp library must be built with \c
+  DYLP_STATISTICS defined. Normally this is handled through options to the
+  configure script.
+
+  #define ODSI_STATISTICS
+*/
+
+/*! \brief Define to produce informational messages
+
+  When defined, informational printing is enabled. Nothing will be printed,
+  however, unless the log level is sufficiently high. Normally handled through
+  options to the configure script.
+
+  #define ODSI_INFOMSGS
+*/
 
 /*!
   \file OsiDylpSolverInterface.cpp
@@ -138,8 +164,10 @@ const double CoinInfinity = COIN_DBL_MAX ;
 
   <strong>Statistics Collection</strong>:
   Dylp can collect detailed statistics on its performance. In order to do so,
-  both OsiDylpSolverInterface and the dylp library must be built with the
-  compile-time symbol \c DYLP_STATISTICS defined.
+  OsiDylpSolverInterface must be built with the compile-time symbol
+  \c ODSI_STATISTICS defined and the dylp library must be built with
+  \c DYLP_STATISTICS defined. Normally this is handled through options to
+  the configure script.
 
   Statistics are collected on a per-call basis only; there is no facility to
   accumulate statistics over multiple calls to dylp. The statistics structure
@@ -181,11 +209,12 @@ const double CoinInfinity = COIN_DBL_MAX ;
   The OSI specification says that changes to the problem structure should
   invalidate the current solution. However, the de facto standards (the
   OSI unitTest and the OsiClp implementation) are more relevant, particularly
-  for solvers that expect to work in Cbc. Clp bends the rules pretty far.
+  for solvers that expect to work in Cbc. Cbc pushes the rules pretty hard.
   OsiDylp offers a compile-time option, ODSI_STRICTLY_FRESH. When this symbol
   is defined, ODSI will throw an exception if the user tries to use a stale
-  solution. If it's not defined, ODSI will quietly return whatever information
-  it has. ODSI_STRICTLY_FRESH is enabled by default.
+  solution. If it's not defined, ODSI will return whatever information
+  it has. In any event, you'll get a warning at any log level greater than 0.
+  ODSI_STRICTLY_FRESH is enabled by default.
 
   The actual behaviour is a bit more complicated, due to the extreme cases.
   The OSI unitTest requires that an empty solver (no constraint system) return
@@ -196,7 +225,9 @@ const double CoinInfinity = COIN_DBL_MAX ;
   <ul>
     <li>
     If a cached solution vector exists, return it. This implies that ODSI
-    must be scrupulous about invalidating the cache when changes occur.
+    must be scrupulous about invalidating the cache when changes are made
+    to the problem. The converse is also true; the cache should never be
+    invalidated unless there's been a change in the problem.
     </li>
     <li>
     If the solver is empty (no consys), return null.
@@ -288,11 +319,13 @@ extern "C"
   COIN directory structure for Osi and Dylp, to wit:
     COIN
       Osi
-	OsiDylp
-      Dylp
-	Dylp
+	src
+	  OsiDylp
+      DyLP
+	src
+	  Dylp
 */
-# define DYLP_ERRMSGDIR "../../Dylp/Dylp"
+# define DYLP_ERRMSGDIR "../../../DyLP/src/Dylp"
 #endif
 
 extern void dy_initbasis(int concnt, int factor_freq, double zero_tol) ;
@@ -612,7 +645,7 @@ inline void ODSI::copy_basis (const basis_struct* src, basis_struct* dst)
 		    "copy_basis","OsiDylpSolverInterface") ; }
   memcpy(dst->el,src->el,idx(src->len)*sizeof(basisel_struct)) ;
 
-# ifdef ODSI_PARANOIA
+# if ODSI_PARANOIA >= 2
   assert_same(*dst, *src, true) ;
 # endif
 
@@ -657,7 +690,7 @@ lpprob_struct* ODSI::copy_lpprob (const lpprob_struct* src)
   CLONE_VEC(double,src->y,dst->y,row_count);
   CLONE_VEC(bool,src->actvars,dst->actvars,col_count);
 
-# ifdef ODSI_PARANOIA
+# if ODSI_PARANOIA >= 2
   assert_same(*dst, *src, true) ;
 # endif
 
@@ -1822,7 +1855,7 @@ ODSI::OsiDylpSolverInterface (const OsiDylpSolverInterface& src)
 
   reference_count++ ;
 
-# ifdef ODSI_PARANOIA
+# if ODSI_PARANOIA >= 2
   assert_same(*this, src, true) ;
 # endif
 
@@ -1925,7 +1958,7 @@ OsiDylpSolverInterface &ODSI::operator= (const OsiDylpSolverInterface &rhs)
 
     reference_count++ ;
 
-#   ifdef ODSI_PARANOIA
+#   if ODSI_PARANOIA >= 2
     assert_same(*this, rhs, true) ;
 #   endif
   }
@@ -2015,7 +2048,7 @@ void ODSI::destruct_problem (bool preserve_interface)
     if (tolerances)
     { delete tolerances ;
       tolerances = 0 ; } }
-# ifdef DYLP_STATISTICS
+# ifdef ODSI_STATISTICS
   if (statistics) dy_freestats(&statistics) ;
 # endif
   
@@ -2147,7 +2180,7 @@ void ODSI::reset ()
 inline void ODSI::setContinuous (int j)
 
 { 
-# ifdef ODSI_PARANOIA
+# if ODSI_PARANOIA >= 1
   indexCheck(j,true,"setContinuous") ;
 # endif
 
@@ -2190,7 +2223,7 @@ inline void ODSI::setContinuous (const int* indices, int len)
 inline void ODSI::setInteger (int j)
 
 { 
-# ifdef ODSI_PARANOIA
+# if ODSI_PARANOIA >= 1
   indexCheck(j,true,"setInteger") ;
 # endif
 
@@ -2250,7 +2283,7 @@ inline void ODSI::setInteger (const int* indices, int len)
 inline void ODSI::setColLower (int i, double val)
 
 { 
-# ifdef ODSI_PARANOIA
+# if ODSI_PARANOIA >= 1
   indexCheck(i,true,"setColLower") ;
 # endif
 
@@ -2287,7 +2320,7 @@ inline void ODSI::setColLower (int i, double val)
 inline void ODSI::setColUpper (int i, double val)
 
 { 
-# ifdef ODSI_PARANOIA
+# if ODSI_PARANOIA >= 1
   indexCheck(i,true,"setColUpper") ;
 # endif
 
@@ -2324,7 +2357,7 @@ inline void ODSI::setColUpper (int i, double val)
 void ODSI::setRowType (int i, char sense, double rhs, double range)
 
 { 
-# ifdef ODSI_PARANOIA
+# if ODSI_PARANOIA >= 1
   indexCheck(i,false,"setRowType") ;
 # endif
 /*
@@ -2351,7 +2384,7 @@ void ODSI::setRowType (int i, char sense, double rhs, double range)
 void ODSI::setRowUpper (int i, double val)
 
 { 
-# ifdef ODSI_PARANOIA
+# if ODSI_PARANOIA >= 1
   indexCheck(i,false,"setRowUpper") ;
 # endif
 
@@ -2392,7 +2425,7 @@ void ODSI::setRowUpper (int i, double val)
 void ODSI::setRowLower (int i, double val)
 
 { 
-# ifdef ODSI_PARANOIA
+# if ODSI_PARANOIA >= 1
   indexCheck(i,false,"setRowLower") ;
 # endif
 
@@ -2542,7 +2575,7 @@ void ODSI::deleteRows (int count, const int* rows)
 void ODSI::setObjCoeff (int j, double objj)
 
 { 
-# ifdef ODSI_PARANOIA
+# if ODSI_PARANOIA >= 1
   indexCheck(j,true,"setObjCoeff") ;
 # endif
   
@@ -4007,7 +4040,7 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
   dy_checkdefaults(consys,&lcl_opts,&lcl_tols) ;
   lpprob->phase = dyINV ;
 
-# ifdef DYLP_STATISTICS
+# ifdef ODSI_STATISTICS
   if (statistics) dy_freestats(&statistics) ;
   dy_initstats(&statistics,lpprob->consys) ;
 # endif
@@ -4048,15 +4081,16 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
 # ifdef ODSI_INFOMSGS
   if (print >= 1)
   { if (lpret == lpOPTIMAL || lpret == lpINFEAS || lpret == lpUNBOUNDED)
-    { outfmt(dy_logchn,dy_gtxecho,"\n  success, status %s",
-	     dy_prtlpret(lpprob->lpret)) ; }
+    { dyio_outfmt(dy_logchn,dy_gtxecho,"\n  success, status %s",
+		  dy_prtlpret(lpprob->lpret)) ; }
     else
     if (lpret == lpITERLIM)
-    { outfmt(dy_logchn,dy_gtxecho,"\n  premature termination, status %s",
-	     dy_prtlpret(lpprob->lpret)) ; }
+    { dyio_outfmt(dy_logchn,dy_gtxecho,
+		  "\n  premature termination, status %s",
+		  dy_prtlpret(lpprob->lpret)) ; }
     else
-    { outfmt(dy_logchn,dy_gtxecho,"\n  failed, status %s",
-	     dy_prtlpret(lpprob->lpret)) ; } }
+    { dyio_outfmt(dy_logchn,dy_gtxecho,"\n  failed, status %s",
+		  dy_prtlpret(lpprob->lpret)) ; } }
 # endif
   clrflg(lpprob->ctlopts,lpctlUBNDCHG|lpctlLBNDCHG|lpctlRHSCHG|lpctlOBJCHG) ;
 
@@ -4114,8 +4148,8 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
     { retries++ ;
 #     ifdef ODSI_INFOMSGS
       if (print >= 1)
-      { outfmt(dy_logchn,dy_gtxecho,".\n    retry %d: refactor = %d ...",
-	       retries,lcl_opts.factor) ; }
+      { dyio_outfmt(dy_logchn,dy_gtxecho,".\n    retry %d: refactor = %d ...",
+	            retries,lcl_opts.factor) ; }
 #     endif
       setflg(lpprob->ctlopts,persistent_flags) ;
       lpprob->phase = dyINV ;
@@ -4125,15 +4159,15 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
       {
 #       ifdef ODSI_INFOMSGS
 	if (print >= 1)
-	{ outfmt(dy_logchn,dy_gtxecho,"\n  success, status %s",
-		 dy_prtlpret(lpprob->lpret)) ; }
+	{ dyio_outfmt(dy_logchn,dy_gtxecho,"\n  success, status %s",
+		      dy_prtlpret(lpprob->lpret)) ; }
 #       endif
 	break ; }
 #     ifdef ODSI_INFOMSGS
       else
       { if (print >= 1)
-	{ outfmt(dy_logchn,dy_gtxecho,"\n  failed, status %s",
-		 dy_prtlpret(lpprob->lpret)) ; } }
+	{ dyio_outfmt(dy_logchn,dy_gtxecho,"\n  failed, status %s",
+		      dy_prtlpret(lpprob->lpret)) ; } }
 #     endif
     }
 #   ifdef DYLP_POSTMORTEM
@@ -4175,14 +4209,14 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
 # ifdef ODSI_INFOMSGS
   if (print >= 1)
   { if (lpprob->lpret == lpOPTIMAL)
-      outfmt(dy_logchn,dy_gtxecho,"; objective %.8g",lpprob->obj) ;
+      dyio_outfmt(dy_logchn,dy_gtxecho,"; objective %.8g",lpprob->obj) ;
     else
     if (lpprob->lpret == lpINFEAS)
-      outfmt(dy_logchn,dy_gtxecho,"; infeasibility %.4g",lpprob->obj) ;
+      dyio_outfmt(dy_logchn,dy_gtxecho,"; infeasibility %.4g",lpprob->obj) ;
     if (lpprob->phase == dyDONE)
-      outfmt(dy_logchn,dy_gtxecho," after %d pivots",lpprob->iters) ;
-    outchr(dy_logchn,dy_gtxecho,'.') ;
-    flushio(dy_logchn,dy_gtxecho) ; }
+      dyio_outfmt(dy_logchn,dy_gtxecho," after %d pivots",lpprob->iters) ;
+    dyio_outchr(dy_logchn,dy_gtxecho,'.') ;
+    dyio_flushio(dy_logchn,dy_gtxecho) ; }
 # endif
 
   return (lpret) ; }
@@ -4546,21 +4580,27 @@ const double* ODSI::getColSolution () const
   variables (vstatNBFR) occur under the same termination conditions, but are
   legitimately zero. We really should return NaN for superbasics, using the
   function <limits>:std::numeric_limits::signaling_NaN(), but it's just not
-  worth the hassle. Sun Workshop C++ (Rogue Wave Software) has it, but Gnu C++
-  prior to v3 doesn't even have <limits>, and the local v3 installation's
-  <limits> points to another, non-existent header.
+  worth the hassle. Sun Workshop C++ (Rogue Wave Software) has it, but Gnu
+  C++ prior to v3 doesn't even have <limits>, and the local v3 installation's
+  <limits> points to another, non-existent header. I don't want to even
+  discuss Microsquash.
 */
 { if (_col_x)
   { return _col_x ; }
   if (consys == 0)
   { return (0) ; }
 
-# ifdef ODSI_STRICTLY_FRESH
   if (!solnIsFresh)
-  { throw CoinError("Constraint system has changed since last call to solver.",
+  { CoinMessageHandler *hdl = messageHandler() ; 
+    hdl->message(ODSI_ACCESS_STALE,messages_)
+      << "getColSolution"
+      << CoinMessageEol ;
+#   ifdef ODSI_STRICTLY_FRESH
+    throw CoinError("Constraint system has changed since last call to solver.",
 		    "getColSolution","OsiDylpSolverInterface") ;
-    return (0) ; }
-# endif
+    return (0) ;
+#   endif
+  }
 
   assert(lpprob->status && lpprob->x) ;
 
@@ -4621,12 +4661,17 @@ const double* ODSI::getRowPrice () const
   if (consys == 0)
   { return (0) ; }
 
-# ifdef ODSI_STRICTLY_FRESH
   if (!solnIsFresh)
-  { throw CoinError("Constraint system has changed since last call to solver.",
+  { CoinMessageHandler *hdl = messageHandler() ; 
+    hdl->message(ODSI_ACCESS_STALE,messages_)
+      << "getRowPrice"
+      << CoinMessageEol ;
+#   ifdef ODSI_STRICTLY_FRESH
+    throw CoinError("Constraint system has changed since last call to solver.",
 		    "getRowPrice","OsiDylpSolverInterface") ;
-    return (0) ; }
-# endif
+    return (0) ;
+#   endif
+  }
 
   assert(lpprob->basis && lpprob->y) ;
 
@@ -5417,7 +5462,7 @@ CoinWarmStart* ODSI::getWarmStart () const
 			  "invalid status in dylp basis.",
 			  "getWarmStart","OsiDylpSolverInterface") ; } } } }
 
-# ifdef ODSI_PARANOIA
+# if ODSI_PARANOIA >= 2
   if (wsb)
   { wsb->checkBasis() ; }
 # endif
@@ -5488,7 +5533,7 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
   if (!wsb)
   { wsb = new OsiDylpWarmStartBasis(*cwsb) ;
     ourBasis = true ; }
-# ifdef ODSI_PARANOIA
+# if ODSI_PARANOIA >= 2
   wsb->checkBasis() ;
 # endif
   varcnt = wsb->getNumStructural() ;
@@ -6102,15 +6147,15 @@ void ODSI::activateRowCutDebugger (const double *solution)
   return ; }
 
 
-# ifdef ODSI_PARANOIA
+# if ODSI_PARANOIA >= 1
 /*!
   This routine will check that the index passed as a parameter is a valid
   variable (isCol == true) or constraint (isCol == false) index and throw an
   error if it's out of bounds. The index is assumed to be zero-based, which is
   appropriate for indices specified by an ODSI client.
 
-  This routine must be active (i.e., ODSI_PARANOIA must be defined) in order
-  for OsiCbc(dylp) to pass the OsiCbc unit test.
+  This routine must be active (i.e., ODSI_PARANOIA must be 1 or greater) in
+  order for OsiCbc(dylp) to pass the OsiCbc unit test.
 */
 inline void ODSI::indexCheck (int k, bool isCol, std::string rtnnme)
 

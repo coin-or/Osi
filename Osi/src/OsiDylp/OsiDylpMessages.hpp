@@ -18,7 +18,8 @@
 /*
   Enum used to specify ODSI messages to the message handler. There is no
   need for the order here to match the order of message definition in
-  OsiDylpMessages.cpp, but all enum values must be here.
+  OsiDylpMessages.cpp, but all enum values must be here. ODSI_DUMMY_END must
+  be last, however.
 */
 
 typedef enum { ODSI_TEST_MSG,
@@ -30,6 +31,7 @@ typedef enum { ODSI_TEST_MSG,
 	       ODSI_ODWSBBADSIZE,
 	       ODSI_ODWSBBADSTATUS,
 	       ODSI_ODWSBSHORTBASIS,
+	       ODSI_ACCESS_STALE,
 	       ODSI_PRESOL_STATS,
 	       ODSI_PRESOL_PASS,
 	       ODSI_POSTSOL,
@@ -38,8 +40,8 @@ typedef enum { ODSI_TEST_MSG,
 	       ODSI_WARM,
 	       ODSI_HOT,
 	       ODSI_ALLDYLP,
-	       ODSI_DETACH,
 	       ODSI_ATTACH,
+	       ODSI_DETACH,
 	       ODSI_NOSOLVE,
 	       ODSI_SHORTSTATS,
 	       ODSI_DUMMY_END } OsiDylpMessageID_enum ;

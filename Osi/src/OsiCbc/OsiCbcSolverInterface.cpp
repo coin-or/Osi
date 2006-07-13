@@ -3,6 +3,7 @@
 
 #include <cassert>
 
+#include "OsiConfig.h"
 #include "CoinTime.hpp"
 
 #ifndef OSICBC_DFLT_SOLVER

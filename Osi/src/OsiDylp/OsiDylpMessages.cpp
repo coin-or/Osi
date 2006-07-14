@@ -107,6 +107,8 @@ static MsgDefn us_en_defns[] = {
   { ODSI_NOSOLVE, 3200, 1, "Impossible to call dylp; %s." },
   // Non-fatal errors (6000 -- 8999)
   { ODSI_UNSUPFORCEDO, 6001, 1, "Attempt to force unsupported hint; %s." },
+  { ODSI_ACCESS_STALE, 6050, 1,
+    "(%s) request to return a value from a stale solution."},
   { ODSI_EMPTYODWSB, 6101, 1, "Empty warm start basis object." },
   { ODSI_NOTODWSB, 6102, 1,
     "The warm start basis object is not a %sWarmStartBasis object." },
@@ -130,7 +132,7 @@ static MsgDefn uk_en_defns[] = {
 */
   const CoinMessages dummy(0) ;
 /*
-  The author is Canadian, eh? But we'll go with us_en anyways.
+  The author is Canadian, eh. But we'll go with us_en anyways.
 */
   const CoinMessages::Language default_language = CoinMessages::us_en ;
 

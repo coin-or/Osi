@@ -21477,6 +21477,10 @@ fi
 #############################################################################
 
 
+
+# Process the with-osicbc-default-solver option.
+
+
 # Check whether --with-osicbc-default-solver or --without-osicbc-default-solver was given.
 if test "${with_osicbc_default_solver+set}" = set; then
   withval="$with_osicbc_default_solver"
@@ -21593,12 +21597,19 @@ echo "$as_me: WARNING: Unrecognised solver $osicbc_with_solver; defaulting to $o
   fi
 
 
-  if test $osi_exists_solver = no; then
-    { { echo "$as_me:$LINENO: error: selected default solver $osicbc_with_solver is unavailable.
-      Please select an available solver." >&5
+# Check that the requested solver is available. If we're not actually
+# building OsiCbc, skip this check to avoid spurious failures in projects
+# that don't have the default solver, Clp.
+
+  if test $coin_has_cbc != unavailable &&
+     test $coin_has_cbc != skipping; then
+    if test $osi_exists_solver = no; then
+      { { echo "$as_me:$LINENO: error: selected default solver $osicbc_with_solver is unavailable.
+	Please select an available solver using the --with-osicbc-default-solver option." >&5
 echo "$as_me: error: selected default solver $osicbc_with_solver is unavailable.
-      Please select an available solver." >&2;}
+	Please select an available solver using the --with-osicbc-default-solver option." >&2;}
    { (exit 1); exit 1; }; }
+    fi
   fi
 
 # State the result.

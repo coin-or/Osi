@@ -14,8 +14,19 @@
 # is hidden in AC_OSI_CANONICAL. The other is visible, the AM_CONDITIONAL
 # list at the end.
 
+# In an ideal world this macro would do absolutely nothing if Cbc is not
+# present, but autotools is not an ideal world and we have to satisfy its
+# requirements. In particular, the AM_CONDITIONAL macros need to execute or
+# automake will complain. Really the only thing we need to suppress is the
+# check that the default solver exists. All the rest is irrelevant when Cbc
+# isn't present (hence OsiCbc will be configured but not actually compiled).
+
 AC_DEFUN([AC_OSICBC_CONFIG],
-[ AC_ARG_WITH([osicbc-default-solver],
+[ 
+
+# Process the with-osicbc-default-solver option.
+
+  AC_ARG_WITH([osicbc-default-solver],
     AS_HELP_STRING([--with-osicbc-default-solver],
        [specify underlying solver for OsiCbc (default $1)]),
        [osicbc_with_solver=$withval],
@@ -25,9 +36,16 @@ AC_DEFUN([AC_OSICBC_CONFIG],
 
   AC_OSI_CANONICAL($osicbc_with_solver)
 
-  if test $osi_exists_solver = no; then
-    AC_MSG_ERROR([selected default solver $osicbc_with_solver is unavailable.
-      Please select an available solver.])
+# Check that the requested solver is available. If we're not actually
+# building OsiCbc, skip this check to avoid spurious failures in projects
+# that don't have the default solver, Clp.
+
+  if test $coin_has_cbc != unavailable &&
+     test $coin_has_cbc != skipping; then
+    if test $osi_exists_solver = no; then
+      AC_MSG_ERROR([selected default solver $osicbc_with_solver is unavailable.
+	Please select an available solver using the --with-osicbc-default-solver option.])
+    fi
   fi
 
 # State the result.

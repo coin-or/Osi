@@ -19,6 +19,7 @@
   cvs: $Id$
 */
 
+#include "OsiConfig.h"
 #include <CoinPackedMatrix.hpp>
 #include <OsiSolverInterface.hpp>
 #include <CoinWarmStart.hpp>
@@ -565,15 +566,15 @@ public:
 
   void activateRowCutDebugger (const double *solution) ;
 
-# ifdef ODSI_PARANOIA
+# if ODSI_PARANOIA >= 1
   /*! \brief Check that a row or column index is in range
 
     Check that a row or column index is in range for the current constraint
     system. This routine will throw an error if there is no constraint system
     or if the index is out of range.
 
-    NOTE that ODSI_PARANOIA must be defined in order for OsiCbc(dylp) to pass
-    the OsiCbc unit test.
+    NOTE that ODSI_PARANOIA must be 1 or greater in order for OsiCbc(dylp)
+    to pass the OsiCbc unit test.
   */
   void indexCheck (int k, bool isCol, std::string rtnnme) ;
 # endif

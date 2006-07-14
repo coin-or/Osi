@@ -100,6 +100,7 @@ include_HEADERS = \
 	OsiCollections.hpp \
 	OsiCut.hpp \
 	OsiCuts.hpp \
+	OsiOpbdpSolve.hpp \
 	OsiPresolve.hpp \
 	OsiSolverInterface.hpp \
 	OsiSolverParameters.hpp \

@@ -52,7 +52,8 @@ OsiBabSolver::OsiBabSolver(int solverType)
    bestObjectiveValue_(1.0e100),
    bestSolution_(NULL),
    mipBound_(-1.0e100),
-   sizeSolution_(0)
+   sizeSolution_(0),
+   extraCharacteristics_(0)
 {
 }
 
@@ -78,7 +79,8 @@ OsiBabSolver::OsiBabSolver(const OsiBabSolver & rhs)
   bestObjectiveValue_(rhs.bestObjectiveValue_),
   bestSolution_(NULL),
   mipBound_(rhs.mipBound_),
-  sizeSolution_(rhs.sizeSolution_)
+  sizeSolution_(rhs.sizeSolution_),
+  extraCharacteristics_(rhs.extraCharacteristics_)
 {
   if (rhs.bestSolution_) {
     assert (solver_);
@@ -97,6 +99,7 @@ OsiBabSolver::operator=(const OsiBabSolver &rhs)
     bestSolution_ = NULL;
     mipBound_ = rhs.mipBound_;
     sizeSolution_ = rhs.sizeSolution_;
+    extraCharacteristics_ = rhs.extraCharacteristics_;
     if (rhs.bestSolution_) {
       assert (solver_);
       bestSolution_ = CoinCopyOfArray(rhs.bestSolution_,sizeSolution_);

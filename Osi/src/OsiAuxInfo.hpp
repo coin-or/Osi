@@ -109,6 +109,7 @@ public:
           check this (rather than solver) to see if feasible and what objective value is.
           Using Outer Approximation so called lp based
           - may also return heuristic solution
+      4 - normal solver but cuts are needed for integral solution    
   */
   inline int solverType() const
   { return solverType_;};
@@ -142,6 +143,16 @@ public:
   /// Says whether we have a warm start (so can do strong branching)
   inline bool warmStart() const
   { return solverType_!=2;};
+  /** Get bit mask for odd actions of solvers
+      1 - solution or bound arrays may move in mysterious ways e.g. cplex
+  */
+  inline int extraCharacteristics() const
+  { return extraCharacteristics_;};
+  /** Set bit mask for odd actions of solvers
+      1 - solution or bound arrays may move in mysterious ways e.g. cplex
+  */
+  inline void setExtraCharacteristics(int value)
+  { extraCharacteristics_=value;};
 protected:
   /// Solver to use for getting/setting solutions etc
   const OsiSolverInterface * solver_;
@@ -165,6 +176,10 @@ protected:
   double mipBound_;
   /// Size of solution
   int sizeSolution_;
+  /** Bit mask for odd actions of solvers
+      1 - solution or bound arrays may move in mysterious ways e.g. cplex
+  */
+  int extraCharacteristics_;
 };
 
 #endif

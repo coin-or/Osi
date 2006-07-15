@@ -106,7 +106,7 @@
 
 /* define to the name of the default solver interface class, e.g.,
    OsiClpSolverInterface */
-#define OSICBC_DFLT_SOLVER "OsiClpSolverInterface"
+#define OSICBC_DFLT_SOLVER OsiClpSolverInterface
 
 /* define this symbol if clp is the default solver */
 #define OSICBC_DFLT_SOLVER_CLP 1

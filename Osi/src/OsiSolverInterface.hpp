@@ -1039,22 +1039,22 @@ public:
   */
   virtual void writeLp(const char *filename,
                const char *extension = "lp",
-               const double epsilon = 1e-5,
-               const int numberAcross = 10,
-               const int decimals = 5,
-               const double objSense = 0.0,
-	       const bool useRowNames = true) const;
+                double epsilon = 1e-5,
+                int numberAcross = 10,
+                int decimals = 5,
+                double objSense = 0.0,
+	        bool useRowNames = true) const;
 
   /** Write the problem into the file pointed to by the parameter fp. 
       Other parameters are similar to 
       those of writeLp() with first parameter filename.
   */
   virtual void writeLp(FILE *fp,
-               const double epsilon = 1e-5,
-               const int numberAcross = 10,
-               const int decimals = 5,
-               const double objSense = 0.0,
-	       const bool useRowNames = true) const;
+                double epsilon = 1e-5,
+                int numberAcross = 10,
+                int decimals = 5,
+                double objSense = 0.0,
+	        bool useRowNames = true) const;
 
   /** Write the problem into an Lp file. Parameters are similar to 
       those of writeLp(), but in addition row names and column names

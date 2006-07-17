@@ -1115,11 +1115,11 @@ OsiSolverInterface::writeMpsNative(const char *filename,
 /***********************************************************************/
 void OsiSolverInterface::writeLp(const char * filename,
 				 const char * extension,
-				 const double epsilon,
-				 const int numberAcross,
-				 const int decimals,
-				 const double objSense,
-				 const bool useRowNames) const
+				  double epsilon,
+				  int numberAcross,
+				  int decimals,
+				  double objSense,
+				  bool useRowNames) const
 {
   std::string f(filename);
   std::string e(extension);
@@ -1138,11 +1138,11 @@ void OsiSolverInterface::writeLp(const char * filename,
 
 /*************************************************************************/
 void OsiSolverInterface::writeLp(FILE *fp,
-				 const double epsilon,
-				 const int numberAcross,
-				 const int decimals,
-				 const double objSense,
-				 const bool useRowNames) const
+				  double epsilon,
+				  int numberAcross,
+				  int decimals,
+				  double objSense,
+				  bool useRowNames) const
 {
   // Fall back on Osi version - without names
   OsiSolverInterface::writeLpNative(fp, 

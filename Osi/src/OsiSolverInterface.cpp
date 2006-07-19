@@ -370,13 +370,21 @@ OsiSolverInterface::addCols( CoinModel & modelObject)
     int numberColumns = getNumCols(); // save number of columns
     int numberColumns2 = modelObject.numberColumns();
     if (numberColumns2&&!numberErrors) {
+      // Clean up infinity
+      double infinity = getInfinity();
+      int iColumn;
+      for (iColumn=0;iColumn<numberColumns2;iColumn++) {
+	if (columnUpper[iColumn]>1.0e30)
+	  columnUpper[iColumn]=infinity;
+	if (columnLower[iColumn]<-1.0e30)
+	  columnLower[iColumn]=-infinity;
+      }
       const int * row = matrix.getIndices();
       const int * columnLength = matrix.getVectorLengths();
       const CoinBigIndex * columnStart = matrix.getVectorStarts();
       const double * element = matrix.getElements();
       CoinPackedVectorBase ** columns=
         new CoinPackedVectorBase * [numberColumns2];
-      int iColumn;
       assert (columnLower);
       for (iColumn=0;iColumn<numberColumns2;iColumn++) {
         int start = columnStart[iColumn];
@@ -499,6 +507,15 @@ OsiSolverInterface::addRows( CoinModel & modelObject)
     modelObject.createPackedMatrix(matrix,associated);
     int numberRows2 = modelObject.numberRows();
     if (numberRows2&&!numberErrors) {
+      // Clean up infinity
+      double infinity = getInfinity();
+      int iRow;
+      for (iRow=0;iRow<numberRows2;iRow++) {
+	if (rowUpper[iRow]>1.0e30)
+	  rowUpper[iRow]=infinity;
+	if (rowLower[iRow]<-1.0e30)
+	  rowLower[iRow]=-infinity;
+      }
       // matrix by rows
       matrix.reverseOrdering();
       const int * column = matrix.getIndices();
@@ -507,7 +524,6 @@ OsiSolverInterface::addRows( CoinModel & modelObject)
       const double * element = matrix.getElements();
       CoinPackedVectorBase ** rows=
         new CoinPackedVectorBase * [numberRows2];
-      int iRow;
       assert (rowLower);
       for (iRow=0;iRow<numberRows2;iRow++) {
         int start = rowStart[iRow];
@@ -565,6 +581,21 @@ OsiSolverInterface::loadFromCoinModel (  CoinModel & modelObject, bool keepSolut
   modelObject.createPackedMatrix(matrix,associated);
   int numberRows = modelObject.numberRows();
   int numberColumns = modelObject.numberColumns();
+  // Clean up infinity
+  double infinity = getInfinity();
+  int iColumn,iRow;
+  for (iColumn=0;iColumn<numberColumns;iColumn++) {
+    if (columnUpper[iColumn]>1.0e30)
+      columnUpper[iColumn]=infinity;
+    if (columnLower[iColumn]<-1.0e30)
+      columnLower[iColumn]=-infinity;
+  }
+  for (iRow=0;iRow<numberRows;iRow++) {
+    if (rowUpper[iRow]>1.0e30)
+      rowUpper[iRow]=infinity;
+    if (rowLower[iRow]<-1.0e30)
+      rowLower[iRow]=-infinity;
+  }
   CoinWarmStart * ws = getWarmStart();
   bool restoreBasis = keepSolution && numberRows&&numberRows==getNumRows()&&
     numberColumns==getNumCols();

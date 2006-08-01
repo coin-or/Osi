@@ -65,6 +65,14 @@ void OsiOslSolverInterface::initialSolve()
     else if (messageHandler()->logLevel()==1)
       ekk_messagePrintOff(model,317);
   }
+  gotHint = getHintParam(OsiDoPresolveInInitial,takeHint,strength);
+  assert(gotHint);
+  if (strength!=OsiHintIgnore) {
+    if (takeHint) 
+      ekk_setPresolveOn(model);
+    else
+      ekk_setPresolveOff(model);
+  }
 #if 0
   ekk_crash(model,1); 
   rtcod=ekk_primalSimplex(model,1);
@@ -97,6 +105,14 @@ void OsiOslSolverInterface::resolve()
       ekk_messagesPrintOff(model,1,5999);
     else if (messageHandler()->logLevel()==1)
       ekk_messagePrintOff(model,317);
+  }
+  gotHint = getHintParam(OsiDoPresolveInResolve,takeHint,strength);
+  assert(gotHint);
+  if (strength!=OsiHintIgnore) {
+    if (takeHint) 
+      ekk_setPresolveOn(model);
+    else
+      ekk_setPresolveOff(model);
   }
 #if 0
   rtcod=ekk_dualSimplex(model); // *FIXME* : why not 0 (eitherSimplex)
@@ -1719,4 +1735,11 @@ OsiOslSolverInterface::reset()
   setInitialData(); // clear base class
   gutsOfDestructor();
   itlimOrig_=9999999;
+}
+//Returns true if a basis is available and optimal
+bool 
+OsiOslSolverInterface::basisIsAvailable() const 
+{
+  EKKModel* model = getMutableModelPtr();
+  return (ekk_getIprobstat(model)==0);
 }

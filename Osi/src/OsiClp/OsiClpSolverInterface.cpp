@@ -3325,6 +3325,77 @@ OsiClpSolverInterface::getBInvARow(int row, double* z, double * slack) const
   rowArray0->clear();
   columnArray1->clear();
 }
+//Get a row of the tableau (slack part in slack if not NULL)
+void 
+OsiClpSolverInterface::getBInvARow(int row, CoinIndexedVector * columnArray0, CoinIndexedVector * slack) const
+{
+#ifndef NDEBUG
+  int nx = modelPtr_->numberRows();
+  if (row<0||row>=nx) {
+    indexError(row,"getBInvARow");
+  }
+#endif
+  //assert (modelPtr_->solveType()==2||(specialOptions_&1));
+  CoinIndexedVector * rowArray0 = modelPtr_->rowArray(0);
+  CoinIndexedVector * rowArray1 = slack ? slack : modelPtr_->rowArray(1);
+  CoinIndexedVector * columnArray1 = modelPtr_->columnArray(1);
+  rowArray0->clear();
+  rowArray1->clear();
+  columnArray0->clear();
+  columnArray1->clear();
+  int numberRows = modelPtr_->numberRows();
+  int numberColumns = modelPtr_->numberColumns();
+  // put +1 in row 
+  // But swap if pivot variable was slack as clp stores slack as -1.0
+  const int * pivotVariable = modelPtr_->pivotVariable();
+  const double * rowScale = modelPtr_->rowScale();
+  const double * columnScale = modelPtr_->columnScale();
+  int pivot = pivotVariable[row];
+  double value;
+  // And if scaled then adjust
+  if (!rowScale) {
+    if (pivot<numberColumns)
+      value = 1.0;
+    else
+      value = -1.0;
+  } else {
+    if (pivot<numberColumns)
+      value = columnScale[pivot];
+    else
+      value = -1.0/rowScale[pivot-numberColumns];
+  }
+  rowArray1->insert(row,value);
+  modelPtr_->factorization()->updateColumnTranspose(rowArray0,rowArray1);
+  // put row of tableau in rowArray1 and columnArray0
+  modelPtr_->clpMatrix()->transposeTimes(modelPtr_,1.0,
+                                         rowArray1,columnArray1,columnArray0);
+  int n;
+  const int * which;
+  double * array;
+  // deal with scaling etc
+  if (rowScale) {
+    int j;
+    // First columns
+    n = columnArray0->getNumElements();
+    which = columnArray0->getIndices();
+    array = columnArray0->denseVector();
+    for (j=0; j < n; j++) {
+      int k=which[j];
+      array[k] /= columnScale[k];
+    }
+    if (slack) {
+      n = slack->getNumElements();
+      which = slack->getIndices();
+      array = slack->denseVector();
+      for(j=0; j < n; j++) {
+	int k=which[j];
+	array[k] *= rowScale[k];
+      }
+    }
+  }
+  if (!slack)
+    rowArray1->clear();
+}
 
 //Get a row of the basis inverse
 void 
@@ -3441,6 +3512,69 @@ OsiClpSolverInterface::getBInvACol(int col, double* vec) const
       }
     }
     rowArray1->clear();
+  }
+}
+//Get a column of the tableau
+void 
+OsiClpSolverInterface::getBInvACol(int col, CoinIndexedVector * rowArray1) const
+{
+  CoinIndexedVector * rowArray0 = modelPtr_->rowArray(0);
+  rowArray0->clear();
+  rowArray1->clear();
+  // get column of matrix
+#ifndef NDEBUG
+  int nx = modelPtr_->numberColumns()+modelPtr_->numberRows();
+  if (col<0||col>=nx) {
+    indexError(col,"getBInvACol");
+  }
+#endif
+  int numberRows = modelPtr_->numberRows();
+  int numberColumns = modelPtr_->numberColumns();
+  const int * pivotVariable = modelPtr_->pivotVariable();
+  const double * rowScale = modelPtr_->rowScale();
+  const double * columnScale = modelPtr_->columnScale();
+  if (!rowScale) {
+    if (col<numberColumns) {
+      modelPtr_->unpack(rowArray1,col);
+    } else {
+      rowArray1->insert(col-numberColumns,1.0);
+    }
+  } else {
+    if (col<numberColumns) {
+      modelPtr_->unpack(rowArray1,col);
+      double multiplier = 1.0/columnScale[col];
+      int number = rowArray1->getNumElements();
+      int * index = rowArray1->getIndices();
+      double * array = rowArray1->denseVector();
+      for (int i=0;i<number;i++) {
+	int iRow = index[i];
+	// make sure not packed
+	assert (array[iRow]);
+	array[iRow] *= multiplier;
+      }
+    } else {
+      rowArray1->insert(col-numberColumns,rowScale[col-numberColumns]);
+    }
+  }
+  modelPtr_->factorization()->updateColumn(rowArray0,rowArray1,false);
+  // Deal with stuff
+  int n = rowArray1->getNumElements();
+  const int * which = rowArray1->getIndices();
+  double * array = rowArray1->denseVector();
+  for(int j=0; j < n; j++){
+    int k=which[j];
+    // need to know pivot variable for +1/-1 (slack) and row/column scaling
+    int pivot = pivotVariable[k];
+    if (pivot<numberColumns) {
+      if (columnScale) 
+	array[k] *= columnScale[pivot];
+    } else {
+      if (!rowScale) {
+	array[k] = -array[k];
+      } else {
+	array[k] = -array[k]/rowScale[pivot-numberColumns];
+      }
+    }
   }
 }
 
@@ -3562,7 +3696,7 @@ OsiClpSolverInterface::setHintParam(OsiHintParam key, bool yesNo,
         specialOptions_=0;
       }
       // set normal
-      specialOptions_ &= 1023;
+      specialOptions_ &= (1023+3*8192);
       if (otherInformation!=NULL) {
         int * array = (int *) otherInformation;
         if (array[0]>=0||array[0]<=2)

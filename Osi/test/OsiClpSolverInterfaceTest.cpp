@@ -1480,6 +1480,72 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     }
     m.setSpecialOptions(m.specialOptions()&~512);
     free(binvA);
+    // Do using newer interface
+    m.enableFactorization();
+    {
+      CoinIndexedVector * rowArray = new CoinIndexedVector(n_rows);
+      CoinIndexedVector * columnArray = new CoinIndexedVector(n_cols);
+      int n;
+      int * which;
+      double * array;
+      printf("B-1 A");
+      for( i = 0; i < n_rows; i++){
+        m.getBInvARow(i, columnArray,rowArray);
+        printf("\nrow: %d -> ",i);
+        int j;
+        // First columns
+        n = columnArray->getNumElements();
+        which = columnArray->getIndices();
+        array = columnArray->denseVector();
+        for(j=0; j < n; j++){
+          int k=which[j];
+	  printf("(%d %g), ", k, array[k]);
+          // zero out
+          array[k]=0.0;
+        }
+        // say empty (if I had not zeroed array[k] I would use ->clear())
+        columnArray->setNumElements(0);
+        // and check (would not be in any production code)
+        columnArray->checkClear();
+        // now rows
+        n = rowArray->getNumElements();
+        which = rowArray->getIndices();
+        array = rowArray->denseVector();
+        for(j=0; j < n; j++){
+          int k=which[j];
+	  printf("(%d %g), ", k+n_cols, array[k]);
+          // zero out
+          array[k]=0.0;
+        }
+        // say empty
+        rowArray->setNumElements(0);
+        // and check (would not be in any production code)
+        rowArray->checkClear();
+      }
+      printf("\n");
+      printf("And by column");
+      const int * pivotVariable = clp->pivotVariable();
+      for( i = 0; i < n_cols+n_rows; i++){
+        m.getBInvACol(i, rowArray);
+        printf("\ncolumn: %d -> ",i);
+        n = rowArray->getNumElements();
+        which = rowArray->getIndices();
+        array = rowArray->denseVector();
+        for(int j=0; j < n; j++){
+          int k=which[j];
+	  printf("(%d %g), ", k, array[k]);
+          // zero out
+          array[k]=0.0;
+        }
+        // say empty
+        rowArray->setNumElements(0);
+        // and check (would not be in any production code)
+        rowArray->checkClear();
+      }
+      printf("\n");
+    }
+    // may not be needed - but cleaner
+    m.disableFactorization();
   }
   // Check tableau stuff when simplex interface is off
   {    

@@ -30,26 +30,26 @@
 
 // Trivial class for Branch and Bound
 
-class OsiNodeSimple  {
+class OsiNodeSimpleOsl  {
   
 public:
     
   // Default Constructor 
-  OsiNodeSimple ();
+  OsiNodeSimpleOsl ();
 
   // Constructor from current state (and list of integers)
   // Also chooses branching variable (if none set to -1)
-  OsiNodeSimple (OsiSolverInterface &model,
+  OsiNodeSimpleOsl (OsiSolverInterface &model,
 	   int numberIntegers, int * integer);
   
   // Copy constructor 
-  OsiNodeSimple ( const OsiNodeSimple &);
+  OsiNodeSimpleOsl ( const OsiNodeSimpleOsl &);
    
   // Assignment operator 
-  OsiNodeSimple & operator=( const OsiNodeSimple& rhs);
+  OsiNodeSimpleOsl & operator=( const OsiNodeSimpleOsl& rhs);
 
   // Destructor 
-  ~OsiNodeSimple ();
+  ~OsiNodeSimpleOsl ();
   
   // Public data
   // Basis (should use tree, but not as wasteful as bounds!)
@@ -71,7 +71,7 @@ public:
 };
 
 
-OsiNodeSimple::OsiNodeSimple() :
+OsiNodeSimpleOsl::OsiNodeSimpleOsl() :
   basis_(CoinWarmStartBasis()),
   objectiveValue_(1.0e100),
   variable_(-100),
@@ -82,7 +82,7 @@ OsiNodeSimple::OsiNodeSimple() :
   upper_(NULL)
 {
 }
-OsiNodeSimple::OsiNodeSimple(OsiSolverInterface & model,
+OsiNodeSimpleOsl::OsiNodeSimpleOsl(OsiSolverInterface & model,
 		 int numberIntegers, int * integer)
 {
   const CoinWarmStartBasis* ws =
@@ -302,7 +302,7 @@ OsiNodeSimple::OsiNodeSimple(OsiSolverInterface & model,
 #endif
 }
 
-OsiNodeSimple::OsiNodeSimple(const OsiNodeSimple & rhs) 
+OsiNodeSimpleOsl::OsiNodeSimpleOsl(const OsiNodeSimpleOsl & rhs) 
 {  
   basis_=rhs.basis_;
   objectiveValue_=rhs.objectiveValue_;
@@ -321,8 +321,8 @@ OsiNodeSimple::OsiNodeSimple(const OsiNodeSimple & rhs)
   }
 }
 
-OsiNodeSimple &
-OsiNodeSimple::operator=(const OsiNodeSimple & rhs)
+OsiNodeSimpleOsl &
+OsiNodeSimpleOsl::operator=(const OsiNodeSimpleOsl & rhs)
 {
   if (this != &rhs) {
     basis_=rhs.basis_;
@@ -347,7 +347,7 @@ OsiNodeSimple::operator=(const OsiNodeSimple & rhs)
 }
 
 
-OsiNodeSimple::~OsiNodeSimple ()
+OsiNodeSimpleOsl::~OsiNodeSimpleOsl ()
 {
   delete [] lower_;
   delete [] upper_;
@@ -355,8 +355,8 @@ OsiNodeSimple::~OsiNodeSimple ()
 
 #include <vector>
 
-// Vector of OsiNodeSimples 
-typedef std::vector<OsiNodeSimple>    OsiVectorNode;
+// Vector of OsiNodeSimpleOsls 
+typedef std::vector<OsiNodeSimpleOsl>    OsiVectorNode;
 
 //#############################################################################
 
@@ -813,17 +813,17 @@ OsiOslSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       OsiVectorNode branchingTree;
       
       // Add continuous to it;
-      branchingTree.push_back(OsiNodeSimple(m,numberIntegers,which));
+      branchingTree.push_back(OsiNodeSimpleOsl(m,numberIntegers,which));
       
       // For printing totals
       int numberIterations=0;
       int numberNodes =0;
       
-      OsiNodeSimple bestNode;
+      OsiNodeSimpleOsl bestNode;
       // while until nothing on stack
       while (branchingTree.size()) {
 	// last node
-	OsiNodeSimple node = branchingTree.back();
+	OsiNodeSimpleOsl node = branchingTree.back();
 	branchingTree.pop_back();
 	numberNodes++;
 	if (node.variable_>=0) {
@@ -854,12 +854,12 @@ OsiOslSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
 	  m.resolve();
 	  numberIterations += m.getIterationCount();
 	  if (!m.isIterationLimitReached()) {
-	    OsiNodeSimple newNode(m,numberIntegers,which);
+	    OsiNodeSimpleOsl newNode(m,numberIntegers,which);
 	    // something extra may have been fixed by strong branching
 	    // if so go round again
 	    while (newNode.variable_==numberIntegers) {
 	      m.resolve();
-	      newNode = OsiNodeSimple(m,numberIntegers,which);
+	      newNode = OsiNodeSimpleOsl(m,numberIntegers,which);
 	    }
 	    if (newNode.objectiveValue_<1.0e100) {
 	      // push on stack

@@ -174,11 +174,17 @@ public:
   ///Get a row of the tableau (slack part in slack if not NULL)
   virtual void getBInvARow(int row, double* z, double * slack=NULL) const;
   
+  ///Get a row of the tableau (slack part in slack if not NULL)
+  virtual void getBInvARow(int row, CoinIndexedVector * z, CoinIndexedVector * slack=NULL) const;
+  
   ///Get a row of the basis inverse
   virtual void getBInvRow(int row, double* z) const;
   
   ///Get a column of the tableau
   virtual void getBInvACol(int col, double* vec) const ;
+  
+  ///Get a column of the tableau
+  virtual void getBInvACol(int col, CoinIndexedVector * vec) const ;
   
   ///Get a column of the basis inverse
   virtual void getBInvCol(int col, double* vec) const ;

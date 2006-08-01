@@ -174,8 +174,12 @@ public:
   ///Get a row of the tableau (slack part in slack if not NULL)
   virtual void getBInvARow(int row, double* z, double * slack=NULL) const;
   
-  ///Get a row of the tableau (slack part in slack if not NULL)
-  virtual void getBInvARow(int row, CoinIndexedVector * z, CoinIndexedVector * slack=NULL) const;
+  /** Get a row of the tableau (slack part in slack if not NULL)
+      If keepScaled is true then scale factors not applied after so
+      user has to use coding similar to what is in this method
+  */
+  virtual void getBInvARow(int row, CoinIndexedVector * z, CoinIndexedVector * slack=NULL,
+			   bool keepScaled=false) const;
   
   ///Get a row of the basis inverse
   virtual void getBInvRow(int row, double* z) const;
@@ -185,6 +189,12 @@ public:
   
   ///Get a column of the tableau
   virtual void getBInvACol(int col, CoinIndexedVector * vec) const ;
+  
+  /** Update (i.e. ftran) the vector passed in.
+      Unscaling is applied after - can't be applied before
+  */
+  
+  virtual void getBInvACol(CoinIndexedVector * vec) const ;
   
   ///Get a column of the basis inverse
   virtual void getBInvCol(int col, double* vec) const ;

@@ -3327,7 +3327,8 @@ OsiClpSolverInterface::getBInvARow(int row, double* z, double * slack) const
 }
 //Get a row of the tableau (slack part in slack if not NULL)
 void 
-OsiClpSolverInterface::getBInvARow(int row, CoinIndexedVector * columnArray0, CoinIndexedVector * slack) const
+OsiClpSolverInterface::getBInvARow(int row, CoinIndexedVector * columnArray0, CoinIndexedVector * slack,
+				   bool keepScaled) const
 {
 #ifndef NDEBUG
   int nx = modelPtr_->numberRows();
@@ -3373,7 +3374,7 @@ OsiClpSolverInterface::getBInvARow(int row, CoinIndexedVector * columnArray0, Co
   const int * which;
   double * array;
   // deal with scaling etc
-  if (rowScale) {
+  if (rowScale&&!keepScaled) {
     int j;
     // First columns
     n = columnArray0->getNumElements();
@@ -3556,6 +3557,41 @@ OsiClpSolverInterface::getBInvACol(int col, CoinIndexedVector * rowArray1) const
       rowArray1->insert(col-numberColumns,rowScale[col-numberColumns]);
     }
   }
+  modelPtr_->factorization()->updateColumn(rowArray0,rowArray1,false);
+  // Deal with stuff
+  int n = rowArray1->getNumElements();
+  const int * which = rowArray1->getIndices();
+  double * array = rowArray1->denseVector();
+  for(int j=0; j < n; j++){
+    int k=which[j];
+    // need to know pivot variable for +1/-1 (slack) and row/column scaling
+    int pivot = pivotVariable[k];
+    if (pivot<numberColumns) {
+      if (columnScale) 
+	array[k] *= columnScale[pivot];
+    } else {
+      if (!rowScale) {
+	array[k] = -array[k];
+      } else {
+	array[k] = -array[k]/rowScale[pivot-numberColumns];
+      }
+    }
+  }
+}
+
+//Get an updated column
+void 
+OsiClpSolverInterface::getBInvACol(CoinIndexedVector * rowArray1) const
+{
+  CoinIndexedVector * rowArray0 = modelPtr_->rowArray(0);
+  rowArray0->clear();
+  // get column of matrix
+  int numberRows = modelPtr_->numberRows();
+  int numberColumns = modelPtr_->numberColumns();
+  const int * pivotVariable = modelPtr_->pivotVariable();
+  const double * rowScale = modelPtr_->rowScale();
+  const double * columnScale = modelPtr_->columnScale();
+  // rowArray1 is not a column - so column scale can't be applied before
   modelPtr_->factorization()->updateColumn(rowArray0,rowArray1,false);
   // Deal with stuff
   int n = rowArray1->getNumElements();

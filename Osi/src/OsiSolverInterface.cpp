@@ -1123,7 +1123,9 @@ OsiSolverInterface::writeMpsNative(const char *filename,
    // Get multiplier for objective function - default 1.0
    double * objective = new double[numcols];
    memcpy(objective,getObjCoefficients(),numcols*sizeof(double));
-   if (objSense*getObjSense()<0.0) {
+   //if (objSense*getObjSense()<0.0) {
+   double locObjSense = (objSense == 0 ? 1 : objSense);
+   if(getObjSense() * locObjSense < 0.0) {
      for (int i = 0; i < numcols; ++i) 
        objective [i] = - objective[i];
    }
@@ -1234,7 +1236,9 @@ OsiSolverInterface::writeLpNative(FILE *fp,
    double *objective = new double[numcols];
    const double *curr_obj = getObjCoefficients();
 
-   if(getObjSense() * objSense < 0.0) {
+   //if(getObjSense() * objSense < 0.0) {
+   double locObjSense = (objSense == 0 ? 1 : objSense);
+   if(getObjSense() * locObjSense < 0.0) {
      for (int i=0; i<numcols; i++) {
        objective[i] = - curr_obj[i];
      }

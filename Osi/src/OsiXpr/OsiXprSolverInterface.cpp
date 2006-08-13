@@ -318,7 +318,7 @@ CoinWarmStart* OsiXprSolverInterface::getWarmStart() const
   
   /* OPEN: what does this mean */
   XPRS_CHECKED( XPRSgetintattrib, (prob_,XPRS_PRESOLVESTATE, &pstat) );
-  if ( pstat != 7 ) return NULL;
+  if ( (pstat & 128) == 0 ) return NULL;
 
   CoinWarmStartBasis *ws = NULL;
   int numcols = getNumCols();

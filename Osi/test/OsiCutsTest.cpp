@@ -5,13 +5,13 @@
 #  pragma warning(disable:4786)
 #endif
 
-#include <cassert>
-
-#include "OsiCuts.hpp"
-
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
+
+#include <cassert>
+
+#include "OsiCuts.hpp"
 
 //--------------------------------------------------------------------------
 void

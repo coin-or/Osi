@@ -6,6 +6,10 @@
 #  pragma warning(disable:4786)
 #endif
 
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
+
 #include "OsiConfig.h"
 
 #include <cassert>
@@ -23,10 +27,6 @@
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
 #include "CoinPackedMatrix.hpp"
-
-#ifdef NDEBUG
-#undef NDEBUG
-#endif
 
 //-----------------------------------------------------------------------
 // Test XPRESS-MP solution methods.

@@ -14,6 +14,10 @@
 #  pragma warning(disable:4786)
 #endif
   
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
+
 #include "OsiConfig.h"
 
 #include <cassert>
@@ -32,10 +36,6 @@
 #ifdef COIN_HAS_GLPK
 
 //#############################################################################
-
-#ifdef NDEBUG
-#undef NDEBUG
-#endif
 
 //--------------------------------------------------------------------------
 void

@@ -2882,6 +2882,7 @@ void
 OsiClpSolverInterface::enableSimplexInterface(bool doingPrimal)
 {
   assert (modelPtr_->solveType()==1);
+  int saveIts = modelPtr_->numberIterations_;
   modelPtr_->setSolveType(2);
   if (doingPrimal)
     modelPtr_->setAlgorithm(1);
@@ -2905,6 +2906,7 @@ OsiClpSolverInterface::enableSimplexInterface(bool doingPrimal)
   int returnCode=modelPtr_->startup(0);
   assert (!returnCode);
 #endif
+  modelPtr_->numberIterations_=saveIts;
 }
 
 //Undo whatever setting changes the above method had to make

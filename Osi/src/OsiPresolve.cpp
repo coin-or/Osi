@@ -107,11 +107,14 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
   presolvedModel_=NULL;
   // Messages
   CoinMessages messages = CoinMessage(si.messages().language());
+  // Only go round 100 times even if integer preprocessing
+  int totalPasses=100;
   while (result==-1) {
 
     // make new copy
     delete presolvedModel_;
     presolvedModel_ = si.clone();
+    totalPasses--;
 
     // drop integer information if wanted
     if (!keepIntegers) {
@@ -278,7 +281,7 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
 						     messages)
 						       <<numberChanges
 						       <<CoinMessageEol;
-	  if (!result) {
+	  if (!result&&totalPasses>0) {
 	    result = -1; // round again
 	  }
 	}

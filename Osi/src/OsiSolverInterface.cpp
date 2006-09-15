@@ -1106,7 +1106,9 @@ OsiSolverInterface::writeMpsNative(const char *filename,
 				   const char ** columnNames,
 				   int formatType,
 				   int numberAcross,
-				   double objSense) const
+				   double objSense,
+				   int numberSOS,
+				   const CoinSet * setInfo ) const
 {
    const int numcols = getNumCols();
    char* integrality = new char[numcols];
@@ -1143,7 +1145,8 @@ OsiSolverInterface::writeMpsNative(const char *filename,
    writer.setObjectiveOffset(objOffset);
    delete [] objective;
    delete[] integrality;
-   return writer.writeMps(filename, 1 /*gzip it*/, formatType, numberAcross);
+   return writer.writeMps(filename, 1 /*gzip it*/, formatType, numberAcross,
+			  NULL,numberSOS,setInfo);
 }
 /***********************************************************************/
 void OsiSolverInterface::writeLp(const char * filename,

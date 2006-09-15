@@ -12,9 +12,11 @@
 #include "CoinPackedMatrix.hpp"
 #include "OsiSolverInterface.hpp"
 #include "CoinWarmStartBasis.hpp"
+#include "ClpEventHandler.hpp"
 
 class OsiRowCut;
 class OsiClpUserSolver;
+class CoinSet;
 #ifndef COIN_DBL_MAX
 static const double OsiClpInfinity = DBL_MAX;
 #else
@@ -562,6 +564,12 @@ public:
   /** Set the variables listed in indices (which is of length len) to be
       integer variables */
   virtual void setInteger(const int* indices, int len);
+  /// Number of SOS sets
+  inline int numberSOS() const
+  { return numberSOS_;};
+  /// SOS set info
+  inline const CoinSet * setInfo() const
+  { return setInfo_;};
   //@}
   
   //-------------------------------------------------------------------------
@@ -739,6 +747,9 @@ public:
       number of errors (see OsiMpsReader class) */
   virtual int readMps(const char *filename,
                       const char *extension = "mps") ;
+  /** Read an mps file from the given filename returns
+      number of errors (see OsiMpsReader class) */
+  int readMps(const char *filename,bool keepNames,bool allowErrors);
   
   /** Write the problem into an mps file of the given filename.
       If objSense is non zero then -1.0 forces the code to write a
@@ -943,6 +954,9 @@ public:
   /// Pass in range array
   inline void passInRanges(int * array)
   { whichRange_=array;};
+  /// Pass in sos stuff from AMPl
+  void setSOSData(int numberSOS,const char * type,
+		  const int * start,const int * indices, const double * weights=NULL);
 protected:
   //@}
   
@@ -972,6 +986,10 @@ protected:
       only used in hotstarts so can be casual */
   mutable double * rowActivity_;
   mutable double * columnActivity_;
+  /// Number of SOS sets
+  int numberSOS_;
+  /// SOS set info
+  CoinSet * setInfo_;
   /// Alternate model (hot starts)
   ClpSimplex * smallModel_;
   /// factorization for hot starts
@@ -1046,6 +1064,87 @@ protected:
   mutable unsigned int specialOptions_;
   //@}
 };
+  
+class OsiClpDisasterHandler : public ClpDisasterHandler {
+public:
+  /**@name Virtual methods that the derived classe should provide.
+  */
+  //@{
+  /// Into simplex
+  virtual void intoSimplex();
+  /// Checks if disaster
+  virtual bool check() const ;
+  /// saves information for next attempt
+  virtual void saveInfo();
+  //@}
+  
+  
+  /**@name Constructors, destructor */
+
+  //@{
+  /** Default constructor. */
+  OsiClpDisasterHandler(OsiClpSolverInterface * model = NULL);
+  /** Destructor */
+  virtual ~OsiClpDisasterHandler();
+  // Copy
+  OsiClpDisasterHandler(const OsiClpDisasterHandler&);
+  // Assignment
+  OsiClpDisasterHandler& operator=(const OsiClpDisasterHandler&);
+  /// Clone
+  virtual ClpDisasterHandler * clone() const;
+
+  //@}
+  
+  /**@name Sets/gets */
+
+  //@{
+  /** set model. */
+  void setOsiModel(OsiClpSolverInterface * model);
+  /// Get model
+  inline OsiClpSolverInterface * osiModel() const
+  { return osiModel_;};
+  /// Set where from
+  inline void setWhereFrom(int value)
+  { whereFrom_=value;};
+  /// Get where from
+  inline int whereFrom() const
+  { return whereFrom_;};
+  /// Set phase 
+  inline void setPhase(int value)
+  { phase_=value;};
+  /// Get phase 
+  inline int phase() const
+  { return phase_;};
+  /// are we in trouble
+  inline bool inTrouble() const
+  { return inTrouble_;};
+  //@}
+  
+  
+protected:
+  /**@name Data members
+     The data members are protected to allow access for derived classes. */
+  //@{
+  /// Pointer to model
+  OsiClpSolverInterface * osiModel_;
+  /** Where from 
+      0 dual
+      1 crunch
+  */
+  int whereFrom_;
+  /** phase
+      0 initial
+      1 trying continuing with back in and maybe different perturb
+      2 trying continuing with back in and different scaling
+      3 trying dual from all slack
+      4 trying primal from previous stored basis
+  */
+  int phase_;
+  /// Are we in trouble
+  bool inTrouble_;
+      
+  //@}
+};
 
 //#############################################################################
 /** A function that tests the methods in the OsiClpSolverInterface class. The
@@ -1057,5 +1156,4 @@ protected:
     (has 256M core memory!)... */
 void
 OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
-
 #endif

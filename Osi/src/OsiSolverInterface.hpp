@@ -1011,9 +1011,10 @@ public:
 	Returns non-zero on I/O error
     */
     int writeMpsNative(const char *filename, 
-		  const char ** rowNames, const char ** columnNames,
-		  int formatType=0,int numberAcross=2,
-		 double objSense=0.0) const ;
+		       const char ** rowNames, const char ** columnNames,
+		       int formatType=0,int numberAcross=2,
+		       double objSense=0.0, int numberSOS=0,
+		       const CoinSet * setInfo=NULL) const ;
 
 /***********************************************************************/
 // Lp files 

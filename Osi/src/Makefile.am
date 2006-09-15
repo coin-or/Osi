@@ -77,7 +77,7 @@ endif
 if COIN_HAS_SPX
   SUBDIRS += OsiSpx
 endif
-if COIN_HAS_SYM
+if COIN_HAS_SYMPHONY
   SUBDIRS += OsiSym
 endif
 if COIN_HAS_VOL

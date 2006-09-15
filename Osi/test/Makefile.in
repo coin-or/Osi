@@ -103,14 +103,14 @@ noinst_PROGRAMS = unitTest$(EXEEXT)
 @COIN_HAS_SPX_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiSpx`
 
 @COIN_HAS_SPX_TRUE@am__append_32 = ../src/OsiSpx/libOsiSpx.la
-@COIN_HAS_SYM_TRUE@am__append_33 = OsiSymSolverInterfaceTest.cpp
-@COIN_HAS_SYM_TRUE@am__append_34 = -I`$(CYGPATH_W) $(SYMSRCDIR)/src` \
-@COIN_HAS_SYM_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiSym`
+@COIN_HAS_SYMPHONY_TRUE@am__append_33 = OsiSymSolverInterfaceTest.cpp
+@COIN_HAS_SYMPHONY_TRUE@am__append_34 = -I`$(CYGPATH_W) $(SYMSRCDIR)/src` \
+@COIN_HAS_SYMPHONY_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiSym`
 
-@COIN_HAS_SYM_TRUE@am__append_35 = ../src/OsiSym/libOsiSym.la \
-@COIN_HAS_SYM_TRUE@	$(SYMOBJDIR)/src/libSym.la
+@COIN_HAS_SYMPHONY_TRUE@am__append_35 = ../src/OsiSym/libOsiSym.la \
+@COIN_HAS_SYMPHONY_TRUE@	$(SYMOBJDIR)/src/libSym.la
 
-@COIN_HAS_SYM_TRUE@am__append_36 = `cat $(SYMOBJDIR)/sym_addlibs.txt`
+@COIN_HAS_SYMPHONY_TRUE@am__append_36 = `cat $(SYMOBJDIR)/sym_addlibs.txt`
 @COIN_HAS_VOL_TRUE@am__append_37 = OsiVolSolverInterfaceTest.cpp
 @COIN_HAS_VOL_TRUE@am__append_38 = -I`$(CYGPATH_W) $(VOLSRCDIR)/src` \
 @COIN_HAS_VOL_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiVol`
@@ -164,8 +164,8 @@ am__unitTest_SOURCES_DIST = OsiColCutTest.cpp OsiCutsTest.cpp \
 @COIN_HAS_OSL_TRUE@	OsiOslSolverInterfaceTest.$(OBJEXT)
 @COIN_HAS_SPX_TRUE@am__objects_9 =  \
 @COIN_HAS_SPX_TRUE@	OsiSpxSolverInterfaceTest.$(OBJEXT)
-@COIN_HAS_SYM_TRUE@am__objects_10 =  \
-@COIN_HAS_SYM_TRUE@	OsiSymSolverInterfaceTest.$(OBJEXT)
+@COIN_HAS_SYMPHONY_TRUE@am__objects_10 =  \
+@COIN_HAS_SYMPHONY_TRUE@	OsiSymSolverInterfaceTest.$(OBJEXT)
 @COIN_HAS_VOL_TRUE@am__objects_11 =  \
 @COIN_HAS_VOL_TRUE@	OsiVolSolverInterfaceTest.$(OBJEXT)
 @COIN_HAS_XPR_TRUE@am__objects_12 =  \
@@ -191,8 +191,9 @@ unitTest_OBJECTS = $(am_unitTest_OBJECTS)
 @COIN_HAS_MSK_TRUE@am__DEPENDENCIES_8 = ../src/OsiMsk/libOsiMsk.la
 @COIN_HAS_OSL_TRUE@am__DEPENDENCIES_9 = ../src/OsiOsl/libOsiOsl.la
 @COIN_HAS_SPX_TRUE@am__DEPENDENCIES_10 = ../src/OsiSpx/libOsiSpx.la
-@COIN_HAS_SYM_TRUE@am__DEPENDENCIES_11 = ../src/OsiSym/libOsiSym.la \
-@COIN_HAS_SYM_TRUE@	$(SYMOBJDIR)/src/libSym.la
+@COIN_HAS_SYMPHONY_TRUE@am__DEPENDENCIES_11 =  \
+@COIN_HAS_SYMPHONY_TRUE@	../src/OsiSym/libOsiSym.la \
+@COIN_HAS_SYMPHONY_TRUE@	$(SYMOBJDIR)/src/libSym.la
 @COIN_HAS_VOL_TRUE@am__DEPENDENCIES_12 = ../src/OsiVol/libOsiVol.la \
 @COIN_HAS_VOL_TRUE@	$(VOLOBJDIR)/src/libVol.la
 @COIN_HAS_XPR_TRUE@am__DEPENDENCIES_13 = ../src/OsiXpr/libOsiXpr.la
@@ -271,8 +272,8 @@ COIN_HAS_OSL_FALSE = @COIN_HAS_OSL_FALSE@
 COIN_HAS_OSL_TRUE = @COIN_HAS_OSL_TRUE@
 COIN_HAS_SPX_FALSE = @COIN_HAS_SPX_FALSE@
 COIN_HAS_SPX_TRUE = @COIN_HAS_SPX_TRUE@
-COIN_HAS_SYM_FALSE = @COIN_HAS_SYM_FALSE@
-COIN_HAS_SYM_TRUE = @COIN_HAS_SYM_TRUE@
+COIN_HAS_SYMPHONY_FALSE = @COIN_HAS_SYMPHONY_FALSE@
+COIN_HAS_SYMPHONY_TRUE = @COIN_HAS_SYMPHONY_TRUE@
 COIN_HAS_VOL_FALSE = @COIN_HAS_VOL_FALSE@
 COIN_HAS_VOL_TRUE = @COIN_HAS_VOL_TRUE@
 COIN_HAS_XPR_FALSE = @COIN_HAS_XPR_FALSE@
@@ -375,8 +376,8 @@ SHELL = @SHELL@
 SPXINCDIR = @SPXINCDIR@
 SPXLIB = @SPXLIB@
 STRIP = @STRIP@
-SYMOBJDIR = @SYMOBJDIR@
-SYMSRCDIR = @SYMSRCDIR@
+SYMPHONYOBJDIR = @SYMPHONYOBJDIR@
+SYMPHONYSRCDIR = @SYMPHONYSRCDIR@
 VERSION = @VERSION@
 VOLOBJDIR = @VOLOBJDIR@
 VOLSRCDIR = @VOLSRCDIR@

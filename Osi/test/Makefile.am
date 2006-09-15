@@ -118,7 +118,7 @@ if COIN_HAS_SPX
   unitTest_LDADD += ../src/OsiSpx/libOsiSpx.la
 endif
 
-if COIN_HAS_SYM
+if COIN_HAS_SYMPHONY
   unitTest_SOURCES += OsiSymSolverInterfaceTest.cpp
   AM_CPPFLAGS += -I`$(CYGPATH_W) $(SYMSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiSym`

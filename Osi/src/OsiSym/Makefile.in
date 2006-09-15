@@ -66,7 +66,7 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libOsiSym_la_LIBADD =
-am_libOsiSym_la_OBJECTS = OsiSymSolverInterface.lo
+am_libOsiSym_la_OBJECTS = OsiSymSolverInterface.lo SymWarmStart.lo
 libOsiSym_la_OBJECTS = $(am_libOsiSym_la_OBJECTS)
 depcomp = $(SHELL) $(top_srcdir)/../depcomp
 am__depfiles_maybe = depfiles
@@ -145,8 +145,8 @@ COIN_HAS_OSL_FALSE = @COIN_HAS_OSL_FALSE@
 COIN_HAS_OSL_TRUE = @COIN_HAS_OSL_TRUE@
 COIN_HAS_SPX_FALSE = @COIN_HAS_SPX_FALSE@
 COIN_HAS_SPX_TRUE = @COIN_HAS_SPX_TRUE@
-COIN_HAS_SYM_FALSE = @COIN_HAS_SYM_FALSE@
-COIN_HAS_SYM_TRUE = @COIN_HAS_SYM_TRUE@
+COIN_HAS_SYMPHONY_FALSE = @COIN_HAS_SYMPHONY_FALSE@
+COIN_HAS_SYMPHONY_TRUE = @COIN_HAS_SYMPHONY_TRUE@
 COIN_HAS_VOL_FALSE = @COIN_HAS_VOL_FALSE@
 COIN_HAS_VOL_TRUE = @COIN_HAS_VOL_TRUE@
 COIN_HAS_XPR_FALSE = @COIN_HAS_XPR_FALSE@
@@ -246,8 +246,8 @@ SHELL = @SHELL@
 SPXINCDIR = @SPXINCDIR@
 SPXLIB = @SPXLIB@
 STRIP = @STRIP@
-SYMOBJDIR = @SYMOBJDIR@
-SYMSRCDIR = @SYMSRCDIR@
+SYMPHONYOBJDIR = @SYMPHONYOBJDIR@
+SYMPHONYSRCDIR = @SYMPHONYSRCDIR@
 VERSION = @VERSION@
 VOLOBJDIR = @VOLOBJDIR@
 VOLSRCDIR = @VOLSRCDIR@
@@ -315,7 +315,9 @@ lib_LTLIBRARIES = libOsiSym.la
 
 # List all source files for this library, including headers
 libOsiSym_la_SOURCES = \
-	OsiSymSolverInterface.cpp OsiSymSolverInterface.hpp
+	OsiSymSolverInterface.cpp OsiSymSolverInterface.hpp \
+	OsiSymSolverParameters.hpp \
+	SymWarmStart.cpp SymWarmStart.hpp
 
 
 # This is for libtool (on Windows)
@@ -328,7 +330,7 @@ libOsiSym_la_LDFLAGS = $(LT_LDFLAGS)
 AM_CPPFLAGS = \
 	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(COINUTILSOBJDIR)/inc` \
-	-I`$(CYGPATH_W) $(SYMSRCDIR)/src` \
+	-I`$(CYGPATH_W) $(SYMPHONYSRCDIR)/include` \
 	-I`$(CYGPATH_W) $(srcdir)/..`
 
 
@@ -416,6 +418,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiSymSolverInterface.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SymWarmStart.Plo@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -637,8 +640,6 @@ uninstall-am: uninstall-includeHEADERS uninstall-info-am \
 	uninstall-includeHEADERS uninstall-info-am \
 	uninstall-libLTLIBRARIES
 
-	OsiSymSolverParameters.hpp \
-	SymWarmStart.cpp SymWarmStart.hpp
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

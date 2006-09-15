@@ -17,7 +17,7 @@ lib_LTLIBRARIES = libOsiSym.la
 
 # List all source files for this library, including headers
 libOsiSym_la_SOURCES = \
-	OsiSymSolverInterface.cpp OsiSymSolverInterface.hpp
+	OsiSymSolverInterface.cpp OsiSymSolverInterface.hpp \
 	OsiSymSolverParameters.hpp \
 	SymWarmStart.cpp SymWarmStart.hpp
 
@@ -31,7 +31,7 @@ libOsiSym_la_LDFLAGS = $(LT_LDFLAGS)
 AM_CPPFLAGS = \
 	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(COINUTILSOBJDIR)/inc` \
-	-I`$(CYGPATH_W) $(SYMSRCDIR)/src` \
+	-I`$(CYGPATH_W) $(SYMPHONYSRCDIR)/include` \
 	-I`$(CYGPATH_W) $(srcdir)/..`
 
 # This line is necessary to allow VPATH compilation with MS compilers

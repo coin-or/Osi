@@ -317,6 +317,7 @@ void OsiClpSolverInterface::resolve()
     // Quick check to see if optimal
     modelPtr_->checkSolutionInternal();
     if (modelPtr_->problemStatus()==0) {
+      modelPtr_->setNumberIterations(0);
       return;
     }
   }
@@ -982,9 +983,27 @@ void OsiClpSolverInterface::markHotStart()
 	// make sure auxiliary model won't get deleted
 	modelPtr_->whatsChanged_ |= 511;
       }
-      //if (small->numberIterations()>0)
-      //printf("**** iterated small %d\n",small->numberIterations());
+      if (small->numberIterations()>0&&small->logLevel()>2)
+	printf("**** iterated small %d\n",small->numberIterations());
       //small->setLogLevel(0);
+      // Could be infeasible if forced one way (and other way stopped on iterations)
+      if (small->status()==1) {
+	delete small;
+	delete [] spareArrays_;
+	spareArrays_=NULL;
+	delete ws_;
+	ws_ = dynamic_cast<CoinWarmStartBasis*>(getWarmStart());
+	int numberRows = modelPtr_->numberRows();
+	rowActivity_= new double[numberRows];
+	memcpy(rowActivity_,modelPtr_->primalRowSolution(),
+	       numberRows*sizeof(double));
+	int numberColumns = modelPtr_->numberColumns();
+	columnActivity_= new double[numberColumns];
+	memcpy(columnActivity_,modelPtr_->primalColumnSolution(),
+	       numberColumns*sizeof(double));
+	modelPtr_->setProblemStatus(1);
+	return;
+      }
     }
     smallModel_=small;
     if (modelPtr_->logLevel()<2) smallModel_->setLogLevel(0);

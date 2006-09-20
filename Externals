@@ -1,7 +1,7 @@
-BuildTools    https://projects.coin-or.org/svn/BuildTools/trunk
-Data/Netlib   https://projects.coin-or.org/svn/Data/trunk/Netlib
-Data/Sample   https://projects.coin-or.org/svn/Data/trunk/Sample
-CoinUtils     https://projects.coin-or.org/svn/CoinUtils/trunk/CoinUtils
-Clp           https://projects.coin-or.org/svn/Clp/trunk/Clp
-DyLP          https://projects.coin-or.org/svn/DyLP/trunk/DyLP
-Vol           https://projects.coin-or.org/svn/Vol/trunk/Vol
+BuildTools    https://projects.coin-or.org/svn/BuildTools/releases/0.5.1
+Data/Netlib   https://projects.coin-or.org/svn/Data/releases/1.0.0/Netlib
+Data/Sample   https://projects.coin-or.org/svn/Data/releases/1.0.0/Sample
+CoinUtils     https://projects.coin-or.org/svn/CoinUtils/releases/1.0.0/CoinUtils
+Clp           https://projects.coin-or.org/svn/Clp/releases/1.3.3/Clp
+DyLP  -r109   https://projects.coin-or.org/svn/DyLP/trunk/DyLP
+Vol           https://projects.coin-or.org/svn/Vol/releases/1.0.0/Vol

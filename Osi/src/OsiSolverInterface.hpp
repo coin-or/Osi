@@ -24,6 +24,7 @@ class CoinBuild;
 class CoinModel;
 class OsiSolverBranch;
 class OsiSolverResult;
+class OsiObject;
 #include "CoinFinite.hpp"
 
 //#############################################################################
@@ -282,6 +283,11 @@ public:
       value = dblParam_[key];
       return true;
     }
+    /** We should be able to get an integer tolerance.
+        Until that time just use primal tolerance
+    */
+    inline double getIntegerTolerance() const
+    { return dblParam_[OsiPrimalTolerance];};
     // Get a string parameter
     virtual bool getStrParam(OsiStrParam key, std::string& value) const {
       if (key == OsiLastStrParam) return (false) ;
@@ -1171,6 +1177,50 @@ public:
   {return &messages_;};
   //@}
   //---------------------------------------------------------------------------
+  /**@name Methods for dealing with discontinuities other than integers.
+  
+     Osi should be able to know about SOS and other types.  This is an optional
+     section where such information can be stored.
+
+  */
+  //@{
+    /** \brief Identify integer variables and create corresponding objects.
+  
+      Record integer variables and create an OsiSimpleInteger object for each
+      one.  All existing OsiSimpleInteger objects will be destroyed.
+      If justCount then no objects created and we just store numberIntegers_
+    */
+
+    void findIntegers(bool justCount);
+    /// Get the number of objects
+    inline int numberObjects() const { return numberObjects_;};
+    /// Set the number of objects
+    inline void setNumberObjects(int number) 
+    {  numberObjects_=number;};
+
+    /// Get the array of objects
+    inline OsiObject ** objects() const { return object_;};
+
+    /// Get the specified object
+    const inline OsiObject * object(int which) const { return object_[which];};
+    /// Get the specified object
+    inline OsiObject * modifiableObject(int which) const { return object_[which];};
+
+    /// Delete all object information
+    void deleteObjects();
+
+    /** Add in object information.
+  
+      Objects are cloned; the owner can delete the originals.
+    */
+    void addObjects(int numberObjects, OsiObject ** objects);
+    /** Use current solution to set bounds so current integer feasible solution will stay feasible.
+        Only feasible bounds will be used, even if current solution outside bounds.  The amount of
+        such violation will be returned (and if small can be ignored)
+    */
+    double forceFeasible();
+  //@}
+  //---------------------------------------------------------------------------
 
   /**@name Methods related to testing generated cuts */
   //@{
@@ -1439,6 +1489,13 @@ protected:
   bool defaultHandler_;
   /// Messages
   CoinMessages messages_;
+  /// Number of integers
+  int numberIntegers_;
+  /// Total number of objects
+  int numberObjects_;
+
+  /// Integer and ... information (integer info normally at beginning)
+  OsiObject ** object_;
  //@}
 };
 

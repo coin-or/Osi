@@ -20,6 +20,7 @@ lib_LTLIBRARIES = libOsi.la
 libOsi_la_SOURCES = \
 	OsiConfig.h \
 	OsiAuxInfo.cpp OsiAuxInfo.hpp \
+	OsiBranchingObject.cpp OsiBranchingObject.hpp \
 	OsiColCut.cpp OsiColCut.hpp \
 	OsiCollections.hpp \
 	OsiCut.cpp OsiCut.hpp \
@@ -96,6 +97,7 @@ endif
 include_HEADERS = \
 	../inc/config_osi.h \
 	OsiAuxInfo.hpp \
+	OsiBranchingObject.hpp \
 	OsiColCut.hpp \
 	OsiCollections.hpp \
 	OsiCut.hpp \

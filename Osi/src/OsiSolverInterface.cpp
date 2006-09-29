@@ -21,6 +21,7 @@
 #include "OsiColCut.hpp"
 #include "OsiRowCutDebugger.hpp"
 #include "OsiAuxInfo.hpp"
+#include "OsiBranchingObject.hpp"
 #include <cassert>
 #include "CoinFinite.hpp"
 #include "CoinBuild.hpp"
@@ -112,14 +113,20 @@ OsiSolverInterface::isInteger(int colIndex) const
 int
 OsiSolverInterface::getNumIntegers () const
 {
-  const int numCols = getNumCols() ;
-  int numIntegers = 0 ;
-  for (int i = 0 ; i < numCols ; ++i) {
-    if (!isContinuous(i)) {
-       numIntegers++ ;
+  if (numberIntegers_>=0) {
+    // we already know
+    return numberIntegers_;
+  } else {
+    // work out
+    const int numCols = getNumCols() ;
+    int numIntegers = 0 ;
+    for (int i = 0 ; i < numCols ; ++i) {
+      if (!isContinuous(i)) {
+	numIntegers++ ;
+      }
     }
+    return (numIntegers) ;
   }
-  return (numIntegers) ;
 }
 //-----------------------------------------------------------------------------
 bool 
@@ -894,6 +901,10 @@ OsiSolverInterface::setInitialData()
     hintParam_[hint] = false;
     hintStrength_[hint] = OsiHintIgnore;
   }
+  // objects
+  numberObjects_=0;
+  numberIntegers_=-1;
+  object_=NULL;
 }
 
 //-------------------------------------------------------------------
@@ -918,6 +929,16 @@ OsiSolverInterface::OsiSolverInterface (const OsiSolverInterface & rhs) :
   CoinDisjointCopyN(rhs.strParam_, OsiLastStrParam, strParam_);
   CoinDisjointCopyN(rhs.hintParam_, OsiLastHintParam, hintParam_);
   CoinDisjointCopyN(rhs.hintStrength_, OsiLastHintParam, hintStrength_);
+  // objects
+  numberObjects_=rhs.numberObjects_;
+  numberIntegers_=rhs.numberIntegers_;
+  if (numberObjects_) {
+    object_ = new OsiObject * [numberObjects_];
+    for (int i=0;i<numberObjects_;i++) 
+      object_[i] = rhs.object_[i]->clone();
+  } else {
+    object_=NULL;
+  }
 }
 
 //-------------------------------------------------------------------
@@ -935,6 +956,9 @@ OsiSolverInterface::~OsiSolverInterface ()
     delete handler_;
     handler_ = NULL;
   }
+  for (int i=0;i<numberObjects_;i++) 
+    delete object_[i];
+  delete [] object_;
 }
 
 //----------------------------------------------------------------
@@ -958,17 +982,31 @@ OsiSolverInterface::operator=(const OsiSolverInterface& rhs)
     CoinDisjointCopyN(rhs.hintStrength_, OsiLastHintParam, hintStrength_);
     delete ws_;
     ws_ = NULL;
-     if (defaultHandler_) {
-       delete handler_;
-       handler_ = NULL;
-     }
+    if (defaultHandler_) {
+      delete handler_;
+      handler_ = NULL;
+    }
     defaultHandler_ = rhs.defaultHandler_;
     if (defaultHandler_) {
       handler_ = new CoinMessageHandler(*rhs.handler_);
     } else {
       handler_ = rhs.handler_;
     }
- }
+    // objects
+    int i;
+    for (i=0;i<numberObjects_;i++) 
+      delete object_[i];
+    delete [] object_;
+    numberObjects_=rhs.numberObjects_;
+    numberIntegers_=rhs.numberIntegers_;
+    if (numberObjects_) {
+      object_ = new OsiObject * [numberObjects_];
+      for (i=0;i<numberObjects_;i++) 
+	object_[i] = rhs.object_[i]->clone();
+    } else {
+      object_=NULL;
+    }
+  }
   return *this;
 }
 
@@ -1575,6 +1613,181 @@ OsiSolverInterface::getBasics(int* index) const
   // Throw an exception
   throw CoinError("Needs coding for this interface", "getBasics",
 		  "OsiSolverInterface");
+}
+/* Identify integer variables and create corresponding objects.
+  
+   Record integer variables and create an OsiSimpleInteger object for each
+   one.  All existing OsiSimpleInteger objects will be destroyed.
+   New 
+*/
+void 
+OsiSolverInterface::findIntegers(bool justCount)
+{
+  numberIntegers_=0;
+  int numberColumns = getNumCols();
+  int iColumn;
+  for (iColumn=0;iColumn<numberColumns;iColumn++) {
+    if (isInteger(iColumn)) 
+      numberIntegers_++;
+  }
+  if (justCount) {
+    assert (!numberObjects_);
+    assert (!object_);
+    return;
+  }
+  // delete old integer objects and keep others
+  int nObjects=0;
+  OsiObject ** oldObject = object_;
+  int iObject;
+  for (iObject = 0;iObject<numberObjects_;iObject++) {
+    OsiSimpleInteger * obj =
+      dynamic_cast <OsiSimpleInteger *>(oldObject[iObject]) ;
+    if (obj) 
+      delete oldObject[iObject];
+    else
+      oldObject[nObjects++]=oldObject[iObject];
+  }
+  // make a large enough array for new objects
+  numberObjects_=numberIntegers_+nObjects;
+  if (numberObjects_)
+    object_ = new OsiObject * [numberObjects_];
+  else
+    object_=NULL;
+  /*
+    Walk the variables again, filling in the indices and creating objects for
+    the integer variables. Initially, the objects hold the index and upper &
+    lower bounds.
+  */
+  numberIntegers_=0;
+  for (iColumn=0;iColumn<numberColumns;iColumn++) {
+    if(isInteger(iColumn)) {
+      object_[numberIntegers_] =
+	new OsiSimpleInteger(this,iColumn);
+    }
+  }
+  // Now append other objects
+  memcpy(object_+numberIntegers_,oldObject,nObjects*sizeof(OsiObject *));
+  // Delete old array (just array)
+  delete [] oldObject;
+}
+// Delete all object information
+void 
+OsiSolverInterface::deleteObjects()
+{
+  for (int i=0;i<numberObjects_;i++) 
+    delete object_[i];
+  delete [] object_;
+  object_=NULL;
+  numberObjects_=0;
+}
+
+/* Add in object information.
+  
+   Objects are cloned; the owner can delete the originals.
+*/
+void 
+OsiSolverInterface::addObjects(int numberObjects, OsiObject ** objects)
+{
+  // Create integers if first time
+  if (!numberObjects_)
+    findIntegers(false);
+  /* But if incoming objects inherit from simple integer we just want
+     to replace */
+  int numberColumns = getNumCols();
+  /** mark is -1 if not integer, >=0 if using existing simple integer and
+      >=numberColumns if using new integer */
+  int * mark = new int[numberColumns];
+  int i;
+  for (i=0;i<numberColumns;i++)
+    mark[i]=-1;
+  int newNumberObjects = numberObjects;
+  int newIntegers=0;
+  for (i=0;i<numberObjects;i++) { 
+    OsiSimpleInteger * obj =
+      dynamic_cast <OsiSimpleInteger *>(objects[i]) ;
+    if (obj) {
+      int iColumn = obj->columnNumber();
+      mark[iColumn]=i+numberColumns;
+      newIntegers++;
+    }
+  }
+  // and existing
+  for (i=0;i<numberObjects_;i++) { 
+    OsiSimpleInteger * obj =
+      dynamic_cast <OsiSimpleInteger *>(object_[i]) ;
+    if (obj) {
+      int iColumn = obj->columnNumber();
+      if (mark[iColumn]<0) {
+        newIntegers++;
+        newNumberObjects++;
+        mark[iColumn]=i;
+      }
+    }
+  } 
+  numberIntegers_ = newIntegers;
+  OsiObject ** temp  = new OsiObject * [newNumberObjects];
+  // Put integers first
+  newIntegers=0;
+  numberIntegers_=0;
+  for (i=0;i<numberColumns;i++) {
+    int which = mark[i];
+    if (which>=0) {
+      if (!isInteger(i)) {
+        newIntegers++;
+        setInteger(i);
+      }
+      if (which<numberColumns) {
+        temp[numberIntegers_]=object_[which];
+        object_[which]=NULL;
+      } else {
+        temp[numberIntegers_]=objects[which-numberColumns]->clone();
+      }
+    }
+  }
+  int n=numberIntegers_;
+  // Now rest of old
+  for (i=0;i<numberObjects_;i++) { 
+    if (object_[i]) {
+      OsiSimpleInteger * obj =
+        dynamic_cast <OsiSimpleInteger *>(object_[i]) ;
+      if (obj) {
+        delete object_[i];
+      } else {
+        temp[n++]=object_[i];
+      }
+    }
+  }
+  // and rest of new
+  for (i=0;i<numberObjects;i++) { 
+    OsiSimpleInteger * obj =
+      dynamic_cast <OsiSimpleInteger *>(objects[i]) ;
+    if (!obj) {
+      temp[n]=objects[i]->clone();
+    }
+  }
+  delete [] mark;
+  delete [] object_;
+  object_ = temp;
+  numberObjects_ = newNumberObjects;
+}
+/* Use current solution to set bounds so current integer feasible solution will stay feasible.
+   Only feasible bounds will be used, even if current solution outside bounds.  The amount of
+   such violation will be returned (and if small can be ignored)
+*/
+double 
+OsiSolverInterface::forceFeasible()
+{
+  /*
+    Run through the objects and use feasibleRegion() to set variable bounds
+    so as to fix the variables specified in the objects at their value in this
+    solution. Since the object list contains (at least) one object for every
+    integer variable, this has the effect of fixing all integer variables.
+  */
+  int i;
+  double infeasibility=0.0;
+  for (i=0;i<numberObjects_;i++)
+    infeasibility += object_[i]->feasibleRegion(this);
+  return infeasibility;
 }
 #ifdef CBC_NEXT_VERSION
 /*

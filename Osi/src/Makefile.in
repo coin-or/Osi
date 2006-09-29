@@ -78,7 +78,7 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libOsi_la_LIBADD =
-am_libOsi_la_OBJECTS = OsiAuxInfo.lo OsiColCut.lo OsiCut.lo OsiCuts.lo \
+am_libOsi_la_OBJECTS = OsiAuxInfo.lo OsiBranchingObject.lo OsiColCut.lo OsiCut.lo OsiCuts.lo \
 	OsiOpbdpSolve.lo OsiPresolve.lo OsiRowCut.lo \
 	OsiRowCutDebugger.lo OsiSolverBranch.lo OsiSolverInterface.lo
 libOsi_la_OBJECTS = $(am_libOsi_la_OBJECTS)
@@ -340,6 +340,7 @@ lib_LTLIBRARIES = libOsi.la
 libOsi_la_SOURCES = \
 	OsiConfig.h \
 	OsiAuxInfo.cpp OsiAuxInfo.hpp \
+	OsiBranchingObject.cpp OsiBranchingObject.hpp \
 	OsiColCut.cpp OsiColCut.hpp \
 	OsiCollections.hpp \
 	OsiCut.cpp OsiCut.hpp \
@@ -385,6 +386,7 @@ SUBDIRS = . $(am__append_1) $(am__append_2) $(am__append_3) \
 include_HEADERS = \
 	../inc/config_osi.h \
 	OsiAuxInfo.hpp \
+	OsiBranchingObject.hpp \
 	OsiColCut.hpp \
 	OsiCollections.hpp \
 	OsiCut.hpp \
@@ -477,6 +479,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiAuxInfo.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiBranchingObject.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiColCut.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiCut.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiCuts.Plo@am__quote@

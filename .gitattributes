@@ -16,6 +16,8 @@ Osi/m4/ac_osi_canonical.m4 -text
 Osi/m4/ac_osicbc_config.m4 -text
 Osi/m4/ac_osidylp_options.m4 -text
 Osi/osi_addlibs.txt.in -text
+Osi/src/OsiBranchingObject.cpp -text
+Osi/src/OsiBranchingObject.hpp -text
 /README -text
 /config.guess -text
 /config.sub -text

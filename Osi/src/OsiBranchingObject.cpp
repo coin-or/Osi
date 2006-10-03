@@ -11,11 +11,12 @@
 #include "OsiSolverInterface.hpp"
 #include "OsiBranchingObject.hpp"
 #include "CoinHelperFunctions.hpp"
+#include "CoinError.hpp"
 
 // Default Constructor
 OsiObject::OsiObject() 
   :infeasibility_(0.0),
-   preferredWay_(0),
+   whichWay_(0),
    priority_(1000),
    numberWays_(2)
 {
@@ -31,7 +32,7 @@ OsiObject::~OsiObject ()
 OsiObject::OsiObject ( const OsiObject & rhs)
 {
   infeasibility_ = rhs.infeasibility_;
-  preferredWay_ = rhs.preferredWay_;
+  whichWay_ = rhs.whichWay_;
   priority_ = rhs.priority_;
   numberWays_ = rhs.numberWays_;
 }
@@ -42,7 +43,7 @@ OsiObject::operator=( const OsiObject& rhs)
 {
   if (this!=&rhs) {
     infeasibility_ = rhs.infeasibility_;
-    preferredWay_ = rhs.preferredWay_;
+    whichWay_ = rhs.whichWay_;
     priority_ = rhs.priority_;
     numberWays_ = rhs.numberWays_;
   }
@@ -65,6 +66,23 @@ int
 OsiObject::columnNumber() const
 {
   return -1;
+}
+// Infeasibility - large is 0.5
+double 
+OsiObject::infeasibility(const OsiSolverInterface * solver, int & preferredWay) const
+{
+  OsiBranchingInformation info(solver);
+  return infeasibility(solver,&info,preferredWay);
+}
+/* For the variable(s) referenced by the object,
+   look at the current solution and set bounds to match the solution.
+   Returns measure of how much it had to move solution to make feasible
+*/
+double 
+OsiObject::feasibleRegion(OsiSolverInterface * solver) const 
+{
+  OsiBranchingInformation info(solver);
+  return feasibleRegion(solver,&info);
 }
 // Default Constructor 
 OsiBranchingObject::OsiBranchingObject()
@@ -113,6 +131,93 @@ OsiBranchingObject::operator=( const OsiBranchingObject& rhs)
 
 // Destructor 
 OsiBranchingObject::~OsiBranchingObject ()
+{
+}
+/** Default Constructor
+
+*/
+OsiBranchingInformation::OsiBranchingInformation ()
+  : objectiveValue_(COIN_DBL_MAX),
+    cutoff_(COIN_DBL_MAX),
+    direction_(COIN_DBL_MAX),
+    integerTolerance_(1.0e-7),
+    primalTolerance_(1.0e-7),
+    lower_(NULL),
+    solution_(NULL),
+    upper_(NULL),
+    hotstartSolution_(NULL),
+    numberSolutions_(0),
+    numberBranchingSolutions_(0),
+    depth_(0)
+{
+}
+
+/** Useful constructor
+*/
+OsiBranchingInformation::OsiBranchingInformation (const OsiSolverInterface * solver)
+  :  hotstartSolution_(NULL),
+     numberSolutions_(0),
+     numberBranchingSolutions_(0),
+     depth_(0)
+{
+  direction_ = solver->getObjSense();
+  objectiveValue_ = solver->getObjValue();
+  objectiveValue_ *= direction_;
+  solver->getDblParam(OsiDualObjectiveLimit,cutoff_) ;
+  cutoff_ *= direction_;
+  integerTolerance_ = solver->getIntegerTolerance();
+  solver->getDblParam(OsiPrimalTolerance,primalTolerance_) ;
+  lower_ = solver->getColLower();
+  solution_ = solver->getColSolution();
+  upper_ = solver->getColUpper();
+}
+// Copy constructor 
+OsiBranchingInformation::OsiBranchingInformation ( const OsiBranchingInformation & rhs)
+{
+  objectiveValue_ = rhs.objectiveValue_;
+  cutoff_ = rhs.cutoff_;
+  direction_ = rhs.direction_;
+  integerTolerance_ = rhs.integerTolerance_;
+  primalTolerance_ = rhs.primalTolerance_;
+  lower_ = rhs.lower_;
+  solution_ = rhs.solution_;
+  upper_ = rhs.upper_;
+  hotstartSolution_ = rhs.hotstartSolution_;
+  numberSolutions_ = rhs.numberSolutions_;
+  numberBranchingSolutions_ = rhs.numberBranchingSolutions_;
+  depth_ = rhs.depth_;
+}
+
+// Clone
+OsiBranchingInformation *
+OsiBranchingInformation::clone() const
+{
+  return new OsiBranchingInformation(*this);
+}
+
+// Assignment operator 
+OsiBranchingInformation & 
+OsiBranchingInformation::operator=( const OsiBranchingInformation& rhs)
+{
+  if (this!=&rhs) {
+    objectiveValue_ = rhs.objectiveValue_;
+    cutoff_ = rhs.cutoff_;
+    direction_ = rhs.direction_;
+    integerTolerance_ = rhs.integerTolerance_;
+    primalTolerance_ = rhs.primalTolerance_;
+    lower_ = rhs.lower_;
+    solution_ = rhs.solution_;
+    upper_ = rhs.upper_;
+    hotstartSolution_ = rhs.hotstartSolution_;
+    numberSolutions_ = rhs.numberSolutions_;
+    numberBranchingSolutions_ = rhs.numberBranchingSolutions_;
+    depth_ = rhs.depth_;
+  }
+  return *this;
+}
+
+// Destructor 
+OsiBranchingInformation::~OsiBranchingInformation ()
 {
 }
 /********* Simple Integers *******************************/
@@ -184,25 +289,47 @@ OsiSimpleInteger::operator=( const OsiSimpleInteger& rhs)
 OsiSimpleInteger::~OsiSimpleInteger ()
 {
 }
+/* Reset variable bounds to their original values.
+   
+Bounds may be tightened, so it may be good to be able to reset them to
+their original values.
+*/
+void 
+OsiSimpleInteger::resetBounds(const OsiSolverInterface * solver) 
+{
+  originalLower_ = solver->getColLower()[columnNumber_] ;
+  originalUpper_ = solver->getColUpper()[columnNumber_] ;
+}
+// Redoes data when sequence numbers change
+void 
+OsiSimpleInteger::resetSequenceEtc(int numberColumns, const int * originalColumns)
+{
+  int i;
+  for (i=0;i<numberColumns;i++) {
+    if (originalColumns[i]==columnNumber_)
+      break;
+  }
+  if (i<numberColumns)
+    columnNumber_=i;
+  else
+    abort(); // should never happen
+}
 
 // Infeasibility - large is 0.5
 double 
-OsiSimpleInteger::infeasibility(const OsiSolverInterface * solver, int & preferredWay) const
+OsiSimpleInteger::infeasibility(const OsiSolverInterface * solver, 
+				const OsiBranchingInformation * info, int & preferredWay) const
 {
-  const double * solution = solver->getColSolution();
-  const double * lower = solver->getColLower();
-  const double * upper = solver->getColUpper();
-  double value = solution[columnNumber_];
-  value = CoinMax(value, lower[columnNumber_]);
-  value = CoinMin(value, upper[columnNumber_]);
+  double value = info->solution_[columnNumber_];
+  value = CoinMax(value, info->lower_[columnNumber_]);
+  value = CoinMin(value, info->upper_[columnNumber_]);
   double nearest = floor(value+(1.0-0.5));
-  double integerTolerance = solver->getIntegerTolerance();
   if (nearest>value) 
     preferredWay=1;
   else
     preferredWay=-1;
   double weight = fabs(value-nearest);
-  if (fabs(value-nearest)<=integerTolerance) 
+  if (fabs(value-nearest)<=info->integerTolerance_) 
     return 0.0;
   else
     return weight;
@@ -214,14 +341,12 @@ OsiSimpleInteger::infeasibility(const OsiSolverInterface * solver, int & preferr
     nearest integer value.
 */
 double
-OsiSimpleInteger::feasibleRegion(OsiSolverInterface * solver) const
+OsiSimpleInteger::feasibleRegion(OsiSolverInterface * solver,
+				 const OsiBranchingInformation * info) const
 {
-  const double * lower = solver->getColLower();
-  const double * upper = solver->getColUpper();
-  const double * solution = solver->getColSolution();
-  double value = solution[columnNumber_];
-  double newValue = CoinMax(value, lower[columnNumber_]);
-  newValue = CoinMin(newValue, upper[columnNumber_]);
+  double value = info->solution_[columnNumber_];
+  double newValue = CoinMax(value, info->lower_[columnNumber_]);
+  newValue = CoinMin(newValue, info->upper_[columnNumber_]);
   newValue = floor(newValue+0.5);
   solver->setColLower(columnNumber_,newValue);
   solver->setColUpper(columnNumber_,newValue);
@@ -332,7 +457,7 @@ OsiIntegerBranchingObject::~OsiIntegerBranchingObject ()
   Returns change in guessed objective on next branch
 */
 double
-OsiIntegerBranchingObject::branch()
+OsiIntegerBranchingObject::branch(bool normalBranch)
 {
   const OsiSimpleInteger * obj =
     dynamic_cast <const OsiSimpleInteger *>(originalObject_) ;

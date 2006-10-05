@@ -232,7 +232,7 @@ public:
 	     strong branching is also passed.
 	     Returns change in guessed objective on next branch
   */
-  virtual double branch(bool normalBranch=false)=0;
+  virtual double branch()=0;
   /** \brief Return true if branch should fix variables
   */
   virtual bool boundBranch() const 
@@ -262,6 +262,9 @@ public:
   /// Set pointer back to object which created
   inline void setOriginalObject(const OsiObject * object)
   {originalObject_=object;};
+  /** \brief Print something about branch - only if log level high
+  */
+  virtual void print() const {};
 
 protected:
 
@@ -466,7 +469,7 @@ public:
 	     strong branching is also passed.
 	     Returns change in guessed objective on next branch
   */
-  virtual double branch(bool normalBranch=false);
+  virtual double branch();
 
 protected:
   // Probably could get away with just value which is already stored 

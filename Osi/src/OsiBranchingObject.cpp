@@ -457,7 +457,7 @@ OsiIntegerBranchingObject::~OsiIntegerBranchingObject ()
   Returns change in guessed objective on next branch
 */
 double
-OsiIntegerBranchingObject::branch(bool normalBranch)
+OsiIntegerBranchingObject::branch()
 {
   const OsiSimpleInteger * obj =
     dynamic_cast <const OsiSimpleInteger *>(originalObject_) ;

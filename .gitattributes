@@ -18,6 +18,8 @@ Osi/m4/ac_osidylp_options.m4 -text
 Osi/osi_addlibs.txt.in -text
 Osi/src/OsiBranchingObject.cpp -text
 Osi/src/OsiBranchingObject.hpp -text
+Osi/src/OsiChooseVariable.cpp -text
+Osi/src/OsiChooseVariable.hpp -text
 /README -text
 /config.guess -text
 /config.sub -text

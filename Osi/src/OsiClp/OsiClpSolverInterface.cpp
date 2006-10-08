@@ -31,6 +31,12 @@
 #include "ClpPresolve.hpp"
 #include "CoinLpIO.hpp"
 static double totalTime=0.0;
+//#define SAVE_MODEL 1
+#ifdef SAVE_MODEL
+static int resolveTry=0;
+static int loResolveTry=0;
+static int hiResolveTry=9999999;
+#endif
 //#############################################################################
 // Solve methods
 //#############################################################################
@@ -354,6 +360,17 @@ void OsiClpSolverInterface::resolve()
   //printf("basis before dual\n");
   //basis_.print();
   setBasis(basis_,modelPtr_);
+#ifdef SAVE_MODEL
+  resolveTry++;
+#if SAVE_MODEL > 1
+  if (resolveTry>=loResolveTry&&
+      resolveTry<=hiResolveTry) {
+    char fileName[20];
+    sprintf(fileName,"save%d.mod",resolveTry);
+    modelPtr_->saveModel(fileName);
+  }
+#endif
+#endif
   // set reasonable defaults
   // Switch off printing if asked to
   gotHint = (getHintParam(OsiDoReducePrint,takeHint,strength));
@@ -601,6 +618,12 @@ void OsiClpSolverInterface::resolve()
     modelPtr_->computeObjectiveValue();
   if (lastAlgorithm_<1||lastAlgorithm_>2)
     lastAlgorithm_=1;
+#ifdef SAVE_MODEL
+  if (resolveTry>=loResolveTry&&
+      resolveTry<=hiResolveTry) {
+    printf("resolve %d took %d iterations - algorithm %d\n",resolveTry,modelPtr_->numberIterations(),lastAlgorithm_);
+  }
+#endif
 }
 /* Sets up solver for repeated use by Osi interface.
    The normal usage does things like keeping factorization around so can be used.

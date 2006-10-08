@@ -1661,7 +1661,7 @@ OsiSolverInterface::findIntegers(bool justCount)
   numberIntegers_=0;
   for (iColumn=0;iColumn<numberColumns;iColumn++) {
     if(isInteger(iColumn)) {
-      object_[numberIntegers_] =
+      object_[numberIntegers_++] =
 	new OsiSimpleInteger(this,iColumn);
     }
   }
@@ -1721,7 +1721,13 @@ OsiSolverInterface::addObjects(int numberObjects, OsiObject ** objects)
         newIntegers++;
         newNumberObjects++;
         mark[iColumn]=i;
+      } else {
+	// But delete existing
+	delete object_[i];
+	object_[i]=NULL;
       }
+    } else {
+      newNumberObjects++;
     }
   } 
   numberIntegers_ = newIntegers;
@@ -1738,10 +1744,10 @@ OsiSolverInterface::addObjects(int numberObjects, OsiObject ** objects)
       }
       if (which<numberColumns) {
         temp[numberIntegers_]=object_[which];
-        object_[which]=NULL;
       } else {
         temp[numberIntegers_]=objects[which-numberColumns]->clone();
       }
+      numberIntegers_++;
     }
   }
   int n=numberIntegers_;
@@ -1750,9 +1756,7 @@ OsiSolverInterface::addObjects(int numberObjects, OsiObject ** objects)
     if (object_[i]) {
       OsiSimpleInteger * obj =
         dynamic_cast <OsiSimpleInteger *>(object_[i]) ;
-      if (obj) {
-        delete object_[i];
-      } else {
+      if (!obj) {
         temp[n++]=object_[i];
       }
     }
@@ -1769,6 +1773,7 @@ OsiSolverInterface::addObjects(int numberObjects, OsiObject ** objects)
   delete [] object_;
   object_ = temp;
   numberObjects_ = newNumberObjects;
+  assert (n==numberObjects_);
 }
 /* Use current solution to set bounds so current integer feasible solution will stay feasible.
    Only feasible bounds will be used, even if current solution outside bounds.  The amount of
@@ -1784,9 +1789,10 @@ OsiSolverInterface::forceFeasible()
     integer variable, this has the effect of fixing all integer variables.
   */
   int i;
+  const OsiBranchingInformation info(this);
   double infeasibility=0.0;
   for (i=0;i<numberObjects_;i++)
-    infeasibility += object_[i]->feasibleRegion(this);
+    infeasibility += object_[i]->feasibleRegion(this,&info);
   return infeasibility;
 }
 #ifdef CBC_NEXT_VERSION

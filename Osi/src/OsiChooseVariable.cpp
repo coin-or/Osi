@@ -13,19 +13,24 @@
 #include "OsiSolverBranch.hpp"
 #include "CoinWarmStartBasis.hpp"
 #include "CoinTime.hpp"
+#include "CoinSort.hpp"
 #include "OsiChooseVariable.hpp"
 using namespace std;
 
 OsiChooseVariable::OsiChooseVariable() :
   goodObjectiveValue_(COIN_DBL_MAX),
+  upChange_(0.0),
+  downChange_(0.0),
   goodSolution_(NULL),
   list_(NULL),
   useful_(NULL),
   solver_(NULL),
-  state_(-1),
+  status_(-1),
+  bestObjectIndex_(-1),
   numberUnsatisfied_(0),
   numberStrong_(0),
   numberOnList_(0),
+  numberStrongDone_(0),
   trustStrongForBound_(true),
   trustStrongForSolution_(true)
 {
@@ -33,12 +38,16 @@ OsiChooseVariable::OsiChooseVariable() :
 
 OsiChooseVariable::OsiChooseVariable(const OsiSolverInterface * solver) :
   goodObjectiveValue_(COIN_DBL_MAX),
+  upChange_(0.0),
+  downChange_(0.0),
   goodSolution_(NULL),
   solver_(solver),
-  state_(-1),
+  status_(-1),
+  bestObjectIndex_(-1),
   numberUnsatisfied_(0),
   numberStrong_(0),
   numberOnList_(0),
+  numberStrongDone_(0),
   trustStrongForBound_(true),
   trustStrongForSolution_(true)
 {
@@ -51,10 +60,14 @@ OsiChooseVariable::OsiChooseVariable(const OsiSolverInterface * solver) :
 OsiChooseVariable::OsiChooseVariable(const OsiChooseVariable & rhs) 
 {  
   goodObjectiveValue_ = rhs.goodObjectiveValue_;
-  state_ = rhs.state_;
+  upChange_ = rhs.upChange_;
+  downChange_ = rhs.downChange_;
+  status_ = rhs.status_;
+  bestObjectIndex_ = rhs.bestObjectIndex_;
   numberUnsatisfied_ = rhs.numberUnsatisfied_;
   numberStrong_ = rhs.numberStrong_;
   numberOnList_ = rhs.numberOnList_;
+  numberStrongDone_ = rhs.numberStrongDone_;
   trustStrongForBound_ = rhs.trustStrongForBound_;
   trustStrongForSolution_ = rhs.trustStrongForSolution_;
   solver_ = rhs.solver_;
@@ -83,10 +96,14 @@ OsiChooseVariable::operator=(const OsiChooseVariable & rhs)
     delete [] list_;
     delete [] useful_;
     goodObjectiveValue_ = rhs.goodObjectiveValue_;
-    state_ = rhs.state_;
+    upChange_ = rhs.upChange_;
+    downChange_ = rhs.downChange_;
+    status_ = rhs.status_;
+    bestObjectIndex_ = rhs.bestObjectIndex_;
     numberUnsatisfied_ = rhs.numberUnsatisfied_;
     numberStrong_ = rhs.numberStrong_;
     numberOnList_ = rhs.numberOnList_;
+    numberStrongDone_ = rhs.numberStrongDone_;
     trustStrongForBound_ = rhs.trustStrongForBound_;
     trustStrongForSolution_ = rhs.trustStrongForSolution_;
     solver_ = rhs.solver_;
@@ -123,15 +140,116 @@ OsiChooseVariable::clone() const
 {
   return new OsiChooseVariable(*this);
 }
+// Set solver and redo arrays
+void 
+OsiChooseVariable::setSolver (const OsiSolverInterface * solver) 
+{
+  solver_ = solver;
+  delete [] list_;
+  delete [] useful_;
+  // create useful arrays
+  int numberObjects = solver_->numberObjects();
+  list_ = new int [numberObjects];
+  useful_ = new double [numberObjects];
+}
 
 
 // Initialize
-void 
-OsiChooseVariable::initialize ( OsiBranchingInformation *info)
+int 
+OsiChooseVariable::setupList ( OsiBranchingInformation *info, bool initialize)
 {
-  state_=0;
-  assert (!goodSolution_);
-  goodObjectiveValue_ = COIN_DBL_MAX;
+  if (initialize) {
+    status_=-2;
+    delete [] goodSolution_;
+    bestObjectIndex_=-1;
+    numberStrongDone_=0;
+    goodSolution_ = NULL;
+    goodObjectiveValue_ = COIN_DBL_MAX;
+  }
+  numberOnList_=0;
+  numberUnsatisfied_=0;
+  int numberObjects = solver_->numberObjects();
+  assert (numberObjects);
+  double check = 0.0;
+  int checkIndex=0;
+  int bestPriority=INT_MAX;
+  // pretend one strong even if none
+  int maximumStrong= numberStrong_ ? numberStrong_ : 1;
+  int putOther = numberObjects;
+  int i;
+  for (i=0;i<maximumStrong;i++) {
+    list_[i]=-1;
+    useful_[i]=0.0;
+  }
+  OsiObject ** object = info->solver_->objects();
+  for (int i=0;i<numberObjects;i++) {
+    int way;
+    double value = object[i]->infeasibility(info,way);
+    if (value>0.0) {
+      numberUnsatisfied_++;
+      int priorityLevel = object[i]->priority();
+      // Better priority? Flush choices.
+      if (priorityLevel<bestPriority) {
+	for (int j=0;j<maximumStrong;j++) {
+	  if (list_[j]>=0) {
+	    int iObject = list_[j];
+	    list_[j]=-1;
+	    useful_[j]=0.0;
+	    list_[--putOther]=iObject;
+	  }
+	}
+	bestPriority = priorityLevel;
+	check=0.0;
+      } 
+      if (priorityLevel==bestPriority) {
+	if (value>check) {
+	  //add to list
+	  int iObject = list_[checkIndex];
+	  if (iObject>=0)
+	    list_[--putOther]=iObject;  // to end
+	  list_[checkIndex]=i;
+	  useful_[checkIndex]=value;
+	  // find worst
+	  check=COIN_DBL_MAX;
+	  for (int j=0;j<maximumStrong;j++) {
+	    if (list_[j]>=0) {
+	      if (useful_[j]<check) {
+		check=useful_[j];
+		checkIndex=j;
+	      }
+	    } else {
+	      check=0.0;
+	      checkIndex = j;
+	      break;
+	    }
+	  }
+	} else {
+	  // to end
+	  list_[--putOther]=i;
+	}
+      }
+    }
+  }
+  // Get list
+  numberOnList_=0;
+  for (i=0;i<maximumStrong;i++) {
+    if (list_[i]>=0) {
+      list_[numberOnList_]=list_[i];
+      useful_[numberOnList_++]=-useful_[i];
+    }
+  }
+  if (numberOnList_) {
+    // Sort 
+    CoinSort_2(useful_,useful_+numberOnList_,list_);
+    // move others
+    i = numberOnList_;
+    for (;putOther<numberObjects;putOther++) 
+      list_[i++]=list_[putOther];
+    assert (i==numberUnsatisfied_);
+    if (!numberStrong_)
+      numberOnList_=0;
+  } 
+  return numberUnsatisfied_;
 }
 /* Choose a variable
    Returns - 
@@ -148,11 +266,22 @@ OsiChooseVariable::initialize ( OsiBranchingInformation *info)
 int 
 OsiChooseVariable::chooseVariable( OsiBranchingInformation *info)
 {
+  if (numberUnsatisfied_) {
+    bestObjectIndex_=list_[0];
+    return 0;
+  } else {
+    return 1;
+  }
 }
-// Finish - deletes any solution etc
+// Given a candidate (bestObjectIndex_) fill in useful information e.g. estimates
 void 
-OsiChooseVariable::finalize()
+OsiChooseVariable::updateInformation( OsiBranchingInformation *info)
 {
-  state_=0;
-  delete [] goodSolution_;
+  if (bestObjectIndex_>=0) {
+    assert (bestObjectIndex_<solver_->numberObjects());
+    OsiObject ** object = info->solver_->objects();
+    upChange_ = object[bestObjectIndex_]->upEstimate();
+    downChange_ = object[bestObjectIndex_]->downEstimate();
+  }  
 }
+		

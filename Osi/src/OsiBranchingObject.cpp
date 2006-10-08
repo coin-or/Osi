@@ -72,7 +72,7 @@ double
 OsiObject::infeasibility(const OsiSolverInterface * solver, int & preferredWay) const
 {
   OsiBranchingInformation info(solver);
-  return infeasibility(solver,&info,preferredWay);
+  return infeasibility(&info,preferredWay);
 }
 /* For the variable(s) referenced by the object,
    look at the current solution and set bounds to match the solution.
@@ -133,6 +133,15 @@ OsiBranchingObject::operator=( const OsiBranchingObject& rhs)
 OsiBranchingObject::~OsiBranchingObject ()
 {
 }
+// For debug
+int 
+OsiBranchingObject::columnNumber() const
+{
+  if (originalObject_)
+    return originalObject_->columnNumber();
+  else
+    return -1;
+}
 /** Default Constructor
 
 */
@@ -142,6 +151,7 @@ OsiBranchingInformation::OsiBranchingInformation ()
     direction_(COIN_DBL_MAX),
     integerTolerance_(1.0e-7),
     primalTolerance_(1.0e-7),
+    solver_(NULL),
     lower_(NULL),
     solution_(NULL),
     upper_(NULL),
@@ -155,21 +165,22 @@ OsiBranchingInformation::OsiBranchingInformation ()
 /** Useful constructor
 */
 OsiBranchingInformation::OsiBranchingInformation (const OsiSolverInterface * solver)
-  :  hotstartSolution_(NULL),
-     numberSolutions_(0),
-     numberBranchingSolutions_(0),
-     depth_(0)
+  : solver_(solver),
+    hotstartSolution_(NULL),
+    numberSolutions_(0),
+    numberBranchingSolutions_(0),
+    depth_(0)
 {
-  direction_ = solver->getObjSense();
-  objectiveValue_ = solver->getObjValue();
+  direction_ = solver_->getObjSense();
+  objectiveValue_ = solver_->getObjValue();
   objectiveValue_ *= direction_;
-  solver->getDblParam(OsiDualObjectiveLimit,cutoff_) ;
+  solver_->getDblParam(OsiDualObjectiveLimit,cutoff_) ;
   cutoff_ *= direction_;
-  integerTolerance_ = solver->getIntegerTolerance();
-  solver->getDblParam(OsiPrimalTolerance,primalTolerance_) ;
-  lower_ = solver->getColLower();
-  solution_ = solver->getColSolution();
-  upper_ = solver->getColUpper();
+  integerTolerance_ = solver_->getIntegerTolerance();
+  solver_->getDblParam(OsiPrimalTolerance,primalTolerance_) ;
+  lower_ = solver_->getColLower();
+  solution_ = solver_->getColSolution();
+  upper_ = solver_->getColUpper();
 }
 // Copy constructor 
 OsiBranchingInformation::OsiBranchingInformation ( const OsiBranchingInformation & rhs)
@@ -179,6 +190,7 @@ OsiBranchingInformation::OsiBranchingInformation ( const OsiBranchingInformation
   direction_ = rhs.direction_;
   integerTolerance_ = rhs.integerTolerance_;
   primalTolerance_ = rhs.primalTolerance_;
+  solver_ = rhs.solver_;
   lower_ = rhs.lower_;
   solution_ = rhs.solution_;
   upper_ = rhs.upper_;
@@ -317,22 +329,23 @@ OsiSimpleInteger::resetSequenceEtc(int numberColumns, const int * originalColumn
 
 // Infeasibility - large is 0.5
 double 
-OsiSimpleInteger::infeasibility(const OsiSolverInterface * solver, 
-				const OsiBranchingInformation * info, int & preferredWay) const
+OsiSimpleInteger::infeasibility(const OsiBranchingInformation * info, int & whichWay) const
 {
   double value = info->solution_[columnNumber_];
   value = CoinMax(value, info->lower_[columnNumber_]);
   value = CoinMin(value, info->upper_[columnNumber_]);
   double nearest = floor(value+(1.0-0.5));
-  if (nearest>value) 
-    preferredWay=1;
-  else
-    preferredWay=-1;
-  double weight = fabs(value-nearest);
-  if (fabs(value-nearest)<=info->integerTolerance_) 
+  if (nearest>value) { 
+    whichWay=1;
+  } else {
+    whichWay=0;
+  }
+  infeasibility_ = fabs(value-nearest);
+  whichWay_=whichWay;
+  if (infeasibility_<=info->integerTolerance_) 
     return 0.0;
   else
-    return weight;
+    return infeasibility_;
 }
 
 // This looks at solution and sets bounds to contain solution
@@ -381,6 +394,24 @@ OsiSimpleInteger::createBranch(OsiSolverInterface * solver, int way) const
   OsiBranchingObject * branch = new OsiIntegerBranchingObject(solver,this,way,
 					     value);
   return branch;
+}
+// Return "down" estimate
+double 
+OsiSimpleInteger::downEstimate() const
+{
+  if (whichWay_)
+    return 1.0-infeasibility_;
+  else
+    return infeasibility_;
+}
+// Return "up" estimate
+double 
+OsiSimpleInteger::upEstimate() const
+{
+  if (!whichWay_)
+    return 1.0-infeasibility_;
+  else
+    return infeasibility_;
 }
 
 // Default Constructor 
@@ -463,7 +494,7 @@ OsiIntegerBranchingObject::branch()
     dynamic_cast <const OsiSimpleInteger *>(originalObject_) ;
   assert (obj);
   int iColumn = obj->columnNumber();
-  int way = (!branchIndex_) ? firstBranch_ : -firstBranch_;
+  int way = (!branchIndex_) ? (2*firstBranch_-1) : -(2*firstBranch_-1);
   if (way<0) {
 #ifdef OSI_DEBUG
   { double olb,oub ;

@@ -71,7 +71,8 @@ public:
     This is some measure of the infeasibility of the object. 0.0 
     indicates that the object is satisfied.
   
-    The preferred branching direction is returned in way,
+    The preferred branching direction is returned in whichWay, where for
+    normal two-way branching 0 is down, 1 is up
   
     This is used to prepare for strong branching but should also think of
     case when no strong branching
@@ -84,10 +85,9 @@ public:
 
     Default for this just calls infeasibility with OsiBranchingInformation
   */
-  virtual double infeasibility(const OsiSolverInterface * solver,int &preferredWay) const ;
+  virtual double infeasibility(const OsiSolverInterface * solver,int &whichWay) const ;
   // Faster version when more information available
-  virtual double infeasibility(const OsiSolverInterface * solver,
-			       const OsiBranchingInformation * info, int &preferredWay) const =0;
+  virtual double infeasibility(const OsiBranchingInformation * info, int &whichWay) const =0;
   
   /** For the variable(s) referenced by the object,
       look at the current solution and set bounds to match the solution.
@@ -136,7 +136,7 @@ public:
       then way=0 means down and 1 means up, otherwise
       way points to preferred branch
   */
-  inline int preferredWay() const
+  inline int whichWay() const
   { return whichWay_;};
   /// Return infeasibility
   inline double infeasibility() const
@@ -262,6 +262,8 @@ public:
   /// Set pointer back to object which created
   inline void setOriginalObject(const OsiObject * object)
   {originalObject_=object;};
+  /// For debug
+  int columnNumber() const;
   /** \brief Print something about branch - only if log level high
   */
   virtual void print() const {};
@@ -326,6 +328,8 @@ public:
   double integerTolerance_;
   /// Primal tolerance
   double primalTolerance_;
+  /// Pointer to solver
+  const OsiSolverInterface * solver_;
   /// Pointer to current lower bounds on columns
   const double * lower_;
   /// Pointer to current solution
@@ -370,8 +374,7 @@ public:
   ~OsiSimpleInteger ();
   
   /// Infeasibility - large is 0.5
-  virtual double infeasibility(const OsiSolverInterface * solver, 
-			       const OsiBranchingInformation * info, int & preferredWay) const;
+  virtual double infeasibility(const OsiBranchingInformation * info, int & whichWay) const;
 
   /** Set bounds to fix the variable at the current (integer) value.
 
@@ -414,6 +417,10 @@ public:
   /**  Change column numbers after preprocessing
    */
   virtual void resetSequenceEtc(int numberColumns, const int * originalColumns);
+  /// Return "up" estimate (default 1.0e-5)
+  virtual double upEstimate() const;
+  /// Return "down" estimate (default 1.0e-5)
+  virtual double downEstimate() const;
   
 
 protected:
@@ -431,7 +438,7 @@ protected:
 
   This object can specify a two-way branch on an integer variable. For each
   arm of the branch, the upper and lower bounds on the variable can be
-  independently specified.
+  independently specified. 0 -> down, 1-> up.
 */
 
 class OsiIntegerBranchingObject : public OsiBranchingObject {

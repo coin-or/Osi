@@ -21,10 +21,6 @@
 
 #include "OsiSolverInterface.hpp"
 #include "OsiSymSolverParameters.hpp"
-/* Switch off part of PROTO as seems to cause problems on some architectures.
-   and not needed in interface ? */
-#define HAS_SRANDOM
-#define HAS_RANDOM
 #include "SymWarmStart.hpp"
 #include "symphony_api.h"
 

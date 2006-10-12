@@ -11,6 +11,7 @@
 #include "OsiSolverInterface.hpp"
 #include "OsiBranchingObject.hpp"
 #include "CoinHelperFunctions.hpp"
+#include "CoinSort.hpp"
 #include "CoinError.hpp"
 
 // Default Constructor
@@ -232,6 +233,46 @@ OsiBranchingInformation::operator=( const OsiBranchingInformation& rhs)
 OsiBranchingInformation::~OsiBranchingInformation ()
 {
 }
+// Default Constructor 
+OsiTwoWayBranchingObject::OsiTwoWayBranchingObject()
+  :OsiBranchingObject()
+{
+  firstBranch_=0;
+}
+
+// Useful constructor
+OsiTwoWayBranchingObject::OsiTwoWayBranchingObject (OsiSolverInterface * solver, 
+						      const OsiObject * object,
+						      int way , double value)
+  :OsiBranchingObject(solver,value)
+{
+  originalObject_ = object;
+  firstBranch_=way;
+}
+  
+
+// Copy constructor 
+OsiTwoWayBranchingObject::OsiTwoWayBranchingObject ( const OsiTwoWayBranchingObject & rhs) :OsiBranchingObject(rhs)
+{
+  firstBranch_=rhs.firstBranch_;
+}
+
+// Assignment operator 
+OsiTwoWayBranchingObject & 
+OsiTwoWayBranchingObject::operator=( const OsiTwoWayBranchingObject& rhs)
+{
+  if (this != &rhs) {
+    OsiBranchingObject::operator=(rhs);
+    firstBranch_=rhs.firstBranch_;
+  }
+  return *this;
+}
+
+// Destructor 
+OsiTwoWayBranchingObject::~OsiTwoWayBranchingObject ()
+{
+}
+
 /********* Simple Integers *******************************/
 /** Default Constructor
 
@@ -377,19 +418,15 @@ OsiSimpleInteger::columnNumber() const
 
 // Creates a branching object
 OsiBranchingObject * 
-OsiSimpleInteger::createBranch(OsiSolverInterface * solver, int way) const 
+OsiSimpleInteger::createBranch(OsiSolverInterface * solver, const OsiBranchingInformation * info, int way) const 
 {
-  const double * solution = solver->getColSolution();
-  const double * lower = solver->getColLower();
-  const double * upper = solver->getColUpper();
-  double value = solution[columnNumber_];
-  value = CoinMax(value, lower[columnNumber_]);
-  value = CoinMin(value, upper[columnNumber_]);
-  assert (upper[columnNumber_]>lower[columnNumber_]);
+  double value = info->solution_[columnNumber_];
+  value = CoinMax(value, info->lower_[columnNumber_]);
+  value = CoinMin(value, info->upper_[columnNumber_]);
+  assert (info->upper_[columnNumber_]>info->lower_[columnNumber_]);
 #ifndef NDEBUG
   double nearest = floor(value+0.5);
-  double integerTolerance = solver->getIntegerTolerance();
-  assert (fabs(value-nearest)>integerTolerance);
+  assert (fabs(value-nearest)>info->integerTolerance_);
 #endif
   OsiBranchingObject * branch = new OsiIntegerBranchingObject(solver,this,way,
 					     value);
@@ -416,39 +453,35 @@ OsiSimpleInteger::upEstimate() const
 
 // Default Constructor 
 OsiIntegerBranchingObject::OsiIntegerBranchingObject()
-  :OsiBranchingObject()
+  :OsiTwoWayBranchingObject()
 {
   down_[0] = 0.0;
   down_[1] = 0.0;
   up_[0] = 0.0;
   up_[1] = 0.0;
-  firstBranch_=0;
 }
 
 // Useful constructor
 OsiIntegerBranchingObject::OsiIntegerBranchingObject (OsiSolverInterface * solver, 
 						      const OsiSimpleInteger * object,
 						      int way , double value)
-  :OsiBranchingObject(solver,value)
+  :OsiTwoWayBranchingObject(solver,object, way, value)
 {
-  originalObject_ = object;
   int iColumn = object->columnNumber();
   down_[0] = solver_->getColLower()[iColumn];
   down_[1] = floor(value_);
   up_[0] = ceil(value_);
   up_[1] = solver_->getColUpper()[iColumn];
-  firstBranch_=way;
 }
   
 
 // Copy constructor 
-OsiIntegerBranchingObject::OsiIntegerBranchingObject ( const OsiIntegerBranchingObject & rhs) :OsiBranchingObject(rhs)
+OsiIntegerBranchingObject::OsiIntegerBranchingObject ( const OsiIntegerBranchingObject & rhs) :OsiTwoWayBranchingObject(rhs)
 {
   down_[0] = rhs.down_[0];
   down_[1] = rhs.down_[1];
   up_[0] = rhs.up_[0];
   up_[1] = rhs.up_[1];
-  firstBranch_=rhs.firstBranch_;
 }
 
 // Assignment operator 
@@ -456,12 +489,11 @@ OsiIntegerBranchingObject &
 OsiIntegerBranchingObject::operator=( const OsiIntegerBranchingObject& rhs)
 {
   if (this != &rhs) {
-    OsiBranchingObject::operator=(rhs);
+    OsiTwoWayBranchingObject::operator=(rhs);
     down_[0] = rhs.down_[0];
     down_[1] = rhs.down_[1];
     up_[0] = rhs.up_[0];
     up_[1] = rhs.up_[1];
-    firstBranch_=rhs.firstBranch_;
   }
   return *this;
 }
@@ -518,5 +550,438 @@ OsiIntegerBranchingObject::branch()
   }
   branchIndex_++;
   return 0.0;
+}
+// Default Constructor 
+OsiSOS::OsiSOS ()
+  : OsiObject(),
+    members_(NULL),
+    weights_(NULL),
+    numberMembers_(0),
+    sosType_(-1),
+    integerValued_(false)
+{
+}
+
+// Useful constructor (which are indices)
+OsiSOS::OsiSOS (const OsiSolverInterface * solver,  int numberMembers,
+	   const int * which, const double * weights, int type)
+  : numberMembers_(numberMembers),
+    sosType_(type)
+{
+  integerValued_ = type==1; // not strictly true - should check problem
+  if (numberMembers_) {
+    members_ = new int[numberMembers_];
+    weights_ = new double[numberMembers_];
+    memcpy(members_,which,numberMembers_*sizeof(int));
+    if (weights) {
+      memcpy(weights_,weights,numberMembers_*sizeof(double));
+    } else {
+      for (int i=0;i<numberMembers_;i++)
+        weights_[i]=i;
+    }
+    // sort so weights increasing
+    CoinSort_2(weights_,weights_+numberMembers_,members_);
+    double last = -COIN_DBL_MAX;
+    int i;
+    for (i=0;i<numberMembers_;i++) {
+      double possible = CoinMax(last+1.0e-10,weights_[i]);
+      weights_[i] = possible;
+      last=possible;
+    }
+  } else {
+    members_ = NULL;
+    weights_ = NULL;
+  }
+  assert (sosType_>0&&sosType_<3);
+}
+
+// Copy constructor 
+OsiSOS::OsiSOS ( const OsiSOS & rhs)
+  :OsiObject(rhs)
+{
+  numberMembers_ = rhs.numberMembers_;
+  sosType_ = rhs.sosType_;
+  integerValued_ = rhs.integerValued_;
+  if (numberMembers_) {
+    members_ = new int[numberMembers_];
+    weights_ = new double[numberMembers_];
+    memcpy(members_,rhs.members_,numberMembers_*sizeof(int));
+    memcpy(weights_,rhs.weights_,numberMembers_*sizeof(double));
+  } else {
+    members_ = NULL;
+    weights_ = NULL;
+  }
+}
+
+// Clone
+OsiObject *
+OsiSOS::clone() const
+{
+  return new OsiSOS(*this);
+}
+
+// Assignment operator 
+OsiSOS & 
+OsiSOS::operator=( const OsiSOS& rhs)
+{
+  if (this!=&rhs) {
+    OsiObject::operator=(rhs);
+    delete [] members_;
+    delete [] weights_;
+    numberMembers_ = rhs.numberMembers_;
+    sosType_ = rhs.sosType_;
+    integerValued_ = rhs.integerValued_;
+    if (numberMembers_) {
+      members_ = new int[numberMembers_];
+      weights_ = new double[numberMembers_];
+      memcpy(members_,rhs.members_,numberMembers_*sizeof(int));
+      memcpy(weights_,rhs.weights_,numberMembers_*sizeof(double));
+    } else {
+      members_ = NULL;
+      weights_ = NULL;
+    }
+  }
+  return *this;
+}
+
+// Destructor 
+OsiSOS::~OsiSOS ()
+{
+  delete [] members_;
+  delete [] weights_;
+}
+
+// Infeasibility - large is 0.5
+double 
+OsiSOS::infeasibility(const OsiBranchingInformation * info,int & whichWay) const
+{
+  int j;
+  int firstNonZero=-1;
+  int lastNonZero = -1;
+  const OsiSolverInterface * solver = info->solver_;
+  const double * solution = solver->getColSolution();
+  //const double * lower = solver->getColLower();
+  const double * upper = solver->getColUpper();
+  //double largestValue=0.0;
+  double integerTolerance = info->integerTolerance_;
+  double weight = 0.0;
+  double sum =0.0;
+
+  // check bounds etc
+  double lastWeight=-1.0e100;
+  for (j=0;j<numberMembers_;j++) {
+    int iColumn = members_[j];
+    if (lastWeight>=weights_[j]-1.0e-7)
+      throw CoinError("Weights too close together in SOS","infeasibility","OsiSOS");
+    double value = CoinMax(0.0,solution[iColumn]);
+    sum += value;
+    if (value>integerTolerance&&upper[iColumn]) {
+      // Possibly due to scaling a fixed variable might slip through
+      if (value>upper[iColumn]) {
+        value=upper[iColumn];
+#ifdef COIN_DEVELOP
+	printf("** Variable %d (%d) has value %g and upper bound of %g\n",
+	       iColumn,j,value,upper[iColumn]);
+#endif
+      } 
+      weight += weights_[j]*value;
+      if (firstNonZero<0)
+        firstNonZero=j;
+      lastNonZero=j;
+    }
+  }
+  whichWay=1;
+  if (lastNonZero-firstNonZero>=sosType_) {
+    // find where to branch
+    assert (sum>0.0);
+    weight /= sum;
+    //int iWhere;
+    //for (iWhere=firstNonZero;iWhere<lastNonZero;iWhere++) 
+    //if (weight<weights_[iWhere+1])
+    //break;
+    // probably best to use pseudo duals
+    double value = lastNonZero-firstNonZero+1;
+    value *= 0.5/((double) numberMembers_);
+    return value;
+  } else {
+    return 0.0; // satisfied
+  }
+}
+
+// This looks at solution and sets bounds to contain solution
+double
+OsiSOS::feasibleRegion(OsiSolverInterface * solver, const OsiBranchingInformation * info) const
+{
+  int j;
+  int firstNonZero=-1;
+  int lastNonZero = -1;
+  const double * solution = info->solution_;
+  //const double * lower = solver->getColLower();
+  const double * upper = solver->getColUpper();
+  double sum =0.0;
+  // Find largest one or pair
+  double movement=0.0;
+  if (sosType_==1) {
+    for (j=0;j<numberMembers_;j++) {
+      int iColumn = members_[j];
+      double value = CoinMax(0.0,solution[iColumn]);
+      if (value>sum&&upper[iColumn]) {
+	firstNonZero=j;
+	sum=value;
+      }
+    }
+    lastNonZero=firstNonZero;
+  } else {
+    // type 2
+    for (j=1;j<numberMembers_;j++) {
+      int iColumn = members_[j];
+      int jColumn = members_[j-1];
+      double value1 = CoinMax(0.0,solution[iColumn]);
+      double value0 = CoinMax(0.0,solution[jColumn]);
+      double value = value0+value1;
+      if (value>sum) {
+	if (upper[iColumn]||upper[jColumn]) {
+	  firstNonZero=upper[jColumn] ? j-1 : j;
+	  lastNonZero=upper[iColumn] ? j : j-1;
+	  sum=value;
+	}
+      }
+    }
+  }
+  for (j=0;j<numberMembers_;j++) {
+    if (j<firstNonZero||j>lastNonZero) {
+      int iColumn = members_[j];
+      double value = CoinMax(0.0,solution[iColumn]);
+      movement += value;
+      solver->setColUpper(iColumn,0.0);
+    }
+  }
+  return movement;
+}
+// Redoes data when sequence numbers change
+void 
+OsiSOS::resetSequenceEtc(int numberColumns, const int * originalColumns)
+{
+  int n2=0;
+  for (int j=0;j<numberMembers_;j++) {
+    int iColumn = members_[j];
+    int i;
+    for (i=0;i<numberColumns;i++) {
+      if (originalColumns[i]==iColumn)
+        break;
+    }
+    if (i<numberColumns) {
+      members_[n2]=i;
+      weights_[n2++]=weights_[j];
+    }
+  }
+  if (n2<numberMembers_) {
+    printf("** SOS number of members reduced from %d to %d!\n",numberMembers_,n2);
+    numberMembers_=n2;
+  }
+}
+// Return "up" estimate (default 1.0e-5)
+double 
+OsiSOS::upEstimate() const
+{
+  return 1.0e-5;
+}
+// Return "down" estimate (default 1.0e-5)
+double 
+OsiSOS::downEstimate() const
+{
+  return 1.0e-5;
+}
+
+
+// Creates a branching object
+OsiBranchingObject * 
+OsiSOS::createBranch(OsiSolverInterface * solver, const OsiBranchingInformation * info, int way) const
+{
+  int j;
+  const double * solution = info->solution_;
+  double tolerance = info->primalTolerance_;
+  const double * upper = info->upper_;
+  int firstNonFixed=-1;
+  int lastNonFixed=-1;
+  int firstNonZero=-1;
+  int lastNonZero = -1;
+  double weight = 0.0;
+  double sum =0.0;
+  for (j=0;j<numberMembers_;j++) {
+    int iColumn = members_[j];
+    if (upper[iColumn]) {
+      double value = CoinMax(0.0,solution[iColumn]);
+      sum += value;
+      if (firstNonFixed<0)
+	firstNonFixed=j;
+      lastNonFixed=j;
+      if (value>tolerance) {
+	weight += weights_[j]*value;
+	if (firstNonZero<0)
+	  firstNonZero=j;
+	lastNonZero=j;
+      }
+    }
+  }
+  assert (lastNonZero-firstNonZero>=sosType_) ;
+  // find where to branch
+  assert (sum>0.0);
+  weight /= sum;
+  int iWhere;
+  double separator=0.0;
+  for (iWhere=firstNonZero;iWhere<lastNonZero;iWhere++) 
+    if (weight<weights_[iWhere+1])
+      break;
+  if (sosType_==1) {
+    // SOS 1
+    separator = 0.5 *(weights_[iWhere]+weights_[iWhere+1]);
+  } else {
+    // SOS 2
+    if (iWhere==firstNonFixed)
+      iWhere++;;
+    if (iWhere==lastNonFixed-1)
+      iWhere = lastNonFixed-2;
+    separator = weights_[iWhere+1];
+  }
+  // create object
+  OsiBranchingObject * branch;
+  branch = new OsiSOSBranchingObject(solver,this,way,separator);
+  return branch;
+}
+// Default Constructor 
+OsiSOSBranchingObject::OsiSOSBranchingObject()
+  :OsiTwoWayBranchingObject()
+{
+}
+
+// Useful constructor
+OsiSOSBranchingObject::OsiSOSBranchingObject (OsiSolverInterface * solver,
+					      const OsiSOS * set,
+					      int way ,
+					      double separator)
+  :OsiTwoWayBranchingObject(solver, set,way,separator)
+{
+}
+
+// Copy constructor 
+OsiSOSBranchingObject::OsiSOSBranchingObject ( const OsiSOSBranchingObject & rhs) :OsiTwoWayBranchingObject(rhs)
+{
+}
+
+// Assignment operator 
+OsiSOSBranchingObject & 
+OsiSOSBranchingObject::operator=( const OsiSOSBranchingObject& rhs)
+{
+  if (this != &rhs) {
+    OsiTwoWayBranchingObject::operator=(rhs);
+  }
+  return *this;
+}
+OsiBranchingObject * 
+OsiSOSBranchingObject::clone() const
+{ 
+  return (new OsiSOSBranchingObject(*this));
+}
+
+
+// Destructor 
+OsiSOSBranchingObject::~OsiSOSBranchingObject ()
+{
+}
+double
+OsiSOSBranchingObject::branch()
+{
+  const OsiSOS * set =
+    dynamic_cast <const OsiSOS *>(originalObject_) ;
+  assert (set);
+  int way = (!branchIndex_) ? (2*firstBranch_-1) : -(2*firstBranch_-1);
+  branchIndex_++;
+  int numberMembers = set->numberMembers();
+  const int * which = set->members();
+  const double * weights = set->weights();
+  //const double * lower = solver_->getColLower();
+  //const double * upper = solver_->getColUpper();
+  // *** for way - up means fix all those in down section
+  if (way<0) {
+    int i;
+    for ( i=0;i<numberMembers;i++) {
+      if (weights[i] > value_)
+	break;
+    }
+    assert (i<numberMembers);
+    for (;i<numberMembers;i++) 
+      solver_->setColUpper(which[i],0.0);
+  } else {
+    int i;
+    for ( i=0;i<numberMembers;i++) {
+      if (weights[i] >= value_)
+	break;
+      else
+	solver_->setColUpper(which[i],0.0);
+    }
+    assert (i<numberMembers);
+  }
+  return 0.0;
+}
+// Print what would happen  
+void
+OsiSOSBranchingObject::print()
+{
+  const OsiSOS * set =
+    dynamic_cast <const OsiSOS *>(originalObject_) ;
+  assert (set);
+  int way = (!branchIndex_) ? (2*firstBranch_-1) : -(2*firstBranch_-1);
+  int numberMembers = set->numberMembers();
+  const int * which = set->members();
+  const double * weights = set->weights();
+  //const double * lower = solver_->getColLower();
+  const double * upper = solver_->getColUpper();
+  int first=numberMembers;
+  int last=-1;
+  int numberFixed=0;
+  int numberOther=0;
+  int i;
+  for ( i=0;i<numberMembers;i++) {
+    double bound = upper[which[i]];
+    if (bound) {
+      first = CoinMin(first,i);
+      last = CoinMax(last,i);
+    }
+  }
+  // *** for way - up means fix all those in down section
+  if (way<0) {
+    printf("SOS Down");
+    for ( i=0;i<numberMembers;i++) {
+      double bound = upper[which[i]];
+      if (weights[i] > value_)
+	break;
+      else if (bound)
+	numberOther++;
+    }
+    assert (i<numberMembers);
+    for (;i<numberMembers;i++) {
+      double bound = upper[which[i]];
+      if (bound)
+	numberFixed++;
+    }
+  } else {
+    printf("SOS Up");
+    for ( i=0;i<numberMembers;i++) {
+      double bound = upper[which[i]];
+      if (weights[i] >= value_)
+	break;
+      else if (bound)
+	numberFixed++;
+    }
+    assert (i<numberMembers);
+    for (;i<numberMembers;i++) {
+      double bound = upper[which[i]];
+      if (bound)
+	numberOther++;
+    }
+  }
+  printf(" - at %g, free range %d (%g) => %d (%g), %d would be fixed, %d other way\n",
+	 value_,which[first],weights[first],which[last],weights[last],numberFixed,numberOther);
 }
   

@@ -106,7 +106,7 @@ public:
       The branching object has to know how to create branches (fix
       variables, etc.)
   */
-  virtual OsiBranchingObject * createBranch(OsiSolverInterface * solver, int way) const = 0;
+  virtual OsiBranchingObject * createBranch(OsiSolverInterface * solver, const OsiBranchingInformation * info, int way) const = 0;
   
   /** \brief Return true if object can take part in normal heuristics
   */
@@ -345,6 +345,45 @@ public:
   /// Depth in tree
   int depth_;
 };
+
+/// This just adds two-wayness to a branching object
+
+class OsiTwoWayBranchingObject : public OsiBranchingObject {
+
+public:
+
+  /// Default constructor 
+  OsiTwoWayBranchingObject ();
+
+  /** Create a standard tw0-way branch object
+
+    Specifies a simple two-way branch.
+    Specify way = -1 to set the object state to perform the down arm first,
+    way = 1 for the up arm.
+  */
+  OsiTwoWayBranchingObject (OsiSolverInterface *solver,const OsiObject * originalObject,
+			     int way , double value) ;
+    
+  /// Copy constructor 
+  OsiTwoWayBranchingObject ( const OsiTwoWayBranchingObject &);
+   
+  /// Assignment operator 
+  OsiTwoWayBranchingObject & operator= (const OsiTwoWayBranchingObject& rhs);
+
+  /// Destructor 
+  virtual ~OsiTwoWayBranchingObject ();
+  
+  /** \brief Sets the bounds for the variable according to the current arm
+	     of the branch and advances the object state to the next arm.
+	     state. 
+	     Returns change in guessed objective on next branch
+  */
+  virtual double branch()=0;
+
+protected:
+  /// Which way was first branch -1 = down, +1 = up
+  int firstBranch_;
+};
 /// Define a single integer class
 
 
@@ -387,7 +426,7 @@ public:
 
     The preferred direction is set by \p way, 0 for down, 1 for up.
   */
-  virtual OsiBranchingObject * createBranch(OsiSolverInterface * solver, int way) const;
+  virtual OsiBranchingObject * createBranch(OsiSolverInterface * solver, const OsiBranchingInformation * info, int way) const;
 
 
   /// Set solver column number
@@ -441,7 +480,7 @@ protected:
   independently specified. 0 -> down, 1-> up.
 */
 
-class OsiIntegerBranchingObject : public OsiBranchingObject {
+class OsiIntegerBranchingObject : public OsiTwoWayBranchingObject {
 
 public:
 
@@ -472,8 +511,7 @@ public:
   
   /** \brief Sets the bounds for the variable according to the current arm
 	     of the branch and advances the object state to the next arm.
-	     state.  Mainly for diagnostics, whether it is true branch or
-	     strong branching is also passed.
+	     state. 
 	     Returns change in guessed objective on next branch
   */
   virtual double branch();
@@ -484,8 +522,138 @@ protected:
   double down_[2];
   /// Lower [0] and upper [1] bounds for the up arm (way_ = 1)
   double up_[2];
-  /// Which way was first branch -1 = down, +1 = up
-  int firstBranch_;
 };
 
+
+/** Define Special Ordered Sets of type 1 and 2.  These do not have to be
+    integer - so do not appear in lists of integers.
+    
+    which_ points columns of matrix
+*/
+
+
+class OsiSOS : public OsiObject {
+
+public:
+
+  // Default Constructor 
+  OsiSOS ();
+
+  /** Useful constructor - which are indices
+      and  weights are also given.  If null then 0,1,2..
+      type is SOS type
+  */
+  OsiSOS (const OsiSolverInterface * solver, int numberMembers,
+	   const int * which, const double * weights, int type=1);
+  
+  // Copy constructor 
+  OsiSOS ( const OsiSOS &);
+   
+  /// Clone
+  virtual OsiObject * clone() const;
+
+  // Assignment operator 
+  OsiSOS & operator=( const OsiSOS& rhs);
+
+  // Destructor 
+  ~OsiSOS ();
+  
+  /// Infeasibility - large is 0.5
+  virtual double infeasibility(const OsiBranchingInformation * info,int & whichWay) const;
+
+  /** Set bounds to fix the variable at the current (integer) value.
+
+    Given an integer value, set the lower and upper bounds to fix the
+    variable. Returns amount it had to move variable.
+  */
+  virtual double feasibleRegion(OsiSolverInterface * solver, const OsiBranchingInformation * info) const;
+
+  /** Creates a branching object
+
+    The preferred direction is set by \p way, 0 for down, 1 for up.
+  */
+  virtual OsiBranchingObject * createBranch(OsiSolverInterface * solver, const OsiBranchingInformation * info, int way) const;
+  /// Return "up" estimate (default 1.0e-5)
+  virtual double upEstimate() const;
+  /// Return "down" estimate (default 1.0e-5)
+  virtual double downEstimate() const;
+  
+  /// Redoes data when sequence numbers change
+  virtual void resetSequenceEtc(int numberColumns, const int * originalColumns);
+  
+  /// Number of members
+  inline int numberMembers() const
+  {return numberMembers_;};
+
+  /// Members (indices in range 0 ... numberColumns-1)
+  inline const int * members() const
+  {return members_;};
+
+  /// SOS type
+  inline int sosType() const
+  {return sosType_;};
+
+  /** Array of weights */
+  inline const double * weights() const
+  { return weights_;};
+
+  /** \brief Return true if object can take part in normal heuristics
+  */
+  virtual bool canDoHeuristics() const 
+  {return (sosType_==1&&integerValued_);};
+  /// Set whether set is integer valued or not
+  inline void setIntegerValued(bool yesNo)
+  { integerValued_=yesNo;};
+private:
+  /// data
+
+  /// Members (indices in range 0 ... numberColumns-1)
+  int * members_;
+  /// Weights
+  double * weights_;
+
+  /// Number of members
+  int numberMembers_;
+  /// SOS type
+   int sosType_;
+  /// Whether integer valued
+  bool integerValued_;
+};
+
+/** Branching object for Special ordered sets
+
+ */
+class OsiSOSBranchingObject : public OsiTwoWayBranchingObject {
+
+public:
+
+  // Default Constructor 
+  OsiSOSBranchingObject ();
+
+  // Useful constructor
+  OsiSOSBranchingObject (OsiSolverInterface * solver,  const OsiSOS * originalObject,
+			    int way,
+			 double separator);
+  
+  // Copy constructor 
+  OsiSOSBranchingObject ( const OsiSOSBranchingObject &);
+   
+  // Assignment operator 
+  OsiSOSBranchingObject & operator=( const OsiSOSBranchingObject& rhs);
+
+  /// Clone
+  virtual OsiBranchingObject * clone() const;
+
+  // Destructor 
+  virtual ~OsiSOSBranchingObject ();
+  
+  /// Does next branch and updates state
+  virtual double branch();
+
+  /** \brief Print something about branch - only if log level high
+  */
+  virtual void print();
+private:
+  /// data
+};
 #endif

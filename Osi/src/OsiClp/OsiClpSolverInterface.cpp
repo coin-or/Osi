@@ -25,6 +25,7 @@
 #include "ClpSimplexDual.hpp"
 #include "ClpNonLinearCost.hpp"
 #include "OsiClpSolverInterface.hpp"
+#include "OsiBranchingObject.hpp"
 #include "OsiCuts.hpp"
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
@@ -4041,6 +4042,50 @@ OsiClpSolverInterface::setSOSData(int numberSOS,const char * type,
 			     type[i]);
     }
   }
+}
+/* Identify integer variables and SOS and create corresponding objects.
+  
+      Record integer variables and create an OsiSimpleInteger object for each
+      one.  All existing OsiSimpleInteger objects will be destroyed.
+      If the solver supports SOS then do the same for SOS.
+
+      If justCount then no objects created and we just store numberIntegers_
+      Returns number of SOS
+*/
+int 
+OsiClpSolverInterface::findIntegersAndSOS(bool justCount)
+{
+  findIntegers(justCount);
+  // delete old SOS objects and keep others
+  int nObjects=0;
+  OsiObject ** oldObject = object_;
+  int iObject;
+  for (iObject = 0;iObject<numberObjects_;iObject++) {
+    OsiSOS * obj =
+      dynamic_cast <OsiSOS *>(oldObject[iObject]) ;
+    if (obj) 
+      delete oldObject[iObject];
+    else
+      oldObject[nObjects++]=oldObject[iObject];
+  }
+  // make a large enough array for new objects
+  numberObjects_=numberSOS_+nObjects;
+  if (numberObjects_)
+    object_ = new OsiObject * [numberObjects_];
+  else
+    object_=NULL;
+  // copy
+  memcpy(object_,oldObject,nObjects*sizeof(OsiObject *));
+  // Delete old array (just array)
+  delete [] oldObject;
+  
+  for (int i=0;i<numberSOS_;i++) {
+    CoinSet * set =  setInfo_+i;
+    object_[nObjects++] =
+      new OsiSOS(this,set->numberEntries(),set->which(),set->weights(),
+		 set->setType());
+  }
+  return numberSOS_;
 }
 // below needed for pathetic branch and bound code
 #include <vector>

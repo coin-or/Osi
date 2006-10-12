@@ -1192,6 +1192,17 @@ public:
     */
 
     void findIntegers(bool justCount);
+    /** \brief Identify integer variables and SOS and create corresponding objects.
+  
+      Record integer variables and create an OsiSimpleInteger object for each
+      one.  All existing OsiSimpleInteger objects will be destroyed.
+      If the solver supports SOS then do the same for SOS.
+
+      If justCount then no objects created and we just store numberIntegers_
+      Returns number of SOS
+    */
+
+    virtual int findIntegersAndSOS(bool justCount);
     /// Get the number of objects
     inline int numberObjects() const { return numberObjects_;};
     /// Set the number of objects

@@ -1670,6 +1670,21 @@ OsiSolverInterface::findIntegers(bool justCount)
   // Delete old array (just array)
   delete [] oldObject;
 }
+/* Identify integer variables and SOS and create corresponding objects.
+  
+      Record integer variables and create an OsiSimpleInteger object for each
+      one.  All existing OsiSimpleInteger objects will be destroyed.
+      If the solver supports SOS then do the same for SOS.
+
+      If justCount then no objects created and we just store numberIntegers_
+      Returns number of SOS
+*/
+int 
+OsiSolverInterface::findIntegersAndSOS(bool justCount)
+{
+  findIntegers(justCount);
+  return 0;
+}
 // Delete all object information
 void 
 OsiSolverInterface::deleteObjects()

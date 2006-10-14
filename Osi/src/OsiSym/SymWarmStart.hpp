@@ -19,10 +19,11 @@
 #ifndef SymWarmStart_H
 #define SymWarmStart_H
 
+#include <iostream>
+
 #include "CoinHelperFunctions.hpp"
 #include "CoinWarmStart.hpp"
-#include <iostream>
-#include "symphony_api.h"
+#include "symphony.h"
 
 using namespace std;
 

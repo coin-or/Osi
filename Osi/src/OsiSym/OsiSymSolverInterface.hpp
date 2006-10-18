@@ -22,7 +22,7 @@
 #include "OsiSolverInterface.hpp"
 #include "OsiSymSolverParameters.hpp"
 #include "SymWarmStart.hpp"
-#include "symphony.h"
+#include "symphony_api.h"
 
 #include "CoinPackedVector.hpp"
 #include "CoinPackedMatrix.hpp"

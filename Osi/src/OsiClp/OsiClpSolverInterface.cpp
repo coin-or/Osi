@@ -271,7 +271,7 @@ void OsiClpSolverInterface::initialSolve()
     }
   } else {
     // User doing nothing and all slack basis
-    ClpSolve options;
+    ClpSolve options=solveOptions_;
     // But switch off odder ideas
     options.setSpecialOption(1,4);
     bool yesNo;
@@ -1012,7 +1012,8 @@ void OsiClpSolverInterface::markHotStart()
       //small->setLogLevel(0);
       // Could be infeasible if forced one way (and other way stopped on iterations)
       if (small->status()==1) {
-	delete small;
+	if (small!=modelPtr_)
+	  delete small;
 	delete [] spareArrays_;
 	spareArrays_=NULL;
 	delete ws_;
@@ -1270,11 +1271,14 @@ void OsiClpSolverInterface::solveFromHotStart()
 
 void OsiClpSolverInterface::unmarkHotStart()
 {
-  delete [] rowActivity_;
-  delete [] columnActivity_;
-  rowActivity_=NULL;
-  columnActivity_=NULL;
   if (smallModel_==NULL) {
+    setWarmStart(ws_);
+    int numberRows = modelPtr_->numberRows();
+    int numberColumns = modelPtr_->numberColumns();
+    memcpy(modelPtr_->primalRowSolution(),
+           rowActivity_,numberRows*sizeof(double));
+    memcpy(modelPtr_->primalColumnSolution(),columnActivity_,
+           numberColumns*sizeof(double));
     delete ws_;
     ws_ = NULL;
   } else {
@@ -1291,6 +1295,10 @@ void OsiClpSolverInterface::unmarkHotStart()
     spareArrays_=NULL;
     factorization_=NULL;
   }
+  delete [] rowActivity_;
+  delete [] columnActivity_;
+  rowActivity_=NULL;
+  columnActivity_=NULL;
 }
 
 //#############################################################################
@@ -2038,6 +2046,7 @@ whichRange_(NULL)
 	   numberColumns*sizeof(char));
   }
   saveData_ = rhs.saveData_;
+  solveOptions_  = rhs.solveOptions_;
   cleanupScaling_ = rhs.cleanupScaling_;
   specialOptions_ = rhs.specialOptions_;
   fillParamMaps();
@@ -2139,6 +2148,7 @@ OsiClpSolverInterface::operator=(const OsiClpSolverInterface& rhs)
     notOwned_=false;
     linearObjective_ = modelPtr_->objective();
     saveData_ = rhs.saveData_;
+    solveOptions_  = rhs.solveOptions_;
     cleanupScaling_ = rhs.cleanupScaling_;
     specialOptions_ = rhs.specialOptions_;
     basis_ = rhs.basis_;
@@ -2150,6 +2160,8 @@ OsiClpSolverInterface::operator=(const OsiClpSolverInterface& rhs)
     }
     if ( rhs.ws_ ) 
       ws_ = new CoinWarmStartBasis(*rhs.ws_);
+    else
+      ws_=NULL;
     delete [] rowActivity_;
     delete [] columnActivity_;
     rowActivity_=NULL;
@@ -2336,12 +2348,12 @@ void OsiClpSolverInterface::freeCachedResults() const
   delete [] rhs_;
   delete [] rowrange_;
   delete matrixByRow_;
-  delete ws_;
+  //delete ws_;
   rowsense_=NULL;
   rhs_=NULL;
   rowrange_=NULL;
   matrixByRow_=NULL;
-  ws_ = NULL;
+  //ws_ = NULL;
   if (modelPtr_&&modelPtr_->clpMatrix())
     modelPtr_->clpMatrix()->refresh(modelPtr_); // make sure all clean
 }
@@ -3896,6 +3908,7 @@ OsiClpSolverInterface::reset()
   if (!notOwned_)
     delete modelPtr_;
   delete ws_;
+  ws_ = NULL;
   delete [] rowActivity_;
   delete [] columnActivity_;
   assert(smallModel_==NULL);

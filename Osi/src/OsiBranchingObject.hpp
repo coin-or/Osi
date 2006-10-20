@@ -88,6 +88,8 @@ public:
   virtual double infeasibility(const OsiSolverInterface * solver,int &whichWay) const ;
   // Faster version when more information available
   virtual double infeasibility(const OsiBranchingInformation * info, int &whichWay) const =0;
+  // This does NOT set mutable stuff
+  double checkInfeasibility(const OsiBranchingInformation * info) const;
   
   /** For the variable(s) referenced by the object,
       look at the current solution and set bounds to match the solution.
@@ -122,7 +124,7 @@ public:
   /// Set priority
   inline void setPriority(int priority)
   { priority_ = priority;};
-  /** \brief Return true if branch should fix variables
+  /** \brief Return true if branch should only bound variables
   */
   virtual bool boundBranch() const 
   {return true;};
@@ -132,6 +134,12 @@ public:
   /// Set maximum number of ways branch may have
   inline void setNumberWays(int numberWays)
   { numberWays_ = numberWays;};
+  /** Return preferred way to branch.  If two
+      then way=0 means down and 1 means up, otherwise
+      way points to preferred branch
+  */
+  inline void setWhichWay(int way)
+  { whichWay_ = way;};
   /** Return preferred way to branch.  If two
       then way=0 means down and 1 means up, otherwise
       way points to preferred branch
@@ -228,11 +236,16 @@ public:
 
   /** \brief Execute the actions required to branch, as specified by the
 	     current state of the branching object, and advance the object's
-	     state.  Mainly for diagnostics, whether it is true branch or
-	     strong branching is also passed.
+	     state. 
 	     Returns change in guessed objective on next branch
   */
-  virtual double branch()=0;
+  virtual double branch(OsiSolverInterface * solver)=0;
+  /** \brief Execute the actions required to branch, as specified by the
+	     current state of the branching object, and advance the object's
+	     state. 
+	     Returns change in guessed objective on next branch
+  */
+  virtual double branch() {return branch(NULL);};
   /** \brief Return true if branch should fix variables
   */
   virtual bool boundBranch() const 
@@ -252,10 +265,6 @@ public:
   inline double value() const
   {return value_;};
   
-  /// Return solver
-  inline OsiSolverInterface * solver() const
-  {return  solver_;};
-
   /// Return pointer back to object which created
   inline const OsiObject * originalObject() const
   {return  originalObject_;};
@@ -266,15 +275,13 @@ public:
   int columnNumber() const;
   /** \brief Print something about branch - only if log level high
   */
-  virtual void print() const {};
+  virtual void print(const OsiSolverInterface * solver=NULL) const {};
 
 protected:
 
   /// Current value - has some meaning about branch
   double value_;
 
-  /// The solver that owns this branching object
-  OsiSolverInterface * solver_;
   /// Pointer back to object which created
   const OsiObject * originalObject_;
 
@@ -328,12 +335,14 @@ public:
   double integerTolerance_;
   /// Primal tolerance
   double primalTolerance_;
+  /// Maximum time remaining before stopping on time
+  double timeRemaining_;
   /// Pointer to solver
   const OsiSolverInterface * solver_;
   /// Pointer to current lower bounds on columns
   const double * lower_;
   /// Pointer to current solution
-  const double * solution_;
+  mutable const double * solution_;
   /// Pointer to current upper bounds on columns
   const double * upper_;
   /// Highly optional target (hot start) solution
@@ -378,7 +387,7 @@ public:
 	     state. 
 	     Returns change in guessed objective on next branch
   */
-  virtual double branch()=0;
+  virtual double branch(OsiSolverInterface * solver)=0;
 
 protected:
   /// Which way was first branch -1 = down, +1 = up
@@ -514,7 +523,11 @@ public:
 	     state. 
 	     Returns change in guessed objective on next branch
   */
-  virtual double branch();
+  virtual double branch(OsiSolverInterface * solver);
+
+  /** \brief Print something about branch - only if log level high
+  */
+  virtual void print(const OsiSolverInterface * solver=NULL);
 
 protected:
   // Probably could get away with just value which is already stored 
@@ -648,11 +661,11 @@ public:
   virtual ~OsiSOSBranchingObject ();
   
   /// Does next branch and updates state
-  virtual double branch();
+  virtual double branch(OsiSolverInterface * solver);
 
   /** \brief Print something about branch - only if log level high
   */
-  virtual void print();
+  virtual void print(const OsiSolverInterface * solver=NULL);
 private:
   /// data
 };

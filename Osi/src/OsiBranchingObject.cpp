@@ -75,6 +75,18 @@ OsiObject::infeasibility(const OsiSolverInterface * solver, int & preferredWay) 
   OsiBranchingInformation info(solver);
   return infeasibility(&info,preferredWay);
 }
+// This does NOT set mutable stuff
+double 
+OsiObject::checkInfeasibility(const OsiBranchingInformation * info) const
+{
+  int way;
+  double saveInfeasibility = infeasibility_;
+  int saveWhichWay = whichWay_;
+  double value = infeasibility(info,way);
+  infeasibility_ = saveInfeasibility;
+  whichWay_ = saveWhichWay;
+  return value;
+}
 /* For the variable(s) referenced by the object,
    look at the current solution and set bounds to match the solution.
    Returns measure of how much it had to move solution to make feasible
@@ -88,7 +100,6 @@ OsiObject::feasibleRegion(OsiSolverInterface * solver) const
 // Default Constructor 
 OsiBranchingObject::OsiBranchingObject()
 {
-  solver_=NULL;
   originalObject_=NULL;
   branchIndex_=0;
   value_=0.0;
@@ -99,7 +110,6 @@ OsiBranchingObject::OsiBranchingObject()
 OsiBranchingObject::OsiBranchingObject (OsiSolverInterface * solver,
 					 double value)
 {
-  solver_= solver;
   originalObject_=NULL;
   branchIndex_=0;
   value_=value;
@@ -109,7 +119,6 @@ OsiBranchingObject::OsiBranchingObject (OsiSolverInterface * solver,
 // Copy constructor 
 OsiBranchingObject::OsiBranchingObject ( const OsiBranchingObject & rhs)
 {
-  solver_=rhs.solver_;
   originalObject_=rhs.originalObject_;
   branchIndex_=rhs.branchIndex_;
   value_=rhs.value_;
@@ -121,7 +130,6 @@ OsiBranchingObject &
 OsiBranchingObject::operator=( const OsiBranchingObject& rhs)
 {
   if (this != &rhs) {
-    solver_=rhs.solver_;
     originalObject_=rhs.originalObject_;
     branchIndex_=rhs.branchIndex_;
     value_=rhs.value_;
@@ -152,6 +160,7 @@ OsiBranchingInformation::OsiBranchingInformation ()
     direction_(COIN_DBL_MAX),
     integerTolerance_(1.0e-7),
     primalTolerance_(1.0e-7),
+    timeRemaining_(COIN_DBL_MAX),
     solver_(NULL),
     lower_(NULL),
     solution_(NULL),
@@ -166,7 +175,8 @@ OsiBranchingInformation::OsiBranchingInformation ()
 /** Useful constructor
 */
 OsiBranchingInformation::OsiBranchingInformation (const OsiSolverInterface * solver)
-  : solver_(solver),
+  : timeRemaining_(COIN_DBL_MAX),
+    solver_(solver),
     hotstartSolution_(NULL),
     numberSolutions_(0),
     numberBranchingSolutions_(0),
@@ -191,6 +201,7 @@ OsiBranchingInformation::OsiBranchingInformation ( const OsiBranchingInformation
   direction_ = rhs.direction_;
   integerTolerance_ = rhs.integerTolerance_;
   primalTolerance_ = rhs.primalTolerance_;
+  timeRemaining_ = rhs.timeRemaining_;
   solver_ = rhs.solver_;
   lower_ = rhs.lower_;
   solution_ = rhs.solution_;
@@ -218,6 +229,7 @@ OsiBranchingInformation::operator=( const OsiBranchingInformation& rhs)
     direction_ = rhs.direction_;
     integerTolerance_ = rhs.integerTolerance_;
     primalTolerance_ = rhs.primalTolerance_;
+    timeRemaining_ = rhs.timeRemaining_;
     lower_ = rhs.lower_;
     solution_ = rhs.solution_;
     upper_ = rhs.upper_;
@@ -415,7 +427,6 @@ OsiSimpleInteger::columnNumber() const
 {
   return columnNumber_;
 }
-
 // Creates a branching object
 OsiBranchingObject * 
 OsiSimpleInteger::createBranch(OsiSolverInterface * solver, const OsiBranchingInformation * info, int way) const 
@@ -468,10 +479,10 @@ OsiIntegerBranchingObject::OsiIntegerBranchingObject (OsiSolverInterface * solve
   :OsiTwoWayBranchingObject(solver,object, way, value)
 {
   int iColumn = object->columnNumber();
-  down_[0] = solver_->getColLower()[iColumn];
+  down_[0] = solver->getColLower()[iColumn];
   down_[1] = floor(value_);
   up_[0] = ceil(value_);
-  up_[1] = solver_->getColUpper()[iColumn];
+  up_[1] = solver->getColUpper()[iColumn];
 }
   
 
@@ -520,7 +531,7 @@ OsiIntegerBranchingObject::~OsiIntegerBranchingObject ()
   Returns change in guessed objective on next branch
 */
 double
-OsiIntegerBranchingObject::branch()
+OsiIntegerBranchingObject::branch(OsiSolverInterface * solver)
 {
   const OsiSimpleInteger * obj =
     dynamic_cast <const OsiSimpleInteger *>(originalObject_) ;
@@ -530,26 +541,49 @@ OsiIntegerBranchingObject::branch()
   if (way<0) {
 #ifdef OSI_DEBUG
   { double olb,oub ;
-    olb = solver_->getColLower()[iColumn] ;
-    oub = solver_->getColUpper()[iColumn] ;
+    olb = solver->getColLower()[iColumn] ;
+    oub = solver->getColUpper()[iColumn] ;
     printf("branching down on var %d: [%g,%g] => [%g,%g]\n",
 	   iColumn,olb,oub,down_[0],down_[1]) ; }
 #endif
-    solver_->setColLower(iColumn,down_[0]);
-    solver_->setColUpper(iColumn,down_[1]);
+    solver->setColLower(iColumn,down_[0]);
+    solver->setColUpper(iColumn,down_[1]);
   } else {
 #ifdef OSI_DEBUG
   { double olb,oub ;
-    olb = solver_->getColLower()[iColumn] ;
-    oub = solver_->getColUpper()[iColumn] ;
+    olb = solver->getColLower()[iColumn] ;
+    oub = solver->getColUpper()[iColumn] ;
     printf("branching up on var %d: [%g,%g] => [%g,%g]\n",
 	   iColumn,olb,oub,up_[0],up_[1]) ; }
 #endif
-    solver_->setColLower(iColumn,up_[0]);
-    solver_->setColUpper(iColumn,up_[1]);
+    solver->setColLower(iColumn,up_[0]);
+    solver->setColUpper(iColumn,up_[1]);
   }
   branchIndex_++;
   return 0.0;
+}
+// Print what would happen  
+void
+OsiIntegerBranchingObject::print(const OsiSolverInterface * solver)
+{
+  const OsiSimpleInteger * obj =
+    dynamic_cast <const OsiSimpleInteger *>(originalObject_) ;
+  assert (obj);
+  int iColumn = obj->columnNumber();
+  int way = (!branchIndex_) ? (2*firstBranch_-1) : -(2*firstBranch_-1);
+  if (way<0) {
+  { double olb,oub ;
+    olb = solver->getColLower()[iColumn] ;
+    oub = solver->getColUpper()[iColumn] ;
+    printf("OsiInteger would branch down on var %d : [%g,%g] => [%g,%g]\n",
+	   iColumn,olb,oub,down_[0],down_[1]) ; }
+  } else {
+  { double olb,oub ;
+    olb = solver->getColLower()[iColumn] ;
+    oub = solver->getColUpper()[iColumn] ;
+    printf("OsiInteger would branch up on var %d : [%g,%g] => [%g,%g]\n",
+	   iColumn,olb,oub,up_[0],up_[1]) ; }
+  }
 }
 // Default Constructor 
 OsiSOS::OsiSOS ()
@@ -890,7 +924,7 @@ OsiSOSBranchingObject::~OsiSOSBranchingObject ()
 {
 }
 double
-OsiSOSBranchingObject::branch()
+OsiSOSBranchingObject::branch(OsiSolverInterface * solver)
 {
   const OsiSOS * set =
     dynamic_cast <const OsiSOS *>(originalObject_) ;
@@ -900,8 +934,8 @@ OsiSOSBranchingObject::branch()
   int numberMembers = set->numberMembers();
   const int * which = set->members();
   const double * weights = set->weights();
-  //const double * lower = solver_->getColLower();
-  //const double * upper = solver_->getColUpper();
+  //const double * lower = solver->getColLower();
+  //const double * upper = solver->getColUpper();
   // *** for way - up means fix all those in down section
   if (way<0) {
     int i;
@@ -911,14 +945,14 @@ OsiSOSBranchingObject::branch()
     }
     assert (i<numberMembers);
     for (;i<numberMembers;i++) 
-      solver_->setColUpper(which[i],0.0);
+      solver->setColUpper(which[i],0.0);
   } else {
     int i;
     for ( i=0;i<numberMembers;i++) {
       if (weights[i] >= value_)
 	break;
       else
-	solver_->setColUpper(which[i],0.0);
+	solver->setColUpper(which[i],0.0);
     }
     assert (i<numberMembers);
   }
@@ -926,7 +960,7 @@ OsiSOSBranchingObject::branch()
 }
 // Print what would happen  
 void
-OsiSOSBranchingObject::print()
+OsiSOSBranchingObject::print(const OsiSolverInterface * solver)
 {
   const OsiSOS * set =
     dynamic_cast <const OsiSOS *>(originalObject_) ;
@@ -935,8 +969,8 @@ OsiSOSBranchingObject::print()
   int numberMembers = set->numberMembers();
   const int * which = set->members();
   const double * weights = set->weights();
-  //const double * lower = solver_->getColLower();
-  const double * upper = solver_->getColUpper();
+  //const double * lower = solver->getColLower();
+  const double * upper = solver->getColUpper();
   int first=numberMembers;
   int last=-1;
   int numberFixed=0;

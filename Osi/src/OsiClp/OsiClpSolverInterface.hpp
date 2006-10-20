@@ -876,6 +876,9 @@ public:
   */
   inline void setSmallestChangeInCut(double value)
   { smallestChangeInCut_=value;};
+  /// Pass in initial solve options
+  inline void setSolveOptions(const ClpSolve & options)
+  { solveOptions_ = options;};
   //@}
   
   //---------------------------------------------------------------------------
@@ -1042,6 +1045,8 @@ protected:
   
   /// To save data in OsiSimplex stuff
   mutable ClpDataSave saveData_;
+  /// Options for initialSolve
+  ClpSolve solveOptions_;
   /** Scaling option
       When scaling is on it is possible that the scaled problem
       is feasible but the unscaled is not.  Clp returns a secondary

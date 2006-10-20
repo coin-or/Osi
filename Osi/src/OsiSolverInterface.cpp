@@ -1788,7 +1788,6 @@ OsiSolverInterface::addObjects(int numberObjects, OsiObject ** objects)
   delete [] object_;
   object_ = temp;
   numberObjects_ = newNumberObjects;
-  assert (n==numberObjects_);
 }
 /* Use current solution to set bounds so current integer feasible solution will stay feasible.
    Only feasible bounds will be used, even if current solution outside bounds.  The amount of

@@ -262,7 +262,7 @@ void OsiClpSolverInterface::initialSolve()
     }
   } else {
     // User doing nothing and all slack basis
-    ClpSolve options;
+    ClpSolve options=solveOptions_;
     // But switch off odder ideas
     options.setSpecialOption(1,4);
     bool yesNo;
@@ -1945,6 +1945,7 @@ whichRange_(NULL)
 	   numberColumns*sizeof(char));
   }
   saveData_ = rhs.saveData_;
+  solveOptions_  = rhs.solveOptions_;
   cleanupScaling_ = rhs.cleanupScaling_;
   specialOptions_ = rhs.specialOptions_;
   fillParamMaps();
@@ -2039,6 +2040,7 @@ OsiClpSolverInterface::operator=(const OsiClpSolverInterface& rhs)
     notOwned_=false;
     linearObjective_ = modelPtr_->objective();
     saveData_ = rhs.saveData_;
+    solveOptions_  = rhs.solveOptions_;
     cleanupScaling_ = rhs.cleanupScaling_;
     specialOptions_ = rhs.specialOptions_;
     basis_ = rhs.basis_;

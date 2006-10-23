@@ -47,6 +47,8 @@
 #include "CoinFinite.hpp"
 const double CoinInfinity = COIN_DBL_MAX ;
 
+#include "CoinTypes.hpp"
+
 /* Cut name lengths for readability. */
 
 #define ODSI OsiDylpSolverInterface
@@ -2082,7 +2084,7 @@ void ODSI::detach_dylp ()
 # ifdef ODSI_INFOMSGS
   CoinMessageHandler *hdl = messageHandler() ; 
   hdl->message(ODSI_DETACH,messages_)
-    << reinterpret_cast<int>(this)
+    << (int)reinterpret_cast<CoinIntPtr>(this)
     << CoinMessageEol ;
 # endif
   dylp(lpprob,initialSolveOptions,tolerances,statistics) ;
@@ -4007,7 +4009,7 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
 
   CoinMessageHandler *hdl = messageHandler() ; 
   hdl->message(ODSI_ALLDYLP,messages_)
-    << startString(start) << reinterpret_cast<int>(this)
+    << startString(start) << (int)reinterpret_cast<CoinIntPtr>(this)
     << CoinMessageEol ;
 # endif
 
@@ -4444,7 +4446,7 @@ void ODSI::initialSolve ()
   { dylp_owner = this ;
 #   ifdef ODSI_INFOMSGS
     hdl->message(ODSI_ATTACH,messages_)
-      << "initialSolve" << reinterpret_cast<int>(this)
+      << "initialSolve" << (int)reinterpret_cast<CoinIntPtr>(this)
       << CoinMessageEol ;
 #   endif
     if (lpprob->lpret == lpUNBOUNDED)
@@ -5875,7 +5877,7 @@ void ODSI::resolve ()
   { dylp_owner = this ;
 #   ifdef ODSI_INFOMSGS
     hdl->message(ODSI_ATTACH,messages_)
-      << "resolve" << reinterpret_cast<int>(this)
+      << "resolve" << (int)reinterpret_cast<CoinIntPtr>(this)
       << CoinMessageEol ;
 #   endif
     if (lpprob->lpret == lpUNBOUNDED)

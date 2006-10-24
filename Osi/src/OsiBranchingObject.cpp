@@ -11,6 +11,7 @@
 #include "OsiSolverInterface.hpp"
 #include "OsiBranchingObject.hpp"
 #include "CoinHelperFunctions.hpp"
+#include "CoinPackedMatrix.hpp"
 #include "CoinSort.hpp"
 #include "CoinError.hpp"
 
@@ -18,8 +19,8 @@
 OsiObject::OsiObject() 
   :infeasibility_(0.0),
    whichWay_(0),
-   priority_(1000),
-   numberWays_(2)
+   numberWays_(2),
+   priority_(1000)
 {
 }
 
@@ -161,11 +162,21 @@ OsiBranchingInformation::OsiBranchingInformation ()
     integerTolerance_(1.0e-7),
     primalTolerance_(1.0e-7),
     timeRemaining_(COIN_DBL_MAX),
+    defaultDual_(-1.0),
     solver_(NULL),
     lower_(NULL),
     solution_(NULL),
     upper_(NULL),
     hotstartSolution_(NULL),
+    pi_(NULL),
+    rowActivity_(NULL),
+    objective_(NULL),
+    rowLower_(NULL),
+    rowUpper_(NULL),
+    elementByColumn_(NULL),
+    columnStart_(NULL),
+    columnLength_(NULL),
+    row_(NULL),
     numberSolutions_(0),
     numberBranchingSolutions_(0),
     depth_(0)
@@ -176,6 +187,7 @@ OsiBranchingInformation::OsiBranchingInformation ()
 */
 OsiBranchingInformation::OsiBranchingInformation (const OsiSolverInterface * solver)
   : timeRemaining_(COIN_DBL_MAX),
+    defaultDual_(-1.0),
     solver_(solver),
     hotstartSolution_(NULL),
     numberSolutions_(0),
@@ -192,6 +204,16 @@ OsiBranchingInformation::OsiBranchingInformation (const OsiSolverInterface * sol
   lower_ = solver_->getColLower();
   solution_ = solver_->getColSolution();
   upper_ = solver_->getColUpper();
+  pi_ = solver_->getRowPrice();
+  rowActivity_ = solver_->getRowActivity();
+  objective_ = solver_->getObjCoefficients();
+  rowLower_ = solver_->getRowLower();
+  rowUpper_ = solver_->getRowUpper();
+  // Column copy of matrix
+  elementByColumn_ = solver_->getMatrixByCol()->getElements();
+  row_ = solver_->getMatrixByCol()->getIndices();
+  columnStart_ = solver_->getMatrixByCol()->getVectorStarts();
+  columnLength_ = solver_->getMatrixByCol()->getVectorLengths();
 }
 // Copy constructor 
 OsiBranchingInformation::OsiBranchingInformation ( const OsiBranchingInformation & rhs)
@@ -202,11 +224,21 @@ OsiBranchingInformation::OsiBranchingInformation ( const OsiBranchingInformation
   integerTolerance_ = rhs.integerTolerance_;
   primalTolerance_ = rhs.primalTolerance_;
   timeRemaining_ = rhs.timeRemaining_;
+  defaultDual_ = rhs.defaultDual_;
   solver_ = rhs.solver_;
   lower_ = rhs.lower_;
   solution_ = rhs.solution_;
   upper_ = rhs.upper_;
   hotstartSolution_ = rhs.hotstartSolution_;
+  pi_ = rhs.pi_;
+  rowActivity_ = rhs.rowActivity_;
+  objective_ = rhs.objective_;
+  rowLower_ = rhs.rowLower_;
+  rowUpper_ = rhs.rowUpper_;
+  elementByColumn_ = rhs.elementByColumn_;
+  row_ = rhs.row_;
+  columnStart_ = rhs.columnStart_;
+  columnLength_ = rhs.columnLength_;
   numberSolutions_ = rhs.numberSolutions_;
   numberBranchingSolutions_ = rhs.numberBranchingSolutions_;
   depth_ = rhs.depth_;
@@ -230,10 +262,20 @@ OsiBranchingInformation::operator=( const OsiBranchingInformation& rhs)
     integerTolerance_ = rhs.integerTolerance_;
     primalTolerance_ = rhs.primalTolerance_;
     timeRemaining_ = rhs.timeRemaining_;
+    defaultDual_ = rhs.defaultDual_;
     lower_ = rhs.lower_;
     solution_ = rhs.solution_;
     upper_ = rhs.upper_;
     hotstartSolution_ = rhs.hotstartSolution_;
+    pi_ = rhs.pi_;
+    rowActivity_ = rhs.rowActivity_;
+    objective_ = rhs.objective_;
+    rowLower_ = rhs.rowLower_;
+    rowUpper_ = rhs.rowUpper_;
+    elementByColumn_ = rhs.elementByColumn_;
+    row_ = rhs.row_;
+    columnStart_ = rhs.columnStart_;
+    columnLength_ = rhs.columnLength_;
     numberSolutions_ = rhs.numberSolutions_;
     numberBranchingSolutions_ = rhs.numberBranchingSolutions_;
     depth_ = rhs.depth_;
@@ -292,9 +334,10 @@ OsiTwoWayBranchingObject::~OsiTwoWayBranchingObject ()
 */
 OsiSimpleInteger::OsiSimpleInteger ()
   : OsiObject(),
-    columnNumber_(-1),
     originalLower_(0.0),
-    originalUpper_(1.0)
+    originalUpper_(1.0),
+    otherInfeasibility_(0.0),
+    columnNumber_(-1)
 {
 }
 
@@ -308,6 +351,7 @@ OsiSimpleInteger::OsiSimpleInteger (const OsiSolverInterface * solver, int iColu
   columnNumber_ = iColumn ;
   originalLower_ = solver->getColLower()[columnNumber_] ;
   originalUpper_ = solver->getColUpper()[columnNumber_] ;
+  otherInfeasibility_=0.0;
 }
 
   
@@ -318,6 +362,7 @@ OsiSimpleInteger::OsiSimpleInteger ( int iColumn, double lower, double upper)
   columnNumber_ = iColumn ;
   originalLower_ = lower;
   originalUpper_ = upper;
+  otherInfeasibility_=0.0;
 }
 
 // Copy constructor 
@@ -328,6 +373,7 @@ OsiSimpleInteger::OsiSimpleInteger ( const OsiSimpleInteger & rhs)
   columnNumber_ = rhs.columnNumber_;
   originalLower_ = rhs.originalLower_;
   originalUpper_ = rhs.originalUpper_;
+  otherInfeasibility_ = rhs.otherInfeasibility_;
 }
 
 // Clone
@@ -346,6 +392,7 @@ OsiSimpleInteger::operator=( const OsiSimpleInteger& rhs)
     columnNumber_ = rhs.columnNumber_;
     originalLower_ = rhs.originalLower_;
     originalUpper_ = rhs.originalUpper_;
+    otherInfeasibility_ = rhs.otherInfeasibility_;
   }
   return *this;
 }
@@ -395,10 +442,72 @@ OsiSimpleInteger::infeasibility(const OsiBranchingInformation * info, int & whic
   }
   infeasibility_ = fabs(value-nearest);
   whichWay_=whichWay;
-  if (infeasibility_<=info->integerTolerance_) 
+  if (infeasibility_<=info->integerTolerance_) {
+    otherInfeasibility_ = 1.0;
     return 0.0;
-  else
+  } else if (info->defaultDual_<0.0) {
+    otherInfeasibility_ = 1.0-infeasibility_;
     return infeasibility_;
+  } else {
+    const double * pi = info->pi_;
+    const double * activity = info->rowActivity_;
+    const double * lower = info->rowLower_;
+    const double * upper = info->rowUpper_;
+    const double * element = info->elementByColumn_;
+    const int * row = info->row_;
+    const CoinBigIndex * columnStart = info->columnStart_;
+    const int * columnLength = info->columnLength_;
+    double direction = info->direction_;
+    double downMovement = value - floor(value);
+    double upMovement = 1.0-downMovement;
+    double valueP = info->objective_[columnNumber_]*direction;
+    CoinBigIndex start = columnStart[columnNumber_];
+    CoinBigIndex end = start + columnLength[columnNumber_];
+    double upEstimate = 0.0;
+    double downEstimate = 0.0;
+    if (valueP>0.0)
+      upEstimate = valueP*upMovement;
+    else
+      downEstimate -= valueP*downMovement;
+    double tolerance = info->primalTolerance_;
+    for (CoinBigIndex j=start;j<end;j++) {
+      int iRow = row[j];
+      if (lower[iRow]<-1.0e20) 
+	assert (pi[iRow]<=1.0e-4);
+      if (upper[iRow]>1.0e20) 
+	assert (pi[iRow]>=-1.0e-4);
+      valueP = pi[iRow]*direction;
+      double el2 = element[j];
+      double value2 = valueP*el2;
+      double u=0.0;
+      double d=0.0;
+      if (value2>0.0)
+	u = value2;
+      else
+	d = -value2;
+      // if up makes infeasible then make at least default
+      double newUp = activity[iRow] + upMovement*el2;
+      if (newUp>upper[iRow]+tolerance||newUp<lower[iRow]-tolerance)
+	u = CoinMax(u,info->defaultDual_);
+      upEstimate += u*upMovement;
+      // if down makes infeasible then make at least default
+      double newDown = activity[iRow] - downMovement*el2;
+      if (newDown>upper[iRow]+tolerance||newDown<lower[iRow]-tolerance)
+	d = CoinMax(d,info->defaultDual_);
+      downEstimate += d*downMovement;
+    }
+    if (downEstimate>=upEstimate) {
+      infeasibility_ = CoinMax(1.0e-12,upEstimate);
+      otherInfeasibility_ = CoinMax(1.0e-12,downEstimate);
+      whichWay = 1;
+    } else {
+      infeasibility_ = CoinMax(1.0e-12,downEstimate);
+      otherInfeasibility_ = CoinMax(1.0e-12,upEstimate);
+      whichWay = 0;
+    }
+    whichWay_=whichWay;
+    return infeasibility_;
+  }
 }
 
 // This looks at solution and sets bounds to contain solution
@@ -448,7 +557,7 @@ double
 OsiSimpleInteger::downEstimate() const
 {
   if (whichWay_)
-    return 1.0-infeasibility_;
+    return otherInfeasibility_;
   else
     return infeasibility_;
 }
@@ -457,7 +566,7 @@ double
 OsiSimpleInteger::upEstimate() const
 {
   if (!whichWay_)
-    return 1.0-infeasibility_;
+    return otherInfeasibility_;
   else
     return infeasibility_;
 }

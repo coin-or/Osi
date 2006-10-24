@@ -500,7 +500,8 @@ OsiChooseStrong::OsiChooseStrong() :
   upNumber_(NULL),
   downNumber_(NULL),
   numberObjects_(0),
-  numberBeforeTrusted_(0)
+  numberBeforeTrusted_(0),
+  shadowPriceMode_(0)
 {
 }
 
@@ -510,7 +511,8 @@ OsiChooseStrong::OsiChooseStrong(const OsiSolverInterface * solver) :
   downTotalChange_(NULL),
   upNumber_(NULL),
   downNumber_(NULL),
-  numberBeforeTrusted_(0)
+  numberBeforeTrusted_(0),
+  shadowPriceMode_(0)
 {
   // create useful arrays
   numberObjects_ = solver_->numberObjects();
@@ -529,6 +531,7 @@ OsiChooseStrong::OsiChooseStrong(const OsiChooseStrong & rhs)
 {  
   numberObjects_ = rhs.numberObjects_;
   numberBeforeTrusted_ = rhs.numberBeforeTrusted_;
+  shadowPriceMode_ = rhs.shadowPriceMode_;
   upTotalChange_ = CoinCopyOfArray(rhs.upTotalChange_,numberObjects_);
   downTotalChange_ = CoinCopyOfArray(rhs.downTotalChange_,numberObjects_);
   upNumber_ = CoinCopyOfArray(rhs.upNumber_,numberObjects_);
@@ -546,6 +549,7 @@ OsiChooseStrong::operator=(const OsiChooseStrong & rhs)
     delete [] downNumber_;
     numberObjects_ = rhs.numberObjects_;
     numberBeforeTrusted_ = rhs.numberBeforeTrusted_;
+    shadowPriceMode_ = rhs.shadowPriceMode_;
     upTotalChange_ = CoinCopyOfArray(rhs.upTotalChange_,numberObjects_);
     downTotalChange_ = CoinCopyOfArray(rhs.downTotalChange_,numberObjects_);
     upNumber_ = CoinCopyOfArray(rhs.upNumber_,numberObjects_);
@@ -600,7 +604,27 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
     useful_[i]=0.0;
   }
   OsiObject ** object = info->solver_->objects();
-  // Get average pseudo costs
+  // Get average pseudo costs and see if pseudo shadow prices possible
+  int shadowPossible=shadowPriceMode_;
+  if (shadowPossible) {
+    for ( i=0;i<numberObjects;i++) {
+      if ( !object[i]->canHandleShadowPrices()) {
+	shadowPossible=0;
+	break;
+      }
+    }
+    if (shadowPossible) {
+      int numberRows = solver_->getNumRows();
+      const double * pi = info->pi_;
+      double sumPi=0.0;
+      for (i=0;i<numberRows;i++) 
+	sumPi += fabs(pi[i]);
+      sumPi /= ((double) numberRows);
+      // and scale back
+      sumPi *= 0.01;
+      info->defaultDual_ = sumPi; // switch on
+    }
+  }
   double sumUp=0.0;
   double numberUp=0.0;
   double sumDown=0.0;
@@ -613,6 +637,7 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
   }
   double upMultiplier=(1.0+sumUp)/(1.0+numberUp);
   double downMultiplier=(1.0+sumDown)/(1.0+numberDown);
+  //
   for ( i=0;i<numberObjects;i++) {
     int way;
     double value = object[i]->infeasibility(info,way);
@@ -639,13 +664,17 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
 	sumDown = downTotalChange_[i]+1.0e-30;
 	numberDown = downNumber_[i];
 	double upEstimate = object[i]->upEstimate();
-	upEstimate = numberUp ? ((upEstimate*sumUp)/numberUp) : (upEstimate*upMultiplier);
-	if (numberUp<numberBeforeTrusted_)
-	  upEstimate *= (numberBeforeTrusted_+1.0)/(numberUp+1.0);
 	double downEstimate = object[i]->downEstimate();
-	downEstimate = numberDown ? ((downEstimate*sumDown)/numberDown) : (downEstimate*downMultiplier);
-	if (numberDown<numberBeforeTrusted_)
-	  downEstimate *= (numberBeforeTrusted_+1.0)/(numberDown+1.0);
+	if (shadowPossible<2) {
+	  upEstimate = numberUp ? ((upEstimate*sumUp)/numberUp) : (upEstimate*upMultiplier);
+	  if (numberUp<numberBeforeTrusted_)
+	    upEstimate *= (numberBeforeTrusted_+1.0)/(numberUp+1.0);
+	  downEstimate = numberDown ? ((downEstimate*sumDown)/numberDown) : (downEstimate*downMultiplier);
+	  if (numberDown<numberBeforeTrusted_)
+	    downEstimate *= (numberBeforeTrusted_+1.0)/(numberDown+1.0);
+	} else {
+	  // use shadow prices always
+	}
 	value = MAXMIN_CRITERION*CoinMin(upEstimate,downEstimate) + (1.0-MAXMIN_CRITERION)*CoinMax(upEstimate,downEstimate);
 	if (value>check) {
 	  //add to list
@@ -693,7 +722,9 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
     assert (i==numberUnsatisfied_);
     if (!numberStrong_)
       numberOnList_=0;
-  } 
+  }
+  // Get rid of any shadow prices info
+  info->defaultDual_ = -1.0; // switch off
   return numberUnsatisfied_;
 }
 /* Choose a variable

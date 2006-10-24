@@ -302,6 +302,18 @@ public:
   inline void setNumberBeforeTrusted(int value)
   { numberBeforeTrusted_ = value;};
 
+  /** Pseudo Shadow Price mode
+      0 - off
+      1 - use if no strong info
+      2 - use if strong not trusted
+      3 - use even if trusted
+  */
+  inline int shadowPriceMode() const
+  { return shadowPriceMode_;};
+  /// Set Shadow price mode
+  inline void setShadowPriceMode(int value)
+  { shadowPriceMode_ = value;};
+
 
 protected:
   // Data
@@ -317,6 +329,12 @@ protected:
   int numberObjects_;
   /// Number before we trust
   int numberBeforeTrusted_;
+  /** Pseudo Shadow Price mode
+      0 - off
+      1 - use and multiply by strong info
+      2 - use 
+  */
+  int shadowPriceMode_;
 };
 
 /** This class contains the result of strong branching on a variable

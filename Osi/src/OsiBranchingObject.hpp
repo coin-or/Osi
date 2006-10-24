@@ -128,6 +128,9 @@ public:
   */
   virtual bool boundBranch() const 
   {return true;};
+  /// Return true if knows how to deal with Pseudo Shadow Prices
+  virtual bool canHandleShadowPrices() const
+  { return false;};
   /// Return maximum number of ways branch may have
   inline int numberWays() const
   { return numberWays_;};
@@ -169,11 +172,11 @@ protected:
   /// Computed infeasibility
   mutable double infeasibility_;
   /// Computed preferred way to branch 
-  mutable int whichWay_;
+  mutable short whichWay_;
+  /// Maximum number of ways on branch
+  short  numberWays_;
   /// Priority
   int priority_;
-  /// Maximum number of ways on branch
-  int numberWays_;
 
 };
 
@@ -337,6 +340,8 @@ public:
   double primalTolerance_;
   /// Maximum time remaining before stopping on time
   double timeRemaining_;
+  /// Dual to use if row bound violated (if negative then pseudoShadowPrices off)
+  double defaultDual_;
   /// Pointer to solver
   const OsiSolverInterface * solver_;
   /// Pointer to current lower bounds on columns
@@ -347,6 +352,24 @@ public:
   const double * upper_;
   /// Highly optional target (hot start) solution
   const double * hotstartSolution_;
+  /// Pointer to duals
+  const double * pi_;
+  /// Pointer to row activity
+  const double * rowActivity_;
+  /// Objective
+  const double * objective_;
+  /// Pointer to current lower bounds on rows
+  const double * rowLower_;
+  /// Pointer to current upper bounds on rows
+  const double * rowUpper_;
+  /// Elements in column copy of matrix
+  const double * elementByColumn_;
+  /// Column starts
+  const CoinBigIndex * columnStart_;
+  /// Column lengths
+  const int * columnLength_;
+  /// Row indices
+  const int * row_;
   /// Number of solutions found
   int numberSolutions_;
   /// Number of branching solutions found (i.e. exclude heuristics)
@@ -465,21 +488,24 @@ public:
   /**  Change column numbers after preprocessing
    */
   virtual void resetSequenceEtc(int numberColumns, const int * originalColumns);
+  
   /// Return "up" estimate (default 1.0e-5)
   virtual double upEstimate() const;
   /// Return "down" estimate (default 1.0e-5)
   virtual double downEstimate() const;
-  
-
+  /// Return true if knows how to deal with Pseudo Shadow Prices
+  virtual bool canHandleShadowPrices() const
+  { return true;};
 protected:
   /// data
-
-  /// Column number in solver
-  int columnNumber_;
   /// Original lower bound
   double originalLower_;
   /// Original upper bound
   double originalUpper_;
+  /// "Infeasibility" on other way
+  mutable float otherInfeasibility_;
+  /// Column number in solver
+  int columnNumber_;
   
 };
 /** Simple branching object for an integer variable

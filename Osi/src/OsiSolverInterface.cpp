@@ -1803,7 +1803,8 @@ OsiSolverInterface::forceFeasible()
     integer variable, this has the effect of fixing all integer variables.
   */
   int i;
-  const OsiBranchingInformation info(this);
+  // Can't guarantee has matrix
+  const OsiBranchingInformation info(this,false);
   double infeasibility=0.0;
   for (i=0;i<numberObjects_;i++)
     infeasibility += object_[i]->feasibleRegion(this,&info);

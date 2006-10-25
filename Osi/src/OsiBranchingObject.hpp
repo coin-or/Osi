@@ -309,8 +309,8 @@ public:
   /// Default Constructor 
   OsiBranchingInformation ();
   
-  /// Useful Constructor 
-  OsiBranchingInformation (const OsiSolverInterface * solver);
+  /// Useful Constructor (normalSolver true if has matrix etc etc)
+  OsiBranchingInformation (const OsiSolverInterface * solver, bool normalSolver);
   
   /// Copy constructor 
   OsiBranchingInformation ( const OsiBranchingInformation &);
@@ -654,7 +654,9 @@ private:
   /// Number of members
   int numberMembers_;
   /// SOS type
-   int sosType_;
+  int sosType_;
+  /// "Infeasibility" on other way
+  mutable float otherInfeasibility_;
   /// Whether integer valued
   bool integerValued_;
 };

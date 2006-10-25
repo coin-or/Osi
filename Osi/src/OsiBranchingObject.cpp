@@ -73,7 +73,8 @@ OsiObject::columnNumber() const
 double 
 OsiObject::infeasibility(const OsiSolverInterface * solver, int & preferredWay) const
 {
-  OsiBranchingInformation info(solver);
+  // Can't guarantee has matrix
+  OsiBranchingInformation info(solver,false);
   return infeasibility(&info,preferredWay);
 }
 // This does NOT set mutable stuff
@@ -95,7 +96,8 @@ OsiObject::checkInfeasibility(const OsiBranchingInformation * info) const
 double 
 OsiObject::feasibleRegion(OsiSolverInterface * solver) const 
 {
-  OsiBranchingInformation info(solver);
+  // Can't guarantee has matrix
+  OsiBranchingInformation info(solver,false);
   return feasibleRegion(solver,&info);
 }
 // Default Constructor 
@@ -185,7 +187,8 @@ OsiBranchingInformation::OsiBranchingInformation ()
 
 /** Useful constructor
 */
-OsiBranchingInformation::OsiBranchingInformation (const OsiSolverInterface * solver)
+OsiBranchingInformation::OsiBranchingInformation (const OsiSolverInterface * solver,
+						  bool normalSolver)
   : timeRemaining_(COIN_DBL_MAX),
     defaultDual_(-1.0),
     solver_(solver),
@@ -209,11 +212,19 @@ OsiBranchingInformation::OsiBranchingInformation (const OsiSolverInterface * sol
   objective_ = solver_->getObjCoefficients();
   rowLower_ = solver_->getRowLower();
   rowUpper_ = solver_->getRowUpper();
-  // Column copy of matrix
-  elementByColumn_ = solver_->getMatrixByCol()->getElements();
-  row_ = solver_->getMatrixByCol()->getIndices();
-  columnStart_ = solver_->getMatrixByCol()->getVectorStarts();
-  columnLength_ = solver_->getMatrixByCol()->getVectorLengths();
+  if (normalSolver) {
+    // Column copy of matrix if matrix exists
+    elementByColumn_ = solver_->getMatrixByCol()->getElements();
+    row_ = solver_->getMatrixByCol()->getIndices();
+    columnStart_ = solver_->getMatrixByCol()->getVectorStarts();
+    columnLength_ = solver_->getMatrixByCol()->getVectorLengths();
+  } else {
+    // Matrix does not exist
+    elementByColumn_ = NULL;
+    row_ = NULL;
+    columnStart_ = NULL;
+    columnLength_ = NULL;
+  }
 }
 // Copy constructor 
 OsiBranchingInformation::OsiBranchingInformation ( const OsiBranchingInformation & rhs)
@@ -701,6 +712,7 @@ OsiSOS::OsiSOS ()
     weights_(NULL),
     numberMembers_(0),
     sosType_(-1),
+    otherInfeasibility_(0.0),
     integerValued_(false)
 {
 }
@@ -708,8 +720,10 @@ OsiSOS::OsiSOS ()
 // Useful constructor (which are indices)
 OsiSOS::OsiSOS (const OsiSolverInterface * solver,  int numberMembers,
 	   const int * which, const double * weights, int type)
-  : numberMembers_(numberMembers),
-    sosType_(type)
+  : OsiObject(),
+    numberMembers_(numberMembers),
+    sosType_(type),
+    otherInfeasibility_(0.0)
 {
   integerValued_ = type==1; // not strictly true - should check problem
   if (numberMembers_) {
@@ -744,6 +758,7 @@ OsiSOS::OsiSOS ( const OsiSOS & rhs)
 {
   numberMembers_ = rhs.numberMembers_;
   sosType_ = rhs.sosType_;
+  otherInfeasibility_ = rhs.otherInfeasibility_;
   integerValued_ = rhs.integerValued_;
   if (numberMembers_) {
     members_ = new int[numberMembers_];
@@ -773,6 +788,7 @@ OsiSOS::operator=( const OsiSOS& rhs)
     delete [] weights_;
     numberMembers_ = rhs.numberMembers_;
     sosType_ = rhs.sosType_;
+    otherInfeasibility_ = rhs.otherInfeasibility_;
     integerValued_ = rhs.integerValued_;
     if (numberMembers_) {
       members_ = new int[numberMembers_];
@@ -801,10 +817,9 @@ OsiSOS::infeasibility(const OsiBranchingInformation * info,int & whichWay) const
   int j;
   int firstNonZero=-1;
   int lastNonZero = -1;
-  const OsiSolverInterface * solver = info->solver_;
-  const double * solution = solver->getColSolution();
-  //const double * lower = solver->getColLower();
-  const double * upper = solver->getColUpper();
+  const double * solution = info->solution_;
+  //const double * lower = info->lower_;
+  const double * upper = info->upper_;
   //double largestValue=0.0;
   double integerTolerance = info->integerTolerance_;
   double weight = 0.0;
@@ -834,6 +849,7 @@ OsiSOS::infeasibility(const OsiBranchingInformation * info,int & whichWay) const
     }
   }
   whichWay=1;
+  whichWay_=1;
   if (lastNonZero-firstNonZero>=sosType_) {
     // find where to branch
     assert (sum>0.0);
@@ -845,8 +861,12 @@ OsiSOS::infeasibility(const OsiBranchingInformation * info,int & whichWay) const
     // probably best to use pseudo duals
     double value = lastNonZero-firstNonZero+1;
     value *= 0.5/((double) numberMembers_);
+    infeasibility_=value;
+    otherInfeasibility_=1.0-value;
     return value;
   } else {
+    infeasibility_=0.0;
+    otherInfeasibility_=1.0;
     return 0.0; // satisfied
   }
 }
@@ -859,8 +879,8 @@ OsiSOS::feasibleRegion(OsiSolverInterface * solver, const OsiBranchingInformatio
   int firstNonZero=-1;
   int lastNonZero = -1;
   const double * solution = info->solution_;
-  //const double * lower = solver->getColLower();
-  const double * upper = solver->getColUpper();
+  //const double * lower = info->lower_;
+  const double * upper = info->upper_;
   double sum =0.0;
   // Find largest one or pair
   double movement=0.0;
@@ -923,19 +943,24 @@ OsiSOS::resetSequenceEtc(int numberColumns, const int * originalColumns)
     numberMembers_=n2;
   }
 }
-// Return "up" estimate (default 1.0e-5)
-double 
-OsiSOS::upEstimate() const
-{
-  return 1.0e-5;
-}
-// Return "down" estimate (default 1.0e-5)
+// Return "down" estimate
 double 
 OsiSOS::downEstimate() const
 {
-  return 1.0e-5;
+  if (whichWay_)
+    return otherInfeasibility_;
+  else
+    return infeasibility_;
 }
-
+// Return "up" estimate
+double 
+OsiSOS::upEstimate() const
+{
+  if (!whichWay_)
+    return otherInfeasibility_;
+  else
+    return infeasibility_;
+}
 
 // Creates a branching object
 OsiBranchingObject * 

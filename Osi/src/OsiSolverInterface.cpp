@@ -1203,7 +1203,7 @@ OsiSolverInterface::writeLpNative(FILE *fp,
    double *objective = new double[numcols];
    const double *curr_obj = getObjCoefficients();
 
-   if(getObjSense() * objSense < 0.0) {
+   if(getObjSense() * ((objSense == 0) ? 1 : objSense) < 0.0) {
      for (int i=0; i<numcols; i++) {
        objective[i] = - curr_obj[i];
      }

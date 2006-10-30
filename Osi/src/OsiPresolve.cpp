@@ -75,13 +75,22 @@ OsiPresolve::gutsOfDestroy()
 
 /* This version of presolve returns a pointer to a new presolved 
    model.  NULL if infeasible
+
+   doStatus controls activities required to transform an existing
+   solution to match the presolved problem. I'd (lh) argue that this should
+   default to false, but to maintain previous behaviour it defaults to true.
+   Really, this is only useful if you've already optimised before applying
+   presolve and also want to work with the solution after presolve.  I think
+   that this is the less common case. The more common situation is to apply
+   presolve before optimising.
 */
 OsiSolverInterface * 
 OsiPresolve::presolvedModel(OsiSolverInterface & si,
-			 double feasibilityTolerance,
-			 bool keepIntegers,
+			    double feasibilityTolerance,
+			    bool keepIntegers,
 			    int numberPasses,
-                            const char * prohibited)
+                            const char * prohibited,
+			    bool doStatus)
 {
   ncols_ = si.getNumCols();
   nrows_ = si.getNumRows();
@@ -127,9 +136,9 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
     CoinPresolveMatrix prob(ncols_,
 			maxmin,
 			presolvedModel_,
-			nrows_, nelems_,true,nonLinearValue_,prohibited);
+			nrows_, nelems_,doStatus,nonLinearValue_,prohibited);
     // make sure row solution correct
-    {
+    if (doStatus) {
       double *colels	= prob.colels_;
       int *hrow		= prob.hrow_;
       CoinBigIndex *mcstrt		= prob.mcstrt_;
@@ -208,29 +217,31 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
     
       prob.update_model(presolvedModel_, nrows_, ncols_, nelems_);
       // copy status and solution
-      presolvedModel_->setColSolution(prob.sol_);
-      CoinWarmStartBasis *basis = 
-	dynamic_cast<CoinWarmStartBasis *>(presolvedModel_->getEmptyWarmStart());
-      basis->resize(prob.nrows_,prob.ncols_);
-      int i;
-      for (i=0;i<prob.ncols_;i++) {
-	CoinWarmStartBasis::Status status = 
-	  (CoinWarmStartBasis::Status ) prob.getColumnStatus(i);
-	basis->setStructStatus(i,status);
+      if (doStatus) {
+	presolvedModel_->setColSolution(prob.sol_);
+	CoinWarmStartBasis *basis = 
+	  dynamic_cast<CoinWarmStartBasis *>(presolvedModel_->getEmptyWarmStart());
+	basis->resize(prob.nrows_,prob.ncols_);
+	int i;
+	for (i=0;i<prob.ncols_;i++) {
+	  CoinWarmStartBasis::Status status = 
+	    (CoinWarmStartBasis::Status ) prob.getColumnStatus(i);
+	  basis->setStructStatus(i,status);
+	}
+	for (i=0;i<prob.nrows_;i++) {
+	  CoinWarmStartBasis::Status status = 
+	    (CoinWarmStartBasis::Status ) prob.getRowStatus(i);
+	  basis->setArtifStatus(i,status);
+	}
+	presolvedModel_->setWarmStart(basis);
+	delete basis ;
+	delete [] prob.sol_;
+	delete [] prob.acts_;
+	delete [] prob.colstat_;
+	prob.sol_=NULL;
+	prob.acts_=NULL;
+	prob.colstat_=NULL;
       }
-      for (i=0;i<prob.nrows_;i++) {
-	CoinWarmStartBasis::Status status = 
-	  (CoinWarmStartBasis::Status ) prob.getRowStatus(i);
-	basis->setArtifStatus(i,status);
-      }
-      presolvedModel_->setWarmStart(basis);
-      delete basis ;
-      delete [] prob.sol_;
-      delete [] prob.acts_;
-      delete [] prob.colstat_;
-      prob.sol_=NULL;
-      prob.acts_=NULL;
-      prob.colstat_=NULL;
       
       int ncolsNow = presolvedModel_->getNumCols();
       memcpy(originalColumn_,prob.originalColumn_,ncolsNow*sizeof(int));

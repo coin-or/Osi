@@ -1781,7 +1781,7 @@ OsiSolverInterface::addObjects(int numberObjects, OsiObject ** objects)
     OsiSimpleInteger * obj =
       dynamic_cast <OsiSimpleInteger *>(objects[i]) ;
     if (!obj) {
-      temp[n]=objects[i]->clone();
+      temp[n++]=objects[i]->clone();
     }
   }
   delete [] mark;

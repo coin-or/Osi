@@ -272,8 +272,6 @@ void OsiClpSolverInterface::initialSolve()
   } else {
     // User doing nothing and all slack basis
     ClpSolve options=solveOptions_;
-    // But switch off odder ideas
-    options.setSpecialOption(1,4);
     bool yesNo;
     OsiHintStrength strength;
     getHintParam(OsiDoInBranchAndCut,yesNo,strength);
@@ -327,6 +325,30 @@ void OsiClpSolverInterface::resolve()
       modelPtr_->setNumberIterations(0);
       return;
     }
+  }
+  // If using Clp initialSolve and primal - just do here
+  gotHint = (getHintParam(OsiDoDualInResolve,takeHint,strength));
+  assert (gotHint);
+  if (strength!=OsiHintIgnore&&!takeHint&&solveOptions_.getSpecialOption(6)) {
+    ClpSolve options=solveOptions_;
+    // presolve
+    getHintParam(OsiDoPresolveInResolve,takeHint,strength);
+    if (strength!=OsiHintIgnore&&!takeHint)
+      options.setPresolveType(ClpSolve::presolveOff);
+    int saveOptions = modelPtr_->specialOptions();
+    getHintParam(OsiDoInBranchAndCut,takeHint,strength);
+    if (takeHint) {
+      modelPtr_->setSpecialOptions(modelPtr_->specialOptions()|1024);
+    }
+    setBasis(basis_,modelPtr_);
+    modelPtr_->initialSolve(options);
+    lastAlgorithm_ = 1; // say primal
+    // If scaled feasible but unscaled infeasible take action
+    if (!modelPtr_->status()&&cleanupScaling_) {
+      modelPtr_->cleanup(cleanupScaling_);
+    }
+    modelPtr_->setSpecialOptions(saveOptions); // restore
+    basis_ = getBasis(modelPtr_);
   }
   int saveSolveType=modelPtr_->solveType();
   bool doingPrimal = modelPtr_->algorithm()>0;
@@ -4069,34 +4091,47 @@ int
 OsiClpSolverInterface::findIntegersAndSOS(bool justCount)
 {
   findIntegers(justCount);
-  // delete old SOS objects and keep others
   int nObjects=0;
   OsiObject ** oldObject = object_;
   int iObject;
+  int numberSOS=0;
   for (iObject = 0;iObject<numberObjects_;iObject++) {
     OsiSOS * obj =
       dynamic_cast <OsiSOS *>(oldObject[iObject]) ;
     if (obj) 
-      delete oldObject[iObject];
-    else
-      oldObject[nObjects++]=oldObject[iObject];
+      numberSOS++;
   }
-  // make a large enough array for new objects
-  numberObjects_=numberSOS_+nObjects;
-  if (numberObjects_)
-    object_ = new OsiObject * [numberObjects_];
-  else
-    object_=NULL;
-  // copy
-  memcpy(object_,oldObject,nObjects*sizeof(OsiObject *));
-  // Delete old array (just array)
-  delete [] oldObject;
-  
-  for (int i=0;i<numberSOS_;i++) {
-    CoinSet * set =  setInfo_+i;
-    object_[nObjects++] =
-      new OsiSOS(this,set->numberEntries(),set->which(),set->weights(),
-		 set->setType());
+  if (numberSOS_&&!numberSOS) {
+    // make a large enough array for new objects
+    nObjects = numberObjects_;
+    numberObjects_=numberSOS_+nObjects;
+    if (numberObjects_)
+      object_ = new OsiObject * [numberObjects_];
+    else
+      object_=NULL;
+    // copy
+    memcpy(object_,oldObject,nObjects*sizeof(OsiObject *));
+    // Delete old array (just array)
+    delete [] oldObject;
+    
+    for (int i=0;i<numberSOS_;i++) {
+      CoinSet * set =  setInfo_+i;
+      object_[nObjects++] =
+	new OsiSOS(this,set->numberEntries(),set->which(),set->weights(),
+		   set->setType());
+    }
+  } else if (!numberSOS_&&numberSOS) {
+    // create Coin sets
+    assert (!setInfo_);
+    setInfo_ = new CoinSet[numberSOS];
+    for (iObject = 0;iObject<numberObjects_;iObject++) {
+      OsiSOS * obj =
+	dynamic_cast <OsiSOS *>(oldObject[iObject]) ;
+      if (obj) 
+	setInfo_[numberSOS_++]=CoinSosSet(obj->numberMembers(),obj->members(),obj->weights(),obj->sosType());
+    }
+  } else if (numberSOS!=numberSOS_) {
+    printf("mismatch on SOS\n");
   }
   return numberSOS_;
 }

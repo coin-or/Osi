@@ -89,6 +89,7 @@ OsiObject::checkInfeasibility(const OsiBranchingInformation * info) const
   whichWay_ = saveWhichWay;
   return value;
 }
+
 /* For the variable(s) referenced by the object,
    look at the current solution and set bounds to match the solution.
    Returns measure of how much it had to move solution to make feasible
@@ -99,6 +100,37 @@ OsiObject::feasibleRegion(OsiSolverInterface * solver) const
   // Can't guarantee has matrix
   OsiBranchingInformation info(solver,false);
   return feasibleRegion(solver,&info);
+}
+
+// Default Constructor
+OsiObject2::OsiObject2() 
+  : OsiObject(),
+    preferredWay_(-1)
+{
+}
+
+
+// Destructor 
+OsiObject2::~OsiObject2 ()
+{
+}
+
+// Copy constructor 
+OsiObject2::OsiObject2 ( const OsiObject2 & rhs)
+  : OsiObject(rhs),
+    preferredWay_(rhs.preferredWay_)
+{
+}
+
+// Assignment operator 
+OsiObject2 & 
+OsiObject2::operator=( const OsiObject2& rhs)
+{
+  if (this!=&rhs) {
+    OsiObject::operator=(rhs);
+    preferredWay_ = rhs.preferredWay_;
+  }
+  return *this;
 }
 // Default Constructor 
 OsiBranchingObject::OsiBranchingObject()
@@ -179,6 +211,8 @@ OsiBranchingInformation::OsiBranchingInformation ()
     columnStart_(NULL),
     columnLength_(NULL),
     row_(NULL),
+    usefulRegion_(NULL),
+    indexRegion_(NULL),
     numberSolutions_(0),
     numberBranchingSolutions_(0),
     depth_(0)
@@ -193,6 +227,8 @@ OsiBranchingInformation::OsiBranchingInformation (const OsiSolverInterface * sol
     defaultDual_(-1.0),
     solver_(solver),
     hotstartSolution_(NULL),
+    usefulRegion_(NULL),
+    indexRegion_(NULL),
     numberSolutions_(0),
     numberBranchingSolutions_(0),
     depth_(0)
@@ -250,6 +286,9 @@ OsiBranchingInformation::OsiBranchingInformation ( const OsiBranchingInformation
   row_ = rhs.row_;
   columnStart_ = rhs.columnStart_;
   columnLength_ = rhs.columnLength_;
+  usefulRegion_ = rhs.usefulRegion_;
+  assert (!usefulRegion_);
+  indexRegion_ = rhs.indexRegion_;
   numberSolutions_ = rhs.numberSolutions_;
   numberBranchingSolutions_ = rhs.numberBranchingSolutions_;
   depth_ = rhs.depth_;
@@ -287,6 +326,9 @@ OsiBranchingInformation::operator=( const OsiBranchingInformation& rhs)
     row_ = rhs.row_;
     columnStart_ = rhs.columnStart_;
     columnLength_ = rhs.columnLength_;
+    usefulRegion_ = rhs.usefulRegion_;
+    assert (!usefulRegion_);
+    indexRegion_ = rhs.indexRegion_;
     numberSolutions_ = rhs.numberSolutions_;
     numberBranchingSolutions_ = rhs.numberBranchingSolutions_;
     depth_ = rhs.depth_;
@@ -344,7 +386,7 @@ OsiTwoWayBranchingObject::~OsiTwoWayBranchingObject ()
   Equivalent to an unspecified binary variable.
 */
 OsiSimpleInteger::OsiSimpleInteger ()
-  : OsiObject(),
+  : OsiObject2(),
     originalLower_(0.0),
     originalUpper_(1.0),
     otherInfeasibility_(0.0),
@@ -357,7 +399,7 @@ OsiSimpleInteger::OsiSimpleInteger ()
   Loads actual upper & lower bounds for the specified variable.
 */
 OsiSimpleInteger::OsiSimpleInteger (const OsiSolverInterface * solver, int iColumn)
-  : OsiObject()
+  : OsiObject2()
 {
   columnNumber_ = iColumn ;
   originalLower_ = solver->getColLower()[columnNumber_] ;
@@ -368,7 +410,7 @@ OsiSimpleInteger::OsiSimpleInteger (const OsiSolverInterface * solver, int iColu
   
 // Useful constructor - passed solver index and original bounds
 OsiSimpleInteger::OsiSimpleInteger ( int iColumn, double lower, double upper)
-  : OsiObject()
+  : OsiObject2()
 {
   columnNumber_ = iColumn ;
   originalLower_ = lower;
@@ -378,7 +420,7 @@ OsiSimpleInteger::OsiSimpleInteger ( int iColumn, double lower, double upper)
 
 // Copy constructor 
 OsiSimpleInteger::OsiSimpleInteger ( const OsiSimpleInteger & rhs)
-  :OsiObject(rhs)
+  :OsiObject2(rhs)
 
 {
   columnNumber_ = rhs.columnNumber_;
@@ -399,7 +441,7 @@ OsiSimpleInteger &
 OsiSimpleInteger::operator=( const OsiSimpleInteger& rhs)
 {
   if (this!=&rhs) {
-    OsiObject::operator=(rhs);
+    OsiObject2::operator=(rhs);
     columnNumber_ = rhs.columnNumber_;
     originalLower_ = rhs.originalLower_;
     originalUpper_ = rhs.originalUpper_;
@@ -707,7 +749,7 @@ OsiIntegerBranchingObject::print(const OsiSolverInterface * solver)
 }
 // Default Constructor 
 OsiSOS::OsiSOS ()
-  : OsiObject(),
+  : OsiObject2(),
     members_(NULL),
     weights_(NULL),
     numberMembers_(0),
@@ -720,7 +762,7 @@ OsiSOS::OsiSOS ()
 // Useful constructor (which are indices)
 OsiSOS::OsiSOS (const OsiSolverInterface * solver,  int numberMembers,
 	   const int * which, const double * weights, int type)
-  : OsiObject(),
+  : OsiObject2(),
     numberMembers_(numberMembers),
     sosType_(type),
     otherInfeasibility_(0.0)
@@ -754,7 +796,7 @@ OsiSOS::OsiSOS (const OsiSolverInterface * solver,  int numberMembers,
 
 // Copy constructor 
 OsiSOS::OsiSOS ( const OsiSOS & rhs)
-  :OsiObject(rhs)
+  :OsiObject2(rhs)
 {
   numberMembers_ = rhs.numberMembers_;
   sosType_ = rhs.sosType_;
@@ -783,7 +825,7 @@ OsiSOS &
 OsiSOS::operator=( const OsiSOS& rhs)
 {
   if (this!=&rhs) {
-    OsiObject::operator=(rhs);
+    OsiObject2::operator=(rhs);
     delete [] members_;
     delete [] weights_;
     numberMembers_ = rhs.numberMembers_;
@@ -817,11 +859,14 @@ OsiSOS::infeasibility(const OsiBranchingInformation * info,int & whichWay) const
   int j;
   int firstNonZero=-1;
   int lastNonZero = -1;
+  int firstNonFixed=-1;
+  int lastNonFixed = -1;
   const double * solution = info->solution_;
   //const double * lower = info->lower_;
   const double * upper = info->upper_;
   //double largestValue=0.0;
   double integerTolerance = info->integerTolerance_;
+  double primalTolerance = info->primalTolerance_;
   double weight = 0.0;
   double sum =0.0;
 
@@ -829,23 +874,30 @@ OsiSOS::infeasibility(const OsiBranchingInformation * info,int & whichWay) const
   double lastWeight=-1.0e100;
   for (j=0;j<numberMembers_;j++) {
     int iColumn = members_[j];
-    if (lastWeight>=weights_[j]-1.0e-7)
+    if (lastWeight>=weights_[j]-1.0e-12)
       throw CoinError("Weights too close together in SOS","infeasibility","OsiSOS");
-    double value = CoinMax(0.0,solution[iColumn]);
-    sum += value;
-    if (value>integerTolerance&&upper[iColumn]) {
-      // Possibly due to scaling a fixed variable might slip through
-      if (value>upper[iColumn]) {
-        value=upper[iColumn];
+    lastWeight = weights_[j];
+    if (upper[iColumn]) {
+      double value = CoinMax(0.0,solution[iColumn]);
+      if (value>integerTolerance) {
+	// Possibly due to scaling a fixed variable might slip through
 #ifdef COIN_DEVELOP
-	printf("** Variable %d (%d) has value %g and upper bound of %g\n",
-	       iColumn,j,value,upper[iColumn]);
+	if (value>upper[iColumn]+10.0*primalTolerance)
+	  printf("** Variable %d (%d) has value %g and upper bound of %g\n",
+		 iColumn,j,value,upper[iColumn]);
 #endif
-      } 
-      weight += weights_[j]*value;
-      if (firstNonZero<0)
-        firstNonZero=j;
-      lastNonZero=j;
+	if (value>upper[iColumn]) {
+	  value=upper[iColumn];
+	} 
+	sum += value;
+	weight += weights_[j]*value;
+	if (firstNonZero<0)
+	  firstNonZero=j;
+	lastNonZero=j;
+      }
+      if (firstNonFixed<0)
+	firstNonFixed=j;
+      lastNonFixed=j;
     }
   }
   whichWay=1;
@@ -853,16 +905,185 @@ OsiSOS::infeasibility(const OsiBranchingInformation * info,int & whichWay) const
   if (lastNonZero-firstNonZero>=sosType_) {
     // find where to branch
     assert (sum>0.0);
-    weight /= sum;
-    //int iWhere;
-    //for (iWhere=firstNonZero;iWhere<lastNonZero;iWhere++) 
-    //if (weight<weights_[iWhere+1])
-    //break;
     // probably best to use pseudo duals
     double value = lastNonZero-firstNonZero+1;
     value *= 0.5/((double) numberMembers_);
     infeasibility_=value;
     otherInfeasibility_=1.0-value;
+    if (info->defaultDual_>=0.0) {
+      // Using pseudo shadow prices
+      weight /= sum;
+      int iWhere;
+      for (iWhere=firstNonZero;iWhere<lastNonZero;iWhere++) 
+	if (weight<weights_[iWhere+1])
+	  break;
+      assert (iWhere!=lastNonZero);
+      /* Complicated - infeasibility is being used for branching so we
+	 don't want estimate of satisfying set but of each way on branch.
+	 So let us suppose that all on side being fixed to 0 goes to closest
+      */
+      int lastDown=iWhere;
+      int firstUp=iWhere+1;
+      if (sosType_==2) {
+	// SOS 2 - choose nearest
+	if (weight-weights_[iWhere]>=weights_[iWhere+1]-weight)
+	  lastDown++;
+	// But make sure OK
+	if (lastDown==firstNonFixed) {
+	  lastDown ++;
+	} else if (lastDown==lastNonFixed) {
+	  lastDown --;
+	} 
+	firstUp=lastDown;
+      }
+      // Now get current contribution and compute weight for end points
+      double weightDown = 0.0;
+      double weightUp = 0.0;
+      const double * element = info->elementByColumn_;
+      const int * row = info->row_;
+      const CoinBigIndex * columnStart = info->columnStart_;
+      const int * columnLength = info->columnLength_;
+      double direction = info->direction_;
+      const double * objective = info->objective_;
+      // Compute where we would move to
+      double objValue=0.0;
+      double * useful = info->usefulRegion_;
+      int * index = info->indexRegion_;
+      int n=0;
+      for (j=firstNonZero;j<=lastNonZero;j++) {
+	int iColumn = members_[j];
+	double multiplier = solution[iColumn];
+	if (j>=lastDown)
+	  weightDown += multiplier;
+	if (j<=firstUp)
+	  weightUp += multiplier;
+	if (multiplier>0.0) {
+	  objValue += objective[iColumn]*multiplier;
+	  CoinBigIndex start = columnStart[iColumn];
+	  CoinBigIndex end = start + columnLength[iColumn];
+	  for (CoinBigIndex j=start;j<end;j++) {
+	    int iRow = row[j];
+	    double value = element[j]*multiplier;
+	    if (useful[iRow]) {
+	      value += useful[iRow];
+	      if (!value)
+		value = 1.0e-100;
+	    } else {
+	      assert (value);
+	      index[n++]=iRow;
+	    }
+	    useful[iRow] = value;
+	  }
+	}
+      }
+      if (sosType_==2) 
+	assert (fabs(weightUp+weightDown-sum-solution[members_[lastDown]])<1.0e-4);
+      int startX[2];
+      int endX[2];
+      startX[0]=firstNonZero;
+      startX[1]=firstUp;
+      endX[0]=lastDown;
+      endX[1]=lastNonZero;
+      double fakeSolution[2];
+      int check[2];
+      fakeSolution[0]=weightDown;
+      check[0]=members_[lastDown];
+      fakeSolution[1]=weightUp;
+      check[1]=members_[firstUp];
+      const double * pi = info->pi_;
+      const double * activity = info->rowActivity_;
+      const double * lower = info->rowLower_;
+      const double * upper = info->rowUpper_;
+      int numberRows = info->solver_->getNumRows();
+      double * useful2 = useful+numberRows;
+      int * index2 = index+numberRows;
+      for (int i=0;i<2;i++) {
+	double obj=0.0;
+	int n2=0;
+	for (j=startX[i];j<=endX[i];j++) {
+	  int iColumn = members_[j];
+	  double multiplier = solution[iColumn];
+	  if (iColumn==check[i])
+	    multiplier=fakeSolution[i];
+	  if (multiplier>0.0) {
+	    obj += objective[iColumn]*multiplier;
+	    CoinBigIndex start = columnStart[iColumn];
+	    CoinBigIndex end = start + columnLength[iColumn];
+	    for (CoinBigIndex j=start;j<end;j++) {
+	      int iRow = row[j];
+	      double value = element[j]*multiplier;
+	      if (useful2[iRow]) {
+		value += useful2[iRow];
+		if (!value)
+		  value = 1.0e-100;
+	      } else {
+		assert (value);
+		index2[n2++]=iRow;
+	      }
+	      useful2[iRow] = value;
+	    }
+	  }
+	}
+	// movement in objective
+	obj = (obj-objValue) * direction;
+	double estimate = (obj>0.0) ? obj : 0.0;
+	for (j=0;j<n;j++) {
+	  int iRow = index[j];
+	  // movement
+	  double movement = useful2[iRow]-useful[iRow];
+	  useful[iRow]=0.0;
+	  useful2[iRow]=0.0;
+	  double valueP = pi[iRow]*direction;
+	  if (lower[iRow]<-1.0e20) 
+	    assert (valueP<=1.0e-4);
+	  if (upper[iRow]>1.0e20) 
+	    assert (valueP>=-1.0e-4);
+	  double value2 = valueP*movement;
+	  double thisEstimate = (value2>0.0) ? value2 : 0;
+	  // if makes infeasible then make at least default
+	  double newValue = activity[iRow] + movement;
+	  if (newValue>upper[iRow]+primalTolerance||newValue<lower[iRow]-primalTolerance)
+	    thisEstimate = CoinMax(thisEstimate,info->defaultDual_);
+	  estimate += thisEstimate;
+	}
+	for (j=0;j<n2;j++) {
+	  int iRow = index2[j];
+	  // movement
+	  double movement = useful2[iRow]-useful[iRow];
+	  useful[iRow]=0.0;
+	  useful2[iRow]=0.0;
+	  if (movement) {
+	    double valueP = pi[iRow]*direction;
+	    if (lower[iRow]<-1.0e20) 
+	      assert (valueP<=1.0e-4);
+	    if (upper[iRow]>1.0e20) 
+	      assert (valueP>=-1.0e-4);
+	    double value2 = valueP*movement;
+	    double thisEstimate = (value2>0.0) ? value2 : 0;
+	    // if makes infeasible then make at least default
+	    double newValue = activity[iRow] + movement;
+	    if (newValue>upper[iRow]+primalTolerance||newValue<lower[iRow]-primalTolerance)
+	      thisEstimate = CoinMax(thisEstimate,info->defaultDual_);
+	    estimate += thisEstimate;
+	  }
+	}
+	// store in fakeSolution
+	fakeSolution[i]=estimate;
+      }
+      double downEstimate = fakeSolution[0];
+      double upEstimate = fakeSolution[1];
+      if (downEstimate>=upEstimate) {
+	infeasibility_ = CoinMax(1.0e-12,upEstimate);
+	otherInfeasibility_ = CoinMax(1.0e-12,downEstimate);
+	whichWay = 1;
+      } else {
+	infeasibility_ = CoinMax(1.0e-12,downEstimate);
+	otherInfeasibility_ = CoinMax(1.0e-12,upEstimate);
+	whichWay = 0;
+      }
+      whichWay_=whichWay;
+      value=infeasibility_;
+    }
     return value;
   } else {
     infeasibility_=0.0;
@@ -1006,8 +1227,6 @@ OsiSOS::createBranch(OsiSolverInterface * solver, const OsiBranchingInformation 
     separator = 0.5 *(weights_[iWhere]+weights_[iWhere+1]);
   } else {
     // SOS 2
-    if (iWhere==firstNonFixed)
-      iWhere++;;
     if (iWhere==lastNonFixed-1)
       iWhere = lastNonFixed-2;
     separator = weights_[iWhere+1];

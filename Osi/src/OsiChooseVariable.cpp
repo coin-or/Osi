@@ -623,6 +623,11 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
       // and scale back
       sumPi *= 0.01;
       info->defaultDual_ = sumPi; // switch on
+      int numberColumns = solver_->getNumCols();
+      int size = CoinMax(numberColumns,2*numberRows);
+      info->usefulRegion_ = new double [size];
+      CoinZeroN(info->usefulRegion_,size);
+      info->indexRegion_ = new int [size];
     }
   }
   double sumUp=0.0;
@@ -725,6 +730,8 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
   }
   // Get rid of any shadow prices info
   info->defaultDual_ = -1.0; // switch off
+  delete [] info->usefulRegion_;
+  delete [] info->indexRegion_;
   return numberUnsatisfied_;
 }
 /* Choose a variable

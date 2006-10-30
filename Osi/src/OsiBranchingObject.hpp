@@ -179,6 +179,37 @@ protected:
   int priority_;
 
 };
+/// Define a class to add a bit of complexity to OsiObject
+
+
+class OsiObject2 : public OsiObject {
+
+public:
+
+  /// Default Constructor 
+  OsiObject2 ();
+
+  /// Copy constructor 
+  OsiObject2 ( const OsiObject2 &);
+   
+  /// Assignment operator 
+  OsiObject2 & operator=( const OsiObject2& rhs);
+
+  /// Destructor 
+  ~OsiObject2 ();
+  
+  /// Set preferred way of branching - -1 off, 0 down, 1 up (for 2-way)
+  inline void setPreferredWay(int value)
+  {preferredWay_=value;};
+  
+  /// Get preferred way of branching - -1 off, 0 down, 1 up (for 2-way)
+  inline int preferredWay() const
+  { return preferredWay_;};
+protected:
+  /// Preferred way of branching - -1 off, 0 down, 1 up (for 2-way)
+  int preferredWay_;
+  
+};
 
 /** \brief Abstract branching object base class
 
@@ -370,6 +401,14 @@ public:
   const int * columnLength_;
   /// Row indices
   const int * row_;
+  /** Useful region of length CoinMax(numberColumns,2*numberRows)
+      This is allocated and deleted before OsiObject::infeasibility
+      It is zeroed on entry and should be so on exit
+      It only exists if defaultDual_>=0.0
+  */
+  double * usefulRegion_;
+  /// Useful index region to go with usefulRegion_
+  int * indexRegion_;
   /// Number of solutions found
   int numberSolutions_;
   /// Number of branching solutions found (i.e. exclude heuristics)
@@ -419,7 +458,7 @@ protected:
 /// Define a single integer class
 
 
-class OsiSimpleInteger : public OsiObject {
+class OsiSimpleInteger : public OsiObject2 {
 
 public:
 
@@ -571,7 +610,7 @@ protected:
 */
 
 
-class OsiSOS : public OsiObject {
+class OsiSOS : public OsiObject2 {
 
 public:
 
@@ -632,6 +671,10 @@ public:
   inline int sosType() const
   {return sosType_;};
 
+  /// SOS type
+  inline int setType() const
+  {return sosType_;};
+
   /** Array of weights */
   inline const double * weights() const
   { return weights_;};
@@ -643,6 +686,9 @@ public:
   /// Set whether set is integer valued or not
   inline void setIntegerValued(bool yesNo)
   { integerValued_=yesNo;};
+  /// Return true if knows how to deal with Pseudo Shadow Prices
+  virtual bool canHandleShadowPrices() const
+  { return true;};
 private:
   /// data
 

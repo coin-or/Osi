@@ -196,7 +196,7 @@ OsiChooseVariable::setupList ( OsiBranchingInformation *info, bool initialize)
   int checkIndex=0;
   int bestPriority=INT_MAX;
   // pretend one strong even if none
-  int maximumStrong= numberStrong_ ? numberStrong_ : 1;
+  int maximumStrong= numberStrong_ ? CoinMin(numberStrong_,numberObjects) : 1;
   int putOther = numberObjects;
   int i;
   for (i=0;i<maximumStrong;i++) {

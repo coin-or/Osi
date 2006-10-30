@@ -114,6 +114,10 @@ public:
   */
   virtual bool canDoHeuristics() const 
   {return true;};
+  /** \brief Return true if object can take part in move to nearest heuristic
+  */
+  virtual bool canMoveToNearest() const 
+  {return false;};
   /** Column number if single column object -1 otherwise,
       Used by heuristics
   */
@@ -689,7 +693,7 @@ public:
   /// Return true if knows how to deal with Pseudo Shadow Prices
   virtual bool canHandleShadowPrices() const
   { return true;};
-private:
+protected:
   /// data
 
   /// Members (indices in range 0 ... numberColumns-1)

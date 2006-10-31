@@ -105,7 +105,8 @@ OsiObject::feasibleRegion(OsiSolverInterface * solver) const
 // Default Constructor
 OsiObject2::OsiObject2() 
   : OsiObject(),
-    preferredWay_(-1)
+    preferredWay_(-1),
+    otherInfeasibility_(0.0)
 {
 }
 
@@ -118,7 +119,8 @@ OsiObject2::~OsiObject2 ()
 // Copy constructor 
 OsiObject2::OsiObject2 ( const OsiObject2 & rhs)
   : OsiObject(rhs),
-    preferredWay_(rhs.preferredWay_)
+    preferredWay_(rhs.preferredWay_),
+    otherInfeasibility_ (rhs.otherInfeasibility_)
 {
 }
 
@@ -129,6 +131,7 @@ OsiObject2::operator=( const OsiObject2& rhs)
   if (this!=&rhs) {
     OsiObject::operator=(rhs);
     preferredWay_ = rhs.preferredWay_;
+    otherInfeasibility_ = rhs.otherInfeasibility_;
   }
   return *this;
 }
@@ -389,7 +392,6 @@ OsiSimpleInteger::OsiSimpleInteger ()
   : OsiObject2(),
     originalLower_(0.0),
     originalUpper_(1.0),
-    otherInfeasibility_(0.0),
     columnNumber_(-1)
 {
 }
@@ -404,7 +406,6 @@ OsiSimpleInteger::OsiSimpleInteger (const OsiSolverInterface * solver, int iColu
   columnNumber_ = iColumn ;
   originalLower_ = solver->getColLower()[columnNumber_] ;
   originalUpper_ = solver->getColUpper()[columnNumber_] ;
-  otherInfeasibility_=0.0;
 }
 
   
@@ -415,7 +416,6 @@ OsiSimpleInteger::OsiSimpleInteger ( int iColumn, double lower, double upper)
   columnNumber_ = iColumn ;
   originalLower_ = lower;
   originalUpper_ = upper;
-  otherInfeasibility_=0.0;
 }
 
 // Copy constructor 
@@ -426,7 +426,6 @@ OsiSimpleInteger::OsiSimpleInteger ( const OsiSimpleInteger & rhs)
   columnNumber_ = rhs.columnNumber_;
   originalLower_ = rhs.originalLower_;
   originalUpper_ = rhs.originalUpper_;
-  otherInfeasibility_ = rhs.otherInfeasibility_;
 }
 
 // Clone
@@ -445,7 +444,6 @@ OsiSimpleInteger::operator=( const OsiSimpleInteger& rhs)
     columnNumber_ = rhs.columnNumber_;
     originalLower_ = rhs.originalLower_;
     originalUpper_ = rhs.originalUpper_;
-    otherInfeasibility_ = rhs.otherInfeasibility_;
   }
   return *this;
 }
@@ -754,7 +752,6 @@ OsiSOS::OsiSOS ()
     weights_(NULL),
     numberMembers_(0),
     sosType_(-1),
-    otherInfeasibility_(0.0),
     integerValued_(false)
 {
 }
@@ -764,8 +761,7 @@ OsiSOS::OsiSOS (const OsiSolverInterface * solver,  int numberMembers,
 	   const int * which, const double * weights, int type)
   : OsiObject2(),
     numberMembers_(numberMembers),
-    sosType_(type),
-    otherInfeasibility_(0.0)
+    sosType_(type)
 {
   integerValued_ = type==1; // not strictly true - should check problem
   if (numberMembers_) {
@@ -800,7 +796,6 @@ OsiSOS::OsiSOS ( const OsiSOS & rhs)
 {
   numberMembers_ = rhs.numberMembers_;
   sosType_ = rhs.sosType_;
-  otherInfeasibility_ = rhs.otherInfeasibility_;
   integerValued_ = rhs.integerValued_;
   if (numberMembers_) {
     members_ = new int[numberMembers_];
@@ -830,7 +825,6 @@ OsiSOS::operator=( const OsiSOS& rhs)
     delete [] weights_;
     numberMembers_ = rhs.numberMembers_;
     sosType_ = rhs.sosType_;
-    otherInfeasibility_ = rhs.otherInfeasibility_;
     integerValued_ = rhs.integerValued_;
     if (numberMembers_) {
       members_ = new int[numberMembers_];

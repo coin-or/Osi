@@ -706,6 +706,10 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
 	  // to end
 	  list_[--putOther]=i;
 	}
+      } else {
+	// worse priority
+	// to end
+	list_[--putOther]=i;
       }
     }
   }

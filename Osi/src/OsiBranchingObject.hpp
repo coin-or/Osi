@@ -184,6 +184,7 @@ protected:
 
 };
 /// Define a class to add a bit of complexity to OsiObject
+/// This assumes 2 way branching
 
 
 class OsiObject2 : public OsiObject {
@@ -212,6 +213,8 @@ public:
 protected:
   /// Preferred way of branching - -1 off, 0 down, 1 up (for 2-way)
   int preferredWay_;
+  /// "Infeasibility" on other way
+  mutable float otherInfeasibility_;
   
 };
 
@@ -545,8 +548,6 @@ protected:
   double originalLower_;
   /// Original upper bound
   double originalUpper_;
-  /// "Infeasibility" on other way
-  mutable float otherInfeasibility_;
   /// Column number in solver
   int columnNumber_;
   
@@ -705,8 +706,6 @@ protected:
   int numberMembers_;
   /// SOS type
   int sosType_;
-  /// "Infeasibility" on other way
-  mutable float otherInfeasibility_;
   /// Whether integer valued
   bool integerValued_;
 };

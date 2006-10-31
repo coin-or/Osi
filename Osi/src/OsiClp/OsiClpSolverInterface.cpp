@@ -2029,8 +2029,7 @@ OsiSolverInterface * OsiClpSolverInterface::clone(bool CopyData) const
 //-------------------------------------------------------------------
 OsiClpSolverInterface::OsiClpSolverInterface (
                   const OsiClpSolverInterface & rhs)
-:
-OsiSolverInterface(rhs),
+: OsiSolverInterface(rhs),
 rowsense_(NULL),
 rhs_(NULL),
 rowrange_(NULL),

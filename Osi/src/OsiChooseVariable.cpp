@@ -715,7 +715,7 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
   }
   // Get list
   numberOnList_=0;
-  for (i=0;i<maximumStrong;i++) {
+  for (i=0;i<CoinMin(maximumStrong,putOther);i++) {
     if (list_[i]>=0) {
       list_[numberOnList_]=list_[i];
       useful_[numberOnList_++]=-useful_[i];
@@ -842,6 +842,10 @@ OsiChooseStrong::chooseVariable( OsiSolverInterface * solver, OsiBranchingInform
 	    bestTrusted = value;
 	    bestObjectIndex_ = iObject;
 	    bestWhichWay_ = upEstimate>downEstimate ? 0 : 1;
+	    // but override if there is a preferred way
+	    const OsiObject * obj = solver->object(iObject);
+	    if (obj->preferredWay()>=0&&obj->infeasibility())
+	      bestWhichWay_ = obj->preferredWay();
 	    if (returnCode)
 	      returnCode=2;
 	  }
@@ -1020,12 +1024,22 @@ int OsiHotInfo::updateInformation( const OsiSolverInterface * solver, const OsiB
   statuses_[iBranch] = status;
   if (!status&&choose->trustStrongForSolution()&&newObjectiveValue<choose->goodObjectiveValue()) {
     // check if solution
+    const OsiSolverInterface * saveSolver = info->solver_;
+    info->solver_=solver;
+    const double * saveLower = info->lower_;
+    info->lower_ = solver->getColLower();
+    const double * saveUpper = info->upper_;
+    info->upper_ = solver->getColUpper();
+    // also need to make sure bounds OK as may not be info solver
     if (choose->feasibleSolution(info,solver->getColSolution(),solver->numberObjects(),
 				 (const OsiObject **) solver->objects())) {
       // put solution somewhere
       choose->saveSolution(solver);
       status=3;
     }
+    info->solver_=saveSolver;
+    info->lower_ = saveLower;
+    info->upper_ = saveUpper;
   }
   // Now update - possible strong branching info
   choose->updateInformation( info,iBranch,this);

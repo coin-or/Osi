@@ -89,7 +89,7 @@ public:
   // Faster version when more information available
   virtual double infeasibility(const OsiBranchingInformation * info, int &whichWay) const =0;
   // This does NOT set mutable stuff
-  double checkInfeasibility(const OsiBranchingInformation * info) const;
+  virtual double checkInfeasibility(const OsiBranchingInformation * info) const;
   
   /** For the variable(s) referenced by the object,
       look at the current solution and set bounds to match the solution.
@@ -147,12 +147,15 @@ public:
   */
   inline void setWhichWay(int way)
   { whichWay_ = way;};
-  /** Return preferred way to branch.  If two
+  /** Return current preferred way to branch.  If two
       then way=0 means down and 1 means up, otherwise
       way points to preferred branch
   */
   inline int whichWay() const
   { return whichWay_;};
+  /// Get pre-emptive preferred way of branching - -1 off, 0 down, 1 up (for 2-way)
+  virtual int preferredWay() const
+  { return -1;};
   /// Return infeasibility
   inline double infeasibility() const
   { return infeasibility_;};
@@ -201,14 +204,14 @@ public:
   OsiObject2 & operator=( const OsiObject2& rhs);
 
   /// Destructor 
-  ~OsiObject2 ();
+  virtual ~OsiObject2 ();
   
   /// Set preferred way of branching - -1 off, 0 down, 1 up (for 2-way)
   inline void setPreferredWay(int value)
   {preferredWay_=value;};
   
   /// Get preferred way of branching - -1 off, 0 down, 1 up (for 2-way)
-  inline int preferredWay() const
+  virtual int preferredWay() const
   { return preferredWay_;};
 protected:
   /// Preferred way of branching - -1 off, 0 down, 1 up (for 2-way)
@@ -381,13 +384,13 @@ public:
   /// Dual to use if row bound violated (if negative then pseudoShadowPrices off)
   double defaultDual_;
   /// Pointer to solver
-  const OsiSolverInterface * solver_;
+  mutable const OsiSolverInterface * solver_;
   /// Pointer to current lower bounds on columns
-  const double * lower_;
+  mutable const double * lower_;
   /// Pointer to current solution
   mutable const double * solution_;
   /// Pointer to current upper bounds on columns
-  const double * upper_;
+  mutable const double * upper_;
   /// Highly optional target (hot start) solution
   const double * hotstartSolution_;
   /// Pointer to duals
@@ -488,7 +491,7 @@ public:
   OsiSimpleInteger & operator=( const OsiSimpleInteger& rhs);
 
   /// Destructor 
-  ~OsiSimpleInteger ();
+  virtual ~OsiSimpleInteger ();
   
   /// Infeasibility - large is 0.5
   virtual double infeasibility(const OsiBranchingInformation * info, int & whichWay) const;
@@ -639,7 +642,7 @@ public:
   OsiSOS & operator=( const OsiSOS& rhs);
 
   // Destructor 
-  ~OsiSOS ();
+  virtual ~OsiSOS ();
   
   /// Infeasibility - large is 0.5
   virtual double infeasibility(const OsiBranchingInformation * info,int & whichWay) const;

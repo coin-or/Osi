@@ -1635,10 +1635,20 @@ OsiSolverInterface::findIntegers(bool justCount)
     assert (!object_);
     return;
   }
+  int numberIntegers=0;
+  int iObject;
+  for (iObject = 0;iObject<numberObjects_;iObject++) {
+    OsiSimpleInteger * obj =
+      dynamic_cast <OsiSimpleInteger *>(object_[iObject]) ;
+    if (obj) 
+      numberIntegers++;
+  }
+  // if same number return
+  if (numberIntegers_==numberIntegers)
+    return;
   // delete old integer objects and keep others
   int nObjects=0;
   OsiObject ** oldObject = object_;
-  int iObject;
   for (iObject = 0;iObject<numberObjects_;iObject++) {
     OsiSimpleInteger * obj =
       dynamic_cast <OsiSimpleInteger *>(oldObject[iObject]) ;

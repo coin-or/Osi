@@ -7,7 +7,7 @@
 #include <cassert>
 #include <cmath>
 #include <cfloat>
-
+//#define OSI_DEBUG
 #include "OsiSolverInterface.hpp"
 #include "OsiBranchingObject.hpp"
 #include "CoinHelperFunctions.hpp"
@@ -492,13 +492,12 @@ OsiSimpleInteger::infeasibility(const OsiBranchingInformation * info, int & whic
     whichWay=0;
   }
   infeasibility_ = fabs(value-nearest);
-  whichWay_=whichWay;
+  double returnValue = infeasibility_;
   if (infeasibility_<=info->integerTolerance_) {
     otherInfeasibility_ = 1.0;
-    return 0.0;
+    returnValue = 0.0;
   } else if (info->defaultDual_<0.0) {
     otherInfeasibility_ = 1.0-infeasibility_;
-    return infeasibility_;
   } else {
     const double * pi = info->pi_;
     const double * activity = info->rowActivity_;
@@ -556,9 +555,12 @@ OsiSimpleInteger::infeasibility(const OsiBranchingInformation * info, int & whic
       otherInfeasibility_ = CoinMax(1.0e-12,upEstimate);
       whichWay = 0;
     }
-    whichWay_=whichWay;
-    return infeasibility_;
+    returnValue = infeasibility_;
   }
+  if (preferredWay_>=0&&returnValue)
+    whichWay = preferredWay_;
+  whichWay_=whichWay;
+  return returnValue;
 }
 
 // This looks at solution and sets bounds to contain solution
@@ -697,6 +699,9 @@ OsiIntegerBranchingObject::branch(OsiSolverInterface * solver)
     dynamic_cast <const OsiSimpleInteger *>(originalObject_) ;
   assert (obj);
   int iColumn = obj->columnNumber();
+  double olb,oub ;
+  olb = solver->getColLower()[iColumn] ;
+  oub = solver->getColUpper()[iColumn] ;
   int way = (!branchIndex_) ? (2*firstBranch_-1) : -(2*firstBranch_-1);
   if (way<0) {
 #ifdef OSI_DEBUG
@@ -719,6 +724,24 @@ OsiIntegerBranchingObject::branch(OsiSolverInterface * solver)
     solver->setColLower(iColumn,up_[0]);
     solver->setColUpper(iColumn,up_[1]);
   }
+  double nlb = solver->getColLower()[iColumn];
+  if (nlb<olb) {
+#ifndef NDEBUG
+    printf("bad lb change for column %d from %g to %g\n",iColumn,olb,nlb);
+#endif
+    solver->setColLower(iColumn,olb);
+  }
+  double nub = solver->getColUpper()[iColumn];
+  if (nub>oub) {
+#ifndef NDEBUG
+    printf("bad ub change for column %d from %g to %g\n",iColumn,oub,nub);
+#endif
+    solver->setColUpper(iColumn,oub);
+  }
+#ifndef NDEBUG
+  if (nlb<olb+1.0e-8&&nub>oub-1.0e-8)
+    printf("bad null change for column %d - bounds %g,%g\n",iColumn,olb,oub);
+#endif
   branchIndex_++;
   return 0.0;
 }

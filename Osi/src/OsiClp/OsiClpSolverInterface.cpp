@@ -109,7 +109,7 @@ void OsiClpSolverInterface::initialSolve()
   */
   bool doPrimal = (basis_.numberBasicStructurals()>0);
   setBasis(basis_,&solver);
-  if (!defaultHints||doPrimal) {
+  if ((!defaultHints||doPrimal)&&!solveOptions_.getSpecialOption(6)) {
     // scaling
     // save initial state
     const double * rowScale1 = solver.rowScale();

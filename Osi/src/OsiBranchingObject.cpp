@@ -703,6 +703,16 @@ OsiIntegerBranchingObject::branch(OsiSolverInterface * solver)
   olb = solver->getColLower()[iColumn] ;
   oub = solver->getColUpper()[iColumn] ;
   int way = (!branchIndex_) ? (2*firstBranch_-1) : -(2*firstBranch_-1);
+  if (0) {
+    printf("branching %s on %d bounds %g %g / %g %g\n",
+	   (way==-1) ? "down" :"up",iColumn,
+	   down_[0],down_[1],up_[0],up_[1]);
+    const double * lower = solver->getColLower();
+    const double * upper = solver->getColUpper();
+    for (int i=0;i<8;i++) 
+      printf(" [%d (%g,%g)]",i,lower[i],upper[i]);
+    printf("\n");
+  }
   if (way<0) {
 #ifdef OSI_DEBUG
   { double olb,oub ;

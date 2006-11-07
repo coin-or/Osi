@@ -12,6 +12,7 @@
 #include "OsiAuxInfo.hpp"
 #include "OsiSolverBranch.hpp"
 #include "CoinWarmStartBasis.hpp"
+#include "CoinPackedMatrix.hpp"
 #include "CoinTime.hpp"
 #include "CoinSort.hpp"
 #include "OsiChooseVariable.hpp"
@@ -249,6 +250,9 @@ OsiChooseVariable::setupList ( OsiBranchingInformation *info, bool initialize)
 	  // to end
 	  list_[--putOther]=i;
 	}
+      } else {
+	// to end
+	list_[--putOther]=i;
       }
     }
   }
@@ -599,7 +603,7 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
   int maximumStrong= CoinMin(numberStrong_,numberObjects) ;
   int putOther = numberObjects;
   int i;
-  for (i=0;i<maximumStrong;i++) {
+  for (i=0;i<numberObjects;i++) {
     list_[i]=-1;
     useful_[i]=0.0;
   }
@@ -651,7 +655,7 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
       int priorityLevel = object[i]->priority();
       // Better priority? Flush choices.
       if (priorityLevel<bestPriority) {
-	for (int j=0;j<maximumStrong;j++) {
+	for (int j=maximumStrong-1;j>=0;j--) {
 	  if (list_[j]>=0) {
 	    int iObject = list_[j];
 	    list_[j]=-1;
@@ -659,6 +663,7 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
 	    list_[--putOther]=iObject;
 	  }
 	}
+	maximumStrong = CoinMin(maximumStrong,putOther);
 	bestPriority = priorityLevel;
 	check=-COIN_DBL_MAX;
       } 
@@ -684,12 +689,16 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
 	if (value>check) {
 	  //add to list
 	  int iObject = list_[checkIndex];
-	  if (iObject>=0)
+	  if (iObject>=0) {
+	    assert (list_[putOther-1]<0);
 	    list_[--putOther]=iObject;  // to end
+	  }
 	  list_[checkIndex]=i;
+	  assert (checkIndex<putOther);
 	  useful_[checkIndex]=value;
 	  // find worst
 	  check=COIN_DBL_MAX;
+	  maximumStrong = CoinMin(maximumStrong,putOther);
 	  for (int j=0;j<maximumStrong;j++) {
 	    if (list_[j]>=0) {
 	      if (useful_[j]<check) {
@@ -704,12 +713,16 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
 	  }
 	} else {
 	  // to end
+	  assert (list_[putOther-1]<0);
 	  list_[--putOther]=i;
+	  maximumStrong = CoinMin(maximumStrong,putOther);
 	}
       } else {
 	// worse priority
 	// to end
+	assert (list_[putOther-1]<0);
 	list_[--putOther]=i;
+	maximumStrong = CoinMin(maximumStrong,putOther);
       }
     }
   }
@@ -1031,6 +1044,10 @@ int OsiHotInfo::updateInformation( const OsiSolverInterface * solver, const OsiB
     const double * saveUpper = info->upper_;
     info->upper_ = solver->getColUpper();
     // also need to make sure bounds OK as may not be info solver
+#if 1
+    const CoinBigIndex * columnStart = info->columnStart_;
+    assert (saveSolver->getMatrixByCol()->getVectorStarts()==columnStart);
+#endif
     if (choose->feasibleSolution(info,solver->getColSolution(),solver->numberObjects(),
 				 (const OsiObject **) solver->objects())) {
       // put solution somewhere

@@ -251,12 +251,13 @@ OsiBranchingInformation::OsiBranchingInformation (const OsiSolverInterface * sol
   objective_ = solver_->getObjCoefficients();
   rowLower_ = solver_->getRowLower();
   rowUpper_ = solver_->getRowUpper();
-  if (normalSolver) {
+  const CoinPackedMatrix* matrix = solver_->getMatrixByCol();
+  if (matrix) {
     // Column copy of matrix if matrix exists
-    elementByColumn_ = solver_->getMatrixByCol()->getElements();
-    row_ = solver_->getMatrixByCol()->getIndices();
-    columnStart_ = solver_->getMatrixByCol()->getVectorStarts();
-    columnLength_ = solver_->getMatrixByCol()->getVectorLengths();
+    elementByColumn_ = matrix->getElements();
+    row_ = matrix->getIndices();
+    columnStart_ = matrix->getVectorStarts();
+    columnLength_ = matrix->getVectorLengths();
   } else {
     // Matrix does not exist
     elementByColumn_ = NULL;

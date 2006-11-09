@@ -3,6 +3,7 @@
 #ifndef OsiBranchingObject_H
 #define OsiBranchingObject_H
 
+#include <cassert>
 #include <string>
 #include <vector>
 

@@ -85,6 +85,8 @@ public:
     This is for instant re-use for speed
 
     Default for this just calls infeasibility with OsiBranchingInformation
+    NOTE - Convention says that an infeasibility of COIN_DBL_MAX means 
+    object has worked out it can't be satisfied!
   */
   virtual double infeasibility(const OsiSolverInterface * solver,int &whichWay) const ;
   // Faster version when more information available

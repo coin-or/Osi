@@ -51,7 +51,9 @@ public:
   virtual ~OsiChooseVariable ();
 
   /** Sets up strong list and clears all if initialize is true.
-      Returns number of infeasibilities. */
+      Returns number of infeasibilities. 
+      If returns -1 then has worked out node is infeasible!
+  */
   virtual int setupList ( OsiBranchingInformation *info, bool initialize);
   /** Choose a variable
       Returns - 
@@ -275,7 +277,9 @@ public:
   virtual ~OsiChooseStrong ();
 
   /** Sets up strong list and clears all if initialize is true.
-      Returns number of infeasibilities. */
+      Returns number of infeasibilities. 
+      If returns -1 then has worked out node is infeasible!
+  */
   virtual int setupList ( OsiBranchingInformation *info, bool initialize);
   /** Choose a variable
       Returns - 

@@ -205,11 +205,18 @@ OsiChooseVariable::setupList ( OsiBranchingInformation *info, bool initialize)
     useful_[i]=0.0;
   }
   OsiObject ** object = info->solver_->objects();
+  // Say feasible
+  bool feasible = true;
   for ( i=0;i<numberObjects;i++) {
     int way;
     double value = object[i]->infeasibility(info,way);
     if (value>0.0) {
       numberUnsatisfied_++;
+      if (value==COIN_DBL_MAX) {
+	// infeasible
+	feasible=false;
+	break;
+      }
       int priorityLevel = object[i]->priority();
       // Better priority? Flush choices.
       if (priorityLevel<bestPriority) {
@@ -258,23 +265,28 @@ OsiChooseVariable::setupList ( OsiBranchingInformation *info, bool initialize)
   }
   // Get list
   numberOnList_=0;
-  for (i=0;i<maximumStrong;i++) {
-    if (list_[i]>=0) {
-      list_[numberOnList_]=list_[i];
-      useful_[numberOnList_++]=-useful_[i];
+  if (feasible) {
+    for (i=0;i<maximumStrong;i++) {
+      if (list_[i]>=0) {
+	list_[numberOnList_]=list_[i];
+	useful_[numberOnList_++]=-useful_[i];
+      }
     }
+    if (numberOnList_) {
+      // Sort 
+      CoinSort_2(useful_,useful_+numberOnList_,list_);
+      // move others
+      i = numberOnList_;
+      for (;putOther<numberObjects;putOther++) 
+	list_[i++]=list_[putOther];
+      assert (i==numberUnsatisfied_);
+      if (!numberStrong_)
+	numberOnList_=0;
+    } 
+  } else {
+    // not feasible
+    numberUnsatisfied_=-1;
   }
-  if (numberOnList_) {
-    // Sort 
-    CoinSort_2(useful_,useful_+numberOnList_,list_);
-    // move others
-    i = numberOnList_;
-    for (;putOther<numberObjects;putOther++) 
-      list_[i++]=list_[putOther];
-    assert (i==numberUnsatisfied_);
-    if (!numberStrong_)
-      numberOnList_=0;
-  } 
   return numberUnsatisfied_;
 }
 /* Choose a variable
@@ -646,12 +658,18 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
   }
   double upMultiplier=(1.0+sumUp)/(1.0+numberUp);
   double downMultiplier=(1.0+sumDown)/(1.0+numberDown);
-  //
+  // Say feasible
+  bool feasible = true;
   for ( i=0;i<numberObjects;i++) {
     int way;
     double value = object[i]->infeasibility(info,way);
     if (value>0.0) {
       numberUnsatisfied_++;
+      if (value==COIN_DBL_MAX) {
+	// infeasible
+	feasible=false;
+	break;
+      }
       int priorityLevel = object[i]->priority();
       // Better priority? Flush choices.
       if (priorityLevel<bestPriority) {
@@ -728,22 +746,27 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
   }
   // Get list
   numberOnList_=0;
-  for (i=0;i<CoinMin(maximumStrong,putOther);i++) {
-    if (list_[i]>=0) {
-      list_[numberOnList_]=list_[i];
-      useful_[numberOnList_++]=-useful_[i];
+  if (feasible) {
+    for (i=0;i<CoinMin(maximumStrong,putOther);i++) {
+      if (list_[i]>=0) {
+	list_[numberOnList_]=list_[i];
+	useful_[numberOnList_++]=-useful_[i];
+      }
     }
-  }
-  if (numberOnList_) {
-    // Sort 
-    CoinSort_2(useful_,useful_+numberOnList_,list_);
-    // move others
-    i = numberOnList_;
-    for (;putOther<numberObjects;putOther++) 
-      list_[i++]=list_[putOther];
-    assert (i==numberUnsatisfied_);
-    if (!numberStrong_)
-      numberOnList_=0;
+    if (numberOnList_) {
+      // Sort 
+      CoinSort_2(useful_,useful_+numberOnList_,list_);
+      // move others
+      i = numberOnList_;
+      for (;putOther<numberObjects;putOther++) 
+	list_[i++]=list_[putOther];
+      assert (i==numberUnsatisfied_);
+      if (!numberStrong_)
+	numberOnList_=0;
+    }
+  } else {
+    // not feasible
+    numberUnsatisfied_=-1;
   }
   // Get rid of any shadow prices info
   info->defaultDual_ = -1.0; // switch off
@@ -1044,7 +1067,7 @@ int OsiHotInfo::updateInformation( const OsiSolverInterface * solver, const OsiB
     const double * saveUpper = info->upper_;
     info->upper_ = solver->getColUpper();
     // also need to make sure bounds OK as may not be info solver
-#if 1
+#if 0
     const CoinBigIndex * columnStart = info->columnStart_;
     assert (saveSolver->getMatrixByCol()->getVectorStarts()==columnStart);
 #endif

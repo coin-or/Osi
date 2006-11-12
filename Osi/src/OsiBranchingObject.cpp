@@ -203,6 +203,7 @@ OsiBranchingInformation::OsiBranchingInformation ()
     solver_(NULL),
     lower_(NULL),
     solution_(NULL),
+    origSolution_(NULL),
     upper_(NULL),
     hotstartSolution_(NULL),
     pi_(NULL),
@@ -245,6 +246,8 @@ OsiBranchingInformation::OsiBranchingInformation (const OsiSolverInterface * sol
   solver_->getDblParam(OsiPrimalTolerance,primalTolerance_) ;
   lower_ = solver_->getColLower();
   solution_ = solver_->getColSolution();
+  origSolution_ = new double[solver_->getNumCols()];
+  CoinDisjointCopyN(solution_, solver_->getNumCols(), origSolution_);
   upper_ = solver_->getColUpper();
   pi_ = solver_->getRowPrice();
   rowActivity_ = solver_->getRowActivity();
@@ -279,6 +282,8 @@ OsiBranchingInformation::OsiBranchingInformation ( const OsiBranchingInformation
   solver_ = rhs.solver_;
   lower_ = rhs.lower_;
   solution_ = rhs.solution_;
+  origSolution_ = new double[solver_->getNumCols()];
+  CoinDisjointCopyN(solution_, solver_->getNumCols(), origSolution_);
   upper_ = rhs.upper_;
   hotstartSolution_ = rhs.hotstartSolution_;
   pi_ = rhs.pi_;
@@ -319,6 +324,8 @@ OsiBranchingInformation::operator=( const OsiBranchingInformation& rhs)
     defaultDual_ = rhs.defaultDual_;
     lower_ = rhs.lower_;
     solution_ = rhs.solution_;
+    origSolution_ = new double[solver_->getNumCols()];
+    CoinDisjointCopyN(solution_, solver_->getNumCols(), origSolution_);
     upper_ = rhs.upper_;
     hotstartSolution_ = rhs.hotstartSolution_;
     pi_ = rhs.pi_;
@@ -343,6 +350,7 @@ OsiBranchingInformation::operator=( const OsiBranchingInformation& rhs)
 // Destructor 
 OsiBranchingInformation::~OsiBranchingInformation ()
 {
+    delete[] origSolution_;
 }
 // Default Constructor 
 OsiTwoWayBranchingObject::OsiTwoWayBranchingObject()
@@ -483,7 +491,7 @@ OsiSimpleInteger::resetSequenceEtc(int numberColumns, const int * originalColumn
 double 
 OsiSimpleInteger::infeasibility(const OsiBranchingInformation * info, int & whichWay) const
 {
-  double value = info->solution_[columnNumber_];
+  double value = info->origSolution_[columnNumber_];
   value = CoinMax(value, info->lower_[columnNumber_]);
   value = CoinMin(value, info->upper_[columnNumber_]);
   double nearest = floor(value+(1.0-0.5));
@@ -573,7 +581,7 @@ double
 OsiSimpleInteger::feasibleRegion(OsiSolverInterface * solver,
 				 const OsiBranchingInformation * info) const
 {
-  double value = info->solution_[columnNumber_];
+  double value = info->origSolution_[columnNumber_];
   double newValue = CoinMax(value, info->lower_[columnNumber_]);
   newValue = CoinMin(newValue, info->upper_[columnNumber_]);
   newValue = floor(newValue+0.5);
@@ -594,7 +602,7 @@ OsiSimpleInteger::columnNumber() const
 OsiBranchingObject * 
 OsiSimpleInteger::createBranch(OsiSolverInterface * solver, const OsiBranchingInformation * info, int way) const 
 {
-  double value = info->solution_[columnNumber_];
+  double value = info->origSolution_[columnNumber_];
   value = CoinMax(value, info->lower_[columnNumber_]);
   value = CoinMin(value, info->upper_[columnNumber_]);
   assert (info->upper_[columnNumber_]>info->lower_[columnNumber_]);
@@ -889,7 +897,7 @@ OsiSOS::infeasibility(const OsiBranchingInformation * info,int & whichWay) const
   int lastNonZero = -1;
   int firstNonFixed=-1;
   int lastNonFixed = -1;
-  const double * solution = info->solution_;
+  const double * solution = info->origSolution_;
   //const double * lower = info->lower_;
   const double * upper = info->upper_;
   //double largestValue=0.0;
@@ -1127,7 +1135,7 @@ OsiSOS::feasibleRegion(OsiSolverInterface * solver, const OsiBranchingInformatio
   int j;
   int firstNonZero=-1;
   int lastNonZero = -1;
-  const double * solution = info->solution_;
+  const double * solution = info->origSolution_;
   //const double * lower = info->lower_;
   const double * upper = info->upper_;
   double sum =0.0;
@@ -1216,7 +1224,7 @@ OsiBranchingObject *
 OsiSOS::createBranch(OsiSolverInterface * solver, const OsiBranchingInformation * info, int way) const
 {
   int j;
-  const double * solution = info->solution_;
+  const double * solution = info->origSolution_;
   double tolerance = info->primalTolerance_;
   const double * upper = info->upper_;
   int firstNonFixed=-1;

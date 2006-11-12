@@ -1068,8 +1068,10 @@ int OsiHotInfo::updateInformation( const OsiSolverInterface * solver, const OsiB
     info->upper_ = solver->getColUpper();
     // also need to make sure bounds OK as may not be info solver
 #if 0
-    const CoinBigIndex * columnStart = info->columnStart_;
-    assert (saveSolver->getMatrixByCol()->getVectorStarts()==columnStart);
+    if (saveSolver->getMatrixByCol()) {
+	const CoinBigIndex * columnStart = info->columnStart_;
+	assert (saveSolver->getMatrixByCol()->getVectorStarts()==columnStart);
+    }
 #endif
     if (choose->feasibleSolution(info,solver->getColSolution(),solver->numberObjects(),
 				 (const OsiObject **) solver->objects())) {

@@ -1814,7 +1814,7 @@ OsiSolverInterface::forceFeasible()
   */
   int i;
   // Can't guarantee has matrix
-  const OsiBranchingInformation info(this,false);
+  const OsiBranchingInformation info(this,false,false);
   double infeasibility=0.0;
   for (i=0;i<numberObjects_;i++)
     infeasibility += object_[i]->feasibleRegion(this,&info);

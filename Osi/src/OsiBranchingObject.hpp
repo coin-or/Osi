@@ -353,8 +353,11 @@ public:
   /// Default Constructor 
   OsiBranchingInformation ();
   
-  /// Useful Constructor (normalSolver true if has matrix etc etc)
-  OsiBranchingInformation (const OsiSolverInterface * solver, bool normalSolver);
+  /** Useful Constructor 
+      (normalSolver true if has matrix etc etc)
+      copySolution true if constructot should make a copy
+  */
+  OsiBranchingInformation (const OsiSolverInterface * solver, bool normalSolver,bool copySolution=false);
   
   /// Copy constructor 
   OsiBranchingInformation ( const OsiBranchingInformation &);
@@ -430,6 +433,8 @@ public:
   int numberBranchingSolutions_;
   /// Depth in tree
   int depth_;
+  /// TEMP
+  bool owningSolution_;
 };
 
 /// This just adds two-wayness to a branching object

@@ -74,7 +74,7 @@ double
 OsiObject::infeasibility(const OsiSolverInterface * solver, int & preferredWay) const
 {
   // Can't guarantee has matrix
-  OsiBranchingInformation info(solver,false);
+  OsiBranchingInformation info(solver,false,false);
   return infeasibility(&info,preferredWay);
 }
 // This does NOT set mutable stuff
@@ -98,7 +98,7 @@ double
 OsiObject::feasibleRegion(OsiSolverInterface * solver) const 
 {
   // Can't guarantee has matrix
-  OsiBranchingInformation info(solver,false);
+  OsiBranchingInformation info(solver,false,false);
   return feasibleRegion(solver,&info);
 }
 
@@ -219,14 +219,16 @@ OsiBranchingInformation::OsiBranchingInformation ()
     indexRegion_(NULL),
     numberSolutions_(0),
     numberBranchingSolutions_(0),
-    depth_(0)
+    depth_(0),
+    owningSolution_(false)
 {
 }
 
 /** Useful constructor
 */
 OsiBranchingInformation::OsiBranchingInformation (const OsiSolverInterface * solver,
-						  bool normalSolver)
+						  bool normalSolver,
+						  bool owningSolution)
   : timeRemaining_(COIN_DBL_MAX),
     defaultDual_(-1.0),
     solver_(solver),
@@ -235,7 +237,8 @@ OsiBranchingInformation::OsiBranchingInformation (const OsiSolverInterface * sol
     indexRegion_(NULL),
     numberSolutions_(0),
     numberBranchingSolutions_(0),
-    depth_(0)
+    depth_(0),
+    owningSolution_(owningSolution)
 {
   direction_ = solver_->getObjSense();
   objectiveValue_ = solver_->getObjValue();
@@ -246,9 +249,10 @@ OsiBranchingInformation::OsiBranchingInformation (const OsiSolverInterface * sol
   solver_->getDblParam(OsiPrimalTolerance,primalTolerance_) ;
   numberColumns_ = solver_->getNumCols();
   lower_ = solver_->getColLower();
-  solution_ = new double[numberColumns_];
-  memcpy((void*)solution_,
-	 solver_->getColSolution(), numberColumns_*sizeof(double));
+  if (owningSolution_)
+    solution_ = CoinCopyOfArray(solver_->getColSolution(),numberColumns_);
+  else
+    solution_ = solver_->getColSolution();
   upper_ = solver_->getColUpper();
   pi_ = solver_->getRowPrice();
   rowActivity_ = solver_->getRowActivity();
@@ -283,9 +287,11 @@ OsiBranchingInformation::OsiBranchingInformation ( const OsiBranchingInformation
   solver_ = rhs.solver_;
   numberColumns_ = rhs.numberColumns_;
   lower_ = rhs.lower_;
-  solution_ = new double[numberColumns_];
-  memcpy((void*)solution_,
-	 rhs.solution_, numberColumns_*sizeof(double));
+  owningSolution_ = rhs.owningSolution_;
+  if (owningSolution_)
+    solution_ = CoinCopyOfArray(rhs.solution_,numberColumns_);
+  else
+    solution_ = rhs.solution_;
   upper_ = rhs.upper_;
   hotstartSolution_ = rhs.hotstartSolution_;
   pi_ = rhs.pi_;
@@ -326,10 +332,13 @@ OsiBranchingInformation::operator=( const OsiBranchingInformation& rhs)
     defaultDual_ = rhs.defaultDual_;
     numberColumns_ = rhs.numberColumns_;
     lower_ = rhs.lower_;
-    solution_ = rhs.solution_;
-    solution_ = new double[numberColumns_];
-    memcpy((void*)solution_,
-	   rhs.solution_, numberColumns_*sizeof(double));
+    owningSolution_ = rhs.owningSolution_;
+    if (owningSolution_) {
+      solution_ = CoinCopyOfArray(rhs.solution_,numberColumns_);
+      delete [] solution_;
+    } else {
+      solution_ = rhs.solution_;
+    }
     upper_ = rhs.upper_;
     hotstartSolution_ = rhs.hotstartSolution_;
     pi_ = rhs.pi_;
@@ -354,6 +363,7 @@ OsiBranchingInformation::operator=( const OsiBranchingInformation& rhs)
 // Destructor 
 OsiBranchingInformation::~OsiBranchingInformation ()
 {
+  if (owningSolution_) 
     delete[] solution_;
 }
 // Default Constructor 

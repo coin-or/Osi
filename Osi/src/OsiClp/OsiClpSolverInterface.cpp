@@ -1102,7 +1102,7 @@ void OsiClpSolverInterface::solveFromHotStart()
            rowActivity_,numberRows*sizeof(double));
     memcpy(modelPtr_->primalColumnSolution(),columnActivity_,
            numberColumns*sizeof(double));
-    modelPtr_->setIntParam(ClpMaxNumIteration,itlim);
+    modelPtr_->setIntParam(ClpMaxNumIteration,CoinMin(itlim,9999));
     resolve();
   } else {
     double * arrayD = (double *) spareArrays_;

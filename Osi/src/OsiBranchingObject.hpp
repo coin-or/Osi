@@ -388,12 +388,12 @@ public:
   double defaultDual_;
   /// Pointer to solver
   mutable const OsiSolverInterface * solver_;
+  /// The number of columns
+  int numberColumns_;
   /// Pointer to current lower bounds on columns
   mutable const double * lower_;
-  /// Pointer to current solution (this may change during strong branching!
+  /// Pointer to current solution
   mutable const double * solution_;
-  /// Pointer to the solution at the time when the branching process starts
-  double * origSolution_;
   /// Pointer to current upper bounds on columns
   mutable const double * upper_;
   /// Highly optional target (hot start) solution

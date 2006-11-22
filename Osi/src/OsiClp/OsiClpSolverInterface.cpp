@@ -553,6 +553,10 @@ void OsiClpSolverInterface::resolve()
 	// reset
 	modelPtr_->setDisasterHandler(NULL);
       }
+      if (modelPtr_->problemStatus()==4) {
+	// bad bounds?
+	modelPtr_->setProblemStatus(1);
+      }
       if (!modelPtr_->problemStatus()&&0) {
         int numberColumns = modelPtr_->numberColumns();
         const double * columnLower = modelPtr_->columnLower();
@@ -1386,6 +1390,17 @@ const CoinPackedMatrix * OsiClpSolverInterface::getMatrixByRow() const
 const CoinPackedMatrix * OsiClpSolverInterface::getMatrixByCol() const
 {
   return modelPtr_->matrix();
+}
+  
+// Get pointer to mutable column-wise copy of matrix (returns NULL if not meaningful)
+CoinPackedMatrix * 
+OsiClpSolverInterface::getMutableMatrixByCol() const 
+{
+  ClpPackedMatrix * matrix = dynamic_cast<ClpPackedMatrix *>(modelPtr_->matrix_) ;
+  if (matrix)
+    return matrix->getPackedMatrix();
+  else
+    return NULL;
 }
 
 //------------------------------------------------------------------

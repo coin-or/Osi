@@ -684,6 +684,7 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
 	maximumStrong = CoinMin(maximumStrong,putOther);
 	bestPriority = priorityLevel;
 	check=-COIN_DBL_MAX;
+	checkIndex=0;
       } 
       if (priorityLevel==bestPriority) {
 	// Modify value

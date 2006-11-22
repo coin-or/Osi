@@ -518,6 +518,12 @@ public:
       /// Get pointer to column-wise copy of matrix
       virtual const CoinPackedMatrix * getMatrixByCol() const = 0;
   
+      /// Get pointer to mutable row-wise copy of matrix (returns NULL if not meaningful)
+      virtual CoinPackedMatrix * getMutableMatrixByRow() const {return NULL;};
+  
+      /// Get pointer to mutable column-wise copy of matrix (returns NULL if not meaningful)
+      virtual CoinPackedMatrix * getMutableMatrixByCol() const {return NULL;};
+  
       /// Get solver's value for infinity
       virtual double getInfinity() const = 0;
     //@}

@@ -394,7 +394,10 @@ public:
   /// Get pointer to column-wise copy of matrix
   virtual const CoinPackedMatrix * getMatrixByCol() const;
   
-  /// Get solver's value for infinity
+  /// Get pointer to mutable column-wise copy of matrix
+  virtual CoinPackedMatrix * getMutableMatrixByCol() const;
+  
+    /// Get solver's value for infinity
   virtual double getInfinity() const { return OsiClpInfinity; }
   //@}
   

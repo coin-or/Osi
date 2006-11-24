@@ -1016,7 +1016,7 @@ private:
   static void assert_same(const OsiDylpSolverInterface& o1, 
 			  const OsiDylpSolverInterface& o2, bool exact) ;
 //@}
-#endif
+#endif  /* ! _MSC_VER */
 
 /*! \name Vector helper functions */
 //@{

@@ -2084,7 +2084,7 @@ void ODSI::detach_dylp ()
 # ifdef ODSI_INFOMSGS
   CoinMessageHandler *hdl = messageHandler() ; 
   hdl->message(ODSI_DETACH,messages_)
-    << (int)reinterpret_cast<CoinIntPtr>(this)
+    << (int) reinterpret_cast<CoinIntPtr>(this)
     << CoinMessageEol ;
 # endif
   dylp(lpprob,initialSolveOptions,tolerances,statistics) ;
@@ -3046,7 +3046,7 @@ void ODSI::assert_same (const OsiDylpSolverInterface& o1,
 
 //@} // CopyVerifiers
 
-#endif /* !_MSC_VER */
+#endif /* ! _MSC_VER */
 
 
 
@@ -3071,6 +3071,11 @@ void ODSI::assert_same (const OsiDylpSolverInterface& o1,
 /*! \var lptols_struct* main_lptols
     \brief Points to the active dylp tolerances structure
 */
+
+#ifdef _MSC_VER
+extern "C" lpopts_struct* main_lpopts ;
+extern "C" lptols_struct* main_lptols ;
+#endif
   
 lpopts_struct* main_lpopts ;     // just for cmdint.c::process_cmds
 lptols_struct* main_lptols ;     // just for cmdint.c::process_cmds
@@ -4009,7 +4014,7 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
 
   CoinMessageHandler *hdl = messageHandler() ; 
   hdl->message(ODSI_ALLDYLP,messages_)
-    << startString(start) << (int)reinterpret_cast<CoinIntPtr>(this)
+    << startString(start) << (int) reinterpret_cast<CoinIntPtr>(this)
     << CoinMessageEol ;
 # endif
 
@@ -4446,7 +4451,7 @@ void ODSI::initialSolve ()
   { dylp_owner = this ;
 #   ifdef ODSI_INFOMSGS
     hdl->message(ODSI_ATTACH,messages_)
-      << "initialSolve" << (int)reinterpret_cast<CoinIntPtr>(this)
+      << "initialSolve" << (int) reinterpret_cast<CoinIntPtr>(this)
       << CoinMessageEol ;
 #   endif
     if (lpprob->lpret == lpUNBOUNDED)
@@ -5877,7 +5882,7 @@ void ODSI::resolve ()
   { dylp_owner = this ;
 #   ifdef ODSI_INFOMSGS
     hdl->message(ODSI_ATTACH,messages_)
-      << "resolve" << (int)reinterpret_cast<CoinIntPtr>(this)
+      << "resolve" << (int) reinterpret_cast<CoinIntPtr>(this)
       << CoinMessageEol ;
 #   endif
     if (lpprob->lpret == lpUNBOUNDED)

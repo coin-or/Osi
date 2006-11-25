@@ -47,10 +47,30 @@
 #include "CoinFinite.hpp"
 const double CoinInfinity = COIN_DBL_MAX ;
 
+#include "CoinTypes.hpp"
+
 /* Cut name lengths for readability. */
 
 #define ODSI OsiDylpSolverInterface
 #define OSI OsiSolverInterface
+
+#include <string>
+#include <cassert>
+#include <sstream>
+#include <sstream>
+#include "CoinTime.hpp"
+#include <OsiColCut.hpp>
+#include <OsiRowCut.hpp>
+#include <OsiRowCutDebugger.hpp>
+#include "OsiDylpSolverInterface.hpp"
+#include "OsiDylpMessages.hpp"
+#include "OsiDylpWarmStartBasis.hpp"
+#include "OsiPresolve.hpp"
+
+namespace {
+  char sccsid[] UNUSED = "@(#)OsiDylpSolverInterface.cpp	1.20	11/13/04" ;
+  char cvsid[] UNUSED = "$Id$" ;
+}
 
 /*! \brief Define to enable implicit read of options file
 
@@ -76,7 +96,20 @@ const double CoinInfinity = COIN_DBL_MAX ;
   you'll get a warning.
 */
 
-#define ODSI_STRICTLY_FRESH
+#define ODSI_STRICTLY_FRESH 1
+
+/*
+  The following symbols are useful only for detailed debugging.
+
+  ODSI_TRACK_FRESH	track how a solution is made stale/fresh
+  ODSI_TRACK_SOLVERS	track creation, use, and deletion of ODSI objects
+  ODSI_TRACK_ACTIVE	track creation and deletion of activeBasis (the
+			active warm start object)
+
+ #define ODSI_TRACK_FRESH 1
+ #define ODSI_TRACK_SOLVERS 1
+ #define ODSI_TRACK_ACTIVE 1
+*/
 
 /*! \brief Define to enable paranoid checks.
 
@@ -88,13 +121,16 @@ const double CoinInfinity = COIN_DBL_MAX ;
   An error will cause a throw. Configuration should set this symbol to 0 for
   an optimised build, 2 if --enable-osidylp-paranoia is requested.
 
-  In particular, this symbol must be defined in order for OsiCbc(dylp) to
-  pass the OsiCbc unit test.
+  In particular, this symbol must be defined as >= 1 in order for OsiCbc(dylp)
+  to pass the OsiCbc unit test.
 */
 
 #ifndef ODSI_PARANOIA
 # define ODSI_PARANOIA 1
 #endif
+// #undef ODSI_PARANOIA
+// #define ODSI_PARANOIA 2
+
 
 /*! \brief Define to enable statistics collection in dylp
 
@@ -270,22 +306,7 @@ const double CoinInfinity = COIN_DBL_MAX ;
 
 */
 
-#include <string>
-#include <cassert>
-#include <sstream>
-#include "CoinTime.hpp"
-#include <OsiColCut.hpp>
-#include <OsiRowCut.hpp>
-#include <OsiRowCutDebugger.hpp>
-#include "OsiDylpSolverInterface.hpp"
-#include "OsiDylpMessages.hpp"
-#include "OsiDylpWarmStartBasis.hpp"
-#include "OsiPresolve.hpp"
-
 namespace {
-  char sccsid[] UNUSED = "@(#)OsiDylpSolverInterface.cpp	1.20	11/13/04" ;
-  char cvsid[] UNUSED = "$Id$" ;
-
 /*
   A little print helper routine for the ODSI_start_enum type.
 */
@@ -949,6 +970,11 @@ void ODSI::add_col (const CoinPackedVectorBase& coin_colj,
 */
   resolveOptions->forcewarm = true ;
   solnIsFresh = false ;
+# if ODSI_TRACK_FRESH > 0
+  std::cout
+    << "ODSI(" << std::hex << this << std::dec
+    << ")::add_col: new column." << std::endl ;
+# endif
 
   destruct_cache(false,true) ; }
 
@@ -998,6 +1024,11 @@ void ODSI::add_row (const CoinPackedVectorBase &coin_rowi, char clazzi,
 */
   resolveOptions->forcewarm = true ;
   solnIsFresh = false ;
+# if ODSI_TRACK_FRESH > 0
+  std::cout
+    << "ODSI(" << std::hex << this << std::dec
+    << ")::add_row: new row." << std::endl ;
+# endif
 
   destruct_cache(true,false) ; }
 
@@ -1084,6 +1115,13 @@ void ODSI::pessimal_primal ()
 /*
   Set pessbasis to be the active basis and return.
 */
+# if ODSI_TRACK_ACTIVE > 0
+  std::cout
+    << "ODSI(" << std::hex << this
+    << ")::pessimal_primal: replacing active basis "
+    << activeBasis << " with " << pessbasis << std::dec
+    << "." << std::endl ;
+# endif
   delete activeBasis ;
   activeIsModified = true ;
   activeBasis = pessbasis ;
@@ -1721,8 +1759,8 @@ ODSI::OsiDylpSolverInterface ()
     _row_upper(0),
     _row_sense(0),
     _row_range(0),
-    _row_price(0),
     _row_lhs(0),
+    _row_price(0),
     _matrix_by_col(0),
     _matrix_by_row(0),
 
@@ -1767,6 +1805,12 @@ ODSI::OsiDylpSolverInterface ()
     CoinRelFltEq eq ;
     assert(eq(odsiInfinity, odsiInfinity)) ; }
 
+# if ODSI_TRACK_SOLVERS > 0
+  std::cout
+    << "ODSI(" << std::hex << this << std::dec
+    << "): default constructor." << std::endl ;
+# endif
+
   return ; }
 
 
@@ -1806,8 +1850,8 @@ ODSI::OsiDylpSolverInterface (const OsiDylpSolverInterface& src)
     _row_upper(0),
     _row_sense(0),
     _row_range(0),
-    _row_price(0),
     _row_lhs(0),
+    _row_price(0),
     _matrix_by_col(0),
     _matrix_by_row(0),
 
@@ -1858,6 +1902,11 @@ ODSI::OsiDylpSolverInterface (const OsiDylpSolverInterface& src)
 # if ODSI_PARANOIA >= 2
   assert_same(*this, src, true) ;
 # endif
+# if ODSI_TRACK_SOLVERS > 0
+  std::cout
+    << "ODSI(" << std::hex << this << "): copy from "
+    << &src << std::dec << "." << std::endl ;
+# endif
 
 }
 
@@ -1868,7 +1917,14 @@ ODSI::OsiDylpSolverInterface (const OsiDylpSolverInterface& src)
 
 inline OsiSolverInterface* ODSI::clone (bool copyData) const
 
-{ if (copyData)
+{ 
+# if ODSI_TRACK_SOLVERS > 0
+  std::cout
+    << "ODSI(" << std::hex << this << std::dec << "): cloning ("
+    << ((this->solnIsFresh == true)?"fresh":"stale") << ")." << std::endl ;
+# endif
+
+  if (copyData)
   { return new OsiDylpSolverInterface(*this) ; }
   else
   { return new OsiDylpSolverInterface() ; }
@@ -1962,6 +2018,11 @@ OsiDylpSolverInterface &ODSI::operator= (const OsiDylpSolverInterface &rhs)
     assert_same(*this, rhs, true) ;
 #   endif
   }
+# if ODSI_TRACK_SOLVERS > 0
+  std::cout
+    << "ODSI(" << std::hex << this << "): assign from "
+    << &rhs << std::dec << "." << std::endl ;
+# endif
 
   return (*this) ; }
 
@@ -2025,6 +2086,11 @@ void ODSI::destruct_problem (bool preserve_interface)
   { consys_free(consys) ;
     consys = 0 ; }
   solnIsFresh = false ;
+# if ODSI_TRACK_FRESH > 0
+  std::cout
+    << "ODSI(" << std::hex << this << std::dec
+    << ")::destruct_problem." << std::endl ;
+# endif
   addedColCnt = 0 ;
   addedRowCnt = 0 ;
  
@@ -2032,7 +2098,14 @@ void ODSI::destruct_problem (bool preserve_interface)
   { delete hotstart_fallback ;
     hotstart_fallback = 0 ; }
   if (activeBasis)
-  { delete activeBasis ;
+  { 
+#   if ODSI_TRACK_ACTIVE > 0
+    std::cout
+      << "ODSI(" << std::hex << this
+      << ")::destruct_problem: deleting active basis "
+      << activeBasis << std::dec << "." << std::endl ;
+#   endif
+    delete activeBasis ;
     activeBasis = 0 ;
     activeIsModified = false ; }
 
@@ -2082,7 +2155,7 @@ void ODSI::detach_dylp ()
 # ifdef ODSI_INFOMSGS
   CoinMessageHandler *hdl = messageHandler() ; 
   hdl->message(ODSI_DETACH,messages_)
-    << reinterpret_cast<int>(this)
+    << (int) reinterpret_cast<CoinIntPtr>(this)
     << CoinMessageEol ;
 # endif
   dylp(lpprob,initialSolveOptions,tolerances,statistics) ;
@@ -2119,6 +2192,12 @@ ODSI::~OsiDylpSolverInterface ()
       basis_ready = false ; }
     dyio_ioterm() ;
     errterm() ; }
+
+# if ODSI_TRACK_SOLVERS > 0
+  std::cout
+    << "ODSI(" << std::hex << this << std::dec
+    << "): destructor." << std::endl ;
+# endif
 
   return ; }
 
@@ -2164,6 +2243,12 @@ void ODSI::reset ()
   setOsiDylpMessages(CoinMessages::us_en) ;
   for (int i = 0 ; i < OsiLastHintParam ; i++) info_[i] = 0 ;
   setHintParam(OsiDoPresolveInInitial,true,OsiForceDo,0) ;
+
+# if ODSI_TRACK_SOLVERS > 0
+  std::cout
+    << "ODSI(" << std::hex << this << std::dec
+    << "): reset." << std::endl ;
+# endif
 
   return ; }
 
@@ -2293,24 +2378,50 @@ inline void ODSI::setColLower (int i, double val)
     if (!r)
     { lp_retval = lpFATAL ;
       return ; } }
+
+  double primalTol ;
+  (void) getDblParam(OsiPrimalTolerance,primalTol) ;
+
+/*
+  Make a clean integer value if the variable type is integer.
+*/
+  double cleanval ;
+  if (isInteger(i))
+  { cleanval = ceil(val-primalTol) ; }
+  else
+  { cleanval = val ; }
 /*
   Change the bound. In general, this can result in a change in the optimal
   solution, but we'll be punctilious and only mark the solution as stale if the
-  new bound conflicts with the primal solution value.
+  new bound conflicts with the primal solution value. But ... if the solution's
+  already stale, don't check further.
 */
   consys->vlb[idx(i)] = val ;
   if (lpprob) setflg(lpprob->ctlopts,lpctlLBNDCHG) ;
 
-  const double *xvals = getColSolution() ;
-  if (xvals[i] < val)
-  { solnIsFresh = false ; }
+  if (solnIsFresh == true)
+  { const double *xvals = getColSolution() ;
+    if (xvals[i] < val-primalTol)
+    { solnIsFresh = false ;
+      destruct_col_cache(false) ;
+#     if ODSI_TRACK_FRESH > 0
+      std::cout
+	<< "ODSI(" << std::hex << this << std::dec
+	<< ")::setColLower: new bound "
+	<< val << " exceeds current value " << xvals[i]
+	<< " by " << (val - xvals[i]) << "." << std::endl ;
+#     endif
+    } }
 
+# if 0
   if (isInteger(i))
   { if (floor(val) != val)
       setContinuous(i) ;
     else
     if (isBinary(i) && !(val == 0.0 || val == 1.0))
-      setInteger(i) ; } }
+      setInteger(i) ; }
+# endif
+}
 
 /*!
   See the comments with setColLower re. automatic variable type conversions.
@@ -2330,6 +2441,18 @@ inline void ODSI::setColUpper (int i, double val)
     if (!r)
     { lp_retval = lpFATAL ;
       return ; } }
+
+  double primalTol ;
+  (void) getDblParam(OsiPrimalTolerance,primalTol) ;
+
+/*
+  Make a clean integer value if the variable type is integer.
+*/
+  double cleanval ;
+  if (isInteger(i))
+  { cleanval = floor(val+primalTol) ; }
+  else
+  { cleanval = val ; }
 /*
   Change the bound. In general, this can result in a change in the optimal
   solution, but we'll be punctilious and only mark the solution as stale if the
@@ -2337,16 +2460,30 @@ inline void ODSI::setColUpper (int i, double val)
 */
   consys->vub[idx(i)] = val ;
   if (lpprob) setflg(lpprob->ctlopts,lpctlUBNDCHG) ;
-  const double *xvals = getColSolution() ;
-  if (xvals[i] > val)
-  { solnIsFresh = false ; }
 
+  if (solnIsFresh == true)
+  { const double *xvals = getColSolution() ;
+    if (xvals[i] > val+primalTol)
+    { solnIsFresh = false ;
+      destruct_col_cache(false) ;
+#     if ODSI_TRACK_FRESH > 0
+      std::cout
+	<< "ODSI(" << std::hex << this << std::dec
+	<< ")::setColUpper: new bound "
+	<< val << " exceeds current value " << xvals[i]
+	<< " by " << (xvals[i]-val) << "." << std::endl ;
+#     endif
+    } }
+
+# if 0
   if (isInteger(i))
   { if (floor(val) != val)
       setContinuous(i) ;
     else
     if (isBinary(i) && !(val == 0.0 || val == 1.0))
-      setInteger(i) ; } }
+      setInteger(i) ; }
+# endif
+}
 
 
 /*!
@@ -2368,6 +2505,12 @@ void ODSI::setRowType (int i, char sense, double rhs, double range)
 		sense,rhs,range) ;
   if (resolveOptions) resolveOptions->forcewarm = true ;
   solnIsFresh = false ;
+# if ODSI_TRACK_FRESH > 0
+  std::cout
+    << "ODSI(" << std::hex << this << std::dec
+    << ")::setRowType: new row type."
+    << std::endl ;
+# endif
 /*
   Destroy cached values. We need to clear the structural side of the row
   cache.
@@ -2412,6 +2555,12 @@ void ODSI::setRowUpper (int i, double val)
 		clbi,val) ;
   if (lpprob) setflg(lpprob->ctlopts,lpctlRHSCHG) ;
   solnIsFresh = false ;
+# if ODSI_TRACK_FRESH > 0
+  std::cout
+    << "ODSI(" << std::hex << this << std::dec
+    << ")::setRowUpper: new bound."
+    << std::endl ;
+# endif
 
   destruct_row_cache(true) ;
   destruct_col_cache(false) ; }
@@ -2444,6 +2593,12 @@ void ODSI::setRowLower (int i, double val)
 		val,cubi) ;
   if (lpprob) setflg(lpprob->ctlopts,lpctlRHSCHG) ;
   solnIsFresh = false ;
+# if ODSI_TRACK_FRESH > 0
+  std::cout
+    << "ODSI(" << std::hex << this << std::dec
+    << ")::setRowLower: new bound."
+    << std::endl ;
+# endif
 
   destruct_row_cache(true) ;
   destruct_col_cache(false) ; }
@@ -2540,6 +2695,12 @@ void ODSI::deleteRows (int count, const int* rows)
     { lp_retval = lpFATAL ;
       return ; } }
   solnIsFresh = false ;
+# if ODSI_TRACK_FRESH > 0
+  std::cout
+    << "ODSI(" << std::hex << this << std::dec
+    << ")::deleteRows: deleted " << count
+    << " rows." << std::endl ;
+# endif
 /*
   Now, see if there's an active basis. If so, check that all the constraints
   to be deleted are slack. If they are, we can delete them from activeBasis
@@ -2559,7 +2720,15 @@ void ODSI::deleteRows (int count, const int* rows)
       activeIsModified = true ;
       resolveOptions->forcewarm = true ; }
     else
-    { delete activeBasis ;
+    { 
+#     if ODSI_TRACK_ACTIVE > 0
+      std::cout
+	<< "ODSI(" << std::hex << this
+	<< ")::deleteRows: deleted tight constraints, deleting basis "
+	<< activeBasis << std::dec
+	<< "." << std::endl ;
+#     endif
+      delete activeBasis ;
       activeBasis = 0 ;
       activeIsModified = false ; } }
 
@@ -2606,7 +2775,14 @@ void ODSI::setObjSense (double val)
   { double *tmpobj = INV_VEC(double,consys->obj) ;
     std::transform(tmpobj,tmpobj+n,tmpobj,std::negate<double>()) ;
     if (lpprob) setflg(lpprob->ctlopts,lpctlOBJCHG) ;
-    solnIsFresh = false ; }
+    solnIsFresh = false ;
+# if ODSI_TRACK_FRESH > 0
+  std::cout
+    << "ODSI(" << std::hex << this << std::dec
+    << ")::setObjSense: changing to "
+    << ((val < 0)?"minimisation":"maximisation") << "." << std::endl ;
+# endif
+  }
   
   obj_sense = val ;
   
@@ -2686,6 +2862,12 @@ void ODSI::deleteCols (int count, const int* cols)
     { lp_retval = lpFATAL ;
       return ; } }
   solnIsFresh = false ;
+# if ODSI_TRACK_FRESH > 0
+  std::cout
+    << "ODSI(" << std::hex << this << std::dec
+    << ")::deleteCols: deleted " << count
+    << "columns." << std::endl ;
+# endif
 /*
   Now, see if there's an active basis. If so, check that all the variables to
   be deleted are nonbasic. If they are, we can delete them from activeBasis
@@ -2705,7 +2887,15 @@ void ODSI::deleteCols (int count, const int* cols)
       activeIsModified = true ;
       resolveOptions->forcewarm = true ; }
     else
-    { delete activeBasis ;
+    { 
+#     if ODSI_TRACK_ACTIVE > 0
+      std::cout
+	<< "ODSI(" << std::hex << this
+	<< ")::deleteCols: deleted basic variables, deleting basis "
+	<< activeBasis << std::dec
+	<< "." << std::endl ;
+#     endif
+      delete activeBasis ;
       activeBasis = 0 ;
       activeIsModified = false ; } }
 
@@ -3044,7 +3234,7 @@ void ODSI::assert_same (const OsiDylpSolverInterface& o1,
 
 //@} // CopyVerifiers
 
-#endif /* !_MSC_VER */
+#endif /* ! _MSC_VER */
 
 
 
@@ -3069,6 +3259,11 @@ void ODSI::assert_same (const OsiDylpSolverInterface& o1,
 /*! \var lptols_struct* main_lptols
     \brief Points to the active dylp tolerances structure
 */
+  
+#ifdef _MSC_VER
+extern "C" lpopts_struct* main_lpopts ;
+extern "C" lptols_struct* main_lptols ;
+#endif
   
 lpopts_struct* main_lpopts ;     // just for cmdint.c::process_cmds
 lptols_struct* main_lptols ;     // just for cmdint.c::process_cmds
@@ -3760,7 +3955,7 @@ void ODSI::unimp_hint (bool dylpSense, bool hintSense,
         << message << CoinMessageEol ;
       throw CoinError(message,"setHintParam","OsiDylpSolverInterface") ; }
     else
-    { handler_->message(ODSI_IGNORED,messages_)
+    { handler_->message(ODSI_IGNOREDHINT,messages_)
 	<< message << CoinMessageEol ; } }
   
   return ; }
@@ -4007,7 +4202,7 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
 
   CoinMessageHandler *hdl = messageHandler() ; 
   hdl->message(ODSI_ALLDYLP,messages_)
-    << startString(start) << reinterpret_cast<int>(this)
+    << startString(start) << (int) reinterpret_cast<CoinIntPtr>(this)
     << CoinMessageEol ;
 # endif
 
@@ -4036,7 +4231,11 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
     { lcl_opts = *resolveOptions ;
       assert(lcl_opts.forcecold == false) ;
       lcl_opts.forcewarm = false ;
-      break ; } }
+      break ; }
+    case startInvalid:
+    { handler_->message(ODSI_CONFUSION,messages_)
+        << __LINE__ << CoinMessageEol ;
+      return (lpFATAL) ; } }
   dy_checkdefaults(consys,&lcl_opts,&lcl_tols) ;
   lpprob->phase = dyINV ;
 
@@ -4203,6 +4402,11 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
 	if (flipped[cndx] == true) lpprob->y[ndx] = -lpprob->y[ndx] ; } } }
   FREE(flipped) ;
   solnIsFresh = true ;
+# if ODSI_TRACK_FRESH > 0
+  std::cout
+    << "ODSI(" << std::hex << this << std::dec
+    << ")::solution refreshed." << std::endl ;
+# endif
 /*
   That's it, we've done our best. Do a little printing and return.
 */
@@ -4315,6 +4519,13 @@ void ODSI::initialSolve ()
   presolving, saveOriginalSys has moved the cached structural vectors and
   matrices to a save place, otherwise they'll be unaffected.
 */
+# if ODSI_TRACK_ACTIVE > 0
+  std::cout
+    << "ODSI(" << std::hex << this
+    << ")::initialSolve(1): deleting active basis "
+    << activeBasis << std::dec
+    << "." << std::endl ;
+# endif
   delete activeBasis ;
   activeBasis = 0 ;
   activeIsModified = false ;
@@ -4405,6 +4616,13 @@ void ODSI::initialSolve ()
       { throw CoinError("Call to dylp failed (postsolve).",
 			"initialSolve","OsiDylpSolverInterface") ; }
       lpprob->iters += presolIters ;
+#     if ODSI_TRACK_ACTIVE > 0
+      std::cout
+	<< "ODSI(" << std::hex << this
+	<< ")::initialSolve(2): deleting active basis "
+	<< activeBasis << std::dec
+	<< "." << std::endl ;
+#     endif
       delete activeBasis ;
       activeBasis = 0 ;
       activeIsModified = false ; }
@@ -4444,14 +4662,22 @@ void ODSI::initialSolve ()
   { dylp_owner = this ;
 #   ifdef ODSI_INFOMSGS
     hdl->message(ODSI_ATTACH,messages_)
-      << "initialSolve" << reinterpret_cast<int>(this)
+      << "initialSolve" << (int) reinterpret_cast<CoinIntPtr>(this)
       << CoinMessageEol ;
 #   endif
     if (lpprob->lpret == lpUNBOUNDED)
     { _objval = -getObjSense()*getInfinity() ; }
     else
     { _objval = getObjSense()*lpprob->obj ; }
-    activeBasis = this->getWarmStart() ; }
+    activeBasis = this->getWarmStart() ;
+#   if ODSI_TRACK_ACTIVE > 0
+    std::cout
+      << "ODSI(" << std::hex << this
+      << ")::initialSolve: setting active basis "
+      << activeBasis << std::dec
+      << "." << std::endl ;
+#   endif
+  }
   else
   { dylp_owner = 0 ; }
 
@@ -4595,6 +4821,11 @@ const double* ODSI::getColSolution () const
     hdl->message(ODSI_ACCESS_STALE,messages_)
       << "getColSolution"
       << CoinMessageEol ;
+#   if ODSI_TRACK_SOLVERS > 0
+    std::cout
+      << "ODSI(" << std::hex << this << std::dec
+      << ")::getColSolution: request for stale solution." << std::endl ;
+#   endif
 #   ifdef ODSI_STRICTLY_FRESH
     throw CoinError("Constraint system has changed since last call to solver.",
 		    "getColSolution","OsiDylpSolverInterface") ;
@@ -5016,9 +5247,9 @@ const CoinPackedMatrix* ODSI::getMatrixByCol () const
   Get the column and coefficient counts and create the OSI core vectors.
 */
   int col_count = getNumCols() ;
-  assert(col_count > 0) ;
   int coeff_count = consys->mtx.coeffcnt ;
-  assert(coeff_count > 0) ;
+  assert((col_count > 0 && coeff_count > 0) ||
+	 (col_count == 0 && coeff_count == 0)) ;
 
   int* start = new int[col_count+1] ;
   int* len = new int[col_count] ;
@@ -5503,7 +5734,15 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
   A null parameter says delete the current active basis and return.
 */
   if (!ws)
-  { delete activeBasis ;
+  { 
+#   if ODSI_TRACK_ACTIVE > 0
+    std::cout
+      << "ODSI(" << std::hex << this
+      << ")::setWarmStart: deleting active basis "
+      << activeBasis << std::dec
+      << "(null param)." << std::endl ;
+#   endif
+    delete activeBasis ;
     activeBasis = 0 ;
     activeIsModified = false ;
     return (true) ; }
@@ -5519,7 +5758,15 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
   int varcnt = cwsb->getNumStructural() ;
   int concnt = cwsb->getNumArtificial() ;
   if (varcnt == 0 && concnt == 0)
-  { delete activeBasis ;
+  { 
+#   if ODSI_TRACK_ACTIVE > 0
+    std::cout
+      << "ODSI(" << std::hex << this
+      << ")::setWarmStart: deleting active basis "
+      << activeBasis << std::dec
+      << " (0x0 CWSB)." << std::endl ;
+#   endif
+    delete activeBasis ;
     activeBasis = 0 ;
     activeIsModified = false ;
     return (true) ; }
@@ -5539,7 +5786,15 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
   varcnt = wsb->getNumStructural() ;
   concnt = wsb->getNumArtificial() ;
   if (varcnt == 0 && concnt == 0)
-  { delete activeBasis ;
+  { 
+#   if ODSI_TRACK_ACTIVE > 0
+    std::cout
+      << "ODSI(" << std::hex << this
+      << ")::setWarmStart: deleting active basis "
+      << activeBasis << std::dec
+      << " (0x0 ODWSB)." << std::endl ;
+#   endif
+    delete activeBasis ;
     activeBasis = 0 ;
     activeIsModified = false ;
     if (ourBasis == true) delete wsb ;
@@ -5563,8 +5818,8 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
   much of the basis as is needed for the active constraints.
 */
   if (!(varcnt == getNumCols() && concnt == getNumRows()))
-  { handler_->message(ODSI_ODWSBBADSIZE,messages_) <<
-      concnt << varcnt << getNumRows() << getNumCols() ;
+  { handler_->message(ODSI_ODWSBBADSIZE,messages_)
+      << concnt << varcnt << getNumRows() << getNumCols() ;
     if (ourBasis == true) delete wsb ;
     return (false) ; }
 
@@ -5744,12 +5999,23 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
   already have a copy, so much the better.
 */
   if (wsb != activeBasis)
-  { delete activeBasis ;
+  { 
+#   if ODSI_TRACK_ACTIVE > 0
+    std::cout
+      << "ODSI(" << std::hex << this
+      << ")::setWarmStart: replacing active basis "
+      << activeBasis << " with " ;
+#   endif
+    delete activeBasis ;
     if (ourBasis == false)
     { activeBasis = wsb->clone() ; }
     else
     { activeBasis = const_cast<OsiDylpWarmStartBasis *>(wsb) ;
       ourBasis = false ; }
+#   if ODSI_TRACK_ACTIVE > 0
+    std::cout
+      << activeBasis << std::dec << "." << std::endl ;
+#   endif
     activeIsModified = false ; }
   
   if (ourBasis == true) delete wsb ;
@@ -5814,7 +6080,15 @@ void ODSI::resolve ()
   else
   if (activeBasis && (activeIsModified == true || dylp_owner == 0))
   { if (setWarmStart(activeBasis) == false)
-    { delete activeBasis ;
+    { 
+#     if ODSI_TRACK_ACTIVE > 0
+      std::cout
+	<< "ODSI(" << std::hex << this
+	<< ")::resolve: deleting basis "
+	<< activeBasis << std::dec
+	<< "." << std::endl ;
+#     endif
+      delete activeBasis ;
       activeBasis = 0 ;
       activeIsModified = false ;
       
@@ -5868,6 +6142,13 @@ void ODSI::resolve ()
   dylp overloads lpprob->obj with the index of the unbounded variable when
   returning lpUNBOUNDED, so we need to fake the objective.
 */
+# if ODSI_TRACK_ACTIVE > 0
+  std::cout
+    << "ODSI(" << std::hex << this
+    << ")::resolve: deleting active basis "
+    << activeBasis << std::dec
+    << "." << std::endl ;
+# endif
   delete activeBasis ;
   activeBasis = 0 ;
   activeIsModified = false ;
@@ -5875,7 +6156,7 @@ void ODSI::resolve ()
   { dylp_owner = this ;
 #   ifdef ODSI_INFOMSGS
     hdl->message(ODSI_ATTACH,messages_)
-      << "resolve" << reinterpret_cast<int>(this)
+      << "resolve" << (int) reinterpret_cast<CoinIntPtr>(this)
       << CoinMessageEol ;
 #   endif
     if (lpprob->lpret == lpUNBOUNDED)
@@ -5883,6 +6164,13 @@ void ODSI::resolve ()
     else
     { _objval = getObjSense()*lpprob->obj ; }
     activeBasis = this->getWarmStart() ;
+#   if ODSI_TRACK_ACTIVE > 0
+    std::cout
+      << "ODSI(" << std::hex << this
+      << ")::resolve: setting active basis "
+      << activeBasis << std::dec
+      << "." << std::endl ;
+#   endif
     resolveOptions->forcewarm = false ; }
   else
   { dylp_owner = 0 ; }
@@ -6046,6 +6334,13 @@ void ODSI::solveFromHotStart ()
   dylp overloads lpprob->obj with the index of the unbounded variable when
   returning lpUNBOUNDED, so we need to fake the objective.
 */
+# if ODSI_TRACK_ACTIVE > 0
+  std::cout
+    << "ODSI(" << std::hex << this
+    << ")::solveFromHotStart: deleting active basis "
+    << activeBasis << std::dec
+    << "." << std::endl ;
+# endif
   delete activeBasis ;
   activeBasis = 0 ;
   activeIsModified = false ;
@@ -6054,7 +6349,15 @@ void ODSI::solveFromHotStart ()
     { _objval = -getObjSense()*getInfinity() ; }
     else
     { _objval = getObjSense()*lpprob->obj ; }
-    activeBasis = this->getWarmStart() ; }
+    activeBasis = this->getWarmStart() ;
+#   if ODSI_TRACK_ACTIVE > 0
+    std::cout
+      << "ODSI(" << std::hex << this
+      << ")::solveFromHotStart: setting active basis "
+      << activeBasis << std::dec
+      << "." << std::endl ;
+#   endif
+  }
   else
   { dylp_owner = 0 ; }
   if (tmp_iterlim > 0) resolveOptions->iterlim = tmp_iterlim ;

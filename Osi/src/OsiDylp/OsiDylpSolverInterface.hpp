@@ -93,8 +93,7 @@ typedef enum { startInvalid = 0,
   so hot start information is not copied on assignment.
 
   Detailed documentation is contained in OsiDylpSolverInterface.cpp, which
-  is not normally scanned when generating COIN OSI layer documentation. Try
-  `make doc' in the source directory of the OsiDylp distribution.
+  is not normally scanned when generating COIN OSI layer documentation.
 */
 
 class OsiDylpSolverInterface: virtual public OsiSolverInterface
@@ -155,7 +154,12 @@ public:
   int readMps(const char *filename, const char *extension,
 	      int &numberSets, CoinSet **&sets) ;
 
-  /*! \brief Write the problem into the specified file in MPS format. */
+  /*! \brief Write the problem into the specified file in MPS format.
+  
+    \p objsense == 1 forces the file to be written as a maximisation problem,
+    while -1 forces a minimisation problem. The default of 0 writes the file
+    as maximisation or minimisation using the solver's current setting.
+  */
 
   void writeMps(const char *basename,
 		const char *extension = "mps",
@@ -279,7 +283,10 @@ public:
 
   const double* getObjCoefficients() const ;
 
-  /*! \brief Get the objective function sense (min/max) */
+  /*! \brief Get the objective function sense (min/max)
+  
+    A value of 1 indicates minimisation; -1 indicates maximisation.
+  */
 
   double getObjSense() const ;
 
@@ -337,7 +344,11 @@ public:
 
   void setObjCoeff (int index, double value) ;
 
-  /*! \brief Set the sense (min/max) of the objective */
+  /*! \brief Set the sense (min/max) of the objective
+  
+    Use 1 for minimisation, -1 for maximisation. (The default is minimisation;
+    the objective is multiplied by -1 to maximise.)
+  */
 
   void setObjSense(double sense) ;
 
@@ -1016,7 +1027,7 @@ private:
   static void assert_same(const OsiDylpSolverInterface& o1, 
 			  const OsiDylpSolverInterface& o2, bool exact) ;
 //@}
-#endif
+#endif	/* ! _MSC_VER */
 
 /*! \name Vector helper functions */
 //@{

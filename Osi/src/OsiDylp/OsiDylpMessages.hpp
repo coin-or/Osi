@@ -25,7 +25,7 @@
 typedef enum { ODSI_TEST_MSG,
 	       ODSI_MPSFILEIO,
 	       ODSI_UNSUPFORCEDO,
-	       ODSI_IGNORED,
+	       ODSI_IGNOREDHINT,
 	       ODSI_EMPTYODWSB,
 	       ODSI_NOTODWSB,
 	       ODSI_ODWSBBADSIZE,
@@ -44,6 +44,7 @@ typedef enum { ODSI_TEST_MSG,
 	       ODSI_DETACH,
 	       ODSI_NOSOLVE,
 	       ODSI_SHORTSTATS,
+	       ODSI_CONFUSION,
 	       ODSI_DUMMY_END } OsiDylpMessageID_enum ;
 
 #endif /* OsiDylpMessages_H */

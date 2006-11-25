@@ -276,7 +276,9 @@ void OsiDylpSolverInterfaceUnitTest (const std::string &mpsDir,
   std::cout << "Testing reset ...\n" ;
   OsiDylpSolverInterface* osi2 = new OsiDylpSolverInterface ;
   osi->reset() ;
+# ifndef _MSC_VER
   osi->assert_same(*osi,*osi2,true) ;
+# endif
   delete osi ;
   delete osi2 ;
   std::cout <<

@@ -632,6 +632,11 @@ public:
                        const CoinPackedVectorBase * const * cols,
                        const double* collb, const double* colub,   
                        const double* obj);
+  /**  */
+  virtual void addCols(const int numcols,
+		       const int * columnStarts, const int * rows, const double * elements,
+		       const double* collb, const double* colub,   
+		       const double* obj);
   /** */
   virtual void deleteCols(const int num, const int * colIndices);
   
@@ -652,6 +657,10 @@ public:
                        const char* rowsen, const double* rowrhs,   
                        const double* rowrng);
 
+  /** */
+  virtual void addRows(const int numrows,
+		       const int * rowStarts, const int * columns, const double * element,
+		       const double* rowlb, const double* rowub);
   ///
   void modifyCoefficient(int row, int column, double newElement,
 			bool keepZero=false)

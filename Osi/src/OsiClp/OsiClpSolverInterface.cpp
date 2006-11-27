@@ -1623,6 +1623,42 @@ OsiClpSolverInterface::addCols(const int numcols,
   }
   freeCachedResults();
 }
+void 
+OsiClpSolverInterface::addCols(const int numcols,
+			       const int * columnStarts, const int * rows, const double * elements,
+			       const double* collb, const double* colub,   
+			       const double* obj)
+{
+  int numberColumns = modelPtr_->numberColumns();
+  modelPtr_->resize(modelPtr_->numberRows(),numberColumns+numcols);
+  linearObjective_ = modelPtr_->objective();
+  basis_.resize(modelPtr_->numberRows(),numberColumns+numcols);
+  double * lower = modelPtr_->columnLower()+numberColumns;
+  double * upper = modelPtr_->columnUpper()+numberColumns;
+  double * objective = modelPtr_->objective()+numberColumns;
+  int iCol;
+  for (iCol = 0; iCol < numcols; iCol++) {
+    lower[iCol]= forceIntoRange(collb[iCol], -OsiClpInfinity, OsiClpInfinity);
+    upper[iCol]= forceIntoRange(colub[iCol], -OsiClpInfinity, OsiClpInfinity);
+    if (lower[iCol]<-1.0e27)
+      lower[iCol]=-COIN_DBL_MAX;
+    if (upper[iCol]>1.0e27)
+      upper[iCol]=COIN_DBL_MAX;
+    objective[iCol] = obj[iCol];
+  }
+  if (!modelPtr_->clpMatrix())
+    modelPtr_->createEmptyMatrix();
+  modelPtr_->matrix()->appendCols(numcols,columnStarts,rows,elements);
+  if (integerInformation_) {
+    char * temp = new char[numberColumns+numcols];
+    memcpy(temp,integerInformation_,numberColumns*sizeof(char));
+    delete [] integerInformation_;
+    integerInformation_ = temp;
+    for (iCol = 0; iCol < numcols; iCol++) 
+      integerInformation_[numberColumns+iCol]=0;
+  }
+  freeCachedResults();
+}
 //-----------------------------------------------------------------------------
 void 
 OsiClpSolverInterface::deleteCols(const int num, const int * columnIndices)
@@ -1715,6 +1751,30 @@ OsiClpSolverInterface::addRows(const int numrows,
   if (!modelPtr_->clpMatrix())
     modelPtr_->createEmptyMatrix();
   modelPtr_->matrix()->appendRows(numrows,rows);
+  freeCachedResults();
+}
+void 
+OsiClpSolverInterface::addRows(const int numrows,
+			       const int * rowStarts, const int * columns, const double * element,
+			       const double* rowlb, const double* rowub)
+{
+  int numberRows = modelPtr_->numberRows();
+  modelPtr_->resize(numberRows+numrows,modelPtr_->numberColumns());
+  basis_.resize(numberRows+numrows,modelPtr_->numberColumns());
+  double * lower = modelPtr_->rowLower()+numberRows;
+  double * upper = modelPtr_->rowUpper()+numberRows;
+  int iRow;
+  for (iRow = 0; iRow < numrows; iRow++) {
+    lower[iRow]= forceIntoRange(rowlb[iRow], -OsiClpInfinity, OsiClpInfinity);
+    upper[iRow]= forceIntoRange(rowub[iRow], -OsiClpInfinity, OsiClpInfinity);
+    if (lower[iRow]<-1.0e27)
+      lower[iRow]=-COIN_DBL_MAX;
+    if (upper[iRow]>1.0e27)
+      upper[iRow]=COIN_DBL_MAX;
+  }
+  if (!modelPtr_->clpMatrix())
+    modelPtr_->createEmptyMatrix();
+  modelPtr_->matrix()->appendRows(numrows,rowStarts,columns,element);
   freeCachedResults();
 }
 //-----------------------------------------------------------------------------

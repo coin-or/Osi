@@ -1106,11 +1106,11 @@ Optional Features:
   --enable-xpress-libcheck
                           use disable-xpress-libcheck to skip the
                           link check at configuration time
-  --with-osidylp-info     Enable OsiDylp's informational printing (output will
+  --enable-osidylp-info   Enable OsiDylp's informational printing (output will
                           depend on log level) (default=yes)
-  --with-osidylp-stats    Enable OsiDylp's support for dylp's statistics
+  --enable-osidylp-stats  Enable OsiDylp's support for dylp's statistics
                           collection features (default=no)
-  --with-osidylp-paranoia Control osidylp's paranoid checks. 0 is off, 1 is
+  --enable-osidylp-paranoia Control osidylp's paranoid checks. 0 is off, 1 is
                           index checks, 2 is consistency checks (expensive)
                           (default=1)
 

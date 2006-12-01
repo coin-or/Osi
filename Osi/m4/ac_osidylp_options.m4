@@ -5,7 +5,7 @@
 # ------------------------------------------------------------------
 AC_DEFUN([AC_ODSI_PARANOIA],
 [ AC_ARG_ENABLE([osidylp-paranoia],
-      AS_HELP_STRING([--with-osidylp-paranoia],
+      AS_HELP_STRING([--enable-osidylp-paranoia],
           [Control osidylp's paranoid checks. 0 is off, 1 is index checks,
 	   2 is consistency checks (expensive) (default=$1)]),
       [osidylp_paranoia=$enableval],
@@ -37,7 +37,7 @@ AC_DEFUN([AC_ODSI_PARANOIA],
 # ------------------------------------------------------------------
 AC_DEFUN([AC_ODSI_STATISTICS],
 [ AC_ARG_ENABLE([osidylp-stats],
-      AS_HELP_STRING([--with-osidylp-stats],
+      AS_HELP_STRING([--enable-osidylp-stats],
           [Enable OsiDylp's support for dylp's statistics collection
 	   features (default=$1)]),
       [osidylp_stats=$enableval],
@@ -58,7 +58,7 @@ AC_DEFUN([AC_ODSI_STATISTICS],
 # ------------------------------------------------------------------
 AC_DEFUN([AC_ODSI_INFO],
 [ AC_ARG_ENABLE([osidylp-info],
-      AS_HELP_STRING([--with-osidylp-info],
+      AS_HELP_STRING([--enable-osidylp-info],
           [Enable OsiDylp's informational printing (output will depend on log
 	   level) (default=$1)]),
       [osidylp_info=$enableval],

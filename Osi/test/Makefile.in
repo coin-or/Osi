@@ -104,13 +104,13 @@ noinst_PROGRAMS = unitTest$(EXEEXT)
 
 @COIN_HAS_SPX_TRUE@am__append_32 = ../src/OsiSpx/libOsiSpx.la
 @COIN_HAS_SYMPHONY_TRUE@am__append_33 = OsiSymSolverInterfaceTest.cpp
-@COIN_HAS_SYMPHONY_TRUE@am__append_34 = -I`$(CYGPATH_W) $(SYMSRCDIR)/src` \
+@COIN_HAS_SYMPHONY_TRUE@am__append_34 = -I`$(CYGPATH_W) $(SYMPHONYSRCDIR)/include` \
 @COIN_HAS_SYMPHONY_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiSym`
 
 @COIN_HAS_SYMPHONY_TRUE@am__append_35 = ../src/OsiSym/libOsiSym.la \
-@COIN_HAS_SYMPHONY_TRUE@	$(SYMOBJDIR)/src/libSym.la
+@COIN_HAS_SYMPHONY_TRUE@	$(SYMPHONYOBJDIR)/src/libSym.la
 
-@COIN_HAS_SYMPHONY_TRUE@am__append_36 = `cat $(SYMOBJDIR)/sym_addlibs.txt`
+@COIN_HAS_SYMPHONY_TRUE@am__append_36 = `cat $(SYMPHONYOBJDIR)/sym_addlibs.txt`
 @COIN_HAS_VOL_TRUE@am__append_37 = OsiVolSolverInterfaceTest.cpp
 @COIN_HAS_VOL_TRUE@am__append_38 = -I`$(CYGPATH_W) $(VOLSRCDIR)/src` \
 @COIN_HAS_VOL_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiVol`
@@ -193,7 +193,7 @@ unitTest_OBJECTS = $(am_unitTest_OBJECTS)
 @COIN_HAS_SPX_TRUE@am__DEPENDENCIES_10 = ../src/OsiSpx/libOsiSpx.la
 @COIN_HAS_SYMPHONY_TRUE@am__DEPENDENCIES_11 =  \
 @COIN_HAS_SYMPHONY_TRUE@	../src/OsiSym/libOsiSym.la \
-@COIN_HAS_SYMPHONY_TRUE@	$(SYMOBJDIR)/src/libSym.la
+@COIN_HAS_SYMPHONY_TRUE@	$(SYMPHONYOBJDIR)/src/libSym.la
 @COIN_HAS_VOL_TRUE@am__DEPENDENCIES_12 = ../src/OsiVol/libOsiVol.la \
 @COIN_HAS_VOL_TRUE@	$(VOLOBJDIR)/src/libVol.la
 @COIN_HAS_XPR_TRUE@am__DEPENDENCIES_13 = ../src/OsiXpr/libOsiXpr.la

@@ -120,11 +120,11 @@ endif
 
 if COIN_HAS_SYMPHONY
   unitTest_SOURCES += OsiSymSolverInterfaceTest.cpp
-  AM_CPPFLAGS += -I`$(CYGPATH_W) $(SYMSRCDIR)/src` \
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(SYMPHONYSRCDIR)/include` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiSym`
   unitTest_LDADD += ../src/OsiSym/libOsiSym.la \
-	$(SYMOBJDIR)/src/libSym.la
-  LIBS += `cat $(SYMOBJDIR)/sym_addlibs.txt`
+	$(SYMPHONYOBJDIR)/src/libSym.la
+  LIBS += `cat $(SYMPHONYOBJDIR)/sym_addlibs.txt`
 endif
 
 if COIN_HAS_VOL

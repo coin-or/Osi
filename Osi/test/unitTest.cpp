@@ -48,7 +48,7 @@
 #ifdef COIN_HAS_CLP
 #include "OsiClpSolverInterface.hpp"
 #endif
-#ifdef COIN_HAS_SYM
+#ifdef COIN_HAS_SYMPHONY
 #include "OsiSymSolverInterface.hpp"
 #endif
 #ifdef COIN_HAS_MSK
@@ -342,7 +342,7 @@ int main (int argc, const char *argv[])
   }
 #endif
 
-#ifdef COIN_HAS_SYM  
+#ifdef COIN_HAS_SYMPHONY 
   {
     OsiSymSolverInterface symSi;
     testingMessage( "Testing OsiRowCut with OsiSymSolverInterface\n" );
@@ -460,7 +460,7 @@ int main (int argc, const char *argv[])
   OsiCbcSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
-#ifdef COIN_HAS_SYM
+#ifdef COIN_HAS_SYMPHONY
   testingMessage( "Testing OsiSymSolverInterface\n" );
   OsiSymSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
@@ -492,7 +492,7 @@ int main (int argc, const char *argv[])
     clpSi->setHintParam(OsiDoReducePrint,true,OsiHintTry);
     vecSi.push_back(clpSi);
 #endif
-#   if COIN_HAS_SYM
+#   if COIN_HAS_SYMPHONY
     OsiSolverInterface * symSi = new OsiSymSolverInterface;
     vecSi.push_back(symSi);
 #endif

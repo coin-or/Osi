@@ -705,6 +705,9 @@ void OsiSymSolverInterface::parseCommandLine(int argc, char **argv)
 int OsiSymSolverInterface::readMps(const char * infile, const char * extension)
 {
 
+   return(OsiSolverInterface::readMps(infile, extension));
+
+#if 0
    int termcode = 0;
    char *fn = new char [MAX_FILE_NAME_LENGTH+1];
    
@@ -715,7 +718,7 @@ int OsiSymSolverInterface::readMps(const char * infile, const char * extension)
    delete [] fn;
    
    return (termcode);
-
+#endif
 }
 
 /*===========================================================================*/

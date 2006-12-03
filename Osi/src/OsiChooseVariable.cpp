@@ -607,7 +607,7 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
   numberOnList_=0;
   numberUnsatisfied_=0;
   int numberObjects = solver_->numberObjects();
-  assert (numberObjects&&numberObjects==numberObjects_);
+  assert (numberObjects&&numberObjects<=numberObjects_);
   double check = -COIN_DBL_MAX;
   int checkIndex=0;
   int bestPriority=INT_MAX;

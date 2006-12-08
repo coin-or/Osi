@@ -2715,6 +2715,12 @@ OsiClpSolverInterface::setRowLower( int elementIndex, double elementValue ) {
   }
 #endif
   modelPtr_->setRowLower(elementIndex , elementValue);
+  if (rowsense_!=NULL) {
+    assert ((rhs_ != NULL) && (rowrange_ != NULL));
+    convertBoundToSense(modelPtr_->rowLower_[elementIndex], 
+			modelPtr_->rowUpper_[elementIndex],
+			rowsense_[elementIndex], rhs_[elementIndex], rowrange_[elementIndex]);
+  }
 }
       
 /* Set a single row upper bound<br>
@@ -2730,6 +2736,12 @@ OsiClpSolverInterface::setRowUpper( int elementIndex, double elementValue ) {
   }
 #endif
   modelPtr_->setRowUpper(elementIndex , elementValue);
+  if (rowsense_!=NULL) {
+    assert ((rhs_ != NULL) && (rowrange_ != NULL));
+    convertBoundToSense(modelPtr_->rowLower_[elementIndex], 
+			modelPtr_->rowUpper_[elementIndex],
+			rowsense_[elementIndex], rhs_[elementIndex], rowrange_[elementIndex]);
+  }
 }
     
 /* Set a single row lower and upper bound */
@@ -2745,6 +2757,12 @@ OsiClpSolverInterface::setRowBounds( int elementIndex,
   }
 #endif
   modelPtr_->setRowBounds(elementIndex,lower,upper);
+  if (rowsense_!=NULL) {
+    assert ((rhs_ != NULL) && (rowrange_ != NULL));
+    convertBoundToSense(modelPtr_->rowLower_[elementIndex], 
+			modelPtr_->rowUpper_[elementIndex],
+			rowsense_[elementIndex], rhs_[elementIndex], rowrange_[elementIndex]);
+  }
 }
 //-----------------------------------------------------------------------------
 void

@@ -401,6 +401,10 @@ OsiChooseVariable::doStrongBranching( OsiSolverInterface * solver,
       // adding cuts or something 
       thisSolver = solver->clone();
       branch->branch(thisSolver);
+      // set hot start iterations
+      int limit;
+      thisSolver->getIntParam(OsiMaxNumIterationHotStart,limit);
+      thisSolver->setIntParam(OsiMaxNumIteration,limit); 
       thisSolver->resolve();
     }
     // can check if we got solution

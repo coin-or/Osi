@@ -11,6 +11,7 @@
 #include "CoinMpsIO.hpp"
 #include "CoinMessage.hpp"
 #include "CoinWarmStart.hpp"
+#include "CoinSnapshot.hpp"
 
 #include "OsiSolverInterface.hpp"
 #ifdef CBC_NEXT_VERSION
@@ -1613,6 +1614,70 @@ OsiSolverInterface::getBasics(int* index) const
   // Throw an exception
   throw CoinError("Needs coding for this interface", "getBasics",
 		  "OsiSolverInterface");
+}
+// Fill in a CoinSnapshot
+CoinSnapshot *
+OsiSolverInterface::snapshot(bool createArrays) const
+{
+  CoinSnapshot * snap = new CoinSnapshot();
+  // scalars
+  snap->setObjSense(getObjSense());
+  snap->setInfinity(getInfinity());
+  snap->setObjValue(getObjValue());
+  double objOffset=0.0;
+  getDblParam(OsiObjOffset,objOffset);
+  snap->setObjOffset(objOffset);
+  snap->setDualTolerance(dblParam_[OsiDualTolerance]);
+  snap->setPrimalTolerance(dblParam_[OsiPrimalTolerance]);
+  snap->setIntegerTolerance(getIntegerTolerance());
+  snap->setIntegerUpperBound(dblParam_[OsiDualObjectiveLimit]);
+  if (createArrays) {
+    snap->loadProblem(*getMatrixByCol(),getColLower(),getColUpper(),
+		      getObjCoefficients(),getRowLower(),
+		      getRowUpper());
+    snap->createRightHandSide();
+    // Solution 
+    snap->setColSolution(getColSolution(),true);
+    snap->setRowPrice(getRowPrice(),true);
+    snap->setReducedCost(getReducedCost(),true);
+    snap->setRowActivity(getRowActivity(),true);
+  } else {
+    snap->setNumCols(getNumCols());
+    snap->setNumRows(getNumRows());
+    snap->setNumElements(getNumElements());
+    snap->setMatrixByCol(getMatrixByCol(),false);
+    snap->setColLower(getColLower(),false);
+    snap->setColUpper(getColUpper(),false);
+    snap->setObjCoefficients(getObjCoefficients(),false);
+    snap->setRowLower(getRowLower(),false);
+    snap->setRowUpper(getRowUpper(),false);
+    // Solution 
+    snap->setColSolution(getColSolution(),false);
+    snap->setRowPrice(getRowPrice(),false);
+    snap->setReducedCost(getReducedCost(),false);
+    snap->setRowActivity(getRowActivity(),false);
+  }
+  // If integer then create array (which snapshot has to own);
+  int numberColumns = getNumCols();
+  char * type = new char[numberColumns];
+  int numberIntegers=0;
+  for (int i=0;i<numberColumns;i++) {
+    if (isInteger(i)) {
+      numberIntegers++;
+      if (isBinary(i))
+	type[i]='B';
+      else
+	type[i]='I';
+    } else {
+      type[i]='C';
+    }
+  }
+  if (numberIntegers) 
+    snap->setColType(type,true);
+  else
+    snap->setNumIntegers(0);
+  delete [] type;
+  return snap;
 }
 /* Identify integer variables and create corresponding objects.
   

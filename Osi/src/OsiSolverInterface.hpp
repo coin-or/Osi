@@ -14,6 +14,7 @@
 
 class CoinPackedMatrix;
 class CoinWarmStart;
+class CoinSnapshot;
 
 class OsiCuts;
 class OsiAuxInfo;
@@ -1125,6 +1126,14 @@ public:
   virtual void replaceMatrixOptional(const CoinPackedMatrix & matrix) {};
   /// And if it does matter (not used at present)
   virtual void replaceMatrix(const CoinPackedMatrix & matrix) {abort();};
+  //@}
+
+  //---------------------------------------------------------------------------
+
+  /**@name Miscellaneous */
+  //@{
+  /// Return a CoinSnapshot
+  virtual CoinSnapshot * snapshot(bool createArrays=true) const;
   //@}
 
   //---------------------------------------------------------------------------

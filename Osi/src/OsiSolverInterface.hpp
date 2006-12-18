@@ -1132,8 +1132,10 @@ public:
 
   /**@name Miscellaneous */
   //@{
+#ifdef COIN_SNAPSHOT
   /// Return a CoinSnapshot
   virtual CoinSnapshot * snapshot(bool createArrays=true) const;
+#endif
   //@}
 
   //---------------------------------------------------------------------------

@@ -11,7 +11,9 @@
 #include "CoinMpsIO.hpp"
 #include "CoinMessage.hpp"
 #include "CoinWarmStart.hpp"
+#ifdef COIN_SNAPSHOT
 #include "CoinSnapshot.hpp"
+#endif
 
 #include "OsiSolverInterface.hpp"
 #ifdef CBC_NEXT_VERSION
@@ -1615,6 +1617,7 @@ OsiSolverInterface::getBasics(int* index) const
   throw CoinError("Needs coding for this interface", "getBasics",
 		  "OsiSolverInterface");
 }
+#ifdef COIN_SNAPSHOT
 // Fill in a CoinSnapshot
 CoinSnapshot *
 OsiSolverInterface::snapshot(bool createArrays) const
@@ -1679,6 +1682,7 @@ OsiSolverInterface::snapshot(bool createArrays) const
   delete [] type;
   return snap;
 }
+#endif
 /* Identify integer variables and create corresponding objects.
   
    Record integer variables and create an OsiSimpleInteger object for each

@@ -2954,6 +2954,8 @@ OsiClpSolverInterface::setColLower( int index, double elementValue )
   // Say can't gurantee optimal basis etc
   if (changed)
     lastAlgorithm_=999;
+  if (!modelPtr_->lower_)
+    modelPtr_->whatsChanged_=0; // switch off
   modelPtr_->setColumnLower(index,elementValue);
 }
       
@@ -2975,6 +2977,8 @@ OsiClpSolverInterface::setColUpper( int index, double elementValue )
   // Say can't gurantee optimal basis etc
   if (changed)
     lastAlgorithm_=999;
+  if (!modelPtr_->upper_)
+    modelPtr_->whatsChanged_=0; // switch off
   modelPtr_->setColumnUpper(index,elementValue);
 }
 
@@ -2991,6 +2995,8 @@ OsiClpSolverInterface::setColBounds( int elementIndex,
     indexError(elementIndex,"setColBounds");
   }
 #endif
+  if (!modelPtr_->lower_)
+    modelPtr_->whatsChanged_=0; // switch off
   modelPtr_->setColumnBounds(elementIndex,lower,upper);
 }
 void OsiClpSolverInterface::setColSetBounds(const int* indexFirst,

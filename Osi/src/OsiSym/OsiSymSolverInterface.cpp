@@ -1689,7 +1689,7 @@ void OsiSymSolverInterface::writeMps(const char *filename,
    mps.setMpsData(*colMat, getInfinity(), env_->mip->lb, 
 				       env_->mip->ub, 
 				       env_->mip->obj, env_->mip->is_int, 
-				       env_->mip->rhs,
+				       env_->mip->sense, env_->mip->rhs,
 				       env_->mip->rngval, colnames, rownames);
 
    string f(filename);

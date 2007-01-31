@@ -405,6 +405,15 @@ void ODWSB::compressRows (int tgtCnt, const int *tgts)
   int i,keep,t,tgt,blkStart,blkEnd ;
   Status stati ;
 
+/*
+  Depending on circumstances, constraint indices may be larger than the size
+  of the basis. Check for that now. Scan from top, betting that in most cases
+  the majority of indices will be valid.
+*/
+  for (t = tgtCnt-1 ; t >= 0 && tgts[t] >= numArtificial_ ; t--) ;
+  if (t < 0) return ;
+  tgtCnt = t+1 ;
+
 # if ODSI_PARANOIA >= 2
 /*
   If we're debugging, scan to see if we're deleting nonbasic artificials.

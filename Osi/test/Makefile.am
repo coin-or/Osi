@@ -149,7 +149,7 @@ LIBS += `cat $(OSIOBJDIR)/osi_addlibs.txt` \
 	`cat $(COINUTILSOBJDIR)/coinutils_addlibs.txt` $(ADDLIBS)
 
 test: unitTest$(EXEEXT)
-	cd ../../Data/Netlib; make uncompress
+	cd ../../Data/Netlib; $(MAKE) uncompress
 	./unitTest$(EXEEXT) -testOsiSolverInterface
 
 .PHONY: test

@@ -46,6 +46,9 @@
 #include <iostream>
 #include "OsiDylpWarmStartBasis.hpp"
 
+#undef ODSI_PARANOIA
+#define ODSI_PARANOIA 2
+
 namespace {
   char sccsid[] UNUSED = "@(#)OsiDylpWarmStartBasis.cpp	1.7	11/06/04" ;
   char cvsid[] UNUSED = "$Id$" ;
@@ -402,7 +405,16 @@ void ODWSB::compressRows (int tgtCnt, const int *tgts)
   int i,keep,t,tgt,blkStart,blkEnd ;
   Status stati ;
 
-# ifdef COIN_DEBUG
+/*
+  Depending on circumstances, constraint indices may be larger than the size
+  of the basis. Check for that now. Scan from top, betting that in most cases
+  the majority of indices will be valid.
+*/
+  for (t = tgtCnt-1 ; t >= 0 && tgts[t] >= numArtificial_ ; t--) ;
+  if (t < 0) return ;
+  tgtCnt = t+1 ;
+
+# if ODSI_PARANOIA >= 2
 /*
   If we're debugging, scan to see if we're deleting nonbasic artificials.
   (In other words, are we deleting tight constraints?) Easiest to just do this
@@ -421,8 +433,6 @@ void ODWSB::compressRows (int tgtCnt, const int *tgts)
 /*
   We preserve all entries before the first target. Skip across consecutive
   target indices to establish the start of the first block to be retained.
-  By testing for tgts[t]+1 >= tgts[t+1], we're robust against duplicate
-  indices.
 */
   keep = tgts[0] ;
   for (t = 0 ; t < tgtCnt-1 && tgts[t]+1 == tgts[t+1] ; t++) ;

@@ -101,7 +101,7 @@ static MsgDefn us_en_defns[] = {
   { ODSI_POSTSOL, 200, 3, "Postsolve %s."},
   { ODSI_POSTSOL_ACT, 201, 6, "Applying postsolve transform %s."},
   // warning (3000 -- 5999)
-  { ODSI_IGNORED, 3001, 2, "Ignored unsupported hint; %s." },
+  { ODSI_IGNOREDHINT, 3001, 2, "Ignored unsupported hint; %s." },
   { ODSI_ODWSBSHORTBASIS, 3100, 1,
     "[%s]: basis has only %d variables for %d constraints." },
   { ODSI_NOSOLVE, 3200, 1, "Impossible to call dylp; %s." },
@@ -117,6 +117,8 @@ static MsgDefn us_en_defns[] = {
   { ODSI_ODWSBBADSTATUS, 6104, 1,
     "Flipping %s (%d) from %s to %s; lack of finite bound." },
   // Fatal errors (9000 and up)
+  { ODSI_CONFUSION, 9001, 1,
+    "Internal confusion, line %d." },
   { ODSI_DUMMY_END, 999999, 0, "" }
 } ;
 

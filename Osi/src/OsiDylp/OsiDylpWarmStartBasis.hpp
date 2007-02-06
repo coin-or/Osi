@@ -156,9 +156,11 @@ class OsiDylpWarmStartBasis : public CoinWarmStartBasis
     length.
   */
 
+  /* Keep out of the build until CoinUtils catches up.
   virtual void mergeBasis(const CoinWarmStartBasis *src,
 			  const XferVec *xferRows,
 			  const XferVec *xferCols) ;
+  */
 
 //@}
 

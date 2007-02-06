@@ -49,16 +49,16 @@
 #ifndef ODSI_PARANOIA
 # define ODSI_PARANOIA 1
 #endif
-// #undef ODSI_PARANOIA
-// #define ODSI_PARANOIA 2
+#undef ODSI_PARANOIA
+#define ODSI_PARANOIA 2
 
 /*
   The following symbol is useful only for detailed debugging.
 
   ODWSB_TRACK_BASIS	track basis manipulations
 
-  #define ODWSB_TRACK_BASIS 1
 */
+#define ODWSB_TRACK_BASIS 1
 
 namespace {
   char sccsid[] UNUSED = "@(#)OsiDylpWarmStartBasis.cpp	1.7	11/06/04" ;
@@ -540,6 +540,8 @@ void ODWSB::deleteRows (int rawTgtCnt, const int *rawTgts)
   will be transferred from src to tgt.
 */
 
+// Temporarily keep out of the compile until CoinUtils catches up.
+#if 0
 void ODWSB::mergeBasis (const CoinWarmStartBasis *cwsb_src,
 		        const XferVec *xferRows, const XferVec *xferCols)
 
@@ -588,6 +590,7 @@ void ODWSB::mergeBasis (const CoinWarmStartBasis *cwsb_src,
 	setStatus(constraintStatus_,tgtNdx+i,stat) ; } } }
 
   return ; }
+#endif // if 0
 
 //@}
 

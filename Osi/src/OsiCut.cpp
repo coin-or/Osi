@@ -13,7 +13,7 @@
 OsiCut::OsiCut ()
 :
   effectiveness_(0.),
-  globallyValid_(false)
+  globallyValid_(0)
 //timesUsed_(0),
 //timesTested_(0)
 {

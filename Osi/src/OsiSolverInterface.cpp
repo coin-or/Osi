@@ -1715,19 +1715,24 @@ OsiSolverInterface::findIntegers(bool justCount)
   // if same number return
   if (numberIntegers_==numberIntegers)
     return;
-  // delete old integer objects and keep others
-  int nObjects=0;
+  // space for integers
+  int * marked = new int[numberColumns];
+  for (iColumn=0;iColumn<numberColumns;iColumn++)
+    marked[iColumn]=-1;
+  // mark simple integers
   OsiObject ** oldObject = object_;
-  for (iObject = 0;iObject<numberObjects_;iObject++) {
+  int nObjects=numberObjects_;
+  for (iObject = 0;iObject<nObjects;iObject++) {
     OsiSimpleInteger * obj =
       dynamic_cast <OsiSimpleInteger *>(oldObject[iObject]) ;
-    if (obj) 
-      delete oldObject[iObject];
-    else
-      oldObject[nObjects++]=oldObject[iObject];
+    if (obj) {
+      iColumn = obj->columnNumber();
+      assert (iColumn>=0&&iColumn<numberColumns);
+      marked[iColumn]=iObject;
+    }
   }
   // make a large enough array for new objects
-  numberObjects_=numberIntegers_+nObjects;
+  numberObjects_ += numberIntegers_-numberIntegers;
   if (numberObjects_)
     object_ = new OsiObject * [numberObjects_];
   else
@@ -1737,17 +1742,27 @@ OsiSolverInterface::findIntegers(bool justCount)
     the integer variables. Initially, the objects hold the index and upper &
     lower bounds.
   */
-  numberIntegers_=0;
+  numberObjects_=0;
   for (iColumn=0;iColumn<numberColumns;iColumn++) {
     if(isInteger(iColumn)) {
-      object_[numberIntegers_++] =
-	new OsiSimpleInteger(this,iColumn);
+      iObject=marked[iColumn];
+      if (iObject>=0) 
+	object_[numberObjects_++] = oldObject[iObject];
+      else
+	object_[numberObjects_++] =
+	  new OsiSimpleInteger(this,iColumn);
     }
   }
   // Now append other objects
-  memcpy(object_+numberIntegers_,oldObject,nObjects*sizeof(OsiObject *));
+  for (iObject = 0;iObject<nObjects;iObject++) {
+    OsiSimpleInteger * obj =
+      dynamic_cast <OsiSimpleInteger *>(oldObject[iObject]) ;
+    if (!obj) 
+      object_[numberObjects_++] = oldObject[iObject];
+  }
   // Delete old array (just array)
   delete [] oldObject;
+  delete [] marked;
 }
 /* Identify integer variables and SOS and create corresponding objects.
   

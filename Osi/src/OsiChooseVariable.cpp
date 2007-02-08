@@ -615,7 +615,22 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
   numberOnList_=0;
   numberUnsatisfied_=0;
   int numberObjects = solver_->numberObjects();
-  assert (numberObjects&&numberObjects<=numberObjects_);
+  if (numberObjects>numberObjects_) {
+    // redo useful arrays
+    delete [] upTotalChange_;
+    delete [] downTotalChange_;
+    delete [] upNumber_;
+    delete [] downNumber_;
+    numberObjects_ = solver_->numberObjects();
+    upTotalChange_ = new double [numberObjects_];
+    downTotalChange_ = new double [numberObjects_];
+    upNumber_ = new int [numberObjects_];
+    downNumber_ = new int [numberObjects_];
+  }
+  CoinZeroN(upTotalChange_,numberObjects_);
+  CoinZeroN(downTotalChange_,numberObjects_);
+  CoinZeroN(upNumber_,numberObjects_);
+  CoinZeroN(downNumber_,numberObjects_);
   double check = -COIN_DBL_MAX;
   int checkIndex=0;
   int bestPriority=INT_MAX;

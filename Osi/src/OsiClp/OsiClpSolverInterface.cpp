@@ -1309,7 +1309,8 @@ void OsiClpSolverInterface::unmarkHotStart()
     ws_ = NULL;
   } else {
     if (!modelPtr_->auxiliaryModel_) {
-      delete smallModel_;
+      if (smallModel_!=modelPtr_)
+	delete smallModel_;
     } else {
       modelPtr_->deleteRim(0);
       //modelPtr_->setLogLevel(modelPtr_->auxiliaryModel_->numberPrimalInfeasibilities_);

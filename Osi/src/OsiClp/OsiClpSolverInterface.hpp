@@ -647,6 +647,9 @@ public:
   virtual void addRow(const CoinPackedVectorBase& vec,
                       const char rowsen, const double rowrhs,   
                       const double rowrng);
+  /** Add a row (constraint) to the problem. */
+  virtual void addRow(int numberElements, const int * columns, const double * element,
+		      const double rowlb, const double rowub) ;
   /** */
   virtual void addRows(const int numrows,
                        const CoinPackedVectorBase * const * rows,

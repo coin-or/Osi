@@ -1601,14 +1601,30 @@ OsiClpSolverInterface::addCols(const int numcols,
   double * upper = modelPtr_->columnUpper()+numberColumns;
   double * objective = modelPtr_->objective()+numberColumns;
   int iCol;
-  for (iCol = 0; iCol < numcols; iCol++) {
-    lower[iCol]= forceIntoRange(collb[iCol], -OsiClpInfinity, OsiClpInfinity);
-    upper[iCol]= forceIntoRange(colub[iCol], -OsiClpInfinity, OsiClpInfinity);
-    if (lower[iCol]<-1.0e27)
-      lower[iCol]=-COIN_DBL_MAX;
-    if (upper[iCol]>1.0e27)
-      upper[iCol]=COIN_DBL_MAX;
-    objective[iCol] = obj[iCol];
+  if (collb) {
+    for (iCol = 0; iCol < numcols; iCol++) {
+      lower[iCol]= forceIntoRange(collb[iCol], -OsiClpInfinity, OsiClpInfinity);
+      if (lower[iCol]<-1.0e27)
+	lower[iCol]=-COIN_DBL_MAX;
+    }
+  } else {
+    CoinFillN ( lower, numcols,0.0);
+  }
+  if (colub) {
+    for (iCol = 0; iCol < numcols; iCol++) {
+      upper[iCol]= forceIntoRange(colub[iCol], -OsiClpInfinity, OsiClpInfinity);
+      if (upper[iCol]>1.0e27)
+	upper[iCol]=COIN_DBL_MAX;
+    }
+  } else {
+    CoinFillN ( upper, numcols,COIN_DBL_MAX);
+  }
+  if (obj) {
+    for (iCol = 0; iCol < numcols; iCol++) {
+      objective[iCol] = obj[iCol];
+    }
+  } else {
+    CoinFillN ( objective, numcols,0.0);
   }
   if (!modelPtr_->clpMatrix())
     modelPtr_->createEmptyMatrix();
@@ -1637,14 +1653,30 @@ OsiClpSolverInterface::addCols(const int numcols,
   double * upper = modelPtr_->columnUpper()+numberColumns;
   double * objective = modelPtr_->objective()+numberColumns;
   int iCol;
-  for (iCol = 0; iCol < numcols; iCol++) {
-    lower[iCol]= forceIntoRange(collb[iCol], -OsiClpInfinity, OsiClpInfinity);
-    upper[iCol]= forceIntoRange(colub[iCol], -OsiClpInfinity, OsiClpInfinity);
-    if (lower[iCol]<-1.0e27)
-      lower[iCol]=-COIN_DBL_MAX;
-    if (upper[iCol]>1.0e27)
-      upper[iCol]=COIN_DBL_MAX;
-    objective[iCol] = obj[iCol];
+  if (collb) {
+    for (iCol = 0; iCol < numcols; iCol++) {
+      lower[iCol]= forceIntoRange(collb[iCol], -OsiClpInfinity, OsiClpInfinity);
+      if (lower[iCol]<-1.0e27)
+	lower[iCol]=-COIN_DBL_MAX;
+    }
+  } else {
+    CoinFillN ( lower, numcols,0.0);
+  }
+  if (colub) {
+    for (iCol = 0; iCol < numcols; iCol++) {
+      upper[iCol]= forceIntoRange(colub[iCol], -OsiClpInfinity, OsiClpInfinity);
+      if (upper[iCol]>1.0e27)
+	upper[iCol]=COIN_DBL_MAX;
+    }
+  } else {
+    CoinFillN ( upper, numcols,COIN_DBL_MAX);
+  }
+  if (obj) {
+    for (iCol = 0; iCol < numcols; iCol++) {
+      objective[iCol] = obj[iCol];
+    }
+  } else {
+    CoinFillN ( objective, numcols,0.0);
   }
   if (!modelPtr_->clpMatrix())
     modelPtr_->createEmptyMatrix();
@@ -1698,6 +1730,20 @@ OsiClpSolverInterface::addRow(const CoinPackedVectorBase& vec,
   if (!modelPtr_->clpMatrix())
     modelPtr_->createEmptyMatrix();
   modelPtr_->matrix()->appendRow(vec);
+}
+//-----------------------------------------------------------------------------
+void 
+OsiClpSolverInterface::addRow(int numberElements, const int * columns, const double * elements,
+			   const double rowlb, const double rowub) 
+{
+  freeCachedResults();
+  int numberRows = modelPtr_->numberRows();
+  modelPtr_->resize(numberRows+1,modelPtr_->numberColumns());
+  basis_.resize(numberRows+1,modelPtr_->numberColumns());
+  setRowBounds(numberRows,rowlb,rowub);
+  if (!modelPtr_->clpMatrix())
+    modelPtr_->createEmptyMatrix();
+  modelPtr_->matrix()->appendRow(numberElements, columns, elements);
 }
 //-----------------------------------------------------------------------------
 void 

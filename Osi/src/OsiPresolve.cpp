@@ -81,7 +81,8 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
 			 double feasibilityTolerance,
 			 bool keepIntegers,
 			    int numberPasses,
-                            const char * prohibited)
+                            const char * prohibited,
+			    bool doStatus)
 {
   ncols_ = si.getNumCols();
   nrows_ = si.getNumRows();

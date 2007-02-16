@@ -1883,6 +1883,73 @@ OsiSolverInterface::addObjects(int numberObjects, OsiObject ** objects)
   object_ = temp;
   numberObjects_ = newNumberObjects;
 }
+// Deletes branching information before columns deleted
+void 
+OsiSolverInterface::deleteBranchingInfo(int numberDeleted, const int * which)
+{
+  if (numberObjects_) {
+    int numberColumns = getNumCols();
+    // mark is -1 if deleted and new number if not deleted 
+    int * mark = new int[numberColumns];
+    int i;
+    int iColumn;
+    for (i=0;i<numberColumns;i++)
+      mark[i]=0;
+    for (i=0;i<numberDeleted;i++) {
+      iColumn = which[i];
+      if (iColumn>=0&&iColumn<numberColumns)
+	mark[iColumn]=-1;
+    }
+    iColumn = 0;
+    for (i=0;i<numberColumns;i++) {
+      if (mark[i]>=0) {
+	mark[i]=iColumn;
+	iColumn++;
+      }
+    }
+    int oldNumberObjects = numberObjects_;
+    numberIntegers_=0;
+    numberObjects_=0;
+    for (i=0;i<oldNumberObjects;i++) { 
+      OsiSimpleInteger * obj =
+	dynamic_cast <OsiSimpleInteger *>(object_[i]) ;
+      if (obj) {
+	iColumn = obj->columnNumber();
+	int jColumn = mark[iColumn];
+	if (jColumn>=0) {
+	  obj->setColumnNumber(jColumn);
+	  object_[numberObjects_++]=obj;
+	  numberIntegers_++;
+	}
+      } else {
+	// not integer - all I know about is SOS
+	OsiSOS * obj =
+	  dynamic_cast <OsiSOS *>(object_[i]) ;
+	if (obj) {
+	  int oldNumberMembers=obj->numberMembers();
+	  int numberMembers=0;
+	  double * weight = obj->mutableWeights();
+	  int * members = obj->mutableMembers();
+	  for (int k=0;k<oldNumberMembers;k++) {
+	    iColumn = members[k];
+	    int jColumn = mark[iColumn];
+	    if (jColumn>=0) {
+	      members[numberMembers]=jColumn;
+	      weight[numberMembers++]=weight[k];
+	    }
+	  }
+	  if (numberMembers) {
+	    obj->setNumberMembers(numberMembers);
+	    object_[numberObjects_++]=obj;
+	  }
+	}
+      }
+    }
+    delete [] mark;
+  } else {
+    findIntegers(false);
+  }
+}
 /* Use current solution to set bounds so current integer feasible solution will stay feasible.
    Only feasible bounds will be used, even if current solution outside bounds.  The amount of
    such violation will be returned (and if small can be ignored)

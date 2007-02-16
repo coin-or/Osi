@@ -179,7 +179,7 @@ private:
   /// Effectiveness
   double effectiveness_;
   /// If cut has global validity i.e. can be used anywhere in tree
-  bool globallyValid_;
+  int globallyValid_;
 #if 0
   /// Times used
   int timesUsed_;

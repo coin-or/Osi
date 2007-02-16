@@ -887,6 +887,8 @@ public:
 	  This is passed in as an array of pointers.
       */
       virtual void applyRowCuts(int numberCuts, const OsiRowCut ** cuts);
+      /// Deletes branching information before columns deleted
+      void deleteBranchingInfo(int numberDeleted, const int * which);
     //@}
 
   //---------------------------------------------------------------------------

@@ -709,6 +709,21 @@ public:
   /// Return true if knows how to deal with Pseudo Shadow Prices
   virtual bool canHandleShadowPrices() const
   { return true;};
+  /// Set number of members
+  inline void setNumberMembers(int value)
+  {numberMembers_=value;};
+
+  /// Members (indices in range 0 ... numberColumns-1)
+  inline int * mutableMembers() const
+  {return members_;};
+
+  /// Set SOS type
+  inline void setSosType(int value)
+  {sosType_=value;};
+
+  /** Array of weights */
+  inline  double * mutableWeights() const
+  { return weights_;};
 protected:
   /// data
 

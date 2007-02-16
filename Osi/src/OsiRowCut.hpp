@@ -65,6 +65,8 @@ public:
     OsiRowCut_inline void setRow( const CoinPackedVector & v );
     /// Get row elements
     OsiRowCut_inline const CoinPackedVector & row() const;
+    /// Get row elements for changing
+    OsiRowCut_inline CoinPackedVector & mutableRow() ;
   //@}
 
   /**@name Comparison operators  */
@@ -220,6 +222,14 @@ void OsiRowCut::setRow( const CoinPackedVector & v )
 // Get the row
 //-------------------------------------------------------------------
 const CoinPackedVector & OsiRowCut::row() const 
+{ 
+  return row_; 
+}
+
+//-------------------------------------------------------------------
+// Get the row so we can change
+//-------------------------------------------------------------------
+CoinPackedVector & OsiRowCut::mutableRow() 
 { 
   return row_; 
 }

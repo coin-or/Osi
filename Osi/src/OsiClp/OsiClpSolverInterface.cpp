@@ -43,7 +43,7 @@ static int hiResolveTry=9999999;
 //#############################################################################
 void OsiClpSolverInterface::initialSolve()
 {
-  ClpSimplex solver;
+  ClpSimplex solver(true);
   double time1 = CoinCpuTime();
   solver.borrowModel(*modelPtr_);
   // Treat as if user simplex not enabled
@@ -798,7 +798,8 @@ OsiClpSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
 bool OsiClpSolverInterface::isAbandoned() const
 {
   // not sure about -1 (should not happen)
-  return (modelPtr_->status()==4||modelPtr_->status()==-1);
+  return (modelPtr_->status()==4||modelPtr_->status()==-1||
+	  (modelPtr_->status()==1&&modelPtr_->secondaryStatus()==8));
 }
 
 bool OsiClpSolverInterface::isProvenOptimal() const
@@ -927,7 +928,7 @@ bool OsiClpSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
 void OsiClpSolverInterface::markHotStart()
 {
   modelPtr_->setProblemStatus(0);
-  if ((specialOptions_&8192)==0) {
+  if ((specialOptions_&8192)==0) { // ||(specialOptions_&1024)!=0) {
     delete ws_;
     ws_ = dynamic_cast<CoinWarmStartBasis*>(getWarmStart());
     int numberRows = modelPtr_->numberRows();
@@ -1696,6 +1697,7 @@ OsiClpSolverInterface::addCols(const int numcols,
 void 
 OsiClpSolverInterface::deleteCols(const int num, const int * columnIndices)
 {
+  deleteBranchingInfo(num,columnIndices);
   modelPtr_->deleteColumns(num,columnIndices);
   basis_.deleteColumns(num,columnIndices);
   linearObjective_ = modelPtr_->objective();
@@ -1813,8 +1815,14 @@ OsiClpSolverInterface::addRows(const int numrows,
   double * upper = modelPtr_->rowUpper()+numberRows;
   int iRow;
   for (iRow = 0; iRow < numrows; iRow++) {
-    lower[iRow]= forceIntoRange(rowlb[iRow], -OsiClpInfinity, OsiClpInfinity);
-    upper[iRow]= forceIntoRange(rowub[iRow], -OsiClpInfinity, OsiClpInfinity);
+    if (rowlb) 
+      lower[iRow]= forceIntoRange(rowlb[iRow], -OsiClpInfinity, OsiClpInfinity);
+    else 
+      lower[iRow]=-OsiClpInfinity;
+    if (rowub) 
+      upper[iRow]= forceIntoRange(rowub[iRow], -OsiClpInfinity, OsiClpInfinity);
+    else 
+      upper[iRow]=OsiClpInfinity;
     if (lower[iRow]<-1.0e27)
       lower[iRow]=-COIN_DBL_MAX;
     if (upper[iRow]>1.0e27)
@@ -4114,7 +4122,7 @@ OsiClpSolverInterface::setHintParam(OsiHintParam key, bool yesNo,
         specialOptions_=0;
       }
       // set normal
-      specialOptions_ &= (1023+3*8192);
+      specialOptions_ &= (2047+3*8192);
       if (otherInformation!=NULL) {
         int * array = (int *) otherInformation;
         if (array[0]>=0||array[0]<=2)
@@ -4352,6 +4360,7 @@ OsiNodeSimple::OsiNodeSimple(OsiSolverInterface & model,
   value_=0.0;
   if (model.isProvenOptimal()&&!model.isDualObjectiveLimitReached()) {
     objectiveValue_ = model.getObjSense()*model.getObjValue();
+    printf("node obj value %g\n",objectiveValue_);
   } else {
     objectiveValue_ = 1.0e100;
     lower_ = NULL;
@@ -4715,7 +4724,8 @@ OsiClpSolverInterface::branchAndBound() {
         int nFixed0=0,nFixed1=0;
         double cutoff;
         getDblParam(OsiDualObjectiveLimit,cutoff);
-        double gap=(cutoff-getObjValue())*direction+1.0e-4;
+        double gap=(cutoff-modelPtr_->objectiveValue())*direction+1.0e-4;
+	printf("cutoff %g obj %g gap %g\n",cutoff,modelPtr_->objectiveValue(),gap);
         if (gap<1.0e10&&isProvenOptimal()&&!isDualObjectiveLimitReached()) {
           const double * dj = getReducedCost();
           const double * lower = getColLower();

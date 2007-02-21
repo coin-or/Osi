@@ -4360,7 +4360,6 @@ OsiNodeSimple::OsiNodeSimple(OsiSolverInterface & model,
   value_=0.0;
   if (model.isProvenOptimal()&&!model.isDualObjectiveLimitReached()) {
     objectiveValue_ = model.getObjSense()*model.getObjValue();
-    printf("node obj value %g\n",objectiveValue_);
   } else {
     objectiveValue_ = 1.0e100;
     lower_ = NULL;
@@ -4725,7 +4724,6 @@ OsiClpSolverInterface::branchAndBound() {
         double cutoff;
         getDblParam(OsiDualObjectiveLimit,cutoff);
         double gap=(cutoff-modelPtr_->objectiveValue())*direction+1.0e-4;
-	printf("cutoff %g obj %g gap %g\n",cutoff,modelPtr_->objectiveValue(),gap);
         if (gap<1.0e10&&isProvenOptimal()&&!isDualObjectiveLimitReached()) {
           const double * dj = getReducedCost();
           const double * lower = getColLower();

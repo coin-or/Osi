@@ -875,7 +875,7 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
 
   }
   // Test branch and bound
-  if (0) {    
+  {    
     OsiClpSolverInterface m;
     std::string fn = mpsDir+"p0033";
     m.readMps(fn.c_str(),"mps");

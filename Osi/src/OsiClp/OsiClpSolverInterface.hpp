@@ -13,6 +13,7 @@
 #include "OsiSolverInterface.hpp"
 #include "CoinWarmStartBasis.hpp"
 #include "ClpEventHandler.hpp"
+#include "CoinIndexedVector.hpp"
 
 class OsiRowCut;
 class OsiClpUserSolver;
@@ -973,7 +974,12 @@ protected:
   void setBasis( const CoinWarmStartBasis & basis, ClpSimplex * model);
   /// Crunch down problem a bit
   void crunch();
+  /// Extend scale factors
+  void redoScaleFactors(int numberRows,const CoinBigIndex * starts,
+			const int * indices, const double * elements);
 public:
+  /// Delete all scale factor stuff and reset option
+  void deleteScaleFactors();
   /// If doing fast hot start then ranges are computed
   inline const double * upRange() const
   { return rowActivity_;};
@@ -1090,8 +1096,18 @@ protected:
       512 Give user direct access to Clp regions in getBInvARow etc
       Bits above 8192 give where called from in Cbc
       At present 0 is normal, 1 doing fast hotstarts, 2 is can do quick check
+      65536 Keep simple i.e. no auxiliary model or crunch etc
+      131072 Try and keep scaling factors around
   */
   mutable unsigned int specialOptions_;
+  /// Copy of model when option 131072 set
+  ClpSimplex * baseModel_;
+  /// Number of rows when last "scaled"
+  int lastNumberRows_;
+  /// Row scale factors (has inverse at end)
+  CoinDoubleArrayWithLength rowScale_; 
+  /// Column scale factors (has inverse at end)
+  CoinDoubleArrayWithLength columnScale_; 
   //@}
 };
   

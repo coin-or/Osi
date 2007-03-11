@@ -318,7 +318,7 @@ void OsiClpSolverInterface::resolve()
   assert (gotHint);
   // mark so we can pick up objective value quickly
   modelPtr_->upperIn_=0.0;
-  if ((specialOptions_>>10)==2) {
+  if (((specialOptions_>>10)&2)!=0) {
     // Quick check to see if optimal
     modelPtr_->checkSolutionInternal();
     if (modelPtr_->problemStatus()==0) {
@@ -509,14 +509,38 @@ void OsiClpSolverInterface::resolve()
         if ((specialOptions_&128)==0) {
 	  if (inCbcOrOther)
 	    modelPtr_->setDisasterHandler(&handler);
+	  bool specialScale;
+	  if ((specialOptions_&131072)!=0&&!modelPtr_->rowScale_) {
+	    modelPtr_->rowScale_ = rowScale_.array();
+	    modelPtr_->columnScale_ = columnScale_.array();
+	    specialScale=true;
+	  } else {
+	    specialScale=false;
+	  }
           modelPtr_->dual(0,startFinishOptions);
+	  if (specialScale) {
+	    modelPtr_->rowScale_ = NULL;
+	    modelPtr_->columnScale_ = NULL;
+	  }
         } else {
           double * rhs = modelPtr_->auxiliaryModel_->lower_;
           int numberTightened = ((ClpSimplexOther *)modelPtr_)->tightenIntegerBounds(rhs);
           if (numberTightened>=0) {
 	    if (inCbcOrOther)
 	      modelPtr_->setDisasterHandler(&handler);
-            modelPtr_->dual(0,0);
+	    bool specialScale;
+	    if ((specialOptions_&131072)!=0&&!modelPtr_->rowScale_) {
+	      modelPtr_->rowScale_ = rowScale_.array();
+	      modelPtr_->columnScale_ = columnScale_.array();
+	      specialScale=true;
+	    } else {
+	      specialScale=false;
+	    }
+	    modelPtr_->dual(0,0);
+	    if (specialScale) {
+	      modelPtr_->rowScale_ = NULL;
+	      modelPtr_->columnScale_ = NULL;
+	    }
           } else {
             modelPtr_->setProblemStatus(1);
 	  }
@@ -525,7 +549,19 @@ void OsiClpSolverInterface::resolve()
  	if((specialOptions_&1)==0) {
 	  if (inCbcOrOther)
 	    modelPtr_->setDisasterHandler(&handler);
+	  bool specialScale;
+	  if ((specialOptions_&131072)!=0&&!modelPtr_->rowScale_) {
+	    modelPtr_->rowScale_ = rowScale_.array();
+	    modelPtr_->columnScale_ = columnScale_.array();
+	    specialScale=true;
+	  } else {
+	    specialScale=false;
+	  }
           modelPtr_->dual(0,startFinishOptions);
+	  if (specialScale) {
+	    modelPtr_->rowScale_ = NULL;
+	    modelPtr_->columnScale_ = NULL;
+	  }
         } else {
           crunch();
 	  // should have already been fixed if problems
@@ -924,11 +960,88 @@ bool OsiClpSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
 //#############################################################################
 // Hotstart related methods (primarily used in strong branching)
 //#############################################################################
-
 void OsiClpSolverInterface::markHotStart()
 {
   modelPtr_->setProblemStatus(0);
-  if ((specialOptions_&8192)==0) { // ||(specialOptions_&1024)!=0) {
+#define CLEAN_HOT_START
+#ifdef CLEAN_HOT_START
+  if ((specialOptions_&65536)!=0) {
+    assert ((specialOptions_&128)==0);
+    // space for save arrays
+    int numberColumns = modelPtr_->numberColumns();
+    int numberRows = modelPtr_->numberRows();
+    // Get space for strong branching 
+    int size = (1+4*(numberRows+numberColumns))*sizeof(double);
+    // and for save of original column bounds
+    size += 2*numberColumns*sizeof(double);
+    size += (1+4*numberRows+2*numberColumns)*sizeof(int);
+    size += numberRows+numberColumns;
+    assert (spareArrays_==NULL);
+    spareArrays_ = new char[size];
+    // Setup for strong branching
+    assert (factorization_==NULL);
+    if ((specialOptions_&131072)!=0) {
+      assert (lastNumberRows_>=0);
+      if (modelPtr_->rowScale_!=rowScale_.array()) {
+	assert(modelPtr_->columnScale_!=columnScale_.array());
+	delete [] modelPtr_->rowScale_;
+	modelPtr_->rowScale_=NULL;
+	delete [] modelPtr_->columnScale_;
+	modelPtr_->columnScale_=NULL;
+	if (lastNumberRows_==modelPtr_->numberRows()) {
+	  // use scaling
+	  modelPtr_->rowScale_ = rowScale_.array();
+	  modelPtr_->columnScale_ = columnScale_.array();
+	} else {
+	  specialOptions_ &= ~131072;
+	  modelPtr_->specialOptions_ &= ~131072;
+	}
+      }
+      lastNumberRows_ = -1 -lastNumberRows_;
+    }
+    factorization_ = ((ClpSimplexDual *)modelPtr_)->setupForStrongBranching(spareArrays_,numberRows,
+									    numberColumns);
+    double * arrayD = (double *) spareArrays_;
+    arrayD[0]=modelPtr_->objectiveValue()* modelPtr_->optimizationDirection();
+    double * saveSolution = arrayD+1;
+    double * saveLower = saveSolution + (numberRows+numberColumns);
+    double * saveUpper = saveLower + (numberRows+numberColumns);
+    double * saveObjective = saveUpper + (numberRows+numberColumns);
+    double * saveLowerOriginal = saveObjective + (numberRows+numberColumns);
+    double * saveUpperOriginal = saveLowerOriginal + numberColumns;
+    memcpy( saveLowerOriginal, modelPtr_->columnLower(),numberColumns*sizeof(double));
+    memcpy( saveUpperOriginal, modelPtr_->columnUpper(),numberColumns*sizeof(double));
+#if 0
+    if (whichRange_&&whichRange_[0]) {
+      // get ranging information
+      int numberToDo = whichRange_[0];
+      int * which = new int [numberToDo];
+      // Convert column numbers
+      int * backColumn = whichColumn+numberColumns;
+      for (int i=0;i<numberToDo;i++) {
+	int iColumn = whichRange_[i+1];
+	which[i]=backColumn[iColumn];
+      }
+      double * downRange=new double [numberToDo];
+      double * upRange=new double [numberToDo];
+      int * whichDown = new int [numberToDo];
+      int * whichUp = new int [numberToDo];
+      modelPtr_->gutsOfSolution(NULL,NULL,false);
+      // Tell code we can increase costs in some cases
+      modelPtr_->setCurrentDualTolerance(0.0);
+      ((ClpSimplexOther *) modelPtr_)->dualRanging(numberToDo,which,
+						   upRange, whichUp, downRange, whichDown);
+      delete [] whichDown;
+      delete [] whichUp;
+      delete [] which;
+      rowActivity_=upRange;
+      columnActivity_=downRange;
+    }
+#endif
+    return;
+  }
+#endif
+  if ((specialOptions_&8192)==0) { // ||(specialOptions_&65536)!=0) {
     delete ws_;
     ws_ = dynamic_cast<CoinWarmStartBasis*>(getWarmStart());
     int numberRows = modelPtr_->numberRows();
@@ -983,6 +1096,33 @@ void OsiClpSolverInterface::markHotStart()
     ClpSimplex * small;
     if (!keepModel) {
       small = ((ClpSimplexOther *) modelPtr_)->crunch(rhs,whichRow,whichColumn,nBound,true);
+      if (small&&(specialOptions_&131072)!=0) {
+	assert (lastNumberRows_>=0);
+	int numberRows2 = small->numberRows();
+	int numberColumns2 = small->numberColumns();
+	double * rowScale2 = new double [2*numberRows2];
+	const double * rowScale = rowScale_.array();
+	double * inverseScale2 = rowScale2+numberRows2;
+	const double * inverseScale = rowScale+modelPtr_->numberRows_;
+	int i;
+	for (i=0;i<numberRows2;i++) {
+	  int iRow = whichRow[i];
+	  rowScale2[i]=rowScale[iRow];
+	  inverseScale2[i]=inverseScale[iRow];
+	}
+	small->setRowScale(rowScale2);
+	double * columnScale2 = new double [2*numberColumns2];
+	const double * columnScale = columnScale_.array();
+	inverseScale2 = columnScale2+numberColumns2;
+	inverseScale = columnScale+modelPtr_->numberColumns_;
+	for (i=0;i<numberColumns2;i++) {
+	  int iColumn = whichColumn[i];
+	  columnScale2[i]=columnScale[iColumn];
+	  inverseScale2[i]=inverseScale[iColumn];
+	}
+	small->setColumnScale(columnScale2);
+	small->specialOptions_ |= 131072;
+      }
     } else {
       // save stuff
       small=modelPtr_;
@@ -1101,6 +1241,156 @@ void OsiClpSolverInterface::solveFromHotStart()
   modelPtr_->getIntParam(ClpMaxNumIteration,itlimOrig_);
   int itlim;
   modelPtr_->getIntParam(ClpMaxNumIterationHotStart, itlim);
+#ifdef CLEAN_HOT_START
+  if ((specialOptions_&65536)!=0) {
+    double * arrayD = (double *) spareArrays_;
+    double saveObjectiveValue = arrayD[0];
+    double * saveSolution = arrayD+1;
+    int number = numberRows+numberColumns;
+    memcpy(modelPtr_->solutionRegion(),saveSolution,number*sizeof(double));
+    double * saveLower = saveSolution + (numberRows+numberColumns);
+    memcpy(modelPtr_->lowerRegion(),saveLower,number*sizeof(double));
+    double * saveUpper = saveLower + (numberRows+numberColumns);
+    memcpy(modelPtr_->upperRegion(),saveUpper,number*sizeof(double));
+    double * saveObjective = saveUpper + (numberRows+numberColumns);
+    memcpy(modelPtr_->costRegion(),saveObjective,number*sizeof(double));
+    double * saveLowerOriginal = saveObjective + (numberRows+numberColumns);
+    double * saveUpperOriginal = saveLowerOriginal + numberColumns;
+    arrayD = saveUpperOriginal + numberColumns;
+    int * savePivot = (int *) arrayD;
+    memcpy(modelPtr_->pivotVariable(),savePivot,numberRows*sizeof(int));
+    int * whichRow = savePivot+numberRows;
+    int * whichColumn = whichRow + 3*numberRows;
+    int * arrayI = whichColumn + 2*numberColumns;
+    unsigned char * saveStatus = (unsigned char *) (arrayI+1);
+    memcpy(modelPtr_->statusArray(),saveStatus,number);
+    modelPtr_->setFactorization(*factorization_);
+    double * columnLower = modelPtr_->columnLower();
+    double * columnUpper = modelPtr_->columnUpper();
+    // make sure whatsChanged_ has 1 set
+    modelPtr_->setWhatsChanged(511);
+    double * lowerInternal = modelPtr_->lowerRegion();
+    double * upperInternal = modelPtr_->upperRegion();
+    double rhsScale = modelPtr_->rhsScale();
+    const double * columnScale = NULL;
+    if (modelPtr_->scalingFlag()>0) 
+      columnScale = modelPtr_->columnScale() ;
+    // and do bounds in case dual needs them
+    int iColumn;
+    for (iColumn=0;iColumn<numberColumns;iColumn++) {
+      if (columnLower[iColumn]>saveLowerOriginal[iColumn]) {
+	double value = columnLower[iColumn];
+	value *= rhsScale;
+	if (columnScale)
+	  value /= columnScale[iColumn];
+	lowerInternal[iColumn]=value;
+      }
+      if (columnUpper[iColumn]<saveUpperOriginal[iColumn]) {
+	double value = columnUpper[iColumn];
+	value *= rhsScale;
+	if (columnScale)
+	  value /= columnScale[iColumn];
+	upperInternal[iColumn]=value;
+      }
+    }
+    // Start of fast iterations
+    bool alwaysFinish= ((specialOptions_&32)==0) ? true : false;
+    //modelPtr_->setLogLevel(1);
+    modelPtr_->setIntParam(ClpMaxNumIteration,itlim);
+    int status = ((ClpSimplexDual *)modelPtr_)->fastDual(alwaysFinish);
+    
+    int problemStatus = modelPtr_->problemStatus();
+    double objectiveValue =modelPtr_->objectiveValue() * modelPtr_->optimizationDirection();
+    CoinAssert (modelPtr_->problemStatus()||modelPtr_->objectiveValue()<1.0e50);
+    // make sure plausible
+    double obj = CoinMax(objectiveValue,saveObjectiveValue);
+    if (problemStatus==10||problemStatus<0) {
+      // was trying to clean up or something odd
+      if (problemStatus==10)
+	lastAlgorithm_=1; // so won't fail on cutoff (in CbcNode)
+      status=1;
+    }
+    if (status) {
+      // not finished - might be optimal
+      modelPtr_->checkPrimalSolution(modelPtr_->solutionRegion(0),
+                                     modelPtr_->solutionRegion(1));
+      //modelPtr_->gutsOfSolution(NULL,NULL,0);
+      //if (problemStatus==3)
+      //modelPtr_->computeObjectiveValue();
+      objectiveValue =modelPtr_->objectiveValue() *
+	modelPtr_->optimizationDirection();
+      obj = CoinMax(objectiveValue,saveObjectiveValue);
+      if (!modelPtr_->numberDualInfeasibilities()) { 
+	double limit = 0.0;
+	modelPtr_->getDblParam(ClpDualObjectiveLimit, limit);
+	if (modelPtr_->secondaryStatus()==1&&!problemStatus&&obj<limit) {
+	  obj=limit;
+	  problemStatus=3;
+	}
+	if (!modelPtr_->numberPrimalInfeasibilities()&&obj<limit) { 
+	  problemStatus=0;
+	} else if (problemStatus==10) {
+	  problemStatus=3;
+	} else if (!modelPtr_->numberPrimalInfeasibilities()) {
+	  problemStatus=1; // infeasible
+	} 
+      } else {
+	// can't say much
+	//if (problemStatus==3)
+	//modelPtr_->computeObjectiveValue();
+	lastAlgorithm_=1; // so won't fail on cutoff (in CbcNode)
+	problemStatus=3;
+      }
+    } else if (!problemStatus) {
+      if (modelPtr_->isDualObjectiveLimitReached()) 
+	problemStatus=1; // infeasible
+    }
+    if (status&&!problemStatus) {
+      problemStatus=3; // can't be sure
+      lastAlgorithm_=1;
+    }
+    if (problemStatus<0)
+      problemStatus=3;
+    modelPtr_->setProblemStatus(problemStatus);
+    modelPtr_->setObjectiveValue(obj*modelPtr_->optimizationDirection());
+    double * solution = modelPtr_->primalColumnSolution();
+    const double * solution2 = modelPtr_->solutionRegion();
+    // could just do changed bounds - also try double size scale so can use * not /
+    if (!columnScale) {
+      for (iColumn=0;iColumn<numberColumns;iColumn++) {
+	solution[iColumn]= solution2[iColumn];
+      }
+    } else {
+      for (iColumn=0;iColumn<numberColumns;iColumn++) {
+	solution[iColumn]= solution2[iColumn]*columnScale[iColumn];
+      }
+    }
+    memcpy(columnLower,saveLowerOriginal,numberColumns*sizeof(double));
+    memcpy(columnUpper,saveUpperOriginal,numberColumns*sizeof(double));
+#if 0
+    // could combine with loop above
+    if (modelPtr_==modelPtr_)
+      modelPtr_->computeObjectiveValue();
+    if (status&&!problemStatus) {
+      memset(modelPtr_->primalRowSolution(),0,numberRows*sizeof(double));
+      modelPtr_->clpMatrix()->times(1.0,solution,modelPtr_->primalRowSolution());
+      modelPtr_->checkSolutionInternal();
+      //modelPtr_->setLogLevel(1);
+      //modelPtr_->allSlackBasis();
+      //modelPtr_->primal(1);
+      //memset(modelPtr_->primalRowSolution(),0,numberRows*sizeof(double));
+      //modelPtr_->clpMatrix()->times(1.0,solution,modelPtr_->primalRowSolution());
+      //modelPtr_->checkSolutionInternal();
+      assert (!modelPtr_->problemStatus());
+    }
+#endif
+    // and back bounds
+    memcpy(modelPtr_->lowerRegion(),saveLower,number*sizeof(double));
+    memcpy(modelPtr_->upperRegion(),saveUpper,number*sizeof(double));
+    modelPtr_->setIntParam(ClpMaxNumIteration,itlimOrig_);
+    return;
+  }
+#endif
   if (smallModel_==NULL) {
     setWarmStart(ws_);
     memcpy(modelPtr_->primalRowSolution(),
@@ -1298,6 +1588,34 @@ void OsiClpSolverInterface::solveFromHotStart()
 
 void OsiClpSolverInterface::unmarkHotStart()
 {
+#ifdef CLEAN_HOT_START
+  if ((specialOptions_&65536)!=0) {
+    modelPtr_->deleteRim(0);
+    if (lastNumberRows_<0) {
+      specialOptions_ |= 131072;
+      modelPtr_->specialOptions_ |= 131072;
+      lastNumberRows_ = -1 -lastNumberRows_;
+      if (modelPtr_->rowScale_) {
+	if (modelPtr_->rowScale_!=rowScale_.array()) {
+	  delete [] modelPtr_->rowScale_;
+	  delete [] modelPtr_->columnScale_;
+	}
+	modelPtr_->rowScale_=NULL;
+	modelPtr_->columnScale_=NULL;
+      }
+    }
+    delete factorization_;
+    delete [] spareArrays_;
+    smallModel_=NULL;
+    spareArrays_=NULL;
+    factorization_=NULL;
+    delete [] rowActivity_;
+    delete [] columnActivity_;
+    rowActivity_=NULL;
+    columnActivity_=NULL;
+    return;
+  }
+#endif
   if (smallModel_==NULL) {
     setWarmStart(ws_);
     int numberRows = modelPtr_->numberRows();
@@ -1762,8 +2080,14 @@ OsiClpSolverInterface::addRows(const int numrows,
   double * upper = modelPtr_->rowUpper()+numberRows;
   int iRow;
   for (iRow = 0; iRow < numrows; iRow++) {
-    lower[iRow]= forceIntoRange(rowlb[iRow], -OsiClpInfinity, OsiClpInfinity);
-    upper[iRow]= forceIntoRange(rowub[iRow], -OsiClpInfinity, OsiClpInfinity);
+    if (rowlb) 
+      lower[iRow]= forceIntoRange(rowlb[iRow], -OsiClpInfinity, OsiClpInfinity);
+    else 
+      lower[iRow]=-OsiClpInfinity;
+    if (rowub) 
+      upper[iRow]= forceIntoRange(rowub[iRow], -OsiClpInfinity, OsiClpInfinity);
+    else 
+      upper[iRow]=OsiClpInfinity;
     if (lower[iRow]<-1.0e27)
       lower[iRow]=-COIN_DBL_MAX;
     if (upper[iRow]>1.0e27)
@@ -1831,6 +2155,7 @@ OsiClpSolverInterface::addRows(const int numrows,
   if (!modelPtr_->clpMatrix())
     modelPtr_->createEmptyMatrix();
   modelPtr_->matrix()->appendRows(numrows,rowStarts,columns,element);
+  redoScaleFactors( numrows,rowStarts, columns, element);
 }
 //-----------------------------------------------------------------------------
 void 
@@ -1850,6 +2175,8 @@ OsiClpSolverInterface::deleteRows(const int num, const int * rowIndices)
   basis_.deleteRows(num,rowIndices);
   freeCachedResults();
   lastAlgorithm_ = saveAlgorithm;
+  if ((specialOptions_&131072)!=0) 
+    lastNumberRows_=modelPtr_->numberRows();
 }
 
 //#############################################################################
@@ -2107,7 +2434,6 @@ ClpSimplex * OsiClpSolverInterface::getModelPtr() const
 //#############################################################################
 // Constructors, destructors clone and assignment
 //#############################################################################
-
 //-------------------------------------------------------------------
 // Default Constructor 
 //-------------------------------------------------------------------
@@ -2132,7 +2458,9 @@ matrixByRow_(NULL),
 integerInformation_(NULL),
 whichRange_(NULL),
 cleanupScaling_(0),
-specialOptions_(0x80000000)
+specialOptions_(0x80000000),
+baseModel_(NULL),
+lastNumberRows_(0)
 {
   //printf("in default %x\n",this);
   modelPtr_=NULL;
@@ -2186,6 +2514,10 @@ whichRange_(NULL)
     modelPtr_ = new ClpSimplex(*rhs.modelPtr_);
   else
     modelPtr_ = new ClpSimplex();
+  if ( rhs.baseModel_  ) 
+    baseModel_ = new ClpSimplex(*rhs.baseModel_);
+  else
+    baseModel_ = NULL;
   linearObjective_ = modelPtr_->objective();
   if ( rhs.ws_ ) 
     ws_ = new CoinWarmStartBasis(*rhs.ws_);
@@ -2200,6 +2532,9 @@ whichRange_(NULL)
   solveOptions_  = rhs.solveOptions_;
   cleanupScaling_ = rhs.cleanupScaling_;
   specialOptions_ = rhs.specialOptions_;
+  lastNumberRows_ = rhs.lastNumberRows_;
+  rowScale_ = rhs.rowScale_;
+  columnScale_ = rhs.columnScale_;
   fillParamMaps();
   messageHandler()->setLogLevel(rhs.messageHandler()->logLevel());
   if (numberSOS_) {
@@ -2235,7 +2570,9 @@ matrixByRow_(NULL),
 integerInformation_(NULL),
 whichRange_(NULL),
 cleanupScaling_(0),
-specialOptions_(0x80000000)
+specialOptions_(0x80000000),
+baseModel_(NULL),
+lastNumberRows_(0)
 {
   //printf("in borrow %x - > %x\n",&rhs,this);
   modelPtr_ = rhs;
@@ -2271,6 +2608,7 @@ OsiClpSolverInterface::~OsiClpSolverInterface ()
   freeCachedResults();
   if (!notOwned_)
     delete modelPtr_;
+  delete baseModel_;
   delete ws_;
   delete [] rowActivity_;
   delete [] columnActivity_;
@@ -2296,12 +2634,20 @@ OsiClpSolverInterface::operator=(const OsiClpSolverInterface& rhs)
     delete ws_;
     if ( rhs.modelPtr_  ) 
       modelPtr_ = new ClpSimplex(*rhs.modelPtr_);
+    delete baseModel_;
+    if ( rhs.baseModel_  ) 
+      baseModel_ = new ClpSimplex(*rhs.baseModel_);
+    else
+      baseModel_ = NULL;
     notOwned_=false;
     linearObjective_ = modelPtr_->objective();
     saveData_ = rhs.saveData_;
     solveOptions_  = rhs.solveOptions_;
     cleanupScaling_ = rhs.cleanupScaling_;
     specialOptions_ = rhs.specialOptions_;
+    lastNumberRows_ = rhs.lastNumberRows_;
+    rowScale_ = rhs.rowScale_;
+    columnScale_ = rhs.columnScale_;
     basis_ = rhs.basis_;
     if (rhs.integerInformation_) {
       int numberColumns = modelPtr_->numberColumns();
@@ -2454,10 +2800,64 @@ OsiClpSolverInterface::applyRowCuts(int numberCuts, const OsiRowCut ** cuts)
   //modelPtr_->matrix()->appendRows(numberCuts,rows);
   modelPtr_->clpMatrix()->appendMatrix(numberCuts,0,starts,indices,elements);
   freeCachedResults();
+  redoScaleFactors( numberCuts,starts, indices, elements);
   delete [] starts;
   delete [] indices;
   delete [] elements;
 
+}
+// Extend scale factors
+void 
+OsiClpSolverInterface::redoScaleFactors(int numberAdd,const CoinBigIndex * starts,
+					const int * indices, const double * elements)
+{
+  if ((specialOptions_&131072)!=0) {
+    int numberRows = modelPtr_->numberRows()-numberAdd;
+    assert (lastNumberRows_==numberRows); // ???
+    int iRow;
+    int newNumberRows = numberRows + numberAdd;
+    rowScale_.extend(2*newNumberRows*sizeof(double));
+    double * rowScale = rowScale_.array();
+    double * oldInverseScale = rowScale + lastNumberRows_;
+    double * inverseRowScale = rowScale + newNumberRows;
+    for (iRow=lastNumberRows_-1;iRow>=0;iRow--)
+      inverseRowScale[iRow] = oldInverseScale[iRow] ;
+    //int numberColumns = baseModel_->numberColumns();
+    const double * columnScale = columnScale_.array();
+    //const double * inverseColumnScale = columnScale + numberColumns;
+    // Geometric mean on row scales
+    // adjust arrays
+    rowScale += lastNumberRows_;
+    inverseRowScale += lastNumberRows_;
+    for (iRow=0;iRow<numberAdd;iRow++) {
+      CoinBigIndex j;
+      double largest=1.0e-20;
+      double smallest=1.0e50;
+      for (j=starts[iRow];j<starts[iRow+1];j++) {
+	int iColumn = indices[j];
+	double value = fabs(elements[j]);
+	// Don't bother with tiny elements
+	if (value>1.0e-20) {
+	  value *= columnScale[iColumn];
+	  largest = CoinMax(largest,value);
+	  smallest = CoinMin(smallest,value);
+	}
+      }
+      double scale=sqrt(smallest*largest);
+      scale=CoinMax(1.0e-10,CoinMin(1.0e10,scale));
+      inverseRowScale[iRow]=scale;
+      rowScale[iRow]=1.0/scale;
+    }
+    lastNumberRows_=newNumberRows;
+  }
+}
+// Delete all scale factor stuff and reset option
+void OsiClpSolverInterface::deleteScaleFactors()
+{
+  delete baseModel_;
+  baseModel_=NULL;
+  lastNumberRows_=0;
+  specialOptions_ &= ~131072;
 }
 //-----------------------------------------------------------------------------
 
@@ -2743,8 +3143,20 @@ OsiClpSolverInterface::readMps(const char *filename,bool keepNames,bool allowErr
     loadProblem(*m.getMatrixByCol(),m.getColLower(),m.getColUpper(),
 		m.getObjCoefficients(),m.getRowSense(),m.getRightHandSide(),
 		m.getRowRange());
-    const char * integer = m.integerColumns();
     int nCols=m.getNumCols();
+    // get quadratic part
+    if (m.reader()->whichSection (  ) == COIN_QUAD_SECTION ) {
+      int * start=NULL;
+      int * column = NULL;
+      double * element = NULL;
+      int status=m.readQuadraticMps(NULL,start,column,element,2);
+      if (!status) 
+	modelPtr_->loadQuadraticObjective(nCols,start,column,element);
+      delete [] start;
+      delete [] column;
+      delete [] element;
+    }
+    const char * integer = m.integerColumns();
     int nRows=m.getNumRows();
     if (integer) {
       int i,n=0;
@@ -4122,7 +4534,7 @@ OsiClpSolverInterface::setHintParam(OsiHintParam key, bool yesNo,
         specialOptions_=0;
       }
       // set normal
-      specialOptions_ &= (2047+3*8192);
+      specialOptions_ &= (1023+3*8192+3*65536);
       if (otherInformation!=NULL) {
         int * array = (int *) otherInformation;
         if (array[0]>=0||array[0]<=2)
@@ -4150,6 +4562,33 @@ OsiClpSolverInterface::crunch()
   ClpSimplex * small = ((ClpSimplexOther *) modelPtr_)->crunch(rhs,whichRow,whichColumn,
                                                                nBound,false,tightenBounds);
   if (small) {
+    if ((specialOptions_&131072)!=0) {
+      assert (lastNumberRows_>=0);
+      int numberRows2 = small->numberRows();
+      int numberColumns2 = small->numberColumns();
+      double * rowScale2 = new double [2*numberRows2];
+      const double * rowScale = rowScale_.array();
+      double * inverseScale2 = rowScale2+numberRows2;
+      const double * inverseScale = rowScale+modelPtr_->numberRows_;
+      int i;
+      for (i=0;i<numberRows2;i++) {
+	int iRow = whichRow[i];
+	rowScale2[i]=rowScale[iRow];
+	inverseScale2[i]=inverseScale[iRow];
+      }
+      small->setRowScale(rowScale2);
+      double * columnScale2 = new double [2*numberColumns2];
+      const double * columnScale = columnScale_.array();
+      inverseScale2 = columnScale2+numberColumns2;
+      inverseScale = columnScale+modelPtr_->numberColumns_;
+      for (i=0;i<numberColumns2;i++) {
+	int iColumn = whichColumn[i];
+	columnScale2[i]=columnScale[iColumn];
+	inverseScale2[i]=inverseScale[iColumn];
+      }
+      small->setColumnScale(columnScale2);
+      small->specialOptions_ |= 131072;
+    }
     OsiClpDisasterHandler handler(this);
     bool inCbcOrOther = (modelPtr_->specialOptions()&0x03000000)!=0;
     if (inCbcOrOther) {
@@ -4166,7 +4605,10 @@ OsiClpSolverInterface::crunch()
       if (small->problemStatus_==3) {
 	// may be problems
 	if (inCbcOrOther&&handler.inTrouble()) {
-	  // try just going back in
+	  // in case scaling bad
+	  small->setRowScale(NULL);
+	  small->setColumnScale(NULL);
+    	  // try just going back in
 	  handler.setPhase(1);
 	  small->dual();
 	  if (handler.inTrouble()) {
@@ -4205,7 +4647,20 @@ void
 OsiClpSolverInterface::synchronizeModel() 
 {
   if ((specialOptions_ &128)!=0) {
-    modelPtr_->auxiliaryModel(63-2);
+    if (!modelPtr_->rowScale_&&(specialOptions_&131072)!=0) {
+      assert (lastNumberRows_==modelPtr_->numberRows_);
+      int numberRows = modelPtr_->numberRows();
+      int numberColumns = modelPtr_->numberColumns();
+      double * rowScale = CoinCopyOfArray(rowScale_.array(),2*numberRows);
+      modelPtr_->setRowScale(rowScale);
+      double * columnScale = CoinCopyOfArray(columnScale_.array(),2*numberColumns);
+      modelPtr_->setColumnScale(columnScale);
+      modelPtr_->auxiliaryModel(63-2);
+      modelPtr_->setRowScale(NULL);
+      modelPtr_->setColumnScale(NULL);
+    } else {
+      modelPtr_->auxiliaryModel(63-2);
+    }
   }
 }
 // Returns true if has OsiSimplex methods
@@ -4807,6 +5262,44 @@ OsiClpSolverInterface::branchAndBound() {
 void 
 OsiClpSolverInterface::setSpecialOptions(unsigned int value)
 { 
+  if ((value&131072)!=0&&(specialOptions_&131072)==0) {
+    // Try and keep scaling factors around
+    delete baseModel_;
+    baseModel_ = new ClpSimplex(*modelPtr_);
+    ClpPackedMatrix * clpMatrix = 
+      dynamic_cast< ClpPackedMatrix*>(baseModel_->matrix_);
+    if (!clpMatrix||clpMatrix->scale(baseModel_)) {
+      // switch off again
+      delete baseModel_;
+      baseModel_=NULL;
+      value &= ~131072;
+    } else {
+      // Off current scaling
+      modelPtr_->setRowScale(NULL);
+      modelPtr_->setColumnScale(NULL);
+      lastNumberRows_=baseModel_->numberRows();
+      rowScale_ = CoinDoubleArrayWithLength(2*lastNumberRows_,0);
+      int i;
+      double * scale;
+      double * inverseScale;
+      scale = rowScale_.array();
+      inverseScale = scale + lastNumberRows_;
+      const double * rowScale = baseModel_->rowScale_;
+      for (i=0;i<lastNumberRows_;i++) {
+	scale[i] = rowScale[i];
+	inverseScale[i] = 1.0/scale[i];
+      }
+      int numberColumns = baseModel_->numberColumns();
+      columnScale_ = CoinDoubleArrayWithLength(2*numberColumns,0);
+      scale = columnScale_.array();
+      inverseScale = scale + numberColumns;
+      const double * columnScale = baseModel_->columnScale_;
+      for (i=0;i<numberColumns;i++) {
+	scale[i] = columnScale[i];
+	inverseScale[i] = 1.0/scale[i];
+      }
+    }
+  }
   specialOptions_=value;
   if ((specialOptions_&0x80000000)!=0) {
     // unset top bit if anything set

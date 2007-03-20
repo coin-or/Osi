@@ -2294,8 +2294,36 @@ void OsiGlpkSolverInterface::gutsOfCopy( const OsiGlpkSolverInterface & source )
 	bbWasLast_ = source.bbWasLast_;
 	iter_used_ = source.iter_used_;
 
-	// ??? Need to copy parameters somehow?
-	
+	// Copy parameters held in the Osi and push them down into the new
+	// glpk model. The implementation uses a mix of locally held values
+	// and values held strictly in the glpk object.
+
+	LPX *srcmodel = source.getMutableModelPtr();
+	LPX *model = getMutableModelPtr();
+	maxIteration_ = source.maxIteration_;
+	lpx_set_int_parm( model, LPX_K_ITLIM, maxIteration_ ); 
+	hotStartMaxIteration_ = source.hotStartMaxIteration_;
+
+	dualObjectiveLimit_ = source.dualObjectiveLimit_;
+	if (getObjSense()==1)  // minimization
+	  lpx_set_real_parm( model, LPX_K_OBJUL, dualObjectiveLimit_ );
+	else                   // maximization
+	  lpx_set_real_parm( model, LPX_K_OBJLL, dualObjectiveLimit_ );
+	primalObjectiveLimit_ = source.primalObjectiveLimit_;
+	if (getObjSense()==1) // minimization
+	  lpx_set_real_parm( model, LPX_K_OBJLL, primalObjectiveLimit_ );
+	else
+	  lpx_set_real_parm( model, LPX_K_OBJUL, primalObjectiveLimit_ );
+	dualTolerance_ = source.dualTolerance_;
+	lpx_set_real_parm( model, LPX_K_TOLDJ, dualTolerance_ );
+	primalTolerance_ = source.primalTolerance_;
+	lpx_set_real_parm( model, LPX_K_TOLBND, primalTolerance_ );
+	// OsiObjOffset
+        double dblvalue = lpx_get_obj_coef( srcmodel, 0 );
+	lpx_set_obj_coef( model, 0, dblvalue );
+
+	std::string probName = lpx_get_prob_name( srcmodel );
+	lpx_set_prob_name( model, const_cast<char *>(probName.c_str()));
 
 	int numcols = getNumCols();
 	// Set MIP information
@@ -2312,8 +2340,6 @@ void OsiGlpkSolverInterface::gutsOfCopy( const OsiGlpkSolverInterface & source )
 
 	// In this case, it's easier to use GLPK's own functions than
 	// to go through COIN/OSI interface.
-	LPX *srcmodel = source.getMutableModelPtr();
-	LPX *model = getMutableModelPtr();
 	int tagx;
 	for ( j = 1; j <= numcols; j++ )
 	  {
@@ -2359,6 +2385,11 @@ void OsiGlpkSolverInterface::gutsOfConstructor()
 
 	maxIteration_ = INT_MAX;
 	hotStartMaxIteration_ = 0;
+
+	dualObjectiveLimit_ = DBL_MAX;
+	primalObjectiveLimit_ = DBL_MAX;
+	dualTolerance_ = 1.0e-6;
+	primalTolerance_ = 1.0e-6;
 
 	hotStartCStat_ = NULL;
 	hotStartCStatSize_ = 0;

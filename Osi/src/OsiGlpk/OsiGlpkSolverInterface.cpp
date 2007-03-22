@@ -31,8 +31,6 @@
 // bbWasLast_, to the class to record which solution call was most
 // recent (lp or mip).
 //
-// Glpk uses 1-based indexing!
-//
 // Possible areas of improvement
 // -----------------------------
 //
@@ -49,6 +47,21 @@
 // making things functional and not too messy.  There's plenty of room
 // for more efficient implementations.
 //
+
+/*
+  Various bits and pieces of knowledge that are handy when working on OsiGlpk.
+
+  Glpk uses 1-based indexing. Be careful.
+
+  Primal and dual solutions may be set by the user. This means that that
+  getColSolution and getRowPrice are obliged to return the cached solution
+  vector whenever it's available. Various other routines which calculate
+  values based on primal and dual solutions must also use the cached vectors.
+  On the other hand, we don't want to be rebuilding the cache with every call
+  to the solver. The approach is that a call to the solver removes the cached
+  values. Subsequent calls to retrieve solution values will repopulate the
+  cache by interrogating glpk.
+*/
 
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
@@ -275,6 +288,11 @@ bool OsiGlpkSolverInterface::setIntParam (OsiIntParam key, int value)
 
 //-----------------------------------------------------------------------------
 
+/*
+  Self-protection is required here --- glpk will fault if handed a value
+  it doesn't like.
+*/
+
 bool OsiGlpkSolverInterface::setDblParam (OsiDblParam key, double value)
 
 { bool retval = false ;
@@ -299,7 +317,7 @@ bool OsiGlpkSolverInterface::setDblParam (OsiDblParam key, double value)
       retval = true ; 
       break ; }
     case OsiDualTolerance:
-    { if (value >= 0)
+    { if (value >= 0 && value <= .001)
       { dualTolerance_ = value;
 	lpx_set_real_parm(lp_,LPX_K_TOLDJ,value) ;
 	retval = true ; }
@@ -307,7 +325,7 @@ bool OsiGlpkSolverInterface::setDblParam (OsiDblParam key, double value)
       { retval = false ; }
       break ; }
     case OsiPrimalTolerance:
-    { if (value >= 0)
+    { if (value >= 0 && value <= .001)
       { primalTolerance_ = value ;
 	lpx_set_real_parm(lp_,LPX_K_TOLBND,value) ;
 	retval = true ; }
@@ -1120,73 +1138,114 @@ double OsiGlpkSolverInterface::getInfinity() const
 
 /*
   Retrieve column solution, querying solver if we don't have a cached solution.
+  Refresh reduced costs while we're here.
+
   Reduced costs may or may not already exist (user can create a reduced cost
   vector by supplying duals (row price) and asking for reduced costs).
+
+  Appropriate calls depend on whether last call to solver was simplex or
+  branch-and-bound.
 */
-const double * OsiGlpkSolverInterface::getColSolution() const
-{
-	if( !colsol_ )
-	{
- 	        LPX *model = getMutableModelPtr();
 
-		int numcols = getNumCols();
-		if( numcols > 0 )
-		{
-			colsol_ = new double[numcols];
-			if (redcost_) delete [] redcost_ ;
-			redcost_ = new double[numcols] ;
-		}
+const double *OsiGlpkSolverInterface::getColSolution() const
 
-		// Function calls differ if last solve was b&b or simplex
-		if (bbWasLast_ == 0)  // simplex/continuous solution
-		  {
-		    // Note: if the problem has not been solved, GLPK
-		    //  returns 0, but OSI requires something
-		    //  within bounds
-		    if (lpx_get_status( model ) == LPX_UNDEF)
-		      {
-			// Make sure bounds are in cache.
-			// this really handles upper bds too
-			getColLower();  
-			// now collower_ and colupper_ hold the bounds
-			int j;
-			for( j = 0; j < numcols; j++ )
-			  {
-			    colsol_[j] = (collower_[j] > 0) ? collower_[j]:0;
-			    if (colupper_[j] < colsol_[j]) 
-			      colsol_[j] = colupper_[j];
-			  }
-		      }
-		    else  // this is what will usually be executed
-		      {
-			int j;
-			for( j = 0; j < numcols; j++ )
-			  {
-			    // int status;
-			    // status=lpx_get_col_stat(model,j+1);
-			    colsol_[j] = lpx_get_col_prim(model,j+1);
-			    redcost_[j] = lpx_get_col_dual(model,j+1);
-			  }
-		      }
-		  }
-		else   // b&b/integer solution
-		  {
-		    int j;
-		    for( j = 0; j < numcols; j++ )
-		      colsol_[j] = lpx_mip_col_val( model, j+1);
-		  }
-	}
-	return colsol_;
-}
+{ 
+/*
+  Use the cached solution vector, if present. If we have no constraint system,
+  return 0.
+*/
+  if (colsol_)
+  { return (colsol_) ; }
+
+  int numcols = getNumCols() ;
+  if (numcols == 0)
+  { return (0) ; }
+
+  colsol_ = new double[numcols] ;
+  if (redcost_) delete [] redcost_ ;
+  { redcost_ = new double[numcols] ; }
+/*
+  Grab the problem status.
+*/
+  int probStatus ;
+  if (bbWasLast_)
+  { probStatus = lpx_mip_status(lp_) ; }
+  else
+  { probStatus = lpx_get_status(lp_) ; }
+/*
+  If the problem hasn't been solved, glpk returns zeros, but OSI requires that
+  the solution be within bound. getColLower() will ensure both upper and lower
+  bounds are present. There's an implicit assumption that we're feasible (i.e.,
+  collower[j] < colupper[j]). Solution values will be 0.0 unless that's outside
+  the bounds.
+*/
+  if (probStatus == LPX_UNDEF || probStatus == LPX_I_UNDEF)
+  { getColLower() ;
+    int j ;
+    for (j = 0 ; j < numcols ; j++)
+    { colsol_[j] = 0.0 ;
+      if (collower_[j] > 0.0)
+      { colsol_[j] = collower_[j] ; }
+      else
+      if (colupper_[j] < 0.0) 
+      { colsol_[j] = colupper_[j] ; } } }
+/*
+  We should have a defined solution. For simplex, refresh the reduced costs
+  as well as the primal solution.
+*/
+  else
+  if (bbWasLast_ == 0)
+  { int j ;
+    for (j = 0 ; j < numcols ; j++)
+    { colsol_[j] = lpx_get_col_prim(lp_,j+1) ;
+      redcost_[j] = lpx_get_col_dual(lp_,j+1) ; } }
+/*
+  Last solve was branch-and-bound. Set the reduced costs to 0.
+*/
+  else
+  { int j ;
+    for (j = 0 ; j < numcols ; j++)
+    { colsol_[j] = lpx_mip_col_val(lp_,j+1) ;
+      redcost_[j] = 0.0 ; } }
+
+  return (colsol_) ; }
 
 //-----------------------------------------------------------------------------
 
-const double * OsiGlpkSolverInterface::getRowPrice() const
-{
-	if ( !rowsol_ )
-		getRowActivity();
-	return rowsol_;
-}
+/*
+  Acquire the row solution (dual variables).
+
+  The user can set this independently, so use the cached copy if it's present.
+*/
+
+const double *OsiGlpkSolverInterface::getRowPrice() const
+
+{ 
+/*
+  If we have a cached solution, use it. If the constraint system is empty,
+  return 0. Otherwise, allocate a new vector.
+*/
+  if (rowsol_)
+  { return (rowsol_) ; }
+
+  int numrows = getNumRows() ;
+  if (numrows == 0)
+  { return (0) ; }
+
+  rowsol_ = new double[numrows] ;
+/*
+  For simplex, we have dual variables. For MIP, just set them to zero.
+*/
+  if (bbWasLast_ == 0)
+  { int i ;
+    for (i = 0 ; i < numrows; i++)
+    { rowsol_[i] = lpx_get_row_dual(lp_,i+1) ; } }
+  else
+  { int i ;
+    for (i = 0 ; i < numrows ; i++)
+    { rowsol_[i] = 0 ; } }
+  
+  return (rowact_) ; }
 
 //-----------------------------------------------------------------------------
 
@@ -1194,6 +1253,9 @@ const double * OsiGlpkSolverInterface::getRowPrice() const
   It's tempting to dive into glpk for this, but ... the client may have used
   setRowPrice(), and it'd be nice to return reduced costs that agree with the
   duals.
+
+  To use glpk's routine (lpx_get_col_dual), the interface needs to track the
+  origin of the dual (row price) values.
 */
 const double * OsiGlpkSolverInterface::getReducedCost() const
 {
@@ -1206,115 +1268,81 @@ const double * OsiGlpkSolverInterface::getReducedCost() const
   We need to calculate. Make sure we have a constraint system, then allocate
   a vector and initialise it with the objective coefficients.
 */
-  LPX *model = getMutableModelPtr() ;
-  assert(model) ;
   int n = getNumCols() ;
   if (n == 0)
   { return (0) ; }
 
-  redcost_ = new double[n];
+  redcost_ = new double[n] ;
   CoinDisjointCopyN(getObjCoefficients(),n,redcost_) ;
 /*
-  Acquire dual variables. The presence of rows does not necessarily imply that
-  we have valid dual variables.
+  Try and acquire dual variables. 
 */
   const double *y = getRowPrice() ;
   if (!y)
   { return (redcost_) ; }
   int m = getNumRows() ;
-
-  int *rowind = new int[n+1] ;
-  double *rowelem = new double[n+1] ;
-  int i,j,ndx ;
-  for (i = 0 ; i < m ; i++)
-  { if (y[i] != 0)
-    { int rowsize = lpx_get_mat_row(model,i+1,rowind,rowelem) ;
-      for (ndx = 1 ; ndx <= rowsize ; ndx++)
-      { j = rowind[ndx]-1 ;
-	assert(j >= 0 && j < n) ;
-	redcost_[j] -= y[i]*rowelem[ndx] ; } } }
-  delete [] rowind ;
-  delete [] rowelem ;
 /*
-  Remove infinitesimals from the reduced cost vector.
+  Acquire the constraint matrix and calculate y*A.
 */
-  for (j = 0 ; j < n ; j++)
-  { if (fabs(redcost_[j]) < GlpkZeroTol)
+  const CoinPackedMatrix *mtx = getMatrixByCol() ;
+  double *yA = new double[n] ;
+  mtx->transposeTimes(y,yA) ;
+/*
+  Calculate c-yA and remove infinitesimals from the result.
+*/
+  for (int j = 0 ; j < n ; j++)
+  { redcost_[j] -= yA[j] ;
+    if (fabs(redcost_[j]) < GlpkZeroTol)
     { redcost_[j] = 0 ; } }
+  
+  delete[] yA ;
 
   return (redcost_) ; }
 
 //-----------------------------------------------------------------------------
 
-const double * OsiGlpkSolverInterface::getRowActivity() const
+/*
+  Most of the comments for getReducedCosts apply here too. But we're not
+  tempted to dive into glpk because there isn't a routine to return A*x.
+*/
+
+const double *OsiGlpkSolverInterface::getRowActivity() const
+
 {
-#if 1
-	if( rowact_ == NULL )
-	{
+/*
+  Return the cached copy, if it exists.
+*/
+  if (rowact_)
+  { return (rowact_) ; }
+/*
+  We need to calculate. Make sure we have a constraint system, then allocate
+  a vector and initialise it with the objective coefficients.
+*/
+  int m = getNumRows() ;
+  if (m == 0)
+  { return (0) ; }
 
- 	        LPX *model = getMutableModelPtr();
-
-		int numrows = getNumRows();
-		if( numrows > 0 )
-		{
-			rowact_ = new double[numrows];
-			rowsol_ = new double[numrows];
-		}
-
-		// Function calls differ if last solve was b&b or simplex
-		if (bbWasLast_ == 0)  // simplex/continuous solution
-		  {
-		    int i;
-		    for( i = 0; i < numrows; i++ )
-		      {
-			//int status;
-			//status=lpx_get_row_stat(model,i+1);
-			rowact_[i] = lpx_get_row_prim(model,i+1);
-			rowsol_[i] = lpx_get_row_dual(model,i+1);
-		      }
-		  }
-		else  // last call was b&b mip solution
-		  {
-		    int i;
-		    for( i = 0; i < numrows; i++ )
-		      {
-			rowact_[i] = lpx_mip_row_val( model, i+1);
-			rowsol_[i] = 0;  // no dual values for mip
-		      }
-		  }
-	}
-	return rowact_;
-#else
-	// ??? Consider removing this unused code.
-	// Could be in OsiSolverInterfaceImpl.
-	if( !rowact_ )
-	{
-		const double *colsol = getColSolution();
-		const CoinPackedMatrix * matrix = getMatrixByRow();
-
-		int numrows = getNumRows();
-		rowact_ = new double[numrows];
-
-		assert( numrows == matrix->getNumRows() );
-
-		int i;
-		for( i = 0; i < matrix->getNumRows(); i++ )
-		{
-			const CoinShallowPackedVector row = matrix->getVector(i);
-			const double *elements = row.getElements();
-			const int *indices = row.getIndices();
-
-			rowact_[i] = 0;
-			int j;
-			for( j = 0; j < row.getNumElements(); j++ )
-			{
-				rowact_[i] += colsol[indices[j]] * elements[j];
-			}
-		}
-	}
-	return rowact_;
-#endif
-}
+  rowact_ = new double[m] ;
+/*
+  Acquire primal variables.
+*/
+  const double *x = getColSolution() ;
+  if (!x)
+  { CoinZeroN(rowact_,m) ;
+    return (rowact_) ; }
+/*
+  Acquire the constraint matrix and calculate A*x.
+*/
+  const CoinPackedMatrix *mtx = getMatrixByRow() ;
+  mtx->times(x,rowact_) ;
+/*
+  Remove infinitesimals from the result.
+*/
+  for (int i = 0 ; i < m ; i++)
+  { if (fabs(rowact_[i]) < GlpkZeroTol)
+    { rowact_[i] = 0 ; } }
+  
+  return (rowact_) ; }
 
 //-----------------------------------------------------------------------------
 

@@ -31,6 +31,7 @@
 // bbWasLast_, to the class to record which solution call was most
 // recent (lp or mip).
 //
+// Glpk uses 1-based indexing!
 //
 // Possible areas of improvement
 // -----------------------------
@@ -66,6 +67,18 @@
 #include "OsiColCut.hpp"
 #include "CoinPackedMatrix.hpp"
 #include "CoinWarmStartBasis.hpp"
+
+/*
+  Grab the COIN standard finite infinity from CoinFinite.hpp. Also set a
+  zero tolerance, so we can set clean zeros in computed reduced costs and
+  row activities. The value 1.0e-9 is lifted from glpk --- this is the value
+  that it uses when the LPX_K_ROUND parameter is active.
+*/
+#include "CoinFinite.hpp"
+namespace {
+  const double CoinInfinity = COIN_DBL_MAX ;
+  const double GlpkZeroTol = 1.0e-9 ;
+}
 
 //-----------------------------------------------------------------------------
 
@@ -1112,13 +1125,18 @@ const CoinPackedMatrix * OsiGlpkSolverInterface::getMatrixByCol() const
 //-----------------------------------------------------------------------------
 double OsiGlpkSolverInterface::getInfinity() const
 {
-  	return 1E+300;
+  	return (CoinInfinity) ;
 }
 
 //#############################################################################
 // Problem information methods (results)
 //#############################################################################
 
+/*
+  Retrieve column solution, querying solver if we don't have a cached solution.
+  Reduced costs may or may not already exist (user can create a reduced cost
+  vector by supplying duals (row price) and asking for reduced costs).
+*/
 const double * OsiGlpkSolverInterface::getColSolution() const
 {
 	if( !colsol_ )
@@ -1129,7 +1147,8 @@ const double * OsiGlpkSolverInterface::getColSolution() const
 		if( numcols > 0 )
 		{
 			colsol_ = new double[numcols];
-			redcost_ = new double[numcols];
+			if (redcost_) delete [] redcost_ ;
+			redcost_ = new double[numcols] ;
 		}
 
 		// Function calls differ if last solve was b&b or simplex
@@ -1185,12 +1204,59 @@ const double * OsiGlpkSolverInterface::getRowPrice() const
 
 //-----------------------------------------------------------------------------
 
+/*
+  It's tempting to dive into glpk for this, but ... the client may have used
+  setRowPrice(), and it'd be nice to return reduced costs that agree with the
+  duals.
+*/
 const double * OsiGlpkSolverInterface::getReducedCost() const
 {
-	if ( !redcost_ )
-		getColSolution();
-	return redcost_;
-}
+/*
+  Return the cached copy, if it exists.
+*/
+  if (redcost_)
+  { return (redcost_) ; }
+/*
+  We need to calculate. Make sure we have a constraint system, then allocate
+  a vector and initialise it with the objective coefficients.
+*/
+  LPX *model = getMutableModelPtr() ;
+  assert(model) ;
+  int n = getNumCols() ;
+  if (n == 0)
+  { return (0) ; }
+
+  redcost_ = new double[n];
+  CoinDisjointCopyN(getObjCoefficients(),n,redcost_) ;
+/*
+  Acquire dual variables. The presence of rows does not necessarily imply that
+  we have valid dual variables.
+*/
+  const double *y = getRowPrice() ;
+  if (!y)
+  { return (redcost_) ; }
+  int m = getNumRows() ;
+
+  int *rowind = new int[n+1] ;
+  double *rowelem = new double[n+1] ;
+  int i,j,ndx ;
+  for (i = 0 ; i < m ; i++)
+  { if (y[i] != 0)
+    { int rowsize = lpx_get_mat_row(model,i+1,rowind,rowelem) ;
+      for (ndx = 1 ; ndx <= rowsize ; ndx++)
+      { j = rowind[ndx]-1 ;
+	assert(j >= 0 && j < n) ;
+	redcost_[j] -= y[i]*rowelem[ndx] ; } } }
+  delete [] rowind ;
+  delete [] rowelem ;
+/*
+  Remove infinitesimals from the reduced cost vector.
+*/
+  for (j = 0 ; j < n ; j++)
+  { if (fabs(redcost_[j]) < GlpkZeroTol)
+    { redcost_[j] = 0 ; } }
+
+  return (redcost_) ; }
 
 //-----------------------------------------------------------------------------
 

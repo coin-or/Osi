@@ -239,125 +239,111 @@ void OsiGlpkSolverInterface::branchAndBound()
 // Parameter related methods
 //#############################################################################
 
-bool
-OsiGlpkSolverInterface::setIntParam( OsiIntParam key, int value )
-{
-	bool retval = false;
-	switch( key )
-    {
-    case OsiMaxNumIteration:
-		if( value >= 0 )
-		{
-			maxIteration_ = value;
-			lpx_set_int_parm(getMutableModelPtr(), LPX_K_ITLIM, 
-					 value); 
-			retval = true;
-		}
-		else
-			retval = false;
-		break;
+/*
+  When we set parameters, we have to stash them locally as well as pushing
+  them into the LPX object. The trouble comes when loading a new problem. If
+  the LPX object is already loaded with a problem, the easiest approach is to
+  simply delete it and start fresh. But then we lose all the parameters that
+  are held in the LPX object. By keeping a copy, we have a way to recover.
+*/
 
+bool OsiGlpkSolverInterface::setIntParam (OsiIntParam key, int value)
+
+{ bool retval = false ;
+
+  switch (key)
+  { case OsiMaxNumIteration:
+    { if (value >= 0)
+      { maxIteration_ = value ;
+	lpx_set_int_parm(lp_,LPX_K_ITLIM,value) ;
+	retval = true ; }
+      else
+      { retval = false ; }
+      break ; }
     case OsiMaxNumIterationHotStart:
-		if( value >= 0 )
-		{
-			hotStartMaxIteration_ = value;
-			retval = true;
-		}
-		else
-			retval = false;
-		break;
-
+    { if (value >= 0)
+      { hotStartMaxIteration_ = value ;
+	retval = true ; }
+      else
+      {	retval = false ; }
+      break ; }
     case OsiLastIntParam:
-		retval = false;
-		break;
-    }
-	return retval;
-}
+    { retval = false ;
+      break ; } }
+
+  return (retval) ; }
 
 //-----------------------------------------------------------------------------
 
-bool
-OsiGlpkSolverInterface::setDblParam( OsiDblParam key, double value )
-{
-  bool retval = false;
-  switch ( key )
-    {
-    case OsiDualObjectiveLimit:
-      // as of 4.7, GLPK only uses this if it does dual simplex
-			dualObjectiveLimit_ = value;
-			if (getObjSense()==1)  // minimization
-			  lpx_set_real_parm( getMutableModelPtr(), 
-					       LPX_K_OBJUL, value);
-			else                   // maximization
-			  lpx_set_real_parm( getMutableModelPtr(), 
-					       LPX_K_OBJLL, value);
-			retval = true; 
-		break;
+bool OsiGlpkSolverInterface::setDblParam (OsiDblParam key, double value)
 
+{ bool retval = false ;
+
+  switch (key)
+  { case OsiDualObjectiveLimit:
+    // as of 4.7, GLPK only uses this if it does dual simplex
+    { dualObjectiveLimit_ = value ;
+      if (getObjSense() == 1)				// minimization
+      { lpx_set_real_parm(lp_,LPX_K_OBJUL,value) ; }
+      else              				// maximization
+      { lpx_set_real_parm(lp_,LPX_K_OBJLL,value) ; }
+      retval = true ; 
+      break ; }
     case OsiPrimalObjectiveLimit:
-      // as of 4.7, GLPK only uses this if it does dual simplex
-			primalObjectiveLimit_ = value;
-			if (getObjSense()==1) // minimization
-			  lpx_set_real_parm( getMutableModelPtr(), 
-					       LPX_K_OBJLL, value);
-			else
-			  lpx_set_real_parm( getMutableModelPtr(), 
-					       LPX_K_OBJUL, value);
-			retval = true; 
-		break;
-
+    // as of 4.7, GLPK only uses this if it does dual simplex
+    { primalObjectiveLimit_ = value ;
+      if (getObjSense() == 1)
+      { lpx_set_real_parm(lp_,LPX_K_OBJLL,value) ; }
+      else
+      { lpx_set_real_parm(lp_,LPX_K_OBJUL,value) ; }
+      retval = true ; 
+      break ; }
     case OsiDualTolerance:
-		if( value >= 0 )
-		{
-		  dualTolerance_ = value;
-		  lpx_set_real_parm( getMutableModelPtr(), 
-				     LPX_K_TOLDJ, value);
-		  retval = true;
-		}
-		else
-		  retval = false;
-		break;
-
+    { if (value >= 0)
+      { dualTolerance_ = value;
+	lpx_set_real_parm(lp_,LPX_K_TOLDJ,value) ;
+	retval = true ; }
+      else
+      { retval = false ; }
+      break ; }
     case OsiPrimalTolerance:
-		if( value >= 0 )
-		{
-		  primalTolerance_ = value;
-		  lpx_set_real_parm( getMutableModelPtr(), 
-				     LPX_K_TOLBND, value);
-		  retval = true; 
-		}
-		else
-		  retval = false;
-		break;
-
+    { if (value >= 0)
+      { primalTolerance_ = value ;
+	lpx_set_real_parm(lp_,LPX_K_TOLBND,value) ;
+	retval = true ; }
+      else
+      { retval = false ; }
+      break ; }
     case OsiObjOffset:
-                lpx_set_obj_coef( getMutableModelPtr(), 0, value );
-                retval = true;
-                break;
-
+    { objOffset_ = value ;
+      lpx_set_obj_coef(lp_,0,value) ;
+      retval = true ;
+      break ; }
     case OsiLastDblParam:
-		retval = false;
-		break;
-    }
-	return retval;
-}
+    { retval = false ;
+      break ; } }
+
+  return (retval) ; }
 
 //-----------------------------------------------------------------------------
 
-bool
-OsiGlpkSolverInterface::setStrParam(OsiStrParam key, const std::string & value)
-{
-  switch (key) {
-  case OsiProbName:
-    lpx_set_prob_name( getMutableModelPtr(), const_cast<char *>(value.c_str()));
-    return true;
-  case OsiSolverName:
-    return false;
-  case OsiLastStrParam:
-    return false;
-  }
-  return false;
-}
+bool OsiGlpkSolverInterface::setStrParam (OsiStrParam key,
+					  const std::string &value)
+{ bool retval = false ;
+
+  switch (key)
+  { case OsiProbName:
+    { probName_ = value ;
+      lpx_set_prob_name(lp_,const_cast<char *>(value.c_str())) ;
+      retval = true ;
+      break ; }
+    case OsiSolverName:
+    { retval = true ;
+      break ; }
+    case OsiLastStrParam:
+    { break ; } }
+
+  return (retval) ; }
 
 //-----------------------------------------------------------------------------
 
@@ -1904,57 +1890,60 @@ OsiGlpkSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
 				     const double* collb, const double* colub,
 				     const double* obj,
 				     const double* rowlb, const double* rowub )
-{
-	// Could be in OsiSolverInterfaceImpl.
-  // Actually, this could not.  I needed to add a glpk call below in case 
-  // rows are present but have no nonzero coefficients.
-  // JJF - If model exists then this adds! so I have added guts
-  gutsOfDestructor();
-  gutsOfConstructor();
-  //freeCachedData( OsiGlpkSolverInterface::KEEPCACHED_NONE );
+{ 
+/*
+  There's always an existing LPX object. If it's empty, we can simply load in
+  the new data. If it's non-empty, easiest to delete it and start afresh. When
+  we do this, we need to reload parameters.
+  
+  In any event, get rid of cached data in the OsiGlpk object.
+*/
+  if (lpx_get_num_cols(lp_) != 0 || lpx_get_num_rows(lp_) != 0)
+  { lpx_delete_prob(lp_) ;
+    lp_ = lpx_create_prob() ;
+    assert(lp_) ;
+    lpx_set_class(lp_,LPX_MIP) ;
+    lpx_set_int_parm(lp_,LPX_K_ITLIM,maxIteration_) ; 
+    if (getObjSense() == 1)				// minimization
+    { lpx_set_real_parm(lp_,LPX_K_OBJUL,dualObjectiveLimit_) ;
+      lpx_set_real_parm(lp_,LPX_K_OBJLL,primalObjectiveLimit_) ; }
+    else						// maximization
+    { lpx_set_real_parm(lp_,LPX_K_OBJLL,dualObjectiveLimit_) ;
+      lpx_set_real_parm(lp_,LPX_K_OBJUL,primalObjectiveLimit_) ; }
+    lpx_set_real_parm(lp_,LPX_K_TOLDJ,dualTolerance_) ;
+    lpx_set_real_parm(lp_,LPX_K_TOLBND,primalTolerance_) ;
+    lpx_set_obj_coef(lp_,0,objOffset_) ;
+    lpx_set_prob_name(lp_,const_cast<char *>(probName_.c_str())) ; }
 
-	double inf = getInfinity();
+  freeCachedData(OsiGlpkSolverInterface::KEEPCACHED_NONE) ;
 
-	if( matrix.isColOrdered() )
-	{
-		int i;
-		for( i = 0; i < matrix.getNumCols(); i++ )
-		{
-			addCol( matrix.getVector(i), collb ? collb[i]:0.0, 
-				colub ? colub[i]:inf, obj ? obj[i]:0.0 );
-		}
+  double inf = getInfinity();
 
-		// Also make sure there are enough columns 
-		if( matrix.getNumRows() > getNumRows())
-		  lpx_add_rows( getMutableModelPtr(), matrix.getNumRows() - getNumRows() );
-		int j;
-		for( j = 0; j < matrix.getNumRows(); j++ )
-		{
-			setRowBounds( j, rowlb ? rowlb[j]:-inf, 
-				      rowub ? rowub[j]:inf );
-		}
-	}
-	else
-	{
-		int j;
-		for( j = 0; j < matrix.getNumRows(); j++ )
-		{
-			addRow( matrix.getVector(j), rowlb ? rowlb[j]:-inf, 
-				rowub ? rowub[j]:inf );
-		}
-		// Make sure there are enough columns
-		if( matrix.getNumCols() > getNumCols())
-		  lpx_add_cols( getMutableModelPtr(), matrix.getNumCols() - getNumCols() );
+  if (matrix.isColOrdered())
+  { int i ;
+    for (i = 0 ; i < matrix.getNumCols() ; i++)
+    { addCol(matrix.getVector(i),(collb?collb[i]:0.0), 
+	     (colub?colub[i]:inf),(obj?obj[i]:0.0)) ; }
+    // Make sure there are enough rows 
+    if (matrix.getNumRows() > getNumRows())
+    { lpx_add_rows(lp_,matrix.getNumRows()-getNumRows()) ; }
+    int j ;
+    for (j = 0 ; j < matrix.getNumRows() ; j++)
+    { setRowBounds(j,(rowlb?rowlb[j]:-inf),(rowub?rowub[j]:inf)) ; } }
+  else
+  { int j ;
+    for( j = 0; j < matrix.getNumRows(); j++ )
+    { addRow(matrix.getVector(j),
+	     (rowlb?rowlb[j]:-inf),(rowub?rowub[j]:inf)) ; }
+    // Make sure there are enough columns
+    if (matrix.getNumCols() > getNumCols())
+    { lpx_add_cols(lp_,matrix.getNumCols()-getNumCols()) ; }
+    int i ;
+    for (i = 0 ; i < matrix.getNumCols() ; i++)
+    { setColBounds(i,(collb?collb[i]:0.0),(colub?colub[i]:inf)) ;
+      setObjCoeff(i,(obj?obj[i]:0.0)) ; } }
 
-		int i;
-		for( i = 0; i < matrix.getNumCols(); i++ )
-		{
-			setColBounds( i, collb ? collb[i]:0.0, 
-				      colub ? colub[i]:inf );
-			setObjCoeff( i, obj ? obj[i]:0.0 );
-		}
-	}
-}
+  return ; }
 
 //-----------------------------------------------------------------------------
 
@@ -2116,19 +2105,17 @@ OsiGlpkSolverInterface::loadProblem(const int numcols, const int numrows,
 // Read mps files
 //-----------------------------------------------------------------------------
 
-int OsiGlpkSolverInterface::readMps( const char * filename,
-									 const char * extension )
+/*
+  Call OSI::readMps, which will parse the mps file and call
+  OsiGlpk::loadProblem.
+*/
+int OsiGlpkSolverInterface::readMps (const char *filename,
+				     const char *extension)
 {
-#if 0
-	std::string f( filename );
-	std::string e( extension );
-	std::string fullname = f + "." + e;
-	lp_ = lpx_read_mps( const_cast<char*>( fullname.c_str() ) );
-	assert( lp_ );
-	return 0;  // Should actually check for errors here
-#endif
-  // just call base class method
-  return OsiSolverInterface::readMps(filename,extension);
+
+  int retval = OsiSolverInterface::readMps(filename,extension);
+
+  return (retval) ;
 }
 
 //-----------------------------------------------------------------------------
@@ -2385,11 +2372,11 @@ void OsiGlpkSolverInterface::gutsOfCopy( const OsiGlpkSolverInterface & source )
 	primalTolerance_ = source.primalTolerance_;
 	lpx_set_real_parm( model, LPX_K_TOLBND, primalTolerance_ );
 	// OsiObjOffset
-        double dblvalue = lpx_get_obj_coef( srcmodel, 0 );
-	lpx_set_obj_coef( model, 0, dblvalue );
+        objOffset_ = source.objOffset_ ;
+	lpx_set_obj_coef( model, 0, objOffset_ );
 
-	std::string probName = lpx_get_prob_name( srcmodel );
-	lpx_set_prob_name( model, const_cast<char *>(probName.c_str()));
+	probName_ = source.probName_ ;
+	lpx_set_prob_name(model,const_cast<char *>(probName_.c_str()));
 
 	int numcols = getNumCols();
 	// Set MIP information
@@ -2456,6 +2443,9 @@ void OsiGlpkSolverInterface::gutsOfConstructor()
 	primalObjectiveLimit_ = DBL_MAX;
 	dualTolerance_ = 1.0e-6;
 	primalTolerance_ = 1.0e-6;
+	objOffset_ = 0.0 ;
+
+	probName_ = "<none loaded>" ;
 
 	hotStartCStat_ = NULL;
 	hotStartCStatSize_ = 0;
@@ -2468,8 +2458,7 @@ void OsiGlpkSolverInterface::gutsOfConstructor()
 	isDualInfeasible_ = false;
 
 	lp_ = lpx_create_prob();
-	char name[] = "OSI_GLPK";
-	lpx_set_prob_name( lp_, name );
+	lpx_set_prob_name(lp_,const_cast<char *>(probName_.c_str()));
 	// Make all problems MIPs.  See note at top of file.
 	lpx_set_class( lp_, LPX_MIP );
 	assert( lp_ != NULL );

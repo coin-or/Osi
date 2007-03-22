@@ -696,6 +696,10 @@ private:
   double primalObjectiveLimit_;
   double dualTolerance_;
   double primalTolerance_;
+  double objOffset_;
+
+  // String parameters
+  std::string probName_;
 
   /// Hotstart information
 

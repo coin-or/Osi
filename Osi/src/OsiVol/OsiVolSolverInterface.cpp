@@ -546,6 +546,8 @@ OsiVolSolverInterface::setIntParam(OsiIntParam key, int value)
     break;
   case OsiLastIntParam:
     return false;
+  default:
+    return false;
   }
   return true;
 }
@@ -572,6 +574,8 @@ OsiVolSolverInterface::setDblParam(OsiDblParam key, double value)
     return OsiSolverInterface::setDblParam(key, value);
   case OsiLastDblParam:
     return false;
+  default:
+      return false;
   }
   return true;
 }
@@ -593,6 +597,9 @@ OsiVolSolverInterface::setStrParam(OsiStrParam key, const std::string & value)
 
   case OsiLastStrParam:
     return false;
+
+  default:
+      return false;
   }
   return false;
 }
@@ -610,6 +617,8 @@ OsiVolSolverInterface::getIntParam(OsiIntParam key, int& value) const
     OsiSolverInterface::getIntParam(key, value);
     break;
   case OsiLastIntParam:
+    return false;
+  default:
     return false;
   }
   return true;
@@ -637,6 +646,8 @@ OsiVolSolverInterface::getDblParam(OsiDblParam key, double& value) const
     break;
   case OsiLastDblParam:
     return false;
+  default:
+    return false;
   }
   return true;
 }
@@ -655,6 +666,8 @@ OsiVolSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
     value = "vol";
     return true;
   case OsiLastStrParam:
+    return false;
+  default:
     return false;
   }
   return false;

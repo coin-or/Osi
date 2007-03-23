@@ -30,17 +30,29 @@
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
 #include "CoinMessage.hpp"
+#include "CoinFinite.hpp"
 
-// Added so build windows build with dsp files works,
-// when not building with cplex.
+// Added so windows build with dsp files works,
+// when not building with glpk.
 #ifdef COIN_HAS_GLPK
 
 //#############################################################################
+
+/*
+  Define helper routines in the file-local namespace. Makes it easier to see
+  the main flow of tests.
+*/
+
 
 //--------------------------------------------------------------------------
 void
 OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir)
 {
+  // Do common solverInterface testing 
+  {
+    OsiGlpkSolverInterface m;
+    OsiSolverInterfaceCommonUnitTest(&m, mpsDir,netlibDir);
+  }
   
   // Test default constructor
   {
@@ -138,33 +150,8 @@ OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & n
     // test infinity
     {
       OsiGlpkSolverInterface si;
-      assert( eq(si.getInfinity(),1E+300));
-      // 1E+300 is set in OsiGlpkSolverInterface.cpp
+      assert( eq(si.getInfinity(),COIN_DBL_MAX) );
     }     
-    
-    // Test setting solution
-    {
-      OsiGlpkSolverInterface m1(m);
-      int i;
-
-      double * cs = new double[m1.getNumCols()];
-      for ( i = 0;  i < m1.getNumCols();  i++ ) 
-        cs[i] = i + .5;
-      m1.setColSolution(cs);
-      for ( i = 0;  i < m1.getNumCols();  i++ ) 
-        assert(m1.getColSolution()[i] == i + .5);
-      
-      double * rs = new double[m1.getNumRows()];
-      for ( i = 0;  i < m1.getNumRows();  i++ ) 
-        rs[i] = i - .5;
-      m1.setRowPrice(rs);
-      for ( i = 0;  i < m1.getNumRows();  i++ ) 
-        assert(m1.getRowPrice()[i] == i - .5);
-
-      delete [] cs;
-      delete [] rs;
-    }
-    
     
     // Test fraction Indices
     {
@@ -198,8 +185,6 @@ OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & n
 
       // Test fractionalIndices
 
-      // ??? This fails if the indices 2 and 3 are changed to 0 and 1.
-      //  This should be explained
       {
 	// Set a solution vector
 	double * sol = new double[fim.getNumCols()];
@@ -966,46 +951,37 @@ OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & n
     double objValue = m.getObjValue();
     CoinRelFltEq eq(1.0e-2);
     assert( eq(objValue,2520.57) );
-    // Try deleting first column
+    // Try deleting first column that's nonbasic at lower bound (0).
     int * d = new int[1];
-    d[0]=0;
+    CoinWarmStartBasis *cwsb =
+	dynamic_cast<CoinWarmStartBasis *>(m.getWarmStart()) ;
+    assert(cwsb) ;
+    CoinWarmStartBasis::Status stati ;
+    int iCol ;
+    for (iCol = 0 ;  iCol < cwsb->getNumStructural() ; iCol++)
+    { stati = cwsb->getStructStatus(iCol) ;
+      if (stati == CoinWarmStartBasis::atLowerBound) break ; }
+    d[0]=iCol;
     m.deleteCols(1,d);
     delete [] d;
     d=NULL;
     m.resolve();
     objValue = m.getObjValue();
     assert( eq(objValue,2520.57) );
-    // Try deleting column we added
-    int iCol = m.getNumCols()-1;
+    // Try deleting column we added. If basic, go to initialSolve as deleting
+    // basic variable trashes basis required for warm start.
+    iCol = m.getNumCols()-1;
+    cwsb = dynamic_cast<CoinWarmStartBasis *>(m.getWarmStart()) ;
+    stati =  cwsb->getStructStatus(iCol) ;
     m.deleteCols(1,&iCol);
-    m.resolve();
+    if (stati == CoinWarmStartBasis::basic)
+    { m.initialSolve() ; }
+    else
+    { m.resolve(); }
     objValue = m.getObjValue();
     assert( eq(objValue,2520.57) );
 
   }
-#if 0
-  // Test matt
-  if (fopen("../Clp/matt.mps","r")) {    
-    OsiGlpkSolverInterface m;
-    m.readMps("../Clp/matt","mps");
-    m.setHintParam(OsiDoPresolveInResolve, true, OsiHintDo);
-    m.resolve();
-    
-    std::vector<double *> rays = m.getDualRays(1);
-    std::cout << "Dual Ray: " << std::endl;
-    for(int i = 0; i < m.getNumRows(); i++){
-      if(fabs(rays[0][i]) > 0.00001)
-	std::cout << i << " : " << rays[0][i] << std::endl;
-    }
-    
-    std::cout << "isProvenOptimal = " << m.isProvenOptimal() << std::endl;
-    std::cout << "isProvenPrimalInfeasible = " << m.isProvenPrimalInfeasible()
-	 << std::endl;
-    
-    delete [] rays[0];
-    
-  }
-#endif
 
 #if 0
   // ??? Simplex routines not adapted to OsiGlpk yet
@@ -1156,10 +1132,5 @@ OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & n
   }
 #endif 
 
-  // Do common solverInterface testing 
-  {
-    OsiGlpkSolverInterface m;
-    OsiSolverInterfaceCommonUnitTest(&m, mpsDir,netlibDir);
-  }
 }
 #endif

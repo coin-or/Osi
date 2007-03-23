@@ -1154,7 +1154,7 @@ const double *OsiGlpkSolverInterface::getColSolution() const
   Use the cached solution vector, if present. If we have no constraint system,
   return 0.
 */
-  if (colsol_)
+  if (colsol_ != 0)
   { return (colsol_) ; }
 
   int numcols = getNumCols() ;
@@ -1162,7 +1162,7 @@ const double *OsiGlpkSolverInterface::getColSolution() const
   { return (0) ; }
 
   colsol_ = new double[numcols] ;
-  if (redcost_) delete [] redcost_ ;
+  if (redcost_ != 0) delete [] redcost_ ;
   { redcost_ = new double[numcols] ; }
 /*
   Grab the problem status.
@@ -1225,7 +1225,7 @@ const double *OsiGlpkSolverInterface::getRowPrice() const
   If we have a cached solution, use it. If the constraint system is empty,
   return 0. Otherwise, allocate a new vector.
 */
-  if (rowsol_)
+  if (rowsol_ != 0)
   { return (rowsol_) ; }
 
   int numrows = getNumRows() ;
@@ -1245,7 +1245,7 @@ const double *OsiGlpkSolverInterface::getRowPrice() const
     for (i = 0 ; i < numrows ; i++)
     { rowsol_[i] = 0 ; } }
   
-  return (rowact_) ; }
+  return (rowsol_) ; }
 
 //-----------------------------------------------------------------------------
 
@@ -1262,7 +1262,7 @@ const double * OsiGlpkSolverInterface::getReducedCost() const
 /*
   Return the cached copy, if it exists.
 */
-  if (redcost_)
+  if (redcost_ != 0)
   { return (redcost_) ; }
 /*
   We need to calculate. Make sure we have a constraint system, then allocate
@@ -1302,8 +1302,9 @@ const double * OsiGlpkSolverInterface::getReducedCost() const
 //-----------------------------------------------------------------------------
 
 /*
-  Most of the comments for getReducedCosts apply here too. But we're not
-  tempted to dive into glpk because there isn't a routine to return A*x.
+  As with getReducedCost, we need to be mindful that the primal solution may
+  have been set by the client. As it happens, however, glpk has no equivalent
+  routine, so there's no temptation to resist.
 */
 
 const double *OsiGlpkSolverInterface::getRowActivity() const
@@ -2235,20 +2236,11 @@ OsiGlpkSolverInterface::~OsiGlpkSolverInterface ()
 // ??? look over this carefully to be sure it is correct
 void OsiGlpkSolverInterface::reset()
 {
-   setInitialData();  // this is from the base class OsiSolverInterface
-   gutsOfDestructor();
+  setInitialData();  // this is from the base class OsiSolverInterface
+  gutsOfDestructor();
+  gutsOfConstructor() ;
 
-   bbWasLast_ = 0;
-   
-   maxIteration_ = INT_MAX;
-   hotStartMaxIteration_ = 0;
-   
-   lp_ = lpx_create_prob();
-   char name[] = "OSI_GLPK";
-   lpx_set_prob_name( lp_, name );
-   lpx_set_class( lp_, LPX_MIP );  
-   // See note at top of file.   Use LPX_MIP even for LPs.
-   assert( lp_ != NULL );
+  return ;
 
 }
 
@@ -2446,50 +2438,61 @@ void OsiGlpkSolverInterface::gutsOfCopy( const OsiGlpkSolverInterface & source )
 
 void OsiGlpkSolverInterface::gutsOfConstructor()
 {
-        bbWasLast_ = 0;
-        iter_used_ = 0;
-	obj_ = NULL;
-	collower_ = NULL;
-	colupper_ = NULL;
-	ctype_ = NULL;
-	rowsense_ = NULL;
-	rhs_ = NULL;
-	rowrange_ = NULL;
-	rowlower_ = NULL;
-	rowupper_ = NULL;
-	colsol_ = NULL;
-	rowsol_ = NULL;
-	redcost_ = NULL;
-	rowact_ = NULL;
-	matrixByRow_ = NULL;
-	matrixByCol_ = NULL;
+  bbWasLast_ = 0;
+  iter_used_ = 0;
+  obj_ = NULL;
+  collower_ = NULL;
+  colupper_ = NULL;
+  ctype_ = NULL;
+  rowsense_ = NULL;
+  rhs_ = NULL;
+  rowrange_ = NULL;
+  rowlower_ = NULL;
+  rowupper_ = NULL;
+  colsol_ = NULL;
+  rowsol_ = NULL;
+  redcost_ = NULL;
+  rowact_ = NULL;
+  matrixByRow_ = NULL;
+  matrixByCol_ = NULL;
 
-	maxIteration_ = INT_MAX;
-	hotStartMaxIteration_ = 0;
+  maxIteration_ = INT_MAX;
+  hotStartMaxIteration_ = 0;
 
-	dualObjectiveLimit_ = DBL_MAX;
-	primalObjectiveLimit_ = DBL_MAX;
-	dualTolerance_ = 1.0e-6;
-	primalTolerance_ = 1.0e-6;
-	objOffset_ = 0.0 ;
+  dualObjectiveLimit_ = DBL_MAX;
+  primalObjectiveLimit_ = DBL_MAX;
+  dualTolerance_ = 1.0e-6;
+  primalTolerance_ = 1.0e-6;
+  objOffset_ = 0.0 ;
 
-	probName_ = "<none loaded>" ;
+  probName_ = "<none loaded>" ;
 
-	hotStartCStat_ = NULL;
-	hotStartCStatSize_ = 0;
-	hotStartRStat_ = NULL;
-	hotStartRStatSize_ = 0;
+  hotStartCStat_ = NULL;
+  hotStartCStatSize_ = 0;
+  hotStartRStat_ = NULL;
+  hotStartRStatSize_ = 0;
 
-	isIterationLimitReached_ = false;
-	isAbandoned_ = false;
-	isPrimInfeasible_ = false;
-	isDualInfeasible_ = false;
+  isIterationLimitReached_ = false;
+  isAbandoned_ = false;
+  isPrimInfeasible_ = false;
+  isDualInfeasible_ = false;
 
-	lp_ = lpx_create_prob();
-	lpx_set_prob_name(lp_,const_cast<char *>(probName_.c_str()));
-	// Make all problems MIPs.  See note at top of file.
-	lpx_set_class( lp_, LPX_MIP );
-	assert( lp_ != NULL );
+  lp_ = lpx_create_prob();
+  assert( lp_ != NULL );
+  // Make all problems MIPs.  See note at top of file.
+  lpx_set_class( lp_, LPX_MIP );
+  // Push OSI parameters down into LPX object.
+  lpx_set_int_parm(lp_,LPX_K_ITLIM,maxIteration_) ; 
+  if (getObjSense() == 1)				// minimization
+  { lpx_set_real_parm(lp_,LPX_K_OBJUL,dualObjectiveLimit_) ;
+    lpx_set_real_parm(lp_,LPX_K_OBJLL,primalObjectiveLimit_) ; }
+  else						// maximization
+  { lpx_set_real_parm(lp_,LPX_K_OBJLL,dualObjectiveLimit_) ;
+    lpx_set_real_parm(lp_,LPX_K_OBJUL,primalObjectiveLimit_) ; }
+  lpx_set_real_parm(lp_,LPX_K_TOLDJ,dualTolerance_) ;
+  lpx_set_real_parm(lp_,LPX_K_TOLBND,primalTolerance_) ;
+  lpx_set_obj_coef(lp_,0,objOffset_) ;
+  lpx_set_prob_name(lp_,const_cast<char *>(probName_.c_str())) ;
 }
 
 //-----------------------------------------------------------------------------
@@ -2599,7 +2602,7 @@ void OsiGlpkSolverInterface::freeCachedData( int keepCached )
 
 void OsiGlpkSolverInterface::freeAllMemory()
 {
-	freeCachedData();
+	freeCachedData(OsiGlpkSolverInterface::KEEPCACHED_NONE);
 	delete[] hotStartCStat_;
 	delete[] hotStartRStat_;
 	hotStartCStat_ = NULL;

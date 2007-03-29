@@ -5,6 +5,7 @@
 // Copyright (C) 2002, 2003 Braden Hunsaker 
 // Copyright (C) 2003, 2004 University of Pittsburgh
 // Copyright (C) 2004 Joseph Young
+// Copyright (C) 2007 Lou Hafer
 //    University of Pittsburgh coding done by Brady Hunsaker
 // All Rights Reserved.
 //
@@ -93,6 +94,23 @@ namespace {
   const double GlpkZeroTol = 1.0e-9 ;
 }
 
+/* Cut names down to a reasonable size. */
+
+#define OGSI OsiGlpkSolverInterface
+
+/*
+  A few defines to control execution tracing.
+
+  OGSI_TRACK_SOLVERS	track creation, copy, deletion of OGSI objects
+  OGSI_TRACK_FRESH	track how a solution is made stale/fresh
+  OGSI_VERBOSITY	enables warnings when > 0; probably should be converted
+			to honest messages for message handler
+*/
+
+#define OGSI_TRACK_SOLVERS 0
+#define OGSI_TRACK_FRESH 0
+#define OGSI_VERBOSITY 0
+
 //-----------------------------------------------------------------------------
 
 inline void checkGLPKerror( int err, std::string glpkfuncname, std::string osimethod )
@@ -110,11 +128,17 @@ inline void checkGLPKerror( int err, std::string glpkfuncname, std::string osime
 // Solve methods
 //#############################################################################
 
-void OsiGlpkSolverInterface::initialSolve()
+void OGSI::initialSolve()
 {
+#     if OGSI_TRACK_FRESH > 0
+      std::cout
+	<< "OGSI(" << std::hex << this << std::dec
+	<< ")::initialSolve." << std::endl ;
+#     endif
+
 	// This method should solve the lp relaxation of a mip problem.
         LPX *model = getMutableModelPtr();
-	freeCachedData( OsiGlpkSolverInterface::FREECACHED_RESULTS );
+	freeCachedData( OGSI::FREECACHED_RESULTS );
 
 	lpx_set_int_parm(model, LPX_K_MSGLEV, 1);  // suppress most output 
 	lpx_set_int_parm(model, LPX_K_PRESOL, 1);  // turn on presolver
@@ -161,10 +185,16 @@ void OsiGlpkSolverInterface::initialSolve()
 
 //-----------------------------------------------------------------------------
 
-void OsiGlpkSolverInterface::resolve()
+void OGSI::resolve()
 {
+#     if OGSI_TRACK_FRESH > 0
+      std::cout
+	<< "OGSI(" << std::hex << this
+	<< ")::resolve." << std::endl ;
+#     endif
+
         LPX *model = getMutableModelPtr();
-	freeCachedData( OsiGlpkSolverInterface::FREECACHED_RESULTS );
+	freeCachedData( OGSI::FREECACHED_RESULTS );
 
 	lpx_set_int_parm(model, LPX_K_MSGLEV, 1);  // suppress most output 
 	lpx_set_int_parm(model, LPX_K_DUAL, 1); // Use dual simplex if dual feasible
@@ -210,10 +240,10 @@ void OsiGlpkSolverInterface::resolve()
 
 //-----------------------------------------------------------------------------
 
-void OsiGlpkSolverInterface::branchAndBound()
+void OGSI::branchAndBound()
 {
         LPX *model = getMutableModelPtr();
-	freeCachedData( OsiGlpkSolverInterface::FREECACHED_RESULTS );
+	freeCachedData( OGSI::FREECACHED_RESULTS );
 	if( lpx_get_num_int( model ) ) {
 
 	        // Must have an LP solution before running lpx_integer
@@ -258,9 +288,13 @@ void OsiGlpkSolverInterface::branchAndBound()
   the LPX object is already loaded with a problem, the easiest approach is to
   simply delete it and start fresh. But then we lose all the parameters that
   are held in the LPX object. By keeping a copy, we have a way to recover.
+
+  Really, we should be keeping these values in the OSI base class arrays, but
+  the amount of storage involved is too small to provide motivation to change
+  from the present setup.
 */
 
-bool OsiGlpkSolverInterface::setIntParam (OsiIntParam key, int value)
+bool OGSI::setIntParam (OsiIntParam key, int value)
 
 { bool retval = false ;
 
@@ -280,6 +314,13 @@ bool OsiGlpkSolverInterface::setIntParam (OsiIntParam key, int value)
       else
       {	retval = false ; }
       break ; }
+    case OsiNameDiscipline:
+    { if (value < 0 || value > 3)
+      { retval = false ; }
+      else
+      { nameDisc_ = value ;
+	retval = true ; }
+      break ; }
     case OsiLastIntParam:
     { retval = false ;
       break ; } }
@@ -293,7 +334,7 @@ bool OsiGlpkSolverInterface::setIntParam (OsiIntParam key, int value)
   it doesn't like.
 */
 
-bool OsiGlpkSolverInterface::setDblParam (OsiDblParam key, double value)
+bool OGSI::setDblParam (OsiDblParam key, double value)
 
 { bool retval = false ;
 
@@ -345,7 +386,7 @@ bool OsiGlpkSolverInterface::setDblParam (OsiDblParam key, double value)
 
 //-----------------------------------------------------------------------------
 
-bool OsiGlpkSolverInterface::setStrParam (OsiStrParam key,
+bool OGSI::setStrParam (OsiStrParam key,
 					  const std::string &value)
 { bool retval = false ;
 
@@ -366,7 +407,7 @@ bool OsiGlpkSolverInterface::setStrParam (OsiStrParam key,
 //-----------------------------------------------------------------------------
 
 bool
-OsiGlpkSolverInterface::getIntParam( OsiIntParam key, int& value ) const
+OGSI::getIntParam( OsiIntParam key, int& value ) const
 {
 	bool retval = false;
 	switch( key )
@@ -381,6 +422,11 @@ OsiGlpkSolverInterface::getIntParam( OsiIntParam key, int& value ) const
 		retval = true;
 		break;
 
+    case OsiNameDiscipline:
+		value = nameDisc_;
+		retval = true;
+		break;
+
     case OsiLastIntParam:
 		retval = false;
 		break;
@@ -391,7 +437,7 @@ OsiGlpkSolverInterface::getIntParam( OsiIntParam key, int& value ) const
 //-----------------------------------------------------------------------------
 
 bool
-OsiGlpkSolverInterface::getDblParam( OsiDblParam key, double& value ) const
+OGSI::getDblParam( OsiDblParam key, double& value ) const
 {
 	bool retval = false;
 	switch( key )
@@ -430,7 +476,7 @@ OsiGlpkSolverInterface::getDblParam( OsiDblParam key, double& value ) const
 
 
 bool
-OsiGlpkSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
+OGSI::getStrParam(OsiStrParam key, std::string & value) const
 {
   //	bool retval = false;
   switch (key) {
@@ -449,12 +495,12 @@ OsiGlpkSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
 // Methods returning info on how the solution process terminated
 //#############################################################################
 
-bool OsiGlpkSolverInterface::isAbandoned() const
+bool OGSI::isAbandoned() const
 {
 	return isAbandoned_;
 }
 
-bool OsiGlpkSolverInterface::isProvenOptimal() const
+bool OGSI::isProvenOptimal() const
 {
         LPX *model = getMutableModelPtr();
 
@@ -470,7 +516,7 @@ bool OsiGlpkSolverInterface::isProvenOptimal() const
 	  }
 }
 
-bool OsiGlpkSolverInterface::isProvenPrimalInfeasible() const
+bool OGSI::isProvenPrimalInfeasible() const
 {
         LPX *model = getMutableModelPtr();
 
@@ -483,7 +529,7 @@ bool OsiGlpkSolverInterface::isProvenPrimalInfeasible() const
 		return lpx_mip_status( model ) == LPX_NOFEAS;
 }
 
-bool OsiGlpkSolverInterface::isProvenDualInfeasible() const
+bool OGSI::isProvenDualInfeasible() const
 {
         LPX *model = getMutableModelPtr();
 	
@@ -498,7 +544,7 @@ bool OsiGlpkSolverInterface::isProvenDualInfeasible() const
 	        return false;
 }
 
-bool OsiGlpkSolverInterface::isPrimalObjectiveLimitReached() const
+bool OGSI::isPrimalObjectiveLimitReached() const
 {
   if (getObjSense()==1)  // minimization
     return isObjLowerLimitReached_;
@@ -506,7 +552,7 @@ bool OsiGlpkSolverInterface::isPrimalObjectiveLimitReached() const
     return isObjUpperLimitReached_;
 }
 
-bool OsiGlpkSolverInterface::isDualObjectiveLimitReached() const
+bool OGSI::isDualObjectiveLimitReached() const
 {
   if (getObjSense()==1)  // minimization
     return isObjUpperLimitReached_;
@@ -514,7 +560,7 @@ bool OsiGlpkSolverInterface::isDualObjectiveLimitReached() const
     return isObjLowerLimitReached_;
 }
 
-bool OsiGlpkSolverInterface::isIterationLimitReached() const
+bool OGSI::isIterationLimitReached() const
 {
 	return isIterationLimitReached_;
 }
@@ -523,7 +569,7 @@ bool OsiGlpkSolverInterface::isIterationLimitReached() const
 // WarmStart related methods
 //#############################################################################
 
-CoinWarmStart* OsiGlpkSolverInterface::getWarmStart() const
+CoinWarmStart* OGSI::getWarmStart() const
 {
 	CoinWarmStartBasis *ws = NULL;
 	LPX *model = getMutableModelPtr();
@@ -607,7 +653,7 @@ CoinWarmStart* OsiGlpkSolverInterface::getWarmStart() const
 
 //-----------------------------------------------------------------------------
 
-bool OsiGlpkSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
+bool OGSI::setWarmStart(const CoinWarmStart* warmstart)
 {
 	
 	const CoinWarmStartBasis *ws = 
@@ -623,7 +669,7 @@ bool OsiGlpkSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
 	if( numcols != getNumCols() || numrows != getNumRows() )
 		return false;
 	
-	freeCachedData( OsiGlpkSolverInterface::FREECACHED_RESULTS );
+	freeCachedData( OGSI::FREECACHED_RESULTS );
 	
 	int i;
 	for( i = 0; i < numrows; i++)
@@ -690,7 +736,7 @@ bool OsiGlpkSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
 // Hotstart related methods (primarily used in strong branching)
 //#############################################################################
 
-void OsiGlpkSolverInterface::markHotStart()
+void OGSI::markHotStart()
 {
         LPX *model = getMutableModelPtr();
 	int numcols, numrows;
@@ -746,8 +792,13 @@ void OsiGlpkSolverInterface::markHotStart()
 
 //-----------------------------------------------------------------------------
 
-void OsiGlpkSolverInterface::solveFromHotStart()
+void OGSI::solveFromHotStart()
 {
+#     if OGSI_TRACK_FRESH > 0
+      std::cout
+	<< "OGSI(" << std::hex << this
+	<< ")::solveFromHotStart." << std::endl ;
+#     endif
         LPX *model = getMutableModelPtr();
 	int numcols, numrows;
 
@@ -759,17 +810,14 @@ void OsiGlpkSolverInterface::solveFromHotStart()
 
 	int j;
 	for( j = 0; j < numcols; j++ ) {
-	  //	glp_put_col_soln( lp_, j+1, hotStartCStat_[j], hotStartCVal_[j], hotStartCDualVal_[j] );
-	  // GLPK 4.7 doesn't have a way to set the values--just the status
 	  lpx_set_col_stat( model, j+1, hotStartCStat_[j]);
 	}
 	int i;
 	for( i = 0; i < numrows; i++ ) {
-	  //	glp_put_row_soln( lp_, i+1, hotStartRStat_[i], hotStartRVal_[i], hotStartRDualVal_[i] );
 	  lpx_set_row_stat( model, i+1, hotStartRStat_[i]);
 	}
 
-	freeCachedData( OsiGlpkSolverInterface::FREECACHED_RESULTS );
+	freeCachedData( OGSI::FREECACHED_RESULTS );
 
 	int maxIteration = maxIteration_;
 	maxIteration_ = hotStartMaxIteration_;
@@ -779,7 +827,7 @@ void OsiGlpkSolverInterface::solveFromHotStart()
 
 //-----------------------------------------------------------------------------
 
-void OsiGlpkSolverInterface::unmarkHotStart()
+void OGSI::unmarkHotStart()
 {
 	// ??? be lazy with deallocating memory and do nothing here, deallocate memory in the destructor.
 }
@@ -791,17 +839,17 @@ void OsiGlpkSolverInterface::unmarkHotStart()
 //-----------------------------------------------------------------------------
 // Get number of rows, columns, elements, ...
 //-----------------------------------------------------------------------------
-int OsiGlpkSolverInterface::getNumCols() const
+int OGSI::getNumCols() const
 {
 	return lpx_get_num_cols( getMutableModelPtr() );
 }
 
-int OsiGlpkSolverInterface::getNumRows() const
+int OGSI::getNumRows() const
 {
 	return lpx_get_num_rows( getMutableModelPtr() );
 }
 
-int OsiGlpkSolverInterface::getNumElements() const
+int OGSI::getNumElements() const
 {
 	return lpx_get_num_nz( getMutableModelPtr() );
 }
@@ -810,7 +858,7 @@ int OsiGlpkSolverInterface::getNumElements() const
 // Get pointer to rim vectors
 //------------------------------------------------------------------
 
-const double * OsiGlpkSolverInterface::getColLower() const
+const double * OGSI::getColLower() const
 {
         LPX *model = getMutableModelPtr();
 
@@ -867,7 +915,7 @@ const double * OsiGlpkSolverInterface::getColLower() const
 
 //-----------------------------------------------------------------------------
 
-const double * OsiGlpkSolverInterface::getColUpper() const
+const double * OGSI::getColUpper() const
 {
 	if( colupper_ == NULL )
 	{
@@ -879,7 +927,7 @@ const double * OsiGlpkSolverInterface::getColUpper() const
 
 //-----------------------------------------------------------------------------
 
-const char * OsiGlpkSolverInterface::getRowSense() const
+const char * OGSI::getRowSense() const
 {
 	// Could be in OsiSolverInterfaceImpl.
 	if( rowsense_ == NULL )
@@ -913,7 +961,7 @@ const char * OsiGlpkSolverInterface::getRowSense() const
 
 //-----------------------------------------------------------------------------
 
-const double * OsiGlpkSolverInterface::getRightHandSide() const
+const double * OGSI::getRightHandSide() const
 {
 	if( rhs_ == NULL )
 	{
@@ -925,7 +973,7 @@ const double * OsiGlpkSolverInterface::getRightHandSide() const
 
 //-----------------------------------------------------------------------------
 
-const double * OsiGlpkSolverInterface::getRowRange() const
+const double * OGSI::getRowRange() const
 {
 	if( rowrange_ == NULL )
 	{
@@ -937,7 +985,7 @@ const double * OsiGlpkSolverInterface::getRowRange() const
 
 //-----------------------------------------------------------------------------
 
-const double * OsiGlpkSolverInterface::getRowLower() const
+const double * OGSI::getRowLower() const
 {
         LPX *model = getMutableModelPtr();
 
@@ -992,7 +1040,7 @@ const double * OsiGlpkSolverInterface::getRowLower() const
 
 //-----------------------------------------------------------------------------
 
-const double * OsiGlpkSolverInterface::getRowUpper() const
+const double * OGSI::getRowUpper() const
 {
 	if( rowupper_ == NULL )
 	{
@@ -1004,7 +1052,7 @@ const double * OsiGlpkSolverInterface::getRowUpper() const
 
 //-----------------------------------------------------------------------------
 
-const double * OsiGlpkSolverInterface::getObjCoefficients() const
+const double * OGSI::getObjCoefficients() const
 {
 	if( obj_ == NULL )
 	{
@@ -1026,7 +1074,7 @@ const double * OsiGlpkSolverInterface::getObjCoefficients() const
 
 //-----------------------------------------------------------------------------
 
-double OsiGlpkSolverInterface::getObjSense() const
+double OGSI::getObjSense() const
 {
         LPX *model = getMutableModelPtr();
 
@@ -1045,7 +1093,7 @@ double OsiGlpkSolverInterface::getObjSense() const
 // Return information on integrality
 //-----------------------------------------------------------------------------
 
-bool OsiGlpkSolverInterface::isContinuous( int colNumber ) const
+bool OGSI::isContinuous( int colNumber ) const
 {
   return lpx_get_col_kind( getMutableModelPtr(), colNumber+1 ) == LPX_CV;
 }
@@ -1054,7 +1102,7 @@ bool OsiGlpkSolverInterface::isContinuous( int colNumber ) const
 // Row and column copies of the matrix ...
 //-----------------------------------------------------------------------------
 
-const CoinPackedMatrix * OsiGlpkSolverInterface::getMatrixByRow() const
+const CoinPackedMatrix * OGSI::getMatrixByRow() const
 {
 	if( matrixByRow_ == NULL )
 	{
@@ -1093,7 +1141,7 @@ const CoinPackedMatrix * OsiGlpkSolverInterface::getMatrixByRow() const
 
 //-----------------------------------------------------------------------------
 
-const CoinPackedMatrix * OsiGlpkSolverInterface::getMatrixByCol() const
+const CoinPackedMatrix * OGSI::getMatrixByCol() const
 {
 	if( matrixByCol_ == NULL )
 	{
@@ -1127,7 +1175,7 @@ const CoinPackedMatrix * OsiGlpkSolverInterface::getMatrixByCol() const
 //-----------------------------------------------------------------------------
 // Get solver's value for infinity
 //-----------------------------------------------------------------------------
-double OsiGlpkSolverInterface::getInfinity() const
+double OGSI::getInfinity() const
 {
   	return (CoinInfinity) ;
 }
@@ -1147,7 +1195,7 @@ double OsiGlpkSolverInterface::getInfinity() const
   branch-and-bound.
 */
 
-const double *OsiGlpkSolverInterface::getColSolution() const
+const double *OGSI::getColSolution() const
 
 { 
 /*
@@ -1191,21 +1239,28 @@ const double *OsiGlpkSolverInterface::getColSolution() const
       { colsol_[j] = colupper_[j] ; } } }
 /*
   We should have a defined solution. For simplex, refresh the reduced costs
-  as well as the primal solution.
+  as well as the primal solution. Remove infinitesimals from the results.
 */
   else
   if (bbWasLast_ == 0)
   { int j ;
     for (j = 0 ; j < numcols ; j++)
     { colsol_[j] = lpx_get_col_prim(lp_,j+1) ;
-      redcost_[j] = lpx_get_col_dual(lp_,j+1) ; } }
+      if (fabs(colsol_[j]) < GlpkZeroTol)
+      { colsol_[j] = 0.0 ; }
+      redcost_[j] = lpx_get_col_dual(lp_,j+1) ;
+      if (fabs(redcost_[j]) < GlpkZeroTol)
+      { redcost_[j] = 0.0 ; } } }
 /*
-  Last solve was branch-and-bound. Set the reduced costs to 0.
+  Last solve was branch-and-bound. Set the reduced costs to 0. Remove
+  infinitesimals from the results.
 */
   else
   { int j ;
     for (j = 0 ; j < numcols ; j++)
     { colsol_[j] = lpx_mip_col_val(lp_,j+1) ;
+      if (fabs(colsol_[j]) < GlpkZeroTol)
+      { colsol_[j] = 0.0 ; }
       redcost_[j] = 0.0 ; } }
 
   return (colsol_) ; }
@@ -1218,7 +1273,7 @@ const double *OsiGlpkSolverInterface::getColSolution() const
   The user can set this independently, so use the cached copy if it's present.
 */
 
-const double *OsiGlpkSolverInterface::getRowPrice() const
+const double *OGSI::getRowPrice() const
 
 { 
 /*
@@ -1234,12 +1289,15 @@ const double *OsiGlpkSolverInterface::getRowPrice() const
 
   rowsol_ = new double[numrows] ;
 /*
-  For simplex, we have dual variables. For MIP, just set them to zero.
+  For simplex, we have dual variables. For MIP, just set them to zero. Remove
+  infinitesimals from the results.
 */
   if (bbWasLast_ == 0)
   { int i ;
     for (i = 0 ; i < numrows; i++)
-    { rowsol_[i] = lpx_get_row_dual(lp_,i+1) ; } }
+    { rowsol_[i] = lpx_get_row_dual(lp_,i+1) ;
+      if (fabs(rowsol_[i]) < GlpkZeroTol)
+      { rowsol_[i] = 0.0 ; } } }
   else
   { int i ;
     for (i = 0 ; i < numrows ; i++)
@@ -1257,7 +1315,7 @@ const double *OsiGlpkSolverInterface::getRowPrice() const
   To use glpk's routine (lpx_get_col_dual), the interface needs to track the
   origin of the dual (row price) values.
 */
-const double * OsiGlpkSolverInterface::getReducedCost() const
+const double * OGSI::getReducedCost() const
 {
 /*
   Return the cached copy, if it exists.
@@ -1280,7 +1338,6 @@ const double * OsiGlpkSolverInterface::getReducedCost() const
   const double *y = getRowPrice() ;
   if (!y)
   { return (redcost_) ; }
-  int m = getNumRows() ;
 /*
   Acquire the constraint matrix and calculate y*A.
 */
@@ -1307,7 +1364,7 @@ const double * OsiGlpkSolverInterface::getReducedCost() const
   routine, so there's no temptation to resist.
 */
 
-const double *OsiGlpkSolverInterface::getRowActivity() const
+const double *OGSI::getRowActivity() const
 
 {
 /*
@@ -1347,21 +1404,21 @@ const double *OsiGlpkSolverInterface::getRowActivity() const
 
 //-----------------------------------------------------------------------------
 
-double OsiGlpkSolverInterface::getObjValue() const
+double OGSI::getObjValue() const
 {
   return OsiSolverInterface::getObjValue();
 }
 
 //-----------------------------------------------------------------------------
 
-int OsiGlpkSolverInterface::getIterationCount() const
+int OGSI::getIterationCount() const
 {
 	return iter_used_;
 }
 
 //-----------------------------------------------------------------------------
 
-std::vector<double*> OsiGlpkSolverInterface::getDualRays(int maxNumRays) const
+std::vector<double*> OGSI::getDualRays(int maxNumRays) const
 {
 	// ??? not yet implemented.
 	throw CoinError("method is not yet implemented", "getDualRays", "OsiGlpkSolverInterface");
@@ -1370,7 +1427,7 @@ std::vector<double*> OsiGlpkSolverInterface::getDualRays(int maxNumRays) const
 
 //-----------------------------------------------------------------------------
 
-std::vector<double*> OsiGlpkSolverInterface::getPrimalRays(int maxNumRays) const
+std::vector<double*> OGSI::getPrimalRays(int maxNumRays) const
 {
 	// ??? not yet implemented.
 	throw CoinError("method is not yet implemented", "getPrimalRays", "OsiGlpkSolverInterface");
@@ -1381,104 +1438,186 @@ std::vector<double*> OsiGlpkSolverInterface::getPrimalRays(int maxNumRays) const
 // Problem modifying methods (rim vectors)
 //#############################################################################
 
-void OsiGlpkSolverInterface::setObjCoeff( int elementIndex, double elementValue )
-{
-	freeCachedData( OsiGlpkSolverInterface::FREECACHED_COLUMN );
-	lpx_set_obj_coef( getMutableModelPtr(), elementIndex+1, elementValue );
-}
+/*
+  Yes, I know the OSI spec says that pointers returned by get*() routines are
+  valid only as long as the data is unchanged. But in practice, client code
+  (in particular, portions of Cgl and Cbc) expects that simple changes to rim
+  vector values will not invalidate pointers returned by the various get*()
+  routines. So, for example, modifying an objective coefficient should not
+  free the cached copies of the objective and column bounds. They should be
+  updated on-the-fly. This is exactly the opposite of the original OsiGlpk
+  design, hence this warning.
+
+  Beyond that, it's helpful for an OSI to hold on to the current solution as
+  long as possible. So, for example, a bounds change that does not make the
+  current solution infeasible should not trash the cached solution.
+
+  -- lh, 070326
+*/
+
+void OGSI::setObjCoeff (int j, double cj)
+
+{ assert(j >= 0 && j < getNumCols()) ;
+
+/*
+  Remove the solution. Arguably the only thing that we should remove here is
+  the cached reduced cost.
+*/
+  freeCachedData(OGSI::KEEPCACHED_PROBLEM) ;
+/*
+  Push the changed objective down to glpk.
+*/
+  lpx_set_obj_coef(lp_,j+1,cj) ;
+
+  if (obj_)
+  { obj_[j] = cj ; }
+
+  return ; }
 
 //-----------------------------------------------------------------------------
 
-void OsiGlpkSolverInterface::setColLower(int elementIndex, double elementValue)
+void OGSI::setColLower (int j, double lbj)
+
 {
-	freeCachedData( OsiGlpkSolverInterface::FREECACHED_COLUMN );
+/*
+  Get the upper bound, so we can call setColBounds.  glpk reports 0 for an
+  infinite bound, so we need to check the status and possibly correct.
+*/
+  double inf = getInfinity() ;
+  int type = lpx_get_col_type(lp_,j+1) ;
+  double ubj = lpx_get_col_ub(lp_,j+1) ;
+  switch (type)
+  { case LPX_UP:
+    case LPX_DB:
+    case LPX_FX:
+    { break ; }
+    case LPX_FR:
+    case LPX_LO:
+    { ubj = inf ;
+      break ; }
+    default:
+    { assert (false) ; } }
 
-	double inf = getInfinity();
+# if OGSI_TRACK_FRESH > 0
+/*
+  Check if this bound really invalidates the current solution. This check will
+  give false positives because OsiGlpk needs a notion of `valid solution from
+  solver'. getColSolution will always return something, even if it has to make
+  it up on the spot.
+*/
+  { const double *x = getColSolution() ;
+    if (x)
+    { if (x[j] < lbj-GlpkZeroTol)
+      { std::cout
+	  << "OGSI(" << std::hex << this << std::dec
+	  << ")::setColLower: new bound "
+	  << lbj << " exceeds current value " << x[j]
+	  << " by " << (lbj-x[j]) << "." << std::endl ; } } }
+# endif
 
-	int type;
-	double lb;
-	double ub;
+  setColBounds(j,lbj,ubj) ;
 
-	type=lpx_get_col_type(getMutableModelPtr(),elementIndex+1);
-	ub=lpx_get_col_ub(getMutableModelPtr(),elementIndex+1);
-	lb = elementValue;
-	switch( type )
-	{
-	case LPX_UP:
-	case LPX_DB:
-	case LPX_FX:
-		break;
-
-	case LPX_FR:
-	case LPX_LO:
-		ub = inf;
-		break;
-
-	default:
-		assert( false );
-	}
-	setColBounds( elementIndex, lb, ub );
-}
+  return ; }
 
 //-----------------------------------------------------------------------------
 
-void OsiGlpkSolverInterface::setColUpper(int elementIndex, double elementValue)
+void OGSI::setColUpper (int j, double ubj)
+
 {
-	freeCachedData( OsiGlpkSolverInterface::FREECACHED_COLUMN );
+/*
+  Get the lower bound, so we can call setColBounds.  glpk reports 0 for an
+  infinite bound, so we need to check the status and possibly correct.
+*/
+  double inf = getInfinity() ;
+  int type = lpx_get_col_type(lp_,j+1) ;
+  double lbj = lpx_get_col_lb(lp_,j+1) ;
+  switch (type)
+  { case LPX_LO:
+    case LPX_DB:
+    case LPX_FX:
+    { break ; }
+    case LPX_FR:
+    case LPX_UP:
+    { lbj = inf ;
+      break ; }
+    default:
+    { assert (false) ; } }
 
-	double inf = getInfinity();
+# if OGSI_TRACK_FRESH > 0
+/*
+  Check if this bound really invalidates the current solution. This check will
+  give false positives because OsiGlpk needs a notion of `valid solution from
+  solver'. getColSolution will always return something, even if it has to make
+  it up on the spot.
+*/
+  { const double *x = getColSolution() ;
+    if (x)
+    { if (x[j] > ubj+GlpkZeroTol)
+      { std::cout
+	  << "OGSI(" << std::hex << this << std::dec
+	  << ")::setColUpper: new bound "
+	  << ubj << " exceeds current value " << x[j]
+	  << " by " << (x[j]-ubj) << "." << std::endl ; } } }
+# endif
 
-	int type;
-	double lb;
-	double ub;
+  setColBounds(j,lbj,ubj) ;
 
-	type=lpx_get_col_type(getMutableModelPtr(),elementIndex+1);
-	lb=lpx_get_col_lb(getMutableModelPtr(),elementIndex+1);
-	ub = elementValue;
-	switch( type )
-	{
-	case LPX_LO:
-	case LPX_DB:
-	case LPX_FX:
-		break;
-
-	case LPX_FR:
-	case LPX_UP:
-		lb = -inf;
-		break;
-
-	default:
-		assert( false );
-	}
-	setColBounds( elementIndex, lb, ub );
-}
+  return ; }
 
 //-----------------------------------------------------------------------------
 
-void OsiGlpkSolverInterface::setColBounds( int elementIndex, double lower, double upper )
-{
-	freeCachedData( OsiGlpkSolverInterface::FREECACHED_COLUMN );
+/*
+  Yes, in theory, we shouldn't need to worry about maintaining those cached
+  column bounds over changes to the problem. See the note at the top of this
+  section.
+*/
 
-	double inf = getInfinity();
+void OGSI::setColBounds (int j, double lower, double upper)
 
-	int type;
-	if( lower == upper )
-		type = LPX_FX;
-	else if( lower > -inf && upper < inf )
-		type = LPX_DB;
-	else if( lower > -inf )
-		type = LPX_LO;
-	else if( upper < inf)
-		type = LPX_UP;
-	else
-		type = LPX_FR;
+{ assert(j >= 0 && j < getNumCols()) ;
+/*
+  Free only the cached solution. Keep the cached structural variables.
+*/
+  freeCachedData(OGSI::KEEPCACHED_PROBLEM) ;
+/*
+  Figure out what type we should use for glpk.
+*/
+  double inf = getInfinity() ;
+  int type ;
 
-	lpx_set_col_bnds( getMutableModelPtr(), elementIndex+1, type, lower, upper );
-}
+  if (lower == upper)
+  { type = LPX_FX ; }
+  else
+  if (lower > -inf && upper < inf)
+  { type = LPX_DB ; }
+  else
+  if (lower > -inf)
+  { type = LPX_LO ; }
+  else
+  if (upper < inf)
+  { type = LPX_UP ; }
+  else
+  { type = LPX_FR ; }
+/*
+  Push the bound change down into the solver. 1-based addressing.
+*/
+  int statj = lpx_get_col_stat(lp_,j+1) ;
+  lpx_set_col_bnds(lp_,j+1,type,lower,upper) ;
+  lpx_set_col_stat(lp_,j+1,statj) ;
+  statj = lpx_get_col_stat(lp_,j+1) ;
+/*
+  Correct the cached upper and lower bound vectors, if present.
+*/
+  if (collower_)
+  { collower_[j] = lower ; }
+  if (colupper_)
+  { colupper_[j] = upper ; }
+
+  return ; }
 
 //-----------------------------------------------------------------------------
 
-void OsiGlpkSolverInterface::setColSetBounds(const int* indexFirst,
+void OGSI::setColSetBounds(const int* indexFirst,
 					     const int* indexLast,
 					     const double* boundList)
 {
@@ -1488,7 +1627,7 @@ void OsiGlpkSolverInterface::setColSetBounds(const int* indexFirst,
 //-----------------------------------------------------------------------------
 
 void
-OsiGlpkSolverInterface::setRowLower( int elementIndex, double elementValue )
+OGSI::setRowLower( int elementIndex, double elementValue )
 {
 	// Could be in OsiSolverInterfaceImpl.
 	double inf = getInfinity();
@@ -1520,7 +1659,7 @@ OsiGlpkSolverInterface::setRowLower( int elementIndex, double elementValue )
 
 //-----------------------------------------------------------------------------
 void
-OsiGlpkSolverInterface::setRowUpper( int elementIndex, double elementValue )
+OGSI::setRowUpper( int elementIndex, double elementValue )
 {
 	// Could be in OsiSolverInterfaceImpl.
 	double inf = getInfinity();
@@ -1552,32 +1691,53 @@ OsiGlpkSolverInterface::setRowUpper( int elementIndex, double elementValue )
 
 //-----------------------------------------------------------------------------
 
-void
-OsiGlpkSolverInterface::setRowBounds( int elementIndex, double lower, double upper )
+/*
+  As with setColBounds, just changing the bounds should not invalidate the
+  current rim vectors.
+*/
+
+void OGSI::setRowBounds (int i, double lower, double upper)
 {
-	freeCachedData( OsiGlpkSolverInterface::FREECACHED_ROW );
+/*
+  Free only the row and column solution, keep the cached structural vectors.
+*/
+  freeCachedData(OGSI::KEEPCACHED_PROBLEM) ;
+/*
+  Figure out the correct row type for glpk and push the change down into the
+  solver. 1-based addressing.
+*/
+  double inf = getInfinity() ;
+  int type ;
 
-	double inf = getInfinity();
+  if( lower == upper)
+  { type = LPX_FX ; }
+  else
+  if (lower > -inf && upper < inf)
+  { type = LPX_DB ; }
+  else
+  if (lower > -inf)
+  { type = LPX_LO ; }
+  else
+  if (upper < inf)
+  { type = LPX_UP ; }
+  else
+  { type = LPX_FR ; }
 
-	int type;
-	if( lower == upper )
-		type = LPX_FX;
-	else if( lower > -inf && upper < inf )
-		type = LPX_DB;
-	else if( lower > -inf )
-		type = LPX_LO;
-	else if( upper < inf)
-		type = LPX_UP;
-	else
-		type = LPX_FR;
+  lpx_set_row_bnds(lp_,i+1,type,lower,upper) ;
+/*
+  Update cached vectors, if they exist.
+*/
+  if (rowlower_)
+  { rowlower_[i] = lower ; }
+  if (rowupper_)
+  { rowupper_[i] - upper ; }
 
-	lpx_set_row_bnds( getMutableModelPtr(), elementIndex+1, type, lower, upper );
-}
+  return ; }
 
 //-----------------------------------------------------------------------------
 
 void
-OsiGlpkSolverInterface::setRowType(int elementIndex, char sense, double rightHandSide,
+OGSI::setRowType(int elementIndex, char sense, double rightHandSide,
 								   double range)
 {
 	// Could be in OsiSolverInterfaceImpl.
@@ -1589,7 +1749,7 @@ OsiGlpkSolverInterface::setRowType(int elementIndex, char sense, double rightHan
 
 //-----------------------------------------------------------------------------
 
-void OsiGlpkSolverInterface::setRowSetBounds(const int* indexFirst,
+void OGSI::setRowSetBounds(const int* indexFirst,
 					     const int* indexLast,
 					     const double* boundList)
 {
@@ -1600,7 +1760,7 @@ void OsiGlpkSolverInterface::setRowSetBounds(const int* indexFirst,
 //-----------------------------------------------------------------------------
 
 void
-OsiGlpkSolverInterface::setRowSetTypes(const int* indexFirst,
+OGSI::setRowSetTypes(const int* indexFirst,
 				       const int* indexLast,
 				       const char* senseList,
 				       const double* rhsList,
@@ -1613,27 +1773,27 @@ OsiGlpkSolverInterface::setRowSetTypes(const int* indexFirst,
 //#############################################################################
 
 void
-OsiGlpkSolverInterface::setContinuous(int index)
+OGSI::setContinuous(int index)
 {
         LPX *model = getMutableModelPtr();
-	freeCachedData( OsiGlpkSolverInterface::FREECACHED_COLUMN );
+	freeCachedData( OGSI::FREECACHED_COLUMN );
 	lpx_set_col_kind( model, index+1, LPX_CV );
 }
 
 //-----------------------------------------------------------------------------
 
 void
-OsiGlpkSolverInterface::setInteger(int index)
+OGSI::setInteger(int index)
 {
         LPX *model = getMutableModelPtr();
-	freeCachedData( OsiGlpkSolverInterface::FREECACHED_COLUMN );
+	freeCachedData( OGSI::FREECACHED_COLUMN );
 	lpx_set_col_kind( model, index+1, LPX_IV );
 }
 
 //-----------------------------------------------------------------------------
 
 void
-OsiGlpkSolverInterface::setContinuous(const int* indices, int len)
+OGSI::setContinuous(const int* indices, int len)
 {
 	// Could be in OsiSolverInterfaceImpl.
 	int i;
@@ -1646,7 +1806,7 @@ OsiGlpkSolverInterface::setContinuous(const int* indices, int len)
 //-----------------------------------------------------------------------------
 
 void
-OsiGlpkSolverInterface::setInteger(const int* indices, int len)
+OGSI::setInteger(const int* indices, int len)
 {
 	// Could be in OsiSolverInterfaceImpl.
 	int i;
@@ -1658,9 +1818,9 @@ OsiGlpkSolverInterface::setInteger(const int* indices, int len)
 
 //#############################################################################
 
-void OsiGlpkSolverInterface::setObjSense(double s)
+void OGSI::setObjSense(double s)
 {
-	freeCachedData( OsiGlpkSolverInterface::FREECACHED_RESULTS );
+	freeCachedData( OGSI::FREECACHED_RESULTS );
 	if( s == +1.0 )
 		lpx_set_obj_dir( getMutableModelPtr(), LPX_MIN );
 	else
@@ -1669,7 +1829,7 @@ void OsiGlpkSolverInterface::setObjSense(double s)
 
 //-----------------------------------------------------------------------------
 
-void OsiGlpkSolverInterface::setColSolution(const double * cs)
+void OGSI::setColSolution(const double * cs)
 {
   // You probably don't want to use this function.  You probably want
   // setWarmStart instead.
@@ -1696,7 +1856,7 @@ void OsiGlpkSolverInterface::setColSolution(const double * cs)
 
 //-----------------------------------------------------------------------------
 
-void OsiGlpkSolverInterface::setRowPrice(const double * rs)
+void OGSI::setRowPrice(const double * rs)
 {
   // You probably don't want to use this function.  You probably want
   // setWarmStart instead.
@@ -1725,16 +1885,14 @@ void OsiGlpkSolverInterface::setRowPrice(const double * rs)
 // Problem modifying methods (matrix)
 //#############################################################################
 
-void
-OsiGlpkSolverInterface::addCol(const CoinPackedVectorBase& vec,
-			       const double collb, const double colub,
-			       const double obj)
+void OGSI::addCol (const CoinPackedVectorBase& vec,
+		   const double collb, const double colub, const double obj)
 {
   // Note: GLPK expects only non-zero coefficients will be given in 
   //   lpx_set_mat_col and will abort if there are any zeros.  So any
   //   zeros must be removed prior to calling lpx_set_mat_col.
         LPX *model = getMutableModelPtr();
-	freeCachedData(OsiGlpkSolverInterface::KEEPCACHED_ROW);
+	freeCachedData(OGSI::KEEPCACHED_ROW);
 
 	lpx_add_cols( model, 1 );
 	int numcols = getNumCols();
@@ -1768,15 +1926,21 @@ OsiGlpkSolverInterface::addCol(const CoinPackedVectorBase& vec,
 	lpx_set_mat_col( model, numcols, count, indices_adj, elements_adj );
 	delete [] indices_adj;
 	delete [] elements_adj;
+
+# if OGSI_TRACK_FRESH > 2
+  std::cout
+    << "OGSI(" << std::hex << this << std::dec
+    << ")::addCol: new column." << std::endl ;
+# endif
+
 }
 
 //-----------------------------------------------------------------------------
 
-void
-OsiGlpkSolverInterface::addCols(const int numcols,
-				const CoinPackedVectorBase * const * cols,
-				const double* collb, const double* colub,
-				const double* obj)
+void OGSI::addCols (const int numcols,
+		    const CoinPackedVectorBase *const *cols,
+		    const double *collb, const double *colub,
+		    const double *obj)
 {
   // ??? We could do this more efficiently now 
 	// Could be in OsiSolverInterfaceImpl.
@@ -1788,32 +1952,40 @@ OsiGlpkSolverInterface::addCols(const int numcols,
 //-----------------------------------------------------------------------------
 
 void
-OsiGlpkSolverInterface::deleteCols(const int num, const int * columnIndices)
+OGSI::deleteCols(const int num, const int * columnIndices)
 {
 	int *columnIndicesPlus1 = new int[num+1];
         LPX *model = getMutableModelPtr();
-	freeCachedData( OsiGlpkSolverInterface::KEEPCACHED_ROW );
+	freeCachedData( OGSI::KEEPCACHED_ROW );
 
 	for( int i = 0; i < num; i++ )
 	{
 		columnIndicesPlus1[i+1]=columnIndices[i]+1;
+		deleteColNames(columnIndices[i],1);
 	}
 	lpx_del_cols(model,num,columnIndicesPlus1);
 	delete [] columnIndicesPlus1;
+
+# if OGSI_TRACK_FRESH > 0
+  std::cout
+    << "OGSI(" << std::hex << this << std::dec
+    << ")::deleteCols: deleted " << num << "columns." << std::endl ;
+# endif
+
 }
 
 //-----------------------------------------------------------------------------
 
 void
-OsiGlpkSolverInterface::addRow(const CoinPackedVectorBase& vec,
-							   const double rowlb, const double rowub)
+OGSI::addRow (const CoinPackedVectorBase& vec,
+	      const double rowlb, const double rowub)
 {
   // Note: GLPK expects only non-zero coefficients will be given in 
   //   lpx_set_mat_row and will abort if there are any zeros.  So any
   //   zeros must be removed prior to calling lpx_set_mat_row.
 
         LPX *model = getMutableModelPtr();
-	freeCachedData( OsiGlpkSolverInterface::KEEPCACHED_COLUMN );
+	freeCachedData( OGSI::KEEPCACHED_COLUMN );
 
 	lpx_add_rows( model, 1 );
 	int numrows = getNumRows();
@@ -1845,12 +2017,19 @@ OsiGlpkSolverInterface::addRow(const CoinPackedVectorBase& vec,
 	lpx_set_mat_row( model, numrows, count, indices_adj, elements_adj );
 	delete [] indices_adj;
 	delete [] elements_adj;
+
+# if OGSI_TRACK_FRESH > 0
+  std::cout
+    << "OGSI(" << std::hex << this << std::dec
+    << ")::addRow: new row." << std::endl ;
+# endif
+
 }
 
 //-----------------------------------------------------------------------------
 
 void
-OsiGlpkSolverInterface::addRow(const CoinPackedVectorBase& vec,
+OGSI::addRow(const CoinPackedVectorBase& vec,
 			       const char rowsen, const double rowrhs,
 			       const double rowrng)
 {
@@ -1864,7 +2043,7 @@ OsiGlpkSolverInterface::addRow(const CoinPackedVectorBase& vec,
 //-----------------------------------------------------------------------------
 
 void
-OsiGlpkSolverInterface::addRows(const int numrows, 
+OGSI::addRows(const int numrows, 
 				const CoinPackedVectorBase * const * rows,
 				const double* rowlb, const double* rowub)
 {
@@ -1878,7 +2057,7 @@ OsiGlpkSolverInterface::addRows(const int numrows,
 //-----------------------------------------------------------------------------
 
 void
-OsiGlpkSolverInterface::addRows(const int numrows,
+OGSI::addRows(const int numrows,
 				const CoinPackedVectorBase * const * rows,
 				const char* rowsen, const double* rowrhs,
 				const double* rowrng)
@@ -1891,21 +2070,60 @@ OsiGlpkSolverInterface::addRows(const int numrows,
 
 //-----------------------------------------------------------------------------
 
-void
-OsiGlpkSolverInterface::deleteRows(const int num, const int * rowIndices)
-{
+/*
+  There's an expectation that a valid basis will be maintained across row
+  deletions. Fortunately, glpk will do this automagically as long as we play
+  by the rules and delete only slack constraints. If we delete a constraint
+  with a nonbasic slack, we're in trouble.
+*/
+void OGSI::deleteRows (const int num, const int *osiIndices)
 
-	int *rowIndicesPlus1 = new int[num+1];
-        LPX *model = getMutableModelPtr();
-	freeCachedData( OsiGlpkSolverInterface::KEEPCACHED_COLUMN );
+{ int *glpkIndices = new int[num+1] ;
+  int i,ndx ;
+/*
+  Arguably, column results remain valid across row deletion.
+*/
+  freeCachedData(OGSI::KEEPCACHED_COLUMN) ;
+/*
+  Glpk uses 1-based indexing, so convert the array of indices. While we're
+  doing that, delete the row names.
+*/
+  for (ndx = 0 ; ndx < num ; ndx++)
+  { glpkIndices[ndx+1] = osiIndices[ndx]+1 ;
+    deleteRowNames(osiIndices[ndx],1) ; }
+/*
+  See if we're about to do damage. If we delete a row with a nonbasic slack,
+  we'll have an excess of basic variables.
+*/
+  int notBasic = 0 ;
+  for (ndx = 1 ; ndx <= num ; ndx++)
+  { i = glpkIndices[ndx] ;
+    int stati = lpx_get_row_stat(lp_,i) ;
+    if (stati != LPX_BS)
+    { notBasic++ ; } }
+  if (notBasic)
+  {
+#  if OGSI_VERBOSITY > 1
+    std::cout
+      << "OGSI(" << std::hex << this << std::dec
+      << ")::deleteRows: deleting " << notBasic << " tight constraints; "
+      << "basis is no longer valid." << std::endl ;
+#  endif
+  }
+/*
+  Tell glpk to delete the rows.
+*/
+  lpx_del_rows(lp_,num,glpkIndices) ;
 
-	for( int i = 0; i < num; i++ )
-	{
-		rowIndicesPlus1[i+1]=rowIndices[i]+1;
-	}
-	lpx_del_rows(model, num, rowIndicesPlus1);
-	delete [] rowIndicesPlus1;
-}
+  delete [] glpkIndices ;
+
+# if OGSI_TRACK_FRESH > 0
+  std::cout
+    << "OGSI(" << std::hex << this << std::dec
+    << ")::deleteRows: deleted " << num << " rows." << std::endl ;
+# endif
+
+  return ; }
 
 //#############################################################################
 // Methods to input a problem
@@ -1915,11 +2133,16 @@ OsiGlpkSolverInterface::deleteRows(const int num, const int * rowIndices)
 // inefficient.  Should improve this. ???
 
 void
-OsiGlpkSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
+OGSI::loadProblem( const CoinPackedMatrix& matrix,
 				     const double* collb, const double* colub,
 				     const double* obj,
 				     const double* rowlb, const double* rowub )
 { 
+#   if OGSI_TRACK_FRESH > 0
+    std::cout
+      << "OGSI(" << std::hex << this << std::dec << ")::loadProblem."
+      << std::endl ;
+#   endif
 /*
   There's always an existing LPX object. If it's empty, we can simply load in
   the new data. If it's non-empty, easiest to delete it and start afresh. When
@@ -1942,9 +2165,15 @@ OsiGlpkSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
     lpx_set_real_parm(lp_,LPX_K_TOLDJ,dualTolerance_) ;
     lpx_set_real_parm(lp_,LPX_K_TOLBND,primalTolerance_) ;
     lpx_set_obj_coef(lp_,0,objOffset_) ;
-    lpx_set_prob_name(lp_,const_cast<char *>(probName_.c_str())) ; }
+    lpx_set_prob_name(lp_,const_cast<char *>(probName_.c_str())) ;
+#   if OGSI_TRACK_FRESH > 0
+    std::cout
+      << "    emptying LPX(" << std::hex << lp_ << std::dec << ")."
+      << std::endl ;
+#   endif
+    }
 
-  freeCachedData(OsiGlpkSolverInterface::KEEPCACHED_NONE) ;
+  freeCachedData(OGSI::KEEPCACHED_NONE) ;
 
   double inf = getInfinity();
 
@@ -1977,7 +2206,7 @@ OsiGlpkSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
 //-----------------------------------------------------------------------------
 
 void
-OsiGlpkSolverInterface::assignProblem( CoinPackedMatrix*& matrix,
+OGSI::assignProblem( CoinPackedMatrix*& matrix,
 				       double*& collb, double*& colub,
 				       double*& obj,
 				       double*& rowlb, double*& rowub )
@@ -2001,7 +2230,7 @@ OsiGlpkSolverInterface::assignProblem( CoinPackedMatrix*& matrix,
 //-----------------------------------------------------------------------------
 
 void
-OsiGlpkSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
+OGSI::loadProblem( const CoinPackedMatrix& matrix,
 				     const double* collb, const double* colub,
 				     const double* obj,
 				     const char* rowsen, const double* rowrhs,
@@ -2029,7 +2258,7 @@ OsiGlpkSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
 //-----------------------------------------------------------------------------
 
 void
-OsiGlpkSolverInterface::assignProblem( CoinPackedMatrix*& matrix,
+OGSI::assignProblem( CoinPackedMatrix*& matrix,
 				       double*& collb, double*& colub,
 				       double*& obj,
 				       char*& rowsen, double*& rowrhs,
@@ -2055,14 +2284,14 @@ OsiGlpkSolverInterface::assignProblem( CoinPackedMatrix*& matrix,
 //-----------------------------------------------------------------------------
 
 void
-OsiGlpkSolverInterface::loadProblem(const int numcols, const int numrows,
+OGSI::loadProblem(const int numcols, const int numrows,
 				   const int* start, const int* index,
 				   const double* value,
 				   const double* collb, const double* colub,
 				   const double* obj,
 				   const double* rowlb, const double* rowub)
 {
-  freeCachedData( OsiGlpkSolverInterface::KEEPCACHED_NONE );
+  freeCachedData( OGSI::KEEPCACHED_NONE );
   LPX *model = getMutableModelPtr();
   double inf = getInfinity();
 
@@ -2107,7 +2336,7 @@ OsiGlpkSolverInterface::loadProblem(const int numcols, const int numrows,
 //-----------------------------------------------------------------------------
 
 void
-OsiGlpkSolverInterface::loadProblem(const int numcols, const int numrows,
+OGSI::loadProblem(const int numcols, const int numrows,
 				   const int* start, const int* index,
 				   const double* value,
 				   const double* collb, const double* colub,
@@ -2138,7 +2367,7 @@ OsiGlpkSolverInterface::loadProblem(const int numcols, const int numrows,
   Call OSI::readMps, which will parse the mps file and call
   OsiGlpk::loadProblem.
 */
-int OsiGlpkSolverInterface::readMps (const char *filename,
+int OGSI::readMps (const char *filename,
 				     const char *extension)
 {
 
@@ -2151,7 +2380,7 @@ int OsiGlpkSolverInterface::readMps (const char *filename,
 // Write mps files
 //-----------------------------------------------------------------------------
 
-void OsiGlpkSolverInterface::writeMps( const char * filename,
+void OGSI::writeMps( const char * filename,
 				       const char * extension,
 				       double objSense ) const
 {
@@ -2178,7 +2407,7 @@ void OsiGlpkSolverInterface::writeMps( const char * filename,
 //############################################################################
 
 // Get a pointer to the instance
-LPX * OsiGlpkSolverInterface::getModelPtr ()
+LPX * OGSI::getModelPtr ()
 {
   freeCachedResults();
   return lp_;
@@ -2192,19 +2421,29 @@ LPX * OsiGlpkSolverInterface::getModelPtr ()
 // Default Constructor
 //-----------------------------------------------------------------------------
 
-OsiGlpkSolverInterface::OsiGlpkSolverInterface ()
+OGSI::OsiGlpkSolverInterface ()
 : 
 OsiSolverInterface()
 {
 	gutsOfConstructor();
+
+# if OGSI_TRACK_SOLVERS > 0
+  std::cout
+    << "OGSI(" << std::hex << this << std::dec
+    << "): default constructor." << std::endl ;
+# endif
 }
 
 //-----------------------------------------------------------------------------
 // Clone
 //-----------------------------------------------------------------------------
 
-OsiSolverInterface * OsiGlpkSolverInterface::clone(bool copyData) const
+OsiSolverInterface * OGSI::clone(bool copyData) const
 {
+# if OGSI_TRACK_SOLVERS > 0
+  std::cout
+    << "OGSI(" << std::hex << this << std::dec << "): cloning." << std::endl ;
+# endif
   if (copyData)
     return( new OsiGlpkSolverInterface( *this ) );
   else
@@ -2215,30 +2454,48 @@ OsiSolverInterface * OsiGlpkSolverInterface::clone(bool copyData) const
 // Copy constructor
 //-----------------------------------------------------------------------------
 
-OsiGlpkSolverInterface::OsiGlpkSolverInterface( const OsiGlpkSolverInterface & source )
+OGSI::OsiGlpkSolverInterface( const OsiGlpkSolverInterface & source )
 : 
 OsiSolverInterface(source)
 {
 	gutsOfConstructor();
 	gutsOfCopy( source );
+
+# if OGSI_TRACK_SOLVERS > 0
+  std::cout
+    << "OGSI(" << std::hex << this << "): copy from "
+    << &source << std::dec << "." << std::endl ;
+# endif
 }
 
 //-----------------------------------------------------------------------------
 // Destructor
 //-----------------------------------------------------------------------------
 
-OsiGlpkSolverInterface::~OsiGlpkSolverInterface ()
+OGSI::~OsiGlpkSolverInterface ()
 {
 	gutsOfDestructor();
+
+# if OGSI_TRACK_SOLVERS > 0
+  std::cout
+    << "OGSI(" << std::hex << this << std::dec
+    << "): destructor." << std::endl ;
+# endif
 }
 
 // Resets 
 // ??? look over this carefully to be sure it is correct
-void OsiGlpkSolverInterface::reset()
+void OGSI::reset()
 {
   setInitialData();  // this is from the base class OsiSolverInterface
   gutsOfDestructor();
   gutsOfConstructor() ;
+
+# if OGSI_TRACK_SOLVERS > 0
+  std::cout
+    << "OGSI(" << std::hex << this << std::dec
+    << "): reset." << std::endl ;
+# endif
 
   return ;
 
@@ -2249,7 +2506,7 @@ void OsiGlpkSolverInterface::reset()
 // Assignment operator
 //-----------------------------------------------------------------------------
 
-OsiGlpkSolverInterface& OsiGlpkSolverInterface::operator=( const OsiGlpkSolverInterface& rhs )
+OsiGlpkSolverInterface& OGSI::operator=( const OsiGlpkSolverInterface& rhs )
 {
 	if( this != &rhs )
 	{
@@ -2259,6 +2516,13 @@ OsiGlpkSolverInterface& OsiGlpkSolverInterface::operator=( const OsiGlpkSolverIn
 		if( rhs.lp_ != NULL )
 			gutsOfCopy( rhs );
 	}
+
+# if OGSI_TRACK_SOLVERS > 0
+  std::cout
+    << "OGSI(" << std::hex << this << "): assign from "
+    << &rhs << std::dec << "." << std::endl ;
+# endif
+
 	return *this;
 }
 
@@ -2266,7 +2530,7 @@ OsiGlpkSolverInterface& OsiGlpkSolverInterface::operator=( const OsiGlpkSolverIn
 // Applying cuts
 //#############################################################################
 
-void OsiGlpkSolverInterface::applyColCut( const OsiColCut & cc )
+void OGSI::applyColCut( const OsiColCut & cc )
 {
 	// Could be in OsiSolverInterfaceImpl.
 	const double * colLb = getColLower();
@@ -2335,7 +2599,7 @@ void OsiGlpkSolverInterface::applyColCut( const OsiColCut & cc )
 
 //-----------------------------------------------------------------------------
 
-void OsiGlpkSolverInterface::applyRowCut( const OsiRowCut & rowCut )
+void OGSI::applyRowCut( const OsiRowCut & rowCut )
 {
 	// Could be in OsiSolverInterfaceImpl.
 	addRow( rowCut.row(), rowCut.lb(), rowCut.ub() );
@@ -2345,98 +2609,120 @@ void OsiGlpkSolverInterface::applyRowCut( const OsiRowCut & rowCut )
 // Private methods (non-static and static) and static data
 //#############################################################################
 
-LPX * OsiGlpkSolverInterface::getMutableModelPtr( void ) const
+LPX * OGSI::getMutableModelPtr( void ) const
 {
   return lp_;
 }
 
-void OsiGlpkSolverInterface::gutsOfCopy( const OsiGlpkSolverInterface & source )
-{
-	// Set Objective Sense
-	setObjSense( source.getObjSense() );
+/*
+  This routine must work even if there's no problem loaded in the solver.
+*/
 
-	// Set Rim and constraints
-	const double* obj = source.getObjCoefficients();
-	const double* rhs = source.getRightHandSide();
-	const char* sense = source.getRowSense();
-	const CoinPackedMatrix* cols = source.getMatrixByCol();
-	const double* lb = source.getColLower();
-	const double* ub = source.getColUpper();
-	loadProblem( *cols, lb, ub, obj, sense, rhs, source.getRowRange() );
+void OGSI::gutsOfCopy (const OsiGlpkSolverInterface &source)
 
-	bbWasLast_ = source.bbWasLast_;
-	iter_used_ = source.iter_used_;
+{ LPX *srclpx = source.lp_ ;
+  LPX *lpx = lp_ ;
+  double dblParam ;
+  int intParam ;
+  std::string strParam ;
+/*
+  Copy information from the source OSI that a user might change before
+  loading a problem: objective sense and offset, other OSI parameters.  Use
+  the get/set parameter calls here to hide pushing information into the LPX
+  object. OsiGlpk does not support hints at present; when support is added,
+  they should also be copied.
+*/
+  setObjSense(source.getObjSense()) ;
+  source.getDblParam(OsiObjOffset,dblParam) ;
+  setDblParam(OsiObjOffset,dblParam) ;
 
-	// Copy parameters held in the Osi and push them down into the new
-	// glpk model. The implementation uses a mix of locally held values
-	// and values held strictly in the glpk object.
+  source.getIntParam(OsiNameDiscipline,intParam) ;
+  setIntParam(OsiNameDiscipline,intParam) ;
 
-	LPX *srcmodel = source.getMutableModelPtr();
-	LPX *model = getMutableModelPtr();
-	maxIteration_ = source.maxIteration_;
-	lpx_set_int_parm( model, LPX_K_ITLIM, maxIteration_ ); 
-	hotStartMaxIteration_ = source.hotStartMaxIteration_;
+  source.getIntParam(OsiMaxNumIteration,intParam) ;
+  setIntParam(OsiMaxNumIteration,intParam) ;
+  source.getIntParam(OsiMaxNumIterationHotStart,intParam) ;
+  setIntParam(OsiMaxNumIterationHotStart,intParam) ;
+  
+  source.getDblParam(OsiPrimalObjectiveLimit,dblParam) ;
+  setDblParam(OsiPrimalObjectiveLimit,dblParam) ;
+  source.getDblParam(OsiDualObjectiveLimit,dblParam) ;
+  setDblParam(OsiDualObjectiveLimit,dblParam) ;
+  source.getDblParam(OsiPrimalTolerance,dblParam) ;
+  setDblParam(OsiPrimalTolerance,dblParam) ;
+  source.getDblParam(OsiDualTolerance,dblParam) ;
+  setDblParam(OsiDualTolerance,dblParam) ;
+/*
+  Now --- do we have a problem loaded? If not, we're done.
+*/
+  int n = source.getNumCols() ;
+  int m = source.getNumRows() ;
+  assert(m >= 0 && n >= 0) ;
+  if (m == 0 && n == 0)
+  { 
+#   if OGSI_TRACK_SOLVERS > 0
+    std::cout
+      << "    no problem loaded." << std::endl ;
+#   endif
+    return ; }
+/*
+  We have rows and/or columns, so we need to transfer the problem. Do a few
+  parameters and status fields that may have changed if a problem is loaded.
+  Then pull the problem information and load it into the lpx object for this
+  OSI. Information on integrality must be copied over separately.
+*/
+  source.getStrParam(OsiProbName,strParam) ;
+  setStrParam(OsiProbName,strParam) ;
+  bbWasLast_ = source.bbWasLast_ ;
+  iter_used_ = source.iter_used_ ;
 
-	dualObjectiveLimit_ = source.dualObjectiveLimit_;
-	if (getObjSense()==1)  // minimization
-	  lpx_set_real_parm( model, LPX_K_OBJUL, dualObjectiveLimit_ );
-	else                   // maximization
-	  lpx_set_real_parm( model, LPX_K_OBJLL, dualObjectiveLimit_ );
-	primalObjectiveLimit_ = source.primalObjectiveLimit_;
-	if (getObjSense()==1) // minimization
-	  lpx_set_real_parm( model, LPX_K_OBJLL, primalObjectiveLimit_ );
-	else
-	  lpx_set_real_parm( model, LPX_K_OBJUL, primalObjectiveLimit_ );
-	dualTolerance_ = source.dualTolerance_;
-	lpx_set_real_parm( model, LPX_K_TOLDJ, dualTolerance_ );
-	primalTolerance_ = source.primalTolerance_;
-	lpx_set_real_parm( model, LPX_K_TOLBND, primalTolerance_ );
-	// OsiObjOffset
-        objOffset_ = source.objOffset_ ;
-	lpx_set_obj_coef( model, 0, objOffset_ );
+  const double *obj = source.getObjCoefficients() ;
+  const CoinPackedMatrix *cols = source.getMatrixByCol() ;
+  const double *lb = source.getColLower() ;
+  const double *ub = source.getColUpper() ;
+  const double *rlb = source.getRowLower() ;
+  const double *rub = source.getRowUpper() ;
+  loadProblem(*cols,lb,ub,obj,rlb,rub) ;
 
-	probName_ = source.probName_ ;
-	lpx_set_prob_name(model,const_cast<char *>(probName_.c_str()));
+  int i,j ;
+  for (j = 0 ; j < n ; j++)
+  { if (source.isInteger(j))
+    { setInteger(j) ; } }
+/*
+  Copy the solution information. We need to be a bit careful here. Even though
+  the source has something loaded as a problem, there's no guarantee that we've
+  even called glpk, so we can't consult glpk directly for solution values.
+*/
+  setColSolution(source.getColSolution()) ;
+  setRowPrice(source.getRowPrice()) ;
+/* 
+  We can, however, consult it directly for variable status: glpk initialises
+  this information as soon as columns and/or rows are created. Of course, that
+  applies to the problem we've just created, too. If we're just copying
+  nonsense, then don't bother. Once we've copied the status into the new lpx
+  object, do the warm-up.
+*/
+  if (lpx_get_status(srclpx) != LPX_UNDEF)
+  { for (j = 1 ; j <= n ; j++)
+    { int statj = lpx_get_col_stat(srclpx,j) ;
+      lpx_set_col_stat(lpx,j,statj) ; }
+    for (i = 1 ; i <= m ; i++)
+    { int stati = lpx_get_row_stat(srclpx,i) ;
+      lpx_set_row_stat(lpx,i,stati) ; }
 
-	int numcols = getNumCols();
-	// Set MIP information
-	int j;
-	for( j = 0; j < numcols; j++ )
-	{
-		if( !source.isContinuous(j) )
-		{
-			setInteger(j);
-		}
-	}
+    int retval = lpx_warm_up(lpx) ;
+#   if OGSI_TRACK_SOLVERS > 1
+    std::cout
+      << "    lpx_warm_up returns " << retval << "." << std::endl ;
+#   endif
+    assert(retval == LPX_E_OK) ; }
 
-	// Set Solution
+  return ; }
 
-	// In this case, it's easier to use GLPK's own functions than
-	// to go through COIN/OSI interface.
-	int tagx;
-	for ( j = 1; j <= numcols; j++ )
-	  {
-	    tagx=lpx_get_col_stat(model,j);
-	    lpx_set_col_stat( model, j, tagx );
-	  }
-	int numrows = getNumRows();
-	for ( j = 1; j <= numrows; j++ )
-	  {
-	    tagx=lpx_get_row_stat(srcmodel,j);
-	    lpx_set_row_stat( model, j, tagx );
-	  }
-
-	// In case the cache is different, we'll use setColSolution
-	setColSolution(source.getColSolution());
-	setRowPrice(source.getRowPrice());
-
-	// Now we have GLPK construct the basis so it has solution values
-	lpx_warm_up( model );
-}
 
 //-----------------------------------------------------------------------------
 
-void OsiGlpkSolverInterface::gutsOfConstructor()
+void OGSI::gutsOfConstructor()
 {
   bbWasLast_ = 0;
   iter_used_ = 0;
@@ -2458,6 +2744,7 @@ void OsiGlpkSolverInterface::gutsOfConstructor()
 
   maxIteration_ = INT_MAX;
   hotStartMaxIteration_ = 0;
+  nameDisc_ = 0;
 
   dualObjectiveLimit_ = DBL_MAX;
   primalObjectiveLimit_ = DBL_MAX;
@@ -2497,7 +2784,7 @@ void OsiGlpkSolverInterface::gutsOfConstructor()
 
 //-----------------------------------------------------------------------------
 
-void OsiGlpkSolverInterface::gutsOfDestructor()
+void OGSI::gutsOfDestructor()
 {
 	if( lp_ != NULL )
 	{
@@ -2527,7 +2814,7 @@ void OsiGlpkSolverInterface::gutsOfDestructor()
 // free cached vectors
 //-----------------------------------------------------------------------------
 
-void OsiGlpkSolverInterface::freeCachedColRim()
+void OGSI::freeCachedColRim()
 {
 	delete [] ctype_;
 	delete [] obj_;
@@ -2541,7 +2828,7 @@ void OsiGlpkSolverInterface::freeCachedColRim()
 
 //-----------------------------------------------------------------------------
 
-void OsiGlpkSolverInterface::freeCachedRowRim()
+void OGSI::freeCachedRowRim()
 {
 	delete [] rowsense_;
 	delete [] rhs_;
@@ -2557,7 +2844,7 @@ void OsiGlpkSolverInterface::freeCachedRowRim()
 
 //-----------------------------------------------------------------------------
 
-void OsiGlpkSolverInterface::freeCachedMatrix()
+void OGSI::freeCachedMatrix()
 {
 	delete matrixByRow_;
 	delete matrixByCol_;
@@ -2567,7 +2854,7 @@ void OsiGlpkSolverInterface::freeCachedMatrix()
 
 //-----------------------------------------------------------------------------
 
-void OsiGlpkSolverInterface::freeCachedResults()
+void OGSI::freeCachedResults()
 {
         iter_used_ = 0;
 	isAbandoned_ = false;
@@ -2586,23 +2873,23 @@ void OsiGlpkSolverInterface::freeCachedResults()
 
 //-----------------------------------------------------------------------------
 
-void OsiGlpkSolverInterface::freeCachedData( int keepCached )
+void OGSI::freeCachedData( int keepCached )
 {
-	if( !(keepCached & OsiGlpkSolverInterface::KEEPCACHED_COLUMN) )
+	if( !(keepCached & OGSI::KEEPCACHED_COLUMN) )
 		freeCachedColRim();
-	if( !(keepCached & OsiGlpkSolverInterface::KEEPCACHED_ROW) )
+	if( !(keepCached & OGSI::KEEPCACHED_ROW) )
 		freeCachedRowRim();
-	if( !(keepCached & OsiGlpkSolverInterface::KEEPCACHED_MATRIX) )
+	if( !(keepCached & OGSI::KEEPCACHED_MATRIX) )
 		freeCachedMatrix();
-	if( !(keepCached & OsiGlpkSolverInterface::KEEPCACHED_RESULTS) )
+	if( !(keepCached & OGSI::KEEPCACHED_RESULTS) )
 		freeCachedResults();
 }
 
 //-----------------------------------------------------------------------------
 
-void OsiGlpkSolverInterface::freeAllMemory()
+void OGSI::freeAllMemory()
 {
-	freeCachedData(OsiGlpkSolverInterface::KEEPCACHED_NONE);
+	freeCachedData(OGSI::KEEPCACHED_NONE);
 	delete[] hotStartCStat_;
 	delete[] hotStartRStat_;
 	hotStartCStat_ = NULL;
@@ -2610,3 +2897,64 @@ void OsiGlpkSolverInterface::freeAllMemory()
 	hotStartRStat_ = NULL;
 	hotStartRStatSize_ = 0;
 }
+
+//-----------------------------------------------------------------------------
+
+/*!
+  Set the objective function name.
+*/
+void OGSI::setObjName (std::string name)
+
+{ OsiSolverInterface::setObjName(name) ;
+  lpx_set_obj_name(lp_,const_cast<char *>(name.c_str())) ; }
+
+/*!
+  Set a row name. Make sure both glpk and OSI see the same name.
+*/
+void OGSI::setRowName (int ndx, std::string name)
+
+{ int nameDiscipline ;
+/*
+  Quietly do nothing if the index is out of bounds.
+*/
+  if (ndx < 0 || ndx >= getNumRows())
+  { return ; }
+/*
+  Get the name discipline. Quietly do nothing if it's auto.
+*/
+  (void) getIntParam(OsiNameDiscipline,nameDiscipline) ;
+  if (nameDiscipline == 0)
+  { return ; }
+/*
+  Set the name in the OSI base, then in the consys structure.
+*/
+  OsiSolverInterface::setRowName(ndx,name) ;
+  lpx_set_row_name(lp_,ndx+1,const_cast<char *>(name.c_str())) ;
+
+  return ; }
+
+/*!
+  Set a column name. Make sure both glpk and OSI see the same name.
+*/
+void OGSI::setColName (int ndx, std::string name)
+
+{ int nameDiscipline ;
+/*
+  Quietly do nothing if the index is out of bounds.
+*/
+  if (ndx < 0 || ndx >= getNumCols())
+  { return ; }
+/*
+  Get the name discipline. Quietly do nothing if it's auto.
+*/
+  (void) getIntParam(OsiNameDiscipline,nameDiscipline) ;
+  if (nameDiscipline == 0)
+  { return ; }
+/*
+  Set the name in the OSI base, then in the consys structure.
+*/
+  OsiSolverInterface::setColName(ndx,name) ;
+  lpx_set_col_name(lp_,ndx+1,const_cast<char *>(name.c_str())) ;
+
+  return ; }
+

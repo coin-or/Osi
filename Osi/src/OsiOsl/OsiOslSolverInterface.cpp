@@ -185,6 +185,8 @@ OsiOslSolverInterface::setIntParam(OsiIntParam key, int value)
     break;
   case OsiLastIntParam:
     return false;
+  default:
+    return false;
   }
   return true;
 }
@@ -218,6 +220,9 @@ OsiOslSolverInterface::setDblParam(OsiDblParam key, double value)
     return retval == 0;
 
   case OsiLastDblParam:
+    return false;
+  
+  default:
     return false;
   }
   return true;
@@ -257,6 +262,8 @@ OsiOslSolverInterface::getIntParam(OsiIntParam key, int& value) const
     break;
   case OsiLastIntParam:
     return false;
+  default:
+    return false;
   }
   return true;
 }
@@ -286,6 +293,8 @@ OsiOslSolverInterface::getDblParam(OsiDblParam key, double& value) const
     break;
   case OsiLastDblParam:
     return false;
+  default:
+    return false;
   }
   return true;
 }
@@ -303,6 +312,8 @@ OsiOslSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
     value = "osl";
     break;
   case OsiLastStrParam:
+    return false;
+  default:
     return false;
   }
   return true;

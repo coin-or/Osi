@@ -277,6 +277,74 @@ public:
   virtual std::vector<double*> getPrimalRays(int maxNumRays) const;
   
   //@}
+
+  /*! \name Methods for row and column names.
+
+    Because OsiCbc is a pass-through class, it's necessary to override any
+    virtual method in order to be sure we catch an override by the underlying
+    solver. See the OsiSolverInterface class documentation for detailed
+    descriptions.
+  */
+  //@{
+
+    /*! \brief Generate a standard name of the form Rnnnnnnn or Cnnnnnnn */
+
+    virtual std::string dfltRowColName(char rc,
+				 int ndx, unsigned digits = 7) const ;
+
+    /*! \brief Return the name of the objective function */
+
+    virtual std::string getObjName (unsigned maxLen = std::string::npos) const ;
+
+    /*! \brief Set the name of the objective function */
+
+    virtual void setObjName (std::string name) ;
+
+    /*! \brief Return the name of the row.  */
+
+    virtual std::string getRowName(int rowIndex,
+				   unsigned maxLen = std::string::npos) const ;
+
+    /*! \brief Return a pointer to a vector of row names */
+
+    virtual const OsiNameVec &getRowNames() ;
+
+    /*! \brief Set a row name */
+
+    virtual void setRowName(int ndx, std::string name) ;
+
+    /*! \brief Set multiple row names */
+
+    virtual void setRowNames(OsiNameVec &srcNames,
+		     int srcStart, int len, int tgtStart) ;
+
+    /*! \brief Delete len row names starting at index tgtStart */
+
+    virtual void deleteRowNames(int tgtStart, int len) ;
+  
+    /*! \brief Return the name of the column */
+
+    virtual std::string getColName(int colIndex,
+				   unsigned maxLen = std::string::npos) const ;
+
+    /*! \brief Return a pointer to a vector of column names */
+
+    virtual const OsiNameVec &getColNames() ;
+
+    /*! \brief Set a column name */
+
+    virtual void setColName(int ndx, std::string name) ;
+
+    /*! \brief Set multiple column names */
+
+    virtual void setColNames(OsiNameVec &srcNames,
+		     int srcStart, int len, int tgtStart) ;
+
+    /*! \brief Delete len column names starting at index tgtStart */
+    virtual void deleteColNames(int tgtStart, int len) ;
+
+  //@}
+
   //@}
   
   //---------------------------------------------------------------------------

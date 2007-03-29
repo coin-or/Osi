@@ -45,7 +45,9 @@
 */
 
 #include "CoinFinite.hpp"
-const double CoinInfinity = COIN_DBL_MAX ;
+namespace {
+  const double CoinInfinity = COIN_DBL_MAX ;
+}
 
 #include "CoinTypes.hpp"
 
@@ -53,6 +55,7 @@ const double CoinInfinity = COIN_DBL_MAX ;
 
 #define ODSI OsiDylpSolverInterface
 #define OSI OsiSolverInterface
+#define CWSB CoinWarmStartBasis
 
 #include <string>
 #include <cassert>
@@ -105,11 +108,11 @@ namespace {
   ODSI_TRACK_SOLVERS	track creation, use, and deletion of ODSI objects
   ODSI_TRACK_ACTIVE	track creation and deletion of activeBasis (the
 			active warm start object)
-
- #define ODSI_TRACK_FRESH 1
- #define ODSI_TRACK_SOLVERS 1
- #define ODSI_TRACK_ACTIVE 1
 */
+
+// #define ODSI_TRACK_FRESH 1
+// #define ODSI_TRACK_SOLVERS 1
+// #define ODSI_TRACK_ACTIVE 1
 
 /*! \brief Define to enable paranoid checks.
 
@@ -128,8 +131,8 @@ namespace {
 #ifndef ODSI_PARANOIA
 # define ODSI_PARANOIA 1
 #endif
-// #undef ODSI_PARANOIA
-// #define ODSI_PARANOIA 2
+#undef ODSI_PARANOIA
+#define ODSI_PARANOIA 2
 
 
 /*! \brief Define to enable statistics collection in dylp
@@ -351,16 +354,6 @@ extern "C"
 
 extern void dy_initbasis(int concnt, int factor_freq, double zero_tol) ;
 extern void dy_freebasis() ;
-
-/*
-  These routines work with the literal tree in DylpLib (a legacy, what can I
-  say). DO NOT MIX strings handled with stralloc/strfree with strings handled
-  using malloc/free.  Needless to say, std::string is another beast
-  entirely.
-*/
-
-extern char *stralloc(const char *str) ;
-extern void strfree(const char *str) ;
 
 }
 
@@ -939,7 +932,8 @@ ODSI::gen_rowiparms (contyp_enum* ctypi, double* rhsi, double* rhslowi,
 */
 
 void ODSI::add_col (const CoinPackedVectorBase& coin_colj,
-		    vartyp_enum vtypj, double vlbj, double vubj, double objj)
+		    vartyp_enum vtypj, double vlbj, double vubj, double objj,
+		    const std::string *nme)
 
 { pkvec_struct *pk_colj = packed_vector(coin_colj,getNumRows()) ;
 
@@ -951,10 +945,12 @@ void ODSI::add_col (const CoinPackedVectorBase& coin_colj,
   Generate a name. Not a trivial issue; unique names are critical to the
   ability to write out a system in mps format.
 */
-  std::ostringstream nme ;
-  nme << "var" ;
-  nme << addedColCnt++ ;
-  std::string colname = nme.str() ;
+  std::string colname ;
+  if (nme != 0)
+  { colname = *nme ; }
+  else
+  { int n = getNumCols() ;
+    colname = dfltRowColName('c',n) ; }
   pk_colj->nme = colname.c_str() ;
 /*
   Add the column.
@@ -989,7 +985,8 @@ void ODSI::add_col (const CoinPackedVectorBase& coin_colj,
 */
 
 void ODSI::add_row (const CoinPackedVectorBase &coin_rowi, char clazzi,
-		    contyp_enum ctypi, double rhsi, double rhslowi)
+		    contyp_enum ctypi, double rhsi, double rhslowi,
+		    const std::string *nme)
 
 { pkvec_struct *pk_rowi = packed_vector(coin_rowi,getNumCols()) ;
 
@@ -999,15 +996,16 @@ void ODSI::add_row (const CoinPackedVectorBase &coin_rowi, char clazzi,
   if (!consys) construct_consys(0,0) ;
 /*
   Generate a name. Not a trivial issue; unique names are critical to the
-  ability to write out a system in mps format.
+  ability to write out a system in mps format. If we're given a name as part
+  of the call, use that. Otherwise, use the OSI name facility to generate
+  a default name.
 */
-  std::ostringstream nme ;
-  if (clazzi == 'a')
-  { nme << "con" ; }
+  std::string rowname ;
+  if (nme != 0)
+  { rowname = *nme ; }
   else
-  { nme << "cut" ; }
-  nme << addedRowCnt++ ;
-  std::string rowname = nme.str() ;
+  { int m = getNumRows() ;
+    rowname = dfltRowColName('r',m) ; }
   pk_rowi->nme = rowname.c_str() ;
 /*
   Add the row.
@@ -1065,7 +1063,7 @@ void ODSI::pessimal_primal ()
   double *vub = consys->vub ;
 
   double lbj,ubj,xj ;
-  CoinWarmStartBasis::Status statj ;
+  CWSB::Status statj ;
 /*
   We have columns. Replace or allocate the cached primal solution vector.
 */
@@ -1088,21 +1086,21 @@ void ODSI::pessimal_primal ()
     if (lbj > -odsiInfinity && ubj < odsiInfinity)
     { if (obj[j] > 0)
       { xj = ubj ;
-	statj = CoinWarmStartBasis::atUpperBound ; }
+	statj = CWSB::atUpperBound ; }
       else
       { xj = lbj ;
-	statj = CoinWarmStartBasis::atLowerBound ; } }
+	statj = CWSB::atLowerBound ; } }
     else
     if (lbj > -odsiInfinity)
     { xj = lbj ;
-      statj = CoinWarmStartBasis::atLowerBound ; }
+      statj = CWSB::atLowerBound ; }
     else
     if (ubj < odsiInfinity)
     { xj = ubj ;
-      statj = CoinWarmStartBasis::atLowerBound ; }
+      statj = CWSB::atLowerBound ; }
     else
     { xj = 0 ;
-      statj = CoinWarmStartBasis::isFree ; }
+      statj = CWSB::isFree ; }
     _col_x[inv(j)] = xj ;
     pessbasis->setStructStatus(inv(j),statj) ; }
 /*
@@ -1110,8 +1108,8 @@ void ODSI::pessimal_primal ()
   active.
 */
   for (int i = 1 ; i <= m ; i++)
-  { pessbasis->setArtifStatus(inv(i),CoinWarmStartBasis::basic) ;
-    pessbasis->setConStatus(inv(i),CoinWarmStartBasis::atLowerBound) ; }
+  { pessbasis->setArtifStatus(inv(i),CWSB::basic) ;
+    pessbasis->setConStatus(inv(i),CWSB::atLowerBound) ; }
 /*
   Set pessbasis to be the active basis and return.
 */
@@ -1331,8 +1329,8 @@ void ODSI::load_problem (const CoinMpsIO &mps)
 */
   construct_consys(n,m) ;
   setStrParam(OsiProbName,mps.getProblemName()) ;
-  if (consys->objnme) strfree(consys->objnme) ;
-  consys->objnme = stralloc(mps.getObjectiveName()) ;
+  consys_chgnme(consys,'s',0,mps.getProblemName()) ;
+  consys_chgnme(consys,'o',0,mps.getObjectiveName()) ;
   setDblParam(OsiObjOffset,mps.objectiveOffset()) ;
 /*
   First loop: Insert empty constraints into the new constraint system.
@@ -1404,7 +1402,11 @@ void ODSI::load_problem (const CoinMpsIO &mps)
   { lp_retval = lpFATAL ;
     return ; }
   assert(matrix2->isEquivalent(*getMatrixByCol())) ;
-
+/*
+  Extract the row and column names from the MPS object and install them in the
+  base OSI object. Push up the objective name while we're at it.
+*/
+  setRowColNames(mps) ;
 /*
   Construct a pessimal solution and we're done.
 */
@@ -1726,7 +1728,8 @@ void ODSI::gen_rowparms (int rowcnt,
 
 ODSI::OsiDylpSolverInterface ()
 
-  : initialSolveOptions(0),
+  : OsiSolverInterface(),
+    initialSolveOptions(0),
     resolveOptions(0),
     tolerances(0),
     consys(0),
@@ -1912,7 +1915,7 @@ ODSI::OsiDylpSolverInterface (const OsiDylpSolverInterface& src)
 
 
 /*!
-  An alternate copy constructor; the parameter is ignored (and assumed true).
+  An alternate copy constructor.
 */
 
 inline OsiSolverInterface* ODSI::clone (bool copyData) const
@@ -2355,21 +2358,25 @@ inline void ODSI::setInteger (const int* indices, int len)
 
 /*!
   If the variable is binary, and the new bound is not 0 or 1, the type of the
-  variable is automatically converted to general integer. If the variable is
-  integer, and the new bound is not, the type of the variable is converted to
-  continuous.
+  variable is automatically converted to general integer. This behaviour is
+  required by the OSI unit test.
+  
+  Arguably, if the variable is integer, and the new bound is not, the type of
+  the variable should be converted to continuous, but this has its hazards.
+  The validity of the conversion depends on the integrality tolerance, which
+  the SI does not know. So we do not do this conversion.
 
-  Other conversions are too ambiguous --- suppose a general integer variable
+  Other conversions are also ambiguous --- suppose a general integer variable
   were temporarily bounded between 0 and 1. Should the type really be
   converted from general integer to binary? Similarly, bounding a continuous
   variable to an integer range should not cause it to become integer.
 */
 
-inline void ODSI::setColLower (int i, double val)
+inline void ODSI::setColLower (int j, double lbj)
 
 { 
 # if ODSI_PARANOIA >= 1
-  indexCheck(i,true,"setColLower") ;
+  indexCheck(j,true,"setColLower") ;
 # endif
 
   if (!consys->vlb)
@@ -2384,55 +2391,49 @@ inline void ODSI::setColLower (int i, double val)
 
 /*
   Make a clean integer value if the variable type is integer.
+
+  It's a nice idea, but it'll cause us to fail the OsiCbc unit test.
+
+  if (isInteger(j))
+  { lbj = ceil(lbj-primalTol) ; }
 */
-  double cleanval ;
-  if (isInteger(i))
-  { cleanval = ceil(val-primalTol) ; }
-  else
-  { cleanval = val ; }
 /*
   Change the bound. In general, this can result in a change in the optimal
   solution, but we'll be punctilious and only mark the solution as stale if the
   new bound conflicts with the primal solution value. But ... if the solution's
   already stale, don't check further.
 */
-  consys->vlb[idx(i)] = val ;
+  consys->vlb[idx(j)] = lbj ;
   if (lpprob) setflg(lpprob->ctlopts,lpctlLBNDCHG) ;
 
   if (solnIsFresh == true)
   { const double *xvals = getColSolution() ;
-    if (xvals[i] < val-primalTol)
+    if (xvals[j] < lbj-primalTol)
     { solnIsFresh = false ;
       destruct_col_cache(false) ;
 #     if ODSI_TRACK_FRESH > 0
       std::cout
 	<< "ODSI(" << std::hex << this << std::dec
 	<< ")::setColLower: new bound "
-	<< val << " exceeds current value " << xvals[i]
-	<< " by " << (val - xvals[i]) << "." << std::endl ;
+	<< lbj << " exceeds current value " << xvals[j]
+	<< " by " << (lbj-xvals[j]) << "." << std::endl ;
 #     endif
     } }
 
-# if 0
-  if (isInteger(i))
-  { if (floor(val) != val)
-      setContinuous(i) ;
-    else
-    if (isBinary(i) && !(val == 0.0 || val == 1.0))
-      setInteger(i) ; }
-# endif
-}
+  if (isBinary(j) && !(lbj == 0.0 || lbj == 1.0))
+  { setInteger(j) ; }
+
+  return ; }
 
 /*!
   See the comments with setColLower re. automatic variable type conversions.
-  In short, binary to general integer and integer to continuous are the only
-  ones that will occur.
+  In short, binary to general integer is the only one that will occur.
 */
-inline void ODSI::setColUpper (int i, double val)
+inline void ODSI::setColUpper (int j, double ubj)
 
 { 
 # if ODSI_PARANOIA >= 1
-  indexCheck(i,true,"setColUpper") ;
+  indexCheck(j,true,"setColUpper") ;
 # endif
 
   if (!consys->vub)
@@ -2447,43 +2448,38 @@ inline void ODSI::setColUpper (int i, double val)
 
 /*
   Make a clean integer value if the variable type is integer.
+
+  It's a nice idea, but it'll cause us to fail the OsiCbc unit test.
+
+  if (isInteger(j))
+  { ubj = floor(ubj+primalTol) ; }
 */
-  double cleanval ;
-  if (isInteger(i))
-  { cleanval = floor(val+primalTol) ; }
-  else
-  { cleanval = val ; }
 /*
   Change the bound. In general, this can result in a change in the optimal
   solution, but we'll be punctilious and only mark the solution as stale if the
   new bound conflicts with the primal solution value.
 */
-  consys->vub[idx(i)] = val ;
+  consys->vub[idx(j)] = ubj ;
   if (lpprob) setflg(lpprob->ctlopts,lpctlUBNDCHG) ;
 
   if (solnIsFresh == true)
   { const double *xvals = getColSolution() ;
-    if (xvals[i] > val+primalTol)
+    if (xvals[j] > ubj+primalTol)
     { solnIsFresh = false ;
       destruct_col_cache(false) ;
 #     if ODSI_TRACK_FRESH > 0
       std::cout
 	<< "ODSI(" << std::hex << this << std::dec
 	<< ")::setColUpper: new bound "
-	<< val << " exceeds current value " << xvals[i]
-	<< " by " << (xvals[i]-val) << "." << std::endl ;
+	<< ubj << " exceeds current value " << xvals[j]
+	<< " by " << (xvals[j]-ubj) << "." << std::endl ;
 #     endif
     } }
 
-# if 0
-  if (isInteger(i))
-  { if (floor(val) != val)
-      setContinuous(i) ;
-    else
-    if (isBinary(i) && !(val == 0.0 || val == 1.0))
-      setInteger(i) ; }
-# endif
-}
+  if (isBinary(j) && !(ubj == 0.0 || ubj == 1.0))
+  { setInteger(j) ; }
+
+  return ; }
 
 
 /*!
@@ -2620,7 +2616,7 @@ inline void ODSI::addRow (const CoinPackedVectorBase &row,
   double rhsi,rhslowi ;
 
   gen_rowiparms(&ctypi,&rhsi,&rhslowi,rlb,rub) ;
-  add_row(row,'a',ctypi,rhsi,rhslowi) ;
+  add_row(row,'a',ctypi,rhsi,rhslowi,0) ;
 
   return ; }
 
@@ -2641,7 +2637,7 @@ inline void ODSI::addRow (const CoinPackedVectorBase &coin_row,
   double rhsi,rhslowi ;
 
   gen_rowiparms(&ctypi,&rhsi,&rhslowi,sense,rhs,range) ;
-  add_row(coin_row,'a',ctypi,rhsi,rhslowi) ;
+  add_row(coin_row,'a',ctypi,rhsi,rhslowi,0) ;
 
   return ; }
 
@@ -2660,7 +2656,7 @@ void ODSI::applyRowCut (const OsiRowCut &cut)
   double rhsi,rhslowi ;
 
   gen_rowiparms(&ctypi,&rhsi,&rhslowi,cut.lb(),cut.ub()) ;
-  add_row(cut.row(),'c',ctypi,rhsi,rhslowi) ;
+  add_row(cut.row(),'c',ctypi,rhsi,rhslowi,0) ;
   
   return ; }
 
@@ -2682,7 +2678,7 @@ void ODSI::deleteRows (int count, const int* rows)
 { if (count <= 0) return ;
 /*
   Sort the indices and do the deletions, one by one. This invalidates any
-  existing solution in lpprob.
+  existing solution in lpprob. Remove the names while we're at it.
 */
   vector<int> lclrows = vector<int>(&rows[0],&rows[count]) ;
 
@@ -2693,7 +2689,8 @@ void ODSI::deleteRows (int count, const int* rows)
     bool r = consys_delrow_stable(consys,i) ;
     if (!r)
     { lp_retval = lpFATAL ;
-      return ; } }
+      return ; }
+    deleteRowNames(lclrows[k],1) ; }
   solnIsFresh = false ;
 # if ODSI_TRACK_FRESH > 0
   std::cout
@@ -2712,7 +2709,7 @@ void ODSI::deleteRows (int count, const int* rows)
       dynamic_cast<OsiDylpWarmStartBasis *>(activeBasis) ;
     for (int k = count-1 ; k >= 0 ; k--)
     { int i = lclrows[k] ;
-      if (odwsb->getArtifStatus(i) != CoinWarmStartBasis::basic)
+      if (odwsb->getArtifStatus(i) != CWSB::basic)
       { allslack = false ;
 	break ; } }
     if (allslack == true)
@@ -2800,7 +2797,7 @@ void ODSI::setObjSense (double val)
 inline void ODSI::addCol (const CoinPackedVectorBase& coin_col,
 			  double vlb, double vub, double obj)
 
-{ add_col(coin_col,vartypCON,vlb,vub,obj) ; }
+{ add_col(coin_col,vartypCON,vlb,vub,obj,0) ; }
 
 /*!
   Perhaps better named `applyColCuts', as an OsiColCut object can contain
@@ -2860,7 +2857,8 @@ void ODSI::deleteCols (int count, const int* cols)
     bool r = consys_delcol(consys, j) ;
     if (!r)
     { lp_retval = lpFATAL ;
-      return ; } }
+      return ; }
+    deleteColNames(lclcols[k],1) ; }
   solnIsFresh = false ;
 # if ODSI_TRACK_FRESH > 0
   std::cout
@@ -2879,7 +2877,7 @@ void ODSI::deleteCols (int count, const int* cols)
       dynamic_cast<OsiDylpWarmStartBasis *>(activeBasis) ;
     for (int k = count-1 ; k >= 0 ; k--)
     { int j = lclcols[k] ;
-      if (odwsb->getStructStatus(j) == CoinWarmStartBasis::basic)
+      if (odwsb->getStructStatus(j) == CWSB::basic)
       { allnonbasic = false ;
 	break ; } }
     if (allnonbasic == true)
@@ -3788,7 +3786,7 @@ bool ODSI::setDblParam (OsiDblParam key, double value)
   values are stored, and used by is[Dual,Primal]ObjectiveLimitReached, but
   dylp knows nothing of them.
 */
-{ if (key == OsiLastDblParam) return (false) ;
+{ if (key >= OsiLastDblParam) return (false) ;
 
   bool retval = OSI::setDblParam(key,value) ;
 
@@ -3816,7 +3814,7 @@ bool ODSI::getDblParam (OsiDblParam key, double& value) const
   This simply duplicates OSI::getDblParam. I've kept it here until I decide
   what to do with the parameters Osi[Primal,Dual]ObjectiveLimit.
 */
-{ if (key == OsiLastDblParam) return (false) ;
+{ if (key >= OsiLastDblParam) return (false) ;
 
   bool retval ;
 
@@ -3844,7 +3842,7 @@ bool ODSI::setIntParam (OsiIntParam key, int value)
   overall limit of 3*(per-phase limit). OsiMaxNumIterationHotStart is handled
   in solveFromHotStart.
 */
-{ if (key == OsiLastIntParam) return (false) ;
+{ if (key >= OsiLastIntParam) return (false) ;
 
   bool retval = OSI::setIntParam(key,value) ;
 
@@ -3854,6 +3852,7 @@ bool ODSI::setIntParam (OsiIntParam key, int value)
       resolveOptions->iterlim = initialSolveOptions->iterlim ;
       break ; }
     case OsiMaxNumIterationHotStart:
+    case OsiNameDiscipline:
     { break ; }
     default:
     { retval = false ;
@@ -3869,11 +3868,12 @@ inline bool ODSI::getIntParam (OsiIntParam key, int& value) const
 */
 { bool retval ;
 
-  if (key == OsiLastIntParam) return (false) ;
+  if (key >= OsiLastIntParam) return (false) ;
 
   switch (key)
   { case OsiMaxNumIteration:
     case OsiMaxNumIterationHotStart:
+    case OsiNameDiscipline:
     { retval = OSI::getIntParam(key,value) ;
       break ; }
     default:
@@ -3891,15 +3891,14 @@ bool ODSI::setStrParam (OsiStrParam key, const string& value)
   The problem name is pushed to the constraint system, if it exists.
 */
 
-{ if (key == OsiLastStrParam) return (false) ;
+{ if (key >= OsiLastStrParam) return (false) ;
 
   bool retval = OSI::setStrParam(key,value) ;
 
   switch (key)
   { case OsiProbName:
     { if (consys)
-      { if (consys->nme) strfree(consys->nme) ;
-	consys->nme = stralloc(value.c_str()) ; }
+      { consys_chgnme(consys,'s',0,value.c_str()) ; }
       break ; }
     case OsiSolverName:
     { break ; }
@@ -3914,7 +3913,7 @@ bool ODSI::getStrParam (OsiStrParam key, string& value) const
   This mostly duplicates OSI::getStrParam. It enforces the notion that you
   can't set the solver name, which the default OSI routine does not.
 */
-{ if (key == OsiLastStrParam) return (false) ;
+{ if (key >= OsiLastStrParam) return (false) ;
 
   bool retval = true ;
 
@@ -3982,6 +3981,10 @@ bool ODSI::setHintParam (OsiHintParam key, bool sense,
 */
 
 { bool retval = false ;
+/*
+  Check for out of range.
+*/
+  if (key >= OsiLastHintParam) return (false) ;
 /*
   Set the hint in the OSI structures. Unlike the other set*Param routines,
   setHintParam will return false for key == OsiLastHintParam. Unfortunately,
@@ -4143,7 +4146,11 @@ inline bool ODSI::getHintParam (OsiHintParam key, bool &sense,
   for info.
 */
 
-{ bool retval = OSI::getHintParam(key,sense,strength) ;
+{ bool retval ;
+
+  if (key >= OsiLastHintParam) return (false) ;
+
+  retval = OSI::getHintParam(key,sense,strength) ;
 
   if (retval == false) return (false) ;
 
@@ -4517,7 +4524,7 @@ void ODSI::initialSolve ()
   Remove any active basis and trash any cached solution. The calls to
   destruct_*_cache remove only the cached solution vectors. If we're
   presolving, saveOriginalSys has moved the cached structural vectors and
-  matrices to a save place, otherwise they'll be unaffected.
+  matrices to a safe place, otherwise they'll be unaffected.
 */
 # if ODSI_TRACK_ACTIVE > 0
   std::cout
@@ -5639,17 +5646,17 @@ CoinWarmStart* ODSI::getWarmStart () const
   entered as the negative of the constraint index.
 */
   for (i = 0 ; i < m ; i++)
-  { setStatus(conStatus,i,CoinWarmStartBasis::isFree) ; }
+  { setStatus(conStatus,i,CWSB::isFree) ; }
   for (k = 1 ; k <= basis->len ; k++)
   { i = inv(basis->el[k].cndx) ; 
-    setStatus(conStatus,i,CoinWarmStartBasis::atLowerBound) ;
+    setStatus(conStatus,i,CWSB::atLowerBound) ;
     j = basis->el[k].vndx ;
     if (j < 0)
     { j = inv(-j) ;
-      setStatus(artifStatus,j,CoinWarmStartBasis::basic) ; }
+      setStatus(artifStatus,j,CWSB::basic) ; }
     else
     { j = inv(j) ;
-      setStatus(strucStatus,j,CoinWarmStartBasis::basic) ; } }
+      setStatus(strucStatus,j,CWSB::basic) ; } }
 /*
   Next, scan the conStatus array. For each inactive (loose => isFree)
   constraint, indicate that the logical is basic. For active (tight =>
@@ -5659,18 +5666,18 @@ CoinWarmStart* ODSI::getWarmStart () const
 */
   const double *y = getRowPrice() ;
   for (i = 0 ; i < m ; i++)
-  { if (getStatus(conStatus,i) == CoinWarmStartBasis::isFree)
-    { setStatus(artifStatus,i,CoinWarmStartBasis::basic) ; }
+  { if (getStatus(conStatus,i) == CWSB::isFree)
+    { setStatus(artifStatus,i,CWSB::basic) ; }
     else
-    if (getStatus(artifStatus,i) == CoinWarmStartBasis::isFree)
+    if (getStatus(artifStatus,i) == CWSB::isFree)
     { if (y[i] > 0)
-      { setStatus(artifStatus,i,CoinWarmStartBasis::atUpperBound) ; }
+      { setStatus(artifStatus,i,CWSB::atUpperBound) ; }
       else
-      { setStatus(artifStatus,i,CoinWarmStartBasis::atLowerBound) ; } } }
+      { setStatus(artifStatus,i,CWSB::atLowerBound) ; } } }
 /*
   Now scan the status vector and record the status of nonbasic structural
-  variables. Some information is lost here --- CoinWarmStartBasis::Status
-  doesn't encode NBFX.
+  variables. Some information is lost here --- CWSB::Status doesn't encode
+  NBFX.
 */
   for (j = 1 ; j <= n ; j++)
   { statj = lpprob->status[j] ;
@@ -5678,13 +5685,13 @@ CoinWarmStart* ODSI::getWarmStart () const
     { switch (statj)
       { case vstatNBLB:
 	case vstatNBFX:
-	{ setStatus(strucStatus,inv(j), CoinWarmStartBasis::atLowerBound) ;
+	{ setStatus(strucStatus,inv(j), CWSB::atLowerBound) ;
 	  break ; }
 	case vstatNBUB:
-	{ setStatus(strucStatus,inv(j), CoinWarmStartBasis::atUpperBound) ;
+	{ setStatus(strucStatus,inv(j), CWSB::atUpperBound) ;
 	  break ; }
 	case vstatNBFR:
-	{ setStatus(strucStatus,inv(j), CoinWarmStartBasis::isFree) ;
+	{ setStatus(strucStatus,inv(j), CWSB::isFree) ;
 	  break ; }
 	default:
 	{ delete wsb ;
@@ -5728,7 +5735,7 @@ CoinWarmStart* ODSI::getWarmStart () const
 bool ODSI::setWarmStart (const CoinWarmStart *ws)
 
 { int i,j,k ;
-  CoinWarmStartBasis::Status osi_statlogi,osi_statconi,osi_statvarj ;
+  CWSB::Status osi_statlogi,osi_statconi,osi_statvarj ;
 
 /*
   A null parameter says delete the current active basis and return.
@@ -5747,11 +5754,10 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
     activeIsModified = false ;
     return (true) ; }
 /*
-  Use a dynamic cast to make sure we have a CoinWarmStartBasis. Then check
-  the size --- 0 x 0 is just a request to remove the active basis.
+  Use a dynamic cast to make sure we have a CWSB. Then check the size ---
+  0 x 0 is just a request to remove the active basis.
 */
-  const CoinWarmStartBasis *cwsb =
-			dynamic_cast<const CoinWarmStartBasis *>(ws) ;
+  const CWSB *cwsb = dynamic_cast<const CWSB *>(ws) ;
   if (!cwsb)
   { handler_->message(ODSI_NOTODWSB,messages_) << "Coin" ;
     return (false) ; }
@@ -5843,7 +5849,7 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
   int actcons = 0 ;
   for (i = 1 ; i <= concnt ; i++)
   { osi_statconi = getStatus(conStatus,inv(i)) ;
-    if (osi_statconi == CoinWarmStartBasis::atLowerBound)
+    if (osi_statconi == CWSB::atLowerBound)
     { actcons++ ;
       basis.el[actcons].cndx = i ;
       basis.el[actcons].vndx = 0 ; } }
@@ -5858,13 +5864,13 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
   for (j = 1 ; j <= varcnt ; j++)
   { osi_statvarj = getStatus(strucStatus,inv(j)) ;
     switch (osi_statvarj)
-    { case CoinWarmStartBasis::basic:
+    { case CWSB::basic:
       { k++ ;
 	assert(k <= actcons) ;
 	basis.el[k].vndx = j ;
 	status[j] = (flags) (-k) ;
 	break ; }
-      case CoinWarmStartBasis::atLowerBound:
+      case CWSB::atLowerBound:
       { if (consys->vlb[j] > -odsiInfinity)
 	{ if (consys->vlb[j] == consys->vub[j])
 	  { status[j] = vstatNBFX ; }
@@ -5880,7 +5886,7 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
 	    << dy_prtvstat(vstatNBLB) << dy_prtvstat(status[j])
 	    << CoinMessageEol ; }
 	break ; }
-      case CoinWarmStartBasis::atUpperBound:
+      case CWSB::atUpperBound:
       { if (consys->vub[j] < odsiInfinity)
 	{ if (consys->vlb[j] == consys->vub[j])
 	  { status[j] = vstatNBFX ; }
@@ -5896,7 +5902,7 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
 	    << dy_prtvstat(vstatNBUB) << dy_prtvstat(status[j])
 	    << CoinMessageEol ; }
 	break ; }
-      case CoinWarmStartBasis::isFree:
+      case CWSB::isFree:
       { status[j] = vstatNBFR ;
 	break ; } } }
 /*
@@ -5910,8 +5916,7 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
   for (i = 1 ; i <= concnt ; i++)
   { osi_statlogi = getStatus(artifStatus,inv(i)) ;
     osi_statconi = getStatus(conStatus,inv(i)) ;
-    if (osi_statlogi == CoinWarmStartBasis::basic &&
-	osi_statconi == CoinWarmStartBasis::atLowerBound)
+    if (osi_statlogi == CWSB::basic && osi_statconi == CWSB::atLowerBound)
     { k++ ;
       assert(k <= actcons) ;
       basis.el[k].vndx = -i ; } }
@@ -5931,7 +5936,7 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
       << consys->nme << k << actcons << CoinMessageEol ;
     for (i = 1 ; i <= concnt ; i++)
     { osi_statlogi = getStatus(artifStatus,inv(i)) ;
-      if (osi_statlogi != CoinWarmStartBasis::basic)
+      if (osi_statlogi != CWSB::basic)
       { k++ ;
 	basis.el[k].vndx = -i ;
 	if (k >= actcons) break ; } } }
@@ -6582,3 +6587,71 @@ void ODSI::dylp_printsoln (bool wantSoln, bool wantStats)
   return ; }
 
 //@} // DylpMethods
+
+
+/*! \defgroup NameMethods Methods for row and column names
+
+  The primary reason for overriding the set methods associated with names is
+  so that we can make sure dylp and OSI are holding the same names.
+*/
+//@{
+
+/*!
+  Set the objective function name.
+*/
+void ODSI::setObjName (std::string name)
+
+{ OSI::setObjName(name) ;
+  consys_chgnme(consys,'o',0,name.c_str()) ; }
+
+/*!
+  Set a row name. Make sure both dylp and OSI see the same name.
+*/
+void ODSI::setRowName (int ndx, std::string name)
+
+{ int nameDiscipline ;
+/*
+  Quietly do nothing if the index is out of bounds.
+*/
+  if (ndx < 0 || ndx >= getNumRows())
+  { return ; }
+/*
+  Get the name discipline. Quietly do nothing if it's auto.
+*/
+  (void) getIntParam(OsiNameDiscipline,nameDiscipline) ;
+  if (nameDiscipline == 0)
+  { return ; }
+/*
+  Set the name in the OSI base, then in the consys structure.
+*/
+  OSI::setRowName(ndx,name) ;
+  consys_chgnme(consys,'c',idx(ndx),name.c_str()) ;
+
+  return ; }
+
+/*!
+  Set a column name. Make sure both dylp and OSI see the same name.
+*/
+void ODSI::setColName (int ndx, std::string name)
+
+{ int nameDiscipline ;
+/*
+  Quietly do nothing if the index is out of bounds.
+*/
+  if (ndx < 0 || ndx >= getNumCols())
+  { return ; }
+/*
+  Get the name discipline. Quietly do nothing if it's auto.
+*/
+  (void) getIntParam(OsiNameDiscipline,nameDiscipline) ;
+  if (nameDiscipline == 0)
+  { return ; }
+/*
+  Set the name in the OSI base, then in the consys structure.
+*/
+  OSI::setColName(ndx,name) ;
+  consys_chgnme(consys,'v',idx(ndx),name.c_str()) ;
+
+  return ; }
+
+//@}

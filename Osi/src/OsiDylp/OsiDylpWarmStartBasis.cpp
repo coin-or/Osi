@@ -540,8 +540,6 @@ void ODWSB::deleteRows (int rawTgtCnt, const int *rawTgts)
   will be transferred from src to tgt.
 */
 
-// Temporarily keep out of the compile until CoinUtils catches up.
-#if 0
 void ODWSB::mergeBasis (const CoinWarmStartBasis *cwsb_src,
 		        const XferVec *xferRows, const XferVec *xferCols)
 
@@ -590,7 +588,6 @@ void ODWSB::mergeBasis (const CoinWarmStartBasis *cwsb_src,
 	setStatus(constraintStatus_,tgtNdx+i,stat) ; } } }
 
   return ; }
-#endif // if 0
 
 //@}
 

@@ -80,7 +80,7 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 libOsi_la_LIBADD =
 am_libOsi_la_OBJECTS = OsiAuxInfo.lo OsiBranchingObject.lo \
 	OsiChooseVariable.lo OsiColCut.lo OsiCut.lo OsiCuts.lo \
-	OsiOpbdpSolve.lo OsiPresolve.lo OsiRowCut.lo \
+	OsiNames.lo OsiOpbdpSolve.lo OsiPresolve.lo OsiRowCut.lo \
 	OsiRowCutDebugger.lo OsiSolverBranch.lo OsiSolverInterface.lo
 libOsi_la_OBJECTS = $(am_libOsi_la_OBJECTS)
 depcomp = $(SHELL) $(top_srcdir)/../depcomp
@@ -349,6 +349,7 @@ libOsi_la_SOURCES = \
 	OsiCollections.hpp \
 	OsiCut.cpp OsiCut.hpp \
 	OsiCuts.cpp OsiCuts.hpp \
+	OsiNames.cpp \
 	OsiOpbdpSolve.cpp OsiOpbdpSolve.hpp \
 	OsiPresolve.cpp OsiPresolve.hpp \
 	OsiRowCut.cpp OsiRowCut.hpp \
@@ -489,6 +490,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiColCut.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiCut.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiCuts.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiNames.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiOpbdpSolve.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiPresolve.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiRowCut.Plo@am__quote@

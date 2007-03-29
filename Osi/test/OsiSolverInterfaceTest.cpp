@@ -74,31 +74,52 @@
 #ifdef COIN_OPBDP
 #include "OsiOpbdpSolve.hpp"
 #endif
-//--------------------------------------------------------------------------
+
+/*
+  Define helper routines in the file-local namespace.
+*/
+
+namespace {
+
+//#############################################################################
+// Helper routines for messages.
+//#############################################################################
+
 // A helper function to write out a message about a test failure
-static void
-failureMessage(
-               const std::string & solverName,
-               const std::string & message )
+void failureMessage( const std::string & solverName,
+		     const std::string & message )
 {
   std::string messageText;
   messageText = "*** ";
   messageText += solverName + "SolverInterface testing issue: ";
   messageText += message;
-  std::cerr <<messageText.c_str() <<std::endl;
+  // flush stdout so that error messages are properly interleaved.
+  std::cout.flush() ;
+  std::cerr << messageText.c_str() << std::endl;
 }
 
-static void
-failureMessage(
-               const OsiSolverInterface & si,
-               const std::string & message )
+void failureMessage( const OsiSolverInterface & si,
+		     const std::string & message )
 {
   std::string solverName;
   si.getStrParam(OsiSolverName,solverName);
   failureMessage(solverName,message);
 }
 
-//--------------------------------------------------------------------------
+// Display message on stdout and stderr. Flush cout buffer before printing the
+// message, so that output comes out in order in spite of buffered cout.
+void testingMessage( const char * const msg )
+{
+  std::cout.flush() ;
+  std::cerr <<msg;
+  //cout <<endl <<"*****************************************"
+  //     <<endl <<msg <<endl;
+}
+
+//#############################################################################
+// Vector comparison utility.
+//#############################################################################
+
 // A helper function to compare the equivalence of two vectors 
 static bool
 equivalentVectors(const OsiSolverInterface * si1,
@@ -120,10 +141,6 @@ equivalentVectors(const OsiSolverInterface * si1,
     // Test to see if equal
     if ( !eq(v1[i],v2[i]) ) {
       std::cerr <<"eq " <<i <<" " <<v1[i] <<" " <<v2[i] <<std::endl;
-      //const OsiOslSolverInterface * oslSi = dynamic_cast<const OsiOslSolverInterface*>(si1);
-      //assert(oslSi != NULL);
-      //EKKModel * m = ((OsiOslSolverInterface*)oslSi)->modelPtr();
-      //ekk_printSolution(m);
       retVal = false;
       break;
     }
@@ -132,7 +149,45 @@ equivalentVectors(const OsiSolverInterface * si1,
   return retVal;
 }
 
-//--------------------------------------------------------------------------
+//#############################################################################
+// A routine to build a CoinPackedMatrix matching the exmip1 example.
+//#############################################################################
+
+CoinPackedMatrix &BuildExmip1Mtx ()
+/*
+  Simple function to build a packed matrix for the exmip1 example used in
+  tests. The function exists solely to hide the intermediate variables.
+  Probably could be written as an initialised declaration.
+  See COIN/Mps/Sample/exmip1.mps for a human-readable presentation.
+
+  Ordered triples seem easiest. They're listed in row-major order.
+*/
+
+{ int rowndxs[] = { 0, 0, 0, 0, 0,
+		    1, 1,
+		    2, 2,
+		    3, 3,
+		    4, 4, 4 } ;
+  int colndxs[] = { 0, 1, 3, 4, 7,
+		    1, 2,
+		    2, 5,
+		    3, 6,
+		    0, 4, 7 } ;
+  double coeffs[] = { 3.0, 1.0, -2.0, -1.0, -1.0,
+		      2.0, 1.1,
+		      1.0, 1.0,
+		      2.8, -1.2,
+		      5.6, 1.0, 1.9 } ;
+
+  static CoinPackedMatrix exmip1mtx =
+    CoinPackedMatrix(true,&rowndxs[0],&colndxs[0],&coeffs[0],14) ;
+
+  return (exmip1mtx) ; }
+
+//#############################################################################
+// Short tests contributed by Vivian DeSmedt. Thanks!
+//#############################################################################
+
 bool test1VivianDeSmedt(OsiSolverInterface *s)
 {
 	bool ret = true;
@@ -219,6 +274,7 @@ bool test1VivianDeSmedt(OsiSolverInterface *s)
 }
 
 //--------------------------------------------------------------------------
+
 bool test2VivianDeSmedt(OsiSolverInterface *s)
 {
 	bool ret = true;
@@ -311,8 +367,8 @@ bool test2VivianDeSmedt(OsiSolverInterface *s)
   return ret;
 }
 
-
 //--------------------------------------------------------------------------
+
 bool test3VivianDeSmedt(OsiSolverInterface *s)
 {
 	bool ret = true;
@@ -369,6 +425,7 @@ bool test3VivianDeSmedt(OsiSolverInterface *s)
 }
 
 //--------------------------------------------------------------------------
+
 bool test4VivianDeSmedt(OsiSolverInterface *s)
 {
 	bool ret = true;
@@ -491,7 +548,6 @@ bool test5VivianDeSmedt(OsiSolverInterface *s)
 
 //--------------------------------------------------------------------------
 
-
 bool test6VivianDeSmedt(OsiSolverInterface *s)
 {
 	bool ret = true;
@@ -548,7 +604,6 @@ bool test6VivianDeSmedt(OsiSolverInterface *s)
 }
 
 //--------------------------------------------------------------------------
-
 
 bool test7VivianDeSmedt(OsiSolverInterface *s)
 {
@@ -767,6 +822,7 @@ bool test10VivianDeSmedt(OsiSolverInterface *s)
 }
 
 //--------------------------------------------------------------------------
+
 bool test11VivianDeSmedt(OsiSolverInterface *s)
 {
 	bool ret = true;
@@ -1106,8 +1162,718 @@ bool test15VivianDeSmedt(OsiSolverInterface *s)
 	return ret;
 }
 
+//#############################################################################
+// Routines to test various feature groups
+//#############################################################################
+
+/*! \brief Test row and column name manipulation
+
+  emptySi should be an empty solver interface, fn the path to the exmpi1
+  example.
+*/
+
+void testNames (const OsiSolverInterface *emptySi, std::string fn)
+{ int nameDiscipline ;
+  bool boolResult ;
+  int intResult ;
+  int errCnt = 0 ;
+  bool recognisesOsiNames = true ;
+
+  OsiSolverInterface *si = emptySi->clone() ;
+
+  OsiSolverInterface::OsiNameVec exmip1RowNames(0) ;
+  exmip1RowNames.push_back("ROW01") ;
+  exmip1RowNames.push_back("ROW02") ;
+  exmip1RowNames.push_back("ROW03") ;
+  exmip1RowNames.push_back("ROW04") ;
+  exmip1RowNames.push_back("ROW05") ;
+  OsiSolverInterface::OsiNameVec exmip1ColNames(0) ;
+  exmip1ColNames.push_back("COL01") ;
+  exmip1ColNames.push_back("COL02") ;
+  exmip1ColNames.push_back("COL03") ;
+  exmip1ColNames.push_back("COL04") ;
+  exmip1ColNames.push_back("COL05") ;
+  exmip1ColNames.push_back("COL06") ;
+  exmip1ColNames.push_back("COL07") ;
+  exmip1ColNames.push_back("COL08") ;
+
+  std::cout << "Testing row/column name handling." << std::endl ;
+/*
+  Try to get the solver name, but don't immediately abort.
+*/
+  std::string solverName = "Unknown solver" ;
+  boolResult = si->getStrParam(OsiSolverName,solverName);
+  if (boolResult = false)
+  { failureMessage(solverName,"OsiSolverName parameter get") ; }
+/*
+  Checking default names. dfltRowColName is pretty liberal about indices, but
+  they should never be negative.
+*/
+  std::string dfltName = si->dfltRowColName('o',0,5) ;
+  std::cout
+    << "Default objective name is \"" << dfltName
+    << "\" expected \"OBJECT\"." << std::endl ;
+  if (dfltName != "OBJECT")
+  { failureMessage(solverName,"Default objective name / name truncation") ; }
+  dfltName = si->dfltRowColName('r',-1,5) ;
+  std::cout
+    << "Default name for invalid row index is " << dfltName
+    << "\" expected \"!!invalid Row-1!!\"." << std::endl ;
+  if (dfltName != "!!invalid Row-1!!")
+  { failureMessage(solverName,"default name for invalid row index") ; }
+  dfltName = si->dfltRowColName('c',-1,5) ;
+  std::cout
+    << "Default name for invalid column index is " << dfltName
+    << "\" expected \"!!invalid Col-1!!\"." << std::endl ;
+  if (dfltName != "!!invalid Col-1!!")
+  { failureMessage(solverName,"default name for invalid column index") ; }
+/*
+  Start by telling the SI to use lazy names and see if it comes up with the
+  right names from the MPS file.
+*/
+  std::cout << "Testing lazy names from MPS input file." << std::endl ;
+  nameDiscipline = 1 ;
+  boolResult = si->setIntParam(OsiNameDiscipline,nameDiscipline) ;
+  if (boolResult == false)
+  { failureMessage(solverName,
+		   "Does not recognise OsiNameDiscipline.") ;
+    recognisesOsiNames = false ; }
+
+  intResult = si->readMps(fn.c_str(),"mps") ;
+  if (intResult != 0)
+  { failureMessage(solverName,"Read MPS input file") ;
+    return ; }
+
+  OsiSolverInterface::OsiNameVec rowNames ;
+  int rowNameCnt ;
+  OsiSolverInterface::OsiNameVec colNames ;
+  int colNameCnt ;
+  std::string objName ;
+
+  int m = si->getNumRows() ;
+
+  if (recognisesOsiNames)
+  { objName = si->getObjName() ;
+    std::cout
+      << "Objective name is \"" << objName
+      << "\" expected \"OBJ\"." << std::endl ;
+    if (objName != "OBJ")
+    { failureMessage(solverName,"objective name from mps file") ; }
+    if (objName != si->getRowName(m))
+    { failureMessage(solverName,"objective name disagreement") ; }
+
+    rowNames = si->getRowNames() ;
+    rowNameCnt = rowNames.size() ;
+    std::cout
+      << "Read " << rowNameCnt << " names from " << fn.c_str()
+      << ", expected " << exmip1RowNames.size() << "." << std::endl ;
+    if (rowNameCnt != exmip1RowNames.size())
+    { failureMessage(solverName,"row name count from mps file") ; }
+    for (int i = 0 ; i < rowNameCnt ; i++)
+    { if (rowNames[i] != exmip1RowNames[i])
+      { std::cout << "ERROR! " ;
+	errCnt++ ; }
+      std::cout
+	<< "Row " << i << " is \"" << rowNames[i]
+	<< "\" expected \"" << exmip1RowNames[i] << "\"." << std::endl ; }
+
+    colNames = si->getColNames() ;
+    colNameCnt = colNames.size() ;
+    std::cout
+      << "Read " << colNameCnt << " names from " << fn.c_str()
+      << ", expected " << exmip1ColNames.size() << "." << std::endl ;
+    if (colNameCnt != exmip1ColNames.size())
+    { failureMessage(solverName,"column name count from mps file") ; }
+    for (int j = 0 ; j < colNameCnt ; j++)
+    { if (colNames[j] != exmip1ColNames[j])
+      { std::cout << "ERROR! " ;
+	errCnt++ ; }
+      std::cout
+	<< "Column " << j << " is " << colNames[j] 
+	<< "\" expected \"" << exmip1ColNames[j] << "\"." << std::endl ; } }
+
+/*
+  Switch to name discipline 0. We should see default names.
+*/
+  if (recognisesOsiNames)
+  { std::cout << "Switching to no names (aka default names)." << std::endl ;
+    nameDiscipline = 0 ;
+    boolResult = si->setIntParam(OsiNameDiscipline,nameDiscipline) ;
+    if (boolResult == false)
+    { failureMessage(solverName,"OsiNameDiscipline = 0 parameter set") ;
+      return ; } }
+/*
+  This block of tests should pass even if the underlying Osi doesn't recognise
+  OsiNameDiscipline.
+*/
+  rowNames = si->getRowNames() ;
+  if (rowNames.size() != 0)
+  { failureMessage(solverName,
+		   "Nonzero row name vector length, discipline = 0.") ; }
+  for (int i = 0 ; i < m ; i++)
+  { if (si->getRowName(i) != si->dfltRowColName('r',i))
+    { std::cout << "ERROR! " ;
+      errCnt++ ; }
+    std::cout
+      << "Row " << i << " is \"" << si->getRowName(i)
+      << "\" expected \"" << si->dfltRowColName('r',i)
+      << "\"." << std::endl ; }
+  colNames = si->getColNames() ;
+  if (colNames.size() != 0)
+  { failureMessage(solverName,
+		   "Nonzero column name vector length, discipline = 0.") ; }
+  int n = si->getNumCols() ;
+  for (int j = 0 ; j < n ; j++)
+  { if (si->getColName(j) != si->dfltRowColName('c',j))
+    { std::cout << "ERROR! " ;
+      errCnt++ ; }
+    std::cout
+      << "Column " << j << " is \"" << si->getColName(j)
+      << "\" expected \"" << si->dfltRowColName('c',j)
+      << "\"." << std::endl ; }
+/*
+  This is as much as we can ask if the underlying solver doesn't recognise
+  OsiNameDiscipline. Return if that's the case.
+*/
+  if (!recognisesOsiNames)
+  { if (errCnt > 0)
+    { std::ostringstream msg ;
+      msg << errCnt << " naming errors." ;
+      failureMessage(solverName,msg.str()) ; }
+    return ; }
+/*
+  Switch back. The previous names should again be available.
+*/
+  std::cout << "Switching back to lazy names." << std::endl ;
+  nameDiscipline = 1 ;
+  boolResult = si->setIntParam(OsiNameDiscipline,nameDiscipline) ;
+  if (boolResult == false)
+  { failureMessage(solverName,"OsiNameDiscipline parameter set") ;
+    return ; }
+  rowNames = si->getRowNames() ;
+  rowNameCnt = rowNames.size() ;
+  std::cout
+    << rowNameCnt << " names available, expected "
+    << exmip1RowNames.size() << "." << std::endl ;
+  if (rowNameCnt != exmip1RowNames.size())
+  { failureMessage(solverName,
+		   "row name count, discipline switch 0 -> 1") ; }
+  for (int i = 0 ; i < rowNameCnt ; i++)
+  { if (rowNames[i] != exmip1RowNames[i])
+    { std::cout << "ERROR! " ;
+      errCnt++ ; }
+    std::cout
+      << "Row " << i << " is \"" << rowNames[i]
+      << "\" expected \"" << exmip1RowNames[i] << "\"." << std::endl ; }
+
+  colNames = si->getColNames() ;
+  colNameCnt = colNames.size() ;
+  std::cout
+    << colNameCnt << " names available, expected "
+    << exmip1ColNames.size() << "." << std::endl ;
+  if (colNameCnt != exmip1ColNames.size())
+  { failureMessage(solverName,
+		   "column name count, discipline switch 0 -> 1") ; }
+  for (int j = 0 ; j < colNameCnt ; j++)
+  { if (colNames[j] != exmip1ColNames[j])
+    { std::cout << "ERROR! " ;
+	errCnt++ ; }
+    std::cout
+      << "Column " << j << " is " << colNames[j] 
+      << "\" expected \"" << exmip1ColNames[j] << "\"." << std::endl ; }
+
+/*
+  Add a row. We should see no increase in the size of the row name vector,
+  and asking for the name of the cut should return a default name.
+*/
+  int nels = 5 ;
+  int indices[5] = { 0, 2, 3, 5, 7 } ;
+  double els[5] = { 1.0, 3.0, 4.0, 5.0, 42.0 } ;
+  CoinPackedVector newRow(nels,indices,els) ;
+  si->addRow(newRow,-4.2, .42) ;
+  if (si->getNumRows() != m+1)
+  { failureMessage(solverName,"add new row") ; }
+  std::cout
+    << "Added new row " << si->getNumRows()-1
+    << "; (default) name is \"" << si->getRowName(m)
+    << "\"." << std::endl ;
+  rowNames = si->getRowNames() ;
+  rowNameCnt = rowNames.size() ;
+  if (rowNameCnt != m)
+  { failureMessage(solverName,"incorrect length row name vector") ; }
+  if (si->getRowName(m) != si->dfltRowColName('r',m))
+  { failureMessage(solverName,"incorrect default row name.") ; }
+
+/*
+  Now set a name for the row.
+*/
+  std::string newRowName = "NewRow" ;
+  std::cout
+    << "Setting row name to \"" << newRowName << "\"." << std::endl ;
+  si->setRowName(m,newRowName) ;
+  std::cout
+    << "Recovering name as \"" << si->getRowName(m) << "\"." << std::endl ;
+  if (si->getRowName(m) != newRowName)
+  { failureMessage(solverName,"set row name") ; }
+
+/*
+  Ok, who are we really talking with? Delete row 0 and see if the names
+  change appropriately. Since deleteRows is pure virtual, the names will
+  change only if the underlying OsiXXX supports names (i.e., it must make
+  a call to deleteRowNames).
+*/
+  std::cout
+    << "Testing row deletion." << std::endl ;
+  si->deleteRows(1,indices) ;
+  rowNames = si->getRowNames() ;
+  rowNameCnt = rowNames.size() ;
+  std::cout
+    << rowNameCnt << " names available, expected " << m << "." << std::endl ;
+  if (rowNameCnt != m)
+  { failureMessage(solverName,
+		   "row name count, row deletion") ; }
+  for (int i = 0 ; i < rowNameCnt ; i++)
+  { std::string expected ;
+    if (i != m-1)
+    { expected = exmip1RowNames[i+1] ; }
+    else
+    { expected = newRowName ; }
+    if (rowNames[i] != expected)
+    { std::cout << "ERROR! " ;
+      errCnt++ ; }
+    std::cout
+      << "Row " << i << " is \"" << rowNames[i]
+      << "\" expected \"" << expected << "\"." << std::endl ; }
+
+/*
+  Add/delete a column and do the same tests. Expected results as above.
+*/
+  nels = 3 ;
+  indices[0] = 0 ;
+  indices[1] = 2 ;
+  indices[2] = 4 ;
+  els[0] = 1.0 ;
+  els[1] = 4.0 ;
+  els[2] = 24.0 ;
+  CoinPackedVector newCol(nels,indices,els) ;
+  si->addCol(newCol,-4.2, .42, 42.0) ;
+  if (si->getNumCols() != n+1)
+  { failureMessage(solverName,"add new column") ; }
+  std::cout
+    << "Added new column " << si->getNumCols()-1
+    << "; (default) name is \"" << si->getColName(n)
+    << "\"." << std::endl ;
+  colNames = si->getColNames() ;
+  colNameCnt = colNames.size() ;
+  if (colNameCnt != n)
+  { failureMessage(solverName,"incorrect length column name vector") ; }
+  if (si->getColName(n) != si->dfltRowColName('c',n))
+  { failureMessage(solverName,"incorrect default column name.") ; }
+  std::string newColName = "NewCol" ;
+  std::cout
+    << "Setting column name to \"" << newColName << "\"." << std::endl ;
+  si->setColName(n,newColName) ;
+  std::cout
+    << "Recovering name as \"" << si->getColName(n) << "\"." << std::endl ;
+  if (si->getColName(n) != newColName)
+  { failureMessage(solverName,"set column name") ; }
+  std::cout
+    << "Testing column deletion." << std::endl ;
+  si->deleteCols(1,indices) ;
+  colNames = si->getColNames() ;
+  colNameCnt = colNames.size() ;
+  std::cout
+    << colNameCnt << " names available, expected " << n << "." << std::endl ;
+  if (colNameCnt != n)
+  { failureMessage(solverName,
+		   "column name count, column deletion") ; }
+  for (int j = 0 ; j < colNameCnt ; j++)
+  { std::string expected ;
+    if (j != n-1)
+    { expected = exmip1ColNames[j+1] ; }
+    else
+    { expected = newColName ; }
+    if (colNames[j] != expected)
+    { std::cout << "ERROR! " ;
+      errCnt++ ; }
+    std::cout
+      << "Column " << j << " is \"" << colNames[j]
+      << "\" expected \"" << expected << "\"." << std::endl ; }
+
+/*
+  Interchange row and column names.
+*/
+  std::cout << "Testing bulk replacement of names." << std::endl ;
+  si->setRowNames(exmip1ColNames,0,3,2) ;
+  rowNames = si->getRowNames() ;
+  rowNameCnt = rowNames.size() ;
+  std::cout
+    << rowNameCnt << " names available, expected "
+    << m << "." << std::endl ;
+  if (rowNameCnt != m)
+  { failureMessage(solverName,"row name count after bulk replace") ; }
+  for (int i = 0 ; i < rowNameCnt ; i++)
+  { std::string expected ;
+    if (i < 2)
+    { expected = exmip1RowNames[i+1] ; }
+    else
+    if (i >= 2 && i <= 4)
+    { expected = exmip1ColNames[i-2] ; }
+    else
+    { expected = newRowName ; }
+    if (rowNames[i] != expected)
+    { std::cout << "ERROR! " ;
+      errCnt++ ; }
+    std::cout
+      << "Row " << i << " is \"" << rowNames[i]
+      << "\" expected \"" << expected << "\"." << std::endl ; }
+
+  si->setColNames(exmip1RowNames,3,2,0) ;
+  colNames = si->getColNames() ;
+  colNameCnt = colNames.size() ;
+  std::cout
+    << colNameCnt << " names available, expected "
+    << n << "." << std::endl ;
+  if (colNameCnt != n)
+  { failureMessage(solverName,"column name count after bulk replace") ; }
+  for (int j = 0 ; j < colNameCnt ; j++)
+  { std::string expected ;
+    if (j < 2)
+    { expected = exmip1RowNames[j+3] ; }
+    else
+    if (j >= 2 && j <= 6)
+    { expected = exmip1ColNames[j+1] ; }
+    else
+    { expected = newColName ; }
+    if (colNames[j] != expected)
+    { std::cout << "ERROR! " ;
+      errCnt++ ; }
+    std::cout
+      << "Column " << j << " is \"" << colNames[j]
+      << "\" expected \"" << expected << "\"." << std::endl ; }
+/*
+  Delete a few row and column names. Names should shift downward.
+*/
+  std::cout << "Testing name deletion." << std::endl ;
+  si->deleteRowNames(0,2) ;
+  rowNames = si->getRowNames() ;
+  rowNameCnt = rowNames.size() ;
+  std::cout
+    << rowNameCnt << " names available, expected "
+    << m-2 << "." << std::endl ;
+  if (rowNameCnt != m-2)
+  { failureMessage(solverName,"row name count after delete") ; }
+  for (int i = 0 ; i < rowNameCnt ; i++)
+  { std::string expected ;
+    if (i < rowNameCnt)
+    { expected = exmip1ColNames[i] ; }
+    if (rowNames[i] != expected)
+    { std::cout << "ERROR! " ;
+      errCnt++ ; }
+    std::cout
+      << "Row " << i << " is \"" << rowNames[i]
+      << "\" expected \"" << expected << "\"." << std::endl ; }
+  si->deleteColNames(5,3) ;
+  colNames = si->getColNames() ;
+  colNameCnt = colNames.size() ;
+  std::cout
+    << colNameCnt << " names available, expected "
+    << n-3 << "." << std::endl ;
+  if (colNameCnt != n-3)
+  { failureMessage(solverName,"column name count after delete") ; }
+  for (int j = 0 ; j < colNameCnt ; j++)
+  { std::string expected ;
+    if (j < 2)
+    { expected = exmip1RowNames[j+3] ; }
+    else
+    if (j >= 2 && j < colNameCnt)
+    { expected = exmip1ColNames[j+1] ; }
+    if (colNames[j] != expected)
+    { std::cout << "ERROR! " ;
+      errCnt++ ; }
+    std::cout
+      << "Column " << j << " is \"" << colNames[j]
+      << "\" expected \"" << expected << "\"." << std::endl ; }
+/*
+  Finally, switch to full names, and make sure we retrieve full length
+  vectors.
+*/
+  std::cout << "Switching to full names." << std::endl ;
+  nameDiscipline = 2 ;
+  boolResult = si->setIntParam(OsiNameDiscipline,nameDiscipline) ;
+  if (boolResult == false)
+  { failureMessage(solverName,"OsiNameDiscipline parameter set") ;
+    return ; }
+  m = si->getNumRows() ;
+  rowNames = si->getRowNames() ;
+  rowNameCnt = rowNames.size() ;
+  std::cout
+    << rowNameCnt << " names available, expected "
+    << m+1 << "." << std::endl ;
+  if (rowNameCnt != m+1)
+  { failureMessage(solverName,"row name count, discipline = 2") ; }
+  std::cout
+    << "Objective name is \"" << rowNames[m]
+    << "\" expected \"OBJ\"." << std::endl ;
+  if (rowNames[m] != objName)
+  { failureMessage(solverName,"objective name disagreement") ; }
+  for (int i = 0 ; i < rowNameCnt-1 ; i++)
+  { std::string expected ;
+    if (i < 3)
+    { expected = exmip1ColNames[i] ; }
+    else
+    { expected = si->dfltRowColName('r',i) ; }
+    if (rowNames[i] != expected)
+    { std::cout << "ERROR! " ;
+      errCnt++ ; }
+    std::cout
+      << "Row " << i << " is \"" << rowNames[i]
+      << "\" expected \"" << expected << "\"." << std::endl ; }
+
+  n = si->getNumCols() ;
+  colNames = si->getColNames() ;
+  colNameCnt = colNames.size() ;
+  std::cout
+    << colNameCnt << " names available, expected "
+    << n << "." << std::endl ;
+  if (colNameCnt != n)
+  { failureMessage(solverName,"column name count, discipline = 2") ; }
+  for (int j = 0 ; j < colNameCnt ; j++)
+  { std::string expected ;
+    if (j < 2)
+    { expected = exmip1RowNames[j+3] ; }
+    else
+    if (j >= 2 && j <= 4)
+    { expected = exmip1ColNames[j+1] ; }
+    else
+    { expected = si->dfltRowColName('c',j) ; }
+    if (colNames[j] != expected)
+    { std::cout << "ERROR! " ;
+      errCnt++ ; }
+    std::cout
+      << "Column " << j << " is " << colNames[j] 
+      << "\" expected \"" << expected << "\"." << std::endl ; }
+
+  if (errCnt > 0)
+  { std::ostringstream msg ;
+    msg << errCnt << " naming errors." ;
+    failureMessage(solverName,msg.str()) ; }
+  
+}
+
 //--------------------------------------------------------------------------
 
+/*! \brief Tests for a solution imposed by the user.
+
+  Checks the routines setColSolution (primal variables) and setRowSolution
+  (dual variables). Goes on to check that getReducedCost and getRowActivity
+  use the imposed solution.
+
+  The prototype OSI supplied as the parameter should be loaded with a smallish
+  problem.
+*/
+void testSettingSolutions (OsiSolverInterface &proto)
+
+{ OsiSolverInterface *si = proto.clone() ;
+  int i ;
+  int m = si->getNumRows() ;
+  int n = si->getNumCols() ;
+  double mval,cval,rval ;
+  const double *rowVec,*colVec,*objVec ;
+  double *colShouldBe = new double [m] ;
+  double *rowShouldBe = new double [n] ;
+
+  testingMessage("Checking that solver can set row and column solutions.\n") ;
+
+/*
+  Create dummy solution vectors.
+*/
+  double *dummyColSol = new double[n] ;
+  for (i = 0 ; i < n ; i++) 
+  { dummyColSol[i] = i + .5 ; }
+
+  double *dummyRowSol = new double[m] ;
+  for (i = 0 ; i < m ; i++ ) 
+  { dummyRowSol[i] = i - .5 ; }
+
+/*
+  First the values we can set directly: primal (column) and dual (row)
+  solutions.
+*/
+  si->setColSolution(dummyColSol) ;
+  rowVec = si->getColSolution() ;
+  assert(dummyColSol != rowVec) ;
+
+  for (i = 0 ; i < n ;  i++) 
+  { mval = rowVec[i] ;
+    rval = dummyColSol[i] ;
+    assert(mval == rval) ; }
+  
+  si->setRowPrice(dummyRowSol) ;
+  colVec = si->getRowPrice() ;
+
+  for (i = 0 ; i < m ; i++) 
+  { mval = colVec[i] ;
+    cval = dummyRowSol[i] ;
+    assert(mval == cval) ; }
+/*
+  Now let's get serious. Check that reduced costs and row activities match the
+  values we just specified for row and column solutions. We won't abort for
+  these, just issue a message.
+
+  Reduced costs first: c - yA
+
+  Expected values: [ -17.1  -0.5  -2.05  -8  -2  -1.5  3  -8.15 ]
+*/
+  rowVec = si->getReducedCost() ;
+  objVec = si->getObjCoefficients() ;
+  const CoinPackedMatrix *mtx = si->getMatrixByCol() ;
+  mtx->transposeTimes(dummyRowSol,rowShouldBe) ;
+  bool ok = true ;
+  for (i = 0 ; i < n ; i++)
+  { mval = rowVec[i] ;
+    rval = objVec[i] - rowShouldBe[i] ;
+    // std::cout
+    //   << "cbar<" << i << "> = " << mval
+    //   << ", expecting " << rval << "." << std::endl ;
+    if (mval != rval)
+    { ok = false ; } }
+
+  if (!ok)
+  { failureMessage(*si,
+	"Incorrect reduced costs from solution set with setRowPrice.") ; }
+/*
+  Row activity: Ax
+
+  Expected values: [ -16  5.75  8  2  21.55 ]
+*/
+  colVec = si->getRowActivity() ;
+  mtx->times(dummyColSol,colShouldBe) ;
+  ok = true ;
+  for (i = 0 ; i < m ; i++)
+  { mval = colVec[i] ;
+    cval = colShouldBe[i] ;
+    // std::cout
+    //   << "lhs<" << i << "> = " << mval
+    //   << ", expecting " << cval << "." << std::endl ;
+    if (mval != cval)
+    { ok = false ; } }
+
+  if (!ok)
+  { failureMessage(*si,
+	"Incorrect row activity from solution set with setColSolution.") ; }
+
+  delete [] dummyColSol ;
+  delete [] dummyRowSol ;
+
+  delete si ;
+
+  return ; }
+
+
+//--------------------------------------------------------------------------
+
+/*! \brief Helper routines to test OSI parameters.
+
+  A set of helper routines to test integer, double, and hint parameter
+  set/get routines.
+*/
+
+static bool testIntParam(OsiSolverInterface * si, int k, int val)
+{
+  int i = 123456789, orig = 123456789;
+  bool ret;
+  OsiIntParam key = static_cast<OsiIntParam>(k);
+  si->getIntParam(key, orig);
+  if (si->setIntParam(key, val)) {
+    ret = (si->getIntParam(key, i) == true) && (i == val);
+  } else {
+    ret = (si->getIntParam(key, i) == true) && (i == orig);
+  }
+  return ret;
+}
+
+static bool testDblParam(OsiSolverInterface * si, int k, double val)
+{
+  double d = 123456789.0, orig = 123456789.0;
+  bool ret;
+  OsiDblParam key = static_cast<OsiDblParam>(k);
+  si->getDblParam(key, orig);
+  if (si->setDblParam(key, val)) {
+    ret = (si->getDblParam(key, d) == true) && (d == val);
+  } else {
+    ret = (si->getDblParam(key, d) == true) && (d == orig);
+  }
+  return ret;
+}
+
+static bool testHintParam(OsiSolverInterface * si, int k, bool sense,
+			  OsiHintStrength strength, int *throws)
+/*
+  Tests for proper behaviour of [set,get]HintParam methods. The initial get
+  tests the return value to see if the hint is implemented; the values
+  returned for sense and strength are not checked.
+  
+  If the hint is implemented, a pair of set/get calls is performed at the
+  strength specified by the parameter. The set can return true or, at
+  strength OsiForceDo, throw an exception if the solver cannot comply. The
+  rationale would be that only OsiForceDo must be obeyed, so anything else
+  should return true regardless of whether the solver followed the hint.
+
+  The test checks that the value and strength returned by getHintParam matches
+  the previous call to setHintParam. This is arguably wrong --- one can argue
+  that it should reflect the solver's ability to comply with the hint. But
+  that's how the OSI interface standard has evolved up to now.
+
+  If the hint is not implemented, attempting to set the hint should return
+  false, or throw an exception at strength OsiForceDo.
+
+  The testing code which calls testHintParam is set up so that a successful
+  return is defined as true if the hint is implemented, false if it is not.
+  Information printing is suppressed; uncomment and recompile if you want it.
+*/
+{ bool post_sense ;
+  OsiHintStrength post_strength ;
+  bool ret ;
+  OsiHintParam key = static_cast<OsiHintParam>(k) ;
+
+  if (si->getHintParam(key,post_sense,post_strength))
+  { ret = false ;
+    try
+    { if (si->setHintParam(key,sense,strength))
+      { ret = (si->getHintParam(key,post_sense,post_strength) == true) &&
+	      (post_strength == strength) && (post_sense == sense) ; } }
+    catch (CoinError &thrownErr)
+    { // std::ostringstream msg ;
+      // msg << "setHintParam throw for hint " << key << " sense " << sense <<
+      //      " strength " << strength ;
+      // failureMessage(*si,msg.str()) ;
+      // std::cerr << thrownErr.className() << "::" << thrownErr.methodName() <<
+      //	": " << thrownErr.message() << std::endl ;
+      (*throws)++ ;
+      ret = (strength == OsiForceDo) ; } }
+  else
+  { ret = true ;
+    try
+    { ret = si->setHintParam(key,sense,strength) ; }
+    catch (CoinError &thrownErr)
+    { // std::ostringstream msg ;
+      // msg << "setHintParam throw for hint " << key << " sense " << sense <<
+      //      " strength " << strength ;
+      // failureMessage(*si,msg.str()) ;
+      // std::cerr << thrownErr.className() << "::" << thrownErr.methodName() <<
+      //	": " << thrownErr.message() << std::endl ;
+      (*throws)++ ;
+      ret = !(strength == OsiForceDo) ; } }
+  
+  return ret ; }
+
+}	// end file-local namespace
+
+
+//#############################################################################
+// Routines called from outside of this file
+//#############################################################################
 
 /*! \brief Run solvers on NetLib problems.
 
@@ -1508,150 +2274,8 @@ void OsiSolverInterfaceMpsUnitTest
 
 
 //#############################################################################
+// The main event
 //#############################################################################
-
-static bool testIntParam(OsiSolverInterface * si, int k, int val)
-{
-  int i = 123456789, orig = 123456789;
-  bool ret;
-  OsiIntParam key = static_cast<OsiIntParam>(k);
-  si->getIntParam(key, orig);
-  if (si->setIntParam(key, val)) {
-    ret = (si->getIntParam(key, i) == true) && (i == val);
-  } else {
-    ret = (si->getIntParam(key, i) == true) && (i == orig);
-  }
-  return ret;
-}
-static bool testDblParam(OsiSolverInterface * si, int k, double val)
-{
-  double d = 123456789.0, orig = 123456789.0;
-  bool ret;
-  OsiDblParam key = static_cast<OsiDblParam>(k);
-  si->getDblParam(key, orig);
-  if (si->setDblParam(key, val)) {
-    ret = (si->getDblParam(key, d) == true) && (d == val);
-  } else {
-    ret = (si->getDblParam(key, d) == true) && (d == orig);
-  }
-  return ret;
-}
-
-/*
-  Original model
-
-static bool testHintParam(OsiSolverInterface * si, int k, bool val,
-			  OsiHintStrength strength)
-{
-  bool i = true, orig = true;
-  OsiHintStrength i2 = OsiHintDo, orig2 = OsiHintDo;
-  bool ret;
-  OsiHintParam key = static_cast<OsiHintParam>(k);
-  si->getHintParam(key, orig, orig2);
-  if (si->setHintParam(key, val, strength)) {
-    ret = (si->getHintParam(key, i, i2) == true) && (i2 == strength);
-  } else {
-    ret = (si->getHintParam(key, i, i2) == true) && (i2 == orig2);
-  }
-  return ret;
-}
-*/
-
-static bool testHintParam(OsiSolverInterface * si, int k, bool sense,
-			  OsiHintStrength strength, int *throws)
-/*
-  Tests for proper behaviour of [set,get]HintParam methods. The initial get
-  tests the return value to see if the hint is implemented; the values
-  returned for sense and strength are not checked.
-  
-  If the hint is implemented, a pair of set/get calls is performed at the
-  strength specified by the parameter. The set can return true or, at
-  strength OsiForceDo, throw an exception if the solver cannot comply. The
-  rationale would be that only OsiForceDo must be obeyed, so anything else
-  should return true regardless of whether the solver followed the hint.
-
-  The test checks that the value and strength returned by getHintParam matches
-  the previous call to setHintParam. This is arguably wrong --- one can argue
-  that it should reflect the solver's ability to comply with the hint. But
-  that's how the OSI interface standard has evolved up to now.
-
-  If the hint is not implemented, attempting to set the hint should return
-  false, or throw an exception at strength OsiForceDo.
-
-  The testing code which calls testHintParam is set up so that a successful
-  return is defined as true if the hint is implemented, false if it is not.
-  Information printing is suppressed; uncomment and recompile if you want it.
-*/
-{ bool post_sense ;
-  OsiHintStrength post_strength ;
-  bool ret ;
-  OsiHintParam key = static_cast<OsiHintParam>(k) ;
-
-  if (si->getHintParam(key,post_sense,post_strength))
-  { ret = false ;
-    try
-    { if (si->setHintParam(key,sense,strength))
-      { ret = (si->getHintParam(key,post_sense,post_strength) == true) &&
-	      (post_strength == strength) && (post_sense == sense) ; } }
-    catch (CoinError &thrownErr)
-    { // std::ostringstream msg ;
-      // msg << "setHintParam throw for hint " << key << " sense " << sense <<
-      //      " strength " << strength ;
-      // failureMessage(*si,msg.str()) ;
-      // std::cerr << thrownErr.className() << "::" << thrownErr.methodName() <<
-      //	": " << thrownErr.message() << std::endl ;
-      (*throws)++ ;
-      ret = (strength == OsiForceDo) ; } }
-  else
-  { ret = true ;
-    try
-    { ret = si->setHintParam(key,sense,strength) ; }
-    catch (CoinError &thrownErr)
-    { // std::ostringstream msg ;
-      // msg << "setHintParam throw for hint " << key << " sense " << sense <<
-      //      " strength " << strength ;
-      // failureMessage(*si,msg.str()) ;
-      // std::cerr << thrownErr.className() << "::" << thrownErr.methodName() <<
-      //	": " << thrownErr.message() << std::endl ;
-      (*throws)++ ;
-      ret = !(strength == OsiForceDo) ; } }
-  
-  return ret ; }
-
-//#############################################################################
-//#############################################################################
-
-CoinPackedMatrix &BuildExmip1Mtx ()
-/*
-  Simple function to build a packed matrix for the exmip1 example used in
-  tests. The function exists solely to hide the intermediate variables.
-  Probably could be written as an initialised declaration.
-  See COIN/Mps/Sample/exmip1.mps for a human-readable presentation.
-
-  Ordered triples seem easiest. They're listed in row-major order.
-*/
-
-{ int rowndxs[] = { 0, 0, 0, 0, 0,
-		    1, 1,
-		    2, 2,
-		    3, 3,
-		    4, 4, 4 } ;
-  int colndxs[] = { 0, 1, 3, 4, 7,
-		    1, 2,
-		    2, 5,
-		    3, 6,
-		    0, 4, 7 } ;
-  double coeffs[] = { 3.0, 1.0, -2.0, -1.0, -1.0,
-		      2.0, 1.1,
-		      1.0, 1.0,
-		      2.8, -1.2,
-		      5.6, 1.0, 1.9 } ;
-
-  static CoinPackedMatrix exmip1mtx =
-    CoinPackedMatrix(true,&rowndxs[0],&colndxs[0],&coeffs[0],14) ;
-
-  return (exmip1mtx) ; }
-
 
 void
 OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
@@ -1676,6 +2300,10 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     assert( solverName != "Unknown Solver" );
     delete si;
   }
+
+  // Test that the solver correctly handles row and column names.
+
+  testNames(emptySi,fn) ;
 
   // Determine if this emptySi is an OsiVolSolverInterface
   bool volSolverInterface UNUSED = false;
@@ -1905,7 +2533,6 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 
 
   }
-  
   
   // Test matrixByCol method
   {
@@ -2195,32 +2822,10 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   // end of apply cut method testing
     
 
-  // Test setting solution
+  // Test setting primal (column) and row (dual) solutions, and test that
+  // reduced cost and row activity match.
 
-  {
-    OsiSolverInterface & m1 = *(exmip1Si->clone());
-    int i;
-    
-    double * cs = new double[m1.getNumCols()];
-    for ( i = 0;  i < m1.getNumCols();  i++ ) 
-      cs[i] = i + .5;
-    m1.setColSolution(cs);
-    for ( i = 0;  i < m1.getNumCols();  i++ ) 
-      assert(m1.getColSolution()[i] == i + .5);
-    
-
-    double * rs = new double[m1.getNumRows()];
-    for ( i = 0;  i < m1.getNumRows();  i++ ) 
-      rs[i] = i - .5;
-  if ( !symSolverInterface ) {
-    m1.setRowPrice(rs);
-    for ( i = 0;  i < m1.getNumRows();  i++ ) 
-      assert(m1.getRowPrice()[i] == i - .5);
-  }
-    delete [] cs;
-    delete [] rs;
-    delete &m1;
-  }
+  testSettingSolutions(*exmip1Si) ;
 
   // Test column type methods
 
@@ -2792,7 +3397,8 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
           
 	delete si;
       }
-      //Load problem with row rhs and all rims at defaults
+      // Load problem with row rhs, sense and range; column bounds and
+      // objective at defaults.
       {
 	OsiSolverInterface *  si = emptySi->clone(); 
           
@@ -2865,7 +3471,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 
 	double objective[]={5.0,6.0,5.5};
 
-  {
+	{
 	  // Add empty columns
 	  for (i=0;i<3;i++) 
 	    si->addCol(CoinPackedVector(),0.0,10.0,objective[i]);
@@ -2874,19 +3480,20 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 	  si->addRow(row1,2.0,100.0);
 	  si->addRow(row2,2.0,100.0);
 
-    // Vol can not solve problem of this form
-    if ( !volSolverInterface ) {
+	  // Vol can not solve problem of this form
+	  if ( !volSolverInterface ) {
 	    // solve
 	    si->initialSolve();
 
-      CoinRelFltEq eq(1.0e-7) ;
-      double objValue = si->getObjValue();
+	    CoinRelFltEq eq(1.0e-7) ;
+	    double objValue = si->getObjValue();
 	    if ( !eq(objValue,2.0) )
-        failureMessage(solverName,"getObjValue after adding empty cols and then rows.");;
-    }
-  }
+	      failureMessage(solverName,
+			"getObjValue after adding empty cols and then rows.") ;
+	  }
+	}
 
-  delete si;
+	delete si;
       }
       // Test adding rows to NULL - alternative format
       {
@@ -2945,41 +3552,42 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 	CoinPackedVector col3(2,row,col3E);
 
 	double objective[]={5.0,6.0,5.5};
-  {
-     // Add empty rows
-     for (i=0;i<2;i++) 
-	si->addRow(CoinPackedVector(),2.0,100.0);
+	{
+	  // Add empty rows
+	  for (i=0;i<2;i++) 
+	    si->addRow(CoinPackedVector(),2.0,100.0);
 
-     // Add columns
-     if ( volSolverInterface ) {
-	// FIXME: this test could be done w/ the volume, but the rows must not
-	// be ranged.
-	failureMessage(solverName,"addCol add columns to null");
-     }
-     else {
-	si->addCol(col1,0.0,10.0,objective[0]);
-	si->addCol(col2,0.0,10.0,objective[1]);
-	si->addCol(col3,0.0,10.0,objective[2]);
+	  // Add columns
+	  if ( volSolverInterface ) {
+	    // FIXME: this test could be done w/ the volume, but the rows must
+	    // not be ranged.
+	    failureMessage(solverName,"addCol add columns to null");
+	  }
+	  else {
+	    si->addCol(col1,0.0,10.0,objective[0]);
+	    si->addCol(col2,0.0,10.0,objective[1]);
+	    si->addCol(col3,0.0,10.0,objective[2]);
 
-	// solve
-	si->initialSolve();
+	    // solve
+	    si->initialSolve();
 
-	CoinRelFltEq eq(1.0e-7) ;      
-	double objValue = si->getObjValue();
-	if ( !eq(objValue,2.0) )
-	   failureMessage(solverName,"getObjValue after adding empty rows and then cols.");
+	    CoinRelFltEq eq(1.0e-7) ;      
+	    double objValue = si->getObjValue();
+	    if ( !eq(objValue,2.0) )
+	       failureMessage(solverName,
+			"getObjValue after adding empty rows and then cols.");
 
-     }
-  }
+	  }
+	}
 	delete si;
       }
       // Test Simplex interface
       {
-        OsiSolverInterface * si = emptySi->clone();
-        std::string solverName;
-        si->getStrParam(OsiSolverName,solverName);
-        
-        if (si->canDoSimplexInterface()==2) {
+	OsiSolverInterface * si = emptySi->clone();
+	std::string solverName;
+	si->getStrParam(OsiSolverName,solverName);
+
+	if (si->canDoSimplexInterface()==2) {
           // solve an lp by hand
           
           std::string fn = mpsDir+"p0033";
@@ -3253,7 +3861,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     assert(si->setIntParam(OsiLastIntParam, 0) == false);
     assert(si->setDblParam(OsiLastDblParam, 0) == false);
     assert(si->setHintParam(OsiLastHintParam, false) == false);
-    
+
     for (i = 0; i < OsiLastIntParam; ++i) {
       const bool exists = si->getIntParam(static_cast<OsiIntParam>(i), ival);
       // existence and test should result in the same
@@ -3265,27 +3873,22 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       if (exists)
         assert(si->getIntParam(static_cast<OsiIntParam>(i), ival));
     }
-    // Test for glpk since it dies on this test
-    if ( glpkSolverInterface ) {
-      failureMessage(solverName,"[g,s]etDblParam");
-    }
-    else {
-      for (i = 0; i < OsiLastDblParam; ++i) {
-        const bool exists = si->getDblParam(static_cast<OsiDblParam>(i), dval);
-        // existence and test should result in the same
-        assert(!exists ^ testDblParam(si, i, -1e50));
-        assert(!exists ^ testDblParam(si, i, -1e10));
-        assert(!exists ^ testDblParam(si, i, -1));
-        assert(!exists ^ testDblParam(si, i, -1e-4));
-        assert(!exists ^ testDblParam(si, i, -1e-15));
-        assert(!exists ^ testDblParam(si, i, 1e50));
-        assert(!exists ^ testDblParam(si, i, 1e10));
-        assert(!exists ^ testDblParam(si, i, 1));
-        assert(!exists ^ testDblParam(si, i, 1e-4));
-        assert(!exists ^ testDblParam(si, i, 1e-15));
-        if (exists)
-          assert(si->setDblParam(static_cast<OsiDblParam>(i), dval));
-      }
+
+    for (i = 0; i < OsiLastDblParam; ++i) {
+      const bool exists = si->getDblParam(static_cast<OsiDblParam>(i), dval);
+      // existence and test should result in the same
+      assert(!exists ^ testDblParam(si, i, -1e50));
+      assert(!exists ^ testDblParam(si, i, -1e10));
+      assert(!exists ^ testDblParam(si, i, -1));
+      assert(!exists ^ testDblParam(si, i, -1e-4));
+      assert(!exists ^ testDblParam(si, i, -1e-15));
+      assert(!exists ^ testDblParam(si, i, 1e50));
+      assert(!exists ^ testDblParam(si, i, 1e10));
+      assert(!exists ^ testDblParam(si, i, 1));
+      assert(!exists ^ testDblParam(si, i, 1e-4));
+      assert(!exists ^ testDblParam(si, i, 1e-15));
+      if (exists)
+	assert(si->setDblParam(static_cast<OsiDblParam>(i), dval));
     }
 
     // test hints --- see testHintParam for detailed explanation.
@@ -3376,7 +3979,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
        not being integer, do "numberpasses" passes */
     presolvedModel = pinfo.presolvedModel(*si,1.0e-8,false,numberPasses);
     assert(presolvedModel);
-    // switch off presolve
+    // switch off any native presolve
     presolvedModel->setHintParam(OsiDoPresolveInInitial,false);
     presolvedModel->initialSolve();
     double objValue = presolvedModel->getObjValue(); 

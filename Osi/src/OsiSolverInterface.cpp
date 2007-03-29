@@ -152,27 +152,6 @@ OsiSolverInterface::isFreeBinary(int colIndex) const
     ) return true;
   else return false;
 }
-#if 0
-// Return name of row if one exists or Rnnnnnnn
-std::string 
-OsiSolverInterface::getRowName(int rowIndex) const
-{
-  char name[9];
-  sprintf(name,"R%7.7d",rowIndex);
-  std::string rowName(name);
-  return rowName;
-}
-    
-// Return name of column if one exists or Cnnnnnnn
-std::string 
-OsiSolverInterface::getColName(int colIndex) const
-{
-  char name[9];
-  sprintf(name,"C%7.7d",colIndex);
-  std::string colName(name);
-  return colName;
-}
-#endif    
 
 //#############################################################################
 // Built-in (i.e., slow) methods for problem modification
@@ -271,9 +250,48 @@ void OsiSolverInterface::setColUpper(const double * array)
     setColUpper(i,array[i]);
 }
 //-----------------------------------------------------------------------------
+/*
+  Add a named column. Less than efficient, because the underlying solver almost
+  surely generates an internal name when creating the column, which is then
+  replaced.
+*/
+void OsiSolverInterface::addCol(const CoinPackedVectorBase& vec,
+				const double collb, const double colub,
+				const double obj, std::string name)
+{
+  int ndx = getNumCols() ;
+  addCol(vec,collb,colub,obj) ;
+  setColName(ndx,name) ;
+}
+
+void OsiSolverInterface::addCol(int numberElements,
+				const int* rows, const double* elements,
+				const double collb, const double colub,
+				const double obj, std::string name)
+{
+  int ndx = getNumCols() ;
+  addCol(numberElements,rows,elements,collb,colub,obj) ;
+  setColName(ndx,name) ;
+}
+
+/* Convenience alias for addCol */
+void 
+OsiSolverInterface::addCol(int numberElements,
+			   const int* rows, const double* elements,
+			   const double collb, const double colub,   
+			   const double obj) 
+{
+  CoinPackedVector column(numberElements, rows, elements);
+  addCol(column,collb,colub,obj);
+}
+//-----------------------------------------------------------------------------
+/* Add a set of columns (primal variables) to the problem.
+   
+  Default implementations simply make repeated calls to addCol().
+*/
 void
 OsiSolverInterface::addCols(const int numcols,
-			    const CoinPackedVectorBase * const * cols,
+			    const CoinPackedVectorBase* const* cols,
 			    const double* collb, const double* colub,   
 			    const double* obj)
 {
@@ -281,21 +299,9 @@ OsiSolverInterface::addCols(const int numcols,
     addCol(*cols[i], collb[i], colub[i], obj[i]);
   }
 }
-/* Add a column (primal variable) to the problem. */
-void 
-OsiSolverInterface::addCol(int numberElements, const int * rows, const double * elements,
-			   const double collb, const double colub,   
-			   const double obj) 
-{
-  CoinPackedVector column(numberElements, rows, elements);
-  addCol(column,collb,colub,obj);
-}
-/* Add a set of columns (primal variables) to the problem.
-   
-This default implementation simply makes repeated calls to addCol().
-*/
-void OsiSolverInterface::addCols(const int numcols,
-				 const int * columnStarts, const int * rows, const double * elements,
+
+void OsiSolverInterface::addCols(const int numcols, const int* columnStarts,
+				 const int* rows, const double* elements,
 				 const double* collb, const double* colub,   
 				 const double* obj)
 {
@@ -309,6 +315,7 @@ void OsiSolverInterface::addCols(const int numcols,
 	   obj ? obj[i] : 0.0);
   }
 }
+//-----------------------------------------------------------------------------
 // Add columns from a build object
 void 
 OsiSolverInterface::addCols(const CoinBuild & buildObject)
@@ -437,13 +444,76 @@ OsiSolverInterface::addCols( CoinModel & modelObject)
   }
 }
 //-----------------------------------------------------------------------------
+/*
+  Add a named row. Less than efficient, because the underlying solver almost
+  surely generates an internal name when creating the row, which is then
+  replaced.
+*/
+void OsiSolverInterface::addRow(const CoinPackedVectorBase& vec,
+				const double rowlb, const double rowub,
+				std::string name)
+{
+  int ndx = getNumRows() ;
+  addRow(vec,rowlb,rowub) ;
+  setRowName(ndx,name) ;
+}
+
+void OsiSolverInterface::addRow(const CoinPackedVectorBase& vec,
+				const char rowsen, const double rowrhs,
+				const double rowrng, std::string name)
+{
+  int ndx = getNumRows() ;
+  addRow(vec,rowsen,rowrhs,rowrng) ;
+  setRowName(ndx,name) ;
+}
+
+/* Convenience alias for addRow. */
+void 
+OsiSolverInterface::addRow(int numberElements,
+			   const int *columns, const double *elements,
+			   const double rowlb, const double rowub) 
+{
+  CoinPackedVector row(numberElements,columns,elements);
+  addRow(row,rowlb,rowub);
+}
+//-----------------------------------------------------------------------------
+/* Add a set of rows (constraints) to the problem.
+   
+  The default implementation simply makes repeated calls to addRow().
+*/
+void 
+OsiSolverInterface::addRows(const int numrows, const int* rowStarts,
+			    const int* columns, const double* elements,
+			    const double* rowlb, const double* rowub)
+{
+  double infinity = getInfinity();
+  for (int i = 0; i < numrows; ++i) {
+    int start = rowStarts[i];
+    int number = rowStarts[i+1]-start;
+    assert (number>=0);
+    addRow(number, columns+start, elements+start, rowlb ? rowlb[i] : -infinity, 
+	   rowub ? rowub[i] : infinity);
+  }
+}
+
 void
 OsiSolverInterface::addRows(const int numrows,
-			    const CoinPackedVectorBase * const * rows,
+			    const CoinPackedVectorBase* const* rows,
 			    const double* rowlb, const double* rowub)
 {
   for (int i = 0; i < numrows; ++i) {
     addRow(*rows[i], rowlb[i], rowub[i]);
+  }
+}
+
+void
+OsiSolverInterface::addRows(const int numrows,
+			    const CoinPackedVectorBase* const* rows,
+			    const char* rowsen, const double* rowrhs,   
+			    const double* rowrng)
+{
+  for (int i = 0; i < numrows; ++i) {
+    addRow(*rows[i], rowsen[i], rowrhs[i], rowrng[i]);
   }
 }
 //-----------------------------------------------------------------------------
@@ -611,6 +681,7 @@ OsiSolverInterface::loadFromCoinModel (  CoinModel & modelObject, bool keepSolut
     numberColumns==getNumCols();
   loadProblem(matrix, 
               columnLower, columnUpper, objective, rowLower, rowUpper);
+  setRowColNames(modelObject) ;
   if (restoreBasis)
     setWarmStart(ws);
   delete ws;
@@ -637,43 +708,6 @@ OsiSolverInterface::loadFromCoinModel (  CoinModel & modelObject, bool keepSolut
   return numberErrors;
 }
 //-----------------------------------------------------------------------------
-void
-OsiSolverInterface::addRows(const int numrows,
-			    const CoinPackedVectorBase * const * rows,
-			    const char* rowsen, const double* rowrhs,   
-			    const double* rowrng)
-{
-  for (int i = 0; i < numrows; ++i) {
-    addRow(*rows[i], rowsen[i], rowrhs[i], rowrng[i]);
-  }
-}
-/* Add a row (constraint) to the problem. */
-void 
-OsiSolverInterface::addRow(int numberElements, const int * columns, const double * elements,
-			   const double rowlb, const double rowub) 
-{
-  CoinPackedVector row(numberElements, columns, elements);
-  addRow(row,rowlb,rowub);
-}
-/* Add a set of rows (constraints) to the problem.
-   
-The default implementation simply makes repeated calls to addRow().
-*/
-void 
-OsiSolverInterface::addRows(const int numrows,
-			    const int * rowStarts, const int * columns, const double * elements,
-			    const double* rowlb, const double* rowub)
-{
-  double infinity = getInfinity();
-  for (int i = 0; i < numrows; ++i) {
-    int start = rowStarts[i];
-    int number = rowStarts[i+1]-start;
-    assert (number>=0);
-    addRow(number, columns+start, elements+start, rowlb ? rowlb[i] : -infinity, 
-	   rowub ? rowub[i] : infinity);
-  }
-}
-
 
 //#############################################################################
 // Implement getObjValue in a simple way that the derived solver interfaces
@@ -886,6 +920,7 @@ OsiSolverInterface::setInitialData()
   defaultHandler_=true;
   intParam_[OsiMaxNumIteration] = 9999999;
   intParam_[OsiMaxNumIterationHotStart] = 9999999;
+  intParam_[OsiNameDiscipline] = 0;
 
   dblParam_[OsiDualObjectiveLimit] = DBL_MAX;
   dblParam_[OsiPrimalObjectiveLimit] = DBL_MAX;
@@ -908,6 +943,11 @@ OsiSolverInterface::setInitialData()
   numberObjects_=0;
   numberIntegers_=-1;
   object_=NULL;
+
+  // names
+  rowNames_ = OsiNameVec(0) ;
+  colNames_ = OsiNameVec(0) ;
+  objName_ = "" ;
 }
 
 //-------------------------------------------------------------------
@@ -942,6 +982,10 @@ OsiSolverInterface::OsiSolverInterface (const OsiSolverInterface & rhs) :
   } else {
     object_=NULL;
   }
+  // names
+  rowNames_ = rhs.rowNames_ ;
+  colNames_ = rhs.colNames_ ;
+  objName_ = rhs.objName_ ;
 }
 
 //-------------------------------------------------------------------
@@ -1009,6 +1053,10 @@ OsiSolverInterface::operator=(const OsiSolverInterface& rhs)
     } else {
       object_=NULL;
     }
+    // names
+    rowNames_ = rhs.rowNames_ ;
+    colNames_ = rhs.colNames_ ;
+    objName_ = rhs.objName_ ;
   }
   return *this;
 }
@@ -1034,10 +1082,11 @@ int OsiSolverInterface::readMps(const char * filename,
     // set problem name
     setStrParam(OsiProbName,m.getProblemName());
 
-    // no errors
+    // no errors --- load problem, set names and integrality
     loadProblem(*m.getMatrixByCol(),m.getColLower(),m.getColUpper(),
 		m.getObjCoefficients(),m.getRowSense(),m.getRightHandSide(),
 		m.getRowRange());
+    setRowColNames(m) ;
     const char * integer = m.integerColumns();
     if (integer) {
       int i,n=0;
@@ -1056,7 +1105,7 @@ int OsiSolverInterface::readMps(const char * filename,
 }
 /* Read a problem in GMPL format from the given filenames.
    
-Will only work if glpk installed
+  Will only work if glpk installed
 */
 int 
 OsiSolverInterface::readGMPL(const char *filename, const char * dataname)
@@ -1076,10 +1125,11 @@ OsiSolverInterface::readGMPL(const char *filename, const char * dataname)
     // set problem name
     setStrParam(OsiProbName,m.getProblemName());
 
-    // no errors
+    // no errors --- load problem, set names and integrality
     loadProblem(*m.getMatrixByCol(),m.getColLower(),m.getColUpper(),
 		m.getObjCoefficients(),m.getRowSense(),m.getRightHandSide(),
 		m.getRowRange());
+    setRowColNames(m) ;
     const char * integer = m.integerColumns();
     if (integer) {
       int i,n=0;
@@ -1113,17 +1163,17 @@ OsiSolverInterface::readMps(const char *filename, const char*extension,
   handler_->message(COIN_SOLVER_MPS,messages_)
     <<m.getProblemName()<< numberErrors <<CoinMessageEol;
   if (!numberErrors) {
-
-    // set objective function offest
+    // set objective function offset
     setDblParam(OsiObjOffset,m.objectiveOffset());
 
     // set problem name
     setStrParam(OsiProbName,m.getProblemName());
 
-    // no errors
+    // no errors --- load problem, set names and integrality
     loadProblem(*m.getMatrixByCol(),m.getColLower(),m.getColUpper(),
 		m.getObjCoefficients(),m.getRowSense(),m.getRightHandSide(),
 		m.getRowRange());
+    setRowColNames(m) ;
     const char * integer = m.integerColumns();
     if (integer) {
       int i,n=0;
@@ -1340,10 +1390,10 @@ int OsiSolverInterface::readLp(FILE *fp, const double epsilon) {
   // set problem name
   setStrParam(OsiProbName, m.getProblemName());
 
-  // no errors
+  // no errors --- load problem, set names and integrality
   loadProblem(*m.getMatrixByRow(), m.getColLower(), m.getColUpper(),
 	      m.getObjCoefficients(), m.getRowLower(), m.getRowUpper());
-
+  setRowColNames(m) ;
   const char *integer = m.integerColumns();
   if (integer) {
     int i, n = 0;

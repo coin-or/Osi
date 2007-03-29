@@ -26,6 +26,7 @@ libOsi_la_SOURCES = \
 	OsiCollections.hpp \
 	OsiCut.cpp OsiCut.hpp \
 	OsiCuts.cpp OsiCuts.hpp \
+	OsiNames.cpp \
 	OsiOpbdpSolve.cpp OsiOpbdpSolve.hpp \
 	OsiPresolve.cpp OsiPresolve.hpp \
 	OsiRowCut.cpp OsiRowCut.hpp \

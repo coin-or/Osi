@@ -1798,6 +1798,7 @@ OsiLotsize::feasibleRegion(OsiSolverInterface * solver, const OsiBranchingInform
 #ifndef NDEBUG
   assert (fabs(value-nearest)<=(100.0+10.0*fabs(nearest))*info->integerTolerance_);
 #endif
+  return fabs(value-nearest);
 }
 
 // Creates a branching object

@@ -556,7 +556,7 @@ public:
   virtual double downEstimate() const;
   /// Return true if knows how to deal with Pseudo Shadow Prices
   virtual bool canHandleShadowPrices() const
-  { return true;};
+  { return false;};
 protected:
   /// data
   /// Original lower bound
@@ -775,5 +775,182 @@ public:
   virtual void print(const OsiSolverInterface * solver=NULL);
 private:
   /// data
+};
+/** Lotsize class */
+
+
+class OsiLotsize : public OsiObject2 {
+
+public:
+
+  // Default Constructor 
+  OsiLotsize ();
+
+  /* Useful constructor - passed model index.
+     Also passed valid values - if range then pairs
+  */
+  OsiLotsize (const OsiSolverInterface * solver, int iColumn,
+	      int numberPoints, const double * points, bool range=false);
+  
+  // Copy constructor 
+  OsiLotsize ( const OsiLotsize &);
+   
+  /// Clone
+  virtual OsiObject * clone() const;
+
+  // Assignment operator 
+  OsiLotsize & operator=( const OsiLotsize& rhs);
+
+  // Destructor 
+  ~OsiLotsize ();
+  
+  /// Infeasibility - large is 0.5
+  virtual double infeasibility(const OsiBranchingInformation * info, int & whichWay) const;
+
+  /** Set bounds to contain the current solution.
+
+    More precisely, for the variable associated with this object, take the
+    value given in the current solution, force it within the current bounds
+    if required, then set the bounds to fix the variable at the integer
+    nearest the solution value.  Returns amount it had to move variable.
+  */
+  virtual double feasibleRegion(OsiSolverInterface * solver, const OsiBranchingInformation * info) const;
+
+  /** Creates a branching object
+
+    The preferred direction is set by \p way, 0 for down, 1 for up.
+  */
+  virtual OsiBranchingObject * createBranch(OsiSolverInterface * solver, const OsiBranchingInformation * info, int way) const;
+
+
+  /// Set solver column number
+  inline void setColumnNumber(int value)
+  {columnNumber_=value;};
+  
+  /** Column number if single column object -1 otherwise,
+      so returns >= 0
+      Used by heuristics
+  */
+  virtual int columnNumber() const;
+  /** Reset original upper and lower bound values from the solver.
+  
+    Handy for updating bounds held in this object after bounds held in the
+    solver have been tightened.
+   */
+  virtual void resetBounds(const OsiSolverInterface * solver);
+
+  /** Finds range of interest so value is feasible in range range_ or infeasible 
+      between hi[range_] and lo[range_+1].  Returns true if feasible.
+  */
+  bool findRange(double value, double integerTolerance) const;
+  
+  /** Returns floor and ceiling
+  */
+  virtual void floorCeiling(double & floorLotsize, double & ceilingLotsize, double value,
+			    double tolerance) const;
+  
+  /// Original bounds
+  inline double originalLowerBound() const
+  { return bound_[0];};
+  inline double originalUpperBound() const
+  { return bound_[rangeType_*numberRanges_-1];};
+  /// Type - 1 points, 2 ranges
+  inline int rangeType() const
+  { return rangeType_;};
+  /// Number of points
+  inline int numberRanges() const
+  { return numberRanges_;};
+  /// Ranges
+  inline double * bound() const
+  { return bound_;};
+  /**  Change column numbers after preprocessing
+   */
+  virtual void resetSequenceEtc(int numberColumns, const int * originalColumns);
+  
+  /// Return "up" estimate (default 1.0e-5)
+  virtual double upEstimate() const;
+  /// Return "down" estimate (default 1.0e-5)
+  virtual double downEstimate() const;
+  /// Return true if knows how to deal with Pseudo Shadow Prices
+  virtual bool canHandleShadowPrices() const
+  { return true;};
+  /** \brief Return true if object can take part in normal heuristics
+  */
+  virtual bool canDoHeuristics() const 
+  {return false;};
+
+private:
+  /// data
+
+  /// Column number in model
+  int columnNumber_;
+  /// Type - 1 points, 2 ranges
+  int rangeType_;
+  /// Number of points
+  int numberRanges_;
+  // largest gap
+  double largestGap_;
+  /// Ranges
+  double * bound_;
+  /// Current range
+  mutable int range_;
+};
+
+
+/** Lotsize branching object
+
+  This object can specify a two-way branch on an integer variable. For each
+  arm of the branch, the upper and lower bounds on the variable can be
+  independently specified.
+  
+  Variable_ holds the index of the integer variable in the integerVariable_
+  array of the model.
+*/
+
+class OsiLotsizeBranchingObject : public OsiTwoWayBranchingObject {
+
+public:
+
+  /// Default constructor 
+  OsiLotsizeBranchingObject ();
+
+  /** Create a lotsize floor/ceiling branch object
+
+    Specifies a simple two-way branch. Let \p value = x*. One arm of the
+    branch will be is lb <= x <= valid range below(x*), the other valid range above(x*) <= x <= ub.
+    Specify way = -1 to set the object state to perform the down arm first,
+    way = 1 for the up arm.
+  */
+  OsiLotsizeBranchingObject (OsiSolverInterface *solver,const OsiLotsize * originalObject, 
+			     int way , double value) ;
+  
+  /// Copy constructor 
+  OsiLotsizeBranchingObject ( const OsiLotsizeBranchingObject &);
+   
+  /// Assignment operator 
+  OsiLotsizeBranchingObject & operator= (const OsiLotsizeBranchingObject& rhs);
+
+  /// Clone
+  virtual OsiBranchingObject * clone() const;
+
+  /// Destructor 
+  virtual ~OsiLotsizeBranchingObject ();
+  
+  /** \brief Sets the bounds for the variable according to the current arm
+	     of the branch and advances the object state to the next arm.
+	     state. 
+	     Returns change in guessed objective on next branch
+  */
+  virtual double branch(OsiSolverInterface * solver);
+
+  /** \brief Print something about branch - only if log level high
+  */
+  virtual void print(const OsiSolverInterface * solver=NULL);
+
+protected:
+  /// Lower [0] and upper [1] bounds for the down arm (way_ = -1)
+  double down_[2];
+  /// Lower [0] and upper [1] bounds for the up arm (way_ = 1)
+  double up_[2];
 };
 #endif

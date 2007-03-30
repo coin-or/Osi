@@ -1421,4 +1421,563 @@ OsiSOSBranchingObject::print(const OsiSolverInterface * solver)
   printf(" - at %g, free range %d (%g) => %d (%g), %d would be fixed, %d other way\n",
 	 value_,which[first],weights[first],which[last],weights[last],numberFixed,numberOther);
 }
+/** Default Constructor
+
+*/
+OsiLotsize::OsiLotsize ()
+  : OsiObject2(),
+    columnNumber_(-1),
+    rangeType_(0),
+    numberRanges_(0),
+    largestGap_(0),
+    bound_(NULL),
+    range_(0)
+{
+}
+
+/** Useful constructor
+
+  Loads actual upper & lower bounds for the specified variable.
+*/
+OsiLotsize::OsiLotsize (const OsiSolverInterface * solver, 
+				    int iColumn, int numberPoints,
+			const double * points, bool range)
+  : OsiObject2()
+{
+  assert (numberPoints>0);
+  columnNumber_ = iColumn ;
+  // sort ranges
+  int * sort = new int[numberPoints];
+  double * weight = new double [numberPoints];
+  int i;
+  if (range) {
+    rangeType_=2;
+  } else {
+    rangeType_=1;
+  }
+  for (i=0;i<numberPoints;i++) {
+    sort[i]=i;
+    weight[i]=points[i*rangeType_];
+  }
+  CoinSort_2(weight,weight+numberPoints,sort);
+  numberRanges_=1;
+  largestGap_=0;
+  if (rangeType_==1) {
+    bound_ = new double[numberPoints+1];
+    bound_[0]=weight[0];
+    for (i=1;i<numberPoints;i++) {
+      if (weight[i]!=weight[i-1]) 
+	bound_[numberRanges_++]=weight[i];
+    }
+    // and for safety
+    bound_[numberRanges_]=bound_[numberRanges_-1];
+    for (i=1;i<numberRanges_;i++) {
+      largestGap_ = CoinMax(largestGap_,bound_[i]-bound_[i-1]);
+    }
+  } else {
+    bound_ = new double[2*numberPoints+2];
+    bound_[0]=points[sort[0]*2];
+    bound_[1]=points[sort[0]*2+1];
+    double lo=bound_[0];
+    double hi=bound_[1];
+    assert (hi>=lo);
+    for (i=1;i<numberPoints;i++) {
+      double thisLo =points[sort[i]*2];
+      double thisHi =points[sort[i]*2+1];
+      assert (thisHi>=thisLo);
+      if (thisLo>hi) {
+	bound_[2*numberRanges_]=thisLo;
+	bound_[2*numberRanges_+1]=thisHi;
+	numberRanges_++;
+	lo=thisLo;
+	hi=thisHi;
+      } else {
+	//overlap
+	hi=CoinMax(hi,thisHi);
+	bound_[2*numberRanges_-1]=hi;
+      }
+    }
+    // and for safety
+    bound_[2*numberRanges_]=bound_[2*numberRanges_-2];
+    bound_[2*numberRanges_+1]=bound_[2*numberRanges_-1];
+    for (i=1;i<numberRanges_;i++) {
+      largestGap_ = CoinMax(largestGap_,bound_[2*i]-bound_[2*i-1]);
+    }
+  }
+  delete [] sort;
+  delete [] weight;
+  range_=0;
+}
+
+// Copy constructor 
+OsiLotsize::OsiLotsize ( const OsiLotsize & rhs)
+  :OsiObject2(rhs)
+
+{
+  columnNumber_ = rhs.columnNumber_;
+  rangeType_ = rhs.rangeType_;
+  numberRanges_ = rhs.numberRanges_;
+  range_ = rhs.range_;
+  largestGap_ = rhs.largestGap_;
+  if (numberRanges_) {
+    assert (rangeType_>0&&rangeType_<3);
+    bound_= new double [(numberRanges_+1)*rangeType_];
+    memcpy(bound_,rhs.bound_,(numberRanges_+1)*rangeType_*sizeof(double));
+  } else {
+    bound_=NULL;
+  }
+}
+
+// Clone
+OsiObject *
+OsiLotsize::clone() const
+{
+  return new OsiLotsize(*this);
+}
+
+// Assignment operator 
+OsiLotsize & 
+OsiLotsize::operator=( const OsiLotsize& rhs)
+{
+  if (this!=&rhs) {
+    OsiObject2::operator=(rhs);
+    columnNumber_ = rhs.columnNumber_;
+    rangeType_ = rhs.rangeType_;
+    numberRanges_ = rhs.numberRanges_;
+    largestGap_ = rhs.largestGap_;
+    delete [] bound_;
+    range_ = rhs.range_;
+    if (numberRanges_) {
+      assert (rangeType_>0&&rangeType_<3);
+      bound_= new double [(numberRanges_+1)*rangeType_];
+      memcpy(bound_,rhs.bound_,(numberRanges_+1)*rangeType_*sizeof(double));
+    } else {
+      bound_=NULL;
+    }
+  }
+  return *this;
+}
+
+// Destructor 
+OsiLotsize::~OsiLotsize ()
+{
+  delete [] bound_;
+}
+/* Finds range of interest so value is feasible in range range_ or infeasible 
+   between hi[range_] and lo[range_+1].  Returns true if feasible.
+*/
+bool 
+OsiLotsize::findRange(double value, double integerTolerance) const
+{
+  assert (range_>=0&&range_<numberRanges_+1);
+  int iLo;
+  int iHi;
+  double infeasibility=0.0;
+  if (rangeType_==1) {
+    if (value<bound_[range_]-integerTolerance) {
+      iLo=0;
+      iHi=range_-1;
+    } else if (value<bound_[range_]+integerTolerance) {
+      return true;
+    } else if (value<bound_[range_+1]-integerTolerance) {
+      return false;
+    } else {
+      iLo=range_+1;
+      iHi=numberRanges_-1;
+    }
+    // check lo and hi
+    bool found=false;
+    if (value>bound_[iLo]-integerTolerance&&value<bound_[iLo+1]+integerTolerance) {
+      range_=iLo;
+      found=true;
+    } else if (value>bound_[iHi]-integerTolerance&&value<bound_[iHi+1]+integerTolerance) {
+      range_=iHi;
+      found=true;
+    } else {
+      range_ = (iLo+iHi)>>1;
+    }
+    //points
+    while (!found) {
+      if (value<bound_[range_]) {
+	if (value>=bound_[range_-1]) {
+	  // found
+	  range_--;
+	  break;
+	} else {
+	  iHi = range_;
+	}
+      } else {
+	if (value<bound_[range_+1]) {
+	  // found
+	  break;
+	} else {
+	  iLo = range_;
+	}
+      }
+      range_ = (iLo+iHi)>>1;
+    }
+    if (value-bound_[range_]<=bound_[range_+1]-value) {
+      infeasibility = value-bound_[range_];
+    } else {
+      infeasibility = bound_[range_+1]-value;
+      if (infeasibility<integerTolerance)
+	range_++;
+    }
+    return (infeasibility<integerTolerance);
+  } else {
+    // ranges
+    if (value<bound_[2*range_]-integerTolerance) {
+      iLo=0;
+      iHi=range_-1;
+    } else if (value<bound_[2*range_+1]+integerTolerance) {
+      return true;
+    } else if (value<bound_[2*range_+2]-integerTolerance) {
+      return false;
+    } else {
+      iLo=range_+1;
+      iHi=numberRanges_-1;
+    }
+    // check lo and hi
+    bool found=false;
+    if (value>bound_[2*iLo]-integerTolerance&&value<bound_[2*iLo+2]-integerTolerance) {
+      range_=iLo;
+      found=true;
+    } else if (value>=bound_[2*iHi]-integerTolerance) {
+      range_=iHi;
+      found=true;
+    } else {
+      range_ = (iLo+iHi)>>1;
+    }
+    //points
+    while (!found) {
+      if (value<bound_[2*range_]) {
+	if (value>=bound_[2*range_-2]) {
+	  // found
+	  range_--;
+	  break;
+	} else {
+	  iHi = range_;
+	}
+      } else {
+	if (value<bound_[2*range_+2]) {
+	  // found
+	  break;
+	} else {
+	  iLo = range_;
+	}
+      }
+      range_ = (iLo+iHi)>>1;
+    }
+    if (value>=bound_[2*range_]-integerTolerance&&value<=bound_[2*range_+1]+integerTolerance)
+      infeasibility=0.0;
+    else if (value-bound_[2*range_+1]<bound_[2*range_+2]-value) {
+      infeasibility = value-bound_[2*range_+1];
+    } else {
+      infeasibility = bound_[2*range_+2]-value;
+    }
+    return (infeasibility<integerTolerance);
+  }
+}
+/* Returns floor and ceiling
+ */
+void 
+OsiLotsize::floorCeiling(double & floorLotsize, double & ceilingLotsize, double value,
+			 double tolerance) const
+{
+  bool feasible=findRange(value,tolerance);
+  if (rangeType_==1) {
+    floorLotsize=bound_[range_];
+    ceilingLotsize=bound_[range_+1];
+    // may be able to adjust
+    if (feasible&&fabs(value-floorLotsize)>fabs(value-ceilingLotsize)) {
+      floorLotsize=bound_[range_+1];
+      ceilingLotsize=bound_[range_+2];
+    }
+  } else {
+    // ranges
+    assert (value>=bound_[2*range_+1]);
+    floorLotsize=bound_[2*range_+1];
+    ceilingLotsize=bound_[2*range_+2];
+  }
+}
+
+// Infeasibility - large is 0.5
+double 
+OsiLotsize::infeasibility(const OsiBranchingInformation * info, int & preferredWay) const
+{
+  const double * solution = info->solution_;
+  const double * lower = info->lower_;
+  const double * upper = info->upper_;
+  double value = solution[columnNumber_];
+  value = CoinMax(value, lower[columnNumber_]);
+  value = CoinMin(value, upper[columnNumber_]);
+  double integerTolerance = info->integerTolerance_;
+  /*printf("%d %g %g %g %g\n",columnNumber_,value,lower[columnNumber_],
+    solution[columnNumber_],upper[columnNumber_]);*/
+  assert (value>=bound_[0]-integerTolerance
+          &&value<=bound_[rangeType_*numberRanges_-1]+integerTolerance);
+  infeasibility_=0.0;
+  bool feasible = findRange(value,integerTolerance);
+  if (!feasible) {
+    if (rangeType_==1) {
+      if (value-bound_[range_]<bound_[range_+1]-value) {
+	preferredWay=-1;
+	infeasibility_ = value-bound_[range_];
+	otherInfeasibility_ = bound_[range_+1] - value ;
+      } else {
+	preferredWay=1;
+	infeasibility_ = bound_[range_+1]-value;
+	otherInfeasibility_ = value-bound_[range_];
+      }
+    } else {
+      // ranges
+      if (value-bound_[2*range_+1]<bound_[2*range_+2]-value) {
+	preferredWay=-1;
+	infeasibility_ = value-bound_[2*range_+1];
+	otherInfeasibility_ = bound_[2*range_+2]-value;
+      } else {
+	preferredWay=1;
+	infeasibility_ = bound_[2*range_+2]-value;
+	otherInfeasibility_ = value-bound_[2*range_+1];
+      }
+    }
+  } else {
+    // always satisfied
+    preferredWay=-1;
+    otherInfeasibility_ = 1.0;
+  }
+  if (infeasibility_<integerTolerance)
+    infeasibility_=0.0;
+  else
+    infeasibility_ /= largestGap_;
+  return infeasibility_;
+}
+/* Column number if single column object -1 otherwise,
+   so returns >= 0
+   Used by heuristics
+*/
+int 
+OsiLotsize::columnNumber() const
+{
+  return columnNumber_;
+}
+/* Set bounds to contain the current solution.
+   More precisely, for the variable associated with this object, take the
+   value given in the current solution, force it within the current bounds
+   if required, then set the bounds to fix the variable at the integer
+   nearest the solution value.  Returns amount it had to move variable.
+*/
+double 
+OsiLotsize::feasibleRegion(OsiSolverInterface * solver, const OsiBranchingInformation * info) const
+{
+  const double * lower = solver->getColLower();
+  const double * upper = solver->getColUpper();
+  const double * solution = info->solution_;
+  double value = solution[columnNumber_];
+  value = CoinMax(value, lower[columnNumber_]);
+  value = CoinMin(value, upper[columnNumber_]);
+  findRange(value,info->integerTolerance_);
+  double nearest;
+  if (rangeType_==1) {
+    nearest = bound_[range_];
+    solver->setColLower(columnNumber_,nearest);
+    solver->setColUpper(columnNumber_,nearest);
+  } else {
+    // ranges
+    solver->setColLower(columnNumber_,bound_[2*range_]);
+    solver->setColUpper(columnNumber_,bound_[2*range_+1]);
+    if (value>bound_[2*range_+1]) 
+      nearest=bound_[2*range_+1];
+    else if (value<bound_[2*range_]) 
+      nearest = bound_[2*range_];
+    else
+      nearest = value;
+  }
+  // Scaling may have moved it a bit
+  // Lotsizing variables could be a lot larger
+#ifndef NDEBUG
+  assert (fabs(value-nearest)<=(100.0+10.0*fabs(nearest))*info->integerTolerance_);
+#endif
+}
+
+// Creates a branching object
+// Creates a branching object
+OsiBranchingObject * 
+OsiLotsize::createBranch(OsiSolverInterface * solver, const OsiBranchingInformation * info, int way) const 
+{
+  const double * solution = info->solution_;
+  const double * lower = solver->getColLower();
+  const double * upper = solver->getColUpper();
+  double value = solution[columnNumber_];
+  value = CoinMax(value, lower[columnNumber_]);
+  value = CoinMin(value, upper[columnNumber_]);
+  assert (!findRange(value,info->integerTolerance_));
+  return new OsiLotsizeBranchingObject(solver,this,way,
+					     value);
+}
+
+  
+/*
+  Bounds may be tightened, so it may be good to be able to refresh the local
+  copy of the original bounds.
+ */
+void 
+OsiLotsize::resetBounds(const OsiSolverInterface * solver)
+{
+}
+// Return "down" estimate
+double 
+OsiLotsize::downEstimate() const
+{
+  if (whichWay_)
+    return otherInfeasibility_;
+  else
+    return infeasibility_;
+}
+// Return "up" estimate
+double 
+OsiLotsize::upEstimate() const
+{
+  if (!whichWay_)
+    return otherInfeasibility_;
+  else
+    return infeasibility_;
+}
+// Redoes data when sequence numbers change
+void 
+OsiLotsize::resetSequenceEtc(int numberColumns, const int * originalColumns)
+{
+  int i;
+  for (i=0;i<numberColumns;i++) {
+    if (originalColumns[i]==columnNumber_)
+      break;
+  }
+  if (i<numberColumns)
+    columnNumber_=i;
+  else
+    abort(); // should never happen
+}
+
+
+// Default Constructor 
+OsiLotsizeBranchingObject::OsiLotsizeBranchingObject()
+  :OsiTwoWayBranchingObject()
+{
+  down_[0] = 0.0;
+  down_[1] = 0.0;
+  up_[0] = 0.0;
+  up_[1] = 0.0;
+}
+
+// Useful constructor
+OsiLotsizeBranchingObject::OsiLotsizeBranchingObject (OsiSolverInterface * solver, 
+						      const OsiLotsize * originalObject, 
+						      int way , double value)
+  :OsiTwoWayBranchingObject(solver,originalObject,way,value)
+{
+  int iColumn = originalObject->columnNumber();
+  down_[0] = solver->getColLower()[iColumn];
+  double integerTolerance = solver->getIntegerTolerance();
+  originalObject->floorCeiling(down_[1],up_[0],value,integerTolerance);
+  up_[1] = solver->getColUpper()[iColumn];
+}
+
+// Copy constructor 
+OsiLotsizeBranchingObject::OsiLotsizeBranchingObject ( const OsiLotsizeBranchingObject & rhs) :OsiTwoWayBranchingObject(rhs)
+{
+  down_[0] = rhs.down_[0];
+  down_[1] = rhs.down_[1];
+  up_[0] = rhs.up_[0];
+  up_[1] = rhs.up_[1];
+}
+
+// Assignment operator 
+OsiLotsizeBranchingObject & 
+OsiLotsizeBranchingObject::operator=( const OsiLotsizeBranchingObject& rhs)
+{
+  if (this != &rhs) {
+    OsiTwoWayBranchingObject::operator=(rhs);
+    down_[0] = rhs.down_[0];
+    down_[1] = rhs.down_[1];
+    up_[0] = rhs.up_[0];
+    up_[1] = rhs.up_[1];
+  }
+  return *this;
+}
+OsiBranchingObject * 
+OsiLotsizeBranchingObject::clone() const
+{ 
+  return (new OsiLotsizeBranchingObject(*this));
+}
+
+
+// Destructor 
+OsiLotsizeBranchingObject::~OsiLotsizeBranchingObject ()
+{
+}
+
+/*
+  Perform a branch by adjusting the bounds of the specified variable. Note
+  that each arm of the branch advances the object to the next arm by
+  advancing the value of way_.
+
+  Providing new values for the variable's lower and upper bounds for each
+  branching direction gives a little bit of additional flexibility and will
+  be easily extensible to multi-way branching.
+*/
+double
+OsiLotsizeBranchingObject::branch(OsiSolverInterface * solver)
+{
+  const OsiLotsize * obj =
+    dynamic_cast <const OsiLotsize *>(originalObject_) ;
+  assert (obj);
+  int iColumn = obj->columnNumber();
+  int way = (!branchIndex_) ? (2*firstBranch_-1) : -(2*firstBranch_-1);
+  if (way<0) {
+#ifdef OSI_DEBUG
+  { double olb,oub ;
+    olb = solver->getColLower()[iColumn] ;
+    oub = solver->getColUpper()[iColumn] ;
+    printf("branching down on var %d: [%g,%g] => [%g,%g]\n",
+	   iColumn,olb,oub,down_[0],down_[1]) ; }
+#endif
+    solver->setColLower(iColumn,down_[0]);
+    solver->setColUpper(iColumn,down_[1]);
+  } else {
+#ifdef OSI_DEBUG
+  { double olb,oub ;
+    olb = solver->getColLower()[iColumn] ;
+    oub = solver->getColUpper()[iColumn] ;
+    printf("branching up on var %d: [%g,%g] => [%g,%g]\n",
+	   iColumn,olb,oub,up_[0],up_[1]) ; }
+#endif
+    solver->setColLower(iColumn,up_[0]);
+    solver->setColUpper(iColumn,up_[1]);
+  }
+  branchIndex_++;
+  return 0.0;
+}
+// Print
+void
+OsiLotsizeBranchingObject::print(const OsiSolverInterface * solver)
+{
+  const OsiLotsize * obj =
+    dynamic_cast <const OsiLotsize *>(originalObject_) ;
+  assert (obj);
+  int iColumn = obj->columnNumber();
+  int way = (!branchIndex_) ? (2*firstBranch_-1) : -(2*firstBranch_-1);
+  if (way<0) {
+  { double olb,oub ;
+    olb = solver->getColLower()[iColumn] ;
+    oub = solver->getColUpper()[iColumn] ;
+    printf("branching down on var %d: [%g,%g] => [%g,%g]\n",
+	   iColumn,olb,oub,down_[0],down_[1]) ; }
+  } else {
+  { double olb,oub ;
+    olb = solver->getColLower()[iColumn] ;
+    oub = solver->getColUpper()[iColumn] ;
+    printf("branching up on var %d: [%g,%g] => [%g,%g]\n",
+	   iColumn,olb,oub,up_[0],up_[1]) ; }
+  }
+}
   

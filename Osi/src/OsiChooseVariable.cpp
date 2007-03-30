@@ -634,7 +634,6 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
   double check = -COIN_DBL_MAX;
   int checkIndex=0;
   int bestPriority=INT_MAX;
-  assert (numberStrong_>0);
   int maximumStrong= CoinMin(numberStrong_,numberObjects) ;
   int putOther = numberObjects;
   int i;
@@ -683,6 +682,10 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
   double downMultiplier=(1.0+sumDown)/(1.0+numberDown);
   // Say feasible
   bool feasible = true;
+#if 0
+  int pri[]={10,1000,10000};
+  int priCount[]={0,0,0};
+#endif
   for ( i=0;i<numberObjects;i++) {
     int way;
     double value = object[i]->infeasibility(info,way);
@@ -694,6 +697,12 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
 	break;
       }
       int priorityLevel = object[i]->priority();
+#if 0
+      for (int k=0;k<3;k++) {
+	if (priorityLevel==pri[k])
+	  priCount[k]++;
+      }
+#endif
       // Better priority? Flush choices.
       if (priorityLevel<bestPriority) {
 	for (int j=maximumStrong-1;j>=0;j--) {
@@ -768,6 +777,10 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
       }
     }
   }
+#if 0
+  printf("%d at %d, %d at %d and %d at %d\n",priCount[0],pri[0],
+	 priCount[1],pri[1],priCount[2],pri[2]);
+#endif
   // Get list
   numberOnList_=0;
   if (feasible) {

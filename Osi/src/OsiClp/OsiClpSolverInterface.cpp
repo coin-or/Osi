@@ -2065,6 +2065,10 @@ OsiClpSolverInterface::addRow(int numberElements, const int * columns, const dou
   if (!modelPtr_->clpMatrix())
     modelPtr_->createEmptyMatrix();
   modelPtr_->matrix()->appendRow(numberElements, columns, elements);
+  CoinBigIndex starts[2];
+  starts[0]=0;
+  starts[1]=numberElements;
+  redoScaleFactors( 1,starts, columns, elements);
 }
 //-----------------------------------------------------------------------------
 void 
@@ -4567,22 +4571,26 @@ OsiClpSolverInterface::crunch()
       int numberRows2 = small->numberRows();
       int numberColumns2 = small->numberColumns();
       double * rowScale2 = new double [2*numberRows2];
+      assert (rowScale_.getSize()>=2*numberRows);
       const double * rowScale = rowScale_.array();
       double * inverseScale2 = rowScale2+numberRows2;
       const double * inverseScale = rowScale+modelPtr_->numberRows_;
       int i;
       for (i=0;i<numberRows2;i++) {
 	int iRow = whichRow[i];
+	//assert (iRow<numberRows);
 	rowScale2[i]=rowScale[iRow];
 	inverseScale2[i]=inverseScale[iRow];
       }
       small->setRowScale(rowScale2);
       double * columnScale2 = new double [2*numberColumns2];
+      assert (columnScale_.getSize()>=2*numberColumns);
       const double * columnScale = columnScale_.array();
       inverseScale2 = columnScale2+numberColumns2;
       inverseScale = columnScale+modelPtr_->numberColumns_;
       for (i=0;i<numberColumns2;i++) {
 	int iColumn = whichColumn[i];
+	//assert (iColumn<numberColumns);
 	columnScale2[i]=columnScale[iColumn];
 	inverseScale2[i]=inverseScale[iColumn];
       }

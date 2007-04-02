@@ -2,7 +2,7 @@
 #define OsiDylpWarmStartBasis_H
 
 /*! \legal
-  Copyright (C) 2002, 2003, 2004.
+  Copyright (C) 2003 -- 2007
   Lou Hafer, International Business Machines Corporation and others.
   All Rights Reserved.
 */

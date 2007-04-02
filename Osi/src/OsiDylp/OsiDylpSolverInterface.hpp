@@ -5,6 +5,7 @@
   Copyright (C) 2002, 2003, 2004.
   Lou Hafer, Stephen Tse, International Business Machines Corporation and
   others. All Rights Reserved.
+  Copyright (C) 2005 -- 2007 Lou Hafer
 */
 
 /*! \file OsiDylpSolverInterface.hpp

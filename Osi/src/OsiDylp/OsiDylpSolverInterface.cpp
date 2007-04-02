@@ -2,6 +2,7 @@
   Copyright (C) 2002, 2003, 2004.
   Lou Hafer, Stephen Tse, International Business Machines Corporation and
   others. All Rights Reserved.
+  Copyright 2005, 2006, 2007 Lou Hafer
 
   This file is a portion of the COIN/OSI interface for dylp.
 */

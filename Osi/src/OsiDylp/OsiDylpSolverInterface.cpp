@@ -5711,18 +5711,20 @@ CoinWarmStart* ODSI::getWarmStart () const
 
 /*!
   This routine installs the basis snapshot from an OsiDylpWarmStartBasis
-  object and sets ODSI options so that dylp will attempt a warm start on the
-  next call to \link OsiDylpSolverInterface::resolve ODSI::resolve \endlink.
-  A basis with 0 rows and 0 columns, or a null parameter, is taken as a
-  request to delete the existing warm start information held in activeBasis.
+  (ODWSB) object and sets ODSI options so that dylp will attempt a warm start
+  on the next call to \link OsiDylpSolverInterface::resolve ODSI::resolve
+  \endlink.  A basis with 0 rows and 0 columns, or a null parameter, is taken
+  as a request to delete the existing warm start information held in
+  activeBasis.
 
-  Note that the size (rows x columns) of the CoinWarmStart information should
-  match the size of the constraint system. The final basis built for dylp can
-  be smaller, as inactive constraints will not be included. A basis with 0
-  active constraints is legal. (In fact, fairly common. When a B&C code fixes
-  all integer variables to confirm or regenerate a solution, a problem with
-  only integer variables may have all variables fixed and no tight
-  architectural constraints.)
+  The size (rows x columns) of the constraint system should be equal or
+  larger than the ODSWB information.  The final basis built for dylp can
+  always end up smaller than the constraint system, as inactive constraints
+  and variables will not be included. A basis with 0 active constraints is
+  legal.  (In fact, fairly common. When a B&C code fixes all integer
+  variables to confirm or regenerate a solution, a problem with only integer
+  variables may have all variables fixed and no tight architectural
+  constraints.)
 
   It can happen that the client will, for one reason or another, fix a basic
   variable. The symptom here is that we end up short a few basic variables.
@@ -5731,6 +5733,14 @@ CoinWarmStart* ODSI::getWarmStart () const
   case of cbc, this does occur intentionally. So we compensate, and promote
   some random nonbasic variable to basic status. If the log level is
   sufficiently high, you'll get a message.
+
+  It can happen that the client will, for one reason or another, augment the
+  constraint system and then ask to install some existing ODWSB object. This
+  happens, for example, in the Feasibility Pump heuristic, which simply tacks
+  on the objective function as a constraint and then asks for a resolve(). This
+  leads to the case where the ODWSB object is smaller than the constraint
+  system. We just create a dylp basis that matches the ODWSB object, and trust
+  that dylp will pick up the inactive constraints and/or variables.
 */
 
 bool ODSI::setWarmStart (const CoinWarmStart *ws)
@@ -5815,16 +5825,16 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
 
 /*
   Extract the info in the warm start object --- size and status vectors.  The
-  number of variables and constraints in the warm start object should match
-  the full size of the constraint system. Note that getWarmStart can create
-  an empty ODWSB object (see comments with getWarmStart).
+  number of variables and constraints in the warm start object should not
+  exceed the full size of the constraint system. Note that getWarmStart can
+  create an empty ODWSB object (see comments with getWarmStart).
 
   Create a dylp basis_struct and status vector of sufficient size to hold the
   information in the OsiDylpWarmStartBasis. This space may well be freed or
   realloc'd by dylp, so use standard calloc to acquire it.  We'll only use as
   much of the basis as is needed for the active constraints.
 */
-  if (!(varcnt == getNumCols() && concnt == getNumRows()))
+  if (!(varcnt <= getNumCols() && concnt <= getNumRows()))
   { handler_->message(ODSI_ODWSBBADSIZE,messages_)
       << concnt << varcnt << getNumRows() << getNumCols() ;
     if (ourBasis == true) delete wsb ;

@@ -2015,8 +2015,17 @@ OsiClpSolverInterface::addCols(const int numcols,
 void 
 OsiClpSolverInterface::deleteCols(const int num, const int * columnIndices)
 {
+  findIntegers(false);
   deleteBranchingInfo(num,columnIndices);
   modelPtr_->deleteColumns(num,columnIndices);
+  // synchronize integers (again)
+  int numberColumns = modelPtr_->numberColumns();
+  for (int i=0;i<numberColumns;i++) {
+    if (modelPtr_->isInteger(i))
+      integerInformation_[i]=1;
+    else
+      integerInformation_[i]=0;
+  }
   basis_.deleteColumns(num,columnIndices);
   linearObjective_ = modelPtr_->objective();
   freeCachedResults();
@@ -5138,7 +5147,16 @@ OsiClpSolverInterface::branchAndBound() {
     
     // Add continuous to it;
     OsiNodeSimple rootNode(*this,numberIntegers,which,getWarmStart());
-    branchingTree.push_back(rootNode);
+    // something extra may have been fixed by strong branching
+    // if so go round again
+    while (rootNode.variable_==numberIntegers) {
+      resolve();
+      rootNode = OsiNodeSimple(*this,numberIntegers,which,getWarmStart());
+    }
+    if (rootNode.objectiveValue_<1.0e100) {
+      // push on stack
+      branchingTree.push_back(rootNode);
+    }
     
     // For printing totals
     int numberIterations=0;

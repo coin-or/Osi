@@ -4203,7 +4203,16 @@ OsiClpSolverInterface::branchAndBound() {
     
     // Add continuous to it;
     OsiNodeSimple rootNode(*this,numberIntegers,which,getWarmStart());
-    branchingTree.push_back(rootNode);
+    // something extra may have been fixed by strong branching
+    // if so go round again
+    while (rootNode.variable_==numberIntegers) {
+      resolve();
+      rootNode = OsiNodeSimple(*this,numberIntegers,which,getWarmStart());
+    }
+    if (rootNode.objectiveValue_<1.0e100) {
+      // push on stack
+      branchingTree.push_back(rootNode);
+    }
     
     // For printing totals
     int numberIterations=0;

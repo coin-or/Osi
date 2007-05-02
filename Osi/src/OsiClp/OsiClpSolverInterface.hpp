@@ -1174,8 +1174,11 @@ protected:
   /// Pointer to model
   OsiClpSolverInterface * osiModel_;
   /** Where from 
-      0 dual
+      0 dual (resolve)
       1 crunch
+      2 primal (resolve)
+      4 dual (initialSolve)
+      6 primal (initialSolve)
   */
   int whereFrom_;
   /** phase

@@ -79,10 +79,10 @@ OsiBabSolver::OsiBabSolver(const OsiBabSolver & rhs)
   bestObjectiveValue_(rhs.bestObjectiveValue_),
   mipBound_(rhs.mipBound_),
   solver_(rhs.solver_),
-  solverType_(rhs.solverType_),
   bestSolution_(NULL),
   beforeLower_(rhs.beforeLower_),
   beforeUpper_(rhs.beforeUpper_),
+  solverType_(rhs.solverType_),
   sizeSolution_(rhs.sizeSolution_),
   extraCharacteristics_(rhs.extraCharacteristics_)
 {

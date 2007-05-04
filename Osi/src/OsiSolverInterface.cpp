@@ -896,10 +896,10 @@ const OsiRowCutDebugger * OsiSolverInterface::getRowCutDebuggerAlways() const
 //-------------------------------------------------------------------
 OsiSolverInterface::OsiSolverInterface () :
   rowCutDebugger_(NULL),
-  appDataEtc_(NULL),
-  ws_(NULL),
   handler_(NULL),
-  defaultHandler_(true)
+  defaultHandler_(true),
+  appDataEtc_(NULL),
+  ws_(NULL)
 {
   setInitialData();
 }

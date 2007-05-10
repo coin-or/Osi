@@ -33,11 +33,10 @@ AC_CONFIG_SRCDIR(configure.ac)
 AC_PREFIX_DEFAULT([`pwd`])
 
 #############################################################################
-#     We only need automake to generate Makefiles for the distribution      #
+#  Do the tests necessary to configure compilers and initialise autotools   #
 #############################################################################
 
-# Initialize automake
-AC_COIN_INIT_AUTOMAKE
+AC_COIN_CREATE_LIBTOOL
 
 #############################################################################
 #                  Check which subprojects are there                        #

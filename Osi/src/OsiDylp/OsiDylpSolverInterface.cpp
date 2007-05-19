@@ -340,17 +340,30 @@ extern "C"
 
 #ifndef DYLP_ERRMSGDIR
 /*
-  This is the correct path to find dy_errmsgs.txt, assuming the default
-  COIN directory structure for Osi and Dylp, to wit:
+  This is the correct path to find dy_errmsgs.txt from Osi/test, assuming the
+  default COIN directory structure for Osi and Dylp, to wit:
     COIN
       Osi
 	src
 	  OsiDylp
+	test
       DyLP
 	src
 	  Dylp
+
+  But you most likely want an absolute path, not a relative path.
+
+  This symbol is normally defined when DyLP is configured, and will be set to
+  the absolute path to DyLP/src/Dylp. You can override the configuration by
+  setting DYLP_ERRMSGDIR in the environment before configuring and building
+  DyLP. Note that the surrounding quotes are part of the definition. The path
+  must end in a directory separator.
 */
-# define DYLP_ERRMSGDIR "../../../DyLP/src/Dylp"
+# ifdef _MSC_VER
+#   define DYLP_ERRMSGDIR "..\\..\\DyLP\\src\\Dylp\\"
+# else
+#   define DYLP_ERRMSGDIR "../../DyLP/src/Dylp/"
+# endif
 #endif
 
 extern void dy_initbasis(int concnt, int factor_freq, double zero_tol) ;

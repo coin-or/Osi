@@ -1267,7 +1267,7 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
     std::cout
       << "Read " << rowNameCnt << " names from " << fn.c_str()
       << ", expected " << exmip1RowNames.size() << "." << std::endl ;
-    if (rowNameCnt != exmip1RowNames.size())
+    if (rowNameCnt != static_cast<int>(exmip1RowNames.size()))
     { failureMessage(solverName,"row name count from mps file") ; }
     for (int i = 0 ; i < rowNameCnt ; i++)
     { if (rowNames[i] != exmip1RowNames[i])
@@ -1282,7 +1282,7 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
     std::cout
       << "Read " << colNameCnt << " names from " << fn.c_str()
       << ", expected " << exmip1ColNames.size() << "." << std::endl ;
-    if (colNameCnt != exmip1ColNames.size())
+    if (colNameCnt != static_cast<int>(exmip1ColNames.size()))
     { failureMessage(solverName,"column name count from mps file") ; }
     for (int j = 0 ; j < colNameCnt ; j++)
     { if (colNames[j] != exmip1ColNames[j])
@@ -1355,7 +1355,7 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
   std::cout
     << rowNameCnt << " names available, expected "
     << exmip1RowNames.size() << "." << std::endl ;
-  if (rowNameCnt != exmip1RowNames.size())
+  if (rowNameCnt != static_cast<int>(exmip1RowNames.size()))
   { failureMessage(solverName,
 		   "row name count, discipline switch 0 -> 1") ; }
   for (int i = 0 ; i < rowNameCnt ; i++)
@@ -1371,7 +1371,7 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
   std::cout
     << colNameCnt << " names available, expected "
     << exmip1ColNames.size() << "." << std::endl ;
-  if (colNameCnt != exmip1ColNames.size())
+  if (colNameCnt != static_cast<int>(exmip1ColNames.size()))
   { failureMessage(solverName,
 		   "column name count, discipline switch 0 -> 1") ; }
   for (int j = 0 ; j < colNameCnt ; j++)

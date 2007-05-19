@@ -1730,7 +1730,7 @@ void OGSI::setRowBounds (int i, double lower, double upper)
   if (rowlower_)
   { rowlower_[i] = lower ; }
   if (rowupper_)
-  { rowupper_[i] - upper ; }
+  { rowupper_[i] = upper ; }
 
   return ; }
 
@@ -1741,8 +1741,8 @@ OGSI::setRowType(int elementIndex, char sense, double rightHandSide,
 								   double range)
 {
 	// Could be in OsiSolverInterfaceImpl.
-	double lower;
-	double upper;
+	double lower = 0.0 ;
+	double upper = 0.0 ;
     convertSenseToBound( sense, rightHandSide, range, lower, upper );
 	setRowBounds( elementIndex, lower, upper );
 }
@@ -2034,8 +2034,8 @@ OGSI::addRow(const CoinPackedVectorBase& vec,
 			       const double rowrng)
 {
 	// Could be in OsiSolverInterfaceImpl.
-	double lb;
-	double ub;
+	double lb = 0.0 ;
+	double ub = 0.0 ;
 	convertSenseToBound( rowsen, rowrhs, rowrng, lb, ub);
 	addRow( vec, lb, ub );
 }

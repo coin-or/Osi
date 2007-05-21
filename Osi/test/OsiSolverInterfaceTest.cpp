@@ -1178,9 +1178,12 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
   int intResult ;
   int errCnt = 0 ;
   bool recognisesOsiNames = true ;
+  bool ok ;
+  bool allOK = true ;
 
   OsiSolverInterface *si = emptySi->clone() ;
 
+  std::string exmip1ObjName = "OBJ" ;
   OsiSolverInterface::OsiNameVec exmip1RowNames(0) ;
   exmip1RowNames.push_back("ROW01") ;
   exmip1RowNames.push_back("ROW02") ;
@@ -1197,194 +1200,255 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
   exmip1ColNames.push_back("COL07") ;
   exmip1ColNames.push_back("COL08") ;
 
-  std::cout << "Testing row/column name handling." << std::endl ;
+  testingMessage("Testing row/column name handling ...") ;
 /*
   Try to get the solver name, but don't immediately abort.
 */
   std::string solverName = "Unknown solver" ;
   boolResult = si->getStrParam(OsiSolverName,solverName);
   if (boolResult = false)
-  { failureMessage(solverName,"OsiSolverName parameter get") ; }
+  { failureMessage(solverName,"OsiSolverName parameter get.") ;
+    allOK = false ; }
 /*
   Checking default names. dfltRowColName is pretty liberal about indices, but
-  they should never be negative.
+  they should never be negative. Since default row/column names are a letter
+  plus n digits, asking for a length of 5 on the objective gets you a leading
+  'O' plus five more letters.
 */
   std::string dfltName = si->dfltRowColName('o',0,5) ;
-  std::cout
-    << "Default objective name is \"" << dfltName
-    << "\" expected \"OBJECT\"." << std::endl ;
-  if (dfltName != "OBJECT")
-  { failureMessage(solverName,"Default objective name / name truncation") ; }
+  std::string expName = "OBJECT" ;
+  if (dfltName != expName)
+  { std::cout
+      << "Default objective name is \"" << dfltName
+      << "\" expected \"" << expName << "\"." << std::endl ;
+    failureMessage(solverName,"Default objective name / name truncation.") ;
+    allOK = false ; }
+
   dfltName = si->dfltRowColName('r',-1,5) ;
-  std::cout
-    << "Default name for invalid row index is " << dfltName
-    << "\" expected \"!!invalid Row-1!!\"." << std::endl ;
-  if (dfltName != "!!invalid Row-1!!")
-  { failureMessage(solverName,"default name for invalid row index") ; }
+  expName = "!!invalid Row -1!!" ;
+  if (dfltName != expName)
+  { std::cout
+      << "Default name for invalid row index is " << dfltName
+      << "\" expected \"" << expName << "\"." << std::endl ;
+    failureMessage(solverName,"default name for invalid row index.") ;
+    allOK = false ; }
+
   dfltName = si->dfltRowColName('c',-1,5) ;
-  std::cout
-    << "Default name for invalid column index is " << dfltName
-    << "\" expected \"!!invalid Col-1!!\"." << std::endl ;
-  if (dfltName != "!!invalid Col-1!!")
-  { failureMessage(solverName,"default name for invalid column index") ; }
+  expName = "!!invalid Col -1!!" ;
+  if (dfltName != expName)
+  { std::cout
+      << "Default name for invalid column index is " << dfltName
+      << "\" expected \"" << expName << "\"." << std::endl ;
+    failureMessage(solverName,"default name for invalid column index.") ;
+    allOK = false ; }
 /*
   Start by telling the SI to use lazy names and see if it comes up with the
   right names from the MPS file.
 */
-  std::cout << "Testing lazy names from MPS input file." << std::endl ;
+  // std::cout << "Testing lazy names from MPS input file." << std::endl ;
   nameDiscipline = 1 ;
   boolResult = si->setIntParam(OsiNameDiscipline,nameDiscipline) ;
   if (boolResult == false)
   { failureMessage(solverName,
-		   "Does not recognise OsiNameDiscipline.") ;
+		   "Does not support OsiNameDiscipline.") ;
     recognisesOsiNames = false ; }
 
   intResult = si->readMps(fn.c_str(),"mps") ;
   if (intResult != 0)
-  { failureMessage(solverName,"Read MPS input file") ;
+  { failureMessage(solverName,"Read MPS input file.") ;
     return ; }
 
   OsiSolverInterface::OsiNameVec rowNames ;
   int rowNameCnt ;
   OsiSolverInterface::OsiNameVec colNames ;
   int colNameCnt ;
-  std::string objName ;
 
   int m = si->getNumRows() ;
 
   if (recognisesOsiNames)
-  { objName = si->getObjName() ;
-    std::cout
-      << "Objective name is \"" << objName
-      << "\" expected \"OBJ\"." << std::endl ;
-    if (objName != "OBJ")
-    { failureMessage(solverName,"objective name from mps file") ; }
+  { std::string objName = si->getObjName() ;
+    if (objName != exmip1ObjName)
+    { std::cout
+	<< "Objective name is \"" << objName
+	<< "\" expected \"OBJ\"." << std::endl ;
+      failureMessage(solverName,"objective name from mps file.") ;
+      allOK = false ; }
     if (objName != si->getRowName(m))
-    { failureMessage(solverName,"objective name disagreement") ; }
+    { std::cout
+        << "getObjName returns \"" << objName
+	<< "\" but getRowName(m) returns \"" << si->getRowName(m)
+	<< "\"; should be equal." << std::endl ;
+      failureMessage(solverName,"objective name disagreement, lazy names.") ;
+      allOK = false ; }
 
     rowNames = si->getRowNames() ;
     rowNameCnt = rowNames.size() ;
-    std::cout
-      << "Read " << rowNameCnt << " names from " << fn.c_str()
-      << ", expected " << exmip1RowNames.size() << "." << std::endl ;
     if (rowNameCnt != static_cast<int>(exmip1RowNames.size()))
-    { failureMessage(solverName,"row name count from mps file") ; }
+    { std::cout
+	<< "Read " << rowNameCnt << " names from " << fn.c_str()
+	<< ", expected " << exmip1RowNames.size() << "." << std::endl ;
+      failureMessage(solverName,"row name count from mps file.") ;
+      allOK = false ; }
+    ok = true ;
     for (int i = 0 ; i < rowNameCnt ; i++)
     { if (rowNames[i] != exmip1RowNames[i])
-      { std::cout << "ERROR! " ;
-	errCnt++ ; }
-      std::cout
-	<< "Row " << i << " is \"" << rowNames[i]
-	<< "\" expected \"" << exmip1RowNames[i] << "\"." << std::endl ; }
+      { ok = false ;
+        std::cout << "ERROR! " ;
+	errCnt++ ;
+	std::cout
+	  << "Row " << i << " is \"" << rowNames[i]
+	  << "\" expected \"" << exmip1RowNames[i] << "\"." << std::endl ; } }
+    if (!ok)
+    { failureMessage(solverName,"Error in row names read from exmip1.mps.") ;
+      allOK = false ; }
 
     colNames = si->getColNames() ;
     colNameCnt = colNames.size() ;
-    std::cout
-      << "Read " << colNameCnt << " names from " << fn.c_str()
-      << ", expected " << exmip1ColNames.size() << "." << std::endl ;
     if (colNameCnt != static_cast<int>(exmip1ColNames.size()))
-    { failureMessage(solverName,"column name count from mps file") ; }
+    { std::cout
+	<< "Read " << colNameCnt << " names from " << fn.c_str()
+	<< ", expected " << exmip1ColNames.size() << "." << std::endl ;
+      failureMessage(solverName,"column name count from mps file.") ;
+      allOK = false ; }
+    ok = true ;
     for (int j = 0 ; j < colNameCnt ; j++)
     { if (colNames[j] != exmip1ColNames[j])
-      { std::cout << "ERROR! " ;
-	errCnt++ ; }
-      std::cout
-	<< "Column " << j << " is " << colNames[j] 
-	<< "\" expected \"" << exmip1ColNames[j] << "\"." << std::endl ; } }
-
+      { ok = false ;
+        std::cout << "ERROR! " ;
+	errCnt++ ;
+	std::cout
+	  << "Column " << j << " is " << colNames[j] 
+	  << "\" expected \"" << exmip1ColNames[j] << "\"." << std::endl ; } }
+    if (!ok)
+    { failureMessage(solverName,
+    	  "Error in column names read from exmip1.mps.") ;
+      allOK = false ; }
 /*
-  Switch to name discipline 0. We should see default names.
+  Switch back to name discipline 0. We should revert to default names. Failure
+  to switch back to discipline 0 after successfully switching to discipline 1
+  is some sort of internal confusion in the Osi; abort the test.
 */
-  if (recognisesOsiNames)
-  { std::cout << "Switching to no names (aka default names)." << std::endl ;
+    // std::cout << "Switching to no names (aka default names)." << std::endl ;
     nameDiscipline = 0 ;
     boolResult = si->setIntParam(OsiNameDiscipline,nameDiscipline) ;
     if (boolResult == false)
     { failureMessage(solverName,"OsiNameDiscipline = 0 parameter set") ;
       return ; } }
 /*
-  This block of tests should pass even if the underlying Osi doesn't recognise
-  OsiNameDiscipline.
+  This block of tests for default names should pass even if the underlying
+  Osi doesn't recognise OsiNameDiscipline. When using default names, name
+  vectors are not necessary, hence should have size zero.
 */
   rowNames = si->getRowNames() ;
   if (rowNames.size() != 0)
   { failureMessage(solverName,
-		   "Nonzero row name vector length, discipline = 0.") ; }
+		   "Nonzero row name vector length, discipline = 0.") ;
+    allOK = false ; }
+  ok = true ;
   for (int i = 0 ; i < m ; i++)
   { if (si->getRowName(i) != si->dfltRowColName('r',i))
-    { std::cout << "ERROR! " ;
-      errCnt++ ; }
-    std::cout
-      << "Row " << i << " is \"" << si->getRowName(i)
-      << "\" expected \"" << si->dfltRowColName('r',i)
-      << "\"." << std::endl ; }
+    { ok = false ;
+      std::cout << "ERROR! " ;
+      errCnt++ ;
+      std::cout
+	<< "Row " << i << " is \"" << si->getRowName(i)
+	<< "\" expected \"" << si->dfltRowColName('r',i)
+	<< "\"." << std::endl ; } }
+  if (!ok)
+  { failureMessage(solverName,"Error in default row names.") ;
+    allOK = false ; }
+
   colNames = si->getColNames() ;
   if (colNames.size() != 0)
   { failureMessage(solverName,
-		   "Nonzero column name vector length, discipline = 0.") ; }
+		   "Nonzero column name vector length, discipline = 0.") ;
+    allOK = false ; }
   int n = si->getNumCols() ;
+  ok = true ;
   for (int j = 0 ; j < n ; j++)
   { if (si->getColName(j) != si->dfltRowColName('c',j))
-    { std::cout << "ERROR! " ;
-      errCnt++ ; }
-    std::cout
-      << "Column " << j << " is \"" << si->getColName(j)
-      << "\" expected \"" << si->dfltRowColName('c',j)
-      << "\"." << std::endl ; }
+    { ok = false ;
+      std::cout << "ERROR! " ;
+      errCnt++ ;
+      std::cout
+	<< "Column " << j << " is \"" << si->getColName(j)
+	<< "\" expected \"" << si->dfltRowColName('c',j)
+	<< "\"." << std::endl ; } }
+  if (!ok)
+  { failureMessage(solverName,"Error in default column names.") ;
+    allOK = false ; }
 /*
   This is as much as we can ask if the underlying solver doesn't recognise
   OsiNameDiscipline. Return if that's the case.
 */
   if (!recognisesOsiNames)
-  { if (errCnt > 0)
+  { if (allOK)
+    { testingMessage(" ok.\n") ; }
+    else
     { std::ostringstream msg ;
-      msg << errCnt << " naming errors." ;
+      msg << "name discipline management/naming" ;
+      if (errCnt > 0)
+      { msg << "; " << errCnt << " naming errors" ; }
+      msg << "." ;
       failureMessage(solverName,msg.str()) ; }
     return ; }
 /*
-  Switch back. The previous names should again be available.
+  Switch back to lazy names. The previous names should again be available.
 */
-  std::cout << "Switching back to lazy names." << std::endl ;
+  // std::cout << "Switching back to lazy names." << std::endl ;
   nameDiscipline = 1 ;
   boolResult = si->setIntParam(OsiNameDiscipline,nameDiscipline) ;
   if (boolResult == false)
-  { failureMessage(solverName,"OsiNameDiscipline parameter set") ;
+  { failureMessage(solverName,"OsiNameDiscipline = 1 parameter set.") ;
     return ; }
   rowNames = si->getRowNames() ;
   rowNameCnt = rowNames.size() ;
-  std::cout
-    << rowNameCnt << " names available, expected "
-    << exmip1RowNames.size() << "." << std::endl ;
   if (rowNameCnt != static_cast<int>(exmip1RowNames.size()))
-  { failureMessage(solverName,
-		   "row name count, discipline switch 0 -> 1") ; }
+  { std::cout
+      << rowNameCnt << " names available, expected "
+      << exmip1RowNames.size() << "." << std::endl ;
+    failureMessage(solverName,
+		   "row name count, discipline switch 0 -> 1.") ;
+    allOK = false ; }
+  ok = true ;
   for (int i = 0 ; i < rowNameCnt ; i++)
   { if (rowNames[i] != exmip1RowNames[i])
-    { std::cout << "ERROR! " ;
-      errCnt++ ; }
-    std::cout
-      << "Row " << i << " is \"" << rowNames[i]
-      << "\" expected \"" << exmip1RowNames[i] << "\"." << std::endl ; }
+    { ok = false ;
+      std::cout << "ERROR! " ;
+      errCnt++ ;
+      std::cout
+	<< "Row " << i << " is \"" << rowNames[i]
+	<< "\" expected \"" << exmip1RowNames[i] << "\"." << std::endl ; } }
+  if (!ok)
+  { failureMessage(solverName,
+  	"lazy row names, discipline switch 0 -> 1.") ;
+    allOK = false ; }
 
   colNames = si->getColNames() ;
   colNameCnt = colNames.size() ;
-  std::cout
-    << colNameCnt << " names available, expected "
-    << exmip1ColNames.size() << "." << std::endl ;
   if (colNameCnt != static_cast<int>(exmip1ColNames.size()))
-  { failureMessage(solverName,
-		   "column name count, discipline switch 0 -> 1") ; }
+  { std::cout
+      << colNameCnt << " names available, expected "
+      << exmip1ColNames.size() << "." << std::endl ;
+    failureMessage(solverName,
+		   "column name count, discipline switch 0 -> 1.") ;
+    allOK = false ; }
+  ok = true ;
   for (int j = 0 ; j < colNameCnt ; j++)
   { if (colNames[j] != exmip1ColNames[j])
-    { std::cout << "ERROR! " ;
-	errCnt++ ; }
-    std::cout
-      << "Column " << j << " is " << colNames[j] 
-      << "\" expected \"" << exmip1ColNames[j] << "\"." << std::endl ; }
-
+    { ok = false ;
+      std::cout << "ERROR! " ;
+      errCnt++ ;
+      std::cout
+	<< "Column " << j << " is " << colNames[j] 
+	<< "\" expected \"" << exmip1ColNames[j] << "\"." << std::endl ; } }
+  if (!ok)
+  { failureMessage(solverName,
+  	"lazy column names, discipline switch 0 -> 1.") ;
+    allOK = false ; }
 /*
   Add a row. We should see no increase in the size of the row name vector,
-  and asking for the name of the cut should return a default name.
+  and asking for the name of the new row should return a default name.
 */
   int nels = 5 ;
   int indices[5] = { 0, 2, 3, 5, 7 } ;
@@ -1392,46 +1456,49 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
   CoinPackedVector newRow(nels,indices,els) ;
   si->addRow(newRow,-4.2, .42) ;
   if (si->getNumRows() != m+1)
-  { failureMessage(solverName,"add new row") ; }
-  std::cout
-    << "Added new row " << si->getNumRows()-1
-    << "; (default) name is \"" << si->getRowName(m)
-    << "\"." << std::endl ;
+  { failureMessage(solverName,"add new row") ;
+    return ; }
   rowNames = si->getRowNames() ;
   rowNameCnt = rowNames.size() ;
   if (rowNameCnt != m)
-  { failureMessage(solverName,"incorrect length row name vector") ; }
+  { failureMessage(solverName,"incorrect length row name vector") ;
+    allOK = false ; }
   if (si->getRowName(m) != si->dfltRowColName('r',m))
-  { failureMessage(solverName,"incorrect default row name.") ; }
-
+  { std::cout
+      << "Added new row " << si->getNumRows()-1
+      << "; name is \"" << si->getRowName(m)
+      << "\", expected default \"" << si->dfltRowColName('r',m)
+      << "\"." << std::endl ;
+    failureMessage(solverName,"incorrect default row name.") ;
+    allOK = false ; }
 /*
   Now set a name for the row.
 */
   std::string newRowName = "NewRow" ;
-  std::cout
-    << "Setting row name to \"" << newRowName << "\"." << std::endl ;
   si->setRowName(m,newRowName) ;
-  std::cout
-    << "Recovering name as \"" << si->getRowName(m) << "\"." << std::endl ;
   if (si->getRowName(m) != newRowName)
-  { failureMessage(solverName,"set row name") ; }
-
+  { std::cout
+      << "Setting row name to \"" << newRowName << "\"." << std::endl ;
+    std::cout
+      << "Recovering name as \"" << si->getRowName(m) << "\"." << std::endl ;
+    failureMessage(solverName,"set row name after addRow.") ;
+    allOK = false ; }
 /*
   Ok, who are we really talking with? Delete row 0 and see if the names
   change appropriately. Since deleteRows is pure virtual, the names will
   change only if the underlying OsiXXX supports names (i.e., it must make
   a call to deleteRowNames).
 */
-  std::cout
-    << "Testing row deletion." << std::endl ;
+  // std::cout << "Testing row deletion." << std::endl ;
   si->deleteRows(1,indices) ;
   rowNames = si->getRowNames() ;
   rowNameCnt = rowNames.size() ;
-  std::cout
-    << rowNameCnt << " names available, expected " << m << "." << std::endl ;
   if (rowNameCnt != m)
-  { failureMessage(solverName,
-		   "row name count, row deletion") ; }
+  { std::cout
+      << rowNameCnt << " names available, expected " << m << "." << std::endl ;
+    failureMessage(solverName,"row name count after deleteRows.") ;
+    allOK = false ; }
+  ok = true ;
   for (int i = 0 ; i < rowNameCnt ; i++)
   { std::string expected ;
     if (i != m-1)
@@ -1439,11 +1506,16 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
     else
     { expected = newRowName ; }
     if (rowNames[i] != expected)
-    { std::cout << "ERROR! " ;
-      errCnt++ ; }
-    std::cout
-      << "Row " << i << " is \"" << rowNames[i]
-      << "\" expected \"" << expected << "\"." << std::endl ; }
+    { ok = false ;
+      std::cout << "ERROR! " ;
+      errCnt++ ;
+      std::cout
+	<< "Row " << i << " is \"" << rowNames[i]
+	<< "\" expected \"" << expected << "\"." << std::endl ; } }
+  if (!ok)
+  { failureMessage(solverName,
+  	"row names do not adjust correctly after deletion of a row.") ;
+    allOK = false ; }
 
 /*
   Add/delete a column and do the same tests. Expected results as above.
@@ -1458,35 +1530,41 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
   CoinPackedVector newCol(nels,indices,els) ;
   si->addCol(newCol,-4.2, .42, 42.0) ;
   if (si->getNumCols() != n+1)
-  { failureMessage(solverName,"add new column") ; }
-  std::cout
-    << "Added new column " << si->getNumCols()-1
-    << "; (default) name is \"" << si->getColName(n)
-    << "\"." << std::endl ;
+  { failureMessage(solverName,"add new column") ;
+    return ; }
   colNames = si->getColNames() ;
   colNameCnt = colNames.size() ;
   if (colNameCnt != n)
-  { failureMessage(solverName,"incorrect length column name vector") ; }
+  { failureMessage(solverName,"incorrect length column name vector") ;
+    allOK = false ; }
   if (si->getColName(n) != si->dfltRowColName('c',n))
-  { failureMessage(solverName,"incorrect default column name.") ; }
+  { std::cout
+      << "Added new column " << si->getNumCols()-1
+      << "; name is \"" << si->getColName(n)
+      << "\", expected default \"" << si->dfltRowColName('c',n)
+      << "\"." << std::endl ;
+    failureMessage(solverName,"incorrect default column name.") ;
+    allOK = false ; }
   std::string newColName = "NewCol" ;
-  std::cout
-    << "Setting column name to \"" << newColName << "\"." << std::endl ;
   si->setColName(n,newColName) ;
-  std::cout
-    << "Recovering name as \"" << si->getColName(n) << "\"." << std::endl ;
   if (si->getColName(n) != newColName)
-  { failureMessage(solverName,"set column name") ; }
-  std::cout
-    << "Testing column deletion." << std::endl ;
+  { std::cout
+      << "Setting column name to \"" << newColName << "\"." << std::endl ;
+    std::cout
+      << "Recovering name as \"" << si->getColName(n) << "\"." << std::endl ;
+    failureMessage(solverName,"set column name after addCol.") ;
+    allOK = false ; }
+  // std::cout << "Testing column deletion." << std::endl ;
   si->deleteCols(1,indices) ;
   colNames = si->getColNames() ;
   colNameCnt = colNames.size() ;
-  std::cout
-    << colNameCnt << " names available, expected " << n << "." << std::endl ;
   if (colNameCnt != n)
-  { failureMessage(solverName,
-		   "column name count, column deletion") ; }
+  { std::cout
+      << colNameCnt << " names available, expected " << n << "." << std::endl ;
+    failureMessage(solverName,
+		   "column name count after deleteCols.") ;
+    allOK = false ; }
+  ok = true ;
   for (int j = 0 ; j < colNameCnt ; j++)
   { std::string expected ;
     if (j != n-1)
@@ -1494,24 +1572,30 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
     else
     { expected = newColName ; }
     if (colNames[j] != expected)
-    { std::cout << "ERROR! " ;
-      errCnt++ ; }
-    std::cout
-      << "Column " << j << " is \"" << colNames[j]
-      << "\" expected \"" << expected << "\"." << std::endl ; }
-
+    { ok = false ;
+      std::cout << "ERROR! " ;
+      errCnt++ ;
+      std::cout
+	<< "Column " << j << " is \"" << colNames[j]
+	<< "\" expected \"" << expected << "\"." << std::endl ; } }
+  if (!ok)
+  { failureMessage(solverName,
+  	"column names do not adjust correctly after deletion of a column.") ;
+    allOK = false ; }
 /*
   Interchange row and column names.
 */
-  std::cout << "Testing bulk replacement of names." << std::endl ;
+  // std::cout << "Testing bulk replacement of names." << std::endl ;
   si->setRowNames(exmip1ColNames,0,3,2) ;
   rowNames = si->getRowNames() ;
   rowNameCnt = rowNames.size() ;
-  std::cout
-    << rowNameCnt << " names available, expected "
-    << m << "." << std::endl ;
   if (rowNameCnt != m)
-  { failureMessage(solverName,"row name count after bulk replace") ; }
+  { std::cout
+      << rowNameCnt << " names available, expected "
+      << m << "." << std::endl ;
+    failureMessage(solverName,"row name count after bulk replace.") ;
+    allOK = false ; }
+  ok = true ;
   for (int i = 0 ; i < rowNameCnt ; i++)
   { std::string expected ;
     if (i < 2)
@@ -1522,20 +1606,26 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
     else
     { expected = newRowName ; }
     if (rowNames[i] != expected)
-    { std::cout << "ERROR! " ;
-      errCnt++ ; }
-    std::cout
-      << "Row " << i << " is \"" << rowNames[i]
-      << "\" expected \"" << expected << "\"." << std::endl ; }
+    { ok = false ;
+      std::cout << "ERROR! " ;
+      errCnt++ ;
+      std::cout
+	<< "Row " << i << " is \"" << rowNames[i]
+	<< "\" expected \"" << expected << "\"." << std::endl ; } }
+  if (!ok)
+  { failureMessage(solverName,"bulk set of row names failed.") ;
+    allOK = false ; }
 
   si->setColNames(exmip1RowNames,3,2,0) ;
   colNames = si->getColNames() ;
   colNameCnt = colNames.size() ;
-  std::cout
-    << colNameCnt << " names available, expected "
-    << n << "." << std::endl ;
   if (colNameCnt != n)
-  { failureMessage(solverName,"column name count after bulk replace") ; }
+  { std::cout
+      << colNameCnt << " names available, expected "
+      << n << "." << std::endl ;
+    failureMessage(solverName,"column name count after bulk replace") ;
+    allOK = false ; }
+  ok = true ;
   for (int j = 0 ; j < colNameCnt ; j++)
   { std::string expected ;
     if (j < 2)
@@ -1546,41 +1636,56 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
     else
     { expected = newColName ; }
     if (colNames[j] != expected)
-    { std::cout << "ERROR! " ;
-      errCnt++ ; }
-    std::cout
-      << "Column " << j << " is \"" << colNames[j]
-      << "\" expected \"" << expected << "\"." << std::endl ; }
+    { ok = false ;
+      std::cout << "ERROR! " ;
+      errCnt++ ;
+      std::cout
+	<< "Column " << j << " is \"" << colNames[j]
+	<< "\" expected \"" << expected << "\"." << std::endl ; } }
+  if (!ok)
+  { failureMessage(solverName,"bulk set of column names failed.") ;
+    allOK = false ; }
 /*
-  Delete a few row and column names. Names should shift downward.
+  Delete a few row and column names (directly, as opposed to deleting rows or
+  columns). Names should shift downward.
 */
-  std::cout << "Testing name deletion." << std::endl ;
+  // std::cout << "Testing name deletion." << std::endl ;
   si->deleteRowNames(0,2) ;
   rowNames = si->getRowNames() ;
   rowNameCnt = rowNames.size() ;
-  std::cout
-    << rowNameCnt << " names available, expected "
-    << m-2 << "." << std::endl ;
   if (rowNameCnt != m-2)
-  { failureMessage(solverName,"row name count after delete") ; }
+  { std::cout
+      << rowNameCnt << " names available, expected "
+      << m-2 << "." << std::endl ;
+    failureMessage(solverName,"row name count after deleteRowNames.") ;
+    allOK = false ; }
+  ok = true ;
   for (int i = 0 ; i < rowNameCnt ; i++)
   { std::string expected ;
     if (i < rowNameCnt)
     { expected = exmip1ColNames[i] ; }
     if (rowNames[i] != expected)
-    { std::cout << "ERROR! " ;
-      errCnt++ ; }
-    std::cout
-      << "Row " << i << " is \"" << rowNames[i]
-      << "\" expected \"" << expected << "\"." << std::endl ; }
+    { ok = false ;
+      std::cout << "ERROR! " ;
+      errCnt++ ;
+      std::cout
+	<< "Row " << i << " is \"" << rowNames[i]
+	<< "\" expected \"" << expected << "\"." << std::endl ; } }
+  if (!ok)
+  { failureMessage(solverName,
+  	"row names did not adjust correctly after deleteRowNames.") ;
+    allOK = false ; }
+
   si->deleteColNames(5,3) ;
   colNames = si->getColNames() ;
   colNameCnt = colNames.size() ;
-  std::cout
-    << colNameCnt << " names available, expected "
-    << n-3 << "." << std::endl ;
   if (colNameCnt != n-3)
-  { failureMessage(solverName,"column name count after delete") ; }
+  { std::cout
+      << colNameCnt << " names available, expected "
+      << n-3 << "." << std::endl ;
+    failureMessage(solverName,"column name count after deleteColNames.") ;
+    allOK = false ; }
+  ok = true ;
   for (int j = 0 ; j < colNameCnt ; j++)
   { std::string expected ;
     if (j < 2)
@@ -1589,34 +1694,42 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
     if (j >= 2 && j < colNameCnt)
     { expected = exmip1ColNames[j+1] ; }
     if (colNames[j] != expected)
-    { std::cout << "ERROR! " ;
-      errCnt++ ; }
-    std::cout
-      << "Column " << j << " is \"" << colNames[j]
-      << "\" expected \"" << expected << "\"." << std::endl ; }
+    { ok = false ;
+      std::cout << "ERROR! " ;
+      errCnt++ ;
+      std::cout
+	<< "Column " << j << " is \"" << colNames[j]
+	<< "\" expected \"" << expected << "\"." << std::endl ; } }
+  if (!ok)
+  { failureMessage(solverName,
+  	"column names did not adjust correctly after deleteColNames.") ;
+    allOK = false ; }
 /*
   Finally, switch to full names, and make sure we retrieve full length
   vectors.
 */
-  std::cout << "Switching to full names." << std::endl ;
+  // std::cout << "Switching to full names." << std::endl ;
   nameDiscipline = 2 ;
   boolResult = si->setIntParam(OsiNameDiscipline,nameDiscipline) ;
   if (boolResult == false)
-  { failureMessage(solverName,"OsiNameDiscipline parameter set") ;
+  { failureMessage(solverName,"OsiNameDiscipline = 2 parameter set") ;
     return ; }
   m = si->getNumRows() ;
   rowNames = si->getRowNames() ;
   rowNameCnt = rowNames.size() ;
-  std::cout
-    << rowNameCnt << " names available, expected "
-    << m+1 << "." << std::endl ;
   if (rowNameCnt != m+1)
-  { failureMessage(solverName,"row name count, discipline = 2") ; }
-  std::cout
-    << "Objective name is \"" << rowNames[m]
-    << "\" expected \"OBJ\"." << std::endl ;
-  if (rowNames[m] != objName)
-  { failureMessage(solverName,"objective name disagreement") ; }
+  { std::cout
+      << rowNameCnt << " names available, expected "
+      << m+1 << "." << std::endl ;
+    failureMessage(solverName,"row name count, full names.") ;
+    allOK = false ; }
+  if (rowNames[m] != exmip1ObjName)
+  { std::cout
+      << "Objective name is \"" << rowNames[m]
+      << "\" expected \"" << exmip1ObjName << "\"." << std::endl ;
+    failureMessage(solverName,"objective name disagreement, full names.") ;
+    allOK = false ; }
+  ok = true ;
   for (int i = 0 ; i < rowNameCnt-1 ; i++)
   { std::string expected ;
     if (i < 3)
@@ -1624,20 +1737,25 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
     else
     { expected = si->dfltRowColName('r',i) ; }
     if (rowNames[i] != expected)
-    { std::cout << "ERROR! " ;
-      errCnt++ ; }
-    std::cout
-      << "Row " << i << " is \"" << rowNames[i]
-      << "\" expected \"" << expected << "\"." << std::endl ; }
+    { ok = false ;
+      std::cout << "ERROR! " ;
+      errCnt++ ;
+      std::cout
+	<< "Row " << i << " is \"" << rowNames[i]
+	<< "\" expected \"" << expected << "\"." << std::endl ; } }
+  if (!ok)
+  { failureMessage(solverName,"incorrect row names, full names.") ;
+    allOK = false ; }
 
   n = si->getNumCols() ;
   colNames = si->getColNames() ;
   colNameCnt = colNames.size() ;
-  std::cout
-    << colNameCnt << " names available, expected "
-    << n << "." << std::endl ;
   if (colNameCnt != n)
-  { failureMessage(solverName,"column name count, discipline = 2") ; }
+  { std::cout
+      << colNameCnt << " names available, expected "
+      << n << "." << std::endl ;
+    failureMessage(solverName,"column name count, full names.") ; }
+  ok = true ;
   for (int j = 0 ; j < colNameCnt ; j++)
   { std::string expected ;
     if (j < 2)
@@ -1648,17 +1766,27 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
     else
     { expected = si->dfltRowColName('c',j) ; }
     if (colNames[j] != expected)
-    { std::cout << "ERROR! " ;
-      errCnt++ ; }
-    std::cout
-      << "Column " << j << " is " << colNames[j] 
-      << "\" expected \"" << expected << "\"." << std::endl ; }
+    { ok = false ;
+      std::cout << "ERROR! " ;
+      errCnt++ ;
+      std::cout
+	<< "Column " << j << " is " << colNames[j] 
+	<< "\" expected \"" << expected << "\"." << std::endl ; } }
+  if (!ok)
+  { failureMessage(solverName,"incorrect column names, full names.") ;
+    allOK = false ; }
 
-  if (errCnt > 0)
+  if (allOK)
+  { testingMessage(" ok.\n") ; }
+  else
   { std::ostringstream msg ;
-    msg << errCnt << " naming errors." ;
+    msg << "name discipline management/naming" ;
+    if (errCnt > 0)
+    { msg << "; " << errCnt << " naming errors" ; }
+    msg << "." ;
     failureMessage(solverName,msg.str()) ; }
-  
+
+  return ;
 }
 
 //--------------------------------------------------------------------------
@@ -1675,6 +1803,7 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
 void testSettingSolutions (OsiSolverInterface &proto)
 
 { OsiSolverInterface *si = proto.clone() ;
+  bool allOK = true ;
   int i ;
   int m = si->getNumRows() ;
   int n = si->getNumCols() ;
@@ -1683,7 +1812,9 @@ void testSettingSolutions (OsiSolverInterface &proto)
   double *colShouldBe = new double [m] ;
   double *rowShouldBe = new double [n] ;
 
-  testingMessage("Checking that solver can set row and column solutions.\n") ;
+  CoinAbsFltEq fltEq ;
+
+  testingMessage("Checking that solver can set row and column solutions ...") ;
 
 /*
   Create dummy solution vectors.
@@ -1698,54 +1829,86 @@ void testSettingSolutions (OsiSolverInterface &proto)
 
 /*
   First the values we can set directly: primal (column) and dual (row)
-  solutions.
+  solutions. The osi should copy the vector, hence the pointer we get back
+  should not be the pointer we supply. But it's reasonable to expect exact
+  equality, as no arithmetic should be performed.
 */
   si->setColSolution(dummyColSol) ;
   rowVec = si->getColSolution() ;
-  assert(dummyColSol != rowVec) ;
+  if (dummyColSol == rowVec)
+  { failureMessage(*si,
+  	"Solver returned original pointer for column solution!") ;
+    allOK = false ; }
 
+  bool ok = true ;
   for (i = 0 ; i < n ;  i++) 
   { mval = rowVec[i] ;
     rval = dummyColSol[i] ;
-    assert(mval == rval) ; }
+    if (mval != rval)
+    { ok = false ;
+      std::cout
+        << "x<" << i << "> = " << mval
+        << ", expecting " << rval
+	<< ", |error| = " << (mval-rval)
+        << "." << std::endl ; } }
+  if (!ok)
+  { failureMessage(*si,
+	"Incorrect value returned for column (primal) solution set"
+	" with setColSolution.") ;
+    allOK = false ; }
   
   si->setRowPrice(dummyRowSol) ;
   colVec = si->getRowPrice() ;
+  if (dummyRowSol == colVec)
+  { failureMessage(*si,
+  	"Solver returned original pointer for row solution!") ;
+    allOK = false ; }
 
+  ok = true ;
   for (i = 0 ; i < m ; i++) 
   { mval = colVec[i] ;
     cval = dummyRowSol[i] ;
-    assert(mval == cval) ; }
+    if (mval != cval)
+    { ok = false ;
+      std::cout
+        << "y<" << i << "> = " << mval
+        << ", expecting " << cval
+	<< ", |error| = " << (mval-cval)
+        << "." << std::endl ; } }
+  if (!ok)
+  { failureMessage(*si,
+	"Incorrect value returned for row (dual) solution set"
+	" with setRowPrice.") ;
+    allOK = false ; }
 /*
-  Now let's get serious. Check that reduced costs and row activities match the
-  values we just specified for row and column solutions. We won't abort for
-  these, just issue a message.
+  Now let's get serious. Check that reduced costs and row activities match
+  the values we just specified for row and column solutions. Absolute
+  equality cannot be assumed here.
 
   Reduced costs first: c - yA
-
-  Expected values: [ -17.1  -0.5  -2.05  -8  -2  -1.5  3  -8.15 ]
 */
   rowVec = si->getReducedCost() ;
   objVec = si->getObjCoefficients() ;
   const CoinPackedMatrix *mtx = si->getMatrixByCol() ;
   mtx->transposeTimes(dummyRowSol,rowShouldBe) ;
-  bool ok = true ;
+  ok = true ;
   for (i = 0 ; i < n ; i++)
   { mval = rowVec[i] ;
     rval = objVec[i] - rowShouldBe[i] ;
-    // std::cout
-    //   << "cbar<" << i << "> = " << mval
-    //   << ", expecting " << rval << "." << std::endl ;
-    if (mval != rval)
-    { ok = false ; } }
+    if (!fltEq(mval,rval))
+    { ok = false ;
+      std::cout
+        << "cbar<" << i << "> = " << mval
+        << ", expecting " << rval
+	<< ", |error| = " << (mval-rval)
+        << "." << std::endl ; } }
 
   if (!ok)
   { failureMessage(*si,
-	"Incorrect reduced costs from solution set with setRowPrice.") ; }
+	"Incorrect reduced costs from solution set with setRowPrice.") ;
+    allOK = false ; }
 /*
   Row activity: Ax
-
-  Expected values: [ -16  5.75  8  2  21.55 ]
 */
   colVec = si->getRowActivity() ;
   mtx->times(dummyColSol,colShouldBe) ;
@@ -1753,15 +1916,23 @@ void testSettingSolutions (OsiSolverInterface &proto)
   for (i = 0 ; i < m ; i++)
   { mval = colVec[i] ;
     cval = colShouldBe[i] ;
-    // std::cout
-    //   << "lhs<" << i << "> = " << mval
-    //   << ", expecting " << cval << "." << std::endl ;
-    if (mval != cval)
-    { ok = false ; } }
+    if (!fltEq(mval,cval))
+    { ok = false ;
+      std::cout
+        << "lhs<" << i << "> = " << mval
+        << ", expecting " << cval
+	<< ", |error| = " << (mval-cval)
+	<< "." << std::endl ; } }
 
   if (!ok)
   { failureMessage(*si,
-	"Incorrect row activity from solution set with setColSolution.") ; }
+	"Incorrect row activity from solution set with setColSolution.") ;
+    allOK = false ; }
+
+  if (allOK)
+  { testingMessage(" ok.\n") ; }
+  else
+  { testingMessage(" errors handling imposed column/row solutions.") ; }
 
   delete [] dummyColSol ;
   delete [] dummyRowSol ;

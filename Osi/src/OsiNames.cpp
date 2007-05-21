@@ -69,16 +69,16 @@ std::string invRowColName (char rcd, int ndx)
   buildName << "!!invalid " ;
   switch (rcd)
   { case 'r':
-    { buildName << "Row" << ndx << "!!" ;
+    { buildName << "Row " << ndx << "!!" ;
       break ; }
     case 'c':
-    { buildName << "Col" << ndx << "!!" ;
+    { buildName << "Col " << ndx << "!!" ;
       break ; }
     case 'd':
-    { buildName << "Discipline" << ndx << "!!" ;
+    { buildName << "Discipline " << ndx << "!!" ;
       break ; }
     case 'u':
-    { buildName << "Row/Col" << ndx << "!!" ;
+    { buildName << "Row/Col " << ndx << "!!" ;
       break ; }
     default:
     { buildName << "!!Internal Confusion!!" ;
@@ -105,7 +105,7 @@ void reallocRowColNames (OsiSolverInterface::OsiNameVec &rowNames, int m,
   else
   if (rowCap < m)
   { rowNames.reserve(m) ; }
-  assert(rowNames.capacity() >= m) ;
+  assert(rowNames.capacity() >= static_cast<unsigned>(m)) ;
 
   if (colCap-n > 1000)
   { colNames.resize(n) ;
@@ -114,7 +114,7 @@ void reallocRowColNames (OsiSolverInterface::OsiNameVec &rowNames, int m,
   else
   if (colCap < n)
   { colNames.reserve(n) ; }
-  assert(colNames.capacity() >= n) ;
+  assert(colNames.capacity() >= static_cast<unsigned>(n)) ;
 
   return ; }
 
@@ -146,7 +146,6 @@ std::string
 OsiSolverInterface::dfltRowColName (char rc, int ndx, unsigned digits) const
 
 { std::ostringstream buildName ;
-  int maxNdx ;
 
   if (!(rc == 'r' || rc == 'c' || rc == 'o'))
   { return (invRowColName('u',ndx)) ; }
@@ -171,7 +170,6 @@ OsiSolverInterface::dfltRowColName (char rc, int ndx, unsigned digits) const
 */
 std::string OsiSolverInterface::getObjName (unsigned maxLen) const
 { std::string name ;
-  int m = getNumRows() ;
   
   if (objName_.length() == 0)
   { name = dfltRowColName('o',0,maxLen) ; }
@@ -221,7 +219,7 @@ std::string OsiSolverInterface::getRowName (int ndx, unsigned maxLen) const
     case 1:
     case 2:
     { name = "" ;
-      if (ndx < rowNames_.size())
+      if (static_cast<unsigned>(ndx) < rowNames_.size())
 	name = rowNames_[ndx] ;
       if (name.length() == 0)
 	name = dfltRowColName('r',ndx) ;
@@ -267,7 +265,7 @@ const OsiSolverInterface::OsiNameVec &OsiSolverInterface::getRowNames ()
     { return (rowNames_) ; }
     case 2:
     { int m = getNumRows() ;
-      if (rowNames_.size() < m+1)
+      if (rowNames_.size() < static_cast<unsigned>(m+1))
       { rowNames_.resize(m+1) ; }
       for (int i = 0 ; i < m ; i++)
       { if (rowNames_[i].length() == 0)
@@ -319,7 +317,7 @@ std::string OsiSolverInterface::getColName (int ndx, unsigned maxLen) const
     case 1:
     case 2:
     { name = "" ;
-      if (ndx < colNames_.size())
+      if (static_cast<unsigned>(ndx) < colNames_.size())
 	name = colNames_[ndx] ;
       if (name.length() == 0)
 	name = dfltRowColName('c',ndx) ;
@@ -365,7 +363,7 @@ const OsiSolverInterface::OsiNameVec &OsiSolverInterface::getColNames ()
     { return (colNames_) ; }
     case 2:
     { int n = getNumCols() ;
-      if (colNames_.size() < n)
+      if (colNames_.size() < static_cast<unsigned>(n))
       { colNames_.resize(n) ; }
       for (int j = 0 ; j < n ; j++)
       { if (colNames_[j].length() == 0)
@@ -412,10 +410,10 @@ void OsiSolverInterface::setRowName (int ndx, std::string name)
     { break ; }
     case 1:
     case 2:
-    { if (ndx > rowNames_.capacity())
+    { if (static_cast<unsigned>(ndx) > rowNames_.capacity())
       { rowNames_.resize(ndx+1) ; }
       else
-      if (ndx >= rowNames_.size())
+      if (static_cast<unsigned>(ndx) >= rowNames_.size())
       { rowNames_.resize(ndx+1) ; }
       rowNames_[ndx] = name ;
       break ; }
@@ -541,10 +539,10 @@ void OsiSolverInterface::setColName (int ndx, std::string name)
     { break ; }
     case 1:
     case 2:
-    { if (ndx > colNames_.capacity())
+    { if (static_cast<unsigned>(ndx) > colNames_.capacity())
       { colNames_.resize(ndx+1) ; }
       else
-      if (ndx >= colNames_.size())
+      if (static_cast<unsigned>(ndx) >= colNames_.size())
       { colNames_.resize(ndx+1) ; }
       colNames_[ndx] = name ;
       break ; }

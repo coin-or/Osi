@@ -1932,7 +1932,7 @@ void testSettingSolutions (OsiSolverInterface &proto)
   if (allOK)
   { testingMessage(" ok.\n") ; }
   else
-  { testingMessage(" errors handling imposed column/row solutions.") ; }
+  { failureMessage(*si,"Errors handling imposed column/row solutions.") ; }
 
   delete [] dummyColSol ;
   delete [] dummyRowSol ;

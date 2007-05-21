@@ -1279,7 +1279,7 @@ void ODSI::dylp_ioinit ()
 
 { if (reference_count > 1) return ;
 
-  string errfile = string(DYLP_ERRMSGDIR)+string("/dy_errmsgs.txt") ;
+  string errfile = string(DYLP_ERRMSGDIR)+string("dy_errmsgs.txt") ;
 # ifdef ODSI_INFOMSGS
   errinit(const_cast<char *>(errfile.c_str()),0,true) ;
 # else

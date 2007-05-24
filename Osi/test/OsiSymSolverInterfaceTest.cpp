@@ -22,6 +22,10 @@
 
 #include "OsiConfig.h"
 
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
+
 #include <cassert>
 #include <iostream>
 
@@ -32,10 +36,6 @@
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
 #include "CoinPackedMatrix.hpp"
-
-#ifdef NDEBUG
-#undef NDEBUG
-#endif
 
 void OsiSymSolverInterface::printBounds()
 {

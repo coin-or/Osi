@@ -568,6 +568,35 @@ public:
 
   //---------------------------------------------------------------------------
 
+  /*! \name Methods for row and column names.
+
+    Only the set methods need to be overridden to ensure consistent names
+    between OsiGlpk and the OSI base class.
+  */
+  //@{
+
+    /*! \brief Set the objective function name */
+
+    void setObjName (std::string name) ;
+
+    /*! \brief Set a row name
+
+      Quietly does nothing if the name discipline (#OsiNameDiscipline) is
+      auto. Quietly fails if the row index is invalid.
+    */
+    void setRowName(int ndx, std::string name) ;
+
+    /*! \brief Set a column name
+
+      Quietly does nothing if the name discipline (#OsiNameDiscipline) is
+      auto. Quietly fails if the column index is invalid.
+    */
+    void setColName(int ndx, std::string name) ;
+
+  //@}
+
+  //---------------------------------------------------------------------------
+
   /**@name GLPK specific public interfaces */
   //@{
   enum keepCachedFlag
@@ -688,32 +717,69 @@ private:
   int bbWasLast_; 
 
   // Int parameters.
+  /// simplex iteration limit (per call to solver)
   int maxIteration_;
+  /// simplex iteration limit (for hot start)
   int hotStartMaxIteration_;
+  /// OSI name discipline
+  int nameDisc_;
 
   // Double parameters.
+  /// dual objective limit
   double dualObjectiveLimit_;
+  /// primal objective limit
   double primalObjectiveLimit_;
+  /// dual feasibility tolerance
   double dualTolerance_;
+  /// primal feasibility tolerance
   double primalTolerance_;
+  /// constant offset for objective function
+  double objOffset_;
+
+  // String parameters
+  /// Problem name
+  std::string probName_;
 
   /// Hotstart information
 
+  /// size of column status and value arrays
   int hotStartCStatSize_;
+  /// column status array
   int *hotStartCStat_;
+  /// primal variable values
   double *hotStartCVal_;
+  /// dual variable values
   double *hotStartCDualVal_;
 
+  /// size of row status and value arrays
   int hotStartRStatSize_;
+  /// row status array
   int *hotStartRStat_;
+  /// row slack values
   double *hotStartRVal_;
+  /// row dual values
   double *hotStartRDualVal_;
 
+  // Status information
+  /// glpk stopped on iteration limit
   bool isIterationLimitReached_;
+  /// glpk abandoned the problem 
   bool isAbandoned_;
+  /*! \brief  glpk stopped on lower objective limit
+
+    When minimising, this is the primal limit; when maximising, the dual
+    limit.
+  */
   bool isObjLowerLimitReached_;
+  /*! \brief  glpk stopped on upper objective limit
+
+    When minimising, this is the dual limit; when maximising, the primal
+    limit.
+  */
   bool isObjUpperLimitReached_;
+  /// glpk declared the problem primal infeasible
   bool isPrimInfeasible_;
+  /// glpk declared the problem dual infeasible
   bool isDualInfeasible_;
 
   /**@name Cached information derived from the GLPK model */

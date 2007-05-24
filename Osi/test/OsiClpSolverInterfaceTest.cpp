@@ -6,6 +6,10 @@
 #  pragma warning(disable:4786)
 #endif
 
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
+
 #include "OsiConfig.h"
 
 #include <cassert>
@@ -25,9 +29,6 @@
 
 //#############################################################################
 
-#ifdef NDEBUG
-#undef NDEBUG
-#endif
 class OsiClpMessageTest :
    public CoinMessageHandler {
 

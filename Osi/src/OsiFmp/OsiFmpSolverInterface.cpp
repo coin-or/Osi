@@ -302,6 +302,8 @@ OsiFmpSolverInterface::setIntParam(OsiIntParam key, int value)
     break;
   case OsiLastIntParam:
     return false;
+  default:
+    return false;
   }
   return true;
 }
@@ -350,6 +352,9 @@ OsiFmpSolverInterface::setDblParam(OsiDblParam key, double value)
 
   case OsiLastDblParam:
     return false;
+  
+  default:
+    return false;
   }
   return true;
 }
@@ -389,6 +394,8 @@ OsiFmpSolverInterface::getIntParam(OsiIntParam key, int& value) const
     break;
   case OsiLastIntParam:
     return false;
+  default:
+    return false;
   }
   return true;
 }
@@ -420,6 +427,8 @@ OsiFmpSolverInterface::getDblParam(OsiDblParam key, double& value) const
     break;
   case OsiLastDblParam:
     return false;
+  default:
+    return false;
   }
   return true;
 }
@@ -437,6 +446,8 @@ OsiFmpSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
     value = "FortMP";
     break;
   case OsiLastStrParam:
+    return false;
+  default:
     return false;
   }
   return true;

@@ -86,6 +86,8 @@ public:
     virtual bool isDualObjectiveLimitReached() const;
     /// Iteration limit reached?
     virtual bool isIterationLimitReached() const;
+    //Returns true if a basis is available and optimal
+  virtual bool basisIsAvailable() const ;
   //@}
 
   //---------------------------------------------------------------------------

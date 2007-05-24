@@ -76,11 +76,17 @@ void OsiCuts::gutsOfDestructor()
   int i;
   
   int ne = rowCutPtrs_.size();
-  for (i=0; i<ne; i++) delete rowCutPtrs_[i];
+  for (i=0; i<ne; i++) {
+    if (rowCutPtrs_[i]->globallyValidAsInteger()!=2)
+      delete rowCutPtrs_[i];
+  }
   rowCutPtrs_.clear();
   
   ne = colCutPtrs_.size();
-  for (i=0; i<ne; i++) delete colCutPtrs_[i];
+  for (i=0; i<ne; i++) {
+    if (colCutPtrs_[i]->globallyValidAsInteger()!=2)
+      delete colCutPtrs_[i];
+  }
   colCutPtrs_.clear();
   
   assert( sizeRowCuts()==0 );

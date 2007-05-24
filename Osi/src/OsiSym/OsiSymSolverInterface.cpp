@@ -212,6 +212,8 @@ bool OsiSymSolverInterface::setIntParam(OsiIntParam key, int value)
     case OsiMaxNumIterationHotStart:
        keyVal = "node_limit";
        break;
+    case OsiNameDiscipline:
+       return false ;
     case OsiLastIntParam:
        return false;
 
@@ -460,6 +462,8 @@ bool OsiSymSolverInterface::getIntParam(OsiIntParam key, int& value) const
     case OsiMaxNumIterationHotStart:
        keyVal = "node_limit";
        break;
+    case OsiNameDiscipline:
+       return false ;
     case OsiLastIntParam:
        return false;
     default:

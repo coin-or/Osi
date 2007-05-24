@@ -5,6 +5,7 @@
   Copyright (C) 2002, 2003, 2004.
   Lou Hafer, Stephen Tse, International Business Machines Corporation and
   others. All Rights Reserved.
+  Copyright (C) 2005 -- 2007 Lou Hafer
 */
 
 /*! \file OsiDylpSolverInterface.hpp
@@ -70,8 +71,8 @@ typedef enum { startInvalid = 0,
 
   <p>
   Any successful call to dylp (<i>i.e.</i>, a call that results in an optimal,
-  infeasible, or unbounded result) will replace the existing solution with
-  the result of the call to dylp.
+  infeasible, or unbounded result, or that terminates on iteration limit) will
+  replace the existing solution with the result of the call to dylp.
 
   <p>
   It is possible to specify initial values for the primal and dual variables
@@ -373,7 +374,7 @@ public:
 
   void deleteCols(const int num, const int *colIndices) ;
 
-  /* For overload resolution with OSI::addCol functions. */
+  /* For overload resolution with OSI::addRow functions. */
 
   using OsiSolverInterface::addRow ;
 
@@ -554,6 +555,33 @@ public:
   /*! \brief Get the objective function value for the solution */
 
   double getObjValue() const ;
+
+//@}
+
+/*! \name Methods for row and column names.
+
+  Only the set methods need to be overridden to ensure consistent names
+  between OsiDylp and the OSI base class.
+*/
+//@{
+
+  /*! \brief Set the objective function name */
+
+  void setObjName (std::string name) ;
+
+  /*! \brief Set a row name
+
+    Quietly does nothing if the name discipline (#OsiNameDiscipline) is
+    auto. Quietly fails if the row index is invalid.
+  */
+  void setRowName(int ndx, std::string name) ;
+
+  /*! \brief Set a column name
+
+    Quietly does nothing if the name discipline (#OsiNameDiscipline) is
+    auto. Quietly fails if the column index is invalid.
+  */
+  void setColName(int ndx, std::string name) ;
 
 //@}
 
@@ -965,9 +993,11 @@ private:
 //@{
   
   void add_col(const CoinPackedVectorBase& coin_coli,
-    vartyp_enum vtypi,double vlbi, double vubi, double obji) ;
+	       vartyp_enum vtypi, double vlbi,
+	       double vubi, double obji, const std::string *nme) ;
   void add_row(const CoinPackedVectorBase& coin_rowi, 
-    char clazzi, contyp_enum ctypi, double rhsi, double rhslowi) ;
+	       char clazzi, contyp_enum ctypi,
+	       double rhsi, double rhslowi, const std::string *nme) ;
   void calc_objval() ;
   contyp_enum bound_to_type(double lower, double upper) ;
   void gen_rowiparms(contyp_enum* ctypi, double* rhsi, double* rhslowi, 

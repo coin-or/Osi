@@ -75,7 +75,8 @@ public:
     with the presolved problem, or NULL if the problem is infeasible or
     unbounded.  If \c keepIntegers is true then bounds may be tightened in
     the original. Bounds will be moved by up to \c feasibilityTolerance to
-    try and stay feasible.
+    try and stay feasible. When \c doStatus is true, the current solution will
+    be transformed to match the presolved model.
 
     This should be paired with postsolve(). It is up to the client to
     destroy the returned OsiSolverInterface, <i>after</i> calling postsolve().

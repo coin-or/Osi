@@ -47,12 +47,15 @@ OsiAuxInfo::operator=(const OsiAuxInfo &rhs)
 // Default Constructor
 OsiBabSolver::OsiBabSolver(int solverType) 
   :OsiAuxInfo(),
-   solver_(NULL),
-   solverType_(solverType),
    bestObjectiveValue_(1.0e100),
-   bestSolution_(NULL),
    mipBound_(-1.0e100),
-   sizeSolution_(0)
+   solver_(NULL),
+   bestSolution_(NULL),
+   beforeLower_(NULL),
+   beforeUpper_(NULL),
+   solverType_(solverType),
+   sizeSolution_(0),
+   extraCharacteristics_(0)
 {
 }
 
@@ -73,12 +76,15 @@ OsiBabSolver::clone() const
 OsiBabSolver::OsiBabSolver(const OsiBabSolver & rhs)
 :
   OsiAuxInfo(rhs),
-  solver_(rhs.solver_),
-  solverType_(rhs.solverType_),
   bestObjectiveValue_(rhs.bestObjectiveValue_),
-  bestSolution_(NULL),
   mipBound_(rhs.mipBound_),
-  sizeSolution_(rhs.sizeSolution_)
+  solver_(rhs.solver_),
+  bestSolution_(NULL),
+  beforeLower_(rhs.beforeLower_),
+  beforeUpper_(rhs.beforeUpper_),
+  solverType_(rhs.solverType_),
+  sizeSolution_(rhs.sizeSolution_),
+  extraCharacteristics_(rhs.extraCharacteristics_)
 {
   if (rhs.bestSolution_) {
     assert (solver_);
@@ -97,6 +103,9 @@ OsiBabSolver::operator=(const OsiBabSolver &rhs)
     bestSolution_ = NULL;
     mipBound_ = rhs.mipBound_;
     sizeSolution_ = rhs.sizeSolution_;
+    extraCharacteristics_ = rhs.extraCharacteristics_;
+    beforeLower_ = rhs.beforeLower_;
+    beforeUpper_ = rhs.beforeUpper_;
     if (rhs.bestSolution_) {
       assert (solver_);
       bestSolution_ = CoinCopyOfArray(rhs.bestSolution_,sizeSolution_);

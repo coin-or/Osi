@@ -761,3 +761,94 @@ OsiCbcSolverInterface::branchAndBound()
 {
   modelPtr_->branchAndBound();
 }
+
+/*
+  Name discipline support   -- lh, 070328 --
+
+  For safety, there's really nothing to it but to pass each call of an impure
+  virtual method on to the underlying solver. Otherwise we just can't know if
+  it's been overridden or not.
+*/
+
+std::string
+OsiCbcSolverInterface::dfltRowColName (char rc, int ndx, unsigned digits) const
+{
+  return (modelPtr_->solver()->dfltRowColName(rc,ndx,digits)) ;
+}
+
+std::string OsiCbcSolverInterface::getObjName (unsigned maxLen) const
+{
+  return (modelPtr_->solver()->getObjName(maxLen)) ;
+}
+
+std::string OsiCbcSolverInterface::getRowName (int ndx, unsigned maxLen) const
+{
+  return (modelPtr_->solver()->getRowName(ndx,maxLen)) ;
+}
+
+const OsiSolverInterface::OsiNameVec &OsiCbcSolverInterface::getRowNames ()
+{
+  return (modelPtr_->solver()->getRowNames()) ;
+}
+
+std::string OsiCbcSolverInterface::getColName (int ndx, unsigned maxLen) const
+{
+  return (modelPtr_->solver()->getColName(ndx,maxLen)) ;
+}
+
+const OsiSolverInterface::OsiNameVec &OsiCbcSolverInterface::getColNames ()
+{
+  return (modelPtr_->solver()->getColNames()) ;
+}
+
+void OsiCbcSolverInterface::setRowNames (OsiNameVec &srcNames,
+					 int srcStart, int len, int tgtStart)
+{
+  modelPtr_->solver()->setRowNames(srcNames,srcStart,len,tgtStart) ;
+}
+
+void OsiCbcSolverInterface::deleteRowNames (int tgtStart, int len)
+{
+  modelPtr_->solver()->deleteRowNames(tgtStart,len) ;
+}
+
+void OsiCbcSolverInterface::setColNames (OsiNameVec &srcNames,
+					 int srcStart, int len, int tgtStart)
+{
+  modelPtr_->solver()->setColNames(srcNames,srcStart,len,tgtStart) ;
+}
+
+void OsiCbcSolverInterface::deleteColNames (int tgtStart, int len)
+{
+  modelPtr_->solver()->deleteColNames(tgtStart,len) ;
+}
+
+/*
+  These last three are the only functions that would normally be overridden.
+*/
+
+/*
+  Set objective function name.
+*/
+void OsiCbcSolverInterface::setObjName (std::string name)
+{
+  modelPtr_->solver()->setObjName(name) ;
+}
+
+/*
+  Set a row name, to make sure both the solver and OSI see the same name.
+*/
+void OsiCbcSolverInterface::setRowName (int ndx, std::string name)
+
+{ 
+  modelPtr_->solver()->setRowName(ndx,name) ;
+}
+
+/*
+  Set a column name, to make sure both the solver and OSI see the same name.
+*/
+void OsiCbcSolverInterface::setColName (int ndx, std::string name)
+
+{ 
+  modelPtr_->solver()->setColName(ndx,name) ;
+}

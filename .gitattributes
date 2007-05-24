@@ -17,6 +17,7 @@ Osi/m4/ac_osicbc_config.m4 -text
 Osi/m4/ac_osidylp_options.m4 -text
 Osi/osi_addlibs.txt.in -text
 /README -text
+/compile -text
 /config.guess -text
 /config.sub -text
 /configure -text

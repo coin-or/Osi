@@ -1,5 +1,5 @@
 /*! \legal
-  Copyright (C) 2002, 2003, 2004.
+  Copyright (C) 2004 -- 2007
   Lou Hafer, International Business Machines Corporation and others.
   All Rights Reserved.
 
@@ -276,14 +276,14 @@ CoinPresolveMatrix *ODSI::initialisePresolve (bool keepIntegers)
   getDblParam(OsiPrimalTolerance,val) ;
   exp = ((int) (.5 + log10((double) n))) - 2 ;
   if (exp > 0)
-  { val *= pow(10,(double) exp) ; }
+  { val *= pow(10.0,(double) exp) ; }
   preObj->setPrimalTolerance(val) ;
   preObj->setFeasibilityTolerance(1000*val) ;
 
   getDblParam(OsiDualTolerance,val) ;
   exp = ((int) (.5 + log10((double) m))) - 2 ;
   if (exp > 0)
-  { val *= pow(10,(double) exp) ; }
+  { val *= pow(10.0,(double) exp) ; }
   preObj->setDualTolerance(val) ;
 
   if (keepIntegers_)

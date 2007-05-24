@@ -2,7 +2,7 @@
 #define OsiDylpWarmStartBasis_H
 
 /*! \legal
-  Copyright (C) 2002, 2003, 2004.
+  Copyright (C) 2003 -- 2007
   Lou Hafer, International Business Machines Corporation and others.
   All Rights Reserved.
 */
@@ -142,6 +142,23 @@ class OsiDylpWarmStartBasis : public CoinWarmStartBasis
   */
 
   void deleteRows (int number, const int *which) ;
+
+  /** \brief Merge entries from a source basis into this basis.
+
+    \warning
+    It's the client's responsibility to ensure validity of the merged basis,
+    if that's important to the application.
+
+    The vector xferCols (xferRows) specifies runs of entries to be taken from
+    the source basis and placed in this basis. Each entry is a CoinTriple,
+    with first specifying the starting source index of a run, second
+    specifying the starting destination index, and third specifying the run
+    length.
+  */
+
+  virtual void mergeBasis(const CoinWarmStartBasis *src,
+			  const XferVec *xferRows,
+			  const XferVec *xferCols) ;
 
 //@}
 

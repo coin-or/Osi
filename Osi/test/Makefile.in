@@ -63,54 +63,54 @@ noinst_PROGRAMS = unitTest$(EXEEXT)
 @COIN_HAS_CBC_TRUE@	$(CBCOBJDIR)/src/libCbc.la
 
 @COIN_HAS_CBC_TRUE@am__append_8 = `cat $(CBCOBJDIR)/cbc_addlibs.txt`
-@COIN_HAS_CGL_TRUE@am__append_9 = $(CGLOBJDIR)/src/libCgl.la
-@COIN_HAS_CGL_TRUE@am__append_10 = `cat $(CGLOBJDIR)/cgl_addlibs.txt`
-@COIN_HAS_CPX_TRUE@am__append_11 = OsiCpxSolverInterfaceTest.cpp
-@COIN_HAS_CPX_TRUE@am__append_12 = -I`$(CYGPATH_W) $(CPXINCDIR)` \
+@COIN_HAS_SYMPHONY_TRUE@am__append_9 = OsiSymSolverInterfaceTest.cpp
+@COIN_HAS_SYMPHONY_TRUE@am__append_10 = -I`$(CYGPATH_W) $(SYMPHONYSRCDIR)/include` \
+@COIN_HAS_SYMPHONY_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiSym`
+
+@COIN_HAS_SYMPHONY_TRUE@am__append_11 = ../src/OsiSym/libOsiSym.la \
+@COIN_HAS_SYMPHONY_TRUE@	$(SYMPHONYOBJDIR)/src/libSym.la
+
+@COIN_HAS_SYMPHONY_TRUE@am__append_12 = `cat $(SYMPHONYOBJDIR)/sym_addlibs.txt`
+@COIN_HAS_CGL_TRUE@am__append_13 = $(CGLOBJDIR)/src/libCgl.la
+@COIN_HAS_CGL_TRUE@am__append_14 = `cat $(CGLOBJDIR)/cgl_addlibs.txt`
+@COIN_HAS_CPX_TRUE@am__append_15 = OsiCpxSolverInterfaceTest.cpp
+@COIN_HAS_CPX_TRUE@am__append_16 = -I`$(CYGPATH_W) $(CPXINCDIR)` \
 @COIN_HAS_CPX_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiCpx`
 
-@COIN_HAS_CPX_TRUE@am__append_13 = ../src/OsiCpx/libOsiCpx.la
-@COIN_HAS_DYLP_TRUE@am__append_14 = OsiDylpSolverInterfaceTest.cpp
-@COIN_HAS_DYLP_TRUE@am__append_15 = -I`$(CYGPATH_W) $(DYLPSRCDIR)/src/DylpStdLib` \
+@COIN_HAS_CPX_TRUE@am__append_17 = ../src/OsiCpx/libOsiCpx.la
+@COIN_HAS_DYLP_TRUE@am__append_18 = OsiDylpSolverInterfaceTest.cpp
+@COIN_HAS_DYLP_TRUE@am__append_19 = -I`$(CYGPATH_W) $(DYLPSRCDIR)/src/DylpStdLib` \
 @COIN_HAS_DYLP_TRUE@	-I`$(CYGPATH_W) $(DYLPSRCDIR)/src/Dylp` \
 @COIN_HAS_DYLP_TRUE@	-I`$(CYGPATH_W) $(DYLPOBJDIR)/inc` \
 @COIN_HAS_DYLP_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiDylp`
 
-@COIN_HAS_DYLP_TRUE@am__append_16 = ../src/OsiDylp/libOsiDylp.la \
+@COIN_HAS_DYLP_TRUE@am__append_20 = ../src/OsiDylp/libOsiDylp.la \
 @COIN_HAS_DYLP_TRUE@	$(DYLPOBJDIR)/src/Dylp/libDylp.la
 
-@COIN_HAS_DYLP_TRUE@am__append_17 = `cat $(DYLPOBJDIR)/dylp_addlibs.txt`
-@COIN_HAS_FMP_TRUE@am__append_18 = OsiFmpSolverInterfaceTest.cpp
-@COIN_HAS_FMP_TRUE@am__append_19 = -I`$(CYGPATH_W) $(srcdir)/../src/OsiFmp`
-@COIN_HAS_FMP_TRUE@am__append_20 = ../src/OsiFmp/libOsiFmp.la
-@COIN_HAS_GLPK_TRUE@am__append_21 = OsiGlpkSolverInterfaceTest.cpp
-@COIN_HAS_GLPK_TRUE@am__append_22 = -I`$(CYGPATH_W) $(GLPKINCDIR)` \
+@COIN_HAS_DYLP_TRUE@am__append_21 = `cat $(DYLPOBJDIR)/dylp_addlibs.txt`
+@COIN_HAS_FMP_TRUE@am__append_22 = OsiFmpSolverInterfaceTest.cpp
+@COIN_HAS_FMP_TRUE@am__append_23 = -I`$(CYGPATH_W) $(srcdir)/../src/OsiFmp`
+@COIN_HAS_FMP_TRUE@am__append_24 = ../src/OsiFmp/libOsiFmp.la
+@COIN_HAS_GLPK_TRUE@am__append_25 = OsiGlpkSolverInterfaceTest.cpp
+@COIN_HAS_GLPK_TRUE@am__append_26 = -I`$(CYGPATH_W) $(GLPKINCDIR)` \
 @COIN_HAS_GLPK_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiGlpk`
 
-@COIN_HAS_GLPK_TRUE@am__append_23 = ../src/OsiGlpk/libOsiGlpk.la
-@COIN_HAS_MSK_TRUE@am__append_24 = OsiMskSolverInterfaceTest.cpp
-@COIN_HAS_MSK_TRUE@am__append_25 = -I`$(CYGPATH_W) $(MSKINCDIR)` \
+@COIN_HAS_GLPK_TRUE@am__append_27 = ../src/OsiGlpk/libOsiGlpk.la
+@COIN_HAS_MSK_TRUE@am__append_28 = OsiMskSolverInterfaceTest.cpp
+@COIN_HAS_MSK_TRUE@am__append_29 = -I`$(CYGPATH_W) $(MSKINCDIR)` \
 @COIN_HAS_MSK_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiMsk`
 
-@COIN_HAS_MSK_TRUE@am__append_26 = ../src/OsiMsk/libOsiMsk.la
-@COIN_HAS_OSL_TRUE@am__append_27 = OsiOslSolverInterfaceTest.cpp
-@COIN_HAS_OSL_TRUE@am__append_28 = -I`$(CYGPATH_W) $(OSLINCDIR)` \
+@COIN_HAS_MSK_TRUE@am__append_30 = ../src/OsiMsk/libOsiMsk.la
+@COIN_HAS_OSL_TRUE@am__append_31 = OsiOslSolverInterfaceTest.cpp
+@COIN_HAS_OSL_TRUE@am__append_32 = -I`$(CYGPATH_W) $(OSLINCDIR)` \
 @COIN_HAS_OSL_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiOsl`
 
-@COIN_HAS_OSL_TRUE@am__append_29 = ../src/OsiOsl/libOsiOsl.la
-@COIN_HAS_SPX_TRUE@am__append_30 = OsiSpxSolverInterfaceTest.cpp
-@COIN_HAS_SPX_TRUE@am__append_31 = -I`$(CYGPATH_W) $(SPXINCDIR)` \
+@COIN_HAS_OSL_TRUE@am__append_33 = ../src/OsiOsl/libOsiOsl.la
+@COIN_HAS_SPX_TRUE@am__append_34 = OsiSpxSolverInterfaceTest.cpp
+@COIN_HAS_SPX_TRUE@am__append_35 = -I`$(CYGPATH_W) $(SPXINCDIR)` \
 @COIN_HAS_SPX_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiSpx`
 
-@COIN_HAS_SPX_TRUE@am__append_32 = ../src/OsiSpx/libOsiSpx.la
-@COIN_HAS_SYMPHONY_TRUE@am__append_33 = OsiSymSolverInterfaceTest.cpp
-@COIN_HAS_SYMPHONY_TRUE@am__append_34 = -I`$(CYGPATH_W) $(SYMPHONYSRCDIR)/include` \
-@COIN_HAS_SYMPHONY_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiSym`
-
-@COIN_HAS_SYMPHONY_TRUE@am__append_35 = ../src/OsiSym/libOsiSym.la \
-@COIN_HAS_SYMPHONY_TRUE@	$(SYMPHONYOBJDIR)/src/libSym.la
-
-@COIN_HAS_SYMPHONY_TRUE@am__append_36 = `cat $(SYMPHONYOBJDIR)/sym_addlibs.txt`
+@COIN_HAS_SPX_TRUE@am__append_36 = ../src/OsiSpx/libOsiSpx.la
 @COIN_HAS_VOL_TRUE@am__append_37 = OsiVolSolverInterfaceTest.cpp
 @COIN_HAS_VOL_TRUE@am__append_38 = -I`$(CYGPATH_W) $(VOLSRCDIR)/src` \
 @COIN_HAS_VOL_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiVol`
@@ -141,31 +141,31 @@ am__unitTest_SOURCES_DIST = OsiColCutTest.cpp OsiCutsTest.cpp \
 	OsiRowCutDebuggerTest.cpp OsiRowCutTest.cpp \
 	OsiSolverInterfaceTest.cpp unitTest.cpp \
 	OsiClpSolverInterfaceTest.cpp OsiCbcSolverInterfaceTest.cpp \
-	OsiCpxSolverInterfaceTest.cpp OsiDylpSolverInterfaceTest.cpp \
-	OsiFmpSolverInterfaceTest.cpp OsiGlpkSolverInterfaceTest.cpp \
-	OsiMskSolverInterfaceTest.cpp OsiOslSolverInterfaceTest.cpp \
-	OsiSpxSolverInterfaceTest.cpp OsiSymSolverInterfaceTest.cpp \
+	OsiSymSolverInterfaceTest.cpp OsiCpxSolverInterfaceTest.cpp \
+	OsiDylpSolverInterfaceTest.cpp OsiFmpSolverInterfaceTest.cpp \
+	OsiGlpkSolverInterfaceTest.cpp OsiMskSolverInterfaceTest.cpp \
+	OsiOslSolverInterfaceTest.cpp OsiSpxSolverInterfaceTest.cpp \
 	OsiVolSolverInterfaceTest.cpp OsiXprSolverInterfaceTest.cpp
 @COIN_HAS_CLP_TRUE@am__objects_1 =  \
 @COIN_HAS_CLP_TRUE@	OsiClpSolverInterfaceTest.$(OBJEXT)
 @COIN_HAS_CBC_TRUE@am__objects_2 =  \
 @COIN_HAS_CBC_TRUE@	OsiCbcSolverInterfaceTest.$(OBJEXT)
-@COIN_HAS_CPX_TRUE@am__objects_3 =  \
-@COIN_HAS_CPX_TRUE@	OsiCpxSolverInterfaceTest.$(OBJEXT)
-@COIN_HAS_DYLP_TRUE@am__objects_4 =  \
-@COIN_HAS_DYLP_TRUE@	OsiDylpSolverInterfaceTest.$(OBJEXT)
-@COIN_HAS_FMP_TRUE@am__objects_5 =  \
-@COIN_HAS_FMP_TRUE@	OsiFmpSolverInterfaceTest.$(OBJEXT)
-@COIN_HAS_GLPK_TRUE@am__objects_6 =  \
-@COIN_HAS_GLPK_TRUE@	OsiGlpkSolverInterfaceTest.$(OBJEXT)
-@COIN_HAS_MSK_TRUE@am__objects_7 =  \
-@COIN_HAS_MSK_TRUE@	OsiMskSolverInterfaceTest.$(OBJEXT)
-@COIN_HAS_OSL_TRUE@am__objects_8 =  \
-@COIN_HAS_OSL_TRUE@	OsiOslSolverInterfaceTest.$(OBJEXT)
-@COIN_HAS_SPX_TRUE@am__objects_9 =  \
-@COIN_HAS_SPX_TRUE@	OsiSpxSolverInterfaceTest.$(OBJEXT)
-@COIN_HAS_SYMPHONY_TRUE@am__objects_10 =  \
+@COIN_HAS_SYMPHONY_TRUE@am__objects_3 =  \
 @COIN_HAS_SYMPHONY_TRUE@	OsiSymSolverInterfaceTest.$(OBJEXT)
+@COIN_HAS_CPX_TRUE@am__objects_4 =  \
+@COIN_HAS_CPX_TRUE@	OsiCpxSolverInterfaceTest.$(OBJEXT)
+@COIN_HAS_DYLP_TRUE@am__objects_5 =  \
+@COIN_HAS_DYLP_TRUE@	OsiDylpSolverInterfaceTest.$(OBJEXT)
+@COIN_HAS_FMP_TRUE@am__objects_6 =  \
+@COIN_HAS_FMP_TRUE@	OsiFmpSolverInterfaceTest.$(OBJEXT)
+@COIN_HAS_GLPK_TRUE@am__objects_7 =  \
+@COIN_HAS_GLPK_TRUE@	OsiGlpkSolverInterfaceTest.$(OBJEXT)
+@COIN_HAS_MSK_TRUE@am__objects_8 =  \
+@COIN_HAS_MSK_TRUE@	OsiMskSolverInterfaceTest.$(OBJEXT)
+@COIN_HAS_OSL_TRUE@am__objects_9 =  \
+@COIN_HAS_OSL_TRUE@	OsiOslSolverInterfaceTest.$(OBJEXT)
+@COIN_HAS_SPX_TRUE@am__objects_10 =  \
+@COIN_HAS_SPX_TRUE@	OsiSpxSolverInterfaceTest.$(OBJEXT)
 @COIN_HAS_VOL_TRUE@am__objects_11 =  \
 @COIN_HAS_VOL_TRUE@	OsiVolSolverInterfaceTest.$(OBJEXT)
 @COIN_HAS_XPR_TRUE@am__objects_12 =  \
@@ -182,18 +182,18 @@ unitTest_OBJECTS = $(am_unitTest_OBJECTS)
 @COIN_HAS_CLP_TRUE@	$(CLPOBJDIR)/src/libClp.la
 @COIN_HAS_CBC_TRUE@am__DEPENDENCIES_2 = ../src/OsiCbc/libOsiCbc.la \
 @COIN_HAS_CBC_TRUE@	$(CBCOBJDIR)/src/libCbc.la
-@COIN_HAS_CGL_TRUE@am__DEPENDENCIES_3 = $(CGLOBJDIR)/src/libCgl.la
-@COIN_HAS_CPX_TRUE@am__DEPENDENCIES_4 = ../src/OsiCpx/libOsiCpx.la
-@COIN_HAS_DYLP_TRUE@am__DEPENDENCIES_5 = ../src/OsiDylp/libOsiDylp.la \
-@COIN_HAS_DYLP_TRUE@	$(DYLPOBJDIR)/src/Dylp/libDylp.la
-@COIN_HAS_FMP_TRUE@am__DEPENDENCIES_6 = ../src/OsiFmp/libOsiFmp.la
-@COIN_HAS_GLPK_TRUE@am__DEPENDENCIES_7 = ../src/OsiGlpk/libOsiGlpk.la
-@COIN_HAS_MSK_TRUE@am__DEPENDENCIES_8 = ../src/OsiMsk/libOsiMsk.la
-@COIN_HAS_OSL_TRUE@am__DEPENDENCIES_9 = ../src/OsiOsl/libOsiOsl.la
-@COIN_HAS_SPX_TRUE@am__DEPENDENCIES_10 = ../src/OsiSpx/libOsiSpx.la
-@COIN_HAS_SYMPHONY_TRUE@am__DEPENDENCIES_11 =  \
+@COIN_HAS_SYMPHONY_TRUE@am__DEPENDENCIES_3 =  \
 @COIN_HAS_SYMPHONY_TRUE@	../src/OsiSym/libOsiSym.la \
 @COIN_HAS_SYMPHONY_TRUE@	$(SYMPHONYOBJDIR)/src/libSym.la
+@COIN_HAS_CGL_TRUE@am__DEPENDENCIES_4 = $(CGLOBJDIR)/src/libCgl.la
+@COIN_HAS_CPX_TRUE@am__DEPENDENCIES_5 = ../src/OsiCpx/libOsiCpx.la
+@COIN_HAS_DYLP_TRUE@am__DEPENDENCIES_6 = ../src/OsiDylp/libOsiDylp.la \
+@COIN_HAS_DYLP_TRUE@	$(DYLPOBJDIR)/src/Dylp/libDylp.la
+@COIN_HAS_FMP_TRUE@am__DEPENDENCIES_7 = ../src/OsiFmp/libOsiFmp.la
+@COIN_HAS_GLPK_TRUE@am__DEPENDENCIES_8 = ../src/OsiGlpk/libOsiGlpk.la
+@COIN_HAS_MSK_TRUE@am__DEPENDENCIES_9 = ../src/OsiMsk/libOsiMsk.la
+@COIN_HAS_OSL_TRUE@am__DEPENDENCIES_10 = ../src/OsiOsl/libOsiOsl.la
+@COIN_HAS_SPX_TRUE@am__DEPENDENCIES_11 = ../src/OsiSpx/libOsiSpx.la
 @COIN_HAS_VOL_TRUE@am__DEPENDENCIES_12 = ../src/OsiVol/libOsiVol.la \
 @COIN_HAS_VOL_TRUE@	$(VOLOBJDIR)/src/libVol.la
 @COIN_HAS_XPR_TRUE@am__DEPENDENCIES_13 = ../src/OsiXpr/libOsiXpr.la
@@ -316,8 +316,8 @@ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LDFLAGS = @LDFLAGS@
 LIBEXT = @LIBEXT@
 LIBOBJS = @LIBOBJS@
-LIBS = @LIBS@ $(am__append_4) $(am__append_8) $(am__append_10) \
-	$(am__append_17) $(am__append_36) $(am__append_40) `cat \
+LIBS = @LIBS@ $(am__append_4) $(am__append_8) $(am__append_12) \
+	$(am__append_14) $(am__append_21) $(am__append_40) `cat \
 	$(OSIOBJDIR)/osi_addlibs.txt` `cat \
 	$(COINUTILSOBJDIR)/coinutils_addlibs.txt` $(ADDLIBS)
 LIBTOOL = @LIBTOOL@
@@ -440,18 +440,18 @@ AUTOMAKE_OPTIONS = foreign
 unitTest_SOURCES = OsiColCutTest.cpp OsiCutsTest.cpp \
 	OsiRowCutDebuggerTest.cpp OsiRowCutTest.cpp \
 	OsiSolverInterfaceTest.cpp unitTest.cpp $(am__append_1) \
-	$(am__append_5) $(am__append_11) $(am__append_14) \
-	$(am__append_18) $(am__append_21) $(am__append_24) \
-	$(am__append_27) $(am__append_30) $(am__append_33) \
+	$(am__append_5) $(am__append_9) $(am__append_15) \
+	$(am__append_18) $(am__append_22) $(am__append_25) \
+	$(am__append_28) $(am__append_31) $(am__append_34) \
 	$(am__append_37) $(am__append_41)
 
 # List libraries of COIN projects
 
 # Finally the Coin library (many of the above need it)
-unitTest_LDADD = $(am__append_3) $(am__append_7) $(am__append_9) \
-	$(am__append_13) $(am__append_16) $(am__append_20) \
-	$(am__append_23) $(am__append_26) $(am__append_29) \
-	$(am__append_32) $(am__append_35) $(am__append_39) \
+unitTest_LDADD = $(am__append_3) $(am__append_7) $(am__append_11) \
+	$(am__append_13) $(am__append_17) $(am__append_20) \
+	$(am__append_24) $(am__append_27) $(am__append_30) \
+	$(am__append_33) $(am__append_36) $(am__append_39) \
 	$(am__append_43) ../src/libOsi.la \
 	$(COINUTILSOBJDIR)/src/libCoinUtils.la
 
@@ -462,10 +462,10 @@ unitTest_LDADD = $(am__append_3) $(am__append_7) $(am__append_9) \
 # "cygpath" stuff is necessary to compile with native compilers on Windows
 AM_CPPFLAGS = -I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` -I`$(CYGPATH_W) \
 	$(COINUTILSOBJDIR)/inc` -I`$(CYGPATH_W) $(srcdir)/../src` \
-	$(am__append_2) $(am__append_6) $(am__append_12) \
-	$(am__append_15) $(am__append_19) $(am__append_22) \
-	$(am__append_25) $(am__append_28) $(am__append_31) \
-	$(am__append_34) $(am__append_38) $(am__append_42)
+	$(am__append_2) $(am__append_6) $(am__append_10) \
+	$(am__append_16) $(am__append_19) $(am__append_23) \
+	$(am__append_26) $(am__append_29) $(am__append_32) \
+	$(am__append_35) $(am__append_38) $(am__append_42)
 
 # This line is necessary to allow VPATH compilation with MS compilers
 # on Cygwin

@@ -1,15 +1,15 @@
 // Copyright (C) 2000, International Business Machines
 // Corporation and others.  All Rights Reserved.
 
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
+
 #include <cassert>
 
 #include "OsiVolSolverInterface.hpp"
 
 //#############################################################################
-
-#ifdef NDEBUG
-#undef NDEBUG
-#endif
 
 //--------------------------------------------------------------------------
 // test EKKsolution methods.

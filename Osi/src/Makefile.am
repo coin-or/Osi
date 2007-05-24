@@ -20,10 +20,13 @@ lib_LTLIBRARIES = libOsi.la
 libOsi_la_SOURCES = \
 	OsiConfig.h \
 	OsiAuxInfo.cpp OsiAuxInfo.hpp \
+	OsiBranchingObject.cpp OsiBranchingObject.hpp \
+	OsiChooseVariable.cpp OsiChooseVariable.hpp \
 	OsiColCut.cpp OsiColCut.hpp \
 	OsiCollections.hpp \
 	OsiCut.cpp OsiCut.hpp \
 	OsiCuts.cpp OsiCuts.hpp \
+	OsiNames.cpp \
 	OsiOpbdpSolve.cpp OsiOpbdpSolve.hpp \
 	OsiPresolve.cpp OsiPresolve.hpp \
 	OsiRowCut.cpp OsiRowCut.hpp \
@@ -96,10 +99,13 @@ endif
 include_HEADERS = \
 	../inc/config_osi.h \
 	OsiAuxInfo.hpp \
+	OsiBranchingObject.hpp \
+	OsiChooseVariable.hpp \
 	OsiColCut.hpp \
 	OsiCollections.hpp \
 	OsiCut.hpp \
 	OsiCuts.hpp \
+	OsiOpbdpSolve.hpp \
 	OsiPresolve.hpp \
 	OsiSolverInterface.hpp \
 	OsiSolverParameters.hpp \

@@ -109,6 +109,7 @@ public:
           check this (rather than solver) to see if feasible and what objective value is.
           Using Outer Approximation so called lp based
           - may also return heuristic solution
+      4 - normal solver but cuts are needed for integral solution    
   */
   inline int solverType() const
   { return solverType_;};
@@ -142,9 +143,43 @@ public:
   /// Says whether we have a warm start (so can do strong branching)
   inline bool warmStart() const
   { return solverType_!=2;};
+  /** Get bit mask for odd actions of solvers
+      1 - solution or bound arrays may move in mysterious ways e.g. cplex
+      2 - solver may want bounds before branch
+  */
+  inline int extraCharacteristics() const
+  { return extraCharacteristics_;};
+  /** Set bit mask for odd actions of solvers
+      1 - solution or bound arrays may move in mysterious ways e.g. cplex
+      2 - solver may want bounds before branch
+  */
+  inline void setExtraCharacteristics(int value)
+  { extraCharacteristics_=value;};
+  /// Pointer to lower bounds before branch (only if extraCharacteristics set)
+  inline const double * beforeLower() const
+  { return beforeLower_;};
+  /// Set pointer to lower bounds before branch (only if extraCharacteristics set)
+  inline void setBeforeLower(const double * array)
+  { beforeLower_ = array;};
+  /// Pointer to upper bounds before branch (only if extraCharacteristics set)
+  inline const double * beforeUpper() const
+  { return beforeUpper_;};
+  /// Set pointer to upper bounds before branch (only if extraCharacteristics set)
+  inline void setBeforeUpper(const double * array)
+  { beforeUpper_ = array;};
 protected:
+  /// Objective value of best solution (if there is one) (minimization)
+  double bestObjectiveValue_;
+  /// Current lower bound on solution ( if > 1.0e50 infeasible)
+  double mipBound_;
   /// Solver to use for getting/setting solutions etc
   const OsiSolverInterface * solver_;
+  /// Best integer feasible solution
+  double * bestSolution_;
+  /// Pointer to lower bounds before branch (only if extraCharacteristics set)
+  const double * beforeLower_;
+  /// Pointer to upper bounds before branch (only if extraCharacteristics set)
+  const double * beforeUpper_;
   /** Solver type
       0 - normal LP solver
       1 - DW - may also return heuristic solutions
@@ -157,14 +192,13 @@ protected:
           - may also return heuristic solution
   */
   int solverType_;
-  /// Objective value of best solution (if there is one) (minimization)
-  double bestObjectiveValue_;
-  /// Best integer feasible solution
-  double * bestSolution_;
-  /// Current lower bound on solution ( if > 1.0e50 infeasible)
-  double mipBound_;
   /// Size of solution
   int sizeSolution_;
+  /** Bit mask for odd actions of solvers
+      1 - solution or bound arrays may move in mysterious ways e.g. cplex
+      2 - solver may want bounds before branch
+  */
+  int extraCharacteristics_;
 };
 
 #endif

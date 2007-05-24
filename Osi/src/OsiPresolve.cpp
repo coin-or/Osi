@@ -75,11 +75,19 @@ OsiPresolve::gutsOfDestroy()
 
 /* This version of presolve returns a pointer to a new presolved 
    model.  NULL if infeasible
+
+   doStatus controls activities required to transform an existing
+   solution to match the presolved problem. I'd (lh) argue that this should
+   default to false, but to maintain previous behaviour it defaults to true.
+   Really, this is only useful if you've already optimised before applying
+   presolve and also want to work with the solution after presolve.  I think
+   that this is the less common case. The more common situation is to apply
+   presolve before optimising.
 */
 OsiSolverInterface * 
 OsiPresolve::presolvedModel(OsiSolverInterface & si,
-			 double feasibilityTolerance,
-			 bool keepIntegers,
+			    double feasibilityTolerance,
+			    bool keepIntegers,
 			    int numberPasses,
                             const char * prohibited,
 			    bool doStatus)
@@ -108,11 +116,14 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
   presolvedModel_=NULL;
   // Messages
   CoinMessages messages = CoinMessage(si.messages().language());
+  // Only go round 100 times even if integer preprocessing
+  int totalPasses=100;
   while (result==-1) {
 
     // make new copy
     delete presolvedModel_;
     presolvedModel_ = si.clone();
+    totalPasses--;
 
     // drop integer information if wanted
     if (!keepIntegers) {
@@ -281,7 +292,7 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
 						     messages)
 						       <<numberChanges
 						       <<CoinMessageEol;
-	  if (!result) {
+	  if (!result&&totalPasses>0) {
 	    result = -1; // round again
 	  }
 	}

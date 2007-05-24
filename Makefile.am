@@ -23,14 +23,14 @@ SUBDIRS = $(subdirs)
 ########################################################################
 
 test: all
-	cd Osi; $(MAKE) test
+	cd Osi; make test
 
 unitTest: test
 
 tests: all
 	for dir in $(subdirs); do \
 	  if test -r $$dir/test/Makefile; then \
-	    (cd $$dir; $(MAKE) test) \
+	    (cd $$dir; make test) \
 	  fi; \
 	done
 

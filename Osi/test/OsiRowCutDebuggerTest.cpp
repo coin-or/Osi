@@ -5,13 +5,13 @@
 #  pragma warning(disable:4786)
 #endif
 
-#include <cassert>
-
-#include "OsiRowCutDebugger.hpp"
-
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
+
+#include <cassert>
+
+#include "OsiRowCutDebugger.hpp"
 
 //--------------------------------------------------------------------------
 // test cut debugger methods.

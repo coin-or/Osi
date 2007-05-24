@@ -13,6 +13,25 @@ enum OsiIntParam {
       solver) the solver can execute in the
       OsiSolverinterface::solveFromHotStart() method before terminating. */
   OsiMaxNumIterationHotStart,
+  /** The name discipline; specifies how the solver will handle row and
+      column names.
+    - 0: Auto names: Names cannot be set by the client. Names of the form
+	 Rnnnnnnn or Cnnnnnnn are generated on demand when a name for a
+	 specific row or column is requested; nnnnnnn is derived from the row
+	 or column index. Requests for a vector of names return a vector with
+	 zero entries.
+    - 1: Lazy names: Names supplied by the client are retained. Names of the
+	 form Rnnnnnnn or Cnnnnnnn are generated on demand if no name has been
+	 supplied by the client. Requests for a vector of names return a
+	 vector sized to the largest index of a name supplied by the client;
+	 some entries in the vector may be null strings.
+    - 2: Full names: Names supplied by the client are retained. Names of the
+	 form Rnnnnnnn or Cnnnnnnn are generated on demand if no name has been
+	 supplied by the client. Requests for a vector of names return a
+	 vector sized to match the constraint system, and all entries will
+	 contain either the name specified by the client or a generated name.
+  */
+  OsiNameDiscipline,
   /** Just a marker, so that OsiSolverInterface can allocate a static sized
       array to store parameters. */
   OsiLastIntParam

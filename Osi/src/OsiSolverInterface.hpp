@@ -14,6 +14,9 @@
 
 class CoinPackedMatrix;
 class CoinWarmStart;
+class CoinSnapshot;
+class CoinLpIO;
+class CoinMpsIO;
 
 class OsiCuts;
 class OsiAuxInfo;
@@ -24,7 +27,9 @@ class CoinBuild;
 class CoinModel;
 class OsiSolverBranch;
 class OsiSolverResult;
+class OsiObject;
 #include "CoinFinite.hpp"
+
 
 //#############################################################################
 
@@ -61,6 +66,7 @@ class OsiSolverInterface  {
       const std::string & mpsDir);
 
 public:
+
   /// Internal class for obtaining status from the applyCuts method 
   class ApplyCutsReturnCode {
     friend class OsiSolverInterface;
@@ -145,7 +151,6 @@ public:
 
   //---------------------------------------------------------------------------
 
-public:
   ///@name Solve methods 
   //@{
     /// Solve initial LP relaxation 
@@ -157,6 +162,7 @@ public:
     /// Invoke solver's built-in enumeration algorithm
     virtual void branchAndBound() = 0;
 
+#ifdef CBC_NEXT_VERSION
     /**
        Solve 2**N (N==depth) problems and return solutions and bases.
        There are N branches each of which changes bounds on both sides
@@ -174,11 +180,10 @@ public:
 
        If forceBranch true then branch done even if satisfied
     */
-#ifdef CBC_NEXT_VERSION
-  virtual int solveBranches(int depth,const OsiSolverBranch * branch,
-                            OsiSolverResult * result,
-                            int & numberSolves, int & numberIterations,
-                            bool forceBranch=false);
+    virtual int solveBranches(int depth,const OsiSolverBranch * branch,
+			      OsiSolverResult * result,
+			      int & numberSolves, int & numberIterations,
+			      bool forceBranch=false);
 #endif
   //@}
 
@@ -186,12 +191,13 @@ public:
   /**@name Parameter set/get methods
 
      The set methods return true if the parameter was set to the given value,
-     false otherwise. There can be various reasons for failure: the given
-     parameter is not applicable for the solver (e.g., refactorization
-     frequency for the volume algorithm), the parameter is not yet implemented
-     for the solver or simply the value of the parameter is out of the range
-     the solver accepts. If a parameter setting call returns false check the
-     details of your solver.
+     false otherwise. When a set method returns false, the original value (if
+     any) should be unchanged.  There can be various reasons for failure: the
+     given parameter is not applicable for the solver (e.g., refactorization
+     frequency for the volume algorithm), the parameter is not yet
+     implemented for the solver or simply the value of the parameter is out
+     of the range the solver accepts. If a parameter setting call returns
+     false check the details of your solver.
 
      The get methods return true if the given parameter is applicable for the
      solver and is implemented. In this case the value of the parameter is
@@ -282,6 +288,11 @@ public:
       value = dblParam_[key];
       return true;
     }
+    /** We should be able to get an integer tolerance.
+        Until that time just use primal tolerance
+    */
+    inline double getIntegerTolerance() const
+    { return dblParam_[OsiPrimalTolerance];};
     // Get a string parameter
     virtual bool getStrParam(OsiStrParam key, std::string& value) const {
       if (key == OsiLastStrParam) return (false) ;
@@ -406,475 +417,696 @@ public:
   //@}
 
   //---------------------------------------------------------------------------
-    /**@name Problem query methods
+  /**@name Problem query methods
 
-     Querying a problem that has no data associated with it will result in
-     zeros for the number of rows and columns, and NULL pointers from
-     the methods that return vectors.
-     
-     Const pointers returned from any data-query method are valid as
-     long as the data is unchanged and the solver is not called.
+   Querying a problem that has no data associated with it will result in
+   zeros for the number of rows and columns, and NULL pointers from the
+   methods that return vectors.
+
+   Const pointers returned from any data-query method are valid as long as
+   the data is unchanged and the solver is not called.
+  */
+  //@{
+    /// Get number of columns
+    virtual int getNumCols() const = 0;
+
+    /// Get number of rows
+    virtual int getNumRows() const = 0;
+
+    /// Get number of nonzero elements
+    virtual int getNumElements() const = 0;
+
+    /// Get number of integer variables
+    virtual int getNumIntegers() const ;
+
+    /// Get pointer to array[getNumCols()] of column lower bounds
+    virtual const double * getColLower() const = 0;
+
+    /// Get pointer to array[getNumCols()] of column upper bounds
+    virtual const double * getColUpper() const = 0;
+
+    /** Get pointer to array[getNumRows()] of row constraint senses.
+      <ul>
+      <li>'L': <= constraint
+      <li>'E': =  constraint
+      <li>'G': >= constraint
+      <li>'R': ranged constraint
+      <li>'N': free constraint
+      </ul>
     */
-    //@{
-      /// Get number of columns
-      virtual int getNumCols() const = 0;
-  
-      /// Get number of rows
-      virtual int getNumRows() const = 0;
-  
-      /// Get number of nonzero elements
-      virtual int getNumElements() const = 0;
+    virtual const char * getRowSense() const = 0;
 
-      /// Get number of integer variables
-      virtual int getNumIntegers() const ;
+    /** Get pointer to array[getNumRows()] of row right-hand sides
+      <ul>
+	<li> if getRowSense()[i] == 'L' then
+	     getRightHandSide()[i] == getRowUpper()[i]
+	<li> if getRowSense()[i] == 'G' then
+	     getRightHandSide()[i] == getRowLower()[i]
+	<li> if getRowSense()[i] == 'R' then
+	     getRightHandSide()[i] == getRowUpper()[i]
+	<li> if getRowSense()[i] == 'N' then
+	     getRightHandSide()[i] == 0.0
+      </ul>
+    */
+    virtual const double * getRightHandSide() const = 0;
+
+    /** Get pointer to array[getNumRows()] of row ranges.
+      <ul>
+	  <li> if getRowSense()[i] == 'R' then
+		  getRowRange()[i] == getRowUpper()[i] - getRowLower()[i]
+	  <li> if getRowSense()[i] != 'R' then
+		  getRowRange()[i] is 0.0
+	</ul>
+    */
+    virtual const double * getRowRange() const = 0;
+
+    /// Get pointer to array[getNumRows()] of row lower bounds
+    virtual const double * getRowLower() const = 0;
+
+    /// Get pointer to array[getNumRows()] of row upper bounds
+    virtual const double * getRowUpper() const = 0;
+
+    /// Get pointer to array[getNumCols()] of objective function coefficients
+    virtual const double * getObjCoefficients() const = 0;
+
+    /// Get objective function sense (1 for min (default), -1 for max)
+    virtual double getObjSense() const = 0;
+
+    /// Return true if variable is continuous
+    virtual bool isContinuous(int colIndex) const = 0;
+
+    /// Return true if variable is binary
+    virtual bool isBinary(int colIndex) const;
+
+    /** Return true if column is integer.
+	Note: This function returns true if the the column
+	is binary or a general integer.
+    */
+    virtual bool isInteger(int colIndex) const;
+
+    /// Return true if variable is general integer
+    virtual bool isIntegerNonBinary(int colIndex) const;
+
+    /// Return true if variable is binary and not fixed at either bound
+    virtual bool isFreeBinary(int colIndex) const; 
   
-      /// Get pointer to array[getNumCols()] of column lower bounds
-      virtual const double * getColLower() const = 0;
+    /// Get pointer to row-wise copy of matrix
+    virtual const CoinPackedMatrix * getMatrixByRow() const = 0;
+
+    /// Get pointer to column-wise copy of matrix
+    virtual const CoinPackedMatrix * getMatrixByCol() const = 0;
+
+    /// Get pointer to mutable row-wise copy of matrix (returns NULL if not meaningful)
+    virtual CoinPackedMatrix * getMutableMatrixByRow() const {return NULL;};
+
+    /// Get pointer to mutable column-wise copy of matrix (returns NULL if not meaningful)
+    virtual CoinPackedMatrix * getMutableMatrixByCol() const {return NULL;};
+
+    /// Get solver's value for infinity
+    virtual double getInfinity() const = 0;
+  //@}
+    
+  /**@name Solution query methods */
+  //@{
+    /// Get pointer to array[getNumCols()] of primal variable values
+    virtual const double * getColSolution() const = 0;
+
+    /// Get pointer to array[getNumRows()] of dual variable values
+    virtual const double * getRowPrice() const = 0;
+
+    /// Get a pointer to array[getNumCols()] of reduced costs
+    virtual const double * getReducedCost() const = 0;
+
+    /** Get pointer to array[getNumRows()] of row activity levels (constraint
+      matrix times the solution vector). */
+    virtual const double * getRowActivity() const = 0;
+
+    /// Get objective function value
+    virtual double getObjValue() const = 0;
+
+    /** Get the number of iterations it took to solve the problem (whatever
+	``iteration'' means to the solver). */
+    virtual int getIterationCount() const = 0;
+
+    /** Get as many dual rays as the solver can provide. In case of proven
+	primal infeasibility there should be at least one.
+   
+	\note
+	Implementors of solver interfaces note that
+	the double pointers in the vector should point to arrays of length
+	getNumRows() and they should be allocated via new[].
+   
+	\note
+	Clients of solver interfaces note that
+	it is the client's responsibility to free the double pointers in the
+	vector using delete[].
+    */
+    virtual std::vector<double*> getDualRays(int maxNumRays) const = 0;
+    /** Get as many primal rays as the solver can provide. (In case of proven
+	dual infeasibility there should be at least one.)
+   
+	<strong>NOTE for implementers of solver interfaces:</strong> <br>
+	The double pointers in the vector should point to arrays of length
+	getNumCols() and they should be allocated via new[]. <br>
+   
+	<strong>NOTE for users of solver interfaces:</strong> <br>
+	It is the user's responsibility to free the double pointers in the
+	vector using delete[].
+    */
+    virtual std::vector<double*> getPrimalRays(int maxNumRays) const = 0;
+
+    /** Get vector of indices of primal variables which are integer variables 
+	but have fractional values in the current solution. */
+    virtual OsiVectorInt getFractionalIndices(const double etol=1.e-05)
+      const;
+  //@}
+
+  //-------------------------------------------------------------------------
+  /**@name Methods to modify the objective, bounds, and solution
+
+     For functions which take a set of indices as parameters
+     (\c setObjCoeffSet(), \c setColSetBounds(), \c setRowSetBounds(),
+     \c setRowSetTypes()), the parameters follow the C++ STL iterator
+     convention: \c indexFirst points to the first index in the
+     set, and \c indexLast points to a position one past the last index
+     in the set.
   
-      /// Get pointer to array[getNumCols()] of column upper bounds
-      virtual const double * getColUpper() const = 0;
+  */
+  //@{
+    /** Set an objective function coefficient */
+    virtual void setObjCoeff( int elementIndex, double elementValue ) = 0;
+
+    /** Set a set of objective function coefficients */
+    virtual void setObjCoeffSet(const int* indexFirst,
+				const int* indexLast,
+				const double* coeffList);
+
+    /** Set a single column lower bound.
+	Use -getInfinity() for -infinity. */
+    virtual void setColLower( int elementIndex, double elementValue ) = 0;
+    
+    /** Set a single column upper bound.
+	Use getInfinity() for infinity. */
+    virtual void setColUpper( int elementIndex, double elementValue ) = 0;
+    
+    /** Set a single column lower and upper bound.
+	The default implementation just invokes setColLower() and
+	setColUpper() */
+    virtual void setColBounds( int elementIndex,
+			       double lower, double upper ) {
+       setColLower(elementIndex, lower);
+       setColUpper(elementIndex, upper);
+    }
   
-      /** Get pointer to array[getNumRows()] of row constraint senses.
-  	<ul>
-  	<li>'L': <= constraint
-  	<li>'E': =  constraint
-  	<li>'G': >= constraint
-  	<li>'R': ranged constraint
-  	<li>'N': free constraint
-  	</ul>
-      */
-      virtual const char * getRowSense() const = 0;
+    /** Set the upper and lower bounds of a set of columns.
+	The default implementation just invokes setColBounds() over
+	and over again.
+	For each column, boundList must contain both a lower and
+	upper bound, in that order.
+    */
+    virtual void setColSetBounds(const int* indexFirst,
+				 const int* indexLast,
+				 const double* boundList);
+    
+    /** Set a single row lower bound.
+	Use -getInfinity() for -infinity. */
+    virtual void setRowLower( int elementIndex, double elementValue ) = 0;
+    
+    /** Set a single row upper bound.
+	Use getInfinity() for infinity. */
+    virtual void setRowUpper( int elementIndex, double elementValue ) = 0;
   
-      /** Get pointer to array[getNumRows()] of row right-hand sides
-  	<ul>
-  	  <li> if getRowSense()[i] == 'L' then
-	       getRightHandSide()[i] == getRowUpper()[i]
-  	  <li> if getRowSense()[i] == 'G' then
-	       getRightHandSide()[i] == getRowLower()[i]
-  	  <li> if getRowSense()[i] == 'R' then
-	       getRightHandSide()[i] == getRowUpper()[i]
-  	  <li> if getRowSense()[i] == 'N' then
-	       getRightHandSide()[i] == 0.0
-  	</ul>
-      */
-      virtual const double * getRightHandSide() const = 0;
+    /** Set a single row lower and upper bound.
+	The default implementation just invokes setRowLower() and
+	setRowUpper() */
+    virtual void setRowBounds( int elementIndex,
+			       double lower, double upper ) {
+       setRowLower(elementIndex, lower);
+       setRowUpper(elementIndex, upper);
+    }
   
-      /** Get pointer to array[getNumRows()] of row ranges.
-  	<ul>
-            <li> if getRowSense()[i] == 'R' then
-                    getRowRange()[i] == getRowUpper()[i] - getRowLower()[i]
-            <li> if getRowSense()[i] != 'R' then
-                    getRowRange()[i] is 0.0
-          </ul>
-      */
-      virtual const double * getRowRange() const = 0;
+    /** Set the type of a single row */
+    virtual void setRowType(int index, char sense, double rightHandSide,
+			    double range) = 0;
   
-      /// Get pointer to array[getNumRows()] of row lower bounds
-      virtual const double * getRowLower() const = 0;
+    /** Set the bounds on a set of rows.
+	The default implementation just invokes setRowBounds()
+	over and over again.
+    */
+    virtual void setRowSetBounds(const int* indexFirst,
+				 const int* indexLast,
+				 const double* boundList);
   
-      /// Get pointer to array[getNumRows()] of row upper bounds
-      virtual const double * getRowUpper() const = 0;
+    /** Set the type of a set of rows.
+	The default implementation just invokes setRowType()
+	over and over again.
+    */
+    virtual void setRowSetTypes(const int* indexFirst,
+				const int* indexLast,
+				const char* senseList,
+				const double* rhsList,
+				const double* rangeList);
+
+  /// Set the objective function sense.
+  /// (1 for min (default), -1 for max)
+  virtual void setObjSense(double s) = 0;
   
-      /// Get pointer to array[getNumCols()] of objective function coefficients
-      virtual const double * getObjCoefficients() const = 0;
+  /** Set the primal solution variable values
   
-      /// Get objective function sense (1 for min (default), -1 for max)
-      virtual double getObjSense() const = 0;
+      colsol[getNumCols()] is an array of values for the primal variables.
+      These values are copied to memory owned by the solver interface object
+      or the solver.  They will be returned as the result of getColSolution()
+      until changed by another call to setColSolution() or by a call to any
+      solver routine.  Whether the solver makes use of the solution in any
+      way is solver-dependent.
+  */
+  virtual void setColSolution(const double *colsol) = 0;
+
+  /** Set dual solution variable values
+
+      rowprice[getNumRows()] is an array of values for the dual
+      variables. These values are copied to memory owned by the solver
+      interface object or the solver.  They will be returned as the result of
+      getRowPrice() until changed by another call to setRowPrice() or by a
+      call to any solver routine.  Whether the solver makes use of the
+      solution in any way is solver-dependent.
+  */
+
+ virtual void setRowPrice(const double * rowprice) = 0;
+
+  /** Set the objective coefficients for all columns
+      array [getNumCols()] is an array of values for the objective.
+      This defaults to a series of set operations and is here for speed.
+  */
+  virtual void setObjective(const double * array);
+
+  /** Set the lower bounds for all columns
+      array [getNumCols()] is an array of values for the objective.
+      This defaults to a series of set operations and is here for speed.
+  */
+  virtual void setColLower(const double * array);
+
+  /** Set the upper bounds for all columns
+      array [getNumCols()] is an array of values for the objective.
+      This defaults to a series of set operations and is here for speed.
+  */
+  virtual void setColUpper(const double * array);
+  //@}
+
+  //-------------------------------------------------------------------------
+  /**@name Methods to set variable type */
+  //@{
+    /** Set the index-th variable to be a continuous variable */
+    virtual void setContinuous(int index) = 0;
+    /** Set the index-th variable to be an integer variable */
+    virtual void setInteger(int index) = 0;
+    /** Set the variables listed in indices (which is of length len) to be
+	continuous variables */
+    virtual void setContinuous(const int* indices, int len);
+    /** Set the variables listed in indices (which is of length len) to be
+	integer variables */
+    virtual void setInteger(const int* indices, int len);
+  //@}
+  //-------------------------------------------------------------------------
+
+  //-------------------------------------------------------------------------
+
+    /*! \brief Data type for name vectors. */
+    typedef std::vector<std::string> OsiNameVec ;
+
+  /*! \name Methods for row and column names
+
+    Osi defines three name management disciplines: `auto names' (0), `lazy
+    names' (1), and `full names' (2). See the description of
+    #OsiNameDiscipline for details. Changing the name discipline (via
+    setIntParam()) will not automatically add or remove name information,
+    but setting the discipline to auto will make existing information
+    inaccessible until the discipline is reset to lazy or full.
+
+    By definition, a row index of getNumRows() (<i>i.e.</i>, one larger than
+    the largest valid row index) refers to the objective function.
+
+    OSI users and implementors: While the OSI base class can define an
+    interface and provide rudimentary support, use of names really depends
+    on support by the OsiXXX class to ensure that names are managed
+    correctly.  If an OsiXXX class does not support names, it should return
+    false for calls to getIntParam() or setIntParam() that reference
+    OsiNameDiscipline.
+  */
+  //@{
+
+    /*! \brief Generate a standard name of the form Rnnnnnnn or Cnnnnnnn
+    
+      Set \p rc to 'r' for a row name, 'c' for a column name.
+      The `nnnnnnn' part is generated from ndx and will contain 7 digits
+      by default, padded with zeros if necessary. As a special case,
+      ndx = getNumRows() is interpreted as a request for the name of the
+      objective function. OBJECTIVE is returned, truncated to digits+1
+      characters to match the row and column names.
+    */
+    virtual std::string dfltRowColName(char rc,
+				 int ndx, unsigned digits = 7) const ;
+
+    /*! \brief Return the name of the objective function */
+
+    virtual std::string getObjName (unsigned maxLen = std::string::npos) const ;
+
+    /*! \brief Set the name of the objective function */
+
+    virtual inline void setObjName (std::string name)
+    { objName_ = name ; }
+
+    /*! \brief Return the name of the row.
+
+      The routine will <i>always</i> return some name, regardless of the name
+      discipline or the level of support by an OsiXXX derived class. Use
+      maxLen to limit the length.
+    */
+    virtual std::string getRowName(int rowIndex,
+				   unsigned maxLen = std::string::npos) const ;
+
+    /*! \brief Return a pointer to a vector of row names
+
+      If the name discipline (#OsiNameDiscipline) is auto, the return value
+      will be a vector of length zero. If the name discipline is lazy, the
+      vector will contain only names supplied by the client and will be no
+      larger than needed to hold those names; entries not supplied will be
+      null strings. In particular, the objective name is <i>not</i>
+      included in the vector for lazy names. If the name discipline is
+      full, the vector will have getNumRows() names, either supplied or
+      generated, plus one additional entry for the objective name.
+    */
+    virtual const OsiNameVec &getRowNames() ;
+
+    /*! \brief Set a row name
+
+      Quietly does nothing if the name discipline (#OsiNameDiscipline) is
+      auto. Quietly fails if the row index is invalid.
+    */
+    virtual void setRowName(int ndx, std::string name) ;
+
+    /*! \brief Set multiple row names
+
+      The run of len entries starting at srcNames[srcStart] are installed as
+      row names starting at row index tgtStart. The base class implementation
+      makes repeated calls to setRowName.
+    */
+    virtual void setRowNames(OsiNameVec &srcNames,
+		     int srcStart, int len, int tgtStart) ;
+
+    /*! \brief Delete len row names starting at index tgtStart
+
+      The specified row names are removed and the remaining row names are
+      copied down to close the gap.
+    */
+    virtual void deleteRowNames(int tgtStart, int len) ;
   
-      /// Return true if variable is continuous
-      virtual bool isContinuous(int colIndex) const = 0;
+    /*! \brief Return the name of the column
+
+      The routine will <i>always</i> return some name, regardless of the name
+      discipline or the level of support by an OsiXXX derived class. Use
+      maxLen to limit the length.
+    */
+    virtual std::string getColName(int colIndex,
+				   unsigned maxLen = std::string::npos) const ;
+
+    /*! \brief Return a pointer to a vector of column names
+
+      If the name discipline (#OsiNameDiscipline) is auto, the return value
+      will be a vector of length zero. If the name discipline is lazy, the
+      vector will contain only names supplied by the client and will be no
+      larger than needed to hold those names; entries not supplied will be
+      null strings. If the name discipline is full, the vector will have
+      getNumCols() names, either supplied or generated.
+    */
+    virtual const OsiNameVec &getColNames() ;
+
+    /*! \brief Set a column name
+
+      Quietly does nothing if the name discipline (#OsiNameDiscipline) is
+      auto. Quietly fails if the column index is invalid.
+    */
+    virtual void setColName(int ndx, std::string name) ;
+
+    /*! \brief Set multiple column names
+
+      The run of len entries starting at srcNames[srcStart] are installed as
+      column names starting at column index tgtStart. The base class
+      implementation makes repeated calls to setColName.
+    */
+    virtual void setColNames(OsiNameVec &srcNames,
+		     int srcStart, int len, int tgtStart) ;
+
+    /*! \brief Delete len column names starting at index tgtStart
+
+      The specified column names are removed and the remaining column names
+      are copied down to close the gap.
+    */
+    virtual void deleteColNames(int tgtStart, int len) ;
   
-      /// Return true if variable is binary
-      virtual bool isBinary(int colIndex) const;
-  
-      /** Return true if column is integer.
-          Note: This function returns true if the the column
-          is binary or a general integer.
-      */
-      virtual bool isInteger(int colIndex) const;
-  
-      /// Return true if variable is general integer
-      virtual bool isIntegerNonBinary(int colIndex) const;
-  
-      /// Return true if variable is binary and not fixed at either bound
-      virtual bool isFreeBinary(int colIndex) const; 
+
+    /*! \brief Set row and column names from a CoinMpsIO object.
+    
+      Also sets the name of the objective function. If the name discipline
+      is auto, you get what you asked for. This routine does not use
+      setRowName or setColName.
+    */
+    void setRowColNames(const CoinMpsIO &mps) ;
+
+    /*! \brief Set row and column names from a CoinModel object.
+
+      If the name discipline is auto, you get what you asked for.
+      This routine does not use setRowName or setColName.
+    */
+    void setRowColNames(CoinModel &mod) ;
+
+    /*! \brief Set row and column names from a CoinLpIO object.
+
+      Also sets the name of the objective function. If the name discipline is
+      auto, you get what you asked for. This routine does not use setRowName
+      or setColName.
+    */
+    void setRowColNames(CoinLpIO &mod) ;
+
+  //@}
+  //-------------------------------------------------------------------------
+    
+  //-------------------------------------------------------------------------
+  /**@name Methods to modify the constraint system.
+
+     Note that new columns are added as continuous variables.
+  */
+  //@{
+
+    /** Add a column (primal variable) to the problem. */
+    virtual void addCol(const CoinPackedVectorBase& vec,
+			const double collb, const double colub,   
+			const double obj) = 0;
+
+    /*! \brief Add a named column (primal variable) to the problem.
+
+      The default implementation adds the column, then changes the name. This
+      can surely be made more efficient within an OsiXXX class.
+    */
+    virtual void addCol(const CoinPackedVectorBase& vec,
+			const double collb, const double colub,   
+			const double obj, std::string name) ;
+
+    /** Add a column (primal variable) to the problem. */
+    virtual void addCol(int numberElements,
+			const int* rows, const double* elements,
+			const double collb, const double colub,   
+			const double obj) ;
+
+    /*! \brief Add a named column (primal variable) to the problem.
+
+      The default implementation adds the column, then changes the name. This
+      can surely be made more efficient within an OsiXXX class.
+    */
+    virtual void addCol(int numberElements,
+			const int* rows, const double* elements,
+			const double collb, const double colub,   
+			const double obj, std::string name) ;
+
+    /** Add a set of columns (primal variables) to the problem.
+    
+      The default implementation simply makes repeated calls to
+      addCol().
+    */
+    virtual void addCols(const int numcols,
+			 const CoinPackedVectorBase * const * cols,
+			 const double* collb, const double* colub,   
+			 const double* obj);
+
+    /** Add a set of columns (primal variables) to the problem.
+    
+      The default implementation simply makes repeated calls to
+      addCol().
+    */
+    virtual void addCols(const int numcols, const int* columnStarts,
+			 const int* rows, const double* elements,
+			 const double* collb, const double* colub,   
+			 const double* obj);
+
+    /// Add columns using a CoinBuild object
+    void addCols(const CoinBuild & buildObject);
+
+    /** Add columns from a model object.  returns
+       -1 if object in bad state (i.e. has row information)
+       otherwise number of errors
+       modelObject non const as can be regularized as part of build
+    */
+    int addCols(CoinModel & modelObject);
+
 #if 0
-      /// Return name of row if one exists or Rnnnnnnn
-      virtual std::string getRowName(int rowIndex) const;
-    
-      /// Return name of column if one exists or Cnnnnnnn
-      virtual std::string getColName(int colIndex) const;
+    /** */
+    virtual void addCols(const CoinPackedMatrix& matrix,
+			 const double* collb, const double* colub,   
+			 const double* obj);
 #endif
-    
-      /// Get pointer to row-wise copy of matrix
-      virtual const CoinPackedMatrix * getMatrixByRow() const = 0;
-  
-      /// Get pointer to column-wise copy of matrix
-      virtual const CoinPackedMatrix * getMatrixByCol() const = 0;
-  
-      /// Get solver's value for infinity
-      virtual double getInfinity() const = 0;
-    //@}
-    
-    /**@name Solution query methods */
-    //@{
-      /// Get pointer to array[getNumCols()] of primal variable values
-      virtual const double * getColSolution() const = 0;
-  
-      /// Get pointer to array[getNumRows()] of dual variable values
-      virtual const double * getRowPrice() const = 0;
-  
-      /// Get a pointer to array[getNumCols()] of reduced costs
-      virtual const double * getReducedCost() const = 0;
-  
-      /** Get pointer to array[getNumRows()] of row activity levels (constraint
-  	matrix times the solution vector). */
-      virtual const double * getRowActivity() const = 0;
-  
-      /// Get objective function value
-      virtual double getObjValue() const = 0;
 
-      /** Get the number of iterations it took to solve the problem (whatever
-	  ``iteration'' means to the solver). */
-      virtual int getIterationCount() const = 0;
-  
-      /** Get as many dual rays as the solver can provide. In case of proven
-          primal infeasibility there should be at least one.
-     
-          \note
-	  Implementors of solver interfaces note that
-          the double pointers in the vector should point to arrays of length
-          getNumRows() and they should be allocated via new[].
-     
-          \note
-	  Clients of solver interfaces note that
-          it is the client's responsibility to free the double pointers in the
-          vector using delete[].
-      */
-      virtual std::vector<double*> getDualRays(int maxNumRays) const = 0;
-      /** Get as many primal rays as the solver can provide. (In case of proven
-          dual infeasibility there should be at least one.)
-     
-          <strong>NOTE for implementers of solver interfaces:</strong> <br>
-          The double pointers in the vector should point to arrays of length
-          getNumCols() and they should be allocated via new[]. <br>
-     
-          <strong>NOTE for users of solver interfaces:</strong> <br>
-          It is the user's responsibility to free the double pointers in the
-          vector using delete[].
-      */
-      virtual std::vector<double*> getPrimalRays(int maxNumRays) const = 0;
-  
-      /** Get vector of indices of primal variables which are integer variables 
-  	  but have fractional values in the current solution. */
-      virtual OsiVectorInt getFractionalIndices(const double etol=1.e-05)
-	const;
-    //@}
+    /** \brief Remove a set of columns (primal variables) from the
+	       problem.
 
-    //-------------------------------------------------------------------------
-    /**@name Methods to modify the objective, bounds, and solution
-
-       For functions which take a set of indices as parameters
-       (\c setObjCoeffSet(), \c setColSetBounds(), \c setRowSetBounds(),
-       \c setRowSetTypes()), the parameters follow the C++ STL iterator
-       convention: \c indexFirst points to the first index in the
-       set, and \c indexLast points to a position one past the last index
-       in the set.
-    
+      The solver interface for a basis-oriented solver will maintain valid
+      warm start information if all deleted variables are nonbasic.
     */
-    //@{
-      /** Set an objective function coefficient */
-      virtual void setObjCoeff( int elementIndex, double elementValue ) = 0;
+    virtual void deleteCols(const int num, const int * colIndices) = 0;
+  
+    /*! \brief Add a row (constraint) to the problem. */
+    virtual void addRow(const CoinPackedVectorBase& vec,
+			const double rowlb, const double rowub) = 0;
 
-      /** Set a set of objective function coefficients */
-      virtual void setObjCoeffSet(const int* indexFirst,
-				  const int* indexLast,
-				  const double* coeffList);
-
-      /** Set a single column lower bound.
-    	  Use -getInfinity() for -infinity. */
-      virtual void setColLower( int elementIndex, double elementValue ) = 0;
-      
-      /** Set a single column upper bound.
-    	  Use getInfinity() for infinity. */
-      virtual void setColUpper( int elementIndex, double elementValue ) = 0;
-      
-      /** Set a single column lower and upper bound.
-    	  The default implementation just invokes setColLower() and
-    	  setColUpper() */
-      virtual void setColBounds( int elementIndex,
-    				 double lower, double upper ) {
-    	 setColLower(elementIndex, lower);
-    	 setColUpper(elementIndex, upper);
-      }
+    /*! \brief Add a named row (constraint) to the problem.
     
-      /** Set the upper and lower bounds of a set of columns.
-    	  The default implementation just invokes setColBounds() over
-	  and over again.
-	  For each column, boundList must contain both a lower and
-	  upper bound, in that order.
-      */
-      virtual void setColSetBounds(const int* indexFirst,
-				   const int* indexLast,
-				   const double* boundList);
-      
-      /** Set a single row lower bound.
-    	  Use -getInfinity() for -infinity. */
-      virtual void setRowLower( int elementIndex, double elementValue ) = 0;
-      
-      /** Set a single row upper bound.
-    	  Use getInfinity() for infinity. */
-      virtual void setRowUpper( int elementIndex, double elementValue ) = 0;
-    
-      /** Set a single row lower and upper bound.
-    	  The default implementation just invokes setRowLower() and
-    	  setRowUpper() */
-      virtual void setRowBounds( int elementIndex,
-    				 double lower, double upper ) {
-    	 setRowLower(elementIndex, lower);
-    	 setRowUpper(elementIndex, upper);
-      }
-    
-      /** Set the type of a single row */
-      virtual void setRowType(int index, char sense, double rightHandSide,
-    			      double range) = 0;
-    
-      /** Set the bounds on a set of rows.
-    	  The default implementation just invokes setRowBounds()
-    	  over and over again.
-      */
-      virtual void setRowSetBounds(const int* indexFirst,
-    				   const int* indexLast,
-    				   const double* boundList);
-    
-      /** Set the type of a set of rows.
-    	  The default implementation just invokes setRowType()
-    	  over and over again.
-      */
-      virtual void setRowSetTypes(const int* indexFirst,
-				  const int* indexLast,
-				  const char* senseList,
-				  const double* rhsList,
-				  const double* rangeList);
-#if 0    
-      /// Set name of row if supported
-      virtual void setRowName(int rowIndex, std::string & name) {};
-    
-      /// Set name of column if supported
-      virtual void setColName(int colIndex, std::string & name) {};
-#endif
-    /// Set the objective function sense.
-    /// (1 for min (default), -1 for max)
-    virtual void setObjSense(double s) = 0;
-    
-    /** Set the primal solution variable values
-    
-	colsol[getNumCols()] is an array of values for the primal variables.
-	These values are copied to memory owned by the solver interface object
-	or the solver.  They will be returned as the result of getColSolution()
-	until changed by another call to setColSolution() or by a call to any
-	solver routine.  Whether the solver makes use of the solution in any
-	way is solver-dependent.
+      The default implementation adds the row, then changes the name. This
+      can surely be made more efficient within an OsiXXX class.
     */
-    virtual void setColSolution(const double *colsol) = 0;
+    virtual void addRow(const CoinPackedVectorBase& vec,
+			const double rowlb, const double rowub,
+			std::string name) ;
 
-    /** Set dual solution variable values
+    /*! \brief Add a row (constraint) to the problem. */
+    virtual void addRow(const CoinPackedVectorBase& vec,
+			const char rowsen, const double rowrhs,   
+			const double rowrng) = 0;
 
-	rowprice[getNumRows()] is an array of values for the dual
-	variables. These values are copied to memory owned by the solver
-	interface object or the solver.  They will be returned as the result of
-	getRowPrice() until changed by another call to setRowPrice() or by a
-	call to any solver routine.  Whether the solver makes use of the
-	solution in any way is solver-dependent.
+    /*! \brief Add a named row (constraint) to the problem.
+
+      The default implementation adds the row, then changes the name. This
+      can surely be made more efficient within an OsiXXX class.
     */
+    virtual void addRow(const CoinPackedVectorBase& vec,
+			const char rowsen, const double rowrhs,   
+			const double rowrng, std::string name) ;
 
-   virtual void setRowPrice(const double * rowprice) = 0;
-
-    /** Set the objective coefficients for all columns
-	array [getNumCols()] is an array of values for the objective.
-        This defaults to a series of set operations and is here for speed.
-    */
-    virtual void setObjective(const double * array);
-
-    /** Set the lower bounds for all columns
-	array [getNumCols()] is an array of values for the objective.
-        This defaults to a series of set operations and is here for speed.
-    */
-    virtual void setColLower(const double * array);
-
-    /** Set the upper bounds for all columns
-	array [getNumCols()] is an array of values for the objective.
-        This defaults to a series of set operations and is here for speed.
-    */
-    virtual void setColUpper(const double * array);
-    //@}
-
-    //-------------------------------------------------------------------------
-    /**@name Methods to set variable type */
-    //@{
-      /** Set the index-th variable to be a continuous variable */
-      virtual void setContinuous(int index) = 0;
-      /** Set the index-th variable to be an integer variable */
-      virtual void setInteger(int index) = 0;
-      /** Set the variables listed in indices (which is of length len) to be
-	  continuous variables */
-      virtual void setContinuous(const int* indices, int len);
-      /** Set the variables listed in indices (which is of length len) to be
-	  integer variables */
-      virtual void setInteger(const int* indices, int len);
-    //@}
-    //-------------------------------------------------------------------------
+    /*! Add a row (constraint) to the problem.
     
-    //-------------------------------------------------------------------------
-    /**@name Methods to modify the constraint system.
-
-       Note that new columns are added as continuous variables.
-
+      Converts to addRow(CoinPackedVectorBase&,const double,const double).
     */
-    //@{
-      /** Add a column (primal variable) to the problem. */
-      virtual void addCol(const CoinPackedVectorBase& vec,
-			  const double collb, const double colub,   
-			  const double obj) = 0;
-      /** Add a set of columns (primal variables) to the problem.
-      
-	The default implementation simply makes repeated calls to
-	addCol().
-      */
-      virtual void addCols(const int numcols,
-			   const CoinPackedVectorBase * const * cols,
-			   const double* collb, const double* colub,   
-			   const double* obj);
-      /** Add a column (primal variable) to the problem. */
-      virtual void addCol(int numberElements, const int * rows, const double * elements,
-			  const double collb, const double colub,   
-			  const double obj) ;
-      /** Add a set of columns (primal variables) to the problem.
-      
-	The default implementation simply makes repeated calls to
-	addCol().
-      */
-      virtual void addCols(const int numcols,
-			   const int * columnStarts, const int * rows, const double * elements,
-			   const double* collb, const double* colub,   
-			   const double* obj);
-      /// Add columns using a CoinBuild object
-      void addCols(const CoinBuild & buildObject);
-      /** Add columns from a model object.  returns
-         -1 if object in bad state (i.e. has row information)
-         otherwise number of errors
-         modelObject non const as can be regularized as part of build
-      */
-      int addCols(CoinModel & modelObject);
+    virtual void addRow(int numberElements,
+			const int *columns, const double *element,
+			const double rowlb, const double rowub) ;
+
+    /*! Add a set of rows (constraints) to the problem.
+    
+      The default implementation simply makes repeated calls to
+      addRow().
+    */
+    virtual void addRows(const int numrows,
+			 const CoinPackedVectorBase * const * rows,
+			 const double* rowlb, const double* rowub);
+
+    /** Add a set of rows (constraints) to the problem.
+    
+      The default implementation simply makes repeated calls to
+      addRow().
+    */
+    virtual void addRows(const int numrows,
+			 const CoinPackedVectorBase * const * rows,
+			 const char* rowsen, const double* rowrhs,   
+			 const double* rowrng);
+
+    /** Add a set of rows (constraints) to the problem.
+    
+      The default implementation simply makes repeated calls to
+      addRow().
+    */
+    virtual void addRows(const int numrows, const int *rowStarts,
+			 const int *columns, const double *element,
+			 const double *rowlb, const double *rowub);
+
+    /// Add rows using a CoinBuild object
+    void addRows(const CoinBuild &buildObject);
+
+    /*! Add rows from a CoinModel object.
+    
+      Returns -1 if the object is in the wrong state (<i>i.e.</i>, has
+      column-major information), otherwise the number of errors.
+
+      The modelObject is not const as it can be regularized as part of
+      the build.
+    */
+    int addRows(CoinModel &modelObject);
+
 #if 0
-      /** */
-      virtual void addCols(const CoinPackedMatrix& matrix,
-			   const double* collb, const double* colub,   
-			   const double* obj);
+    /** */
+    virtual void addRows(const CoinPackedMatrix& matrix,
+			 const double* rowlb, const double* rowub);
+    /** */
+    virtual void addRows(const CoinPackedMatrix& matrix,
+			 const char* rowsen, const double* rowrhs,   
+			 const double* rowrng);
 #endif
-      /** \brief Remove a set of columns (primal variables) from the
-		 problem.
 
-	The solver interface for a basis-oriented solver will maintain valid
-	warm start information if all deleted variables are nonbasic.
-      */
-      virtual void deleteCols(const int num, const int * colIndices) = 0;
-    
-      /** Add a row (constraint) to the problem. */
-      virtual void addRow(const CoinPackedVectorBase& vec,
-    			  const double rowlb, const double rowub) = 0;
-      /** */
-      virtual void addRow(const CoinPackedVectorBase& vec,
-    			  const char rowsen, const double rowrhs,   
-    			  const double rowrng) = 0;
-      /** Add a set of rows (constraints) to the problem.
-      
-	The default implementation simply makes repeated calls to
-	addRow().
-      */
-      virtual void addRows(const int numrows,
-			   const CoinPackedVectorBase * const * rows,
-			   const double* rowlb, const double* rowub);
-      /** Add a set of rows (constraints) to the problem.
-      
-	The default implementation simply makes repeated calls to
-	addRow().
-      */
-      virtual void addRows(const int numrows,
-			   const CoinPackedVectorBase * const * rows,
-    			   const char* rowsen, const double* rowrhs,   
-    			   const double* rowrng);
-      /** Add a row (constraint) to the problem. */
-      virtual void addRow(int numberElements, const int * columns, const double * element,
-    			  const double rowlb, const double rowub) ;
-      /** Add a set of rows (constraints) to the problem.
-      
-	The default implementation simply makes repeated calls to
-	addRow().
-      */
-      virtual void addRows(const int numrows,
-			   const int * rowStarts, const int * columns, const double * element,
-			   const double* rowlb, const double* rowub);
-      /// Add rows using a CoinBuild object
-      void addRows(const CoinBuild & buildObject);
-      /** Add rows from a model object.  returns
-         -1 if object in bad state (i.e. has column information)
-         otherwise number of errors.
+    /** \brief Delete a set of rows (constraints) from the problem.
 
-         modelObject non const as can be regularized as part of build
-      */
-      int addRows(CoinModel & modelObject);
-#if 0
-      /** */
-      virtual void addRows(const CoinPackedMatrix& matrix,
-    			   const double* rowlb, const double* rowub);
-      /** */
-      virtual void addRows(const CoinPackedMatrix& matrix,
-    			   const char* rowsen, const double* rowrhs,   
-    			   const double* rowrng);
-#endif
-      /** \brief Delete a set of rows (constraints) from the problem.
+      The solver interface for a basis-oriented solver will maintain valid
+      warm start information if all deleted rows are loose.
+    */
+    virtual void deleteRows(const int num, const int * rowIndices) = 0;
+  
+    //-----------------------------------------------------------------------
+    /** Apply a collection of cuts.
 
-	The solver interface for a basis-oriented solver will maintain valid
-	warm start information if all deleted rows are loose.
-      */
-      virtual void deleteRows(const int num, const int * rowIndices) = 0;
-    
-      //-----------------------------------------------------------------------
-      /** Apply a collection of cuts.
+	Only cuts which have an <code>effectiveness >= effectivenessLb</code>
+	are applied.
+	<ul>
+	  <li> ReturnCode.numberIneffective() -- number of cuts which were
+	       not applied because they had an
+	       <code>effectiveness < effectivenessLb</code>
+	  <li> ReturnCode.numberInconsistent() -- number of invalid cuts
+	  <li> ReturnCode.numberInconsistentWrtIntegerModel() -- number of
+	       cuts that are invalid with respect to this integer model
+	  <li> ReturnCode.numberInfeasible() -- number of cuts that would
+	       make this integer model infeasible
+	  <li> ReturnCode.numberApplied() -- number of integer cuts which
+	       were applied to the integer model
+	  <li> cs.size() == numberIneffective() +
+			    numberInconsistent() +
+			    numberInconsistentWrtIntegerModel() +
+			    numberInfeasible() +
+			    nubmerApplied()
+	</ul>
+    */
+    virtual ApplyCutsReturnCode applyCuts(const OsiCuts & cs,
+					  double effectivenessLb = 0.0);
 
-    	  Only cuts which have an <code>effectiveness >= effectivenessLb</code>
-    	  are applied.
-    	  <ul>
-    	    <li> ReturnCode.numberIneffective() -- number of cuts which were
-                 not applied because they had an
-    	         <code>effectiveness < effectivenessLb</code>
-    	    <li> ReturnCode.numberInconsistent() -- number of invalid cuts
-    	    <li> ReturnCode.numberInconsistentWrtIntegerModel() -- number of
-                 cuts that are invalid with respect to this integer model
-            <li> ReturnCode.numberInfeasible() -- number of cuts that would
-    	         make this integer model infeasible
-            <li> ReturnCode.numberApplied() -- number of integer cuts which
-    	         were applied to the integer model
-            <li> cs.size() == numberIneffective() +
-                              numberInconsistent() +
-    			      numberInconsistentWrtIntegerModel() +
-    			      numberInfeasible() +
-    			      nubmerApplied()
-          </ul>
-      */
-      virtual ApplyCutsReturnCode applyCuts(const OsiCuts & cs,
-    					    double effectivenessLb = 0.0);
-      /** Apply a collection of row cuts which are all effective.
-	  applyCuts seems to do one at a time which seems inefficient.
-	  Would be even more efficient to pass an array of pointers.
-      */
-      virtual void applyRowCuts(int numberCuts, const OsiRowCut * cuts);
-      /** Apply a collection of row cuts which are all effective.
-	  This is passed in as an array of pointers.
-      */
-      virtual void applyRowCuts(int numberCuts, const OsiRowCut ** cuts);
-    //@}
+    /** Apply a collection of row cuts which are all effective.
+	applyCuts seems to do one at a time which seems inefficient.
+	Would be even more efficient to pass an array of pointers.
+    */
+    virtual void applyRowCuts(int numberCuts, const OsiRowCut * cuts);
+
+    /** Apply a collection of row cuts which are all effective.
+	This is passed in as an array of pointers.
+    */
+    virtual void applyRowCuts(int numberCuts, const OsiRowCut ** cuts);
+
+    /// Deletes branching information before columns deleted
+    void deleteBranchingInfo(int numberDeleted, const int * which);
+
+  //@}
 
   //---------------------------------------------------------------------------
 
@@ -1011,9 +1243,10 @@ public:
 	Returns non-zero on I/O error
     */
     int writeMpsNative(const char *filename, 
-		  const char ** rowNames, const char ** columnNames,
-		  int formatType=0,int numberAcross=2,
-		 double objSense=0.0) const ;
+		       const char ** rowNames, const char ** columnNames,
+		       int formatType=0,int numberAcross=2,
+		       double objSense=0.0, int numberSOS=0,
+		       const CoinSet * setInfo=NULL) const ;
 
 /***********************************************************************/
 // Lp files 
@@ -1116,6 +1349,16 @@ public:
 
   //---------------------------------------------------------------------------
 
+  /**@name Miscellaneous */
+  //@{
+#ifdef COIN_SNAPSHOT
+  /// Return a CoinSnapshot
+  virtual CoinSnapshot * snapshot(bool createArrays=true) const;
+#endif
+  //@}
+
+  //---------------------------------------------------------------------------
+
   /**@name Setting/Accessing application data */
   //@{
     /** Set application data.
@@ -1168,6 +1411,61 @@ public:
   /// Return a pointer to the current set of messages
   CoinMessages * messagesPointer() 
   {return &messages_;};
+  //@}
+  //---------------------------------------------------------------------------
+  /**@name Methods for dealing with discontinuities other than integers.
+  
+     Osi should be able to know about SOS and other types.  This is an optional
+     section where such information can be stored.
+
+  */
+  //@{
+    /** \brief Identify integer variables and create corresponding objects.
+  
+      Record integer variables and create an OsiSimpleInteger object for each
+      one.  All existing OsiSimpleInteger objects will be destroyed.
+      If justCount then no objects created and we just store numberIntegers_
+    */
+
+    void findIntegers(bool justCount);
+    /** \brief Identify integer variables and SOS and create corresponding objects.
+  
+      Record integer variables and create an OsiSimpleInteger object for each
+      one.  All existing OsiSimpleInteger objects will be destroyed.
+      If the solver supports SOS then do the same for SOS.
+
+      If justCount then no objects created and we just store numberIntegers_
+      Returns number of SOS
+    */
+
+    virtual int findIntegersAndSOS(bool justCount);
+    /// Get the number of objects
+    inline int numberObjects() const { return numberObjects_;};
+    /// Set the number of objects
+    inline void setNumberObjects(int number) 
+    {  numberObjects_=number;};
+
+    /// Get the array of objects
+    inline OsiObject ** objects() const { return object_;};
+
+    /// Get the specified object
+    const inline OsiObject * object(int which) const { return object_[which];};
+    /// Get the specified object
+    inline OsiObject * modifiableObject(int which) const { return object_[which];};
+
+    /// Delete all object information
+    void deleteObjects();
+
+    /** Add in object information.
+  
+      Objects are cloned; the owner can delete the originals.
+    */
+    void addObjects(int numberObjects, OsiObject ** objects);
+    /** Use current solution to set bounds so current integer feasible solution will stay feasible.
+        Only feasible bounds will be used, even if current solution outside bounds.  The amount of
+        such violation will be returned (and if small can be ignored)
+    */
+    double forceFeasible();
   //@}
   //---------------------------------------------------------------------------
 
@@ -1404,6 +1702,25 @@ protected:
   //@{
     /// Pointer to row cut debugger object
     OsiRowCutDebugger * rowCutDebugger_;
+   // Why not just make useful stuff protected?
+   /// Message handler
+  CoinMessageHandler * handler_;
+  /** Flag to say if the currrent handler is the default handler.
+      Indicates if the solver interface object is responsible
+      for destruction of the handler (true) or if the client is
+      responsible (false).
+  */
+  bool defaultHandler_;
+  /// Messages
+  CoinMessages messages_;
+  /// Number of integers
+  int numberIntegers_;
+  /// Total number of objects
+  int numberObjects_;
+
+  /// Integer and ... information (integer info normally at beginning)
+  OsiObject ** object_;
+
   //@}
   
   //---------------------------------------------------------------------------
@@ -1426,18 +1743,14 @@ private:
     /** Warm start information used for hot starts when the default
        hot start implementation is used. */
     CoinWarmStart* ws_;
-  // Why not just make useful stuff protected?
-protected:
-   /// Message handler
-  CoinMessageHandler * handler_;
-  /** Flag to say if the currrent handler is the default handler.
-      Indicates if the solver interface object is responsible
-      for destruction of the handler (true) or if the client is
-      responsible (false).
-  */
-  bool defaultHandler_;
-  /// Messages
-  CoinMessages messages_;
+
+    /// Row names
+    OsiNameVec rowNames_ ;
+    /// Column names
+    OsiNameVec colNames_ ;
+    /// Objective name
+    std::string objName_ ;
+
  //@}
 };
 

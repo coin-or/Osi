@@ -12,9 +12,12 @@
 #include "CoinPackedMatrix.hpp"
 #include "OsiSolverInterface.hpp"
 #include "CoinWarmStartBasis.hpp"
+#include "ClpEventHandler.hpp"
+#include "CoinIndexedVector.hpp"
 
 class OsiRowCut;
 class OsiClpUserSolver;
+class CoinSet;
 #ifndef COIN_DBL_MAX
 static const double OsiClpInfinity = DBL_MAX;
 #else
@@ -173,7 +176,7 @@ public:
   
   ///Get a row of the tableau (slack part in slack if not NULL)
   virtual void getBInvARow(int row, double* z, double * slack=NULL) const;
-
+  
   /** Get a row of the tableau (slack part in slack if not NULL)
       If keepScaled is true then scale factors not applied after so
       user has to use coding similar to what is in this method
@@ -187,9 +190,9 @@ public:
   ///Get a column of the tableau
   virtual void getBInvACol(int col, double* vec) const ;
   
-  
   ///Get a column of the tableau
   virtual void getBInvACol(int col, CoinIndexedVector * vec) const ;
+  
   /** Update (i.e. ftran) the vector passed in.
       Unscaling is applied after - can't be applied before
   */
@@ -392,7 +395,10 @@ public:
   /// Get pointer to column-wise copy of matrix
   virtual const CoinPackedMatrix * getMatrixByCol() const;
   
-  /// Get solver's value for infinity
+  /// Get pointer to mutable column-wise copy of matrix
+  virtual CoinPackedMatrix * getMutableMatrixByCol() const;
+  
+    /// Get solver's value for infinity
   virtual double getInfinity() const { return OsiClpInfinity; }
   //@}
   
@@ -562,6 +568,22 @@ public:
   /** Set the variables listed in indices (which is of length len) to be
       integer variables */
   virtual void setInteger(const int* indices, int len);
+  /// Number of SOS sets
+  inline int numberSOS() const
+  { return numberSOS_;};
+  /// SOS set info
+  inline const CoinSet * setInfo() const
+  { return setInfo_;};
+  /** \brief Identify integer variables and SOS and create corresponding objects.
+  
+    Record integer variables and create an OsiSimpleInteger object for each
+    one.  All existing OsiSimpleInteger objects will be destroyed.
+    If the solver supports SOS then do the same for SOS.
+     If justCount then no objects created and we just store numberIntegers_
+    Returns number of SOS
+  */
+
+  virtual int findIntegersAndSOS(bool justCount);
   //@}
   
   //-------------------------------------------------------------------------
@@ -611,6 +633,11 @@ public:
                        const CoinPackedVectorBase * const * cols,
                        const double* collb, const double* colub,   
                        const double* obj);
+  /**  */
+  virtual void addCols(const int numcols,
+		       const int * columnStarts, const int * rows, const double * elements,
+		       const double* collb, const double* colub,   
+		       const double* obj);
   /** */
   virtual void deleteCols(const int num, const int * colIndices);
   
@@ -621,6 +648,9 @@ public:
   virtual void addRow(const CoinPackedVectorBase& vec,
                       const char rowsen, const double rowrhs,   
                       const double rowrng);
+  /** Add a row (constraint) to the problem. */
+  virtual void addRow(int numberElements, const int * columns, const double * element,
+		      const double rowlb, const double rowub) ;
   /** */
   virtual void addRows(const int numrows,
                        const CoinPackedVectorBase * const * rows,
@@ -631,6 +661,10 @@ public:
                        const char* rowsen, const double* rowrhs,   
                        const double* rowrng);
 
+  /** */
+  virtual void addRows(const int numrows,
+		       const int * rowStarts, const int * columns, const double * element,
+		       const double* rowlb, const double* rowub);
   ///
   void modifyCoefficient(int row, int column, double newElement,
 			bool keepZero=false)
@@ -739,6 +773,9 @@ public:
       number of errors (see OsiMpsReader class) */
   virtual int readMps(const char *filename,
                       const char *extension = "mps") ;
+  /** Read an mps file from the given filename returns
+      number of errors (see OsiMpsReader class) */
+  int readMps(const char *filename,bool keepNames,bool allowErrors);
   
   /** Write the problem into an mps file of the given filename.
       If objSense is non zero then -1.0 forces the code to write a
@@ -937,7 +974,12 @@ protected:
   void setBasis( const CoinWarmStartBasis & basis, ClpSimplex * model);
   /// Crunch down problem a bit
   void crunch();
+  /// Extend scale factors
+  void redoScaleFactors(int numberRows,const CoinBigIndex * starts,
+			const int * indices, const double * elements);
 public:
+  /// Delete all scale factor stuff and reset option
+  void deleteScaleFactors();
   /// If doing fast hot start then ranges are computed
   inline const double * upRange() const
   { return rowActivity_;};
@@ -946,6 +988,9 @@ public:
   /// Pass in range array
   inline void passInRanges(int * array)
   { whichRange_=array;};
+  /// Pass in sos stuff from AMPl
+  void setSOSData(int numberSOS,const char * type,
+		  const int * start,const int * indices, const double * weights=NULL);
 protected:
   //@}
   
@@ -975,6 +1020,10 @@ protected:
       only used in hotstarts so can be casual */
   mutable double * rowActivity_;
   mutable double * columnActivity_;
+  /// Number of SOS sets
+  int numberSOS_;
+  /// SOS set info
+  CoinSet * setInfo_;
   /// Alternate model (hot starts)
   ClpSimplex * smallModel_;
   /// factorization for hot starts
@@ -1047,8 +1096,102 @@ protected:
       512 Give user direct access to Clp regions in getBInvARow etc
       Bits above 8192 give where called from in Cbc
       At present 0 is normal, 1 doing fast hotstarts, 2 is can do quick check
+      65536 Keep simple i.e. no auxiliary model or crunch etc
+      131072 Try and keep scaling factors around
   */
   mutable unsigned int specialOptions_;
+  /// Copy of model when option 131072 set
+  ClpSimplex * baseModel_;
+  /// Number of rows when last "scaled"
+  int lastNumberRows_;
+  /// Row scale factors (has inverse at end)
+  CoinDoubleArrayWithLength rowScale_; 
+  /// Column scale factors (has inverse at end)
+  CoinDoubleArrayWithLength columnScale_; 
+  //@}
+};
+  
+class OsiClpDisasterHandler : public ClpDisasterHandler {
+public:
+  /**@name Virtual methods that the derived classe should provide.
+  */
+  //@{
+  /// Into simplex
+  virtual void intoSimplex();
+  /// Checks if disaster
+  virtual bool check() const ;
+  /// saves information for next attempt
+  virtual void saveInfo();
+  //@}
+  
+  
+  /**@name Constructors, destructor */
+
+  //@{
+  /** Default constructor. */
+  OsiClpDisasterHandler(OsiClpSolverInterface * model = NULL);
+  /** Destructor */
+  virtual ~OsiClpDisasterHandler();
+  // Copy
+  OsiClpDisasterHandler(const OsiClpDisasterHandler&);
+  // Assignment
+  OsiClpDisasterHandler& operator=(const OsiClpDisasterHandler&);
+  /// Clone
+  virtual ClpDisasterHandler * clone() const;
+
+  //@}
+  
+  /**@name Sets/gets */
+
+  //@{
+  /** set model. */
+  void setOsiModel(OsiClpSolverInterface * model);
+  /// Get model
+  inline OsiClpSolverInterface * osiModel() const
+  { return osiModel_;};
+  /// Set where from
+  inline void setWhereFrom(int value)
+  { whereFrom_=value;};
+  /// Get where from
+  inline int whereFrom() const
+  { return whereFrom_;};
+  /// Set phase 
+  inline void setPhase(int value)
+  { phase_=value;};
+  /// Get phase 
+  inline int phase() const
+  { return phase_;};
+  /// are we in trouble
+  inline bool inTrouble() const
+  { return inTrouble_;};
+  //@}
+  
+  
+protected:
+  /**@name Data members
+     The data members are protected to allow access for derived classes. */
+  //@{
+  /// Pointer to model
+  OsiClpSolverInterface * osiModel_;
+  /** Where from 
+      0 dual (resolve)
+      1 crunch
+      2 primal (resolve)
+      4 dual (initialSolve)
+      6 primal (initialSolve)
+  */
+  int whereFrom_;
+  /** phase
+      0 initial
+      1 trying continuing with back in and maybe different perturb
+      2 trying continuing with back in and different scaling
+      3 trying dual from all slack
+      4 trying primal from previous stored basis
+  */
+  int phase_;
+  /// Are we in trouble
+  bool inTrouble_;
+      
   //@}
 };
 
@@ -1062,5 +1205,4 @@ protected:
     (has 256M core memory!)... */
 void
 OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
-
 #endif

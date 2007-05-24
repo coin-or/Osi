@@ -6,6 +6,10 @@
 #  pragma warning(disable:4786)
 #endif
 
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
+
 #include "OsiConfig.h"
 
 #include <cassert>
@@ -24,10 +28,6 @@
 #endif
 
 //#############################################################################
-
-#ifdef NDEBUG
-#undef NDEBUG
-#endif
 
 namespace {
 CoinPackedMatrix &BuildExmip1Mtx ()

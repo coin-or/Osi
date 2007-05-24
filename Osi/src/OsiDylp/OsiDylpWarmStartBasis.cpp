@@ -1,5 +1,5 @@
 /*! \legal
-  Copyright (C) 2002, 2003, 2004.
+  Copyright (C) 2003 -- 2007
   Lou Hafer, International Business Machines Corporation and others.
   All Rights Reserved.
 
@@ -46,8 +46,19 @@
 #include <iostream>
 #include "OsiDylpWarmStartBasis.hpp"
 
+#ifndef ODSI_PARANOIA
+# define ODSI_PARANOIA 1
+#endif
 #undef ODSI_PARANOIA
 #define ODSI_PARANOIA 2
+
+/*
+  The following symbol is useful only for detailed debugging.
+
+  ODWSB_TRACK_BASIS	track basis manipulations
+
+*/
+#define ODWSB_TRACK_BASIS 1
 
 namespace {
   char sccsid[] UNUSED = "@(#)OsiDylpWarmStartBasis.cpp	1.7	11/06/04" ;
@@ -402,7 +413,7 @@ void ODWSB::compressRows (int tgtCnt, const int *tgts)
 */
   if (tgtCnt <= 0) return ;
 
-  int i,keep,t,tgt,blkStart,blkEnd ;
+  int i,keep,t,blkStart,blkEnd ;
   Status stati ;
 
 /*
@@ -460,6 +471,10 @@ void ODWSB::compressRows (int tgtCnt, const int *tgts)
     setStatus(constraintStatus_,keep++,stati) ; }
 
   numArtificial_ -= tgtCnt ;
+# if ODSI_PARANOIA >= 2
+  checkBasis() ;
+# endif
+
 
   return ; }
 
@@ -509,6 +524,70 @@ void ODWSB::deleteRows (int rawTgtCnt, const int *rawTgts)
 /*
   The good news is that CWSB::deleteColumns works just fine for ODWSB.
 */
+
+/*
+  mergeBasis was originally developed to deal with expansion of a basis in
+  cbc. The original coding manipulated artificialStatus_ directly, losing the
+  active/inactive information in constraintStatus_. mergeBasis rephrases the
+  activity in terms of merging entries from an old basis into a new, expanded
+  basis. The resulting routine is capable of general merging of a source basis
+  into a target (this) basis.
+
+  This code is substantially identical to CoinWarmStartBasis::mergeBasis,
+  with the exception that it understands constraintStatus_.
+
+  If the xferRows (xferCols) vector is missing, no row (column) information
+  will be transferred from src to tgt.
+*/
+
+void ODWSB::mergeBasis (const CoinWarmStartBasis *cwsb_src,
+		        const XferVec *xferRows, const XferVec *xferCols)
+
+{ assert(cwsb_src) ;
+  const ODWSB *src = dynamic_cast<const ODWSB *>(cwsb_src) ;
+  assert(src) ;
+  int srcCols = src->getNumStructural() ;
+  int srcRows = src->getNumArtificial() ;
+/*
+  Merge the structural variable status.
+*/
+  if (srcCols > 0 && xferCols != NULL)
+  { XferVec::const_iterator xferSpec = xferCols->begin() ;
+    XferVec::const_iterator xferEnd = xferCols->end() ;
+    for ( ; xferSpec != xferEnd ; xferSpec++)
+    { int srcNdx = (*xferSpec).first ;
+      int tgtNdx = (*xferSpec).second ;
+      int runLen = (*xferSpec).third ;
+      assert(srcNdx >= 0 && srcNdx+runLen <= srcCols) ;
+      assert(tgtNdx >= 0 && tgtNdx+runLen <= getNumStructural()) ;
+      for (int i = 0 ; i < runLen ; i++)
+      { CoinWarmStartBasis::Status stat = src->getStructStatus(srcNdx+i) ;
+	setStatus(structuralStatus_,tgtNdx+i,stat) ; } } }
+/*
+  Merge the row (artificial variable and constraint activity) status.
+*/
+  if (srcRows > 0 && xferRows != NULL)
+  { XferVec::const_iterator xferSpec = xferRows->begin() ;
+    XferVec::const_iterator xferEnd = xferRows->end() ;
+    for ( ; xferSpec != xferEnd ; xferSpec++)
+    { int srcNdx = (*xferSpec).first ;
+      int tgtNdx = (*xferSpec).second ;
+      int runLen = (*xferSpec).third ;
+#     if ODWSB_TRACK_BASIS > 0
+      std::cout
+        << "\tmerging from " << srcNdx
+	<< " to " << tgtNdx << ", run = " << runLen
+	<< "." << std::endl ;
+#     endif
+      assert(srcNdx >= 0 && srcNdx+runLen <= srcRows) ;
+      assert(tgtNdx >= 0 && tgtNdx+runLen <= getNumArtificial()) ;
+      for (int i = 0 ; i < runLen ; i++)
+      { CoinWarmStartBasis::Status stat = src->getArtifStatus(srcNdx+i) ;
+	setStatus(artificialStatus_,tgtNdx+i,stat) ;
+        stat = src->getConStatus(srcNdx+i) ;
+	setStatus(constraintStatus_,tgtNdx+i,stat) ; } } }
+
+  return ; }
 
 //@}
 

@@ -21023,7 +21023,7 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
-	   for fnm in glp_lpx_simplex ; do
+	   for fnm in _glp_lpx_simplex glp_lpx_simplex ; do
 	     echo "$as_me:$LINENO: checking whether symbol $fnm is available with GLPK" >&5
 echo $ECHO_N "checking whether symbol $fnm is available with GLPK... $ECHO_C" >&6
 	     cat >conftest.$ac_ext <<_ACEOF
@@ -21086,8 +21086,8 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 	   if test x"$coin_GLPK_link" = xyes ; then
 	     LIBS="$coin_save_LIBS"
 	   else
-	     { { echo "$as_me:$LINENO: error: Cannot find symbol(s) glp_lpx_simplex with GLPK" >&5
-echo "$as_me: error: Cannot find symbol(s) glp_lpx_simplex with GLPK" >&2;}
+	     { { echo "$as_me:$LINENO: error: Cannot find symbol(s) _glp_lpx_simplex glp_lpx_simplex with GLPK" >&5
+echo "$as_me: error: Cannot find symbol(s) _glp_lpx_simplex glp_lpx_simplex with GLPK" >&2;}
    { (exit 1); exit 1; }; }
 	   fi
 	 fi
@@ -21967,73 +21967,73 @@ fi;
 # 'cause the quadrigraphs will be replaced with brackets, even in a comment!
 
   case $osicbc_with_solver in
-    clp)
+    [Cc][Ll][Pp]*)
       osi_lc_solver=clp ;
       osi_mc_solver=Clp ;
       osi_uc_solver=CLP ;
       osi_exists_solver=${coin_has_clp-"unavailable"}
       ;;
-    dylp)
+    [Dd][Yy][Ll][Pp]*)
       osi_lc_solver=dylp ;
       osi_mc_solver=Dylp
       osi_uc_solver=DYLP
       osi_exists_solver=${coin_has_dylp-"unavailable"}
       ;;
-    cpx)
+    [Cc][Pp][Xx]*)
       osi_lc_solver=cpx ;
       osi_mc_solver=Cpx
       osi_uc_solver=CPX
       osi_exists_solver=${coin_has_cpx-"unavailable"}
       ;;
-    fmp)
+    [Ff][Mm][Pp]*)
       osi_lc_solver=fmp ;
       osi_mc_solver=Fmp
       osi_uc_solver=FMP
       osi_exists_solver=${coin_has_fmp-"unavailable"}
       ;;
-    glpk)
+    [Gg][Ll][Pp][Kk]*)
       osi_lc_solver=glpk ;
       osi_mc_solver=Glpk
       osi_uc_solver=GLPK
       osi_exists_solver=${coin_has_glpk-"unavailable"}
       ;;
-    msk)
+    [Mm][Ss][Kk]*)
       osi_lc_solver=msk ;
       osi_mc_solver=Msk
       osi_uc_solver=MSK
       osi_exists_solver=${coin_has_msk-"unavailable"}
       ;;
-    osl)
+    [Oo][Ss][Ll]*)
       osi_lc_solver=osl ;
       osi_mc_solver=Osl
       osi_mc_solver=OSL
       osi_exists_solver=${coin_has_osl-"unavailable"}
       ;;
-    spx)
+    [Ss][Pp][Xx]*)
       osi_lc_solver=spx ;
       osi_mc_solver=Spx
       osi_uc_solver=SPX
       osi_exists_solver=${coin_has_spx-"unavailable"}
       ;;
-    sym)
+    [Ss][Yy][Mm]*)
       osi_lc_solver=sym ;
       osi_mc_solver=Sym
       osi_uc_solver=SYM
       osi_exists_solver=${coin_has_sym-"unavailable"}
       ;;
-    vol)
+    [Vv][Oo][Ll]*)
       osi_lc_solver=vol ;
       osi_mc_solver=Vol
       osi_uc_solver=VOL
       osi_exists_solver=${coin_has_vol-"unavailable"}
       ;;
-    xpr)
+    [Xx][Pp][Rr]*)
       osi_lc_solver=xpr ;
       osi_mc_solver=Xpr
       osi_uc_solver=XPR
       osi_exists_solver=${coin_has_xpr-"unavailable"}
       ;;
-    cbc)
+    [Cc][Bb][Cc]*)
       osi_lc_solver=cbc ;
       osi_mc_solver=Cbc
       osi_uc_solver=CBC

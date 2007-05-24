@@ -1,5 +1,5 @@
 /*! \legal
-  Copyright (C) 2004.
+  Copyright (C) 2004 -- 2007
   Lou Hafer, International Business Machines Corporation and others. All
   Rights Reserved.
 
@@ -198,6 +198,14 @@ void ODSI::setOsiDylpMessages (CoinMessages::Language local_language)
     while (msgdefn->inID != ODSI_DUMMY_END)
     { odsiMessages.replaceMessage(msgdefn->inID,msgdefn->fmt) ;
       msgdefn++ ; } }
+/*
+  Each CoinOneMessage has a fixed-length array to hold the message; by default
+  this is 400 chars. Convert to `compressed' CoinOneMessage objects where the
+  array is only as large as necessary. Any attempt to replace a message, or the
+  message text, will automatically trigger a decompress operation before doing
+  the replacement, but the messages will *not* be automatically recompressed.
+*/
+  odsiMessages.toCompact() ;
 
   messages_ = odsiMessages ;
   return ; }

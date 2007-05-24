@@ -7,6 +7,10 @@
 #  pragma warning(disable:4786)
 #endif
 
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
+
 #include "OsiConfig.h"
 
 #include <cassert>
@@ -342,7 +346,7 @@ int main (int argc, const char *argv[])
   }
 #endif
 
-#ifdef COIN_HAS_SYMPHONY 
+#ifdef COIN_HAS_SYMPHONY
   {
     OsiSymSolverInterface symSi;
     testingMessage( "Testing OsiRowCut with OsiSymSolverInterface\n" );

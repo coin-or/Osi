@@ -5,15 +5,15 @@
 #  pragma warning(disable:4786)
 #endif
 
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
+
 //#include <cstdlib>
 #include <cassert>
 //#include <cmath>
 
 #include <OsiColCut.hpp>
-
-#ifdef NDEBUG
-#undef NDEBUG
-#endif
 
 //--------------------------------------------------------------------------
 void

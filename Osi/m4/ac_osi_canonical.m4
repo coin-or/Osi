@@ -1,7 +1,7 @@
 
 # AC_OSI_CANONICAL(solver)
 
-# Given a solver name (e.g., clp, all letters in lower case), set four variables:
+# Given a solver name (e.g., clp, Clp, CLP, DyLP, etc.), set four variables:
 # osi_lc_solver: solver in lower case (e.g., clp)
 # osi_mc_solver: solver in mixed case (e.g., Clp)
 # osi_uc_solver: solver in upper case (e.g., CLP)
@@ -24,73 +24,73 @@ AC_DEFUN([AC_OSI_CANONICAL],
 # 'cause the quadrigraphs will be replaced with brackets, even in a comment!
 
   case $1 in
-    clp)
+    @<:@Cc@:>@@<:@Ll@:>@@<:@Pp@:>@*)
       osi_lc_solver=clp ;
       osi_mc_solver=Clp ;
       osi_uc_solver=CLP ;
       osi_exists_solver=${coin_has_clp-"unavailable"}
       ;;
-    dylp)
+    @<:@Dd@:>@@<:@Yy@:>@@<:@Ll@:>@@<:@Pp@:>@*)
       osi_lc_solver=dylp ;
       osi_mc_solver=Dylp
       osi_uc_solver=DYLP
       osi_exists_solver=${coin_has_dylp-"unavailable"}
       ;;
-    cpx)
+    @<:@Cc@:>@@<:@Pp@:>@@<:@Xx@:>@*)
       osi_lc_solver=cpx ;
       osi_mc_solver=Cpx
       osi_uc_solver=CPX
       osi_exists_solver=${coin_has_cpx-"unavailable"}
       ;;
-    fmp)
+    @<:@Ff@:>@@<:@Mm@:>@@<:@Pp@:>@*)
       osi_lc_solver=fmp ;
       osi_mc_solver=Fmp
       osi_uc_solver=FMP
       osi_exists_solver=${coin_has_fmp-"unavailable"}
       ;;
-    glpk)
+    @<:@Gg@:>@@<:@Ll@:>@@<:@Pp@:>@@<:@Kk@:>@*)
       osi_lc_solver=glpk ;
       osi_mc_solver=Glpk
       osi_uc_solver=GLPK
       osi_exists_solver=${coin_has_glpk-"unavailable"}
       ;;
-    msk)
+    @<:@Mm@:>@@<:@Ss@:>@@<:@Kk@:>@*)
       osi_lc_solver=msk ;
       osi_mc_solver=Msk
       osi_uc_solver=MSK
       osi_exists_solver=${coin_has_msk-"unavailable"}
       ;;
-    osl)
+    @<:@Oo@:>@@<:@Ss@:>@@<:@Ll@:>@*)
       osi_lc_solver=osl ;
       osi_mc_solver=Osl
       osi_mc_solver=OSL
       osi_exists_solver=${coin_has_osl-"unavailable"}
       ;;
-    spx)
+    @<:@Ss@:>@@<:@Pp@:>@@<:@Xx@:>@*)
       osi_lc_solver=spx ;
       osi_mc_solver=Spx
       osi_uc_solver=SPX
       osi_exists_solver=${coin_has_spx-"unavailable"}
       ;;
-    sym)
+    @<:@Ss@:>@@<:@Yy@:>@@<:@Mm@:>@*)
       osi_lc_solver=sym ;
       osi_mc_solver=Sym
       osi_uc_solver=SYM
       osi_exists_solver=${coin_has_sym-"unavailable"}
       ;;
-    vol)
+    @<:@Vv@:>@@<:@Oo@:>@@<:@Ll@:>@*)
       osi_lc_solver=vol ;
       osi_mc_solver=Vol
       osi_uc_solver=VOL
       osi_exists_solver=${coin_has_vol-"unavailable"}
       ;;
-    xpr)
+    @<:@Xx@:>@@<:@Pp@:>@@<:@Rr@:>@*)
       osi_lc_solver=xpr ;
       osi_mc_solver=Xpr
       osi_uc_solver=XPR
       osi_exists_solver=${coin_has_xpr-"unavailable"}
       ;;
-    cbc)
+    @<:@Cc@:>@@<:@Bb@:>@@<:@Cc@:>@*)
       osi_lc_solver=cbc ;
       osi_mc_solver=Cbc
       osi_uc_solver=CBC

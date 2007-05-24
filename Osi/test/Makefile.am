@@ -61,6 +61,15 @@ if COIN_HAS_CBC
   LIBS += `cat $(CBCOBJDIR)/cbc_addlibs.txt`
 endif
 
+if COIN_HAS_SYMPHONY
+  unitTest_SOURCES += OsiSymSolverInterfaceTest.cpp
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(SYMPHONYSRCDIR)/include` \
+	-I`$(CYGPATH_W) $(srcdir)/../src/OsiSym`
+  unitTest_LDADD += ../src/OsiSym/libOsiSym.la \
+	$(SYMPHONYOBJDIR)/src/libSym.la
+  LIBS += `cat $(SYMPHONYOBJDIR)/sym_addlibs.txt`
+endif
+
 if COIN_HAS_CGL
   unitTest_LDADD += $(CGLOBJDIR)/src/libCgl.la
   LIBS += `cat $(CGLOBJDIR)/cgl_addlibs.txt`
@@ -116,15 +125,6 @@ if COIN_HAS_SPX
   AM_CPPFLAGS += -I`$(CYGPATH_W) $(SPXINCDIR)` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiSpx`
   unitTest_LDADD += ../src/OsiSpx/libOsiSpx.la
-endif
-
-if COIN_HAS_SYMPHONY
-  unitTest_SOURCES += OsiSymSolverInterfaceTest.cpp
-  AM_CPPFLAGS += -I`$(CYGPATH_W) $(SYMPHONYSRCDIR)/include` \
-	-I`$(CYGPATH_W) $(srcdir)/../src/OsiSym`
-  unitTest_LDADD += ../src/OsiSym/libOsiSym.la \
-	$(SYMPHONYOBJDIR)/src/libSym.la
-  LIBS += `cat $(SYMPHONYOBJDIR)/sym_addlibs.txt`
 endif
 
 if COIN_HAS_VOL

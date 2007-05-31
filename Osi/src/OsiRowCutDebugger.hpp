@@ -35,6 +35,9 @@ public:
   /// Return optimal solution
   const double * optimalSolution() const
   { return optimalSolution_;};
+
+  /// Return number of columns in optimal solution
+  int numberColumns() const { return (numberColumns_) ; }
   //@}
 
   /**@name Activate Debugger */

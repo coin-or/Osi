@@ -1401,12 +1401,22 @@ void ODSI::load_problem (const CoinMpsIO &mps)
   
   pkvec_struct* colj = pkvec_new(m) ;
 
+/*
+  The little hack here for the upper bound on general integer variables is
+  needed because CoinMpsIO forces 1e30 as the upper bound for a general
+  integer, but the MIR cut generators fail to see this as infinity and generate
+  bogus cuts. If ever CoinMpsIO is fixed, this should come out!
+*/
   for (int j = 0 ; j < n ; j++)
   { const CoinShallowPackedVector coin_col = matrix2->getVector(j) ;
     packed_vector(coin_col,n,colj) ;
+    double uj ;
     colj->nme = const_cast<char *>(mps.columnName(j)) ;
-    r = consys_addcol_pk(consys,vtyp[j],
-			 colj,obj[j],col_lower[j],col_upper[j]) ;
+    if (vtyp[j] == vartypINT && col_upper[j] >= 1e30)
+    { uj = odsiInfinity ; }
+    else
+    { uj = col_upper[j] ; }
+    r = consys_addcol_pk(consys,vtyp[j],colj,obj[j],col_lower[j],uj) ;
     if (!r)
     { break ; } }
 

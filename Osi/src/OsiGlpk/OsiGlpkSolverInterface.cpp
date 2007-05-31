@@ -1782,13 +1782,24 @@ OGSI::setContinuous(int index)
 
 //-----------------------------------------------------------------------------
 
-void
-OGSI::setInteger(int index)
-{
-        LPX *model = getMutableModelPtr();
-	freeCachedData( OGSI::FREECACHED_COLUMN );
-	lpx_set_col_kind( model, index+1, LPX_IV );
-}
+void OGSI::setInteger (int index)
+
+{ LPX *model = getMutableModelPtr() ;
+  freeCachedData(OGSI::FREECACHED_COLUMN) ;
+  lpx_set_col_kind(model,index+1,LPX_IV) ;
+/*
+  Temporary hack to correct upper bounds on general integer variables.
+  CoinMpsIO insists on forcing a bound of 1e30 for general integer variables
+  with no upper bound. This causes several cut generators (MIR, MIR2) to fail.
+  Put the bound back to infinity.
+
+  -- lh, 070530 --
+*/
+  double uj = getColUpper()[index] ;
+  if (uj >= 1e30)
+  { setColUpper(index,getInfinity()) ; }
+
+  return ; }
 
 //-----------------------------------------------------------------------------
 
@@ -2129,14 +2140,11 @@ void OGSI::deleteRows (const int num, const int *osiIndices)
 // Methods to input a problem
 //#############################################################################
 
-// Currently support for the default values (when passed a 0 pointer) is
-// inefficient.  Should improve this. ???
+void OGSI::loadProblem (const CoinPackedMatrix &matrix,
+			const double *collb_parm, const double *colub_parm,
+			const double *obj_parm,
+			const double *rowlb_parm, const double *rowub_parm)
 
-void
-OGSI::loadProblem( const CoinPackedMatrix& matrix,
-				     const double* collb, const double* colub,
-				     const double* obj,
-				     const double* rowlb, const double* rowub )
 { 
 #   if OGSI_TRACK_FRESH > 0
     std::cout
@@ -2175,31 +2183,92 @@ OGSI::loadProblem( const CoinPackedMatrix& matrix,
 
   freeCachedData(OGSI::KEEPCACHED_NONE) ;
 
-  double inf = getInfinity();
-
-  if (matrix.isColOrdered())
-  { int i ;
-    for (i = 0 ; i < matrix.getNumCols() ; i++)
-    { addCol(matrix.getVector(i),(collb?collb[i]:0.0), 
-	     (colub?colub[i]:inf),(obj?obj[i]:0.0)) ; }
-    // Make sure there are enough rows 
-    if (matrix.getNumRows() > getNumRows())
-    { lpx_add_rows(lp_,matrix.getNumRows()-getNumRows()) ; }
-    int j ;
-    for (j = 0 ; j < matrix.getNumRows() ; j++)
-    { setRowBounds(j,(rowlb?rowlb[j]:-inf),(rowub?rowub[j]:inf)) ; } }
+  double inf = getInfinity() ;
+  int m = matrix.getNumRows() ;
+  int n = matrix.getNumCols() ;
+  int i,j ;
+  double *zeroVec,*infVec,*negInfVec ;
+  const double *collb,*colub,*obj,*rowlb,*rowub ;
+/*
+  Check if we need default values for any of the vectors, and set up
+  accordingly.
+*/
+  if (collb_parm == 0 || obj_parm == 0)
+  { zeroVec = new double [n] ; }
   else
-  { int j ;
-    for( j = 0; j < matrix.getNumRows(); j++ )
-    { addRow(matrix.getVector(j),
-	     (rowlb?rowlb[j]:-inf),(rowub?rowub[j]:inf)) ; }
+  { zeroVec = 0 ; }
+
+  if (colub_parm == 0 || rowub_parm == 0)
+  { if (colub_parm == 0 && rowub_parm == 0)
+    { j = CoinMax(m,n) ; }
+    else
+    if (colub_parm == 0)
+    { j = n ; }
+    else
+    { j = m ; }
+    infVec = new double [j] ;
+    for (i = 0 ; i < j ; i++)
+    { infVec[i] = inf ; } }
+  else
+  { infVec = 0 ; }
+
+  if (rowlb_parm == 0)
+  { negInfVec = new double [m] ;
+    for (i = 0 ; i < m ; i++)
+    { negInfVec[i] = -inf ; } }
+  else
+  { negInfVec = 0 ; }
+
+  if (collb_parm == 0)
+  { collb = zeroVec ; }
+  else
+  { collb = collb_parm ; }
+
+  if (colub_parm == 0)
+  { colub = infVec ; }
+  else
+  { colub = colub_parm ; }
+
+  if (obj_parm == 0)
+  { obj = zeroVec ; }
+  else
+  { obj = obj_parm ; }
+
+  if (rowlb_parm == 0)
+  { rowlb = negInfVec ; }
+  else
+  { rowlb = rowlb_parm ; }
+
+  if (rowub_parm == 0)
+  { rowub = infVec ; }
+  else
+  { rowub = rowub_parm ; }
+/*
+  The actual load.
+*/
+  if (matrix.isColOrdered())
+  { for (j = 0 ; j < n ; j++)
+    { addCol(matrix.getVector(j),collb[j],colub[j],obj[j]) ; }
+    // Make sure there are enough rows 
+    if (m > getNumRows())
+    { lpx_add_rows(lp_,m-getNumRows()) ; }
+    for (i = 0 ; i < m ; i++)
+    { setRowBounds(i,rowlb[i],rowub[i]) ; } }
+  else
+  { for (i = 0 ; i < m ; i++)
+    { addRow(matrix.getVector(i),rowlb[i],rowub[i]) ; }
     // Make sure there are enough columns
-    if (matrix.getNumCols() > getNumCols())
-    { lpx_add_cols(lp_,matrix.getNumCols()-getNumCols()) ; }
-    int i ;
-    for (i = 0 ; i < matrix.getNumCols() ; i++)
-    { setColBounds(i,(collb?collb[i]:0.0),(colub?colub[i]:inf)) ;
-      setObjCoeff(i,(obj?obj[i]:0.0)) ; } }
+    if (n > getNumCols())
+    { lpx_add_cols(lp_,n-getNumCols()) ; }
+    for (j = 0 ; j < n ; j++)
+    { setColBounds(j,collb[j],colub[j]) ;
+      setObjCoeff(j,obj[j]) ; } }
+/*
+  Cleanup.
+*/
+  if (zeroVec) delete[] zeroVec ;
+  if (infVec) delete[] infVec ;
+  if (negInfVec) delete[] negInfVec ;
 
   return ; }
 

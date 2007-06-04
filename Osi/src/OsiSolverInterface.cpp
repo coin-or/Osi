@@ -1069,6 +1069,12 @@ int OsiSolverInterface::readMps(const char * filename,
     const char * extension)
 {
   CoinMpsIO m;
+
+  int logLvl = handler_->logLevel() ;
+  if (logLvl > 1)
+  { m.messageHandler()->setLogLevel(handler_->logLevel()) ; }
+  else
+  { m.messageHandler()->setLogLevel(0) ; }
   m.setInfinity(getInfinity());
   
   int numberErrors = m.readMps(filename,extension);

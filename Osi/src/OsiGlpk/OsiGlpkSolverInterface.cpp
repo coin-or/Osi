@@ -50,18 +50,19 @@
 //
 
 /*
-  Various bits and pieces of knowledge that are handy when working on OsiGlpk.
+  Various bits and pieces of knowledge that are handy when working on
+  OsiGlpk.
 
   Glpk uses 1-based indexing. Be careful.
 
-  Primal and dual solutions may be set by the user. This means that that
+  Primal and dual solutions may be set by the user. This means that
   getColSolution and getRowPrice are obliged to return the cached solution
   vector whenever it's available. Various other routines which calculate
-  values based on primal and dual solutions must also use the cached vectors.
-  On the other hand, we don't want to be rebuilding the cache with every call
-  to the solver. The approach is that a call to the solver removes the cached
-  values. Subsequent calls to retrieve solution values will repopulate the
-  cache by interrogating glpk.
+  values based on primal and dual solutions must also use the cached
+  vectors.  On the other hand, we don't want to be rebuilding the cache with
+  every call to the solver. The approach is that a call to the solver removes
+  the cached values. Subsequent calls to retrieve solution values will
+  repopulate the cache by interrogating glpk.
 */
 
 #if defined(_MSC_VER)
@@ -111,132 +112,159 @@ namespace {
 #define OGSI_TRACK_FRESH 0
 #define OGSI_VERBOSITY 0
 
-//-----------------------------------------------------------------------------
+//#############################################################################
+// File-local methods
+//#############################################################################
 
-inline void checkGLPKerror( int err, std::string glpkfuncname, std::string osimethod )
-{
-	if( err != 0 )
-	{
-		char s[100];
-		sprintf( s, "%s returned error %d", glpkfuncname.c_str(), err );
-		std::cout << "ERROR: " << s << " (" << osimethod << " in OsiGlpkSolverInterface)" << std::endl;
-		throw CoinError( s, osimethod.c_str(), "OsiGlpkSolverInterface" );
-	}
-}
+namespace {
+
+/*
+  Convenience routine for generating error messages. Who knows, maybe it'll get
+  used eventually  :-).
+*/
+inline void checkGLPKerror (int err, std::string glpkfuncname,
+			    std::string osimethod)
+{ if (err != 0)
+  { char s[100] ;
+    sprintf(s,"%s returned error %d",glpkfuncname.c_str(),err) ;
+    std::cout
+      << "ERROR: " << s
+      << " (" << osimethod << " in OsiGlpkSolverInterface)" << std::endl ;
+    throw CoinError(s,osimethod.c_str(),"OsiGlpkSolverInterface") ; }
+
+  return ; }
+
+} // end file-local namespace
 
 //#############################################################################
 // Solve methods
 //#############################################################################
 
+/*
+  Solve an LP from scratch.
+*/
 void OGSI::initialSolve()
-{
-#     if OGSI_TRACK_FRESH > 0
-      std::cout
-	<< "OGSI(" << std::hex << this << std::dec
-	<< ")::initialSolve." << std::endl ;
-#     endif
+{ 
+# if OGSI_TRACK_FRESH > 0
+  std::cout
+    << "OGSI(" << std::hex << this << std::dec
+    << ")::initialSolve." << std::endl ;
+# endif
 
-	// This method should solve the lp relaxation of a mip problem.
-        LPX *model = getMutableModelPtr();
-	freeCachedData( OGSI::FREECACHED_RESULTS );
+  LPX *model = getMutableModelPtr() ;
+/*
+  Prep. Toss any cached solution information.
+*/
+  freeCachedData(OGSI::FREECACHED_RESULTS) ;
+/*
+  Solve the lp.
+*/
+  int err = lpx_simplex(model) ;
+  iter_used_ = lpx_get_int_parm(model, LPX_K_ITCNT) ;
+/*
+  Sort out the various state indications.
 
-	lpx_set_int_parm(model, LPX_K_MSGLEV, 1);  // suppress most output 
-	lpx_set_int_parm(model, LPX_K_PRESOL, 1);  // turn on presolver
-	int err = lpx_simplex( model );
-	iter_used_ = lpx_get_int_parm(model, LPX_K_ITCNT);
+  When the presolver is turned on, lpx_simplex() will not be able to tell
+  whether the objective function has hit it's upper or lower limit, and does
+  not return OBJLL or OBJUL. The code for these cases should be beefed up to
+  check the objective against the limit.
 
-	isIterationLimitReached_ = false;
-	isAbandoned_ = false;
-	isPrimInfeasible_ = false;
-	isDualInfeasible_ = false;
+  The codes NOPFS and NODFS are returned only when the presolver is used.
 
-	/* When the presolver is turned on, lpx_simplex() will not be able
-	to tell whether the objective function has hit it's upper or lower
-	limit. */
+  If we ever reach the default case, we're deeply confused.
+*/
+  isIterationLimitReached_ = false ;
+  isAbandoned_ = false ;
+  isPrimInfeasible_ = false ;
+  isDualInfeasible_ = false ;
+  isObjLowerLimitReached_ = false ;
+  isObjUpperLimitReached_ = false ;
 
-	isObjLowerLimitReached_ = false;
-	isObjUpperLimitReached_ = false;
+  switch (err)
+  { case LPX_E_OK:
+    { break ; }
+    case LPX_E_ITLIM:
+    { isIterationLimitReached_ = true ;
+      break ; }
+    case LPX_E_OBJLL:
+    { isObjLowerLimitReached_ = true ;
+      break ; }
+    case LPX_E_OBJUL:
+    { isObjUpperLimitReached_ = true ;
+      break ; }
+    case LPX_E_TMLIM:
+    case LPX_E_FAULT:
+    case LPX_E_SING:
+    { isAbandoned_ = true ;
+      break ; }
+    case LPX_E_NOPFS:
+    { isPrimInfeasible_ = true ;
+      break ; }
+    case LPX_E_NODFS:
+    { isDualInfeasible_ = true ;
+      break ; }
+    default:
+    { assert(false) ; } }
+	  
+  // Record that simplex was most recent
+  bbWasLast_ = 0 ;
 
-	switch ( err )
-	{
-	case LPX_E_ITLIM:
-		isIterationLimitReached_ = true;
-		break;
-
-	// maybe more exit codes should count as abandoned
-	case LPX_E_TMLIM:
-	case LPX_E_FAULT:
-	case LPX_E_SING:
-		isAbandoned_ = true;
-		break;
-
-	case LPX_E_NOPFS:
-		isPrimInfeasible_ = true;
-		break;
-
-	case LPX_E_NODFS:
-		isDualInfeasible_ = true;
-		break;
-		
-	}
-	// Record that simplex was most recent
-	bbWasLast_ = 0;
-}
+  return ; }
 
 //-----------------------------------------------------------------------------
 
 void OGSI::resolve()
 {
-#     if OGSI_TRACK_FRESH > 0
-      std::cout
-	<< "OGSI(" << std::hex << this
-	<< ")::resolve." << std::endl ;
-#     endif
+# if OGSI_TRACK_FRESH > 0
+  std::cout
+    << "OGSI(" << std::hex << this << std::dec
+    << ")::resolve." << std::endl ;
+# endif
 
-        LPX *model = getMutableModelPtr();
-	freeCachedData( OGSI::FREECACHED_RESULTS );
+  LPX *model = getMutableModelPtr() ;
+  freeCachedData(OGSI::FREECACHED_RESULTS) ;
 
-	lpx_set_int_parm(model, LPX_K_MSGLEV, 1);  // suppress most output 
-	lpx_set_int_parm(model, LPX_K_DUAL, 1); // Use dual simplex if dual feasible
-	lpx_set_int_parm(model, LPX_K_PRESOL, 0);  // turn off presolver
+  // lpx_simplex will use the current basis if possible
+  int err = lpx_simplex(model) ;
+  iter_used_ = lpx_get_int_parm(model,LPX_K_ITCNT) ;
 
-	// lpx_simplex will use the current basis if possible
-	int err = lpx_simplex( model );
-	iter_used_ = lpx_get_int_parm(model, LPX_K_ITCNT);
+  isIterationLimitReached_ = false ;
+  isAbandoned_ = false ;
+  isObjLowerLimitReached_ = false ;
+  isObjUpperLimitReached_ = false ;
+  isPrimInfeasible_ = false ;
+  isDualInfeasible_ = false ;
 
-	isIterationLimitReached_ = false;
-	isAbandoned_ = false;
-	isObjLowerLimitReached_ = false;
-	isObjUpperLimitReached_ = false;
-	isPrimInfeasible_ = false;
-	isDualInfeasible_ = false;
-	switch ( err )
-	{
-	case LPX_E_ITLIM:
-		isIterationLimitReached_ = true;
-		break;
-	case LPX_E_OBJLL:
-	  isObjLowerLimitReached_ = true;
-	  break;
-	case LPX_E_OBJUL:
-	  isObjUpperLimitReached_ = true;
-	  break;
+  switch (err)
+  { case LPX_E_OK:
+    { break ; }
+    case LPX_E_ITLIM:
+    { isIterationLimitReached_ = true ;
+      break ; }
+    case LPX_E_OBJLL:
+    { isObjLowerLimitReached_ = true ;
+      break ; }
+    case LPX_E_OBJUL:
+    { isObjUpperLimitReached_ = true ;
+      break ; }
+    case LPX_E_TMLIM:
+    case LPX_E_FAULT:
+    case LPX_E_SING:
+    { isAbandoned_ = true ;
+      break ; }
+    case LPX_E_NOPFS:
+    { isPrimInfeasible_ = true ;
+      break ; }
+    case LPX_E_NODFS:
+    { isDualInfeasible_ = true ;
+      break ; }
+    default:
+    { assert(false) ; } }
 
-		// maybe more exit codes should count as abandoned
-	case LPX_E_FAULT:
-	case LPX_E_SING:
-		isAbandoned_ = true;
-		break;
-	case LPX_E_NOPFS:
-		isPrimInfeasible_ = true;
-		break;
-	case LPX_E_NODFS:
-		isDualInfeasible_ = true;
-		break;
-	}
-	// Record that simplex was most recent
-	bbWasLast_ = 0;
-}
+  // Record that simplex was most recent
+  bbWasLast_ = 0 ;
+
+  return ; }
 
 //-----------------------------------------------------------------------------
 
@@ -406,6 +434,140 @@ bool OGSI::setStrParam (OsiStrParam key,
 
 //-----------------------------------------------------------------------------
 
+namespace {
+/*!
+  A helper routine to deal with hints where glpk lacks any flexibility ---
+  the facility is unimplemented, or always on. Failure is defined as
+  OsiForceDo in the wrong direction; in this case an error is thrown. If the
+  routine returns, then either the hint is compatible with glpk's capabilities,
+  or it can be ignored.
+*/
+
+void unimp_hint (CoinMessageHandler *hdl, bool glpkSense, bool hintSense,
+		 OsiHintStrength hintStrength, const char *msgString)
+
+{ if (glpkSense != hintSense)
+  { std::string message = "glpk " ;
+    if (glpkSense == true)
+    { message += "cannot disable " ; }
+    else
+    { message += "does not support " ; }
+    message += msgString ;
+    *hdl << message << CoinMessageEol ;
+    if (hintStrength == OsiForceDo)
+    { throw CoinError(message,"setHintParam","OsiDylpSolverInterface") ; } }
+  
+  return ; }
+
+} // end file-local namespace
+
+bool OGSI::setHintParam (OsiHintParam key, bool sense,
+			 OsiHintStrength strength, void *info)
+/*
+  OSI provides arrays for the sense and strength. OGSI provides the array for
+  info.
+*/
+
+{ bool retval = false ;
+  CoinMessageHandler *msgHdl = messageHandler() ;
+/*
+  Check for out of range.
+*/
+  if (key >= OsiLastHintParam) return (false) ;
+/*
+  Set the hint in the OSI structures. Unlike the other set*Param routines,
+  setHintParam will return false for key == OsiLastHintParam. Unfortunately,
+  it'll also throw for strength = OsiForceDo, without setting a return value.
+  We need to catch that throw.
+*/
+  try
+  { retval = OsiSolverInterface::setHintParam(key,sense,strength) ; }
+  catch (CoinError)
+  { retval = (strength == OsiForceDo) ; }
+    
+  if (retval == false) return (false) ;
+  info_[key] = info ;
+/*
+  Did the client say `ignore this'? Who are we to argue.
+*/
+  if (strength == OsiHintIgnore) return (true) ;
+/*
+  We have a valid hint which would be impolite to simply ignore. Deal with
+  it as best we can. But say something if we're ignoring the hint.
+
+  This is under construction. For the present, we don't distinguish between
+  initial solve and resolve.
+*/
+  switch (key)
+  {
+    case OsiDoPresolveInInitial:
+    case OsiDoPresolveInResolve:
+    { if (sense == false)
+      { if (strength >= OsiHintTry) lpx_set_int_parm(lp_,LPX_K_PRESOL,0) ; }
+      else
+      { lpx_set_int_parm(lp_,LPX_K_PRESOL,1) ; }
+      retval = true ;
+      break ; }
+    case OsiDoDualInInitial:
+    case OsiDoDualInResolve:
+    { unimp_hint(msgHdl,false,sense,strength,"exclusive use of dual simplex") ;
+      if (sense == false)
+      { if (strength >= OsiHintDo) lpx_set_int_parm(lp_,LPX_K_DUAL,0) ; }
+      else
+      { lpx_set_int_parm(lp_,LPX_K_DUAL,1) ; }
+      retval = true ;
+      break ; }
+    case OsiDoCrash:
+    { unimp_hint(msgHdl,false,sense,strength,"basis crash") ;
+      retval = true ;
+      break ; }
+    case OsiDoInBranchAndCut:
+    { unimp_hint(msgHdl,false,sense,strength,"do in branch and cut") ;
+      retval = true ;
+      break ; }
+/*
+  0 is no scaling, 3 is geometric mean followed by equilibration.
+*/
+    case OsiDoScale:
+    { if (sense == false)
+      { if (strength >= OsiHintTry) lpx_set_int_parm(lp_,LPX_K_SCALE,0) ; }
+      else
+      { lpx_set_int_parm(lp_,LPX_K_SCALE,3) ; }
+      retval = true ;
+      break ; }
+/*
+  Glpk supports four levels, 0 (no output), 1 (errors only), 2 (normal), and
+  3 (normal plus informational).
+*/
+    case OsiDoReducePrint:
+    { if (sense == true)
+      { if (strength <= OsiHintTry)
+	{ lpx_set_int_parm(lp_,LPX_K_MSGLEV,1) ; }
+	else
+	{ lpx_set_int_parm(lp_,LPX_K_MSGLEV,0) ; } }
+      else
+      { if (strength <= OsiHintTry)
+	{ lpx_set_int_parm(lp_,LPX_K_MSGLEV,2) ; }
+	else
+	{ lpx_set_int_parm(lp_,LPX_K_MSGLEV,3) ; } }
+      int logLevel = lpx_get_int_parm(lp_,LPX_K_MSGLEV) ;
+      messageHandler()->setLogLevel(logLevel) ;
+      retval = true ;
+      break ; }
+/*
+  The OSI spec says that unimplemented options (and, by implication, hints)
+  should return false. In the case of a hint, however, we can ignore anything
+  except OsiForceDo, so usability says we should anticipate new hints and set
+  this up so the solver doesn't break. So return true.
+*/
+    default:
+    { unimp_hint(msgHdl,!sense,sense,strength,"unrecognized hint") ;
+      retval = true ;
+      break ; } }
+
+  return (retval) ; }
+//-----------------------------------------------------------------------------
+
 bool
 OGSI::getIntParam( OsiIntParam key, int& value ) const
 {
@@ -526,7 +688,7 @@ bool OGSI::isProvenPrimalInfeasible() const
 	if( bbWasLast_ == 0 )
 		return lpx_get_prim_stat( model ) == LPX_P_NOFEAS;
 	else
-		return lpx_mip_status( model ) == LPX_NOFEAS;
+		return lpx_mip_status( model ) == LPX_I_NOFEAS;
 }
 
 bool OGSI::isProvenDualInfeasible() const
@@ -796,7 +958,7 @@ void OGSI::solveFromHotStart()
 {
 #     if OGSI_TRACK_FRESH > 0
       std::cout
-	<< "OGSI(" << std::hex << this
+	<< "OGSI(" << std::hex << this << std::dec
 	<< ")::solveFromHotStart." << std::endl ;
 #     endif
         LPX *model = getMutableModelPtr();
@@ -1794,11 +1956,11 @@ void OGSI::setInteger (int index)
   Put the bound back to infinity.
 
   -- lh, 070530 --
-*/
+
   double uj = getColUpper()[index] ;
   if (uj >= 1e30)
   { setColUpper(index,getInfinity()) ; }
-
+*/
   return ; }
 
 //-----------------------------------------------------------------------------
@@ -2154,14 +2316,29 @@ void OGSI::loadProblem (const CoinPackedMatrix &matrix,
 /*
   There's always an existing LPX object. If it's empty, we can simply load in
   the new data. If it's non-empty, easiest to delete it and start afresh. When
-  we do this, we need to reload parameters.
+  we do this, we need to reload parameters. For hints, it's easiest to grab
+  from the existing LPX structure.
   
   In any event, get rid of cached data in the OsiGlpk object.
 */
   if (lpx_get_num_cols(lp_) != 0 || lpx_get_num_rows(lp_) != 0)
-  { lpx_delete_prob(lp_) ;
+  { 
+    int presolVal = lpx_get_int_parm(lp_,LPX_K_PRESOL) ;
+    int usedualVal = lpx_get_int_parm(lp_,LPX_K_DUAL) ;
+    int scaleVal = lpx_get_int_parm(lp_,LPX_K_SCALE) ;
+    int logVal = lpx_get_int_parm(lp_,LPX_K_MSGLEV) ;
+#   if OGSI_TRACK_FRESH > 0
+    std::cout
+      << "    emptying LPX(" << std::hex << lp_ << std::dec << "), "
+#   endif
+    lpx_delete_prob(lp_) ;
     lp_ = lpx_create_prob() ;
     assert(lp_) ;
+#   if OGSI_TRACK_FRESH > 0
+    std::cout
+      << "loading LPX(" << std::hex << lp_ << std::dec << ")."
+      << std::endl ;
+#   endif
     lpx_set_class(lp_,LPX_MIP) ;
     lpx_set_int_parm(lp_,LPX_K_ITLIM,maxIteration_) ; 
     if (getObjSense() == 1)				// minimization
@@ -2174,12 +2351,11 @@ void OGSI::loadProblem (const CoinPackedMatrix &matrix,
     lpx_set_real_parm(lp_,LPX_K_TOLBND,primalTolerance_) ;
     lpx_set_obj_coef(lp_,0,objOffset_) ;
     lpx_set_prob_name(lp_,const_cast<char *>(probName_.c_str())) ;
-#   if OGSI_TRACK_FRESH > 0
-    std::cout
-      << "    emptying LPX(" << std::hex << lp_ << std::dec << ")."
-      << std::endl ;
-#   endif
-    }
+    lpx_set_int_parm(lp_,LPX_K_PRESOL,presolVal) ;
+    lpx_set_int_parm(lp_,LPX_K_DUAL,usedualVal) ;
+    lpx_set_int_parm(lp_,LPX_K_SCALE,scaleVal) ;
+    lpx_set_int_parm(lp_,LPX_K_MSGLEV,logVal) ;
+    messageHandler()->setLogLevel(logVal) ; }
 
   freeCachedData(OGSI::KEEPCACHED_NONE) ;
 
@@ -2194,7 +2370,8 @@ void OGSI::loadProblem (const CoinPackedMatrix &matrix,
   accordingly.
 */
   if (collb_parm == 0 || obj_parm == 0)
-  { zeroVec = new double [n] ; }
+  { zeroVec = new double [n] ;
+    CoinZeroN(zeroVec,n) ; }
   else
   { zeroVec = 0 ; }
 
@@ -2207,15 +2384,13 @@ void OGSI::loadProblem (const CoinPackedMatrix &matrix,
     else
     { j = m ; }
     infVec = new double [j] ;
-    for (i = 0 ; i < j ; i++)
-    { infVec[i] = inf ; } }
+    CoinFillN(infVec,j,inf) ; }
   else
   { infVec = 0 ; }
 
   if (rowlb_parm == 0)
   { negInfVec = new double [m] ;
-    for (i = 0 ; i < m ; i++)
-    { negInfVec[i] = -inf ; } }
+    CoinFillN(negInfVec,m,-inf) ; }
   else
   { negInfVec = 0 ; }
 
@@ -2698,8 +2873,7 @@ void OGSI::gutsOfCopy (const OsiGlpkSolverInterface &source)
   Copy information from the source OSI that a user might change before
   loading a problem: objective sense and offset, other OSI parameters.  Use
   the get/set parameter calls here to hide pushing information into the LPX
-  object. OsiGlpk does not support hints at present; when support is added,
-  they should also be copied.
+  object.
 */
   setObjSense(source.getObjSense()) ;
   source.getDblParam(OsiObjOffset,dblParam) ;
@@ -2721,6 +2895,26 @@ void OGSI::gutsOfCopy (const OsiGlpkSolverInterface &source)
   setDblParam(OsiPrimalTolerance,dblParam) ;
   source.getDblParam(OsiDualTolerance,dblParam) ;
   setDblParam(OsiDualTolerance,dblParam) ;
+/*
+  For hints, we need to be a little more circumspect, so as not to pump out a
+  bunch of warnings. Pull parameters from the source LPX object and load into
+  the copy. The actual values of the hint parameters (sense & strength) are
+  held up on the parent OSI object, so we don't need to worry about copying
+  them.
+*/
+  intParam = lpx_get_int_parm(srclpx,LPX_K_PRESOL) ;
+  lpx_set_int_parm(lpx,LPX_K_PRESOL,intParam) ;
+  intParam = lpx_get_int_parm(srclpx,LPX_K_DUAL) ;
+  lpx_set_int_parm(lpx,LPX_K_DUAL,intParam) ;
+  intParam = lpx_get_int_parm(srclpx,LPX_K_SCALE) ;
+  lpx_set_int_parm(lpx,LPX_K_SCALE,intParam) ;
+/*
+  Printing is a bit more complicated. Pull the parameter and set the log
+  level in the message handler and set the print parameter in glpk.
+*/
+  intParam = lpx_get_int_parm(srclpx,LPX_K_MSGLEV) ;
+  lpx_set_int_parm(lpx,LPX_K_MSGLEV,intParam) ;
+  messageHandler()->setLogLevel(intParam) ;
 /*
   Now --- do we have a problem loaded? If not, we're done.
 */
@@ -2837,8 +3031,10 @@ void OGSI::gutsOfConstructor()
   assert( lp_ != NULL );
   // Make all problems MIPs.  See note at top of file.
   lpx_set_class( lp_, LPX_MIP );
+
   // Push OSI parameters down into LPX object.
   lpx_set_int_parm(lp_,LPX_K_ITLIM,maxIteration_) ; 
+
   if (getObjSense() == 1)				// minimization
   { lpx_set_real_parm(lp_,LPX_K_OBJUL,dualObjectiveLimit_) ;
     lpx_set_real_parm(lp_,LPX_K_OBJLL,primalObjectiveLimit_) ; }
@@ -2847,8 +3043,20 @@ void OGSI::gutsOfConstructor()
     lpx_set_real_parm(lp_,LPX_K_OBJUL,primalObjectiveLimit_) ; }
   lpx_set_real_parm(lp_,LPX_K_TOLDJ,dualTolerance_) ;
   lpx_set_real_parm(lp_,LPX_K_TOLBND,primalTolerance_) ;
+
   lpx_set_obj_coef(lp_,0,objOffset_) ;
+
   lpx_set_prob_name(lp_,const_cast<char *>(probName_.c_str())) ;
+
+  lpx_set_int_parm(lp_,LPX_K_PRESOL,0) ;
+  lpx_set_int_parm(lp_,LPX_K_DUAL,1) ;
+  lpx_set_int_parm(lp_,LPX_K_SCALE,3) ;
+/*
+  Printing is a bit more complicated. Set the log level in the handler and set
+  the print parameter in glpk.
+*/
+  lpx_set_int_parm(lp_,LPX_K_MSGLEV,1) ;
+  messageHandler()->setLogLevel(1) ;
 }
 
 //-----------------------------------------------------------------------------

@@ -62,6 +62,9 @@ public:
     bool setDblParam(OsiDblParam key, double value);
     // Set a string parameter
     bool setStrParam(OsiStrParam key, const std::string & value);
+    // Set a hint parameter
+    bool setHintParam(OsiHintParam key, bool sense = true,
+		      OsiHintStrength strength = OsiHintTry, void *info = 0) ;
     // Get an integer parameter
     bool getIntParam(OsiIntParam key, int& value) const;
     // Get an double parameter
@@ -739,6 +742,10 @@ private:
   // String parameters
   /// Problem name
   std::string probName_;
+
+  /*! \brief Array for info blocks associated with hints. */
+  mutable void *info_[OsiLastHintParam] ;
+
 
   /// Hotstart information
 

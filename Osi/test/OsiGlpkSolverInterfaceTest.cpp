@@ -1132,5 +1132,24 @@ OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & n
   }
 #endif 
 
+/*
+  Read in exmip1 and solve it with verbose output setting.
+*/
+  { OsiGlpkSolverInterface osi ;
+    std::cout << "Boosting verbosity.\n" ;
+    osi.setHintParam(OsiDoReducePrint,false,OsiForceDo) ;
+
+    std::string exmpsfile = mpsDir+"exmip1" ;
+    std::string probname ;
+    std::cout << "Reading mps file \"" << exmpsfile << "\"\n" ;
+    osi.readMps(exmpsfile.c_str(), "mps") ;
+    assert(osi.getStrParam(OsiProbName,probname)) ;
+    std::cout << "Solving " << probname << " ... \n" ;
+    osi.initialSolve() ;
+    double val = osi.getObjValue() ;
+    std::cout << "And the answer is " << val << ".\n" ;
+    assert(fabs(val - 3.23) < 0.01) ;
+  }
+
 }
 #endif

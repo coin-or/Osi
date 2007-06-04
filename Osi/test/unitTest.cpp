@@ -493,22 +493,25 @@ int main (int argc, const char *argv[])
     OsiSolverInterface * clpSi = new OsiClpSolverInterface;
     // Okay this is where John Forrest cheats by giving hints
     clpSi->setHintParam(OsiDoPresolveInInitial,true,OsiHintTry);
-    clpSi->setHintParam(OsiDoReducePrint,true,OsiHintTry);
+    clpSi->setHintParam(OsiDoReducePrint,true,OsiHintDo);
     vecSi.push_back(clpSi);
 #endif
 #   if COIN_HAS_SYMPHONY
     OsiSolverInterface * symSi = new OsiSymSolverInterface;
+    symSi->setHintParam(OsiDoReducePrint,true,OsiHintDo);
     vecSi.push_back(symSi);
 #endif
 #   if COIN_HAS_DYLP
     OsiSolverInterface * dylpSi = new OsiDylpSolverInterface;
     // Heh, if it's good enough for John ...
     dylpSi->setHintParam(OsiDoPresolveInInitial,true,OsiHintTry) ;
-    dylpSi->setHintParam(OsiDoReducePrint,false,OsiHintDo) ;
+    dylpSi->setHintParam(OsiDoReducePrint,true,OsiHintDo) ;
     vecSi.push_back(dylpSi);
 #endif
 #   if COIN_HAS_GLPK
     OsiSolverInterface * glpkSi = new OsiGlpkSolverInterface;
+    glpkSi->setHintParam(OsiDoPresolveInInitial,true,OsiHintTry) ;
+    glpkSi->setHintParam(OsiDoReducePrint,true,OsiHintDo) ;
     vecSi.push_back(glpkSi);
 #endif
 #   if COIN_HAS_FMP

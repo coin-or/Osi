@@ -1591,11 +1591,14 @@ OsiClpSolverInterface::deleteRows(const int num, const int * rowIndices)
 {
   // will still be optimal if all rows basic
   bool allBasic=true;
+  int numBasis = basis_.getNumArtificial();
   for (int i=0;i<num;i++) {
     int iRow = rowIndices[i];
-    if (basis_.getArtifStatus(iRow)!=CoinWarmStartBasis::basic) {
-      allBasic=false;
-      break;
+    if (iRow<numBasis) {
+      if (basis_.getArtifStatus(iRow)!=CoinWarmStartBasis::basic) {
+	allBasic=false;
+	break;
+      }
     }
   }
   int saveAlgorithm = allBasic ? lastAlgorithm_ : 999;

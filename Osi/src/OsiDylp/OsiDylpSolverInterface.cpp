@@ -1410,13 +1410,17 @@ void ODSI::load_problem (const CoinMpsIO &mps)
   for (int j = 0 ; j < n ; j++)
   { const CoinShallowPackedVector coin_col = matrix2->getVector(j) ;
     packed_vector(coin_col,n,colj) ;
-    double uj ;
     colj->nme = const_cast<char *>(mps.columnName(j)) ;
+#   if COIN_BOGUS_MPSIO > 0
+    double uj ;
     if (vtyp[j] == vartypINT && col_upper[j] >= 1e30)
     { uj = odsiInfinity ; }
     else
     { uj = col_upper[j] ; }
     r = consys_addcol_pk(consys,vtyp[j],colj,obj[j],col_lower[j],uj) ;
+#   else
+    r = consys_addcol_pk(consys,vtyp[j],colj,obj[j],col_lower[j],col_upper[j]) ;
+#   endif
     if (!r)
     { break ; } }
 
@@ -4033,8 +4037,8 @@ bool ODSI::setHintParam (OsiHintParam key, bool sense,
   switch (key)
   {
 /*
-  In the process of implementing native presolve. initialSolve only at first.
-  Nothing more to do here, as presolve is handled within ODSI.
+  ODSI supports a native presolve for initialSolve only.  Nothing more to do
+  here.
 */
     case OsiDoPresolveInInitial:
     { retval = true ;

@@ -2228,6 +2228,13 @@ void OsiSolverInterfaceMpsUnitTest
     //a basic check, make sure the size of the constraint matrix is correct.
     for (i = vecSiP.size()-1 ; i >= 0 ; --i) { 
       vecSiP[i] = vecEmptySiP[i]->clone() ;
+#     if COIN_HAS_SYMPHONY
+      // bludgeon symphony about the head so it will not print the solution
+      { OsiSymSolverInterface *reallySymSi =
+	    dynamic_cast<OsiSymSolverInterface *>(vecSiP[i]) ;
+	if (reallySymSi)
+	{ reallySymSi->setSymParam(OsiSymVerbosity, -2) ; } }
+#     endif
       
       vecSiP[i]->getStrParam(OsiSolverName,siName[i]);
       

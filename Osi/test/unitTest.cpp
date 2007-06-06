@@ -498,7 +498,9 @@ int main (int argc, const char *argv[])
 #endif
 #   if COIN_HAS_SYMPHONY
     OsiSolverInterface * symSi = new OsiSymSolverInterface;
-    symSi->setHintParam(OsiDoReducePrint,true,OsiHintDo);
+    { OsiSymSolverInterface *reallySymSi =
+	  dynamic_cast<OsiSymSolverInterface *>(symSi) ;
+      reallySymSi->setSymParam(OsiSymVerbosity, -2) ; }
     vecSi.push_back(symSi);
 #endif
 #   if COIN_HAS_DYLP

@@ -1426,8 +1426,12 @@ void OsiCpxSolverInterface::setObjCoeff( int elementIndex, double elementValue )
 {
   debugMessage("OsiCpxSolverInterface::setObjCoeff(%d, %g)\n", elementIndex, elementValue);
 
-  int err = CPXchgobj(env_, getLpPtr( OsiCpxSolverInterface::FREECACHED_COLUMN ), 1, &elementIndex, &elementValue);
+  //  int err = CPXchgobj(env_, getLpPtr( OsiCpxSolverInterface::FREECACHED_COLUMN ), 1, &elementIndex, &elementValue);
+  int err = CPXchgobj(env_, getLpPtr( OsiCpxSolverInterface::KEEPCACHED_PROBLEM ), 1, &elementIndex, &elementValue);
   checkCPXerror(err, "CPXchgobj", "setObjCoeff");
+  if(obj_ != NULL) {
+    obj_[elementIndex] = elementValue;
+  }
 }
 //-----------------------------------------------------------------------------
 void OsiCpxSolverInterface::setObjCoeffSet(const int* indexFirst,
@@ -1437,11 +1441,21 @@ void OsiCpxSolverInterface::setObjCoeffSet(const int* indexFirst,
   debugMessage("OsiCpxSolverInterface::setObjCoeffSet(%p, %p, %p)\n", indexFirst, indexLast, coeffList);
 
    const int cnt = indexLast - indexFirst;
+   //   int err = CPXchgobj(env_,
+   //		       getLpPtr(OsiCpxSolverInterface::FREECACHED_COLUMN), cnt,
+   //		       const_cast<int*>(indexFirst),
+   //		       const_cast<double*>(coeffList));
    int err = CPXchgobj(env_,
-		       getLpPtr(OsiCpxSolverInterface::FREECACHED_COLUMN), cnt,
+		       getLpPtr(OsiCpxSolverInterface::KEEPCACHED_PROBLEM), 
+		       cnt,
 		       const_cast<int*>(indexFirst),
 		       const_cast<double*>(coeffList));
    checkCPXerror(err, "CPXchgobj", "setObjCoeffSet");
+   if (obj_ != NULL) {
+       for (int i = 0; i < cnt; ++i) {
+	   obj_[indexfirst[i]] = coeffList[i];
+       }
+   }
 }
 //-----------------------------------------------------------------------------
 void OsiCpxSolverInterface::setColLower(int elementIndex, double elementValue)
@@ -1449,8 +1463,14 @@ void OsiCpxSolverInterface::setColLower(int elementIndex, double elementValue)
   debugMessage("OsiCpxSolverInterface::setColLower(%d, %g)\n", elementIndex, elementValue);
 
   char c = 'L';
-  int err = CPXchgbds( env_, getLpPtr( OsiCpxSolverInterface::FREECACHED_COLUMN ), 1, &elementIndex, &c, &elementValue );
+  //  int err = CPXchgbds( env_, getLpPtr( OsiCpxSolverInterface::FREECACHED_COLUMN ), 1, &elementIndex, &c, &elementValue );
+  int err = CPXchgbds( env_, 
+		       getLpPtr( OsiCpxSolverInterface::KEEPCACHED_PROBLEM ), 
+		       1, &elementIndex, &c, &elementValue );
   checkCPXerror( err, "CPXchgbds", "setColLower" );
+  if(collower_ != NULL) {
+    collower_[elementIndex] = elementValue;
+  }
 }
 //-----------------------------------------------------------------------------
 void OsiCpxSolverInterface::setColUpper(int elementIndex, double elementValue)
@@ -1458,8 +1478,14 @@ void OsiCpxSolverInterface::setColUpper(int elementIndex, double elementValue)
   debugMessage("OsiCpxSolverInterface::setColUpper(%d, %g)\n", elementIndex, elementValue);
 
   char c = 'U';
-  int err = CPXchgbds( env_, getLpPtr( OsiCpxSolverInterface::FREECACHED_COLUMN ), 1, &elementIndex, &c, &elementValue );
+  //  int err = CPXchgbds( env_, getLpPtr( OsiCpxSolverInterface::FREECACHED_COLUMN ), 1, &elementIndex, &c, &elementValue );
+  int err = CPXchgbds( env_, 
+		       getLpPtr( OsiCpxSolverInterface::KEEPCACHED_PROBLEM ), 
+		       1, &elementIndex, &c, &elementValue );
   checkCPXerror( err, "CPXchgbds", "setColUpper" );
+  if(colupper_ != NULL) {
+    colupper_[elementIndex] = elementValue;
+  }
 } 
 //-----------------------------------------------------------------------------
 void OsiCpxSolverInterface::setColBounds( int elementIndex, double lower, double upper )
@@ -1475,8 +1501,17 @@ void OsiCpxSolverInterface::setColBounds( int elementIndex, double lower, double
   ind[1] = elementIndex;
   bd[0] = lower;
   bd[1] = upper;
-  err = CPXchgbds( env_, getLpPtr( OsiCpxSolverInterface::FREECACHED_COLUMN ), 2, ind, c, bd );
+  //  err = CPXchgbds( env_, getLpPtr( OsiCpxSolverInterface::FREECACHED_COLUMN ), 2, ind, c, bd );
+  err = CPXchgbds( env_, 
+		   getLpPtr( OsiCpxSolverInterface::KEEPCACHED_PROBLEM ), 
+		   2, ind, c, bd );
   checkCPXerror( err, "CPXchgbds", "setColBounds" );
+  if(collower_ != NULL) {
+    collower_[elementIndex] = lower;
+  }
+  if(colupper_ != NULL) {
+    colupper_[elementIndex] = upper;
+  }
 }
 //-----------------------------------------------------------------------------
 void OsiCpxSolverInterface::setColSetBounds(const int* indexFirst,
@@ -1495,11 +1530,23 @@ void OsiCpxSolverInterface::setColSetBounds(const int* indexFirst,
       register const int j = 2 * i;
       c[j] = 'L';
       c[j+1] = 'U';
-      ind[j] = indexFirst[i];
-      ind[j+1] = indexFirst[i];
+      const int colind = indexFirst[i];
+      ind[j] = colind;
+      ind[j+1] = colind;
+
+      if(collower_ != NULL) {
+	collower_[colind] = boundList[2 * i];
+      }
+      if(colupper_ != NULL) {
+	colupper_[colind] = boundList[2 * i + 1];
+      }
    }
+   //   int err = CPXchgbds( env_,
+   //			getLpPtr(OsiCpxSolverInterface::FREECACHED_ROW ),
+   //                            2*cnt, ind, c, 
+   //                            const_cast<double*>(boundList) );
    int err = CPXchgbds( env_,
-			getLpPtr(OsiCpxSolverInterface::FREECACHED_COLUMN),
+			getLpPtr(OsiCpxSolverInterface::KEEPCACHED_PROBLEM),
 			2*cnt, ind, c, const_cast<double*>(boundList) );
    checkCPXerror( err, "CPXchgbds", "setColSetBounds" );
    delete[] ind;
@@ -1570,6 +1617,8 @@ OsiCpxSolverInterface::setRowType(int i, char sense, double rightHandSide,
      rightHandSide = -getInfinity();
      range = 2*getInfinity();
   }
+
+  /**************
   err = CPXchgsense( env_, getLpPtr( OsiCpxSolverInterface::FREECACHED_ROW ),
 		     1, &i, &sense );
   checkCPXerror( err, "CPXchgsense", "setRowType" );
@@ -1579,6 +1628,29 @@ OsiCpxSolverInterface::setRowType(int i, char sense, double rightHandSide,
   err = CPXchgrngval( env_, getLpPtr( OsiCpxSolverInterface::FREECACHED_ROW ),
 		      1, &i, &range );
   checkCPXerror( err, "CPXchgrngval", "setRowType" );
+  ***************/
+
+  err = CPXchgsense( env_, 
+		     getLpPtr( OsiCpxSolverInterface::KEEPCACHED_PROBLEM ),
+		     1, &i, &sense );
+  checkCPXerror( err, "CPXchgsense", "setRowType" );
+  if(rowsense_ != NULL) {
+    rowsense_[i] = sense;
+  }
+
+  err = CPXchgrhs( env_, getLpPtr( OsiCpxSolverInterface::KEEPCACHED_PROBLEM ),
+		   1, &i, &rightHandSide );
+  checkCPXerror( err, "CPXchgrhs", "setRowType" );
+  if(rhs_ != NULL) {
+    rhs_[i] = rightHandSide;
+  }
+  err = CPXchgrngval( env_, 
+		      getLpPtr( OsiCpxSolverInterface::KEEPCACHED_PROBLEM ),
+		      1, &i, &range );
+  checkCPXerror( err, "CPXchgrngval", "setRowType" );
+  if(rowrange_ != NULL) {
+    rowrange_[i] = range;
+  }
 }
 //-----------------------------------------------------------------------------
 void OsiCpxSolverInterface::setRowSetBounds(const int* indexFirst,
@@ -1644,6 +1716,7 @@ OsiCpxSolverInterface::setRowSetTypes(const int* indexFirst,
       }
    }
    int err;
+   /******************
    err = CPXchgsense(env_, getLpPtr(OsiCpxSolverInterface::FREECACHED_ROW),
 		     cnt, const_cast<int*>(indexFirst), sense);
    checkCPXerror( err, "CPXchgsense", "setRowSetTypes" );
@@ -1653,7 +1726,34 @@ OsiCpxSolverInterface::setRowSetTypes(const int* indexFirst,
    err = CPXchgrngval(env_, getLpPtr(OsiCpxSolverInterface::FREECACHED_ROW),
 		      rangecnt, rangeind, range);
    checkCPXerror( err, "CPXchgrngval", "setRowSetTypes" );
+   ********************/
 
+   err = CPXchgsense(env_, getLpPtr(OsiCpxSolverInterface::KEEPCACHED_ROW),
+		     cnt, const_cast<int*>(indexFirst), sense);
+   checkCPXerror( err, "CPXchgsense", "setRowSetTypes" );
+   err = CPXchgrhs(env_, getLpPtr(OsiCpxSolverInterface::FREECACHED_ROW),
+		   cnt, const_cast<int*>(indexFirst), rhs);
+   checkCPXerror( err, "CPXchgrhs", "setRowSetTypes" );
+   err = CPXchgrngval(env_, getLpPtr(OsiCpxSolverInterface::FREECACHED_ROW),
+		      rangecnt, rangeind, range);
+   checkCPXerror( err, "CPXchgrngval", "setRowSetTypes" );
+
+   int j;
+   if(rowsense_ != NULL) {
+     for(j=0; j<cnt; j++) {
+       rowsense_[indexFirst[j]] = sense[j];
+     }
+   }
+   if(rhs_ != NULL) {
+     for(j=0; j<cnt; j++) {
+       rhs_[indexFirst[j]] = rhs[j];
+     }
+   }
+   if(rowrange_ != NULL) {
+     for(j=0; j<rangecnt; j++) {
+       rowrange_[rangeind[j]] = range[j];
+     }
+   }
    delete[] rangeind;
    delete[] range;
    delete[] rhs;
@@ -2969,7 +3069,6 @@ tableau is flipped; then whole column for the slack in opt tableau is flipped.
 2: upper 
 3: lower
 */
-
 void OsiCpxSolverInterface::getBasisStatus(int* cstat, int* rstat) const {
   CPXLPptr lp = getMutableLpPtr();
   int status = CPXgetbase(env_, lp, cstat, rstat);
@@ -2980,7 +3079,11 @@ void OsiCpxSolverInterface::getBasisStatus(int* cstat, int* rstat) const {
 
   int ncol = getNumCols();
   int nrow = getNumRows();
+  const int objsense = getObjSense();
   const double *dual = getRowPrice();
+  const double *row_act = getRowActivity();
+  const double *rowLower = getRowLower();
+  const double *rowUpper = getRowUpper();
 
   char *sense = new char[nrow];
   status = CPXgetsense(env_, lp, sense, 0, nrow-1);
@@ -3000,48 +3103,124 @@ void OsiCpxSolverInterface::getBasisStatus(int* cstat, int* rstat) const {
     }
   }
 
-  for(int i=0; i<nrow; i++) {
-    switch(rstat[i]) {
-    case 0: 
-      rstat[i] = 3;
+  if(objsense == 1) {
 
-      if(sense[i] == 'E') {
-	if(dual[i] > 0) {
+    for(int i=0; i<nrow; i++) {
+      switch(rstat[i]) {
+      case 0: 
+	rstat[i] = 3;
+	
+	if(sense[i] == 'E') {
+	  if(dual[i] > 0) {
+	    rstat[i] = 2;
+	  }
+	}
+	
+	if(sense[i] == 'R') {
+	  if(rowUpper[i] > rowLower[i] + 1e-6) {
+	    if(row_act[i] < rowUpper[i] - 1e-6) {
+	      rstat[i] = 2;
+	    }
+	  }
+	  else {
+	    if(dual[i] > 0) {
+	      rstat[i] = 2;
+	    }	    
+	  }
+	}
+	
+	if(sense[i] == 'G') {
 	  rstat[i] = 2;
 	}
-      }
+	
+	break;
+	
+      case 1: break;
+      case 2: 
+	if(sense[i] == 'E') {
+	  if(dual[i] < 0) {
+	    rstat[i] = 3;
+	  }
+	}
 
-      if(sense[i] == 'G') {
-	rstat[i] = 2;
-      }
-
-      break;
-
-    case 1: break;
-    case 2: 
-      if(sense[i] == 'E') {
-	if(dual[i] > 0) {
+	if(sense[i] == 'R') {
+	  if(rowUpper[i] > rowLower[i] + 1e-6) {
+	    if(row_act[i] > rowLower[i] + 1e-6) {
+	      rstat[i] = 3;
+	    }
+	  }
+	  else {
+	    if(dual[i] < 0) {
+	      rstat[i] = 3;
+	    }	    
+	  }
+	}
+	
+	break;
+      default: printf("### ERROR: OsiCpxSolverInterface::getBasisStatus(): unknown row status: %d\n", rstat[i]); break;
+      }    
+    }
+  }
+  else { // objsense == -1
+    for(int i=0; i<nrow; i++) {
+      switch(rstat[i]) {
+      case 0: 
+	rstat[i] = 3;
+	
+	if(sense[i] == 'E') {
+	  if(dual[i] < 0) {
+	    rstat[i] = 2;
+	  }
+	}
+	
+	if(sense[i] == 'R') {
+	  if(rowUpper[i] > rowLower[i] + 1e-6) {
+	    if(row_act[i] < rowUpper[i] - 1e-6) {
+	      rstat[i] = 2;
+	    }
+	  }
+	  else {
+	    if(dual[i] < 0) {
+	      rstat[i] = 2;
+	    }	    
+	  }
+	}
+	
+	if(sense[i] == 'G') {
 	  rstat[i] = 2;
 	}
-	else {
-	  rstat[i] = 3;
+	
+	break;
+	
+      case 1: break;
+      case 2: 
+	if(sense[i] == 'E') {
+	  if(dual[i] > 0) {
+	    rstat[i] = 3;
+	  }
 	}
-      }
 
-#ifdef MYOSICPX_CHECK
-      if(sense[i] == 'G') {
-	printf("### ERROR: OsiCpxSolverInterface::getBasisStatus(): unexpected sense 'G'\n");
-	exit(1);
-      }
-#endif
-
-      break;
-    default: printf("### ERROR: OsiCpxSolverInterface::getBasisStatus(): unknown row status: %d\n", rstat[i]); break;
+	if(sense[i] == 'R') {
+	  if(rowUpper[i] > rowLower[i] + 1e-6) {
+	    if(row_act[i] > rowLower[i] + 1e-6) {
+	      rstat[i] = 3;
+	    }
+	  }
+	  else {
+	    if(dual[i] > 0) {
+	      rstat[i] = 3;
+	    }	    
+	  }
+	}
+	
+	break;
+      default: printf("### ERROR: OsiCpxSolverInterface::getBasisStatus(): unknown row status: %d\n", rstat[i]); break;
+      }    
     }    
   }
   delete[] sense;
 }
-  
+
 /**********************************************************************/
 void OsiCpxSolverInterface::getBInvARow(int row, double* z, double * slack) 
   const {

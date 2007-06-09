@@ -629,7 +629,11 @@ static void indexError(int index,
 bool
 OsiClpSolverInterface::setIntParam(OsiIntParam key, int value)
 {
-  return modelPtr_->setIntParam((ClpIntParam) key, value);
+  if (key != OsiLastIntParam ) {
+    return modelPtr_->setIntParam((ClpIntParam) key, value);
+  } else {
+    return false;
+  }
 }
 
 //-----------------------------------------------------------------------------

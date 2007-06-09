@@ -664,8 +664,12 @@ OsiClpSolverInterface::setStrParam(OsiStrParam key, const std::string & value)
 
 bool
 OsiClpSolverInterface::getIntParam(OsiIntParam key, int& value) const 
-{
-  return modelPtr_->getIntParam((ClpIntParam) key, value);
+{ 
+  if (key != OsiLastIntParam ) {
+    return modelPtr_->getIntParam((ClpIntParam) key, value);
+  } else {
+    return false;
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -2279,7 +2283,7 @@ OsiClpSolverInterface::fillParamMaps()
 {
    assert ((int) OsiMaxNumIteration==        (int)ClpMaxNumIteration);
    assert ((int) OsiMaxNumIterationHotStart==(int)ClpMaxNumIterationHotStart);
-   assert ((int) OsiLastIntParam==           (int)ClpLastIntParam);
+   //assert ((int) OsiLastIntParam==           (int)ClpLastIntParam);
 
    assert ((int) OsiDualObjectiveLimit==  (int)ClpDualObjectiveLimit);
    assert ((int) OsiPrimalObjectiveLimit==(int)ClpPrimalObjectiveLimit);

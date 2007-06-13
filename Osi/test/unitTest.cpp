@@ -25,6 +25,26 @@
 #include "OsiSolverInterface.hpp"
 #include "OsiRowCutDebugger.hpp"
 
+/*
+  Some convenient undef's, to make it easy to isolate a particular solver.
+  Uncomment to disable a solver that's included in the build. Leave them
+  commented if you're happy with running the unitTest for all solvers in the
+  build.
+*/
+
+// #undef COIN_HAS_OSL
+// #undef COIN_HAS_XPR
+// #undef COIN_HAS_CPX
+// #undef COIN_HAS_SPX
+// #undef COIN_HAS_VOL
+// #undef COIN_HAS_DYLP
+// #undef COIN_HAS_GLPK
+// #undef COIN_HAS_FMP
+// #undef COIN_HAS_CLP
+// #undef COIN_HAS_SYMPHONY
+// #undef COIN_HAS_MSK
+// #undef COIN_HAS_CBC
+
 #ifdef COIN_HAS_OSL
 #include "OsiOslSolverInterface.hpp"
 #endif

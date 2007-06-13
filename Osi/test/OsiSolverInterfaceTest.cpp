@@ -1205,7 +1205,7 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
   Try to get the solver name, but don't immediately abort.
 */
   std::string solverName = "Unknown solver" ;
-  boolResult = si->getStrParam(OsiSolverName,solverName);
+  boolResult = si->getStrParam(OsiSolverName,solverName) ;
   if (boolResult = false)
   { failureMessage(solverName,"OsiSolverName parameter get.") ;
     allOK = false ; }
@@ -1950,7 +1950,7 @@ void testSettingSolutions (OsiSolverInterface &proto)
   set/get routines.
 */
 
-static bool testIntParam(OsiSolverInterface * si, int k, int val)
+bool testIntParam(OsiSolverInterface * si, int k, int val)
 {
   int i = 123456789, orig = 123456789;
   bool ret;
@@ -1964,7 +1964,7 @@ static bool testIntParam(OsiSolverInterface * si, int k, int val)
   return ret;
 }
 
-static bool testDblParam(OsiSolverInterface * si, int k, double val)
+bool testDblParam(OsiSolverInterface * si, int k, double val)
 {
   double d = 123456789.0, orig = 123456789.0;
   bool ret;
@@ -1978,7 +1978,7 @@ static bool testDblParam(OsiSolverInterface * si, int k, double val)
   return ret;
 }
 
-static bool testHintParam(OsiSolverInterface * si, int k, bool sense,
+bool testHintParam(OsiSolverInterface * si, int k, bool sense,
 			  OsiHintStrength strength, int *throws)
 /*
   Tests for proper behaviour of [set,get]HintParam methods. The initial get
@@ -2038,6 +2038,79 @@ static bool testHintParam(OsiSolverInterface * si, int k, bool sense,
       ret = !(strength == OsiForceDo) ; } }
   
   return ret ; }
+
+
+/*
+  Test whether the solver handles a constant in the objecitive function, and
+  whether the dual and primal objective limit methods return the right values.
+  The routine does NOT test whether they are capable of stopping the solver
+  at the limits, before optimality is reached.
+*/
+
+void testObjOffsetAndLimits (const OsiSolverInterface *emptySi,
+			     const std::string &netlibDir)
+
+{ OsiSolverInterface *si = emptySi->clone() ;
+  CoinRelFltEq eq;
+
+  std::string solverName = "Unknown solver" ;
+  si->getStrParam(OsiSolverName,solverName) ;
+
+/*
+  Read in e226; chosen because it has an offset defined in the mps file.
+*/
+  std::string fn = netlibDir+"e226" ;
+  int mpsRc = si->readMps(fn.c_str(),"mps") ;
+  assert(mpsRc == 0) ;
+/*
+  Solve and test for the correct objective value.
+*/
+  si->initialSolve() ;
+  double objValue = si->getObjValue() ;
+  double objNoOffset = -18.751929066 ;
+  double objOffset = +7.113 ;
+  if (!eq(objValue,(objNoOffset+objOffset)))
+  { std::cout
+      << "Solver returned obj = " << objValue
+      << ", expected " << objNoOffset+objOffset << "." << std::endl ;
+    failureMessage(solverName,
+		   "getObjValue with constant in objective function") ; }
+/*
+  Test objective limit methods. There's no attempt to use either to stop the
+  solver early. All we're doing here is checking that the routines return the
+  correct value when the limits are exceeded. The primal limit represents an
+  acceptable level of `goodness'; to be true, we should be below it. The dual
+  limit represents an unacceptable level of `badness'; to be true, we should be
+  above it. Note that the limits specified below are contradictory.
+*/
+  if (si->isPrimalObjectiveLimitReached())
+  { failureMessage(solverName,
+      "false positive, isPrimalObjectiveLimitReached, "
+      "default (no) limit") ; }
+  if (si->isDualObjectiveLimitReached())
+  { failureMessage(solverName,
+      "false positive, isDualObjectiveLimitReached, "
+      "default (no) limit") ; }
+  double primalObjLim = -5.0 ;
+  double dualObjLim = -15.0 ;
+  si->setDblParam(OsiPrimalObjectiveLimit,primalObjLim) ;
+  si->setDblParam(OsiDualObjectiveLimit,dualObjLim) ;
+  if (!si->isPrimalObjectiveLimitReached())
+  { std::cout
+      << "Objective " << objValue << ", primal limit " << primalObjLim
+      << "." << std::endl ;
+    failureMessage(solverName,
+      "false negative, isPrimalObjectiveLimitReached.") ; }
+  if (!si->isDualObjectiveLimitReached())
+  { std::cout
+      << "Objective " << objValue << ", dual limit " << dualObjLim
+      << "." << std::endl ;
+    failureMessage(solverName,
+      "false negative, isDualObjectiveLimitReached.") ; }
+
+  delete si ;
+  
+  return ; }
 
 }	// end file-local namespace
 
@@ -2553,22 +2626,13 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 #endif
   }
 
-  // Test that solverInterface knows about constants
-  // in objective function.
-  // Do not perform test if Vol solver, because it
-  // requires problems of a special form and can not
-  // solve netlib e226.
-  if ( !volSolverInterface ) {
-    OsiSolverInterface * si = emptySi->clone();
-    std::string fn = netlibDir+"e226";
-    int mpsRc = si->readMps(fn.c_str(),"mps");
-    assert(mpsRc==0);
-    si->initialSolve();
-    double objValue = si->getObjValue(); 
-    if( !eq(objValue,-18.751929066+7.113) )
-      failureMessage(solverName,"getObjValue with constant in objective function");
-    delete si;
-  }
+  // Test constants in objective function, dual and primal objective limit
+  // functions.
+  // Do not perform test if Vol solver, because it requires problems of a
+  // special form and can not solve netlib e226.
+
+  if ( !volSolverInterface )
+  { testObjOffsetAndLimits(emptySi,netlibDir) ; }
 
   // Test that values returned from an empty solverInterface
   {

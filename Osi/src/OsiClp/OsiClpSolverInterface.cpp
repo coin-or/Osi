@@ -679,7 +679,6 @@ OsiClpSolverInterface::getIntParam(OsiIntParam key, int& value) const
     return modelPtr_->getIntParam((ClpIntParam) key, value);
   else 
     return false;
-  
 }
 
 //-----------------------------------------------------------------------------
@@ -2436,6 +2435,13 @@ OsiClpSolverInterface::readMps(const char *filename,
     modelPtr_->copyNames(rowNames,columnNames);
   }
   return numberErrors;
+}
+/* Read an mps file from the given filename returns
+   number of errors (see OsiMpsReader class) */
+int 
+OsiClpSolverInterface::readMps(const char *filename,bool keepNames,bool allowErrors)
+{
+  return readMps(filename,"");
 }
 // Read file in LP format (with names)
 int 

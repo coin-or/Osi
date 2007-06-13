@@ -739,7 +739,11 @@ public:
       number of errors (see OsiMpsReader class) */
   virtual int readMps(const char *filename,
                       const char *extension = "mps") ;
+    /** Read an mps file from the given filename returns
+      number of errors (see OsiMpsReader class) */
+  int readMps(const char *filename,bool keepNames,bool allowErrors);
   
+
   /** Write the problem into an mps file of the given filename.
       If objSense is non zero then -1.0 forces the code to write a
       maximization objective and +1.0 to write a minimization one.
@@ -946,6 +950,15 @@ public:
   /// Pass in range array
   inline void passInRanges(int * array)
   { whichRange_=array;};
+  // Next few for compatibility
+  /// Delete all scale factor stuff and reset option
+  inline void deleteScaleFactors() {};
+  /// Number of SOS sets
+  inline int numberSOS() const
+  { return 0;};
+  /// SOS set info
+  inline const CoinSet * setInfo() const
+  { return NULL;};
 protected:
   //@}
   

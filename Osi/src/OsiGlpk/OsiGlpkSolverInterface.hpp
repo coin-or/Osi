@@ -728,9 +728,9 @@ private:
   int nameDisc_;
 
   // Double parameters.
-  /// dual objective limit
+  /// dual objective limit (measure of badness; stop if we're worse)
   double dualObjectiveLimit_;
-  /// primal objective limit
+  /// primal objective limit (measure of goodness; stop if we're better)
   double primalObjectiveLimit_;
   /// dual feasibility tolerance
   double dualTolerance_;

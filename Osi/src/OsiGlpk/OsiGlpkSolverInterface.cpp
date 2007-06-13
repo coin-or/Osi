@@ -706,21 +706,47 @@ bool OGSI::isProvenDualInfeasible() const
 	        return false;
 }
 
+/*
+  This should return true if the solver stopped on the primal limit, or if the
+  current objective is better than the primal limit. getObjSense == 1 is
+  minimisation, -1 is maximisation.
+*/
 bool OGSI::isPrimalObjectiveLimitReached() const
-{
-  if (getObjSense()==1)  // minimization
-    return isObjLowerLimitReached_;
-  else  // maximization
-    return isObjUpperLimitReached_;
-}
+{ bool retval = false ;
+  double obj = getObjValue() ;
+  double objlim ;
 
+  getDblParam(OsiPrimalObjectiveLimit,objlim) ;
+
+  if (getObjSense() == 1)
+  { if (isObjLowerLimitReached_ || obj < objlim)
+    { retval = true ; } }
+  else
+  { if (isObjUpperLimitReached_ || obj > objlim)
+    { retval == true ; } }
+  
+  return (retval) ; }
+
+/*
+  This should return true if the solver stopped on the dual limit, or if the
+  current objective is worse than the dual limit.
+*/
 bool OGSI::isDualObjectiveLimitReached() const
-{
-  if (getObjSense()==1)  // minimization
-    return isObjUpperLimitReached_;
-  else  // maximization
-    return isObjLowerLimitReached_;
-}
+{ bool retval = false ;
+  double obj = getObjValue() ;
+  double objlim ;
+
+  getDblParam(OsiDualObjectiveLimit,objlim) ;
+
+  if (getObjSense() == 1)
+  { if (isObjUpperLimitReached_ || obj > objlim)
+    { retval = true ; } }
+  else
+  { if (isObjLowerLimitReached_ || obj < objlim)
+    { retval == true ; } }
+  
+  return (retval) ; }
+
 
 bool OGSI::isIterationLimitReached() const
 {
@@ -1237,19 +1263,15 @@ const double * OGSI::getObjCoefficients() const
 //-----------------------------------------------------------------------------
 
 double OGSI::getObjSense() const
-{
-        LPX *model = getMutableModelPtr();
 
-	if( lpx_get_obj_dir( model ) == LPX_MIN )
-		// Minimization.
-		return +1.0;
-	else if( lpx_get_obj_dir( model ) == LPX_MAX )
-		// Maximization.
-		return -1.0;
-	else
-		assert( false );
-	return 0;
-}
+{ if (lpx_get_obj_dir(lp_) == LPX_MIN)
+  { return (+1.0) ; }
+  else
+  if (lpx_get_obj_dir(lp_) == LPX_MAX)
+  { return (-1.0) ; }
+  else	// internal confusion
+  { assert(false) ;
+    return (0) ; } }
 
 //-----------------------------------------------------------------------------
 // Return information on integrality
@@ -1991,14 +2013,20 @@ OGSI::setInteger(const int* indices, int len)
 
 //#############################################################################
 
+/*
+  Opt for the natural sense (minimisation) unless the user is clear that
+  maximisation is what's desired.
+*/
 void OGSI::setObjSense(double s)
-{
-	freeCachedData( OGSI::FREECACHED_RESULTS );
-	if( s == +1.0 )
-		lpx_set_obj_dir( getMutableModelPtr(), LPX_MIN );
-	else
-		lpx_set_obj_dir( getMutableModelPtr(), LPX_MAX );
-}
+
+{ freeCachedData(OGSI::FREECACHED_RESULTS) ;
+
+  if (s <= -1.0)
+  { lpx_set_obj_dir(lp_,LPX_MAX) ; }
+  else
+  { lpx_set_obj_dir(lp_,LPX_MIN) ; }
+
+  return ; }
 
 //-----------------------------------------------------------------------------
 
@@ -3009,8 +3037,8 @@ void OGSI::gutsOfConstructor()
   hotStartMaxIteration_ = 0;
   nameDisc_ = 0;
 
-  dualObjectiveLimit_ = DBL_MAX;
-  primalObjectiveLimit_ = DBL_MAX;
+  dualObjectiveLimit_ = getInfinity() ;
+  primalObjectiveLimit_ = -getInfinity() ;
   dualTolerance_ = 1.0e-6;
   primalTolerance_ = 1.0e-6;
   objOffset_ = 0.0 ;
@@ -3035,12 +3063,12 @@ void OGSI::gutsOfConstructor()
   // Push OSI parameters down into LPX object.
   lpx_set_int_parm(lp_,LPX_K_ITLIM,maxIteration_) ; 
 
-  if (getObjSense() == 1)				// minimization
+  if (getObjSense() == 1.0)				// minimization
   { lpx_set_real_parm(lp_,LPX_K_OBJUL,dualObjectiveLimit_) ;
     lpx_set_real_parm(lp_,LPX_K_OBJLL,primalObjectiveLimit_) ; }
   else						// maximization
   { lpx_set_real_parm(lp_,LPX_K_OBJLL,dualObjectiveLimit_) ;
-    lpx_set_real_parm(lp_,LPX_K_OBJUL,primalObjectiveLimit_) ; }
+    lpx_set_real_parm(lp_,LPX_K_OBJUL,-primalObjectiveLimit_) ; }
   lpx_set_real_parm(lp_,LPX_K_TOLDJ,dualTolerance_) ;
   lpx_set_real_parm(lp_,LPX_K_TOLBND,primalTolerance_) ;
 

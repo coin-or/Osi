@@ -466,12 +466,18 @@ public:
 
   int getIterationCount() const ;
 
-  /*! \brief Is the primal objective limit reached? */
-
+  /*! \brief Is the primal objective limit reached?
+  
+    Put in different terms, quit when the objective value becomes better
+    than the given limit for an acceptable value.
+  */
   bool isPrimalObjectiveLimitReached() const ;
 
-  /*! \brief Is the dual objective limit reached? */
-
+  /*! \brief Is the dual objective limit reached?
+  
+    Put in different terms, quit when the objective value becomes worse
+    than the given limit for an acceptable value.
+  */
   bool isDualObjectiveLimitReached() const ;
 //@}
 

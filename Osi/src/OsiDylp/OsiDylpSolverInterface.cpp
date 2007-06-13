@@ -2782,7 +2782,8 @@ void ODSI::setObjCoeff (int j, double objj)
 
 /*!
   Change the sense of the objective; use 1.0 to request the objective be
-  minimised, -1.0 to request it be maximised.
+  minimised, -1.0 to request it be maximised. Since the natural action is
+  minimisation, take that attitude when grooming val.
 */
 
 void ODSI::setObjSense (double val)
@@ -2795,8 +2796,17 @@ void ODSI::setObjSense (double val)
 */
 
 { int n = getNumCols() ;
+  double groomedVal ;
+/*
+  Groom val to be exactly +1.0 or -1.0. Opt for minimisation in the nebulous
+  region -1.0 < val < 1.0.
+*/
+  if (val <= -1.0)
+  { groomedVal = -1.0 ; }
+  else
+  { groomedVal = 1.0 ; }
 
-  if (n > 0 && val != obj_sense)
+  if (n > 0 && groomedVal != obj_sense)
   { double *tmpobj = INV_VEC(double,consys->obj) ;
     std::transform(tmpobj,tmpobj+n,tmpobj,std::negate<double>()) ;
     if (lpprob) setflg(lpprob->ctlopts,lpctlOBJCHG) ;
@@ -2805,11 +2815,11 @@ void ODSI::setObjSense (double val)
   std::cout
     << "ODSI(" << std::hex << this << std::dec
     << ")::setObjSense: changing to "
-    << ((val < 0)?"minimisation":"maximisation") << "." << std::endl ;
+    << ((groomedVal < 0)?"minimisation":"maximisation") << "." << std::endl ;
 # endif
   }
   
-  obj_sense = val ;
+  obj_sense = groomedVal ;
   
   return ; }
 
@@ -5495,15 +5505,22 @@ const double* ODSI::getRightHandSide () const
 
 
 /*!
-  These functions are supported in dylp only when it's operating in the full
+  These functions can be supported in dylp only when it's operating in the full
   constraint system mode.  Otherwise, the alternating addition and deletion of
   constraints and variables by the dynamic simplex algorithm means that the
   objective does not change monotonically.
 
   Right now, they're just a facade, until I train dylp to recognize the
-  limits.
+  limits. They'll report the proper answer after dylp completes, but there's
+  no stopping dylp prematurely.
 */
 
+/*
+  Report true if the objective has degraded past a specified level of
+  badness.  For the default minimisation (getObjSense() === 1), we're over
+  some upper bound. For maximisation (getObjSense() == -1), we're below some
+  lower bound.
+*/
 bool ODSI::isDualObjectiveLimitReached () const
 
 { double objlim ;
@@ -5524,12 +5541,19 @@ bool ODSI::isDualObjectiveLimitReached () const
 	ODSI:isDualObjectiveLimitReached\endlink.
 */
 
+/*
+  Report true if the objective has improved past a specified level of
+  goodness. For the default minimisation, the objective is below the specified
+  upper bound. For maximisation, the objective is above the specified lower
+  bound.
+*/
+
 bool ODSI::isPrimalObjectiveLimitReached () const
 
 { double objlim ;
   double objval = getObjValue() ;
 
-  getDblParam(OsiDualObjectiveLimit,objlim) ;
+  getDblParam(OsiPrimalObjectiveLimit,objlim) ;
   objlim *= getObjSense() ;
 
   if (getObjSense() > 0)

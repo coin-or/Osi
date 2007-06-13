@@ -922,8 +922,10 @@ OsiSolverInterface::setInitialData()
   intParam_[OsiMaxNumIterationHotStart] = 9999999;
   intParam_[OsiNameDiscipline] = 0;
 
+  // Dual objective limit is acceptable `badness'; for minimisation, DBL_MAX
   dblParam_[OsiDualObjectiveLimit] = DBL_MAX;
-  dblParam_[OsiPrimalObjectiveLimit] = DBL_MAX;
+  // Primal objective limit is desired `goodness'; for minimisation, -DBL_MAX
+  dblParam_[OsiPrimalObjectiveLimit] = -DBL_MAX;
   dblParam_[OsiDualTolerance] = 1e-6;
   dblParam_[OsiPrimalTolerance] = 1e-6;
   dblParam_[OsiObjOffset] = 0.0;

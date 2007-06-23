@@ -959,6 +959,9 @@ public:
   /// SOS set info
   inline const CoinSet * setInfo() const
   { return NULL;};
+  /// Pass in sos stuff from AMPl
+  inline void setSOSData(int numberSOS,const char * type,
+		  const int * start,const int * indices, const double * weights=NULL) {};
 protected:
   //@}
   

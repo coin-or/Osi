@@ -38,7 +38,7 @@ enum OsiIntParam {
 };
 
 enum OsiDblParam {
-  /** Set Dual objective limit. This is to be used as a termination
+  /** Dual objective limit. This is to be used as a termination
       criteria in methods where the dual objective monotonically changes
       (e.g., dual simplex, the volume algorithm) */
   OsiDualObjectiveLimit = 0,
@@ -52,8 +52,7 @@ enum OsiDblParam {
   /** The maximum amount the primal constraints can be violated and still be
       considered feasible. */
   OsiPrimalTolerance,
-  /** Objective function constant. This the value of the constant term in
-      the objective function. */
+  /** The value of any constant term in the objective function. */
   OsiObjOffset,
   /** Just a marker, so that OsiSolverInterface can allocate a static sized
       array to store parameters. */

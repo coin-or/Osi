@@ -1,3 +1,4 @@
+MSVisualStudio -r 123 https://projects.coin-or.org/svn/MSVisualStudio/trunk/ExternalsDirs/Osi
 BuildTools    https://projects.coin-or.org/svn/BuildTools/stable/0.5
 Data/Netlib   https://projects.coin-or.org/svn/Data/stable/1.0/Netlib
 Data/Sample   https://projects.coin-or.org/svn/Data/stable/1.0/Sample

@@ -723,7 +723,7 @@ bool OGSI::isPrimalObjectiveLimitReached() const
     { retval = true ; } }
   else
   { if (isObjUpperLimitReached_ || obj > objlim)
-    { retval == true ; } }
+    { retval = true ; } }
   
   return (retval) ; }
 
@@ -743,7 +743,7 @@ bool OGSI::isDualObjectiveLimitReached() const
     { retval = true ; } }
   else
   { if (isObjLowerLimitReached_ || obj < objlim)
-    { retval == true ; } }
+    { retval = true ; } }
   
   return (retval) ; }
 

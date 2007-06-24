@@ -367,6 +367,9 @@ OsiCpxSolverInterface::setIntParam(OsiIntParam key, int value)
     case OsiLastIntParam:
       retval = false;
       break;
+    default:
+      retval = false ;
+      break ;
     }
   return retval;
 }
@@ -405,6 +408,9 @@ OsiCpxSolverInterface::setDblParam(OsiDblParam key, double value)
     case OsiLastDblParam:
       retval = false;
       break;
+    default:
+      retval = false ;
+      break ;
     }
   return retval;
 }
@@ -426,6 +432,8 @@ OsiCpxSolverInterface::setStrParam(OsiStrParam key, const std::string & value)
     return false;
   case OsiLastStrParam:
     return false;
+  default:
+    return false ;
   }
   return false;
 }
@@ -450,6 +458,9 @@ OsiCpxSolverInterface::getIntParam(OsiIntParam key, int& value) const
     case OsiLastIntParam:
       retval = false;
       break;
+    default:
+      retval = false ;
+      break ;
     }
   return retval;
 }
@@ -488,6 +499,9 @@ OsiCpxSolverInterface::getDblParam(OsiDblParam key, double& value) const
     case OsiLastDblParam:
       retval = false;
       break;
+    default:
+      retval = false ;
+      break ;
     }
   return retval;
 }
@@ -509,6 +523,8 @@ OsiCpxSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
     break;
   case OsiLastStrParam:
     return false;
+  default:
+    return false ;
   }
 
   return true;
@@ -1453,7 +1469,7 @@ void OsiCpxSolverInterface::setObjCoeffSet(const int* indexFirst,
    checkCPXerror(err, "CPXchgobj", "setObjCoeffSet");
    if (obj_ != NULL) {
        for (int i = 0; i < cnt; ++i) {
-	   obj_[indexfirst[i]] = coeffList[i];
+	   obj_[indexFirst[i]] = coeffList[i];
        }
    }
 }

@@ -1600,6 +1600,36 @@ OsiClpSolverInterface::addRows(const int numrows,
     modelPtr_->createEmptyMatrix();
   modelPtr_->matrix()->appendRows(numrows,rows);
 }
+void 
+OsiClpSolverInterface::addRows(const int numrows,
+			       const int * rowStarts, const int * columns, const double * element,
+			       const double* rowlb, const double* rowub)
+{
+  freeCachedResults();
+  int numberRows = modelPtr_->numberRows();
+  modelPtr_->resize(numberRows+numrows,modelPtr_->numberColumns());
+  basis_.resize(numberRows+numrows,modelPtr_->numberColumns());
+  double * lower = modelPtr_->rowLower()+numberRows;
+  double * upper = modelPtr_->rowUpper()+numberRows;
+  int iRow;
+  for (iRow = 0; iRow < numrows; iRow++) {
+    if (rowlb) 
+      lower[iRow]= forceIntoRange(rowlb[iRow], -OsiClpInfinity, OsiClpInfinity);
+    else 
+      lower[iRow]=-OsiClpInfinity;
+    if (rowub) 
+      upper[iRow]= forceIntoRange(rowub[iRow], -OsiClpInfinity, OsiClpInfinity);
+    else 
+      upper[iRow]=OsiClpInfinity;
+    if (lower[iRow]<-1.0e27)
+      lower[iRow]=-COIN_DBL_MAX;
+    if (upper[iRow]>1.0e27)
+      upper[iRow]=COIN_DBL_MAX;
+  }
+  if (!modelPtr_->clpMatrix())
+    modelPtr_->createEmptyMatrix();
+  modelPtr_->matrix()->appendRows(numrows,rowStarts,columns,element);
+}
 //-----------------------------------------------------------------------------
 void 
 OsiClpSolverInterface::deleteRows(const int num, const int * rowIndices)

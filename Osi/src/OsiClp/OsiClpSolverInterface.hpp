@@ -631,6 +631,10 @@ public:
                        const char* rowsen, const double* rowrhs,   
                        const double* rowrng);
 
+  /** */
+  virtual void addRows(const int numrows,
+		       const int * rowStarts, const int * columns, const double * element,
+		       const double* rowlb, const double* rowub);
   ///
   void modifyCoefficient(int row, int column, double newElement,
 			bool keepZero=false)

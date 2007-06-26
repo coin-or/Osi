@@ -626,11 +626,11 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
     downTotalChange_ = new double [numberObjects_];
     upNumber_ = new int [numberObjects_];
     downNumber_ = new int [numberObjects_];
+    CoinZeroN(upTotalChange_,numberObjects_);
+    CoinZeroN(downTotalChange_,numberObjects_);
+    CoinZeroN(upNumber_,numberObjects_);
+    CoinZeroN(downNumber_,numberObjects_);
   }
-  CoinZeroN(upTotalChange_,numberObjects_);
-  CoinZeroN(downTotalChange_,numberObjects_);
-  CoinZeroN(upNumber_,numberObjects_);
-  CoinZeroN(downNumber_,numberObjects_);
   double check = -COIN_DBL_MAX;
   int checkIndex=0;
   int bestPriority=INT_MAX;
@@ -960,11 +960,13 @@ OsiChooseStrong::updateInformation(const OsiBranchingInformation *info,
       upTotalChange_[index] += hotInfo->upChange()/object->upEstimate();
       upNumber_[index]++;
     } else {
+#if 0
       // infeasible - just say expensive
       if (info->cutoff_<1.0e50)
 	upTotalChange_[index] += 2.0*(info->cutoff_-info->objectiveValue_)/object->upEstimate();
       else
 	upTotalChange_[index] += 2.0*fabs(info->objectiveValue_)/object->upEstimate();
+#endif
     }
   } else {
     if (hotInfo->downStatus()!=1) {
@@ -972,11 +974,13 @@ OsiChooseStrong::updateInformation(const OsiBranchingInformation *info,
       downTotalChange_[index] += hotInfo->downChange()/object->downEstimate();
       downNumber_[index]++;
     } else {
+#if 0
       // infeasible - just say expensive
       if (info->cutoff_<1.0e50)
 	downTotalChange_[index] += 2.0*(info->cutoff_-info->objectiveValue_)/object->downEstimate();
       else
 	downTotalChange_[index] += 2.0*fabs(info->objectiveValue_)/object->downEstimate();
+#endif
     }
   }  
 }

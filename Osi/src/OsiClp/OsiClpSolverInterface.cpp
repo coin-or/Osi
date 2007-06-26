@@ -2,9 +2,9 @@
 // Corporation and others.  All Rights Reserved.
 
 #include <cassert>
-#ifdef NDEBUG
-#undef NDEBUG
-#endif
+//#ifdef NDEBUG
+//#undef NDEBUG
+//#endif
 
 #include "CoinTime.hpp"
 
@@ -368,8 +368,7 @@ void OsiClpSolverInterface::initialSolve()
 //-----------------------------------------------------------------------------
 void OsiClpSolverInterface::resolve()
 {
-#if 0
-  //#ifndef NDEBUG
+#ifdef COIN_DEVELOP
   {
     int i;
     int n = getNumCols();
@@ -3066,8 +3065,8 @@ void OsiClpSolverInterface::freeCachedResults() const
       assert (clpMatrix->getNumRows()==modelPtr_->getNumRows());
       assert (clpMatrix->getNumCols()==modelPtr_->getNumCols());
     }
-  }
 #endif
+  }
 }
 
 //------------------------------------------------------------------

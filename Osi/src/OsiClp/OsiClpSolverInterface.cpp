@@ -368,7 +368,8 @@ void OsiClpSolverInterface::initialSolve()
 //-----------------------------------------------------------------------------
 void OsiClpSolverInterface::resolve()
 {
-#ifndef NDEBUG
+#if 0
+  //#ifndef NDEBUG
   {
     int i;
     int n = getNumCols();

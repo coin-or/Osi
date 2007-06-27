@@ -2,9 +2,12 @@
 // Corporation and others.  All Rights Reserved.
 
 #include <cassert>
-//#ifdef NDEBUG
-//#undef NDEBUG
-//#endif
+#ifndef CLP_FAST_CODE
+// If NDEBUG defined then Osi unit test fails but code will be slightly faster
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
+#endif
 
 #include "CoinTime.hpp"
 

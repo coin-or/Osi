@@ -33,6 +33,7 @@ AM_CPPFLAGS = \
 	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(COINUTILSOBJDIR)/inc` \
 	-I`$(CYGPATH_W) $(CBCSRCDIR)/src` \
+	-I`$(CYGPATH_W) $(CBCSRCDIR)/inc` \
 	-I`$(CYGPATH_W) $(srcdir)/..`
 
 # Plus the appropriate include directories for the default solver. The

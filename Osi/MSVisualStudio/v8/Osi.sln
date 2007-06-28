@@ -4,7 +4,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libOsi", "libOsi\libOsi.vcp
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libOsiClp", "libOsiClp\libOsiClp.vcproj", "{785FD91E-1780-4886-82B4-34272EC53BA4}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libCoinUtils", "..\CoinUtils\libCoinUtils\libCoinUtils.vcproj", "{2C3DCC6A-E374-4807-9E2B-0E56E02FB01F}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libCoinUtils", "..\..\..\CoinUtils\MSVisualStudio\v8\libCoinUtils\libCoinUtils.vcproj", "{2C3DCC6A-E374-4807-9E2B-0E56E02FB01F}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OsiExamplesBasic2", "OsiExamplesBasic2\OsiExamplesBasic2.vcproj", "{B349E853-2E2B-468E-8853-184ACD948678}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -14,7 +14,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OsiExamplesBasic2", "OsiExa
 		{D49FA3EA-AB8C-4DC2-99BE-E8F61776BF5C} = {D49FA3EA-AB8C-4DC2-99BE-E8F61776BF5C}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libClp", "..\Clp\libClp\libClp.vcproj", "{D49FA3EA-AB8C-4DC2-99BE-E8F61776BF5C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libClp", "..\..\..\Clp\MSVisualStudio\v8\libClp\libClp.vcproj", "{D49FA3EA-AB8C-4DC2-99BE-E8F61776BF5C}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OsiExamplesBasic", "OsiExamplesBasic\OsiExamplesBasic.vcproj", "{B874A948-B5F4-4501-9735-BD9586C5216D}"
 	ProjectSection(ProjectDependencies) = postProject

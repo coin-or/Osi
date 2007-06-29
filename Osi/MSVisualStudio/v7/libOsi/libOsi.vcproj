@@ -143,6 +143,12 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\..\..\src\OsiBranchingObject.cpp">
+			</File>
+			<File
+				RelativePath="..\..\..\src\OsiChooseVariable.cpp">
+			</File>
+			<File
 				RelativePath="..\..\..\..\Osi\src\OsiColCut.cpp">
 				<FileConfiguration
 					Name="Debug|Win32">
@@ -201,6 +207,9 @@
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\..\src\OsiNames.cpp">
 			</File>
 			<File
 				RelativePath="..\..\..\..\Osi\src\OsiOpbdpSolve.cpp">
@@ -442,6 +451,12 @@
 			</File>
 			<File
 				RelativePath="..\..\..\..\Osi\src\OsiAuxInfo.hpp">
+			</File>
+			<File
+				RelativePath="..\..\..\src\OsiBranchingObject.hpp">
+			</File>
+			<File
+				RelativePath="..\..\..\src\OsiChooseVariable.hpp">
 			</File>
 			<File
 				RelativePath="..\..\..\..\Osi\src\OsiColCut.hpp">

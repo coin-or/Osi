@@ -8,7 +8,7 @@
 #undef NDEBUG
 #endif
 #endif
-
+ 
 #include "CoinTime.hpp"
 
 #include "CoinHelperFunctions.hpp"

@@ -1391,5 +1391,15 @@ OsiRowCutDebugger::redoSolution(int numberColumns,const int * originalColumns)
     }
     delete [] mark;
     numberColumns_=numberColumns;
+#if 0
+    FILE * fp = fopen("xx.xx","wb");
+    assert (fp);
+    fwrite(&numberColumns,sizeof(int),1,fp);
+    fwrite(optimalSolution_,sizeof(double),numberColumns,fp);
+    fclose(fp);
+    exit(0);
+#else
+    printf("debug solution - recalculated\n");
+#endif
   }
 }

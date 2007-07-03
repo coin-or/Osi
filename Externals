@@ -1,8 +1,7 @@
-MSVisualStudio -r 123 https://projects.coin-or.org/svn/MSVisualStudio/trunk/ExternalsDirs/Osi
 BuildTools    https://projects.coin-or.org/svn/BuildTools/stable/0.5
 Data/Netlib   https://projects.coin-or.org/svn/Data/stable/1.0/Netlib
 Data/Sample   https://projects.coin-or.org/svn/Data/stable/1.0/Sample
 CoinUtils     https://projects.coin-or.org/svn/CoinUtils/stable/2.0/CoinUtils
 Clp           https://projects.coin-or.org/svn/Clp/stable/1.4/Clp
 DyLP          https://projects.coin-or.org/svn/DyLP/stable/1.2/DyLP
-Vol   -r133   https://projects.coin-or.org/svn/Vol/trunk/Vol
+Vol           https://projects.coin-or.org/svn/Vol/stable/1.1/Vol

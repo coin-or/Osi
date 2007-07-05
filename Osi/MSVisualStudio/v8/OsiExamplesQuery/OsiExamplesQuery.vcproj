@@ -4,6 +4,7 @@
 	Version="8.00"
 	Name="OsiExamplesQuery"
 	ProjectGUID="{E54AF10F-FCBB-4A09-AAB7-2C83CF91BD2C}"
+	RootNamespace="OsiExamplesQuery"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -40,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\..\Osi\src\OsiClp;..\..\..\..\Osi\src;..\..\..\..\Clp\src;..\..\..\..\CoinUtils\src;..\..\..\..\BuildTools\headers"
+				AdditionalIncludeDirectories="..\..\..\src\OsiClp;..\..\..\src;..\..\..\..\Clp\src;..\..\..\..\CoinUtils\src;..\..\..\..\BuildTools\headers"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"

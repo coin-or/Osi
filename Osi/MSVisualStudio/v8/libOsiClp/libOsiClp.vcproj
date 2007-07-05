@@ -4,6 +4,7 @@
 	Version="8.00"
 	Name="libOsiClp"
 	ProjectGUID="{02D45875-A8CF-41B9-990B-3699C0ECFE10}"
+	RootNamespace="libOsiClp"
 	>
 	<Platforms>
 		<Platform
@@ -41,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\..\Clp\src,..\..\..\..\Osi\src,..\..\..\..\CoinUtils\src,..\..\..\..\BuildTools\headers"
+				AdditionalIncludeDirectories="..\..\..\..\Clp\src;..\..\..\src;..\..\..\..\CoinUtils\src;..\..\..\..\BuildTools\headers"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"

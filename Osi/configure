@@ -22297,6 +22297,103 @@ echo "$as_me: OsiDylp paranoid checks at level $osidylp_paranoia." >&6;}
   esac
 
 
+# If glpk is available, choose the MIP solver. lpx_intopt is preferred;
+# lpx_integer will be used as a fallback.
+
+if test "x$coin_has_glpk" = "xtrue" ; then
+   echo "$as_me:$LINENO: checking for glpk mip solver " >&5
+echo $ECHO_N "checking for glpk mip solver ... $ECHO_C" >&6
+  osiglpk_candidates="_glp_lpx_intopt glp_lpx_intopt _glp_lpx_integer glp_lpx_integer"
+  coin_save_LIBS="$LIBS"
+  LIBS="$ADDLIBS $LIBS"
+  osiglpk_mipsolver=
+  ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+  for fnm in $osiglpk_candidates ; do
+#   AC_MSG_CHECKING([whether symbol $fnm is available with glpk])
+    cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+void $fnm() ;
+int
+main ()
+{
+$fnm()
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  osiglpk_mipsolver=$fnm ; break
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+  done
+  ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+  LIBS="$coin_save_LIBS"
+  if test x"$osiglpk_mipsolver" == x ; then
+    echo "$as_me:$LINENO: result: none!" >&5
+echo "${ECHO_T}none!" >&6
+    { { echo "$as_me:$LINENO: error: No glpk MIP solver! You really should upgrade glpk." >&5
+echo "$as_me: error: No glpk MIP solver! You really should upgrade glpk." >&2;}
+   { (exit 1); exit 1; }; }
+  else
+    case $osiglpk_mipsolver in
+      *intopt)
+	echo "$as_me:$LINENO: result: lpx_intopt" >&5
+echo "${ECHO_T}lpx_intopt" >&6
+
+cat >>confdefs.h <<\_ACEOF
+#define GLPK_HAS_INTOPT 1
+_ACEOF
+
+	break ;;
+      *integer)
+	echo "$as_me:$LINENO: result: lpx_integer" >&5
+echo "${ECHO_T}lpx_integer" >&6
+	break ;;
+    esac
+  fi
+
+fi
+
 ##############################################################################
 #                   Finishing up by writing all the output                   #
 ##############################################################################

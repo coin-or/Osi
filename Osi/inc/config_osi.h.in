@@ -51,6 +51,9 @@
 /* Define to the debug verbosity level (0 is no output) */
 #undef COIN_OSI_VERBOSITY
 
+/* Define to 1 if GLPK has the advanced B&B solver lpx_intopt */
+#undef GLPK_HAS_INTOPT
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 

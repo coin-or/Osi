@@ -88,6 +88,13 @@ AC_ODSI_INFO(yes)
 AC_ODSI_STATISTICS(no)
 AC_ODSI_PARANOIA(1)
 
+# If glpk is available, choose the MIP solver. lpx_intopt is preferred;
+# lpx_integer will be used as a fallback.
+
+if test "x$coin_has_glpk" = "xtrue" ; then
+  AC_OGSI_MIPSOLVER()
+fi
+
 ##############################################################################
 #                   Finishing up by writing all the output                   #
 ##############################################################################

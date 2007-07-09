@@ -77,6 +77,8 @@
 
 #include "CoinError.hpp"
 
+#include "OsiConfig.h"
+
 #include "OsiGlpkSolverInterface.hpp"
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
@@ -268,43 +270,129 @@ void OGSI::resolve()
 
 //-----------------------------------------------------------------------------
 
-void OGSI::branchAndBound()
-{
-        LPX *model = getMutableModelPtr();
-	freeCachedData( OGSI::FREECACHED_RESULTS );
-	if( lpx_get_num_int( model ) ) {
+/*
+  Call glpk's built-in MIP solver. Any halfway recent version (from glpk 4.4,
+  at least) will have lpx_intopt, a branch-and-cut solver. The presence of cut
+  generators is more recent. LPX_K_USECUTS appears in 4.9; the parameter value
+  appears to be unused in this version. LPX_C_ALL appears in 4.10.
+*/
+void OGSI::branchAndBound ()
 
-	        // Must have an LP solution before running lpx_integer
- 	        if (lpx_get_status(model) != LPX_OPT)
-	          initialSolve();
-		// What if there's an error there?
-		int err = lpx_integer( model );
-		iter_used_ = lpx_get_int_parm(model, LPX_K_ITCNT);
-		// Uncertain whether GLPK 4.7 keeps iteration count correctly
-		// for MIPs ???
+{ LPX *model = getMutableModelPtr() ;
+/*
+  Destroy cached data.
+*/
+  freeCachedData(OGSI::FREECACHED_RESULTS) ;
+/*
+  Assuming we have integer variables in the model, call the best MIP solver
+  we can manage.
 
-		isIterationLimitReached_ = false;
-		isAbandoned_ = false;
-		isPrimInfeasible_ = false;
-		isDualInfeasible_ = false;
-		switch( err )
-		{
-		case LPX_E_ITLIM:
-			isIterationLimitReached_ = true;
-			break;
+  lpx_intopt does not require an optimal LP solution as a starting point, so
+  we can call it directly. Enable cuts if they're available. This is a bit of a
+  pain, as the interface has changed since it was first introduced in 4.9.
 
-		case LPX_E_FAULT:
-		case LPX_E_SING:
-			isAbandoned_ = true;
-			break;
-		}
-		// Record that b&b was most recent
-		bbWasLast_ = 1;
-	}
-	else {
-		resolve();
-	}
-}
+  lpx_integer needs an initial optimal solution to the relaxation.
+*/
+  if (lpx_get_num_int(model))
+  { int err = LPX_E_FAULT ;
+
+#   ifdef GLPK_HAS_INTOPT
+#   ifdef LPX_K_USECUTS
+#   ifdef LPX_C_ALL
+    lpx_set_int_parm(model,LPX_K_USECUTS,LPX_C_ALL) ;
+#   else
+    lpx_set_int_parm(model,LPX_K_USECUTS,0) ;
+#   endif
+#   endif
+    err = lpx_intopt(model) ;
+#   else
+    if (lpx_get_status(model) != LPX_OPT)
+    { initialSolve() ; }
+    err = lpx_integer(model) ;
+#   endif
+/*
+  We have a result. What is it? Start with a positive attitude and revise as
+  needed. The various LPX_E_* and LPX_I_* defines are stable back as far as
+  glpk-4.4.
+
+  When we get LPX_E_OK (MIP terminated normally), we need to look more
+  closely.  LPX_I_OPT indicates a proven optimal integer solution.
+  LPX_I_NOFEAS indicates that there is no integer feasible solution.
+  LPX_I_UNDEF says the MIP solution is undefined. LPX_I_FEAS says that in
+  integer feasible solution was found but not proven optimal (termination of
+  search due to some limit is the common cause). It's not clear what to do
+  with these last two; currently, they are not really reflected in
+  termination status.
+
+  Various other codes are returned by lpx_intopt (lpx_integer returns a
+  subset of these).  LPX_E_NOPFS (LPX_E_NODFS) indicate no primal (dual)
+  feasible solution; detected at the root, either by presolve or when
+  attempting the root relaxation. LPX_E_ITLIM (LPX_E_TMLIM) indicate
+  iteration (time) limit reached. Osi doesn't provide for time limit, so lump
+  it in with iteration limit (an arguable choice, but seems better than the
+  alternatives).  LPX_E_SING (lp solver failed due to singular basis) is
+  legimately characterised as abandoned.  LPX_E_FAULT indicates a structural
+  problem (problem not of class MIP, or an integer variable has a non-integer
+  bound), which really translates into internal confusion in OsiGlpk.
+
+  Previous comments expressed uncertainty about the iteration count. This
+  should be checked at some point. -- lh, 070709 --
+*/
+    iter_used_ = lpx_get_int_parm(model,LPX_K_ITCNT) ;
+    isIterationLimitReached_ = false ;
+    isAbandoned_ = false ;
+    isPrimInfeasible_ = false ;
+    isDualInfeasible_ = false ;
+
+    switch (err)
+    { case LPX_E_OK:
+      { int mip_status = lpx_mip_status(model) ;
+	switch (mip_status)
+	{ case LPX_I_OPT:
+	  { break ; }
+	  case LPX_I_NOFEAS:
+	  { isPrimInfeasible_ = false ;
+	    break ; }
+	  case LPX_I_UNDEF:
+	  case LPX_I_FEAS:
+	  { break ; }
+	  default:
+	  { assert(false) ;
+	    break ; } }
+	break ; }
+      case LPX_E_NOPFS:
+      { isPrimInfeasible_ = true ;
+	break ; }
+      case LPX_E_NODFS:
+      { isDualInfeasible_ = true ;
+	break ; }
+      case LPX_E_ITLIM:
+      case LPX_E_TMLIM:
+      { isIterationLimitReached_ = true ;
+	break ; }
+      case LPX_E_SING:
+      { isAbandoned_ = true ;
+	break ; }
+      case LPX_E_FAULT:
+      { assert(false) ;
+	break ; }
+      default:
+      { assert(false) ;
+	break ; } }
+/*
+  The final action is to note that our last call to glpk was the MIP solver.
+*/
+    bbWasLast_ = 1 ; }
+/*
+  Not a MIP (no integer variables). Call the LP solver. Since we can call
+  branchAndBound with no initial LP solution, initialSolve is appropriate here.
+  (But for glpk, it actually makes no difference --- lpx_simplex makes the
+  decision on how to proceed.)
+*/
+  else
+  { initialSolve() ; }
+
+  return ; }
 
 //#############################################################################
 // Parameter related methods

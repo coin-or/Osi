@@ -1453,7 +1453,7 @@ void OsiCpxSolverInterface::setObjCoeffSet(const int* indexFirst,
    checkCPXerror(err, "CPXchgobj", "setObjCoeffSet");
    if (obj_ != NULL) {
        for (int i = 0; i < cnt; ++i) {
-	   obj_[indexfirst[i]] = coeffList[i];
+	   obj_[indexFirst[i]] = coeffList[i];
        }
    }
 }

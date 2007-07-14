@@ -840,7 +840,7 @@ OsiChooseStrong::chooseVariable( OsiSolverInterface * solver, OsiBranchingInform
     for (int i=0;i<numberLeft;i++) {
       int iObject = list_[i];
       if (upNumber_[iObject]<numberBeforeTrusted_||downNumber_[iObject]<numberBeforeTrusted_) {
-	results[numberToDo] = OsiHotInfo(solver,info,(const OsiObject **) solver->objects(),iObject);
+	results[numberToDo] = OsiHotInfo(solver,info,const_cast<const OsiObject **> (solver->objects()),iObject);
 	temp[numberToDo++]=iObject;
       } else if (bestObjectIndex_<0) {
 	const OsiObject * obj = solver->object(iObject);
@@ -1115,7 +1115,7 @@ int OsiHotInfo::updateInformation( const OsiSolverInterface * solver, const OsiB
     }
 #endif
     if (choose->feasibleSolution(info,solver->getColSolution(),solver->numberObjects(),
-				 (const OsiObject **) solver->objects())) {
+				 const_cast<const OsiObject **> (solver->objects()))) {
       // put solution somewhere
       choose->saveSolution(solver);
       status=3;

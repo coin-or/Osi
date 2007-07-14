@@ -590,6 +590,15 @@ public:
   */
   OsiIntegerBranchingObject (OsiSolverInterface *solver,const OsiSimpleInteger * originalObject,
 			     int way , double value) ;
+  /** Create a standard floor/ceiling branch object
+
+    Specifies a simple two-way branch in a more flexible way. One arm of the
+    branch will be lb <= x <= downUpperBound, the other upLowerBound <= x <= ub.
+    Specify way = -1 to set the object state to perform the down arm first,
+    way = 1 for the up arm.
+  */
+  OsiIntegerBranchingObject (OsiSolverInterface *solver,const OsiSimpleInteger * originalObject,
+			     int way , double value, double downUpperBound, double upLowerBound) ;
     
   /// Copy constructor 
   OsiIntegerBranchingObject ( const OsiIntegerBranchingObject &);

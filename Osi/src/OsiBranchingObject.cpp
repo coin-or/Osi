@@ -669,6 +669,24 @@ OsiIntegerBranchingObject::OsiIntegerBranchingObject (OsiSolverInterface * solve
   up_[0] = ceil(value_);
   up_[1] = solver->getColUpper()[iColumn];
 }
+/* Create a standard floor/ceiling branch object
+   Specifies a simple two-way branch in a more flexible way. One arm of the
+   branch will be lb <= x <= downUpperBound, the other upLowerBound <= x <= ub.
+   Specify way = -1 to set the object state to perform the down arm first,
+   way = 1 for the up arm.
+*/
+OsiIntegerBranchingObject::OsiIntegerBranchingObject (OsiSolverInterface * solver, 
+						      const OsiSimpleInteger * object,
+						      int way , double value, double downUpperBound, 
+						      double upLowerBound) 
+  :OsiTwoWayBranchingObject(solver,object, way, value)
+{
+  int iColumn = object->columnNumber();
+  down_[0] = solver->getColLower()[iColumn];
+  down_[1] = downUpperBound;
+  up_[0] = upLowerBound;
+  up_[1] = solver->getColUpper()[iColumn];
+}
   
 
 // Copy constructor 

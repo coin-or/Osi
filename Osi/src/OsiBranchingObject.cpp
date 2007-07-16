@@ -633,7 +633,7 @@ double
 OsiSimpleInteger::downEstimate() const
 {
   if (whichWay_)
-    return otherInfeasibility_;
+    return 1.0-infeasibility_;
   else
     return infeasibility_;
 }
@@ -642,7 +642,7 @@ double
 OsiSimpleInteger::upEstimate() const
 {
   if (!whichWay_)
-    return otherInfeasibility_;
+    return 1.0-infeasibility_;
   else
     return infeasibility_;
 }

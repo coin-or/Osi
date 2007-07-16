@@ -97,6 +97,10 @@ public:
   /// Given a candidate fill in useful information e.g. estimates
   virtual void updateInformation( const OsiBranchingInformation *info,
 				  int branch, OsiHotInfo * hotInfo);
+  /// Given a branch fill in useful information e.g. estimates
+  virtual void updateInformation( int whichObject, int branch, 
+				  double changeInObjective, double changeInValue,
+				  int status);
   /// Objective value for feasible solution
   inline double goodObjectiveValue() const
   { return goodObjectiveValue_;};
@@ -299,6 +303,10 @@ public:
   /// Given a candidate fill in useful information e.g. estimates
   virtual void updateInformation(const OsiBranchingInformation *info,
 				  int branch, OsiHotInfo * hotInfo);
+  /// Given a branch fill in useful information e.g. estimates
+  virtual void updateInformation( int whichObject, int branch, 
+				  double changeInObjective, double changeInValue,
+				  int status);
   /// Number of times before trusted
   inline int numberBeforeTrusted() const
   { return numberBeforeTrusted_;};

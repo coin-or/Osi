@@ -516,6 +516,20 @@ OsiChooseVariable::updateInformation(const OsiBranchingInformation *info,
   upChange_ = object[index]->upEstimate();
   downChange_ = object[index]->downEstimate();
 }
+// Given a branch fill in useful information e.g. estimates
+void 
+OsiChooseVariable::updateInformation( int index, int branch, 
+				      double changeInObjective, double changeInValue,
+				      int status)
+{
+  assert (index<solver_->numberObjects());
+  assert (branch<2);
+  OsiObject ** object = solver_->objects();
+  if (branch)
+    upChange_ = object[index]->upEstimate();
+  else
+    downChange_ = object[index]->downEstimate();
+}
 
 OsiChooseStrong::OsiChooseStrong() :
   OsiChooseVariable(),
@@ -981,6 +995,30 @@ OsiChooseStrong::updateInformation(const OsiBranchingInformation *info,
       else
 	downTotalChange_[index] += 2.0*fabs(info->objectiveValue_)/object->downEstimate();
 #endif
+    }
+  }  
+}
+// Given a branch fill in useful information e.g. estimates
+void 
+OsiChooseStrong::updateInformation( int index, int branch, 
+				      double changeInObjective, double changeInValue,
+				      int status)
+{
+  assert (index<solver_->numberObjects());
+  assert (branch<2);
+  assert (changeInValue>0.0);
+  assert (branch<2);
+  if (branch) {
+    if (status!=1) {
+      assert (status>=0);
+      upTotalChange_[index] += changeInObjective/changeInValue;
+      upNumber_[index]++;
+    }
+  } else {
+    if (status!=1) {
+      assert (status>=0);
+      downTotalChange_[index] += changeInObjective/changeInValue;
+      downNumber_[index]++;
     }
   }  
 }

@@ -55,6 +55,7 @@ endif
 if COIN_HAS_CBC
   unitTest_SOURCES += OsiCbcSolverInterfaceTest.cpp
   AM_CPPFLAGS += -I`$(CYGPATH_W) $(CBCSRCDIR)/src` \
+	-I`$(CYGPATH_W) $(CBCOBJDIR)/inc` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiCbc`
   unitTest_LDADD += ../src/OsiCbc/libOsiCbc.la \
 	$(CBCOBJDIR)/src/libCbc.la

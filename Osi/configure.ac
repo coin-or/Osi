@@ -83,15 +83,19 @@ AC_COIN_HAS_USER_LIBRARY([Xpress],[XPR],[xprs.h],[XPRSsetintcontrol])
 #                 Configuration options for individual OSIs                 #
 #############################################################################
 
+# If any of the tests performed in this section actually require the presence
+# of the solver (file presence, link checks, etc.) be sure to guard the call.
+
 AC_OSICBC_CONFIG(clp)
 AC_ODSI_INFO(yes)
 AC_ODSI_STATISTICS(no)
 AC_ODSI_PARANOIA(1)
 
 # If glpk is available, choose the MIP solver. lpx_intopt is preferred;
-# lpx_integer will be used as a fallback.
+# lpx_integer will be used as a fallback. coin_has_glpk and glpk_libcheck
+# are defined and set by COIN_HAS_USER_LIBRARY.
 
-if test "x$coin_has_glpk" = "xtrue" ; then
+if test "x$coin_has_glpk" = "xtrue" && test "x$glpk_libcheck" = "xyes" ; then
   AC_OGSI_MIPSOLVER()
 fi
 

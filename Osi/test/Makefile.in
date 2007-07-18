@@ -57,6 +57,7 @@ noinst_PROGRAMS = unitTest$(EXEEXT)
 @COIN_HAS_CLP_TRUE@am__append_4 = `cat $(CLPOBJDIR)/clp_addlibs.txt`
 @COIN_HAS_CBC_TRUE@am__append_5 = OsiCbcSolverInterfaceTest.cpp
 @COIN_HAS_CBC_TRUE@am__append_6 = -I`$(CYGPATH_W) $(CBCSRCDIR)/src` \
+@COIN_HAS_CBC_TRUE@	-I`$(CYGPATH_W) $(CBCOBJDIR)/inc` \
 @COIN_HAS_CBC_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiCbc`
 
 @COIN_HAS_CBC_TRUE@am__append_7 = ../src/OsiCbc/libOsiCbc.la \

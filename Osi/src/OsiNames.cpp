@@ -493,11 +493,11 @@ void OsiSolverInterface::deleteRowNames (int tgtStart, int len)
   Trim the range to names that exist in the name vector. If we're doing lazy
   names, it's quite likely that we don't need to do any work.
 */
-  int lastNdx = rowNames_.size()-1 ;
-  if (tgtStart < 0 || tgtStart > lastNdx)
+  int lastNdx = rowNames_.size() ;
+  if (tgtStart < 0 || tgtStart >= lastNdx)
   { return ; }
-  if (tgtStart+len-1 > lastNdx)
-  { len = tgtStart-lastNdx+1 ; }
+  if (tgtStart+len > lastNdx)
+  { len = lastNdx-tgtStart ; }
 /*
   Erase the names.
 */
@@ -624,11 +624,11 @@ void OsiSolverInterface::deleteColNames (int tgtStart, int len)
   Trim the range to names that exist in the name vector. If we're doing lazy
   names, it's quite likely that we don't need to do any work.
 */
-  int lastNdx = colNames_.size()-1 ;
-  if (tgtStart < 0 || tgtStart > lastNdx)
+  int lastNdx = colNames_.size() ;
+  if (tgtStart < 0 || tgtStart >= lastNdx)
   { return ; }
-  if (tgtStart+len-1 > lastNdx)
-  { len = tgtStart-lastNdx+1 ; }
+  if (tgtStart+len > lastNdx)
+  { len = lastNdx-tgtStart ; }
 /*
   Erase the names.
 */

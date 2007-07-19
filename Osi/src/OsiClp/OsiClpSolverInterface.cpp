@@ -2870,7 +2870,7 @@ OsiClpSolverInterface::applyRowCuts(int numberCuts, const OsiRowCut ** cuts)
   int i;
   if (!numberCuts)
     return;
-#ifndef NDEBUG
+#if 0 // was #ifndef NDEBUG
   int nameDiscipline;
   getIntParam(OsiNameDiscipline,nameDiscipline) ;
   assert (!nameDiscipline);

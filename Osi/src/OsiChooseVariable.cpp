@@ -195,7 +195,7 @@ OsiChooseVariable::setupList ( OsiBranchingInformation *info, bool initialize)
   assert (numberObjects);
   double check = 0.0;
   int checkIndex=0;
-  int bestPriority=INT_MAX;
+  int bestPriority=COIN_INT_MAX;
   // pretend one strong even if none
   int maximumStrong= numberStrong_ ? CoinMin(numberStrong_,numberObjects) : 1;
   int putOther = numberObjects;
@@ -647,7 +647,7 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
   }
   double check = -COIN_DBL_MAX;
   int checkIndex=0;
-  int bestPriority=INT_MAX;
+  int bestPriority=COIN_INT_MAX;
   int maximumStrong= CoinMin(numberStrong_,numberObjects) ;
   int putOther = numberObjects;
   int i;

@@ -3121,7 +3121,7 @@ void OGSI::gutsOfConstructor()
   matrixByRow_ = NULL;
   matrixByCol_ = NULL;
 
-  maxIteration_ = INT_MAX;
+  maxIteration_ = COIN_INT_MAX;
   hotStartMaxIteration_ = 0;
   nameDisc_ = 0;
 

@@ -292,7 +292,7 @@ public:
         Until that time just use primal tolerance
     */
     inline double getIntegerTolerance() const
-    { return dblParam_[OsiPrimalTolerance];};
+    { return dblParam_[OsiPrimalTolerance];}
     // Get a string parameter
     virtual bool getStrParam(OsiStrParam key, std::string& value) const {
       if (key == OsiLastStrParam) return (false) ;
@@ -517,10 +517,10 @@ public:
     virtual const CoinPackedMatrix * getMatrixByCol() const = 0;
 
     /// Get pointer to mutable row-wise copy of matrix (returns NULL if not meaningful)
-    virtual CoinPackedMatrix * getMutableMatrixByRow() const {return NULL;};
+    virtual CoinPackedMatrix * getMutableMatrixByRow() const {return NULL;}
 
     /// Get pointer to mutable column-wise copy of matrix (returns NULL if not meaningful)
-    virtual CoinPackedMatrix * getMutableMatrixByCol() const {return NULL;};
+    virtual CoinPackedMatrix * getMutableMatrixByCol() const {return NULL;}
 
     /// Get solver's value for infinity
     virtual double getInfinity() const = 0;
@@ -1342,9 +1342,9 @@ public:
      The default behavior of this is do nothing so only use where that would not matter
      e.g. strengthening a matrix for MIP
   */
-  virtual void replaceMatrixOptional(const CoinPackedMatrix & matrix) {};
+  virtual void replaceMatrixOptional(const CoinPackedMatrix & matrix) {}
   /// And if it does matter (not used at present)
-  virtual void replaceMatrix(const CoinPackedMatrix & matrix) {abort();};
+  virtual void replaceMatrix(const CoinPackedMatrix & matrix) {abort();}
   //@}
 
   //---------------------------------------------------------------------------
@@ -1401,16 +1401,16 @@ public:
   /// Set language
   void newLanguage(CoinMessages::Language language);
   void setLanguage(CoinMessages::Language language)
-  {newLanguage(language);};
+  {newLanguage(language);}
   /// Return a pointer to the current message handler
   CoinMessageHandler * messageHandler() const
-  {return handler_;};
+  {return handler_;}
   /// Return the current set of messages
   CoinMessages messages() 
-  {return messages_;};
+  {return messages_;}
   /// Return a pointer to the current set of messages
   CoinMessages * messagesPointer() 
-  {return &messages_;};
+  {return &messages_;}
   //@}
   //---------------------------------------------------------------------------
   /**@name Methods for dealing with discontinuities other than integers.
@@ -1440,18 +1440,18 @@ public:
 
     virtual int findIntegersAndSOS(bool justCount);
     /// Get the number of objects
-    inline int numberObjects() const { return numberObjects_;};
+    inline int numberObjects() const { return numberObjects_;}
     /// Set the number of objects
     inline void setNumberObjects(int number) 
-    {  numberObjects_=number;};
+    {  numberObjects_=number;}
 
     /// Get the array of objects
-    inline OsiObject ** objects() const { return object_;};
+    inline OsiObject ** objects() const { return object_;}
 
     /// Get the specified object
-    const inline OsiObject * object(int which) const { return object_[which];};
+    const inline OsiObject * object(int which) const { return object_[which];}
     /// Get the specified object
-    inline OsiObject * modifiableObject(int which) const { return object_[which];};
+    inline OsiObject * modifiableObject(int which) const { return object_[which];}
 
     /// Delete all object information
     void deleteObjects();
@@ -1543,7 +1543,7 @@ public:
   virtual bool basisIsAvailable() const ;
   /// Synonym for basisIsAvailable!
   inline bool optimalBasisIsAvailable() const
-  { return basisIsAvailable();};
+  { return basisIsAvailable();}
 
   /** The following two methods may be replaced by the
      methods of OsiSolverInterface using OsiWarmStartBasis if:

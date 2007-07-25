@@ -303,10 +303,10 @@ public:
   //@{
   /// Get row
   inline int whichRow() const
-  { return whichRow_;};
+  { return whichRow_;}
   /// Set row
   inline void setWhichRow(int row)
-  { whichRow_=row;};
+  { whichRow_=row;}
   //@}
   
   /**@name Constructors and destructors */

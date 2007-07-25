@@ -37,26 +37,26 @@ public:
   //@{
   /// Set globallyValid (nonzero true)
   inline void setGloballyValid( bool trueFalse ) 
-  { globallyValid_=trueFalse ? 1 : 0;};
+  { globallyValid_=trueFalse ? 1 : 0;}
   inline void setGloballyValid( ) 
-  { globallyValid_=1;};
+  { globallyValid_=1;}
   inline void setNotGloballyValid( ) 
-  { globallyValid_=0;};
+  { globallyValid_=0;}
   /// Get globallyValid
   inline bool globallyValid() const
-  { return globallyValid_!=0;};
+  { return globallyValid_!=0;}
   /// Set globallyValid as integer (nonzero true)
   inline void setGloballyValidAsInteger( int trueFalse ) 
-  { globallyValid_=trueFalse;};
+  { globallyValid_=trueFalse;}
   /// Get globallyValid
   inline int globallyValidAsInteger() const
-  { return globallyValid_;};
+  { return globallyValid_;}
   //@}
 
   /**@name Debug stuff */
   //@{
     /// Print cuts in collection
-  virtual void print() const {};
+  virtual void print() const {}
   //@}
    
 #if 0

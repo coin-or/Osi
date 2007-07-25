@@ -116,52 +116,52 @@ public:
   /** \brief Return true if object can take part in normal heuristics
   */
   virtual bool canDoHeuristics() const 
-  {return true;};
+  {return true;}
   /** \brief Return true if object can take part in move to nearest heuristic
   */
   virtual bool canMoveToNearest() const 
-  {return false;};
+  {return false;}
   /** Column number if single column object -1 otherwise,
       Used by heuristics
   */
   virtual int columnNumber() const;
   /// Return Priority - note 1 is highest priority
   inline int priority() const
-  { return priority_;};
+  { return priority_;}
   /// Set priority
   inline void setPriority(int priority)
-  { priority_ = priority;};
+  { priority_ = priority;}
   /** \brief Return true if branch should only bound variables
   */
   virtual bool boundBranch() const 
-  {return true;};
+  {return true;}
   /// Return true if knows how to deal with Pseudo Shadow Prices
   virtual bool canHandleShadowPrices() const
-  { return false;};
+  { return false;}
   /// Return maximum number of ways branch may have
   inline int numberWays() const
-  { return numberWays_;};
+  { return numberWays_;}
   /// Set maximum number of ways branch may have
   inline void setNumberWays(int numberWays)
-  { numberWays_ = numberWays;};
+  { numberWays_ = numberWays;}
   /** Return preferred way to branch.  If two
       then way=0 means down and 1 means up, otherwise
       way points to preferred branch
   */
   inline void setWhichWay(int way)
-  { whichWay_ = way;};
+  { whichWay_ = way;}
   /** Return current preferred way to branch.  If two
       then way=0 means down and 1 means up, otherwise
       way points to preferred branch
   */
   inline int whichWay() const
-  { return whichWay_;};
+  { return whichWay_;}
   /// Get pre-emptive preferred way of branching - -1 off, 0 down, 1 up (for 2-way)
   virtual int preferredWay() const
-  { return -1;};
+  { return -1;}
   /// Return infeasibility
   inline double infeasibility() const
-  { return infeasibility_;};
+  { return infeasibility_;}
   /// Return "up" estimate (default 1.0e-5)
   virtual double upEstimate() const;
   /// Return "down" estimate (default 1.0e-5)
@@ -170,10 +170,10 @@ public:
     Bounds may be tightened, so it may be good to be able to reset them to
     their original values.
    */
-  virtual void resetBounds(const OsiSolverInterface * solver) {};
+  virtual void resetBounds(const OsiSolverInterface * solver) {}
   /**  Change column numbers after preprocessing
    */
-  virtual void resetSequenceEtc(int numberColumns, const int * originalColumns) {};
+  virtual void resetSequenceEtc(int numberColumns, const int * originalColumns) {}
   
 
 protected:
@@ -211,11 +211,11 @@ public:
   
   /// Set preferred way of branching - -1 off, 0 down, 1 up (for 2-way)
   inline void setPreferredWay(int value)
-  {preferredWay_=value;};
+  {preferredWay_=value;}
   
   /// Get preferred way of branching - -1 off, 0 down, 1 up (for 2-way)
   virtual int preferredWay() const
-  { return preferredWay_;};
+  { return preferredWay_;}
 protected:
   /// Preferred way of branching - -1 off, 0 down, 1 up (for 2-way)
   int preferredWay_;
@@ -265,21 +265,21 @@ public:
 
   /// The number of branch arms created for this branching object
   inline int numberBranches() const
-  {return numberBranches_;};
+  {return numberBranches_;}
 
   /// The number of branch arms left for this branching object
   inline int numberBranchesLeft() const
-  {return numberBranches_-branchIndex_;};
+  {return numberBranches_-branchIndex_;}
 
   /** Set the number of branch arms left for this branching object
       Just for forcing
   */
   inline void setNumberBranchesLeft(int value)
-  {assert (value==1&&!branchIndex_); numberBranches_=1;};
+  {assert (value==1&&!branchIndex_); numberBranches_=1;}
 
   /// Decrement the number of branch arms left for this branching object
   inline void decrementNumberBranchesLeft()
-  {branchIndex_++;};
+  {branchIndex_++;}
 
   /** \brief Execute the actions required to branch, as specified by the
 	     current state of the branching object, and advance the object's
@@ -292,37 +292,37 @@ public:
 	     state. 
 	     Returns change in guessed objective on next branch
   */
-  virtual double branch() {return branch(NULL);};
+  virtual double branch() {return branch(NULL);}
   /** \brief Return true if branch should fix variables
   */
   virtual bool boundBranch() const 
-  {return true;};
+  {return true;}
   /** Get the state of the branching object
       This is just the branch index
   */
   inline int branchIndex() const
-  {return branchIndex_;};
+  {return branchIndex_;}
 
   /** Set the state of the branching object.
   */
   inline void setBranchingIndex(int branchIndex)
-  {branchIndex_=branchIndex;};
+  {branchIndex_=branchIndex;}
 
   /// Current value
   inline double value() const
-  {return value_;};
+  {return value_;}
   
   /// Return pointer back to object which created
   inline const OsiObject * originalObject() const
-  {return  originalObject_;};
+  {return  originalObject_;}
   /// Set pointer back to object which created
   inline void setOriginalObject(const OsiObject * object)
-  {originalObject_=object;};
+  {originalObject_=object;}
   /// For debug
   int columnNumber() const;
   /** \brief Print something about branch - only if log level high
   */
-  virtual void print(const OsiSolverInterface * solver=NULL) const {};
+  virtual void print(const OsiSolverInterface * solver=NULL) const {}
 
 protected:
 
@@ -524,7 +524,7 @@ public:
 
   /// Set solver column number
   inline void setColumnNumber(int value)
-  {columnNumber_=value;};
+  {columnNumber_=value;}
   
   /** Column number if single column object -1 otherwise,
       so returns >= 0
@@ -534,13 +534,13 @@ public:
 
   /// Original bounds
   inline double originalLowerBound() const
-  { return originalLower_;};
+  { return originalLower_;}
   inline void setOriginalLowerBound(double value)
-  { originalLower_=value;};
+  { originalLower_=value;}
   inline double originalUpperBound() const
-  { return originalUpper_;};
+  { return originalUpper_;}
   inline void setOriginalUpperBound(double value)
-  { originalUpper_=value;};
+  { originalUpper_=value;}
   /** Reset variable bounds to their original values.
     Bounds may be tightened, so it may be good to be able to reset them to
     their original values.
@@ -556,7 +556,7 @@ public:
   virtual double downEstimate() const;
   /// Return true if knows how to deal with Pseudo Shadow Prices
   virtual bool canHandleShadowPrices() const
-  { return false;};
+  { return false;}
 protected:
   /// data
   /// Original lower bound
@@ -690,49 +690,49 @@ public:
   
   /// Number of members
   inline int numberMembers() const
-  {return numberMembers_;};
+  {return numberMembers_;}
 
   /// Members (indices in range 0 ... numberColumns-1)
   inline const int * members() const
-  {return members_;};
+  {return members_;}
 
   /// SOS type
   inline int sosType() const
-  {return sosType_;};
+  {return sosType_;}
 
   /// SOS type
   inline int setType() const
-  {return sosType_;};
+  {return sosType_;}
 
   /** Array of weights */
   inline const double * weights() const
-  { return weights_;};
+  { return weights_;}
 
   /** \brief Return true if object can take part in normal heuristics
   */
   virtual bool canDoHeuristics() const 
-  {return (sosType_==1&&integerValued_);};
+  {return (sosType_==1&&integerValued_);}
   /// Set whether set is integer valued or not
   inline void setIntegerValued(bool yesNo)
-  { integerValued_=yesNo;};
+  { integerValued_=yesNo;}
   /// Return true if knows how to deal with Pseudo Shadow Prices
   virtual bool canHandleShadowPrices() const
-  { return true;};
+  { return true;}
   /// Set number of members
   inline void setNumberMembers(int value)
-  {numberMembers_=value;};
+  {numberMembers_=value;}
 
   /// Members (indices in range 0 ... numberColumns-1)
   inline int * mutableMembers() const
-  {return members_;};
+  {return members_;}
 
   /// Set SOS type
   inline void setSosType(int value)
-  {sosType_=value;};
+  {sosType_=value;}
 
   /** Array of weights */
   inline  double * mutableWeights() const
-  { return weights_;};
+  { return weights_;}
 protected:
   /// data
 
@@ -834,7 +834,7 @@ public:
 
   /// Set solver column number
   inline void setColumnNumber(int value)
-  {columnNumber_=value;};
+  {columnNumber_=value;}
   
   /** Column number if single column object -1 otherwise,
       so returns >= 0
@@ -860,18 +860,18 @@ public:
   
   /// Original bounds
   inline double originalLowerBound() const
-  { return bound_[0];};
+  { return bound_[0];}
   inline double originalUpperBound() const
-  { return bound_[rangeType_*numberRanges_-1];};
+  { return bound_[rangeType_*numberRanges_-1];}
   /// Type - 1 points, 2 ranges
   inline int rangeType() const
-  { return rangeType_;};
+  { return rangeType_;}
   /// Number of points
   inline int numberRanges() const
-  { return numberRanges_;};
+  { return numberRanges_;}
   /// Ranges
   inline double * bound() const
-  { return bound_;};
+  { return bound_;}
   /**  Change column numbers after preprocessing
    */
   virtual void resetSequenceEtc(int numberColumns, const int * originalColumns);
@@ -882,11 +882,11 @@ public:
   virtual double downEstimate() const;
   /// Return true if knows how to deal with Pseudo Shadow Prices
   virtual bool canHandleShadowPrices() const
-  { return true;};
+  { return true;}
   /** \brief Return true if object can take part in normal heuristics
   */
   virtual bool canDoHeuristics() const 
-  {return false;};
+  {return false;}
 
 private:
   /// data

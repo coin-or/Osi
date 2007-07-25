@@ -33,7 +33,7 @@ public:
   
   /// Get application data
   inline void * getApplicationData() const
-  { return appData_;};
+  { return appData_;}
 protected:
     /// Pointer to user-defined data structure
     void * appData_;
@@ -61,10 +61,10 @@ public:
   
   /// Update solver 
   inline void setSolver(const OsiSolverInterface * solver)
-  { solver_ = solver;};
+  { solver_ = solver;}
   /// Update solver 
   inline void setSolver(const OsiSolverInterface & solver)
-  { solver_ = &solver;};
+  { solver_ = &solver;}
 
   /** returns 0 if no heuristic solution, 1 if valid solution
       with better objective value than one passed in
@@ -98,7 +98,7 @@ public:
       4 - normal solver but cuts are needed for integral solution    
   */
   inline void setSolverType(int value)
-  { solverType_=value;};
+  { solverType_=value;}
   /** gets solver type
       0 - normal LP solver
       1 - DW - may also return heuristic solutions
@@ -112,61 +112,61 @@ public:
       4 - normal solver but cuts are needed for integral solution    
   */
   inline int solverType() const
-  { return solverType_;};
+  { return solverType_;}
   /** Return true if getting solution may add cuts so hot start etc will
       be obsolete */
   inline bool solutionAddsCuts() const
-  { return solverType_==3;};
+  { return solverType_==3;}
   /// Return true if we should try cuts at root even if looks satisfied
   inline bool alwaysTryCutsAtRootNode() const
-  { return solverType_==4;};
+  { return solverType_==4;}
   /** Returns true if can use solver objective or feasible values,
       otherwise use mipBound etc */
   inline bool solverAccurate() const
-  { return solverType_==0||solverType_==2||solverType_==4;};
+  { return solverType_==0||solverType_==2||solverType_==4;}
   /// Returns true if can use reduced costs for fixing
   inline bool reducedCostsAccurate() const
-  { return solverType_==0||solverType_==4;};
+  { return solverType_==0||solverType_==4;}
   /// Get objective  (well mip bound)
   double mipBound() const;
   /// Returns true if node feasible
   bool mipFeasible() const;
   /// Set mip bound (only used for some solvers)
   inline void setMipBound(double value)
-  { mipBound_ = value;};
+  { mipBound_ = value;}
   /// Get objective value of saved solution
   inline double bestObjectiveValue() const
-  { return bestObjectiveValue_;};
+  { return bestObjectiveValue_;}
   /// Says whether we want to try cuts at all
   inline bool tryCuts() const
-  { return solverType_!=2;};
+  { return solverType_!=2;}
   /// Says whether we have a warm start (so can do strong branching)
   inline bool warmStart() const
-  { return solverType_!=2;};
+  { return solverType_!=2;}
   /** Get bit mask for odd actions of solvers
       1 - solution or bound arrays may move in mysterious ways e.g. cplex
       2 - solver may want bounds before branch
   */
   inline int extraCharacteristics() const
-  { return extraCharacteristics_;};
+  { return extraCharacteristics_;}
   /** Set bit mask for odd actions of solvers
       1 - solution or bound arrays may move in mysterious ways e.g. cplex
       2 - solver may want bounds before branch
   */
   inline void setExtraCharacteristics(int value)
-  { extraCharacteristics_=value;};
+  { extraCharacteristics_=value;}
   /// Pointer to lower bounds before branch (only if extraCharacteristics set)
   inline const double * beforeLower() const
-  { return beforeLower_;};
+  { return beforeLower_;}
   /// Set pointer to lower bounds before branch (only if extraCharacteristics set)
   inline void setBeforeLower(const double * array)
-  { beforeLower_ = array;};
+  { beforeLower_ = array;}
   /// Pointer to upper bounds before branch (only if extraCharacteristics set)
   inline const double * beforeUpper() const
-  { return beforeUpper_;};
+  { return beforeUpper_;}
   /// Set pointer to upper bounds before branch (only if extraCharacteristics set)
   inline void setBeforeUpper(const double * array)
-  { beforeUpper_ = array;};
+  { beforeUpper_ = array;}
 protected:
   /// Objective value of best solution (if there is one) (minimization)
   double bestObjectiveValue_;

@@ -132,9 +132,9 @@ public:
       to the row and column.  This is for non-linear problems.
   */
   inline void setNonLinearValue(double value)
-  { nonLinearValue_ = value;};
+  { nonLinearValue_ = value;}
   inline double nonLinearValue() const
-    { return nonLinearValue_;};
+    { return nonLinearValue_;}
   /** Whether we want to skip dual part of presolve etc.
       1 bit allows duplicate column processing on integer columns
       and dual stuff on integers
@@ -143,7 +143,7 @@ public:
       8 bit set stops x+y+z=1 transform
   */
   inline void setPresolveActions(int action)
-  { presolveActions_  = (presolveActions_&0xffff0000)|(action&0xffff);};
+  { presolveActions_  = (presolveActions_&0xffff0000)|(action&0xffff);}
 
 private:
   /*! Original model (solver interface loaded with the original problem).

@@ -570,10 +570,10 @@ public:
   virtual void setInteger(const int* indices, int len);
   /// Number of SOS sets
   inline int numberSOS() const
-  { return numberSOS_;};
+  { return numberSOS_;}
   /// SOS set info
   inline const CoinSet * setInfo() const
-  { return setInfo_;};
+  { return setInfo_;}
   /** \brief Identify integer variables and SOS and create corresponding objects.
   
     Record integer variables and create an OsiSimpleInteger object for each
@@ -837,7 +837,7 @@ public:
   /// Set language
   void newLanguage(CoinMessages::Language language);
   void setLanguage(CoinMessages::Language language)
-  {newLanguage(language);};
+  {newLanguage(language);}
     /// Create C++ lines to get to current state
     void generateCpp( FILE * fp);
   //@}
@@ -849,11 +849,11 @@ public:
   ClpSimplex * getModelPtr() const ;
   /// Get special options
   inline unsigned int specialOptions() const
-  { return specialOptions_;};
+  { return specialOptions_;}
   void setSpecialOptions(unsigned int value);
   /// Get scaling action option
   inline int cleanupScaling() const
-  { return cleanupScaling_;};
+  { return cleanupScaling_;}
   /** Set Scaling option
       When scaling is on it is possible that the scaled problem
       is feasible but the unscaled is not.  Clp returns a secondary
@@ -867,15 +867,15 @@ public:
       11,12,13 - as 1,2,3 but use primal
   */
   inline void setCleanupScaling(int value)
-  { cleanupScaling_=value;};
+  { cleanupScaling_=value;}
   /** Get smallest allowed element in cut.
       If smaller than this then ignored */
   inline double smallestElementInCut() const
-  { return smallestElementInCut_;};
+  { return smallestElementInCut_;}
   /** Set smallest allowed element in cut.
       If smaller than this then ignored */
   inline void setSmallestElementInCut(double value)
-  { smallestElementInCut_=value;};
+  { smallestElementInCut_=value;}
   /** Get smallest change in cut.
       If (upper-lower)*element < this then element is
       taken out and cut relaxed. 
@@ -883,7 +883,7 @@ public:
       this is assumed >= smallestElementInCut_
   */
   inline double smallestChangeInCut() const
-  { return smallestChangeInCut_;};
+  { return smallestChangeInCut_;}
   /** Set smallest change in cut.
       If (upper-lower)*element < this then element is
       taken out and cut relaxed. 
@@ -891,10 +891,10 @@ public:
       this is assumed >= smallestElementInCut_
   */
   inline void setSmallestChangeInCut(double value)
-  { smallestChangeInCut_=value;};
+  { smallestChangeInCut_=value;}
   /// Pass in initial solve options
   inline void setSolveOptions(const ClpSolve & options)
-  { solveOptions_ = options;};
+  { solveOptions_ = options;}
   //@}
   
   //---------------------------------------------------------------------------
@@ -982,12 +982,12 @@ public:
   void deleteScaleFactors();
   /// If doing fast hot start then ranges are computed
   inline const double * upRange() const
-  { return rowActivity_;};
+  { return rowActivity_;}
   inline const double * downRange() const
-  { return columnActivity_;};
+  { return columnActivity_;}
   /// Pass in range array
   inline void passInRanges(int * array)
-  { whichRange_=array;};
+  { whichRange_=array;}
   /// Pass in sos stuff from AMPl
   void setSOSData(int numberSOS,const char * type,
 		  const int * start,const int * indices, const double * weights=NULL);
@@ -1148,22 +1148,22 @@ public:
   void setOsiModel(OsiClpSolverInterface * model);
   /// Get model
   inline OsiClpSolverInterface * osiModel() const
-  { return osiModel_;};
+  { return osiModel_;}
   /// Set where from
   inline void setWhereFrom(int value)
-  { whereFrom_=value;};
+  { whereFrom_=value;}
   /// Get where from
   inline int whereFrom() const
-  { return whereFrom_;};
+  { return whereFrom_;}
   /// Set phase 
   inline void setPhase(int value)
-  { phase_=value;};
+  { phase_=value;}
   /// Get phase 
   inline int phase() const
-  { return phase_;};
+  { return phase_;}
   /// are we in trouble
   inline bool inTrouble() const
-  { return inTrouble_;};
+  { return inTrouble_;}
   //@}
   
   

@@ -35,13 +35,13 @@ public:
   bool feasibleOneWay(const OsiSolverInterface & solver) const;
   /// Starts
   inline const int * starts() const
-  { return start_;};
+  { return start_;}
   /// Which variables
   inline const int * which() const
-  { return indices_;};
+  { return indices_;}
   /// Bounds
   inline const double * bounds() const
-  { return bound_;};
+  { return bound_;}
   //@}
   
   
@@ -97,19 +97,19 @@ public:
   
   /// Objective value (as minimization)
   inline double objectiveValue() const
-  { return objectiveValue_;};
+  { return objectiveValue_;}
 
   /// Primal solution
   inline const double * primalSolution() const
-  { return primalSolution_;};
+  { return primalSolution_;}
 
   /// Dual solution
   inline const double * dualSolution() const
-  { return dualSolution_;};
+  { return dualSolution_;}
 
   /// Extra fixed
   inline const OsiSolverBranch & fixed() const
-  { return fixed_;};
+  { return fixed_;}
   //@}
   
   

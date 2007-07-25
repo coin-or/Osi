@@ -103,76 +103,76 @@ public:
 				  int status);
   /// Objective value for feasible solution
   inline double goodObjectiveValue() const
-  { return goodObjectiveValue_;};
+  { return goodObjectiveValue_;}
   /// Estimate of up change or change on chosen if n-way
   inline double upChange() const
-  { return upChange_;};
+  { return upChange_;}
   /// Estimate of down change or max change on other possibilities if n-way
   inline double downChange() const
-  { return downChange_;};
+  { return downChange_;}
   /// Good solution - deleted by finalize
   inline const double * goodSolution() const
-  { return goodSolution_;};
+  { return goodSolution_;}
   /// Index of chosen object
   inline int bestObjectIndex() const
-  { return bestObjectIndex_;};
+  { return bestObjectIndex_;}
   /// Set index of chosen object
   inline void setBestObjectIndex(int value)
-  { bestObjectIndex_ = value;};
+  { bestObjectIndex_ = value;}
   /// Preferred way of chosen object
   inline int bestWhichWay() const
-  { return bestWhichWay_;};
+  { return bestWhichWay_;}
   /// Set preferred way of chosen object
   inline void setBestWhichWay(int value)
-  { bestWhichWay_ = value;};
+  { bestWhichWay_ = value;}
   /// Index of forced object
   inline int firstForcedObjectIndex() const
-  { return firstForcedObjectIndex_;};
+  { return firstForcedObjectIndex_;}
   /// Set index of forced object
   inline void setFirstForcedObjectIndex(int value)
-  { firstForcedObjectIndex_ = value;};
+  { firstForcedObjectIndex_ = value;}
   /// Preferred way of forced object
   inline int firstForcedWhichWay() const
-  { return firstForcedWhichWay_;};
+  { return firstForcedWhichWay_;}
   /// Set preferred way of forced object
   inline void setFirstForcedWhichWay(int value)
-  { firstForcedWhichWay_ = value;};
+  { firstForcedWhichWay_ = value;}
   /// Get the number of objects unsatisfied at this node - accurate on first pass
   inline int numberUnsatisfied() const
-  {return numberUnsatisfied_;};
+  {return numberUnsatisfied_;}
   /// Number of objects to choose for strong branching
   inline int numberStrong() const
-  { return numberStrong_;};
+  { return numberStrong_;}
   /// Set number of objects to choose for strong branching
   inline void setNumberStrong(int value)
-  { numberStrong_ = value;};
+  { numberStrong_ = value;}
   /// Number left on strong list
   inline int numberOnList() const
-  { return numberOnList_;};
+  { return numberOnList_;}
   /// Number of strong branches actually done 
   inline int numberStrongDone() const
-  { return numberStrongDone_;};
+  { return numberStrongDone_;}
   /// Number of strong iterations actually done 
   inline int numberStrongIterations() const
-  { return numberStrongIterations_;};
+  { return numberStrongIterations_;}
   /// Number of strong branches which changed bounds 
   inline int numberStrongFixed() const
-  { return numberStrongFixed_;};
+  { return numberStrongFixed_;}
   /// List of candidates
   inline const int * candidates() const
-  { return list_;};
+  { return list_;}
   /// Trust results from strong branching for changing bounds
   inline bool trustStrongForBound() const
-  { return trustStrongForBound_;};
+  { return trustStrongForBound_;}
   /// Set trust results from strong branching for changing bounds
   inline void setTrustStrongForBound(bool yesNo)
-  { trustStrongForBound_ = yesNo;};
+  { trustStrongForBound_ = yesNo;}
   /// Trust results from strong branching for valid solution
   inline bool trustStrongForSolution() const
-  { return trustStrongForSolution_;};
+  { return trustStrongForSolution_;}
   /// Set trust results from strong branching for valid solution
   inline void setTrustStrongForSolution(bool yesNo)
-  { trustStrongForSolution_ = yesNo;};
+  { trustStrongForSolution_ = yesNo;}
   /// Set solver and redo arrays
   void setSolver (const OsiSolverInterface * solver);
   /** Return status - 
@@ -187,9 +187,9 @@ public:
      If we have a solution then we can pick up from goodObjectiveValue() and goodSolution()
   */
   inline int status() const
-  { return status_;};
+  { return status_;}
   inline void setStatus(int value)
-  { status_ = value;};
+  { status_ = value;}
 
 
 protected:
@@ -309,10 +309,10 @@ public:
 				  int status);
   /// Number of times before trusted
   inline int numberBeforeTrusted() const
-  { return numberBeforeTrusted_;};
+  { return numberBeforeTrusted_;}
   /// Set number of times before trusted
   inline void setNumberBeforeTrusted(int value)
-  { numberBeforeTrusted_ = value;};
+  { numberBeforeTrusted_ = value;}
 
   /** Pseudo Shadow Price mode
       0 - off
@@ -321,10 +321,10 @@ public:
       3 - use even if trusted
   */
   inline int shadowPriceMode() const
-  { return shadowPriceMode_;};
+  { return shadowPriceMode_;}
   /// Set Shadow price mode
   inline void setShadowPriceMode(int value)
-  { shadowPriceMode_ = value;};
+  { shadowPriceMode_ = value;}
 
 
 protected:
@@ -384,41 +384,41 @@ public:
 			 OsiChooseVariable * choose);
   /// Original objective value
   inline double originalObjectiveValue() const
-  { return originalObjectiveValue_;};
+  { return originalObjectiveValue_;}
   /// Up change  - invalid if n-way
   inline double upChange() const
-  { assert (branchingObject_->numberBranches()==2); return changes_[1];};
+  { assert (branchingObject_->numberBranches()==2); return changes_[1];}
   /// Down change  - invalid if n-way
   inline double downChange() const
-  { assert (branchingObject_->numberBranches()==2); return changes_[0];};
+  { assert (branchingObject_->numberBranches()==2); return changes_[0];}
   /// Change on way k
   inline double change(int k) const
-  { return changes_[k];};
+  { return changes_[k];}
 
   /// Up iteration count  - invalid if n-way
   inline int upIterationCount() const
-  { assert (branchingObject_->numberBranches()==2); return iterationCounts_[1];};
+  { assert (branchingObject_->numberBranches()==2); return iterationCounts_[1];}
   /// Down iteration count  - invalid if n-way
   inline int downIterationCount() const
-  { assert (branchingObject_->numberBranches()==2); return iterationCounts_[0];};
+  { assert (branchingObject_->numberBranches()==2); return iterationCounts_[0];}
   /// Iteration count on way k
   inline int iterationCount(int k) const
-  { return iterationCounts_[k];};
+  { return iterationCounts_[k];}
 
   /// Up status  - invalid if n-way
   inline int upStatus() const
-  { assert (branchingObject_->numberBranches()==2); return statuses_[1];};
+  { assert (branchingObject_->numberBranches()==2); return statuses_[1];}
   /// Down status  - invalid if n-way
   inline int downStatus() const
-  { assert (branchingObject_->numberBranches()==2); return statuses_[0];};
+  { assert (branchingObject_->numberBranches()==2); return statuses_[0];}
   /// Status on way k
   inline int status(int k) const
-  { return statuses_[k];};
+  { return statuses_[k];}
   /// Branching object
   inline OsiBranchingObject * branchingObject() const
   { return branchingObject_;}
   inline int whichObject() const
-  { return whichObject_;};
+  { return whichObject_;}
 
 protected:
   // Data

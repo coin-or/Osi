@@ -711,7 +711,7 @@ private:
 			   const VOL_dvector& x, double& heur_val) {
       heur_val = DBL_MAX;
       return 0;
-    };
+    }
   //@}
 
   //---------------------------------------------------------------------------

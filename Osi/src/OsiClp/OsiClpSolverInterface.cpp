@@ -5605,6 +5605,9 @@ OsiClpDisasterHandler::intoSimplex()
 bool
 OsiClpDisasterHandler::check() const
 {
+  // Exit if really large number of iterations
+  if (model_->numberIterations()> 100000+100*(model_->numberRows()+model_->numberColumns()))
+    return true;
   if ((whereFrom_&2)==0||!model_->nonLinearCost()) {
     // dual
     if (model_->numberIterations()<model_->numberRows()+1000) {
@@ -5638,7 +5641,7 @@ OsiClpDisasterHandler::check() const
       return false;
     } else if (phase_<2) {
       if (model_->numberIterations()> 2*model_->numberRows()+2000+
-	  model_->numberRows()/2&&
+	  model_->numberColumns()/2&&
 	  model_->numberDualInfeasibilitiesWithoutFree()>0&&
 	  model_->numberPrimalInfeasibilities()>0&&
 	  model_->nonLinearCost()->changeInCost()>1.0e8) {

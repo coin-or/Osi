@@ -4,7 +4,7 @@
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
 #endif
- 
+
 #include "OsiConfig.h"
 
 #ifdef NDEBUG
@@ -120,7 +120,7 @@ void testingMessage( const char * const msg )
 // Vector comparison utility.
 //#############################################################################
 
-// A helper function to compare the equivalence of two vectors 
+// A helper function to compare the equivalence of two vectors
 static bool
 equivalentVectors(const OsiSolverInterface * si1,
 		  const OsiSolverInterface * si2,
@@ -133,11 +133,11 @@ equivalentVectors(const OsiSolverInterface * si1,
   CoinRelFltEq eq(tol);
   int i;
   for ( i=0; i<size; i++ ) {
-    
+
     // If both are equal to infinity then iterate
     if ( fabs(v1[i])==si1->getInfinity() && fabs(v2[i])==si2->getInfinity() )
        continue;
-    
+
     // Test to see if equal
     if ( !eq(v1[i],v2[i]) ) {
       std::cerr <<"eq " <<i <<" " <<v1[i] <<" " <<v2[i] <<std::endl;
@@ -1317,7 +1317,7 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
         std::cout << "ERROR! " ;
 	errCnt++ ;
 	std::cout
-	  << "Column " << j << " is " << colNames[j] 
+	  << "Column " << j << " is " << colNames[j]
 	  << "\" expected \"" << exmip1ColNames[j] << "\"." << std::endl ; } }
     if (!ok)
     { failureMessage(solverName,
@@ -1440,7 +1440,7 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
       std::cout << "ERROR! " ;
       errCnt++ ;
       std::cout
-	<< "Column " << j << " is " << colNames[j] 
+	<< "Column " << j << " is " << colNames[j]
 	<< "\" expected \"" << exmip1ColNames[j] << "\"." << std::endl ; } }
   if (!ok)
   { failureMessage(solverName,
@@ -1770,7 +1770,7 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
       std::cout << "ERROR! " ;
       errCnt++ ;
       std::cout
-	<< "Column " << j << " is " << colNames[j] 
+	<< "Column " << j << " is " << colNames[j]
 	<< "\" expected \"" << expected << "\"." << std::endl ; } }
   if (!ok)
   { failureMessage(solverName,"incorrect column names, full names.") ;
@@ -1820,11 +1820,11 @@ void testSettingSolutions (OsiSolverInterface &proto)
   Create dummy solution vectors.
 */
   double *dummyColSol = new double[n] ;
-  for (i = 0 ; i < n ; i++) 
+  for (i = 0 ; i < n ; i++)
   { dummyColSol[i] = i + .5 ; }
 
   double *dummyRowSol = new double[m] ;
-  for (i = 0 ; i < m ; i++ ) 
+  for (i = 0 ; i < m ; i++ )
   { dummyRowSol[i] = i - .5 ; }
 
 /*
@@ -1841,7 +1841,7 @@ void testSettingSolutions (OsiSolverInterface &proto)
     allOK = false ; }
 
   bool ok = true ;
-  for (i = 0 ; i < n ;  i++) 
+  for (i = 0 ; i < n ;  i++)
   { mval = rowVec[i] ;
     rval = dummyColSol[i] ;
     if (mval != rval)
@@ -1856,7 +1856,7 @@ void testSettingSolutions (OsiSolverInterface &proto)
 	"Incorrect value returned for column (primal) solution set"
 	" with setColSolution.") ;
     allOK = false ; }
-  
+
   si->setRowPrice(dummyRowSol) ;
   colVec = si->getRowPrice() ;
   if (dummyRowSol == colVec)
@@ -1865,7 +1865,7 @@ void testSettingSolutions (OsiSolverInterface &proto)
     allOK = false ; }
 
   ok = true ;
-  for (i = 0 ; i < m ; i++) 
+  for (i = 0 ; i < m ; i++)
   { mval = colVec[i] ;
     cval = dummyRowSol[i] ;
     if (mval != cval)
@@ -1984,7 +1984,7 @@ bool testHintParam(OsiSolverInterface * si, int k, bool sense,
   Tests for proper behaviour of [set,get]HintParam methods. The initial get
   tests the return value to see if the hint is implemented; the values
   returned for sense and strength are not checked.
-  
+
   If the hint is implemented, a pair of set/get calls is performed at the
   strength specified by the parameter. The set can return true or, at
   strength OsiForceDo, throw an exception if the solver cannot comply. The
@@ -2036,7 +2036,7 @@ bool testHintParam(OsiSolverInterface * si, int k, bool sense,
       //	": " << thrownErr.message() << std::endl ;
       (*throws)++ ;
       ret = !(strength == OsiForceDo) ; } }
-  
+
   return ret ; }
 
 
@@ -2109,8 +2109,969 @@ void testObjOffsetAndLimits (const OsiSolverInterface *emptySi,
       "false negative, isDualObjectiveLimitReached.") ; }
 
   delete si ;
-  
+
   return ; }
+
+
+/*
+  Test the writeMps and writeMpsNative functions by loading a problem,
+  writing it out to a file, reloading it, and solving.
+  
+  Implicitly assumes readMps has already been tested.
+
+  fn should be the path to exmip1.
+*/
+
+void testWriteMps (const OsiSolverInterface *emptySi, std::string fn)
+
+{
+  testingMessage("Testing writeMps and writeMpsNative.") ;
+
+  CoinRelFltEq eq(1.0e-8) ;
+
+  OsiSolverInterface *si1 = emptySi->clone();
+  OsiSolverInterface *si2 = emptySi->clone();
+  OsiSolverInterface *si3 = emptySi->clone();
+/*
+  Sanity test. Read in exmip1 and do an initialSolve.
+*/
+  si1->readMps(fn.c_str(),"mps");
+
+  bool solved = true;
+  try {
+     si1->initialSolve();
+  }
+  catch (CoinError e) {
+     if (e.className() != "OsiVolSolverInterface") {
+	failureMessage(*si1,"Couldn't load and solve LP in testWriteMps!\n");
+	abort();
+     }
+     solved = false;
+  }
+  double soln = si1->getObjValue();
+/*
+  Write a test output file with writeMpsNative, then read and solve. See if
+  we get the right answer.
+  
+  FIXME: Really, this test should verify values --- Vol could participate in
+  that (lh, 070726).
+*/
+  si1->writeMpsNative("test.out",NULL,NULL);
+  si2->readMps("test.out","");
+  if (solved) {
+    try {
+      si2->initialSolve();
+    }
+    catch (CoinError e) {
+      failureMessage(*si2,
+	 "Couldn't load and solve mps file written by writeMpsNative!\n");
+      abort();
+      }
+    assert(eq(soln,si2->getObjValue()));
+  }
+/*
+  Repeat with writeMps.
+*/
+  si1->writeMps("test2","out");
+  si3->readMps("test2.out","");
+  if (solved) {
+    try {
+      si3->initialSolve();
+    }
+    catch (CoinError e) {
+      failureMessage(*si3,
+	 "Couldn't load and solve mps file written by writeMps!\n");
+      abort();
+      }
+    assert(eq(soln,si3->getObjValue()));
+  }
+/*
+  Clean up.
+*/
+  delete si1;
+  delete si2;
+  delete si3;
+}
+
+
+/*
+  Test writeLp and writeLpNative. Same sequence as for testWriteMps, above.
+  Implicitly assumes readLp has been tested, but in fact that's not the case at
+  present (lh, 070726).
+*/
+void testWriteLp (const OsiSolverInterface *emptySi, std::string fn)
+
+{
+  testingMessage("Testing writeLp and writeLpNative.") ;
+
+  CoinRelFltEq eq(1.0e-8) ;
+
+  OsiSolverInterface * si1 = emptySi->clone();
+  OsiSolverInterface * si2 = emptySi->clone();
+  OsiSolverInterface * si3 = emptySi->clone();
+
+  si1->readMps(fn.c_str(),"mps");
+  bool solved = true;
+  try {
+     si1->initialSolve();
+  }
+  catch (CoinError e) {
+    if (e.className() != "OsiVolSolverInterface") {
+      printf("Couldn't solve initial LP in testing WriteMps\n");
+      abort();
+    }
+    solved = false;
+  }
+  double soln = si1->getObjValue();
+
+  si1->writeLpNative("test.lp",NULL,NULL,1.0e-9,10,8);
+  si2->readLp("test.lp");
+  if (solved) {
+    try {
+      si2->initialSolve();
+    }
+    catch (CoinError e) {
+      failureMessage(*si2,
+	 "Couldn't load and solve Lp file written by writeLpNative!\n");
+      abort();
+      }
+    assert(eq(soln,si2->getObjValue()));
+  }
+
+  si1->writeLp("test2");
+  si3->readLp("test2.lp");
+  if (solved) {
+    try {
+      si3->initialSolve();
+    }
+    catch (CoinError e) {
+      failureMessage(*si3,
+	 "Couldn't load and solve Lp file written by writeLp!\n");
+      abort();
+      }
+    assert(eq(soln,si3->getObjValue()));
+  }
+
+  delete si1;
+  delete si2;
+  delete si3;
+}
+
+/*
+  Test load and assign problem. The first batch of tests loads up eight
+  solvers, using each variable of loadProblem and assignProblem, runs
+  initialSolve for all, then checks all values for all variants.
+*/
+
+void testLoadAndAssignProblem (const OsiSolverInterface *emptySi,
+			       const OsiSolverInterface *exmip1Si)
+
+{
+  CoinRelFltEq eq(1.0e-8) ;
+/*
+  Test each variant of loadProblem and assignProblem. Clone a whack of solvers
+  and use one for each variant. Then run initialSolve() on each solver. Then
+  check that all values are as they should be.
+
+  Note that we are not testing the variants that supply the matrix as a set
+  of vectors (row/col starts, col/row indices, coefficients). To be really
+  thorough, we should do another eight ...
+*/
+  {
+    testingMessage("Testing loadProblem and assignProblem methods.") ;
+    OsiSolverInterface * base = exmip1Si->clone();
+    OsiSolverInterface *  si1 = emptySi->clone();
+    OsiSolverInterface *  si2 = emptySi->clone();
+    OsiSolverInterface *  si3 = emptySi->clone();
+    OsiSolverInterface *  si4 = emptySi->clone();
+    OsiSolverInterface *  si5 = emptySi->clone();
+    OsiSolverInterface *  si6 = emptySi->clone();
+    OsiSolverInterface *  si7 = emptySi->clone();
+    OsiSolverInterface *  si8 = emptySi->clone();
+
+    si1->loadProblem(*base->getMatrixByCol(),
+		     base->getColLower(),base->getColUpper(),
+		     base->getObjCoefficients(),
+		     base->getRowSense(),base->getRightHandSide(),
+		     base->getRowRange());
+    si2->loadProblem(*base->getMatrixByRow(),
+		     base->getColLower(),base->getColUpper(),
+		     base->getObjCoefficients(),
+		     base->getRowSense(),base->getRightHandSide(),
+		     base->getRowRange());
+    si3->loadProblem(*base->getMatrixByCol(),
+		     base->getColLower(),base->getColUpper(),
+		     base->getObjCoefficients(),
+		     base->getRowLower(),base->getRowUpper() );
+    si4->loadProblem(*base->getMatrixByCol(),
+		     base->getColLower(),base->getColUpper(),
+		     base->getObjCoefficients(),
+		     base->getRowLower(),base->getRowUpper() );
+    {
+      double objOffset;
+      base->getDblParam(OsiObjOffset,objOffset);
+      si1->setDblParam(OsiObjOffset,objOffset);
+      si2->setDblParam(OsiObjOffset,objOffset);
+      si3->setDblParam(OsiObjOffset,objOffset);
+      si4->setDblParam(OsiObjOffset,objOffset);
+      si5->setDblParam(OsiObjOffset,objOffset);
+      si6->setDblParam(OsiObjOffset,objOffset);
+      si7->setDblParam(OsiObjOffset,objOffset);
+      si8->setDblParam(OsiObjOffset,objOffset);
+    }
+/*
+  Assign methods should set their parameters to NULL, so check for that.
+*/
+    CoinPackedMatrix * pm = new CoinPackedMatrix(*base->getMatrixByCol());
+    double * clb = new double[base->getNumCols()];
+    std::copy(base->getColLower(),
+	      base->getColLower()+base->getNumCols(),clb);
+    double * cub = new double[base->getNumCols()];
+    std::copy(base->getColUpper(),
+	      base->getColUpper()+base->getNumCols(),cub);
+    double * objc = new double[base->getNumCols()];
+    std::copy(base->getObjCoefficients(),
+	      base->getObjCoefficients()+base->getNumCols(),objc);
+    double * rlb = new double[base->getNumRows()];
+    std::copy(base->getRowLower(),
+	      base->getRowLower()+base->getNumRows(),rlb);
+    double * rub = new double[base->getNumRows()];
+    std::copy(base->getRowUpper(),
+	      base->getRowUpper()+base->getNumRows(),rub);
+    si5->assignProblem(pm,clb,cub,objc,rlb,rub);
+    assert(pm==NULL);
+    assert(clb==NULL);
+    assert(cub==NULL);
+    assert(objc==NULL);
+    assert(rlb==NULL);
+    assert(rub==NULL);
+
+    pm = new CoinPackedMatrix(*base->getMatrixByRow());
+    clb = new double[base->getNumCols()];
+    std::copy(base->getColLower(),
+	      base->getColLower()+base->getNumCols(),clb);
+    cub = new double[base->getNumCols()];
+    std::copy(base->getColUpper(),
+	      base->getColUpper()+base->getNumCols(),cub);
+    objc = new double[base->getNumCols()];
+    std::copy(base->getObjCoefficients(),
+	      base->getObjCoefficients()+base->getNumCols(),objc);
+    rlb = new double[base->getNumRows()];
+    std::copy(base->getRowLower(),
+	      base->getRowLower()+base->getNumRows(),rlb);
+    rub = new double[base->getNumRows()];
+    std::copy(base->getRowUpper(),
+	      base->getRowUpper()+base->getNumRows(),rub);
+    si6->assignProblem(pm,clb,cub,objc,rlb,rub);
+    assert(pm==NULL);
+    assert(clb==NULL);
+    assert(cub==NULL);
+    assert(objc==NULL);
+    assert(rlb==NULL);
+    assert(rub==NULL);
+
+    pm = new CoinPackedMatrix(*base->getMatrixByCol());
+    clb = new double[base->getNumCols()];
+    std::copy(base->getColLower(),
+	      base->getColLower()+base->getNumCols(),clb);
+    cub = new double[base->getNumCols()];
+    std::copy(base->getColUpper(),
+	      base->getColUpper()+base->getNumCols(),cub);
+    objc = new double[base->getNumCols()];
+    std::copy(base->getObjCoefficients(),
+	      base->getObjCoefficients()+base->getNumCols(),objc);
+    char * rsen = new char[base->getNumRows()];
+    std::copy(base->getRowSense(),
+	      base->getRowSense()+base->getNumRows(),rsen);
+    double * rhs = new double[base->getNumRows()];
+    std::copy(base->getRightHandSide(),
+	      base->getRightHandSide()+base->getNumRows(),rhs);
+    double * rng = new double[base->getNumRows()];
+    std::copy(base->getRowRange(),
+	      base->getRowRange()+base->getNumRows(),rng);
+    si7->assignProblem(pm,clb,cub,objc,rsen,rhs,rng);
+    assert(pm==NULL);
+    assert(clb==NULL);
+    assert(cub==NULL);
+    assert(objc==NULL);
+    assert(rsen==NULL);
+    assert(rhs==NULL);
+    assert(rng==NULL);
+
+    pm = new CoinPackedMatrix(*base->getMatrixByCol());
+    clb = new double[base->getNumCols()];
+    std::copy(base->getColLower(),
+	      base->getColLower()+base->getNumCols(),clb);
+    cub = new double[base->getNumCols()];
+    std::copy(base->getColUpper(),
+	      base->getColUpper()+base->getNumCols(),cub);
+    objc = new double[base->getNumCols()];
+    std::copy(base->getObjCoefficients(),
+	      base->getObjCoefficients()+base->getNumCols(),objc);
+    rsen = new char[base->getNumRows()];
+    std::copy(base->getRowSense(),
+	      base->getRowSense()+base->getNumRows(),rsen);
+    rhs = new double[base->getNumRows()];
+    std::copy(base->getRightHandSide(),
+	      base->getRightHandSide()+base->getNumRows(),rhs);
+    rng = new double[base->getNumRows()];
+    std::copy(base->getRowRange(),
+	      base->getRowRange()+base->getNumRows(),rng);
+    si8->assignProblem(pm,clb,cub,objc,rsen,rhs,rng);
+    assert(pm==NULL);
+    assert(clb==NULL);
+    assert(cub==NULL);
+    assert(objc==NULL);
+    assert(rsen==NULL);
+    assert(rhs==NULL);
+    assert(rng==NULL);
+
+    // Create an indices vector
+    CoinPackedVector basePv,pv;
+    assert(base->getNumCols()<10);
+    assert(base->getNumRows()<10);
+    int indices[10];
+    int i;
+    for (i=0; i<10; i++) indices[i]=i;
+
+    // Test solve methods.
+    try {
+      base->initialSolve();
+      si1->initialSolve();
+      si2->initialSolve();
+      si3->initialSolve();
+      si4->initialSolve();
+      si5->initialSolve();
+      si6->initialSolve();
+      si7->initialSolve();
+      si8->initialSolve();
+    }
+    catch (CoinError e) {
+#ifdef COIN_HAS_VOL
+      // Vol solver interface is expected to throw
+      // an error if the data has a ranged row.
+	
+      // Check that using Vol SI
+      OsiVolSolverInterface * vsi =
+	dynamic_cast<OsiVolSolverInterface *>(base);
+      assert( vsi != NULL );
+	
+      // Test that there is non-zero range
+      basePv.setFull(base->getNumRows(),base->getRowRange());
+      pv.setConstant( base->getNumRows(), indices, 0.0 );
+      assert(!basePv.isEquivalent(pv));
+#else
+      assert(0==1);
+#endif
+    }
+
+    // Test collower
+    basePv.setVector(base->getNumCols(),indices,base->getColLower());
+    pv.setVector( si1->getNumCols(),indices, si1->getColLower());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si2->getNumCols(),indices, si2->getColLower());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si3->getNumCols(),indices, si3->getColLower());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si4->getNumCols(),indices, si4->getColLower());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si5->getNumCols(),indices, si5->getColLower());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si6->getNumCols(),indices, si6->getColLower());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si7->getNumCols(),indices, si7->getColLower());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si8->getNumCols(),indices, si8->getColLower());
+    assert(basePv.isEquivalent(pv));
+
+    // Test colupper
+    basePv.setVector(base->getNumCols(),indices,base->getColUpper());
+    pv.setVector( si1->getNumCols(),indices, si1->getColUpper());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si2->getNumCols(),indices, si2->getColUpper());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si3->getNumCols(),indices, si3->getColUpper());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si4->getNumCols(),indices, si4->getColUpper());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si5->getNumCols(),indices, si5->getColUpper());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si6->getNumCols(),indices, si6->getColUpper());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si7->getNumCols(),indices, si7->getColUpper());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si8->getNumCols(),indices, si8->getColUpper());
+    assert(basePv.isEquivalent(pv));
+
+    // Test getObjCoefficients
+    basePv.setVector(base->getNumCols(),indices,base->getObjCoefficients());
+    pv.setVector( si1->getNumCols(),indices, si1->getObjCoefficients());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si2->getNumCols(),indices, si2->getObjCoefficients());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si3->getNumCols(),indices, si3->getObjCoefficients());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si4->getNumCols(),indices, si4->getObjCoefficients());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si5->getNumCols(),indices, si5->getObjCoefficients());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si6->getNumCols(),indices, si6->getObjCoefficients());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si7->getNumCols(),indices, si7->getObjCoefficients());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si8->getNumCols(),indices, si8->getObjCoefficients());
+    assert(basePv.isEquivalent(pv));
+	
+    // Test rowrhs
+    basePv.setFull(base->getNumRows(),base->getRightHandSide());
+    pv.setFull( si1->getNumRows(), si1->getRightHandSide());
+    assert(basePv.isEquivalent(pv));
+    pv.setFull( si2->getNumRows(), si2->getRightHandSide());
+    assert(basePv.isEquivalent(pv));
+    pv.setFull( si3->getNumRows(), si3->getRightHandSide());
+    assert(basePv.isEquivalent(pv));
+    pv.setFull( si4->getNumRows(), si4->getRightHandSide());
+    assert(basePv.isEquivalent(pv));
+    pv.setFull( si5->getNumRows(), si5->getRightHandSide());
+    assert(basePv.isEquivalent(pv));
+    pv.setFull( si6->getNumRows(), si6->getRightHandSide());
+    assert(basePv.isEquivalent(pv));
+    pv.setFull( si7->getNumRows(), si7->getRightHandSide());
+    assert(basePv.isEquivalent(pv));
+    pv.setFull( si8->getNumRows(), si8->getRightHandSide());
+    assert(basePv.isEquivalent(pv));
+
+    // Test rowrange
+    basePv.setFull(base->getNumRows(),base->getRowRange());
+    pv.setFull( si1->getNumRows(), si1->getRowRange());
+    assert(basePv.isEquivalent(pv));
+    pv.setFull( si2->getNumRows(), si2->getRowRange());
+    assert(basePv.isEquivalent(pv));
+    pv.setFull( si3->getNumRows(), si3->getRowRange());
+    assert(basePv.isEquivalent(pv));
+    pv.setFull( si4->getNumRows(), si4->getRowRange());
+    assert(basePv.isEquivalent(pv));
+    pv.setFull( si5->getNumRows(), si5->getRowRange());
+    assert(basePv.isEquivalent(pv));
+    pv.setFull( si6->getNumRows(), si6->getRowRange());
+    assert(basePv.isEquivalent(pv));
+    pv.setFull( si7->getNumRows(), si7->getRowRange());
+    assert(basePv.isEquivalent(pv));
+    pv.setFull( si8->getNumRows(), si8->getRowRange());
+    assert(basePv.isEquivalent(pv));
+
+    // Test row sense
+    {
+      const char * cb = base->getRowSense();
+      const char * c1 = si1->getRowSense();
+      const char * c2 = si2->getRowSense();
+      const char * c3 = si3->getRowSense();
+      const char * c4 = si4->getRowSense();
+      const char * c5 = si5->getRowSense();
+      const char * c6 = si6->getRowSense();
+      const char * c7 = si7->getRowSense();
+      const char * c8 = si8->getRowSense();
+      int nr = base->getNumRows();
+      for ( i=0; i<nr; i++ ) {
+	assert( cb[i]==c1[i] );
+	assert( cb[i]==c2[i] );
+	assert( cb[i]==c3[i] );
+	assert( cb[i]==c4[i] );
+	assert( cb[i]==c5[i] );
+	assert( cb[i]==c6[i] );
+	assert( cb[i]==c7[i] );
+	assert( cb[i]==c8[i] );
+      }
+    }
+
+    // Test rowlower
+    basePv.setVector(base->getNumRows(),indices,base->getRowLower());
+    pv.setVector( si1->getNumRows(),indices, si1->getRowLower());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si2->getNumRows(),indices, si2->getRowLower());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si3->getNumRows(),indices, si3->getRowLower());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si4->getNumRows(),indices, si4->getRowLower());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si5->getNumRows(),indices, si5->getRowLower());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si6->getNumRows(),indices, si6->getRowLower());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si7->getNumRows(),indices, si7->getRowLower());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si8->getNumRows(),indices, si8->getRowLower());
+    assert(basePv.isEquivalent(pv));
+
+    // Test rowupper
+    basePv.setVector(base->getNumRows(),indices,base->getRowUpper());
+    pv.setVector( si1->getNumRows(),indices, si1->getRowUpper());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si2->getNumRows(),indices, si2->getRowUpper());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si3->getNumRows(),indices, si3->getRowUpper());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si4->getNumRows(),indices, si4->getRowUpper());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si5->getNumRows(),indices, si5->getRowUpper());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si6->getNumRows(),indices, si6->getRowUpper());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si7->getNumRows(),indices, si7->getRowUpper());
+    assert(basePv.isEquivalent(pv));
+    pv.setVector( si8->getNumRows(),indices, si8->getRowUpper());
+    assert(basePv.isEquivalent(pv));
+
+    // Test Constraint Matrix
+    assert( base->getMatrixByCol()->isEquivalent(*si1->getMatrixByCol()) );
+    assert( base->getMatrixByRow()->isEquivalent(*si1->getMatrixByRow()) );
+    assert( base->getMatrixByCol()->isEquivalent(*si2->getMatrixByCol()) );
+    assert( base->getMatrixByRow()->isEquivalent(*si2->getMatrixByRow()) );
+    assert( base->getMatrixByCol()->isEquivalent(*si3->getMatrixByCol()) );
+    assert( base->getMatrixByRow()->isEquivalent(*si3->getMatrixByRow()) );
+    assert( base->getMatrixByCol()->isEquivalent(*si4->getMatrixByCol()) );
+    assert( base->getMatrixByRow()->isEquivalent(*si4->getMatrixByRow()) );
+    assert( base->getMatrixByCol()->isEquivalent(*si5->getMatrixByCol()) );
+    assert( base->getMatrixByRow()->isEquivalent(*si5->getMatrixByRow()) );
+    assert( base->getMatrixByCol()->isEquivalent(*si6->getMatrixByCol()) );
+    assert( base->getMatrixByRow()->isEquivalent(*si6->getMatrixByRow()) );
+    assert( base->getMatrixByCol()->isEquivalent(*si7->getMatrixByCol()) );
+    assert( base->getMatrixByRow()->isEquivalent(*si7->getMatrixByRow()) );
+    assert( base->getMatrixByCol()->isEquivalent(*si8->getMatrixByCol()) );
+    assert( base->getMatrixByRow()->isEquivalent(*si8->getMatrixByRow()) );
+
+    // Test Objective Value
+    assert( eq(base->getObjValue(),si1->getObjValue()) );
+    assert( eq(base->getObjValue(),si2->getObjValue()) );
+    assert( eq(base->getObjValue(),si3->getObjValue()) );
+    assert( eq(base->getObjValue(),si4->getObjValue()) );
+    assert( eq(base->getObjValue(),si5->getObjValue()) );
+    assert( eq(base->getObjValue(),si6->getObjValue()) );
+    assert( eq(base->getObjValue(),si7->getObjValue()) );
+    assert( eq(base->getObjValue(),si8->getObjValue()) );
+
+    // Clean-up
+    delete si8;
+    delete si7;
+    delete si6;
+    delete si5;
+    delete si4;
+    delete si3;
+    delete si2;
+    delete si1;
+    delete base;
+  }
+/*
+  The OSI interface spec says any of the parameters to loadProblem can default
+  to null. Let's see if that works. Test the rowub, rowlb and sense, rhs, range
+  variants. Arguably we should check all variants again, but let's hope that
+  OSI implementors carry things over from one variant to another.
+*/
+  {
+    int i ;
+
+    OsiSolverInterface * si1 = emptySi->clone();
+    OsiSolverInterface * si2 = emptySi->clone();
+      
+    si1->loadProblem(*exmip1Si->getMatrixByCol(),NULL,NULL,NULL,NULL,NULL);
+    si2->loadProblem(*exmip1Si->getMatrixByCol(),
+		     NULL,NULL,NULL,NULL,NULL,NULL);
+      
+    // Test column settings
+    assert(si1->getNumCols()==exmip1Si->getNumCols() );
+    for ( i=0; i<si1->getNumCols(); i++ ) {
+      assert( eq(si1->getColLower()[i],0.0) );
+      assert( eq(si1->getColUpper()[i],si1->getInfinity()) );
+      assert( eq(si1->getObjCoefficients()[i],0.0) );
+    }
+    // Test row settings
+    assert(si1->getNumRows()==exmip1Si->getNumRows() );
+    const double * rh = si1->getRightHandSide();
+    const double * rr = si1->getRowRange();
+    const char * rs = si1->getRowSense();
+    const double * rl = si1->getRowLower();
+    const double * ru = si1->getRowUpper();
+    for ( i=0; i<si1->getNumRows(); i++ ) {
+      assert( eq(rh[i],0.0) );
+      assert( eq(rr[i],0.0) );
+      assert( 'N'==rs[i] );
+      assert( eq(rl[i],-si1->getInfinity()) );
+      assert( eq(ru[i], si1->getInfinity()) );
+    }
+
+    // And repeat for si2
+    assert(si2->getNumCols()==exmip1Si->getNumCols() );
+    for ( i=0; i<si2->getNumCols(); i++ ) {
+      assert( eq(si2->getColLower()[i],0.0) );
+      assert( eq(si2->getColUpper()[i],si2->getInfinity()) );
+      assert( eq(si2->getObjCoefficients()[i],0.0) );
+    }
+    //
+    assert(si2->getNumRows()==exmip1Si->getNumRows() );
+    rh = si2->getRightHandSide();
+    rr = si2->getRowRange();
+    rs = si2->getRowSense();
+    rl = si2->getRowLower();
+    ru = si2->getRowUpper();
+    for ( i=0; i<si2->getNumRows(); i++ ) {
+      assert( eq(rh[i],0.0) );
+      assert( eq(rr[i],0.0) );
+      assert( 'G'==rs[i] );
+      assert( eq(rl[i],0.0) );
+      assert( eq(ru[i], si2->getInfinity()) );
+    }
+      
+    delete si1;
+    delete si2;
+  }
+/*
+  Load problem with row rhs, sense and range, but leave column bounds and
+  objective at defaults. A belt-and-suspenders kind of test. Arguably we should
+  have the symmetric case, with column bounds valid and row values at default.
+*/
+  {
+    int i ;
+
+    OsiSolverInterface *  si = emptySi->clone();
+      
+    si->loadProblem(*exmip1Si->getMatrixByRow(),
+		    NULL,NULL,NULL,
+		    exmip1Si->getRowSense(),
+		    exmip1Si->getRightHandSide(),
+		    exmip1Si->getRowRange());
+    // Test column settings
+    assert(si->getNumCols()==exmip1Si->getNumCols() );
+    for ( i=0; i<si->getNumCols(); i++ ) {
+      assert( eq(si->getColLower()[i],0.0) );
+      assert( eq(si->getColUpper()[i],si->getInfinity()) );
+      assert( eq(si->getObjCoefficients()[i],0.0) );
+    }
+    // Test row settings
+    assert(si->getNumRows()==exmip1Si->getNumRows() );
+    for ( i=0; i<si->getNumRows(); i++ ) {
+      char s = si->getRowSense()[i];
+      assert( eq(si->getRightHandSide()[i],
+		 exmip1Si->getRightHandSide()[i]) );
+      assert( eq(si->getRowRange()[i],
+		 exmip1Si->getRowRange()[i]) );
+      assert( s==exmip1Si->getRowSense()[i] );
+      
+      if ( s=='G' ) {
+	assert( eq(si->getRowLower()[i],
+		   exmip1Si->getRightHandSide()[i]) );
+	assert( eq(si->getRowUpper()[i],
+		   si->getInfinity()) );
+      }
+      else if ( s=='L' ) {
+	assert( eq(si->getRowLower()[i],
+		   -si->getInfinity()) );
+	assert( eq(si->getRowUpper()[i],
+		   exmip1Si->getRightHandSide()[i]) );
+      }
+      else if ( s=='E' ) {
+	assert( eq(si->getRowLower()[i],
+		   si->getRowUpper()[i]) );
+	assert( eq(si->getRowUpper()[i],
+		   exmip1Si->getRightHandSide()[i]) );
+      }
+      else if ( s=='N' ) {
+	assert( eq(si->getRowLower()[i], -si->getInfinity()) );
+	assert( eq(si->getRowUpper()[i],  si->getInfinity()) );
+      }
+      else if ( s=='R' ) {
+	assert( eq(si->getRowLower()[i],
+		   exmip1Si->getRightHandSide()[i] -
+		   exmip1Si->getRowRange()[i]) );
+	assert( eq(si->getRowUpper()[i],
+		   exmip1Si->getRightHandSide()[i]) );
+      }
+    }
+      
+    delete si;
+  }
+
+  return ;
+}
+
+/*
+  Test adding rows and columns to an empty constraint system.
+*/
+void testAddToEmptySystem (const OsiSolverInterface *emptySi,
+			   bool volSolverInterface)
+
+{
+  CoinRelFltEq eq(1.0e-7) ;
+
+  std::string solverName = "Unknown solver" ;
+  emptySi->getStrParam(OsiSolverName,solverName) ;
+/*
+  Add rows to an empty system. Begin by creating empty columns, then add some
+  rows.
+*/
+  {
+    OsiSolverInterface *  si = emptySi->clone();
+    int i;
+
+    //Matrix
+    int column[]={0,1,2};
+    double row1E[]={4.0,7.0,5.0};
+    double row2E[]={7.0,4.0,5.0};
+    CoinPackedVector row1(3,column,row1E);
+    CoinPackedVector row2(3,column,row2E);
+
+    double objective[]={5.0,6.0,5.5};
+
+    {
+      // Add empty columns
+      for (i=0;i<3;i++)
+	si->addCol(CoinPackedVector(),0.0,10.0,objective[i]);
+
+      // Add rows
+      si->addRow(row1,2.0,100.0);
+      si->addRow(row2,2.0,100.0);
+
+      // Vol can not solve problem of this form
+      if ( !volSolverInterface ) {
+	// solve
+	si->initialSolve();
+
+	double objValue = si->getObjValue();
+	if ( !eq(objValue,2.0) )
+	  failureMessage(solverName,
+		    "getObjValue after adding empty cols and then rows.") ;
+      }
+    }
+
+    delete si;
+  }
+  // Test adding rows to NULL - alternative row vector format
+  {
+    OsiSolverInterface *  si = emptySi->clone();
+    int i;
+
+    //Matrix
+    int column[]={0,1,2,0,1,2};
+    double row1E[]={4.0,7.0,5.0};
+    double row2E[]={7.0,4.0,5.0};
+    double row12E[]={4.0,7.0,5.0,7.0,4.0,5.0};
+    int starts[]={0,3,6};
+    double ub[]={100.0,100.0};
+
+    double objective[]={5.0,6.0,5.5};
+
+    {
+      // Add empty columns
+      for (i=0;i<3;i++)
+	si->addCol(CoinPackedVector(),0.0,10.0,objective[i]);
+      
+      // Add rows
+      si->addRows(2,starts,column,row12E,NULL,ub);
+      // and again
+      si->addRow(3,column,row1E,2.0,100.0);
+      si->addRow(3,column,row2E,2.0,100.0);
+      
+      // Vol can not solve problem of this form
+      if ( !volSolverInterface ) {
+	// solve
+	si->initialSolve();
+      
+	double objValue = si->getObjValue();
+	if ( !eq(objValue,2.0) )
+	  failureMessage(solverName,
+	      "getObjValue after adding empty cols and then rows (alt fmt).") ;
+      }
+    }
+
+    delete si;
+  }
+/*
+  Add columns to an empty system. Start by creating empty rows, then add
+  some columns.
+*/
+  {
+    OsiSolverInterface *  si = emptySi->clone();
+    int i;
+
+    //Matrix
+    int row[]={0,1};
+    double col1E[]={4.0,7.0};
+    double col2E[]={7.0,4.0};
+    double col3E[]={5.0,5.0};
+    CoinPackedVector col1(2,row,col1E);
+    CoinPackedVector col2(2,row,col2E);
+    CoinPackedVector col3(2,row,col3E);
+
+    double objective[]={5.0,6.0,5.5};
+    {
+      // Add empty rows
+      for (i=0;i<2;i++)
+	si->addRow(CoinPackedVector(),2.0,100.0);
+
+      // Add columns
+      if ( volSolverInterface ) {
+	// FIXME: this test could be done w/ the volume, but the rows must
+	// not be ranged.
+	failureMessage(solverName,"addCol add columns to null");
+      }
+      else {
+	si->addCol(col1,0.0,10.0,objective[0]);
+	si->addCol(col2,0.0,10.0,objective[1]);
+	si->addCol(col3,0.0,10.0,objective[2]);
+
+	// solve
+	si->initialSolve();
+
+	CoinRelFltEq eq(1.0e-7) ;
+	double objValue = si->getObjValue();
+	if ( !eq(objValue,2.0) )
+	   failureMessage(solverName,
+		    "getObjValue after adding empty rows and then cols.");
+
+      }
+    }
+    delete si;
+  }
+  // Test adding columns to NULL - alternative column vector format
+  {
+    OsiSolverInterface *  si = emptySi->clone();
+    int i;
+
+    //Matrix
+    int row[]={0,1};
+    double col1E[]={4.0,7.0};
+    double col23E[]={7.0,4.0,5.0,5.0};
+    int row23E[]={0,1,0,1};
+    int start23E[]={0,2,4};
+    double ub23E[]={10.0,10.0};
+
+    double objective[]={5.0,6.0,5.5};
+    {
+      // Add empty rows
+      for (i=0;i<2;i++)
+	si->addRow(CoinPackedVector(),2.0,100.0);
+      
+      // Add columns
+      if ( volSolverInterface ) {
+	// FIXME: this test could be done w/ the volume, but the rows must not
+	// be ranged.
+	failureMessage(solverName,"addCol add columns to null");
+      }
+      else {
+	si->addCols(2,start23E,row23E,col23E,NULL,ub23E,objective+1);
+	si->addCol(2,row,col1E,0.0,10.0,objective[0]);
+      
+	// solve
+	si->initialSolve();
+      
+	double objValue = si->getObjValue();
+	if ( !eq(objValue,2.0) )
+	  failureMessage(solverName,
+	      "getObjValue after adding empty rows and then cols (alt fmt).");
+      
+      }
+    }
+    delete si;
+  }
+}
+
+
+/*
+  Test the simplex portion of the OSI interface.
+*/
+void testSimplex (const OsiSolverInterface *emptySi, std::string mpsDir)
+
+{
+  OsiSolverInterface * si = emptySi->clone();
+  std::string solverName;
+  si->getStrParam(OsiSolverName,solverName);
+/*
+  Do the test only if the solver has this capability.
+*/
+  if (si->canDoSimplexInterface()==2) {
+    // solve an lp by hand
+    
+    std::string fn = mpsDir+"p0033";
+    si->readMps(fn.c_str(),"mps");
+    si->setObjSense(-1.0);
+    si->initialSolve();
+    si->setObjSense(1.0);
+    // enable special mode
+    si->enableSimplexInterface(true);
+    // we happen to know that variables are 0-1 and rows are L
+    int numberIterations=0;
+    int numberColumns = si->getNumCols();
+    int numberRows = si->getNumRows();
+    double * fakeCost = new double[numberColumns];
+    double * duals = new double [numberRows];
+    double * djs = new double [numberColumns];
+    const double * solution = si->getColSolution();
+    memcpy(fakeCost,si->getObjCoefficients(),numberColumns*sizeof(double));
+    while (1) {
+      const double * dj;
+      const double * dual;
+      if ((numberIterations&1)==0) {
+	// use given ones
+	dj = si->getReducedCost();
+	dual = si->getRowPrice();
+      } else {
+	// create
+	dj = djs;
+	dual = duals;
+	si->getReducedGradient(djs,duals,fakeCost);
+      }
+      int i;
+      int colIn=9999;
+      int direction=1;
+      double best=1.0e-6;
+      // find most negative reduced cost
+      // Should check basic - but should be okay on this problem
+      for (i=0;i<numberRows;i++) {
+	double value=dual[i];
+	if (value>best) {
+	  direction=-1;
+	  best=value;
+	  colIn=-i-1;
+	}
+      }
+      for (i=0;i<numberColumns;i++) {
+	double value=dj[i];
+	if (value<-best&&solution[i]<1.0e-6) {
+	  direction=1;
+	  best=-value;
+	  colIn=i;
+	} else if (value>best&&solution[i]>1.0-1.0e-6) {
+	  direction=-1;
+	  best=value;
+	  colIn=i;
+	}
+      }
+      if (colIn==9999)
+	break; // should be optimal
+      int colOut;
+      int outStatus;
+      double theta;
+      assert(!si->primalPivotResult(colIn,direction,colOut,outStatus,theta,NULL));
+      printf("out %d, direction %d theta %g\n",
+	     colOut,outStatus,theta);
+      numberIterations++;
+    }
+    delete [] fakeCost;
+    delete [] duals;
+    delete [] djs;
+    // exit special mode
+    si->disableSimplexInterface();
+    si->resolve();
+    assert (!si->getIterationCount());
+    si->setObjSense(-1.0);
+    si->initialSolve();
+    std::cout<<solverName<<" passed OsiSimplexInterface test"<<std::endl;
+  } else {
+    std::cout<<solverName<<" has no OsiSimplexInterface"<<std::endl;
+  }
+  delete si;
+}
+
+
 
 }	// end file-local namespace
 
@@ -2123,7 +3084,7 @@ void testObjOffsetAndLimits (const OsiSolverInterface *emptySi,
 
   The routine creates a vector of NetLib problems (problem name, objective,
   various other characteristics), and a vector of solvers to be tested.
-  
+
   Each solver is run on each problem. The run is deemed successful if the
   solver reports the correct problem size after loading and returns the
   correct objective value after optimization.
@@ -2253,8 +3214,8 @@ void OsiSolverInterfaceMpsUnitTest
   PUSH_MPS("sierra",true,1228,2036,1.5394362184e+07,1.e-10)
   PUSH_MPS("stair",true,357,467,-2.5126695119e+02,1.e-10)
   PUSH_MPS("standata",true,360,1075,1.2576995000e+03,1.e-10)
-  // GUB PUSH_MPS("standgub",true,362,1184,1257.6995,1.e-10) 
-  PUSH_MPS("standmps",true,468,1075,1.4060175000E+03,1.e-10) 
+  // GUB PUSH_MPS("standgub",true,362,1184,1257.6995,1.e-10)
+  PUSH_MPS("standmps",true,468,1075,1.4060175000E+03,1.e-10)
   PUSH_MPS("stocfor1",true,118,111,-4.1131976219E+04,1.e-10)
   PUSH_MPS("stocfor2",true,2158,2031,-3.9024408538e+04,1.e-10)
   // ?? PUSH_MPS("stocfor3",true,16676,15695,-3.9976661576e+04,1.e-10)
@@ -2287,19 +3248,19 @@ void OsiSolverInterfaceMpsUnitTest
     numProbSolved.push_back(0);
     timeTaken.push_back(0.0);
   }
-  
-  
+
+
   //Open the main loop to step through the MPS problems.
-  for (m = 0 ; m < mpsName.size() ; m++) { 
-    std::cerr << "  processing mps file: " << mpsName[m] 
+  for (m = 0 ; m < mpsName.size() ; m++) {
+    std::cerr << "  processing mps file: " << mpsName[m]
       << " (" << m+1 << " out of " << mpsName.size() << ")" << std::endl ;
     bool allSolversReadMpsFile = true;
-    
-    
+
+
     //Stage 1: Read the MPS file into each solver interface.
     //Fill vecSiP with fresh clones of the solvers and read in the MPS file. As
     //a basic check, make sure the size of the constraint matrix is correct.
-    for (i = vecSiP.size()-1 ; i >= 0 ; --i) { 
+    for (i = vecSiP.size()-1 ; i >= 0 ; --i) {
       vecSiP[i] = vecEmptySiP[i]->clone() ;
 #     if COIN_HAS_SYMPHONY
       // bludgeon symphony about the head so it will not print the solution
@@ -2308,56 +3269,56 @@ void OsiSolverInterfaceMpsUnitTest
 	if (reallySymSi)
 	{ reallySymSi->setSymParam(OsiSymVerbosity, -2) ; } }
 #     endif
-      
+
       vecSiP[i]->getStrParam(OsiSolverName,siName[i]);
-      
+
       std::string fn = mpsDir+mpsName[m] ;
       vecSiP[i]->readMps(fn.c_str(),"mps") ;
-      
+
       if (min[m])
         vecSiP[i]->setObjSense(1.0) ;
       else
         vecSiP[i]->setObjSense(-1.0) ;
-      
+
       int nr = vecSiP[i]->getNumRows() ;
       int nc = vecSiP[i]->getNumCols() ;
       assert(nr == nRows[m]-1) ;
-      assert(nc == nCols[m]) ; 
-    } 
-    
+      assert(nc == nCols[m]) ;
+    }
+
     //If we have multiple solvers, compare the representations.
     if ( allSolversReadMpsFile )
-      for (i = vecSiP.size()-1 ; i > 0 ; --i) { 
+      for (i = vecSiP.size()-1 ; i > 0 ; --i) {
         CoinPackedVector vim1,vi ;
-        
+
         // Compare col lowerbounds
         assert(
           equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
           vecSiP[i-1]->getColLower(),vecSiP[i  ]->getColLower(),
           vecSiP[i  ]->getNumCols() )
           ) ;
-        
+
         // Compare col upperbounds
         assert(
           equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
           vecSiP[i-1]->getColUpper(),vecSiP[i  ]->getColUpper(),
           vecSiP[i  ]->getNumCols() )
           ) ;
-        
+
         // Compare row lowerbounds
         assert(
           equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
           vecSiP[i-1]->getRowLower(),vecSiP[i  ]->getRowLower(),
           vecSiP[i  ]->getNumRows() )
           ) ;
-        
+
         // Compare row upperbounds
-        assert( 
+        assert(
           equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
           vecSiP[i-1]->getRowUpper(),vecSiP[i  ]->getRowUpper(),
           vecSiP[i  ]->getNumRows() )
           ) ;
-        
+
         // Compare row sense
         {
           const char * rsm1 = vecSiP[i-1]->getRowSense() ;
@@ -2366,62 +3327,62 @@ void OsiSolverInterfaceMpsUnitTest
           int r ;
           for (r = 0 ; r < nr ; r++) assert (rsm1[r] == rs[r]) ;
         }
-        
+
         // Compare rhs
-        assert( 
+        assert(
           equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
           vecSiP[i-1]->getRightHandSide(),vecSiP[i  ]->getRightHandSide(),
           vecSiP[i  ]->getNumRows() )
           ) ;
-        
+
         // Compare range
-        assert( 
+        assert(
           equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
           vecSiP[i-1]->getRowRange(),vecSiP[i  ]->getRowRange(),
           vecSiP[i  ]->getNumRows() )
           ) ;
-        
+
         // Compare objective sense
         assert( vecSiP[i-1]->getObjSense() == vecSiP[i  ]->getObjSense() ) ;
-        
+
         // Compare objective coefficients
-        assert( 
+        assert(
           equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
           vecSiP[i-1]->getObjCoefficients(),vecSiP[i  ]->getObjCoefficients(),
           vecSiP[i  ]->getNumCols() )
           ) ;
-        
+
         // Compare number of elements
         assert( vecSiP[i-1]->getNumElements() == vecSiP[i]->getNumElements() ) ;
-        
+
         // Compare constraint matrix
-        { 
+        {
           const CoinPackedMatrix * rmm1=vecSiP[i-1]->getMatrixByRow() ;
           const CoinPackedMatrix * rm  =vecSiP[i  ]->getMatrixByRow() ;
           assert( rmm1->isEquivalent(*rm) ) ;
-          
+
           const CoinPackedMatrix * cmm1=vecSiP[i-1]->getMatrixByCol() ;
           const CoinPackedMatrix * cm  =vecSiP[i  ]->getMatrixByCol() ;
-          assert( cmm1->isEquivalent(*cm) ) ; 
-        } 
+          assert( cmm1->isEquivalent(*cm) ) ;
+        }
       }
-      
-      //If we have multiple solvers, compare the variable type information      
+
+      //If we have multiple solvers, compare the variable type information
       if ( allSolversReadMpsFile )
-        for (i = vecSiP.size()-1 ; i > 0 ; --i){ 
+        for (i = vecSiP.size()-1 ; i > 0 ; --i){
           CoinPackedVector vim1,vi ;
           int c ;
-          
-          { 
+
+          {
             OsiVectorInt sm1 = vecSiP[i-1]->getFractionalIndices() ;
             OsiVectorInt s   = vecSiP[i  ]->getFractionalIndices() ;
             assert( sm1.size() == s.size() ) ;
-            for (c = s.size()-1 ; c >= 0 ; --c) assert( sm1[c] == s[c] ) ; 
+            for (c = s.size()-1 ; c >= 0 ; --c) assert( sm1[c] == s[c] ) ;
           }
-          
-          { 
+
+          {
             int nc = vecSiP[i]->getNumCols() ;
-            for (c = 0 ; c < nc ; c++){ 
+            for (c = 0 ; c < nc ; c++){
               assert(
                 vecSiP[i-1]->isContinuous(c) == vecSiP[i]->isContinuous(c)
                 ) ;
@@ -2437,29 +3398,29 @@ void OsiSolverInterfaceMpsUnitTest
                 ) ;
               assert(
                 vecSiP[i-1]->isInteger(c) == vecSiP[i]->isInteger(c)
-                ) ; 
-            } 
-          } 
+                ) ;
+            }
+          }
         }
-        
+
       //Stage 2: Call each solver to solve the problem.
       //
       // We call each solver, then check the return code and objective.
-      //  
+      //
       //    Note that the volume solver can't handle the Netlib cases. The strategy is
       //    to require that it be the last solver in vecSiP and then break out of the
       //    loop. This ensures that all previous solvers are run and compared to one
-      //    another.      
+      //    another.
       for (i = 0 ; i < static_cast<int>(vecSiP.size()) ; ++i) {
         double startTime = CoinCpuTime();
-        
+
 #     ifdef COIN_HAS_VOL
-        { 
+        {
           OsiVolSolverInterface * si =
             dynamic_cast<OsiVolSolverInterface *>(vecSiP[i]) ;
-          if (si != NULL )  { 
+          if (si != NULL )  {
             // VOL does not solve netlib cases so don't bother trying to solve
-            break ; 
+            break ;
           }
         }
 #     endif
@@ -2470,35 +3431,35 @@ void OsiSolverInterfaceMpsUnitTest
 	{ std::cerr << thrownErr.className() << "::" << thrownErr.methodName()
 		    << ": " << thrownErr.message() << std::endl ; }
         double timeOfSolution = CoinCpuTime()-startTime;
-        if (vecSiP[i]->isProvenOptimal()) { 
-          double soln = vecSiP[i]->getObjValue();       
+        if (vecSiP[i]->isProvenOptimal()) {
+          double soln = vecSiP[i]->getObjValue();
           CoinRelFltEq eq(objValueTol[m]) ;
-          if (eq(soln,objValue[m])) { 
-            std::cerr 
+          if (eq(soln,objValue[m])) {
+            std::cerr
               <<siName[i]<<"SolverInterface "
               << soln << " = " << objValue[m] <<", "
 	      << vecSiP[i]->getIterationCount() << " iters"
 	      << "; okay";
             numProbSolved[i]++;
-          } else  { 
+          } else  {
             std::cerr <<siName[i] <<" " <<soln << " != " <<objValue[m] << "; error=" ;
-            std::cerr <<fabs(objValue[m] - soln); 
+            std::cerr <<fabs(objValue[m] - soln);
           }
         } else {
-	   if (vecSiP[i]->isProvenPrimalInfeasible()) 
+	   if (vecSiP[i]->isProvenPrimalInfeasible())
 	      std::cerr << "error; primal infeasible" ;
-#ifndef COIN_HAS_SYMPHONY 
+#ifndef COIN_HAS_SYMPHONY
 	   else if (vecSiP[i]->isProvenDualInfeasible())
 	      std::cerr << "error; dual infeasible" ;
 #endif
-	   else if (vecSiP[i]->isIterationLimitReached()) 
+	   else if (vecSiP[i]->isIterationLimitReached())
 	      std::cerr << "error; iteration limit" ;
-	   else if (vecSiP[i]->isAbandoned()) 
+	   else if (vecSiP[i]->isAbandoned())
 	      std::cerr << "error; abandoned" ;
-	   else  
+	   else
 	      std::cerr << "error; unknown" ;
         }
-        std::cerr<<" - took " <<timeOfSolution<<" seconds."<<std::endl; 
+        std::cerr<<" - took " <<timeOfSolution<<" seconds."<<std::endl;
         timeTaken[i] += timeOfSolution;
       }
       /*
@@ -2510,9 +3471,9 @@ void OsiSolverInterfaceMpsUnitTest
 
   const int siName_size = siName.size();
   for ( i=0; i<siName_size; i++ ) {
-    std::cerr 
-      <<siName[i] 
-      <<" solved " 
+    std::cerr
+      <<siName[i]
+      <<" solved "
       <<numProbSolved[i]
       <<" out of "
       <<objValue.size()
@@ -2520,7 +3481,7 @@ void OsiSolverInterfaceMpsUnitTest
       <<timeTaken[i]
       <<" seconds."
       <<std::endl;
-  } 
+  }
 }
 
 
@@ -2530,15 +3491,15 @@ void OsiSolverInterfaceMpsUnitTest
 
 void
 OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
-				 const std::string & mpsDir, 
+				 const std::string & mpsDir,
          const std::string & netlibDir)
 {
-  
+
   int i;
   CoinRelFltEq eq;
 
   std::string fn = mpsDir+"exmip1";
-  OsiSolverInterface * exmip1Si = emptySi->clone(); 
+  OsiSolverInterface * exmip1Si = emptySi->clone();
   exmip1Si->readMps(fn.c_str(),"mps");
 
   // Test that solverInterface knows its name.
@@ -2663,8 +3624,8 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       failureMessage(solverName,"getRowUpper with empty solverInterface");
     delete si;
   }
-  
-  
+
+
   // Test that problem was loaded correctly
 
   { const char   * exmip1Sirs  = exmip1Si->getRowSense();
@@ -2674,14 +3635,14 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     assert( exmip1Sirs[2]=='E' );
     assert( exmip1Sirs[3]=='R' );
     assert( exmip1Sirs[4]=='R' );
-    
+
     const double * exmip1Sirhs = exmip1Si->getRightHandSide();
     assert( eq(exmip1Sirhs[0],2.5) );
     assert( eq(exmip1Sirhs[1],2.1) );
     assert( eq(exmip1Sirhs[2],4.0) );
     assert( eq(exmip1Sirhs[3],5.0) );
-    assert( eq(exmip1Sirhs[4],15.) ); 
-    
+    assert( eq(exmip1Sirhs[4],15.) );
+
     const double * exmip1Sirr  = exmip1Si->getRowRange();
     assert( eq(exmip1Sirr[0],0.0) );
     assert( eq(exmip1Sirr[1],0.0) );
@@ -2697,7 +3658,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     pm = *exmip1Si->getMatrixByRow();
     pm.removeGaps();
     assert(goldmtx.isEquivalent(pm)) ;
-    
+
     int nc = exmip1Si->getNumCols();
     int nr = exmip1Si->getNumRows();
     const double * cl = exmip1Si->getColLower();
@@ -2733,7 +3694,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     assert( eq(ru[2],4.0) );
     assert( eq(ru[3],5.0) );
     assert( eq(ru[4],15.0) );
-    
+
     // make sure col solution is something reasonable,
     // that is between upper and lower bounds
     const double * cs = exmip1Si->getColSolution();
@@ -2741,7 +3702,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     bool okColSol=true;
     //double inf = exmip1Si->getInfinity();
     for ( c=0; c<nc; c++ ) {
-      // if colSol is not between column bounds then 
+      // if colSol is not between column bounds then
       // colSol is unreasonable.
       if( !(cl[c]<=cs[c] && cs[c]<=cu[c]) ) okColSol=false;
       // if at least one column bound is not infinite,
@@ -2752,7 +3713,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     }
     if( !okColSol )
       failureMessage(solverName,"getColSolution before solve");
-    
+
     // Test value of objective function coefficients
     const double * objCoef = exmip1Si->getObjCoefficients();
     assert( eq( objCoef[0],  1.0) );
@@ -2775,7 +3736,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 
 
   }
-  
+
   // Test matrixByCol method
   {
     CoinPackedMatrix &goldmtx = BuildExmip1Mtx() ;
@@ -2786,7 +3747,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 
     if (!getByColOK)
       failureMessage(solverName,"getMatrixByCol()") ;
-    
+
     // Test getting and setting of objective offset
     double objOffset;
     bool supportOsiObjOffset = si.getDblParam(OsiObjOffset,objOffset);
@@ -2796,23 +3757,23 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     assert( supportOsiObjOffset );
     si.getDblParam(OsiObjOffset,objOffset);
     assert( eq( objOffset, 3.21 ) );
-    
+
     delete &si;
   }
-   
+
   // Test clone
   {
-    OsiSolverInterface * si2;  
+    OsiSolverInterface * si2;
     int ad = 13579;
     {
-      OsiSolverInterface * si1 = exmip1Si->clone(); 
+      OsiSolverInterface * si1 = exmip1Si->clone();
       int ad = 13579;
       si1->setApplicationData(&ad);
       assert( *((int *)(si1->getApplicationData())) == ad );
       si2 = si1->clone();
       delete si1;
     }
-    
+
     if( *((int *)(si2->getApplicationData())) != ad )
       failureMessage(solverName,"getApplicationData on cloned solverInterface");
 
@@ -2822,21 +3783,21 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     assert( exmip1Sirs[2]=='E' );
     assert( exmip1Sirs[3]=='R' );
     assert( exmip1Sirs[4]=='R' );
-    
+
     const double * exmip1Sirhs = si2->getRightHandSide();
     assert( eq(exmip1Sirhs[0],2.5) );
     assert( eq(exmip1Sirhs[1],2.1) );
     assert( eq(exmip1Sirhs[2],4.0) );
     assert( eq(exmip1Sirhs[3],5.0) );
-    assert( eq(exmip1Sirhs[4],15.) ); 
-    
+    assert( eq(exmip1Sirhs[4],15.) );
+
     const double * exmip1Sirr  = si2->getRowRange();
     assert( eq(exmip1Sirr[0],0.0) );
     assert( eq(exmip1Sirr[1],0.0) );
     assert( eq(exmip1Sirr[2],0.0) );
     assert( eq(exmip1Sirr[3],5.0-1.8) );
     assert( eq(exmip1Sirr[4],15.0-3.0) );
-    
+
     CoinPackedMatrix goldmtx ;
     goldmtx.reverseOrderedCopyOf(BuildExmip1Mtx()) ;
     CoinPackedMatrix pm;
@@ -2844,7 +3805,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     pm.setExtraMajor(0.0);
     pm = *si2->getMatrixByRow();
     assert(goldmtx.isEquivalent(pm)) ;
-    
+
     int nc = si2->getNumCols();
     int nr = si2->getNumRows();
     const double * cl = si2->getColLower();
@@ -2880,7 +3841,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     assert( eq(ru[2],4.0) );
     assert( eq(ru[3],5.0) );
     assert( eq(ru[4],15.0) );
-        
+
     // make sure col solution is something reasonable,
     // that is between upper and lower bounds
     const double * cs = exmip1Si->getColSolution();
@@ -2888,7 +3849,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     bool okColSol=true;
     //double inf = exmip1Si->getInfinity();
     for ( c=0; c<nc; c++ ) {
-      // if colSol is not between column bounds then 
+      // if colSol is not between column bounds then
       // colSol is unreasonable.
       if( !(cl[c]<=cs[c] && cs[c]<=cu[c]) ) okColSol=false;
       // if at least one column bound is not infinite,
@@ -2899,7 +3860,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     }
     if( !okColSol )
       failureMessage(solverName,"getColSolution before solve on cloned solverInterface");
-    
+
     assert( eq( si2->getObjCoefficients()[0],  1.0) );
     assert( eq( si2->getObjCoefficients()[1],  0.0) );
     assert( eq( si2->getObjCoefficients()[2],  0.0) );
@@ -2908,7 +3869,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     assert( eq( si2->getObjCoefficients()[5],  0.0) );
     assert( eq( si2->getObjCoefficients()[6],  0.0) );
     assert( eq( si2->getObjCoefficients()[7], -1.0) );
-    
+
     // Test getting and setting of objective offset
     double objOffset;
     bool supported = si2->getDblParam(OsiObjOffset,objOffset);
@@ -2918,20 +3879,20 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     delete si2;
   }
   // end of clone testing
-  
+
   // Test apply cuts method
-  {      
-    OsiSolverInterface & im = *(exmip1Si->clone()); 
+  {
+    OsiSolverInterface & im = *(exmip1Si->clone());
     OsiCuts cuts;
-    
-    // Generate some cuts 
+
+    // Generate some cuts
     {
       // Get number of rows and columns in model
       int nr=im.getNumRows();
       int nc=im.getNumCols();
       assert( nr == 5 );
       assert( nc == 8 );
-      
+
       // Generate a valid row cut from thin air
       int c;
       {
@@ -2939,18 +3900,18 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
         for (c=0;c<nc;c++) inx[c]=c;
         double *el = new double[nc];
         for (c=0;c<nc;c++) el[c]=((double)c)*((double)c);
-        
+
         OsiRowCut rc;
         rc.setRow(nc,inx,el);
         rc.setLb(-100.);
         rc.setUb(100.);
         rc.setEffectiveness(22);
-        
+
         cuts.insert(rc);
         delete[]el;
         delete[]inx;
       }
-      
+
       // Generate valid col cut from thin air
       {
         const double * oslColLB = im.getColLower();
@@ -2961,24 +3922,24 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
         double *ub = new double[nc];
         for (c=0;c<nc;c++) lb[c]=oslColLB[c]+0.001;
         for (c=0;c<nc;c++) ub[c]=oslColUB[c]-0.001;
-        
+
         OsiColCut cc;
         cc.setLbs(nc,inx,lb);
         cc.setUbs(nc,inx,ub);
-        
+
         cuts.insert(cc);
         delete [] ub;
         delete [] lb;
         delete [] inx;
       }
-      
+
       {
         // Generate a row and column cut which are ineffective
         OsiRowCut * rcP= new OsiRowCut;
         rcP->setEffectiveness(-1.);
         cuts.insert(rcP);
         assert(rcP==NULL);
-        
+
         OsiColCut * ccP= new OsiColCut;
         ccP->setEffectiveness(-12.);
         cuts.insert(ccP);
@@ -3045,7 +4006,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     assert(cuts.sizeRowCuts()==4);
     assert(cuts.sizeColCuts()==5);
 
-   {  
+   {
       OsiSolverInterface::ApplyCutsReturnCode rc = im.applyCuts(cuts);
       assert( rc.getNumIneffective() == 2 );
       assert( rc.getNumApplied() == 2 );
@@ -3062,7 +4023,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     delete &im;
   }
   // end of apply cut method testing
-    
+
 
   // Test setting primal (column) and row (dual) solutions, and test that
   // reduced cost and row activity match.
@@ -3089,25 +4050,25 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     assert( !fim.isContinuous(2) );
     assert( !fim.isContinuous(3) );
     assert(  fim.isContinuous(4) );
-    
+
     assert( !fim.isInteger(0) );
     assert( !fim.isInteger(1) );
     assert(  fim.isInteger(2) );
     assert(  fim.isInteger(3) );
     assert( !fim.isInteger(4) );
-    
+
     assert( !fim.isBinary(0) );
     assert( !fim.isBinary(1) );
     assert(  fim.isBinary(2) );
     assert(  fim.isBinary(3) );
     assert( !fim.isBinary(4) );
-    
+
     assert( !fim.isIntegerNonBinary(0) );
     assert( !fim.isIntegerNonBinary(1) );
     assert( !fim.isIntegerNonBinary(2) );
     assert( !fim.isIntegerNonBinary(3) );
     assert( !fim.isIntegerNonBinary(4) );
-    
+
     // Test fractionalIndices
 
     {
@@ -3116,14 +4077,14 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       OsiVectorInt fi = fim.getFractionalIndices(1e-5);
       assert( fi.size() == 1 );
       assert( fi[0]==2 );
-      
+
       // Set integer variables very close to integer values
       sol[2]=5 + .00001/2.;
       sol[3]=8 - .00001/2.;
       fim.setColSolution(sol);
       fi = fim.getFractionalIndices(1e-5);
       assert( fi.size() == 0 );
-      
+
       // Set integer variables close, but beyond tolerances
       sol[2]=5 + .00001*2.;
       sol[3]=8 - .00001*2.;
@@ -3133,7 +4094,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       assert( fi[0]==2 );
       assert( fi[1]==3 );
     }
-    
+
     // Change data so column 2 & 3 are integerNonBinary
     fim.setColUpper(2,5.0);
     assert( eq(fim.getColUpper()[2],5.0) );
@@ -3146,7 +4107,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     if( fim.isBinary(3) )
       failureMessage(solverName,"isBinary or setColUpper");
     assert( !fim.isBinary(4) );
-    
+
     if (fim.getNumIntegers() != 2)
       failureMessage(solverName,"getNumIntegers");
 
@@ -3157,808 +4118,27 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     if( !fim.isIntegerNonBinary(3) )
       failureMessage(solverName,"isIntegerNonBinary or setColUpper");
     assert( !fim.isIntegerNonBinary(4) );
-    
+
     delete &fim;
   }
 
-    
-  // Test load and assign problem
-  {
-    {   
-      OsiSolverInterface * base = exmip1Si->clone();
-      OsiSolverInterface *  si1 = emptySi->clone(); 
-      OsiSolverInterface *  si2 = emptySi->clone(); 
-      OsiSolverInterface *  si3 = emptySi->clone(); 
-      OsiSolverInterface *  si4 = emptySi->clone();  
-      OsiSolverInterface *  si5 = emptySi->clone();  
-      OsiSolverInterface *  si6 = emptySi->clone(); 
-      OsiSolverInterface *  si7 = emptySi->clone();  
-      OsiSolverInterface *  si8 = emptySi->clone(); 
-        
-      si1->loadProblem(*base->getMatrixByCol(),
-		       base->getColLower(),base->getColUpper(),
-		       base->getObjCoefficients(),
-		       base->getRowSense(),base->getRightHandSide(),
-		       base->getRowRange());
-      si2->loadProblem(*base->getMatrixByRow(),
-		       base->getColLower(),base->getColUpper(),
-		       base->getObjCoefficients(),
-		       base->getRowSense(),base->getRightHandSide(),
-		       base->getRowRange());
-      si3->loadProblem(*base->getMatrixByCol(),
-		       base->getColLower(),base->getColUpper(),
-		       base->getObjCoefficients(),
-		       base->getRowLower(),base->getRowUpper() );
-      si4->loadProblem(*base->getMatrixByCol(),
-		       base->getColLower(),base->getColUpper(),
-		       base->getObjCoefficients(),
-		       base->getRowLower(),base->getRowUpper() );
-      {
-        double objOffset;
-        base->getDblParam(OsiObjOffset,objOffset);
-        si1->setDblParam(OsiObjOffset,objOffset);
-        si2->setDblParam(OsiObjOffset,objOffset);
-        si3->setDblParam(OsiObjOffset,objOffset);
-        si4->setDblParam(OsiObjOffset,objOffset);
-        si5->setDblParam(OsiObjOffset,objOffset);
-        si6->setDblParam(OsiObjOffset,objOffset);
-        si7->setDblParam(OsiObjOffset,objOffset);
-        si8->setDblParam(OsiObjOffset,objOffset);
-      }
-      CoinPackedMatrix * pm = new CoinPackedMatrix(*base->getMatrixByCol());
-      double * clb = new double[base->getNumCols()];
-      std::copy(base->getColLower(),
-		base->getColLower()+base->getNumCols(),clb);
-      double * cub = new double[base->getNumCols()];
-      std::copy(base->getColUpper(),
-		base->getColUpper()+base->getNumCols(),cub);
-      double * objc = new double[base->getNumCols()];
-      std::copy(base->getObjCoefficients(),
-		base->getObjCoefficients()+base->getNumCols(),objc);
-      double * rlb = new double[base->getNumRows()];
-      std::copy(base->getRowLower(),
-		base->getRowLower()+base->getNumRows(),rlb);
-      double * rub = new double[base->getNumRows()];
-      std::copy(base->getRowUpper(),
-		base->getRowUpper()+base->getNumRows(),rub);
-      si5->assignProblem(pm,clb,cub,objc,rlb,rub);
-      assert(pm==NULL);
-      assert(clb==NULL);
-      assert(cub==NULL);
-      assert(objc==NULL);
-      assert(rlb==NULL);
-      assert(rub==NULL);
-        
-      pm = new CoinPackedMatrix(*base->getMatrixByRow());
-      clb = new double[base->getNumCols()];
-      std::copy(base->getColLower(),
-		base->getColLower()+base->getNumCols(),clb);
-      cub = new double[base->getNumCols()];
-      std::copy(base->getColUpper(),
-		base->getColUpper()+base->getNumCols(),cub);
-      objc = new double[base->getNumCols()];
-      std::copy(base->getObjCoefficients(),
-		base->getObjCoefficients()+base->getNumCols(),objc);
-      rlb = new double[base->getNumRows()];
-      std::copy(base->getRowLower(),
-		base->getRowLower()+base->getNumRows(),rlb);
-      rub = new double[base->getNumRows()];
-      std::copy(base->getRowUpper(),
-		base->getRowUpper()+base->getNumRows(),rub);
-      si6->assignProblem(pm,clb,cub,objc,rlb,rub);
-      assert(pm==NULL);
-      assert(clb==NULL);
-      assert(cub==NULL);
-      assert(objc==NULL);
-      assert(rlb==NULL);
-      assert(rub==NULL);      
-        
-      pm = new CoinPackedMatrix(*base->getMatrixByCol());
-      clb = new double[base->getNumCols()];
-      std::copy(base->getColLower(),
-		base->getColLower()+base->getNumCols(),clb);
-      cub = new double[base->getNumCols()];
-      std::copy(base->getColUpper(),
-		base->getColUpper()+base->getNumCols(),cub);
-      objc = new double[base->getNumCols()];
-      std::copy(base->getObjCoefficients(),
-		base->getObjCoefficients()+base->getNumCols(),objc);
-      char * rsen = new char[base->getNumRows()];
-      std::copy(base->getRowSense(),
-		base->getRowSense()+base->getNumRows(),rsen);
-      double * rhs = new double[base->getNumRows()];
-      std::copy(base->getRightHandSide(),
-		base->getRightHandSide()+base->getNumRows(),rhs);
-      double * rng = new double[base->getNumRows()];
-      std::copy(base->getRowRange(),
-		base->getRowRange()+base->getNumRows(),rng);
-      si7->assignProblem(pm,clb,cub,objc,rsen,rhs,rng);
-      assert(pm==NULL);
-      assert(clb==NULL);
-      assert(cub==NULL);
-      assert(objc==NULL);
-      assert(rsen==NULL);
-      assert(rhs==NULL);
-      assert(rng==NULL);
-        
-      pm = new CoinPackedMatrix(*base->getMatrixByCol());
-      clb = new double[base->getNumCols()];
-      std::copy(base->getColLower(),
-		base->getColLower()+base->getNumCols(),clb);
-      cub = new double[base->getNumCols()];
-      std::copy(base->getColUpper(),
-		base->getColUpper()+base->getNumCols(),cub);
-      objc = new double[base->getNumCols()];
-      std::copy(base->getObjCoefficients(),
-		base->getObjCoefficients()+base->getNumCols(),objc);
-      rsen = new char[base->getNumRows()];
-      std::copy(base->getRowSense(),
-		base->getRowSense()+base->getNumRows(),rsen);
-      rhs = new double[base->getNumRows()];
-      std::copy(base->getRightHandSide(),
-		base->getRightHandSide()+base->getNumRows(),rhs);
-      rng = new double[base->getNumRows()];
-      std::copy(base->getRowRange(),
-		base->getRowRange()+base->getNumRows(),rng);
-      si8->assignProblem(pm,clb,cub,objc,rsen,rhs,rng);
-      assert(pm==NULL);
-      assert(clb==NULL);
-      assert(cub==NULL);
-      assert(objc==NULL);
-      assert(rsen==NULL);
-      assert(rhs==NULL);
-      assert(rng==NULL);
-     
-        
-      // Create an indices vector        
-      CoinPackedVector basePv,pv;
-      assert(base->getNumCols()<10);
-      assert(base->getNumRows()<10);
-      int indices[10];
-      int i;
-      for (i=0; i<10; i++) indices[i]=i;
-        
-      // Test solve methods.
-      try {
-	base->initialSolve();
-	si1->initialSolve();
-	si2->initialSolve();
-	si3->initialSolve();
-	si4->initialSolve();
-	si5->initialSolve();
-	si6->initialSolve();
-	si7->initialSolve();
-	si8->initialSolve();
-      }        
-      catch (CoinError e) {
-#ifdef COIN_HAS_VOL
-	// Vol solver interface is expected to throw
-	// an error if the data has a ranged row.
-          
-	// Check that using Vol SI
-	OsiVolSolverInterface * vsi =
-	  dynamic_cast<OsiVolSolverInterface *>(base);
-	assert( vsi != NULL );        
-          
-	// Test that there is non-zero range
-	basePv.setFull(base->getNumRows(),base->getRowRange());
-	pv.setConstant( base->getNumRows(), indices, 0.0 );
-	assert(!basePv.isEquivalent(pv)); 
-#else
-	assert(0==1);
-#endif
-      }
-      
-      // Test WriteMps
-      
-      {
+/*
+  Test load and assign methods, and do an initialSolve while we have the
+  problem loaded. This routine also puts some stress on cloning --- it creates
+  nine simultaneous clones of the OSI under test.
+*/
+  testLoadAndAssignProblem(emptySi,exmip1Si) ;
+  testAddToEmptySystem(emptySi,volSolverInterface) ;
+/*
+  Test write methods.
+*/
+  testWriteMps(emptySi,fn) ;
+  testWriteLp(emptySi,fn) ;
+/*
+  Test the simplex portion of the OSI interface.
+*/
+  testSimplex(emptySi,mpsDir) ;
 
-	OsiSolverInterface *  si1 = emptySi->clone(); 
-	OsiSolverInterface *  si2 = emptySi->clone(); 
-	si1->readMps(fn.c_str(),"mps");
-	si1->writeMpsNative("test.out",NULL,NULL);
-	si1->writeMps("test2","out");
-	si2->readMps("test.out","");
-	bool solved = true;
-	try {
-	   si1->initialSolve();
-	}
-	catch (CoinError e) {
-	   if (e.className() != "OsiVolSolverInterface") {
-	      printf("Couldn't solve initial LP in testing WriteMps\n");
-	      abort();
-	   }
-	   solved = false;
-	}
-	if (solved) {
-	   si2->initialSolve();
-	   double soln = si1->getObjValue();       
-	   CoinRelFltEq eq(1.0e-8) ;
-	   assert( eq(soln,si2->getObjValue()));       
-	}
-	delete si1;
-	delete si2;
-      }
-        
-      // Test WriteLp
-      
-      {
-
-	OsiSolverInterface *  si1 = emptySi->clone(); 
-	OsiSolverInterface *  si2 = emptySi->clone(); 
-	si1->readMps(fn.c_str(),"mps");
-	si1->writeLpNative("test.lp",NULL,NULL,1.0e-9,10,8);
-	si1->writeLp("test2");
-	si2->readLp("test.lp");
-	bool solved = true;
-	try {
-	   si1->initialSolve();
-	}
-	catch (CoinError e) {
-	   if (e.className() != "OsiVolSolverInterface") {
-	      printf("Couldn't solve initial LP in testing WriteMps\n");
-	      abort();
-	   }
-	   solved = false;
-	}
-	if (solved) {
-	   si2->initialSolve();
-	   double soln = si1->getObjValue();       
-	   CoinRelFltEq eq(1.0e-8) ;
-	   assert( eq(soln,si2->getObjValue()));       
-	}
-	delete si1;
-	delete si2;
-      }
-        
-      // Test collower
-      basePv.setVector(base->getNumCols(),indices,base->getColLower());
-      pv.setVector( si1->getNumCols(),indices, si1->getColLower());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si2->getNumCols(),indices, si2->getColLower());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si3->getNumCols(),indices, si3->getColLower());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si4->getNumCols(),indices, si4->getColLower());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si5->getNumCols(),indices, si5->getColLower());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si6->getNumCols(),indices, si6->getColLower());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si7->getNumCols(),indices, si7->getColLower());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si8->getNumCols(),indices, si8->getColLower());
-      assert(basePv.isEquivalent(pv));
-        
-      // Test colupper
-      basePv.setVector(base->getNumCols(),indices,base->getColUpper());
-      pv.setVector( si1->getNumCols(),indices, si1->getColUpper());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si2->getNumCols(),indices, si2->getColUpper());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si3->getNumCols(),indices, si3->getColUpper());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si4->getNumCols(),indices, si4->getColUpper());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si5->getNumCols(),indices, si5->getColUpper());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si6->getNumCols(),indices, si6->getColUpper());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si7->getNumCols(),indices, si7->getColUpper());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si8->getNumCols(),indices, si8->getColUpper());
-      assert(basePv.isEquivalent(pv));
-        
-      // Test getObjCoefficients
-      basePv.setVector(base->getNumCols(),indices,base->getObjCoefficients());
-      pv.setVector( si1->getNumCols(),indices, si1->getObjCoefficients());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si2->getNumCols(),indices, si2->getObjCoefficients());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si3->getNumCols(),indices, si3->getObjCoefficients());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si4->getNumCols(),indices, si4->getObjCoefficients());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si5->getNumCols(),indices, si5->getObjCoefficients());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si6->getNumCols(),indices, si6->getObjCoefficients());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si7->getNumCols(),indices, si7->getObjCoefficients());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si8->getNumCols(),indices, si8->getObjCoefficients());
-      assert(basePv.isEquivalent(pv));
-                
-      // Test rowrhs
-      basePv.setFull(base->getNumRows(),base->getRightHandSide());
-      pv.setFull( si1->getNumRows(), si1->getRightHandSide());
-      assert(basePv.isEquivalent(pv));
-      pv.setFull( si2->getNumRows(), si2->getRightHandSide());
-      assert(basePv.isEquivalent(pv));
-      pv.setFull( si3->getNumRows(), si3->getRightHandSide());
-      assert(basePv.isEquivalent(pv));
-      pv.setFull( si4->getNumRows(), si4->getRightHandSide());
-      assert(basePv.isEquivalent(pv));
-      pv.setFull( si5->getNumRows(), si5->getRightHandSide());
-      assert(basePv.isEquivalent(pv));
-      pv.setFull( si6->getNumRows(), si6->getRightHandSide());
-      assert(basePv.isEquivalent(pv));
-      pv.setFull( si7->getNumRows(), si7->getRightHandSide());
-      assert(basePv.isEquivalent(pv));
-      pv.setFull( si8->getNumRows(), si8->getRightHandSide());
-      assert(basePv.isEquivalent(pv));
-        
-      // Test rowrange
-      basePv.setFull(base->getNumRows(),base->getRowRange());
-      pv.setFull( si1->getNumRows(), si1->getRowRange());
-      assert(basePv.isEquivalent(pv));
-      pv.setFull( si2->getNumRows(), si2->getRowRange());
-      assert(basePv.isEquivalent(pv));
-      pv.setFull( si3->getNumRows(), si3->getRowRange());
-      assert(basePv.isEquivalent(pv));
-      pv.setFull( si4->getNumRows(), si4->getRowRange());
-      assert(basePv.isEquivalent(pv));
-      pv.setFull( si5->getNumRows(), si5->getRowRange());
-      assert(basePv.isEquivalent(pv));
-      pv.setFull( si6->getNumRows(), si6->getRowRange());
-      assert(basePv.isEquivalent(pv));
-      pv.setFull( si7->getNumRows(), si7->getRowRange());
-      assert(basePv.isEquivalent(pv));
-      pv.setFull( si8->getNumRows(), si8->getRowRange());
-      assert(basePv.isEquivalent(pv));
-        
-      // Test row sense
-      {
-	const char * cb = base->getRowSense();
-	const char * c1 = si1->getRowSense();
-	const char * c2 = si2->getRowSense();
-	const char * c3 = si3->getRowSense();
-	const char * c4 = si4->getRowSense();
-	const char * c5 = si5->getRowSense();
-	const char * c6 = si6->getRowSense();
-	const char * c7 = si7->getRowSense();
-	const char * c8 = si8->getRowSense();
-	int nr = base->getNumRows();
-	for ( i=0; i<nr; i++ ) {
-	  assert( cb[i]==c1[i] );
-	  assert( cb[i]==c2[i] );
-	  assert( cb[i]==c3[i] );
-	  assert( cb[i]==c4[i] );
-	  assert( cb[i]==c5[i] );
-	  assert( cb[i]==c6[i] );
-	  assert( cb[i]==c7[i] );
-	  assert( cb[i]==c8[i] );
-	}
-      }
-        
-      // Test rowlower
-      basePv.setVector(base->getNumRows(),indices,base->getRowLower());
-      pv.setVector( si1->getNumRows(),indices, si1->getRowLower());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si2->getNumRows(),indices, si2->getRowLower());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si3->getNumRows(),indices, si3->getRowLower());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si4->getNumRows(),indices, si4->getRowLower());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si5->getNumRows(),indices, si5->getRowLower());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si6->getNumRows(),indices, si6->getRowLower());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si7->getNumRows(),indices, si7->getRowLower());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si8->getNumRows(),indices, si8->getRowLower());
-      assert(basePv.isEquivalent(pv));
-        
-      // Test rowupper
-      basePv.setVector(base->getNumRows(),indices,base->getRowUpper());
-      pv.setVector( si1->getNumRows(),indices, si1->getRowUpper());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si2->getNumRows(),indices, si2->getRowUpper());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si3->getNumRows(),indices, si3->getRowUpper());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si4->getNumRows(),indices, si4->getRowUpper());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si5->getNumRows(),indices, si5->getRowUpper());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si6->getNumRows(),indices, si6->getRowUpper());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si7->getNumRows(),indices, si7->getRowUpper());
-      assert(basePv.isEquivalent(pv));
-      pv.setVector( si8->getNumRows(),indices, si8->getRowUpper());
-      assert(basePv.isEquivalent(pv)); 
-        
-      // Test Constraint Matrix
-      assert( base->getMatrixByCol()->isEquivalent(*si1->getMatrixByCol()) );
-      assert( base->getMatrixByRow()->isEquivalent(*si1->getMatrixByRow()) );
-      assert( base->getMatrixByCol()->isEquivalent(*si2->getMatrixByCol()) );
-      assert( base->getMatrixByRow()->isEquivalent(*si2->getMatrixByRow()) );
-      assert( base->getMatrixByCol()->isEquivalent(*si3->getMatrixByCol()) );
-      assert( base->getMatrixByRow()->isEquivalent(*si3->getMatrixByRow()) );
-      assert( base->getMatrixByCol()->isEquivalent(*si4->getMatrixByCol()) );
-      assert( base->getMatrixByRow()->isEquivalent(*si4->getMatrixByRow()) );
-      assert( base->getMatrixByCol()->isEquivalent(*si5->getMatrixByCol()) );
-      assert( base->getMatrixByRow()->isEquivalent(*si5->getMatrixByRow()) );
-      assert( base->getMatrixByCol()->isEquivalent(*si6->getMatrixByCol()) );
-      assert( base->getMatrixByRow()->isEquivalent(*si6->getMatrixByRow()) );
-      assert( base->getMatrixByCol()->isEquivalent(*si7->getMatrixByCol()) );
-      assert( base->getMatrixByRow()->isEquivalent(*si7->getMatrixByRow()) );
-      assert( base->getMatrixByCol()->isEquivalent(*si8->getMatrixByCol()) );
-      assert( base->getMatrixByRow()->isEquivalent(*si8->getMatrixByRow()) );
-        
-      // Test Objective Value
-      assert( eq(base->getObjValue(),si1->getObjValue()) );
-      assert( eq(base->getObjValue(),si2->getObjValue()) );
-      assert( eq(base->getObjValue(),si3->getObjValue()) );
-      assert( eq(base->getObjValue(),si4->getObjValue()) );
-      assert( eq(base->getObjValue(),si5->getObjValue()) );
-      assert( eq(base->getObjValue(),si6->getObjValue()) );
-      assert( eq(base->getObjValue(),si7->getObjValue()) );
-      assert( eq(base->getObjValue(),si8->getObjValue()) );
-        
-      // Clean-up
-      delete si8;
-      delete si7;
-      delete si6;
-      delete si5;
-      delete si4;
-      delete si3;
-      delete si2;
-      delete si1;
-      delete base;
-    }     
-    // Test load/assign with null parms
-    {
-      //Load problem with row bounds and all rims at defaults
-      {
-	OsiSolverInterface *  si = emptySi->clone(); 
-          
-	si->loadProblem(*exmip1Si->getMatrixByCol(),NULL,NULL,NULL,NULL,NULL);
-          
-	// Test column settings
-	assert(si->getNumCols()==exmip1Si->getNumCols() );
-	for ( i=0; i<si->getNumCols(); i++ ) {
-	  assert( eq(si->getColLower()[i],0.0) );
-	  assert( eq(si->getColUpper()[i],si->getInfinity()) );
-	  assert( eq(si->getObjCoefficients()[i],0.0) );
-	}
-	// Test row settings
-	assert(si->getNumRows()==exmip1Si->getNumRows() );
-	const double * rh = si->getRightHandSide();
-	const double * rr = si->getRowRange();
-	const char * rs = si->getRowSense();
-	const double * rl = si->getRowLower();
-	const double * ru = si->getRowUpper();
-	for ( i=0; i<si->getNumRows(); i++ ) {
-	  assert( eq(rh[i],0.0) );
-	  assert( eq(rr[i],0.0) );
-	  assert( 'N'==rs[i] );
-	  assert( eq(rl[i],-si->getInfinity()) );
-	  assert( eq(ru[i], si->getInfinity()) );
-	}
-          
-	delete si;
-      }
-      // Load problem with row rhs, sense and range; column bounds and
-      // objective at defaults.
-      {
-	OsiSolverInterface *  si = emptySi->clone(); 
-          
-	si->loadProblem(*exmip1Si->getMatrixByRow(),
-			NULL,NULL,NULL,
-			exmip1Si->getRowSense(),
-			exmip1Si->getRightHandSide(),
-			exmip1Si->getRowRange());
-	// Test column settings
-	assert(si->getNumCols()==exmip1Si->getNumCols() );
-	for ( i=0; i<si->getNumCols(); i++ ) {
-	  assert( eq(si->getColLower()[i],0.0) );
-	  assert( eq(si->getColUpper()[i],si->getInfinity()) );
-	  assert( eq(si->getObjCoefficients()[i],0.0) );
-	}
-	// Test row settings
-	assert(si->getNumRows()==exmip1Si->getNumRows() );
-	for ( i=0; i<si->getNumRows(); i++ ) {
-	  char s = si->getRowSense()[i];
-	  assert( eq(si->getRightHandSide()[i],
-		     exmip1Si->getRightHandSide()[i]) );
-	  assert( eq(si->getRowRange()[i],
-		     exmip1Si->getRowRange()[i]) );
-	  assert( s==exmip1Si->getRowSense()[i] );
-            
-	  if ( s=='G' ) {
-	    assert( eq(si->getRowLower()[i],
-		       exmip1Si->getRightHandSide()[i]) );
-	    assert( eq(si->getRowUpper()[i],
-		       si->getInfinity()) );
-	  }
-	  else if ( s=='L' ) {
-	    assert( eq(si->getRowLower()[i],
-		       -si->getInfinity()) );
-	    assert( eq(si->getRowUpper()[i],
-		       exmip1Si->getRightHandSide()[i]) );
-	  }
-	  else if ( s=='E' ) {
-	    assert( eq(si->getRowLower()[i],
-		       si->getRowUpper()[i]) );
-	    assert( eq(si->getRowUpper()[i],
-		       exmip1Si->getRightHandSide()[i]) );
-	  }
-	  else if ( s=='N' ) {
-	    assert( eq(si->getRowLower()[i], -si->getInfinity()) );
-	    assert( eq(si->getRowUpper()[i],  si->getInfinity()) );
-	  }
-	  else if ( s=='R' ) {
-	    assert( eq(si->getRowLower()[i],
-		       exmip1Si->getRightHandSide()[i] -
-		       exmip1Si->getRowRange()[i]) );
-	    assert( eq(si->getRowUpper()[i],
-		       exmip1Si->getRightHandSide()[i]) );
-	  }
-	}
-          
-	delete si;
-      }
-      // Test adding rows to NULL
-      {
-	OsiSolverInterface *  si = emptySi->clone();
-	int i;
-
-	//Matrix
-	int column[]={0,1,2};
-	double row1E[]={4.0,7.0,5.0};
-	double row2E[]={7.0,4.0,5.0};
-	CoinPackedVector row1(3,column,row1E);
-	CoinPackedVector row2(3,column,row2E);
-
-	double objective[]={5.0,6.0,5.5};
-
-	{
-	  // Add empty columns
-	  for (i=0;i<3;i++) 
-	    si->addCol(CoinPackedVector(),0.0,10.0,objective[i]);
-
-	  // Add rows
-	  si->addRow(row1,2.0,100.0);
-	  si->addRow(row2,2.0,100.0);
-
-	  // Vol can not solve problem of this form
-	  if ( !volSolverInterface ) {
-	    // solve
-	    si->initialSolve();
-
-	    CoinRelFltEq eq(1.0e-7) ;
-	    double objValue = si->getObjValue();
-	    if ( !eq(objValue,2.0) )
-	      failureMessage(solverName,
-			"getObjValue after adding empty cols and then rows.") ;
-	  }
-	}
-
-	delete si;
-      }
-      // Test adding rows to NULL - alternative format
-      {
-	OsiSolverInterface *  si = emptySi->clone();
-	int i;
-
-	//Matrix
-	int column[]={0,1,2,0,1,2};
-	double row1E[]={4.0,7.0,5.0};
-	double row2E[]={7.0,4.0,5.0};
-	double row12E[]={4.0,7.0,5.0,7.0,4.0,5.0};
-	int starts[]={0,3,6};
-	double ub[]={100.0,100.0};
-	//CoinPackedVector row1(3,column,row1E);
-	//CoinPackedVector row2(3,column,row2E);
-
-	double objective[]={5.0,6.0,5.5};
-
-	{
-	  // Add empty columns
-	  for (i=0;i<3;i++) 
-	    si->addCol(CoinPackedVector(),0.0,10.0,objective[i]);
-	  
-	  // Add rows
-	  si->addRow(3,column,row1E,2.0,100.0);
-	  si->addRow(3,column,row2E,2.0,100.0);
-	  // and again
-	  si->addRows(2,starts,column,row12E,NULL,ub);
-	  
-	  // Vol can not solve problem of this form
-	  if ( !volSolverInterface ) {
-	    // solve
-	    si->initialSolve();
-	    
-	    CoinRelFltEq eq(1.0e-7) ;
-	    double objValue = si->getObjValue();
-	    if ( !eq(objValue,2.0) )
-	      failureMessage(solverName,"getObjValue after adding empty cols and then rows.");;
-	  }
-	}
-	
-	delete si;
-      }
-      // Test adding columns to NULL
-      {
-	OsiSolverInterface *  si = emptySi->clone();
-	int i;
-
-	//Matrix
-	int row[]={0,1};
-	double col1E[]={4.0,7.0};
-	double col2E[]={7.0,4.0};
-	double col3E[]={5.0,5.0};
-	CoinPackedVector col1(2,row,col1E);
-	CoinPackedVector col2(2,row,col2E);
-	CoinPackedVector col3(2,row,col3E);
-
-	double objective[]={5.0,6.0,5.5};
-	{
-	  // Add empty rows
-	  for (i=0;i<2;i++) 
-	    si->addRow(CoinPackedVector(),2.0,100.0);
-
-	  // Add columns
-	  if ( volSolverInterface ) {
-	    // FIXME: this test could be done w/ the volume, but the rows must
-	    // not be ranged.
-	    failureMessage(solverName,"addCol add columns to null");
-	  }
-	  else {
-	    si->addCol(col1,0.0,10.0,objective[0]);
-	    si->addCol(col2,0.0,10.0,objective[1]);
-	    si->addCol(col3,0.0,10.0,objective[2]);
-
-	    // solve
-	    si->initialSolve();
-
-	    CoinRelFltEq eq(1.0e-7) ;      
-	    double objValue = si->getObjValue();
-	    if ( !eq(objValue,2.0) )
-	       failureMessage(solverName,
-			"getObjValue after adding empty rows and then cols.");
-
-	  }
-	}
-	delete si;
-      }
-      // Test Simplex interface
-      {
-	OsiSolverInterface * si = emptySi->clone();
-	std::string solverName;
-	si->getStrParam(OsiSolverName,solverName);
-
-	if (si->canDoSimplexInterface()==2) {
-          // solve an lp by hand
-          
-          std::string fn = mpsDir+"p0033";
-          si->readMps(fn.c_str(),"mps");
-          si->setObjSense(-1.0);
-          si->initialSolve();
-          si->setObjSense(1.0);
-          // enable special mode
-          si->enableSimplexInterface(true);
-          // we happen to know that variables are 0-1 and rows are L
-          int numberIterations=0;
-          int numberColumns = si->getNumCols();
-          int numberRows = si->getNumRows();
-          double * fakeCost = new double[numberColumns];
-          double * duals = new double [numberRows];
-          double * djs = new double [numberColumns];
-          const double * solution = si->getColSolution();
-          memcpy(fakeCost,si->getObjCoefficients(),numberColumns*sizeof(double));
-          while (1) {
-            const double * dj;
-            const double * dual;
-            if ((numberIterations&1)==0) {
-              // use given ones
-              dj = si->getReducedCost();
-              dual = si->getRowPrice();
-            } else {
-              // create
-              dj = djs;
-              dual = duals;
-              si->getReducedGradient(djs,duals,fakeCost);
-            }
-            int i;
-            int colIn=9999;
-            int direction=1;
-            double best=1.0e-6;
-            // find most negative reduced cost
-            // Should check basic - but should be okay on this problem
-            for (i=0;i<numberRows;i++) {
-              double value=dual[i];
-              if (value>best) {
-                direction=-1;
-                best=value;
-                colIn=-i-1;
-              }
-            }
-            for (i=0;i<numberColumns;i++) {
-              double value=dj[i];
-              if (value<-best&&solution[i]<1.0e-6) {
-                direction=1;
-                best=-value;
-                colIn=i;
-              } else if (value>best&&solution[i]>1.0-1.0e-6) {
-                direction=-1;
-                best=value;
-                colIn=i;
-              }
-            }
-            if (colIn==9999)
-              break; // should be optimal
-            int colOut;
-            int outStatus;
-            double theta;
-            assert(!si->primalPivotResult(colIn,direction,colOut,outStatus,theta,NULL));
-            printf("out %d, direction %d theta %g\n",
-                   colOut,outStatus,theta);
-            numberIterations++;
-          }
-          delete [] fakeCost;
-          delete [] duals;
-          delete [] djs;
-          // exit special mode
-          si->disableSimplexInterface();
-          si->resolve();
-          assert (!si->getIterationCount());
-          si->setObjSense(-1.0);
-          si->initialSolve();
-          std::cout<<solverName<<" passed OsiSimplexInterface test"<<std::endl;
-        } else {
-          std::cout<<solverName<<" has no OsiSimplexInterface"<<std::endl;
-        }
-        delete si;
-      }
-
-      // Test adding columns to NULL - alternative format
-      {
-	OsiSolverInterface *  si = emptySi->clone();
-	int i;
-
-	//Matrix
-	int row[]={0,1};
-	double col1E[]={4.0,7.0};
-	double col23E[]={7.0,4.0,5.0,5.0};
-	int row23E[]={0,1,0,1};
-	int start23E[]={0,2,4};
-	double ub23E[]={10.0,10.0};
-	//CoinPackedVector col1(2,row,col1E);
-	//CoinPackedVector col2(2,row,col2E);
-	//CoinPackedVector col3(2,row,col3E);
-
-	double objective[]={5.0,6.0,5.5};
-	{
-	  // Add empty rows
-	  for (i=0;i<2;i++) 
-	    si->addRow(CoinPackedVector(),2.0,100.0);
-	  
-	  // Add columns
-	  if ( volSolverInterface ) {
-	    // FIXME: this test could be done w/ the volume, but the rows must not
-	    // be ranged.
-	    failureMessage(solverName,"addCol add columns to null");
-	  }
-	  else {
-	    si->addCol(2,row,col1E,0.0,10.0,objective[0]);
-	    si->addCols(2,start23E,row23E,col23E,NULL,ub23E,objective+1);
-	    
-	    // solve
-	    si->initialSolve();
-	    
-	    CoinRelFltEq eq(1.0e-7) ;      
-	    double objValue = si->getObjValue();
-	    if ( !eq(objValue,2.0) )
-	      failureMessage(solverName,"getObjValue after adding empty rows and then cols.");
-	    
-	  }
-	}
-	delete si;
-      }
-    }
-  }
 #ifdef COIN_OPBDP
   // test Opbdp interface
   {
@@ -3975,7 +4155,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     int numberColumns = si->getNumCols();
     for (int i=0;i<numberFound;i++) {
       unsigned int * thisArray = array[i];
-      for (int j=0;j<numberColumns;j++) 
+      for (int j=0;j<numberColumns;j++)
         if (atOne(j,thisArray))
           printf(" %d",j);
       printf("\n");
@@ -3987,15 +4167,15 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 #endif
 
   // Add a Laci suggested test case
-  // Load in a problem as column ordered matrix, 
-  // extract the row ordered copy, 
-  // add a row, 
-  // extract the row ordered copy again and test whether it's ok. 
+  // Load in a problem as column ordered matrix,
+  // extract the row ordered copy,
+  // add a row,
+  // extract the row ordered copy again and test whether it's ok.
   // (the same can be done with reversing the role
   //  of row and column ordered.)
   {
-    OsiSolverInterface *  si = emptySi->clone(); 
-      
+    OsiSolverInterface *  si = emptySi->clone();
+
     si->loadProblem(
 		    *(exmip1Si->getMatrixByCol()),
 		    exmip1Si->getColLower(),
@@ -4020,7 +4200,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     cuts.insert(rc);
 
     si->applyCuts(cuts);
-      
+
     CoinPackedMatrix pm2 = *(si->getMatrixByRow());
 
     assert(pm1.getNumRows()==pm2.getNumRows()-1);
@@ -4034,8 +4214,8 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     delete si;
   }
   {
-    OsiSolverInterface *  si = emptySi->clone(); 
-      
+    OsiSolverInterface *  si = emptySi->clone();
+
     si->loadProblem(
 		    *(exmip1Si->getMatrixByRow()),
 		    exmip1Si->getColLower(),
@@ -4059,7 +4239,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     cuts.insert(rc);
 
     si->applyCuts(cuts);
-      
+
     CoinPackedMatrix pm2 = *(si->getMatrixByCol());
 
     assert( pm1.isColOrdered() );
@@ -4072,7 +4252,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     pm2ByRow.reverseOrderedCopyOf(pm2);
 
     assert( !pm1ByRow.isColOrdered() );
-    assert( !pm2ByRow.isColOrdered() );      
+    assert( !pm2ByRow.isColOrdered() );
     assert( pm1ByRow.getNumRows()==pm2ByRow.getNumRows()-1 );
     assert( pm1.getNumRows() == pm1ByRow.getNumRows() );
     assert( pm2.getNumRows() == pm2ByRow.getNumRows() );
@@ -4086,7 +4266,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 
     delete si;
   }
-    
+
   delete exmip1Si;
 
   {
@@ -4148,7 +4328,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 	assert(!exists ^ testHintParam(si,i,false,OsiHintDo,&throws)) ;
 	assert(!exists ^ testHintParam(si,i,true,OsiForceDo,&throws)) ;
 	assert(!exists ^ testHintParam(si,i,false,OsiForceDo,&throws)) ; }
-      
+
       std::cerr << "Checked " << OsiLastHintParam <<
 		   " hints x (true, false) at strength OsiForceDo; " <<
 		   throws << " throws." << std::endl ;
@@ -4156,7 +4336,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 
     delete si;
   }
-  
+
   // Test case submitted by Vivian De Smedt (slightly modifed to work with
   // Vol Algorithm).
 
@@ -4166,24 +4346,24 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     int iEmpty = 0;
     CoinBigIndex iEmpty2 = 0;
     //char cEmpty = '?';
-    
+
     s->loadProblem(0, 0, &iEmpty2, &iEmpty, &dEmpty, &dEmpty, &dEmpty, &dEmpty, &dEmpty, &dEmpty);
     double inf = s->getInfinity();
     CoinPackedVector c;
-    
+
     s->addCol(c, 0, 10, 3);
     s->addCol(c, 0, 10, 1);
-    
+
     CoinPackedVector r1;
     r1.insert(0, 2);
     r1.insert(1, 1);
     s->addRow(r1, -inf, 10);
-    
+
     CoinPackedVector r2;
     r2.insert(0, 1);
     r2.insert(1, 3);
     s->addRow(r2, -inf, 15);
-    
+
     s->setObjSense(-1);
 
     s->initialSolve() ;
@@ -4194,11 +4374,11 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       failureMessage(*s,"colsol[0] bad value");
     if ( colSol[1]>0.5 )
       failureMessage(*s,"colsol[1] bad value");
-    
+
     s->setObjCoeff(0, 1);
     s->setObjCoeff(1, 1);
-    
-    s->resolve();    
+
+    s->resolve();
     colSol = s->getColSolution();
     // Don't test for exact answer, because Vol algorithm
     // only returns an appoximate solution
@@ -4217,14 +4397,14 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     OsiSolverInterface * presolvedModel;
     OsiPresolve pinfo;
     int numberPasses=5; // can change this
-    /* Use a tolerance of 1.0e-8 for feasibility, treat problem as 
+    /* Use a tolerance of 1.0e-8 for feasibility, treat problem as
        not being integer, do "numberpasses" passes */
     presolvedModel = pinfo.presolvedModel(*si,1.0e-8,false,numberPasses);
     assert(presolvedModel);
     // switch off any native presolve
     presolvedModel->setHintParam(OsiDoPresolveInInitial,false);
     presolvedModel->initialSolve();
-    double objValue = presolvedModel->getObjValue(); 
+    double objValue = presolvedModel->getObjValue();
     if( !eq(objValue,5.5018458883e+03) )
       failureMessage(solverName,"OsiPresolved model has wrong objective");
     pinfo.postsolve(true);
@@ -4234,7 +4414,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     si->setHintParam(OsiDoPresolveInResolve,false);
     si->setHintParam(OsiDoDualInResolve,false);
     si->resolve();
-    objValue = si->getObjValue(); 
+    objValue = si->getObjValue();
     if( !eq(objValue,5.5018458883e+03) )
       failureMessage(solverName,"OsiPresolve - final objective wrong");
     if (si->getIterationCount())
@@ -4245,7 +4425,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   // Perform tests that are embodied in functions
   if ( !volSolverInterface && !symSolverInterface)
   {
-    
+
     typedef bool (*TestFunction)(OsiSolverInterface*);
     std::vector<std::pair<TestFunction, const char*> > test_functions;
     test_functions.push_back(std::pair<TestFunction, const char*>(&test1VivianDeSmedt, "test1VivianDeSmedt"));
@@ -4263,7 +4443,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     test_functions.push_back(std::pair<TestFunction, const char*>(&test13VivianDeSmedt,"test13VivianDeSmedt"));
     test_functions.push_back(std::pair<TestFunction, const char*>(&test14VivianDeSmedt,"test14VivianDeSmedt"));
     test_functions.push_back(std::pair<TestFunction, const char*>(&test15VivianDeSmedt,"test15VivianDeSmedt"));
-    
+
     unsigned int i;
     for (i = 0; i < test_functions.size(); ++i) {
       OsiSolverInterface *s = emptySi->clone();

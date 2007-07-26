@@ -1,4 +1,4 @@
-# Copyright (C) 2006 International Business Machines and others.
+# Copyright (C) 2006, 2007 International Business Machines and others.
 # All Rights Reserved.
 # This file is distributed under the Common Public License.
 
@@ -21,6 +21,9 @@ libOsiGlpk_la_SOURCES = \
 
 # This is for libtool (on Windows)
 libOsiGlpk_la_LDFLAGS = $(LT_LDFLAGS)
+
+# If Glpk has been compiled in ThirdParty, we include it into this library
+libOsiGlpk_la_LIBADD = $(GLPKCOINLIB)
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows.

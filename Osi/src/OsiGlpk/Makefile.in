@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-# Copyright (C) 2006 International Business Machines and others.
+# Copyright (C) 2006, 2007 International Business Machines and others.
 # All Rights Reserved.
 # This file is distributed under the Common Public License.
 
@@ -66,7 +66,7 @@ am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libOsiGlpk_la_LIBADD =
+libOsiGlpk_la_DEPENDENCIES =
 am_libOsiGlpk_la_OBJECTS = OsiGlpkSolverInterface.lo
 libOsiGlpk_la_OBJECTS = $(am_libOsiGlpk_la_OBJECTS)
 depcomp = $(SHELL) $(top_srcdir)/../depcomp
@@ -122,6 +122,8 @@ CLPOBJDIR = @CLPOBJDIR@
 CLPSRCDIR = @CLPSRCDIR@
 COINUTILSOBJDIR = @COINUTILSOBJDIR@
 COINUTILSSRCDIR = @COINUTILSSRCDIR@
+COIN_BUILD_GLPK_FALSE = @COIN_BUILD_GLPK_FALSE@
+COIN_BUILD_GLPK_TRUE = @COIN_BUILD_GLPK_TRUE@
 COIN_HAS_CBC_FALSE = @COIN_HAS_CBC_FALSE@
 COIN_HAS_CBC_TRUE = @COIN_HAS_CBC_TRUE@
 COIN_HAS_CGL_FALSE = @COIN_HAS_CGL_FALSE@
@@ -323,6 +325,9 @@ libOsiGlpk_la_SOURCES = \
 
 # This is for libtool (on Windows)
 libOsiGlpk_la_LDFLAGS = $(LT_LDFLAGS)
+
+# If Glpk has been compiled in ThirdParty, we include it into this library
+libOsiGlpk_la_LIBADD = $(GLPKCOINLIB)
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows.

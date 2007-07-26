@@ -71,13 +71,13 @@ AC_COIN_HAS_PROJECT(Vol)
 
 # Check which third party solvers are available ToDo!
 AC_COIN_HAS_USER_LIBRARY([Cplex],[CPX],[cplex.h],[CPXgetstat])
-AC_COIN_HAS_USER_LIBRARY([Glpk],[GLPK],[glpk.h],
-    [_glp_lpx_simplex glp_lpx_simplex])
 AC_COIN_HAS_USER_LIBRARY([FortMP],[FMP])  #ToDo! is Fortran?
 AC_COIN_HAS_USER_LIBRARY([Mosek],[MSK],[mosekdl.h],[MSK_openmosek])
 AC_COIN_HAS_USER_LIBRARY([Osl],[OSL],[ekk_c_api.h],[ekk_simplex])
 AC_COIN_HAS_USER_LIBRARY([Soplex],[SPX],[spxsolver.h]) # ToDo
 AC_COIN_HAS_USER_LIBRARY([Xpress],[XPR],[xprs.h],[XPRSsetintcontrol])
+
+AC_COIN_HAS_GLPK(Glpk)
 
 #############################################################################
 #                 Configuration options for individual OSIs                 #
@@ -93,10 +93,18 @@ AC_ODSI_PARANOIA(1)
 
 # If glpk is available, choose the MIP solver. lpx_intopt is preferred;
 # lpx_integer will be used as a fallback. coin_has_glpk and glpk_libcheck
-# are defined and set by COIN_HAS_USER_LIBRARY.
+# are defined and set by COIN_HAS_GLPK. If we're building ThirdParty/Glpk,
+# we already know the answer. Make it look like we're checking.
 
-if test "x$coin_has_glpk" = "xtrue" && test "x$glpk_libcheck" = "xyes" ; then
-  AC_OGSI_MIPSOLVER()
+if test x"$use_thirdpartyglpk" == xbuild; then
+  AC_MSG_CHECKING([for glpk mip solver ])
+  AC_DEFINE(GLPK_HAS_INTOPT,[1],
+	    [Define to 1 if GLPK has the advanced B&B solver lpx_intopt])
+  AC_MSG_RESULT([lpx_intopt])
+else
+  if test "x$coin_has_glpk" = "xtrue" && test "x$glpk_libcheck" = "xyes" ; then
+    AC_OGSI_MIPSOLVER()
+  fi
 fi
 
 ##############################################################################

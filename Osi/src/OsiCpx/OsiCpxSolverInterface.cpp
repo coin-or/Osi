@@ -2127,7 +2127,7 @@ OsiCpxSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
 				    const double* obj,
 				    const double* rowlb, const double* rowub )
 {
-  debugMessage("OsiCpxSolverInterface::loadProblem(%p, %p, %p, %p, %p, %p)\n", &matrix, collb, colub, obj, rowlb, rowub);
+  debugMessage("OsiCpxSolverInterface::loadProblem(1)(%p, %p, %p, %p, %p, %p)\n", &matrix, collb, colub, obj, rowlb, rowub);
 
   const double inf = getInfinity();
   
@@ -2178,8 +2178,11 @@ OsiCpxSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
 				    const char* rowsen, const double* rowrhs,
 				    const double* rowrng )
 {
-  debugMessage("OsiCpxSolverInterface::loadProblem(%p, %p, %p, %p, %p, %p, %p)\n",
+  debugMessage("OsiCpxSolverInterface::loadProblem(2)(%p, %p, %p, %p, %p, %p, %p)\n",
      &matrix, collb, colub, obj, rowsen, rowrhs, rowrng);
+
+  char *lclRowsen = NULL ;
+  double *lclRowrhs = NULL ;
 
   int nc=matrix.getNumCols();
   int nr=matrix.getNumRows();
@@ -2188,8 +2191,14 @@ OsiCpxSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
     gutsOfDestructor();      // -> kill old LP
   else
     {
-      assert( rowsen != NULL );
-      assert( rowrhs != NULL );
+      if (rowsen == NULL)
+      { lclRowsen = new char[nr] ;
+	CoinFillN(lclRowsen,nr,'G') ;
+	rowsen = lclRowsen ; }
+      if (rowrhs == NULL)
+      { lclRowrhs = new double[nr] ;
+	CoinFillN(lclRowrhs,nr,0.0) ;
+	rowrhs = lclRowrhs ; }
 
       int i;
       
@@ -2299,6 +2308,9 @@ OsiCpxSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
       resizeColType(nc);
       CoinFillN(coltype_, nc, 'C');
     }
+
+  if (lclRowsen != NULL) delete[] lclRowsen ;
+  if (lclRowrhs != NULL) delete[] lclRowrhs ;
 }
    
 //-----------------------------------------------------------------------------
@@ -2332,7 +2344,7 @@ OsiCpxSolverInterface::loadProblem(const int numcols, const int numrows,
 				   const double* obj,
 				   const double* rowlb, const double* rowub )
 {
-  debugMessage("OsiCpxSolverInterface::loadProblem()\n");
+  debugMessage("OsiCpxSolverInterface::loadProblem(3)()\n");
 
   const double inf = getInfinity();
   
@@ -2365,7 +2377,7 @@ OsiCpxSolverInterface::loadProblem(const int numcols, const int numrows,
 				   const char* rowsen, const double* rowrhs,
 				   const double* rowrng )
 {
-  debugMessage("OsiCpxSolverInterface::loadProblem(%d, %d, %p, %p, %p, %p, %p, %p, %p, %p, %p)\n",
+  debugMessage("OsiCpxSolverInterface::loadProblem(4)(%d, %d, %p, %p, %p, %p, %p, %p, %p, %p, %p)\n",
      numcols, numrows, start, index, value, collb, colub, obj, rowsen, rowrhs, rowrng);
 
   const int nc = numcols;
@@ -2377,8 +2389,16 @@ OsiCpxSolverInterface::loadProblem(const int numcols, const int numrows,
     return;
   }
 
-  assert( rowsen != NULL );
-  assert( rowrhs != NULL );
+  char *lclRowsen = NULL ;
+  double *lclRowrhs = NULL ;
+
+  if (rowsen == NULL)
+  { lclRowsen = new char[nr] ;
+    CoinFillN(lclRowsen,nr,'G') ;
+    rowsen = lclRowsen ; }
+  if (rowrhs == NULL)
+  { lclRowrhs = new double[nr] ;
+    CoinFillN(lclRowrhs,nr,0.0) ; }
       
   int i;
       
@@ -2451,6 +2471,9 @@ OsiCpxSolverInterface::loadProblem(const int numcols, const int numrows,
   delete[] rr;
   delete[] rhs;
   delete[] sen;
+
+  if (lclRowsen != NULL) delete[] lclRowsen ;
+  if (lclRowrhs != NULL) delete[] lclRowrhs ;
 
   resizeColType(nc);
   CoinFillN(coltype_, nc, 'C');

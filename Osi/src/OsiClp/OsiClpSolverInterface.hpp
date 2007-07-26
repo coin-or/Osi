@@ -693,7 +693,7 @@ public:
   /**@name Methods to input a problem */
   //@{
   /** Load in an problem by copying the arguments (the constraints on the
-      rows are given by lower and upper bounds). If a pointer is 0 then the
+      rows are given by lower and upper bounds). If a pointer is NULL then the
       following values are the default:
       <ul>
       <li> <code>colub</code>: all columns have upper bound infinity
@@ -720,7 +720,7 @@ public:
     			     double*& rowlb, double*& rowub);
   
   /** Load in an problem by copying the arguments (the constraints on the
-      rows are given by sense/rhs/range triplets). If a pointer is 0 then the
+      rows are given by sense/rhs/range triplets). If a pointer is NULL then the
       following values are the default:
       <ul>
       <li> <code>colub</code>: all columns have upper bound infinity

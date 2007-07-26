@@ -420,6 +420,9 @@ OsiVolSolverInterface::writeMps(const char *filename,
 		     getRowLower(), getRowUpper(),
 		     (const char**) 0 /*colnam*/, (const char**) 0 /*rownam*/);
    std::string fname = filename;
+   if (extension)
+   { if (extension[0] != '\0' && extension[0] != '.')
+     fname += "." ; }
    fname += extension;
    writer.writeMps(fname.c_str());
 }

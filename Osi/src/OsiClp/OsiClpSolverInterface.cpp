@@ -254,12 +254,16 @@ void OsiClpSolverInterface::initialSolve()
         solver.dual(0);
 	if (inCbcOrOther) {
 	  if(handler.inTrouble()) {
+#ifdef COIN_DEVELOP
 	    printf("dual trouble a\n");
+#endif
 	    // try just going back in
 	    handler.setPhase(1);
 	    solver.dual();
 	    if (handler.inTrouble()) {
+#ifdef COIN_DEVELOP
 	      printf("dual trouble b\n");
+#endif
 	      // try primal with original basis
 	      handler.setPhase(2);
 	      setBasis(basis_,&solver);
@@ -287,12 +291,16 @@ void OsiClpSolverInterface::initialSolve()
         solver.primal(1);
 	if (inCbcOrOther) {
 	  if(handler.inTrouble()) {
+#ifdef COIN_DEVELOP
 	    printf("primal trouble a\n");
+#endif
 	    // try just going back in (but with dual)
 	    handler.setPhase(1);
 	    solver.dual();
 	    if (handler.inTrouble()) {
+#ifdef COIN_DEVELOP
 	      printf("primal trouble b\n");
+#endif
 	      // try primal with original basis
 	      handler.setPhase(2);
 	      setBasis(basis_,&solver);
@@ -348,6 +356,7 @@ void OsiClpSolverInterface::initialSolve()
     basis_ = getBasis(&solver);
     //basis_.print();
   }
+  solver.messageHandler()->setLogLevel(saveMessageLevel);
   solver.returnModel(*modelPtr_);
   if (startFinishOptions) {
     int save = modelPtr_->logLevel();
@@ -753,8 +762,8 @@ void OsiClpSolverInterface::resolve()
   basis_ = getBasis(modelPtr_);
   //printf("basis after dual\n");
   //basis_.print();
-  //modelPtr_->messageHandler()->setLogLevel(saveMessageLevel);
   modelPtr_->popMessageHandler(saveHandler,oldDefault);
+  modelPtr_->messageHandler()->setLogLevel(saveMessageLevel);
   if (saveSolveType==2) {
     enableSimplexInterface(doingPrimal);
   }

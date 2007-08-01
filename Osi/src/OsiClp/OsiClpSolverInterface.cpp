@@ -491,7 +491,7 @@ void OsiClpSolverInterface::resolve()
     if (messageLevel>0)
       messageLevel--;
   }
-  if (messageLevel<saveMessageLevel)
+  if (messageLevel<modelPtr_->messageHandler()->logLevel())
     modelPtr_->messageHandler()->setLogLevel(messageLevel);
   // See if user set factorization frequency
   int userFactorizationFrequency = modelPtr_->factorization()->maximumPivots();

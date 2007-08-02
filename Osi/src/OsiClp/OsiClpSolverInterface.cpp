@@ -2152,6 +2152,7 @@ void
 OsiClpSolverInterface::addRow(const CoinPackedVectorBase& vec,
 			      const double rowlb, const double rowub)
 {
+  freeCachedResults0();
   int numberRows = modelPtr_->numberRows();
   modelPtr_->resize(numberRows+1,modelPtr_->numberColumns());
   basis_.resize(numberRows+1,modelPtr_->numberColumns());
@@ -2159,7 +2160,7 @@ OsiClpSolverInterface::addRow(const CoinPackedVectorBase& vec,
   if (!modelPtr_->clpMatrix())
     modelPtr_->createEmptyMatrix();
   modelPtr_->matrix()->appendRow(vec);
-  freeCachedResults();
+  freeCachedResults1();
 }
 //-----------------------------------------------------------------------------
 void 
@@ -2167,6 +2168,7 @@ OsiClpSolverInterface::addRow(const CoinPackedVectorBase& vec,
 			      const char rowsen, const double rowrhs,   
 			      const double rowrng)
 {
+  freeCachedResults0();
   int numberRows = modelPtr_->numberRows();
   modelPtr_->resize(numberRows+1,modelPtr_->numberColumns());
   basis_.resize(numberRows+1,modelPtr_->numberColumns());
@@ -2176,13 +2178,14 @@ OsiClpSolverInterface::addRow(const CoinPackedVectorBase& vec,
   if (!modelPtr_->clpMatrix())
     modelPtr_->createEmptyMatrix();
   modelPtr_->matrix()->appendRow(vec);
-  freeCachedResults();
+  freeCachedResults1();
 }
 //-----------------------------------------------------------------------------
 void 
 OsiClpSolverInterface::addRow(int numberElements, const int * columns, const double * elements,
 			   const double rowlb, const double rowub) 
 {
+  freeCachedResults0();
   int numberRows = modelPtr_->numberRows();
   modelPtr_->resize(numberRows+1,modelPtr_->numberColumns());
   basis_.resize(numberRows+1,modelPtr_->numberColumns());
@@ -2194,7 +2197,7 @@ OsiClpSolverInterface::addRow(int numberElements, const int * columns, const dou
   starts[0]=0;
   starts[1]=numberElements;
   redoScaleFactors( 1,starts, columns, elements);
-  freeCachedResults();
+  freeCachedResults1();
 }
 //-----------------------------------------------------------------------------
 void 
@@ -2202,6 +2205,7 @@ OsiClpSolverInterface::addRows(const int numrows,
 			       const CoinPackedVectorBase * const * rows,
 			       const double* rowlb, const double* rowub)
 {
+  freeCachedResults0();
   int numberRows = modelPtr_->numberRows();
   modelPtr_->resize(numberRows+numrows,modelPtr_->numberColumns());
   basis_.resize(numberRows+numrows,modelPtr_->numberColumns());
@@ -2225,7 +2229,7 @@ OsiClpSolverInterface::addRows(const int numrows,
   if (!modelPtr_->clpMatrix())
     modelPtr_->createEmptyMatrix();
   modelPtr_->matrix()->appendRows(numrows,rows);
-  freeCachedResults();
+  freeCachedResults1();
 }
 //-----------------------------------------------------------------------------
 void 
@@ -2234,6 +2238,7 @@ OsiClpSolverInterface::addRows(const int numrows,
 			       const char* rowsen, const double* rowrhs,   
 			       const double* rowrng)
 {
+  freeCachedResults0();
   int numberRows = modelPtr_->numberRows();
   modelPtr_->resize(numberRows+numrows,modelPtr_->numberColumns());
   basis_.resize(numberRows+numrows,modelPtr_->numberColumns());
@@ -2254,13 +2259,14 @@ OsiClpSolverInterface::addRows(const int numrows,
   if (!modelPtr_->clpMatrix())
     modelPtr_->createEmptyMatrix();
   modelPtr_->matrix()->appendRows(numrows,rows);
-  freeCachedResults();
+  freeCachedResults1();
 }
 void 
 OsiClpSolverInterface::addRows(const int numrows,
 			       const int * rowStarts, const int * columns, const double * element,
 			       const double* rowlb, const double* rowub)
 {
+  freeCachedResults0();
   int numberRows = modelPtr_->numberRows();
   modelPtr_->resize(numberRows+numrows,modelPtr_->numberColumns());
   basis_.resize(numberRows+numrows,modelPtr_->numberColumns());
@@ -2285,7 +2291,7 @@ OsiClpSolverInterface::addRows(const int numrows,
     modelPtr_->createEmptyMatrix();
   modelPtr_->matrix()->appendRows(numrows,rowStarts,columns,element);
   redoScaleFactors( numrows,rowStarts, columns, element);
-  freeCachedResults();
+  freeCachedResults1();
 }
 //-----------------------------------------------------------------------------
 void 
@@ -2938,6 +2944,7 @@ OsiClpSolverInterface::applyRowCuts(int numberCuts, const OsiRowCut ** cuts)
   getIntParam(OsiNameDiscipline,nameDiscipline) ;
   assert (!nameDiscipline);
 #endif
+  freeCachedResults0();
   // Say can't gurantee optimal basis etc
   lastAlgorithm_=999;
   int numberRows = modelPtr_->numberRows();
@@ -3017,7 +3024,7 @@ OsiClpSolverInterface::applyRowCuts(int numberCuts, const OsiRowCut ** cuts)
     modelPtr_->createEmptyMatrix();
   //modelPtr_->matrix()->appendRows(numberCuts,rows);
   modelPtr_->clpMatrix()->appendMatrix(numberCuts,0,starts,indices,elements);
-  freeCachedResults();
+  freeCachedResults1();
   redoScaleFactors( numberCuts,starts, indices, elements);
   delete [] starts;
   delete [] indices;
@@ -3121,6 +3128,39 @@ void OsiClpSolverInterface::freeCachedResults() const
   rowsense_=NULL;
   rhs_=NULL;
   rowrange_=NULL;
+  matrixByRow_=NULL;
+  //ws_ = NULL;
+  if (modelPtr_&&modelPtr_->clpMatrix()) {
+    modelPtr_->clpMatrix()->refresh(modelPtr_); // make sure all clean
+#ifndef NDEBUG
+    ClpPackedMatrix * clpMatrix = dynamic_cast<ClpPackedMatrix *> (modelPtr_->clpMatrix());
+    if (clpMatrix) {
+      assert (clpMatrix->getNumRows()==modelPtr_->getNumRows());
+      assert (clpMatrix->getNumCols()==modelPtr_->getNumCols());
+    }
+#endif
+  }
+}
+
+//------------------------------------------------------------------- 
+
+void OsiClpSolverInterface::freeCachedResults0() const
+{  
+  delete [] rowsense_;
+  delete [] rhs_;
+  delete [] rowrange_;
+  rowsense_=NULL;
+  rhs_=NULL;
+  rowrange_=NULL;
+}
+
+//------------------------------------------------------------------- 
+
+void OsiClpSolverInterface::freeCachedResults1() const
+{  
+  // Say can't gurantee optimal basis etc
+  lastAlgorithm_=999;
+  delete matrixByRow_;
   matrixByRow_=NULL;
   //ws_ = NULL;
   if (modelPtr_&&modelPtr_->clpMatrix()) {

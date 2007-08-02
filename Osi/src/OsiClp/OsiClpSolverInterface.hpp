@@ -949,6 +949,12 @@ protected:
   /// Deletes all mutable stuff
   void freeCachedResults() const;
   
+  /// Deletes all mutable stuff for row ranges etc
+  void freeCachedResults0() const;
+  
+  /// Deletes all mutable stuff for matrix etc
+  void freeCachedResults1() const;
+  
   /// A method that fills up the rowsense_, rhs_ and rowrange_ arrays
   void extractSenseRhsRange() const;
   

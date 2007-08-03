@@ -1400,17 +1400,20 @@ public:
   void passInMessageHandler(CoinMessageHandler * handler);
   /// Set language
   void newLanguage(CoinMessages::Language language);
-  void setLanguage(CoinMessages::Language language)
+  inline void setLanguage(CoinMessages::Language language)
   {newLanguage(language);}
   /// Return a pointer to the current message handler
-  CoinMessageHandler * messageHandler() const
+  inline CoinMessageHandler * messageHandler() const
   {return handler_;}
   /// Return the current set of messages
-  CoinMessages messages() 
+  inline CoinMessages messages() 
   {return messages_;}
   /// Return a pointer to the current set of messages
-  CoinMessages * messagesPointer() 
+  inline CoinMessages * messagesPointer() 
   {return &messages_;}
+  /// Return true if default handler
+  inline bool defaultHandler() const
+  { return defaultHandler_;}
   //@}
   //---------------------------------------------------------------------------
   /**@name Methods for dealing with discontinuities other than integers.

@@ -22,9 +22,6 @@ libOsiGlpk_la_SOURCES = \
 # This is for libtool (on Windows)
 libOsiGlpk_la_LDFLAGS = $(LT_LDFLAGS)
 
-# If Glpk has been compiled in ThirdParty, we include it into this library
-libOsiGlpk_la_LIBADD = $(GLPKCOINLIB)
-
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows.
 # "top_srcdir" refers to the basic directory for the main package that is

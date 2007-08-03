@@ -66,7 +66,7 @@ am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libOsiGlpk_la_DEPENDENCIES =
+libOsiGlpk_la_LIBADD =
 am_libOsiGlpk_la_OBJECTS = OsiGlpkSolverInterface.lo
 libOsiGlpk_la_OBJECTS = $(am_libOsiGlpk_la_OBJECTS)
 depcomp = $(SHELL) $(top_srcdir)/../depcomp
@@ -325,9 +325,6 @@ libOsiGlpk_la_SOURCES = \
 
 # This is for libtool (on Windows)
 libOsiGlpk_la_LDFLAGS = $(LT_LDFLAGS)
-
-# If Glpk has been compiled in ThirdParty, we include it into this library
-libOsiGlpk_la_LIBADD = $(GLPKCOINLIB)
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows.

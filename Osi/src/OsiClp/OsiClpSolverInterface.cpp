@@ -3225,6 +3225,8 @@ OsiClpSolverInterface::fillParamMaps()
    assert ((int) OsiProbName==    (int) ClpProbName);
    //strParamMap_[OsiLastStrParam] = ClpLastStrParam;
 }
+//#define NEW_STATUS
+#ifdef NEW_STATUS
 // Warm start
 CoinWarmStartBasis
 OsiClpSolverInterface::getBasis(ClpSimplex * model) const
@@ -3284,6 +3286,71 @@ OsiClpSolverInterface::setBasis ( const CoinWarmStartBasis & basis,
 		    (ClpSimplex::Status) basis2.getStructStatus(iColumn));
   }
 }
+#else
+// Warm start
+CoinWarmStartBasis
+OsiClpSolverInterface::getBasis(ClpSimplex * model) const
+{
+  int iRow,iColumn;
+  int numberRows = model->numberRows();
+  int numberColumns = model->numberColumns();
+  CoinWarmStartBasis basis;
+  basis.setSize(numberColumns,numberRows);
+  if (model->statusExists()) {
+    // Flip slacks
+    int lookupA[]={0,1,3,2,0,2};
+    for (iRow=0;iRow<numberRows;iRow++) {
+      int iStatus = model->getRowStatus(iRow);
+      iStatus = lookupA[iStatus];
+      basis.setArtifStatus(iRow,(CoinWarmStartBasis::Status) iStatus);
+    }
+    int lookupS[]={0,1,2,3,0,3};
+    for (iColumn=0;iColumn<numberColumns;iColumn++) {
+      int iStatus = model->getColumnStatus(iColumn);
+      iStatus = lookupS[iStatus];
+      basis.setStructStatus(iColumn,(CoinWarmStartBasis::Status) iStatus);
+    }
+  }
+  //basis.print();
+  return basis;
+}
+// Sets up basis
+void 
+OsiClpSolverInterface::setBasis ( const CoinWarmStartBasis & basis,
+				  ClpSimplex * model)
+{
+  // Say can't gurantee optimal basis etc
+  lastAlgorithm_=999;
+  // transform basis to status arrays
+  int iRow,iColumn;
+  int numberRows = model->numberRows();
+  int numberColumns = model->numberColumns();
+  if (!model->statusExists()) {
+    /*
+      get status arrays
+      ClpBasis would seem to have overheads and we will need
+      extra bits anyway.
+    */
+    model->createStatus();
+  }
+  CoinWarmStartBasis basis2 = basis;
+  // resize if necessary
+  basis2.resize(numberRows,numberColumns);
+  // move status
+  model->createStatus();
+  // For rows lower and upper are flipped
+  for (iRow=0;iRow<numberRows;iRow++) {
+    int stat = basis2.getArtifStatus(iRow);
+    if (stat>1)
+      stat = 5 - stat; // so 2->3 and 3->2
+    model->setRowStatus(iRow, (ClpSimplex::Status) stat);
+  }
+  for (iColumn=0;iColumn<numberColumns;iColumn++) {
+    model->setColumnStatus(iColumn,
+		    (ClpSimplex::Status) basis2.getStructStatus(iColumn));
+  }
+}
+#endif
 /* Read an mps file from the given filename (defaults to Osi reader) - returns
    number of errors (see OsiMpsReader class) */
 int 
@@ -4078,6 +4145,7 @@ OsiClpSolverInterface::disableFactorization() const
   delete [] dual;
   modelPtr_->messageHandler()->setLogLevel(saveMessageLevel);
 }
+#ifdef NEW_STATUS
 /* The following two methods may be replaced by the
    methods of OsiSolverInterface using OsiWarmStartBasis if:
    1. OsiWarmStartBasis resize operation is implemented
@@ -4233,6 +4301,165 @@ OsiClpSolverInterface::setBasisStatus(const int* cstat, const int* rstat)
   basis_ = getBasis(modelPtr_);
   return 0;
 }
+#else
+/* The following two methods may be replaced by the
+   methods of OsiSolverInterface using OsiWarmStartBasis if:
+   1. OsiWarmStartBasis resize operation is implemented
+   more efficiently and
+   2. It is ensured that effects on the solver are the same
+   
+   Returns a basis status of the structural/artificial variables 
+*/
+void 
+OsiClpSolverInterface::getBasisStatus(int* cstat, int* rstat) const
+{
+  int iRow,iColumn;
+  int numberRows = modelPtr_->numberRows();
+  int numberColumns = modelPtr_->numberColumns();
+  const double * pi = modelPtr_->dualRowSolution();
+  const double * dj = modelPtr_->dualColumnSolution();
+  double multiplier = modelPtr_->optimizationDirection();
+  // Flip slacks
+  int lookupA[]={0,1,3,2,0,3};
+  for (iRow=0;iRow<numberRows;iRow++) {
+    int iStatus = modelPtr_->getRowStatus(iRow);
+    if (iStatus==5) {
+      // Fixed - look at reduced cost
+      if (pi[iRow]*multiplier>1.0e-7)
+        iStatus = 3;
+    }
+    iStatus = lookupA[iStatus];
+    rstat[iRow]=iStatus;
+  }
+  int lookupS[]={0,1,2,3,0,3};
+  for (iColumn=0;iColumn<numberColumns;iColumn++) {
+    int iStatus = modelPtr_->getColumnStatus(iColumn);
+    if (iStatus==5) {
+      // Fixed - look at reduced cost
+      if (dj[iColumn]*multiplier<-1.0e-7)
+        iStatus = 2;
+    }
+    iStatus = lookupS[iStatus];
+    cstat[iColumn]=iStatus;
+  }
+}
+
+//Set the status of structural/artificial variables 
+int 
+OsiClpSolverInterface::setBasisStatus(const int* cstat, const int* rstat)
+{
+  // Say can't gurantee optimal basis etc
+  lastAlgorithm_=999;
+  modelPtr_->createStatus();
+  int i, n;
+  double * lower, * upper, * solution;
+  n=modelPtr_->numberRows();
+  lower = modelPtr_->rowLower();
+  upper = modelPtr_->rowUpper();
+  solution = modelPtr_->primalRowSolution();
+  // For rows lower and upper are flipped
+  int lookupA[]={0,1,3,2};
+  for (i=0;i<n;i++) {
+    int status = lookupA[rstat[i]];
+    if (status<0||status>3)
+      status = 3;
+    if (lower[i]<-1.0e50&&upper[i]>1.0e50&&status!=1)
+      status = 0; // set free if should be
+    else if (lower[i]<-1.0e50&&status==3)
+      status = 2; // can't be at lower bound
+    else if (upper[i]>1.0e50&&status==2)
+      status = 3; // can't be at upper bound
+    switch (status) {
+      // free or superbasic
+    case 0:
+      if (lower[i]<-1.0e50&&upper[i]>1.0e50) {
+	modelPtr_->setRowStatus(i,ClpSimplex::isFree);
+	if (fabs(solution[i])>1.0e20)
+	  solution[i]=0.0;
+      } else {
+	modelPtr_->setRowStatus(i,ClpSimplex::superBasic);
+	if (fabs(solution[i])>1.0e20)
+	  solution[i]=0.0;
+      }
+      break;
+    case 1:
+      // basic
+      modelPtr_->setRowStatus(i,ClpSimplex::basic);
+      break;
+    case 2:
+      // at upper bound
+      solution[i]=upper[i];
+      if (upper[i]>lower[i])
+	modelPtr_->setRowStatus(i,ClpSimplex::atUpperBound);
+      else
+	modelPtr_->setRowStatus(i,ClpSimplex::isFixed);
+      break;
+    case 3:
+      // at lower bound
+      solution[i]=lower[i];
+      if (upper[i]>lower[i])
+	modelPtr_->setRowStatus(i,ClpSimplex::atLowerBound);
+      else
+	modelPtr_->setRowStatus(i,ClpSimplex::isFixed);
+      break;
+    }
+  }
+  n=modelPtr_->numberColumns();
+  lower = modelPtr_->columnLower();
+  upper = modelPtr_->columnUpper();
+  solution = modelPtr_->primalColumnSolution();
+  for (i=0;i<n;i++) {
+    int status = cstat[i];
+    if (status<0||status>3)
+      status = 3;
+    if (lower[i]<-1.0e50&&upper[i]>1.0e50&&status!=1)
+      status = 0; // set free if should be
+    else if (lower[i]<-1.0e50&&status==3)
+      status = 2; // can't be at lower bound
+    else if (upper[i]>1.0e50&&status==2)
+      status = 3; // can't be at upper bound
+    switch (status) {
+      // free or superbasic
+    case 0:
+      if (lower[i]<-1.0e50&&upper[i]>1.0e50) {
+	modelPtr_->setColumnStatus(i,ClpSimplex::isFree);
+	if (fabs(solution[i])>1.0e20)
+	  solution[i]=0.0;
+      } else {
+	modelPtr_->setColumnStatus(i,ClpSimplex::superBasic);
+	if (fabs(solution[i])>1.0e20)
+	  solution[i]=0.0;
+      }
+      break;
+    case 1:
+      // basic
+      modelPtr_->setColumnStatus(i,ClpSimplex::basic);
+      break;
+    case 2:
+      // at upper bound
+      solution[i]=upper[i];
+      if (upper[i]>lower[i])
+	modelPtr_->setColumnStatus(i,ClpSimplex::atUpperBound);
+      else
+	modelPtr_->setColumnStatus(i,ClpSimplex::isFixed);
+      break;
+    case 3:
+      // at lower bound
+      solution[i]=lower[i];
+      if (upper[i]>lower[i])
+	modelPtr_->setColumnStatus(i,ClpSimplex::atLowerBound);
+      else
+	modelPtr_->setColumnStatus(i,ClpSimplex::isFixed);
+      break;
+    }
+  }
+  // say first time
+  modelPtr_->statusOfProblem(true);
+  // Save 
+  basis_ = getBasis(modelPtr_);
+  return 0;
+}
+#endif
 
 /* Perform a pivot by substituting a colIn for colOut in the basis. 
    The status of the leaving variable is given in statOut. Where

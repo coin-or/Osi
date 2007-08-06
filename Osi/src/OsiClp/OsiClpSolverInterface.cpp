@@ -3235,17 +3235,15 @@ OsiClpSolverInterface::getBasis(ClpSimplex * model) const
   CoinWarmStartBasis basis;
   basis.setSize(numberColumns,numberRows);
   if (model->statusExists()) {
-    // Flip slacks
-    int lookupA[]={0,1,3,2,0,2};
+    int lookup[]={0,1,2,3,0,3};
     for (iRow=0;iRow<numberRows;iRow++) {
       int iStatus = model->getRowStatus(iRow);
-      iStatus = lookupA[iStatus];
+      iStatus = lookup[iStatus];
       basis.setArtifStatus(iRow,(CoinWarmStartBasis::Status) iStatus);
     }
-    int lookupS[]={0,1,2,3,0,3};
     for (iColumn=0;iColumn<numberColumns;iColumn++) {
       int iStatus = model->getColumnStatus(iColumn);
-      iStatus = lookupS[iStatus];
+      iStatus = lookup[iStatus];
       basis.setStructStatus(iColumn,(CoinWarmStartBasis::Status) iStatus);
     }
   }
@@ -3276,11 +3274,9 @@ OsiClpSolverInterface::setBasis ( const CoinWarmStartBasis & basis,
   basis2.resize(numberRows,numberColumns);
   // move status
   model->createStatus();
-  // For rows lower and upper are flipped
+
   for (iRow=0;iRow<numberRows;iRow++) {
     int stat = basis2.getArtifStatus(iRow);
-    if (stat>1)
-      stat = 5 - stat; // so 2->3 and 3->2
     model->setRowStatus(iRow, (ClpSimplex::Status) stat);
   }
   for (iColumn=0;iColumn<numberColumns;iColumn++) {
@@ -4099,19 +4095,18 @@ OsiClpSolverInterface::getBasisStatus(int* cstat, int* rstat) const
   const double * pi = modelPtr_->dualRowSolution();
   const double * dj = modelPtr_->dualColumnSolution();
   double multiplier = modelPtr_->optimizationDirection();
-  // Flip slacks
-  int lookupA[]={0,1,3,2,0,3};
+
+  int lookup[]={0,1,2,3,0,3};
   for (iRow=0;iRow<numberRows;iRow++) {
     int iStatus = modelPtr_->getRowStatus(iRow);
     if (iStatus==5) {
       // Fixed - look at reduced cost
-      if (pi[iRow]*multiplier>1.0e-7)
-        iStatus = 3;
+      if (pi[iRow]*multiplier<-1.0e-7)
+        iStatus = 2;
     }
-    iStatus = lookupA[iStatus];
+    iStatus = lookup[iStatus];
     rstat[iRow]=iStatus;
   }
-  int lookupS[]={0,1,2,3,0,3};
   for (iColumn=0;iColumn<numberColumns;iColumn++) {
     int iStatus = modelPtr_->getColumnStatus(iColumn);
     if (iStatus==5) {
@@ -4119,7 +4114,7 @@ OsiClpSolverInterface::getBasisStatus(int* cstat, int* rstat) const
       if (dj[iColumn]*multiplier<-1.0e-7)
         iStatus = 2;
     }
-    iStatus = lookupS[iStatus];
+    iStatus = lookup[iStatus];
     cstat[iColumn]=iStatus;
   }
 }
@@ -4138,9 +4133,8 @@ OsiClpSolverInterface::setBasisStatus(const int* cstat, const int* rstat)
   upper = modelPtr_->rowUpper();
   solution = modelPtr_->primalRowSolution();
   // For rows lower and upper are flipped
-  int lookupA[]={0,1,3,2};
   for (i=0;i<n;i++) {
-    int status = lookupA[rstat[i]];
+    int status = rstat[i];
     if (status<0||status>3)
       status = 3;
     if (lower[i]<-1.0e50&&upper[i]>1.0e50&&status!=1)

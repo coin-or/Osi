@@ -259,6 +259,13 @@ bool test1VivianDeSmedt(OsiSolverInterface *s)
 	s->setObjCoeff(1, 1);
 
 	s->resolve();
+	// Check that status of rows is atUpperBound
+	const CoinWarmStartBasis* basis =
+	  dynamic_cast <const CoinWarmStartBasis*>(s->getWarmStart()) ;
+	if (basis) {
+	  assert (basis->getArtifStatus(0)==CoinWarmStartBasis::atUpperBound);
+	  delete basis ;
+	} 
 
 	ret = ret && s->isProvenOptimal();
 	ret = ret && !s->isProvenPrimalInfeasible();

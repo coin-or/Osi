@@ -757,6 +757,10 @@ OsiOslSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     OsiOslSolverInterface m;
     OsiSolverInterfaceCommonUnitTest(&m, mpsDir, netlibDir );
   }
+  // We don't know what is in common test
+  int numberInstances=OsiOslSolverInterface::getNumInstances();
+  if (!numberInstances)
+    printf("*** OsiOsl %d instances left over from CommonUnitTest!\n",numberInstances);
 
   // Do primitive branch and bound
   // And test message handling
@@ -920,7 +924,7 @@ OsiOslSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     ekk_setUserData(m.getModelPtr(),NULL);
    }
 
-  assert(OsiOslSolverInterface::getNumInstances()==0);
+  assert(OsiOslSolverInterface::getNumInstances()==numberInstances);
 
 }
 #endif

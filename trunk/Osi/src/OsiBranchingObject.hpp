@@ -220,7 +220,7 @@ protected:
   /// Preferred way of branching - -1 off, 0 down, 1 up (for 2-way)
   int preferredWay_;
   /// "Infeasibility" on other way
-  mutable float otherInfeasibility_;
+  mutable double otherInfeasibility_;
   
 };
 

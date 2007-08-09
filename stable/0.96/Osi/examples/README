@@ -1,0 +1,22 @@
+These examples are from the OSI tutorial at INFORMS Atlanta 2003 by
+Brady Hunsaker and the workshop section on OSI given by Matthew
+Saltzman at CORS/INFORMS Banff 2004.
+
+To build each program, adjust the COIN_DIR macro in Makefile.<program>
+and invoke
+
+	make -f Makefile.<program>
+
+where <program> is the name of the program to build.  The accompanying
+slides and handouts can be found at
+
+	http://www.coin-or.org/Presentations/CORSINFORMSWorkshop04/index.html
+
+---------------
+
+If "make" is failing with link time errors when building in the cygwin environment 
+then try changing the line
+   CXX := g++
+to be
+   CXX := g++ -mno-cygwin
+in the file Makefile.<program>

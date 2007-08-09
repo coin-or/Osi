@@ -293,7 +293,7 @@ class OsiDylpWarmStartBasisDiff : public CoinWarmStartBasisDiff
       consze_(0),
       condiffNdxs_(0),
       condiffVals_(0)
-  { /* intentionally left blank */ } ;
+  { /* intentionally left blank */ } 
 
   /*! \brief Copy constructor
   

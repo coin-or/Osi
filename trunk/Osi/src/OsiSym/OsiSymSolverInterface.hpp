@@ -188,7 +188,7 @@ public:
    virtual bool isProvenDualInfeasible() const {
       throw CoinError("Error: Function not implemented",
 		      "isProvenDualInfeasible", "OsiSymSolverInterface");
-   };
+   }
     /// Is the given primal objective limit reached?
    virtual bool isPrimalObjectiveLimitReached() const;
 
@@ -196,7 +196,7 @@ public:
     virtual bool isDualObjectiveLimitReached() const{
        throw CoinError("Error: Function not implemented",
 		       "isDualObjectiveLimitReached", "OsiSymSolverInterface");
-    };
+    }
     /// Iteration limit reached?
    virtual bool isIterationLimitReached() const;
 
@@ -221,7 +221,7 @@ public:
     virtual CoinWarmStart *getEmptyWarmStart () const{
        throw CoinError("Error: Function not implemented",
 		       "getEmptyWarmStart", "OsiSymSolverInterface");
-    };
+    }
 
     /** Get warm start information.
 
@@ -362,14 +362,14 @@ public:
 	 //       throw CoinError("Error: Function not implemented",
 	 //       "getRowPrice", "OsiSymSolverInterface");
 	 return (0);
-    };
+    }
   
       /// Get a pointer to array[getNumCols()] of reduced costs
       virtual const double * getReducedCost() const{
 	 //       throw CoinError("Error: Function not implemented",
 	 //       "getReducedCost", "OsiSymSolverInterface");
 	 return (0);
-    };
+    }
   
       /** Get pointer to array[getNumRows()] of row activity levels (constraint
   	matrix times the solution vector). */
@@ -401,7 +401,7 @@ public:
       virtual std::vector<double*> getDualRays(int maxNumRays) const{
        throw CoinError("Error: Function not implemented",
 		       "getDualRays", "OsiSymSolverInterface");
-    };
+    }
       /** Get as many primal rays as the solver can provide. (In case of proven
           dual infeasibility there should be at least one.)
      
@@ -416,7 +416,7 @@ public:
       virtual std::vector<double*> getPrimalRays(int maxNumRays) const{
        throw CoinError("Error: Function not implemented",
 		       "getPrimalRays", "OsiSymSolverInterface");
-    };
+    }
   
     //@}
 
@@ -490,7 +490,7 @@ public:
    virtual void setRowPrice(const double * rowprice){
        throw CoinError("Error: Function not implemented",
 		       "setRowPrice", "OsiSymSolverInterface");
-    };
+    }
 
     //@}
 

@@ -327,9 +327,11 @@ public:
     if ( matrix != NULL ) retVal=matrix->getNumElements();
     return retVal; }
 
+    using OsiSolverInterface::getRowName ;
     /// Return name of row if one exists or Rnnnnnnn
     virtual std::string getRowName(int rowIndex) const;
     
+    using OsiSolverInterface::getColName ;
     /// Return name of column if one exists or Cnnnnnnn
     virtual std::string getColName(int colIndex) const;
     
@@ -547,11 +549,14 @@ public:
         This defaults to a series of set operations and is here for speed.
     */
     virtual void setColUpper(const double * array);
-      /// Set name of row
-      virtual void setRowName(int rowIndex, std::string & name) ;
+
+    using OsiSolverInterface::setRowName ;
+    /// Set name of row
+    virtual void setRowName(int rowIndex, std::string & name) ;
     
-      /// Set name of column
-      virtual void setColName(int colIndex, std::string & name) ;
+    using OsiSolverInterface::setColName ;
+    /// Set name of column
+    virtual void setColName(int colIndex, std::string & name) ;
     
   //@}
   
@@ -620,6 +625,8 @@ public:
      Note that if a column is added then by default it will correspond to a
      continuous variable. */
   //@{
+
+  using OsiSolverInterface::addCol ;
   /** */
   virtual void addCol(const CoinPackedVectorBase& vec,
                       const double collb, const double colub,   
@@ -641,6 +648,7 @@ public:
   /** */
   virtual void deleteCols(const int num, const int * colIndices);
   
+  using OsiSolverInterface::addRow ;
   /** */
   virtual void addRow(const CoinPackedVectorBase& vec,
                       const double rowlb, const double rowub);
@@ -769,6 +777,8 @@ public:
                            const double* rowrng);
   /// This loads a model from a coinModel object - returns number of errors
   virtual int loadFromCoinModel (  CoinModel & modelObject, bool keepSolution=false);
+
+  using OsiSolverInterface::readMps ;
   /** Read an mps file from the given filename (defaults to Osi reader) - returns
       number of errors (see OsiMpsReader class) */
   virtual int readMps(const char *filename,

@@ -60,6 +60,10 @@ if COIN_HAS_CBC
   unitTest_LDADD += ../src/OsiCbc/libOsiCbc.la \
 	$(CBCOBJDIR)/src/libCbc.la
   LIBS += `cat $(CBCOBJDIR)/cbc_addlibs.txt`
+if COIN_HAS_ASL
+  unitTest_LDADD += $(ASLLIB)
+  AM_CPPFLAGS += $(ASL_CPPFLAGS) -DCOIN_HAS_ASL
+endif
 endif
 
 if COIN_HAS_SYMPHONY

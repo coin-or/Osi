@@ -79,6 +79,9 @@ AC_COIN_HAS_USER_LIBRARY([Xpress],[XPR],[xprs.h],[XPRSsetintcontrol])
 
 AC_COIN_HAS_GLPK(Glpk)
 
+# We need Ampl in case we're using Cbc and it's build with Ampl.
+AC_COIN_HAS_ASL
+
 #############################################################################
 #                 Configuration options for individual OSIs                 #
 #############################################################################

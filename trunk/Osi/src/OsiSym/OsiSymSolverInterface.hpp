@@ -438,10 +438,12 @@ public:
       /** Set an objective function coefficient for the second objective */
    virtual void setObj2Coeff( int elementIndex, double elementValue );
 
+   using OsiSolverInterface::setColLower ;
       /** Set a single column lower bound.
     	  Use -getInfinity() for -infinity. */
    virtual void setColLower( int elementIndex, double elementValue );
       
+   using OsiSolverInterface::setColUpper ;
       /** Set a single column upper bound.
     	  Use getInfinity() for infinity. */
    virtual void setColUpper( int elementIndex, double elementValue );      
@@ -497,13 +499,17 @@ public:
     //-------------------------------------------------------------------------
     /**@name Methods to set variable type */
     //@{
+
+      using OsiSolverInterface::setContinuous ;
       /** Set the index-th variable to be a continuous variable */
    virtual void setContinuous(int index);
 
+      using OsiSolverInterface::setInteger ;
       /** Set the index-th variable to be an integer variable */
    virtual void setInteger(int index);
 
 
+      using OsiSolverInterface::setColName ;
    virtual void setColName(char **colname);
 
     //@}
@@ -516,6 +522,8 @@ public:
 
     */
     //@{
+
+      using OsiSolverInterface::addCol ;
       /** Add a column (primal variable) to the problem. */
       virtual void addCol(const CoinPackedVectorBase& vec,
 			  const double collb, const double colub,   
@@ -524,6 +532,7 @@ public:
       /** Remove a set of columns (primal variables) from the problem.  */
    virtual void deleteCols(const int num, const int * colIndices);
     
+      using OsiSolverInterface::addRow ;
       /** Add a row (constraint) to the problem. */
    virtual void addRow(const CoinPackedVectorBase& vec,
 		       const double rowlb, const double rowub);
@@ -636,6 +645,7 @@ public:
 
    void parseCommandLine(int argc, char **argv);
 
+   using OsiSolverInterface::readMps ;
    virtual int readMps(const char * infile, const char *extension = "mps");
 
    virtual int readGMPL(const char * modelFile, const char * dataFile=NULL);

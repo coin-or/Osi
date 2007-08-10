@@ -22445,7 +22445,7 @@ echo "$as_me: OsiDylp paranoid checks at level $osidylp_paranoia." >&6;}
 # are defined and set by COIN_HAS_GLPK. If we're building ThirdParty/Glpk,
 # we already know the answer. Make it look like we're checking.
 
-if test x"$use_thirdpartyglpk" == xbuild; then
+if test x"$use_thirdpartyglpk" = xbuild; then
   echo "$as_me:$LINENO: checking for glpk mip solver " >&5
 echo $ECHO_N "checking for glpk mip solver ... $ECHO_C" >&6
 
@@ -22524,7 +22524,7 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
   LIBS="$coin_save_LIBS"
-  if test x"$osiglpk_mipsolver" == x ; then
+  if test x"$osiglpk_mipsolver" = x ; then
     echo "$as_me:$LINENO: result: none!" >&5
 echo "${ECHO_T}none!" >&6
     { { echo "$as_me:$LINENO: error: No glpk MIP solver! You really should upgrade glpk." >&5

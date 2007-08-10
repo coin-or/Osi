@@ -20,7 +20,7 @@ AC_DEFUN([AC_OGSI_MIPSOLVER],
   done
   AC_LANG_POP(C)
   LIBS="$coin_save_LIBS"
-  if test x"$osiglpk_mipsolver" == x ; then
+  if test x"$osiglpk_mipsolver" = x ; then
     AC_MSG_RESULT([none!])
     AC_MSG_ERROR([No glpk MIP solver! You really should upgrade glpk.])
   else

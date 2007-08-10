@@ -99,7 +99,7 @@ AC_ODSI_PARANOIA(1)
 # are defined and set by COIN_HAS_GLPK. If we're building ThirdParty/Glpk,
 # we already know the answer. Make it look like we're checking.
 
-if test x"$use_thirdpartyglpk" == xbuild; then
+if test x"$use_thirdpartyglpk" = xbuild; then
   AC_MSG_CHECKING([for glpk mip solver ])
   AC_DEFINE(GLPK_HAS_INTOPT,[1],
 	    [Define to 1 if GLPK has the advanced B&B solver lpx_intopt])

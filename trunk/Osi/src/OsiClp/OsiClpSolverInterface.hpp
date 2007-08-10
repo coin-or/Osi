@@ -552,13 +552,15 @@ public:
     */
     virtual void setColUpper(const double * array);
 
-    using OsiSolverInterface::setRowName ;
+//    using OsiSolverInterface::setRowName ;
     /// Set name of row
-    virtual void setRowName(int rowIndex, std::string & name) ;
+//    virtual void setRowName(int rowIndex, std::string & name) ;
+    virtual void setRowName(int rowIndex, std::string  name) ;
     
-    using OsiSolverInterface::setColName ;
+//    using OsiSolverInterface::setColName ;
     /// Set name of column
-    virtual void setColName(int colIndex, std::string & name) ;
+//    virtual void setColName(int colIndex, std::string & name) ;
+    virtual void setColName(int colIndex, std::string  name) ;
     
   //@}
   

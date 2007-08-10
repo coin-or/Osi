@@ -327,13 +327,15 @@ public:
     if ( matrix != NULL ) retVal=matrix->getNumElements();
     return retVal; }
 
-    using OsiSolverInterface::getRowName ;
+//    using OsiSolverInterface::getRowName ;
     /// Return name of row if one exists or Rnnnnnnn
-    virtual std::string getRowName(int rowIndex) const;
+    /// maxLen is currently ignored and only there to match the signature from the base class! 
+    virtual std::string getRowName(int rowIndex, unsigned maxLen = std::string::npos) const;
     
-    using OsiSolverInterface::getColName ;
+//    using OsiSolverInterface::getColName ;
     /// Return name of column if one exists or Cnnnnnnn
-    virtual std::string getColName(int colIndex) const;
+    /// maxLen is currently ignored and only there to match the signature from the base class! 
+    virtual std::string getColName(int colIndex, unsigned maxLen = std::string::npos) const;
     
   
   /// Get pointer to array[getNumCols()] of column lower bounds

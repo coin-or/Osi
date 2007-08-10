@@ -1782,6 +1782,11 @@ bool OsiSymSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
    CoinWarmStart * wsC = const_cast<CoinWarmStart*> (warmstart);
    SymWarmStart *symWS = dynamic_cast<SymWarmStart*>(wsC);
    
+   if (symWS==NULL) {
+   	 cout << "setWarmStart(): No SymWarmStart was given!" << endl;
+   	 return false;
+   }
+   
    warm_start_desc * ws  = symWS->getCopyOfWarmStartDesc();
    
    if(!ws){

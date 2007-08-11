@@ -762,8 +762,10 @@ uninstall-am: uninstall-info-am
 
 
 test: unitTest$(EXEEXT)
-	cd ../../Data/Netlib; $(MAKE) uncompress
-	./unitTest$(EXEEXT) -testOsiSolverInterface
+	if test x"$(DIRNETLIB)" != x; then \
+		NETLIBARG="-netlibDir $(DIRNETLIB) -testOsiSolverInterface"; \
+	fi; \
+	./unitTest$(EXEEXT) $$NETLIBARG
 
 .PHONY: test
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

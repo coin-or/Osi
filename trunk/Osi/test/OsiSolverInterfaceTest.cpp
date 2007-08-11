@@ -2058,7 +2058,7 @@ bool testHintParam(OsiSolverInterface * si, int k, bool sense,
 */
 
 void testObjOffsetAndLimits (const OsiSolverInterface *emptySi,
-			     const std::string &netlibDir)
+			     const std::string &mpsDir)
 
 { OsiSolverInterface *si = emptySi->clone() ;
   CoinRelFltEq eq;
@@ -2069,7 +2069,7 @@ void testObjOffsetAndLimits (const OsiSolverInterface *emptySi,
 /*
   Read in e226; chosen because it has an offset defined in the mps file.
 */
-  std::string fn = netlibDir+"e226" ;
+  std::string fn = mpsDir+"e226" ;
   int mpsRc = si->readMps(fn.c_str(),"mps") ;
   assert(mpsRc == 0) ;
 /*
@@ -3502,7 +3502,7 @@ void OsiSolverInterfaceMpsUnitTest
 void
 OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 				 const std::string & mpsDir,
-         const std::string & netlibDir)
+				 const std::string & netlibDir)
 {
 
   int i;
@@ -3603,7 +3603,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   // special form and can not solve netlib e226.
 
   if ( !volSolverInterface )
-  { testObjOffsetAndLimits(emptySi,netlibDir) ; }
+  { testObjOffsetAndLimits(emptySi,mpsDir) ; }
 
   // Test that values returned from an empty solverInterface
   {
@@ -4401,6 +4401,13 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 
   // Test presolve
   if ( !volSolverInterface /*&& !fmpSolverInterface*/ && !symSolverInterface ) {
+#if 1
+    printf("\
+*** WARNING *** ACHTUNG *** FIGYELEM ***\n\
+    Test presolve needs to be changed to use a problem that's already\n\
+    in Data/Sample.\n\
+*** WARNING *** ACHTUNG *** FIGYELEM ***\n");
+#else
     OsiSolverInterface * si = emptySi->clone();
     std::string fn = netlibDir+"25fv47";
     si->readMps(fn.c_str(),"mps");
@@ -4430,6 +4437,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     if (si->getIterationCount())
       failureMessage(solverName,"OsiPresolve - minor error, needs iterations");
     delete si;
+#endif
   }
 
   // Perform tests that are embodied in functions

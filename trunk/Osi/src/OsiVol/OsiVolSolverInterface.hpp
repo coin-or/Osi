@@ -329,12 +329,14 @@ public:
 	objcoeffs_[elementIndex] = elementValue;
       }
 
+      using OsiSolverInterface::setColLower ;
       /** Set a single column lower bound<br>
     	  Use -DBL_MAX for -infinity. */
       virtual void setColLower( int elementIndex, double elementValue ) {
 	collower_[elementIndex] = elementValue;
       }
       
+      using OsiSolverInterface::setColUpper ;
       /** Set a single column upper bound<br>
     	  Use DBL_MAX for infinity. */
       virtual void setColUpper( int elementIndex, double elementValue ) {
@@ -475,10 +477,14 @@ public:
        Note that if a column is added then by default it will correspond to a
        continuous variable. */
     //@{
+
+      using OsiSolverInterface::addCol ;
       /** */
       virtual void addCol(const CoinPackedVectorBase& vec,
     			     const double collb, const double colub,   
     			     const double obj);
+
+      using OsiSolverInterface::addCols ;
       /** */
       virtual void addCols(const int numcols,
 			   const CoinPackedVectorBase * const * cols,
@@ -493,6 +499,7 @@ public:
       /** */
       virtual void deleteCols(const int num, const int * colIndices);
     
+      using OsiSolverInterface::addRow ;
       /** */
       virtual void addRow(const CoinPackedVectorBase& vec,
     			  const double rowlb, const double rowub);
@@ -500,6 +507,8 @@ public:
       virtual void addRow(const CoinPackedVectorBase& vec,
     			  const char rowsen, const double rowrhs,   
     			  const double rowrng);
+
+      using OsiSolverInterface::addRows ;
       /** */
       virtual void addRows(const int numrows,
 			   const CoinPackedVectorBase * const * rows,
@@ -640,6 +649,7 @@ public:
 			     const char* rowsen, const double* rowrhs,   
 			     const double* rowrng);
     
+    using OsiSolverInterface::readMps ;
     /** Read an mps file from the given filename */
     virtual int readMps(const char *filename,
 			 const char *extension = "mps");

@@ -31,8 +31,6 @@
 #include <string>
 #include <cassert>
 
-using namespace std;
-
 //#############################################################################
 
 /** OSI Solver Interface for SYMPHONY

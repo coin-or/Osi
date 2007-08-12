@@ -805,7 +805,7 @@ void ODWSB::print () const
 
 void ODWSB::checkBasis () const
 
-{ int i,j ;
+{ int i;
   bool retval = true ;
   int numBasicStruct,numBasicLog,numCons,numActCons ;
   Status conStat,logStat ;

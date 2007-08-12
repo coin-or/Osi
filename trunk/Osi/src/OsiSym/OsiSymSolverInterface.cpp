@@ -204,7 +204,7 @@ void OsiSymSolverInterface::reset()
 bool OsiSymSolverInterface::setIntParam(OsiIntParam key, int value)
 {
 
-   char * keyVal;
+   const char * keyVal;
 
    switch(key) {
 
@@ -231,7 +231,7 @@ bool OsiSymSolverInterface::setIntParam(OsiIntParam key, int value)
 bool OsiSymSolverInterface::setSymParam(OsiSymIntParam key, int value)
 {
 
-   char *keyVal;
+   const char *keyVal;
 
    switch(key){
       
@@ -315,7 +315,7 @@ bool OsiSymSolverInterface::setSymParam(OsiSymIntParam key, int value)
 bool OsiSymSolverInterface::setSymParam(const std::string key, int value)
 {
 
-   return(!sym_set_int_param(env_, const_cast<char*>(key.c_str()), value)? 
+   return(!sym_set_int_param(env_, key.c_str(), value)? 
 	  true :false );
 
 }
@@ -326,8 +326,6 @@ bool OsiSymSolverInterface::setSymParam(const std::string key, int value)
 bool OsiSymSolverInterface::setDblParam(OsiDblParam key, double value)
 {
 
-   char *keyVal;
-   
    switch(key){
       
     case OsiDualObjectiveLimit:
@@ -357,7 +355,7 @@ bool OsiSymSolverInterface::setDblParam(OsiDblParam key, double value)
 bool OsiSymSolverInterface::setSymParam(OsiSymDblParam key, double value)
 {
 
-   char *keyVal;
+   const char *keyVal;
 
    switch(key){
 
@@ -390,7 +388,7 @@ bool OsiSymSolverInterface::setSymParam(OsiSymDblParam key, double value)
 bool OsiSymSolverInterface::setSymParam(const std::string key, double value)
 {
 
-   return(!sym_set_dbl_param(env_, const_cast<char*>(key.c_str()), value) 
+   return(!sym_set_dbl_param(env_, key.c_str(), value) 
 	  ? true : false);
 
 }
@@ -402,7 +400,7 @@ bool OsiSymSolverInterface::setStrParam(OsiStrParam key,
 					const std::string & value)
 {
 
-   char * keyVal;
+   const char * keyVal;
 
    switch(key) {
 
@@ -443,8 +441,8 @@ bool OsiSymSolverInterface::setSymParam(const std::string key,
 					const std::string value)
 {
 
-   return(!sym_set_str_param(env_, const_cast<char *>(key.c_str()), 
-			     const_cast<char *>(value.c_str())) ? true : false);
+   return(!sym_set_str_param(env_, key.c_str(), 
+			     value.c_str()) ? true : false);
 
 }
 
@@ -454,7 +452,7 @@ bool OsiSymSolverInterface::setSymParam(const std::string key,
 bool OsiSymSolverInterface::getIntParam(OsiIntParam key, int& value) const
 {
 
-   char *keyVal;
+   const char *keyVal;
 
    switch(key) {
       
@@ -480,7 +478,7 @@ bool OsiSymSolverInterface::getIntParam(OsiIntParam key, int& value) const
 bool OsiSymSolverInterface::getSymParam(OsiSymIntParam key, int& value) const
 {
 
-   char *keyVal;
+   const char *keyVal;
 
    switch(key){
 
@@ -540,7 +538,7 @@ bool OsiSymSolverInterface::getSymParam(const std::string key,
 					int& value) const
 {
 
-   return (!sym_get_int_param(env_, const_cast<char *>(key.c_str()), &value) 
+   return (!sym_get_int_param(env_, key.c_str(), &value) 
 	   ? true : false);
 
 }
@@ -581,7 +579,7 @@ bool OsiSymSolverInterface::getSymParam(OsiSymDblParam key,
 					double& value) const
 {
 
-   char * keyVal;
+   const char * keyVal;
 
    switch(key){
     case OsiSymGranularity:
@@ -614,7 +612,7 @@ bool OsiSymSolverInterface::getSymParam(const std::string key,
 					double& value) const
 {
 
-   return (!sym_get_dbl_param(env_, const_cast<char *>(key.c_str()), &value) 
+   return (!sym_get_dbl_param(env_, key.c_str(), &value) 
 	   ? true : false);
 
 }
@@ -626,7 +624,7 @@ bool OsiSymSolverInterface::getStrParam(OsiStrParam key,
 					std::string& value) const
 {
 
-   char * keyVal;
+   const char * keyVal;
    char * val;
 
    switch(key) {
@@ -674,7 +672,7 @@ bool OsiSymSolverInterface::getSymParam(const std::string key,
 {
 
    char * val;
-   if (!sym_get_str_param(env_, const_cast<char*>(key.c_str()), &val)){
+   if (!sym_get_str_param(env_, key.c_str(), &val)){
       value = val;
       return true;
    }
@@ -785,7 +783,7 @@ void OsiSymSolverInterface::loadProblem(const CoinPackedMatrix& matrix,
    const double inf = getInfinity();
    
    int nrows = matrix.getNumRows();
-   int ncols = matrix.getNumCols();
+//   int ncols = matrix.getNumCols();
    char   * rowSense = new char  [nrows]; 
    double * rowRhs   = new double[nrows];
    double * rowRange = new double[nrows];
@@ -1614,7 +1612,7 @@ void OsiSymSolverInterface::addCol(const CoinPackedVectorBase& vec,
 
    freeCachedData(KEEPCACHED_ROW);
 
-   if(numElements = vec.getNumElements()){
+   if((numElements = vec.getNumElements())){
       indices = const_cast<int*>(vec.getIndices());
       elements = const_cast<double*>(vec.getElements());
    }
@@ -1649,7 +1647,7 @@ void OsiSymSolverInterface::addRow(const CoinPackedVectorBase& vec,
 
    freeCachedData(KEEPCACHED_COLUMN);
 
-   if(numElements = vec.getNumElements()){
+   if((numElements = vec.getNumElements())){
       indices = const_cast<int*>(vec.getIndices());
       elements = const_cast<double*>(vec.getElements());
    }

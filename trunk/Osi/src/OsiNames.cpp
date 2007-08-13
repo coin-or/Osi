@@ -713,7 +713,7 @@ void OsiSolverInterface::setRowColNames (CoinModel &mod)
   rows and columns, so we need to pay attention.
 */
   if (nameDiscipline != 0)
-  { int maxRowNdx, maxColNdx ;
+  { int maxRowNdx=-1, maxColNdx=-1 ;
     const char *const *names = mod.rowNames()->names() ;
     rowNames_.resize(m) ;
     for (int i = 0 ; i < m ; i++)
@@ -775,7 +775,7 @@ void OsiSolverInterface::setRowColNames (CoinLpIO &mod)
   columns, so we need to pay attention.
 */
   if (nameDiscipline != 0)
-  { int maxRowNdx, maxColNdx ;
+  { int maxRowNdx=-1, maxColNdx=-1 ;
     const char *const *names = mod.getRowNames() ;
     rowNames_.resize(m) ;
     for (int i = 0 ; i < m ; i++)

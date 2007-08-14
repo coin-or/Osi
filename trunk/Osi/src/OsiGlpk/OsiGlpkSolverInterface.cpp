@@ -2539,7 +2539,8 @@ void OGSI::loadProblem (const CoinPackedMatrix &matrix,
 */
   if (matrix.isColOrdered())
   { for (j = 0 ; j < n ; j++)
-    { addCol(matrix.getVector(j),collb[j],colub[j],obj[j]) ; }
+    { const CoinShallowPackedVector reqdBySunCC = matrix.getVector(j) ;
+      addCol(reqdBySunCC,collb[j],colub[j],obj[j]) ; }
     // Make sure there are enough rows 
     if (m > getNumRows())
     { lpx_add_rows(lp_,m-getNumRows()) ; }
@@ -2547,7 +2548,8 @@ void OGSI::loadProblem (const CoinPackedMatrix &matrix,
     { setRowBounds(i,rowlb[i],rowub[i]) ; } }
   else
   { for (i = 0 ; i < m ; i++)
-    { addRow(matrix.getVector(i),rowlb[i],rowub[i]) ; }
+    { const CoinShallowPackedVector reqdBySunCC = matrix.getVector(i) ;
+      addRow(reqdBySunCC,rowlb[i],rowub[i]) ; }
     // Make sure there are enough columns
     if (n > getNumCols())
     { lpx_add_cols(lp_,n-getNumCols()) ; }

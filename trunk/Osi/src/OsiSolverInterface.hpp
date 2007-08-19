@@ -711,6 +711,10 @@ public:
       This defaults to a series of set operations and is here for speed.
   */
   virtual void setColUpper(const double * array);
+  /** Set all variables to bounds if reduced cost >= gap.
+      Returns number fixed
+  */
+  virtual int reducedCostFix(double gap, bool justInteger=true);
   //@}
 
   //-------------------------------------------------------------------------

@@ -2029,6 +2029,43 @@ OsiSolverInterface::forceFeasible()
     infeasibility += object_[i]->feasibleRegion(this,&info);
   return infeasibility;
 }
+/* Set all variables to bounds if reduced cost >= gap
+   Returns number fixed
+*/
+int 
+OsiSolverInterface::reducedCostFix(double gap, bool justInteger)
+{
+  double direction = getObjSense() ;
+  double tolerance;
+  getDblParam(OsiPrimalTolerance,tolerance) ;
+  if (gap<=0.0)
+    return 0;
+
+  const double *lower = getColLower() ;
+  const double *upper = getColUpper() ;
+  const double *solution = getColSolution() ;
+  const double *reducedCost = getReducedCost() ;
+
+  int numberFixed = 0 ;
+  int numberColumns = getNumCols();
+
+  for (int iColumn = 0 ; iColumn < numberColumns ; iColumn++) {
+    if (isInteger(iColumn)||!justInteger) {
+      double djValue = direction*reducedCost[iColumn] ;
+      if (upper[iColumn]-lower[iColumn] > tolerance) {
+	if (solution[iColumn] < lower[iColumn]+tolerance && djValue > gap) {
+	  setColUpper(iColumn,lower[iColumn]) ;
+	  numberFixed++ ; 
+	} else if (solution[iColumn] > upper[iColumn]-tolerance && -djValue > gap) {
+	  setColLower(iColumn,upper[iColumn]) ;
+	  numberFixed++ ;
+	}
+      }
+    }
+  }
+  
+  return numberFixed;
+}
 #ifdef CBC_NEXT_VERSION
 /*
   Solve 2**N (N==depth) problems and return solutions and bases.

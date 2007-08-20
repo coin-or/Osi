@@ -220,7 +220,7 @@ protected:
   /// Preferred way of branching - -1 off, 0 down, 1 up (for 2-way)
   int preferredWay_;
   /// "Infeasibility" on other way
-  mutable float otherInfeasibility_;
+  mutable double otherInfeasibility_;
   
 };
 
@@ -463,7 +463,8 @@ public:
 
   /// Destructor 
   virtual ~OsiTwoWayBranchingObject ();
-  
+
+  using OsiBranchingObject::branch ;
   /** \brief Sets the bounds for the variable according to the current arm
 	     of the branch and advances the object state to the next arm.
 	     state. 
@@ -505,9 +506,11 @@ public:
   /// Destructor 
   virtual ~OsiSimpleInteger ();
   
+  using OsiObject::infeasibility ;
   /// Infeasibility - large is 0.5
   virtual double infeasibility(const OsiBranchingInformation * info, int & whichWay) const;
 
+  using OsiObject::feasibleRegion ;
   /** Set bounds to fix the variable at the current (integer) value.
 
     Given an integer value, set the lower and upper bounds to fix the
@@ -612,6 +615,7 @@ public:
   /// Destructor 
   virtual ~OsiIntegerBranchingObject ();
   
+  using OsiBranchingObject::branch ;
   /** \brief Sets the bounds for the variable according to the current arm
 	     of the branch and advances the object state to the next arm.
 	     state. 
@@ -619,6 +623,7 @@ public:
   */
   virtual double branch(OsiSolverInterface * solver);
 
+  using OsiBranchingObject::print ;
   /** \brief Print something about branch - only if log level high
   */
   virtual void print(const OsiSolverInterface * solver=NULL);
@@ -665,9 +670,11 @@ public:
   // Destructor 
   virtual ~OsiSOS ();
   
+  using OsiObject::infeasibility ;
   /// Infeasibility - large is 0.5
   virtual double infeasibility(const OsiBranchingInformation * info,int & whichWay) const;
 
+  using OsiObject::feasibleRegion ;
   /** Set bounds to fix the variable at the current (integer) value.
 
     Given an integer value, set the lower and upper bounds to fix the
@@ -776,9 +783,11 @@ public:
   // Destructor 
   virtual ~OsiSOSBranchingObject ();
   
+  using OsiBranchingObject::branch ;
   /// Does next branch and updates state
   virtual double branch(OsiSolverInterface * solver);
 
+  using OsiBranchingObject::print ;
   /** \brief Print something about branch - only if log level high
   */
   virtual void print(const OsiSolverInterface * solver=NULL);
@@ -813,9 +822,11 @@ public:
   // Destructor 
   ~OsiLotsize ();
   
+  using OsiObject::infeasibility ;
   /// Infeasibility - large is 0.5
   virtual double infeasibility(const OsiBranchingInformation * info, int & whichWay) const;
 
+  using OsiObject::feasibleRegion ;
   /** Set bounds to contain the current solution.
 
     More precisely, for the variable associated with this object, take the
@@ -944,7 +955,8 @@ public:
 
   /// Destructor 
   virtual ~OsiLotsizeBranchingObject ();
-  
+
+  using OsiBranchingObject::branch ;
   /** \brief Sets the bounds for the variable according to the current arm
 	     of the branch and advances the object state to the next arm.
 	     state. 
@@ -952,6 +964,7 @@ public:
   */
   virtual double branch(OsiSolverInterface * solver);
 
+  using OsiBranchingObject::print ;
   /** \brief Print something about branch - only if log level high
   */
   virtual void print(const OsiSolverInterface * solver=NULL);

@@ -31,8 +31,6 @@
 #include <string>
 #include <cassert>
 
-using namespace std;
-
 //#############################################################################
 
 /** OSI Solver Interface for SYMPHONY
@@ -188,7 +186,7 @@ public:
    virtual bool isProvenDualInfeasible() const {
       throw CoinError("Error: Function not implemented",
 		      "isProvenDualInfeasible", "OsiSymSolverInterface");
-   };
+   }
     /// Is the given primal objective limit reached?
    virtual bool isPrimalObjectiveLimitReached() const;
 
@@ -196,7 +194,7 @@ public:
     virtual bool isDualObjectiveLimitReached() const{
        throw CoinError("Error: Function not implemented",
 		       "isDualObjectiveLimitReached", "OsiSymSolverInterface");
-    };
+    }
     /// Iteration limit reached?
    virtual bool isIterationLimitReached() const;
 
@@ -221,7 +219,7 @@ public:
     virtual CoinWarmStart *getEmptyWarmStart () const{
        throw CoinError("Error: Function not implemented",
 		       "getEmptyWarmStart", "OsiSymSolverInterface");
-    };
+    }
 
     /** Get warm start information.
 
@@ -362,14 +360,14 @@ public:
 	 //       throw CoinError("Error: Function not implemented",
 	 //       "getRowPrice", "OsiSymSolverInterface");
 	 return (0);
-    };
+    }
   
       /// Get a pointer to array[getNumCols()] of reduced costs
       virtual const double * getReducedCost() const{
 	 //       throw CoinError("Error: Function not implemented",
 	 //       "getReducedCost", "OsiSymSolverInterface");
 	 return (0);
-    };
+    }
   
       /** Get pointer to array[getNumRows()] of row activity levels (constraint
   	matrix times the solution vector). */
@@ -401,7 +399,7 @@ public:
       virtual std::vector<double*> getDualRays(int maxNumRays) const{
        throw CoinError("Error: Function not implemented",
 		       "getDualRays", "OsiSymSolverInterface");
-    };
+    }
       /** Get as many primal rays as the solver can provide. (In case of proven
           dual infeasibility there should be at least one.)
      
@@ -416,7 +414,7 @@ public:
       virtual std::vector<double*> getPrimalRays(int maxNumRays) const{
        throw CoinError("Error: Function not implemented",
 		       "getPrimalRays", "OsiSymSolverInterface");
-    };
+    }
   
     //@}
 
@@ -438,10 +436,12 @@ public:
       /** Set an objective function coefficient for the second objective */
    virtual void setObj2Coeff( int elementIndex, double elementValue );
 
+   using OsiSolverInterface::setColLower ;
       /** Set a single column lower bound.
     	  Use -getInfinity() for -infinity. */
    virtual void setColLower( int elementIndex, double elementValue );
       
+   using OsiSolverInterface::setColUpper ;
       /** Set a single column upper bound.
     	  Use getInfinity() for infinity. */
    virtual void setColUpper( int elementIndex, double elementValue );      
@@ -490,20 +490,24 @@ public:
    virtual void setRowPrice(const double * rowprice){
        throw CoinError("Error: Function not implemented",
 		       "setRowPrice", "OsiSymSolverInterface");
-    };
+    }
 
     //@}
 
     //-------------------------------------------------------------------------
     /**@name Methods to set variable type */
     //@{
+
+      using OsiSolverInterface::setContinuous ;
       /** Set the index-th variable to be a continuous variable */
    virtual void setContinuous(int index);
 
+      using OsiSolverInterface::setInteger ;
       /** Set the index-th variable to be an integer variable */
    virtual void setInteger(int index);
 
 
+      using OsiSolverInterface::setColName ;
    virtual void setColName(char **colname);
 
     //@}
@@ -516,6 +520,8 @@ public:
 
     */
     //@{
+
+      using OsiSolverInterface::addCol ;
       /** Add a column (primal variable) to the problem. */
       virtual void addCol(const CoinPackedVectorBase& vec,
 			  const double collb, const double colub,   
@@ -524,6 +530,7 @@ public:
       /** Remove a set of columns (primal variables) from the problem.  */
    virtual void deleteCols(const int num, const int * colIndices);
     
+      using OsiSolverInterface::addRow ;
       /** Add a row (constraint) to the problem. */
    virtual void addRow(const CoinPackedVectorBase& vec,
 		       const double rowlb, const double rowub);
@@ -636,6 +643,7 @@ public:
 
    void parseCommandLine(int argc, char **argv);
 
+   using OsiSolverInterface::readMps ;
    virtual int readMps(const char * infile, const char *extension = "mps");
 
    virtual int readGMPL(const char * modelFile, const char * dataFile=NULL);

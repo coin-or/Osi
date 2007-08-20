@@ -3929,7 +3929,8 @@ OsiClpSolverInterface::setRowType(int i, char sense, double rightHandSide,
 }
 // Set name of row
 void 
-OsiClpSolverInterface::setRowName(int rowIndex, std::string & name) 
+//OsiClpSolverInterface::setRowName(int rowIndex, std::string & name) 
+OsiClpSolverInterface::setRowName(int rowIndex, std::string name) 
 {
   if (rowIndex>=0&&rowIndex<modelPtr_->numberRows()) {
     int nameDiscipline;
@@ -3941,15 +3942,19 @@ OsiClpSolverInterface::setRowName(int rowIndex, std::string & name)
   }
 }
 // Return name of row if one exists or Rnnnnnnn
+// we ignore maxLen
 std::string 
-OsiClpSolverInterface::getRowName(int rowIndex) const
-{
+OsiClpSolverInterface::getRowName(int rowIndex, unsigned maxLen) const
+{ 
+	if (rowIndex == getNumRows())
+		return getObjName();
   return modelPtr_->getRowName(rowIndex);
 }
     
 // Set name of col
 void 
-OsiClpSolverInterface::setColName(int colIndex, std::string & name) 
+//OsiClpSolverInterface::setColName(int colIndex, std::string & name) 
+OsiClpSolverInterface::setColName(int colIndex, std::string name) 
 {
   if (colIndex>=0&&colIndex<modelPtr_->numberColumns()) {
     int nameDiscipline;
@@ -3962,7 +3967,7 @@ OsiClpSolverInterface::setColName(int colIndex, std::string & name)
 }
 // Return name of col if one exists or Rnnnnnnn
 std::string 
-OsiClpSolverInterface::getColName(int colIndex) const
+OsiClpSolverInterface::getColName(int colIndex, unsigned maxLen) const
 {
   return modelPtr_->getColumnName(colIndex);
 }

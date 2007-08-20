@@ -530,12 +530,12 @@ public:
   /*! \brief Change the language for OsiDylp messages */
 
   inline void newLanguage(CoinMessages::Language language)
-  { setOsiDylpMessages(language) ; } ;
+  { setOsiDylpMessages(language) ; }
 
   /*! \brief An alias for OsiDylpSolverInterface::newLanguage. */
 
   inline void setLanguage(CoinMessages::Language language)
-  { setOsiDylpMessages(language) ; } ;
+  { setOsiDylpMessages(language) ; }
 
 //@}
 

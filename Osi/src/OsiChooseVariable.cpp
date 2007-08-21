@@ -1128,13 +1128,14 @@ int OsiHotInfo::updateInformation( const OsiSolverInterface * solver, const OsiB
   else
     status=1; // infeasible
   // Could do something different if we can't trust
-  assert (choose->trustStrongForBound());
   double newObjectiveValue = solver->getObjSense()*solver->getObjValue();
   changes_[iBranch] =CoinMax(0.0,newObjectiveValue-originalObjectiveValue_);
   // we might have got here by primal
-  if (!status&&newObjectiveValue>=info->cutoff_) {
-    status=1; // infeasible
-    changes_[iBranch] = 1.0e100;
+  if (choose->trustStrongForBound()) {
+    if (!status&&newObjectiveValue>=info->cutoff_) {
+      status=1; // infeasible
+      changes_[iBranch] = 1.0e100;
+    }
   }
   statuses_[iBranch] = status;
   if (!status&&choose->trustStrongForSolution()&&newObjectiveValue<choose->goodObjectiveValue()) {

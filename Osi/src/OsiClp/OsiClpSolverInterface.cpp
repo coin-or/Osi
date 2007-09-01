@@ -2591,6 +2591,7 @@ OsiClpSolverInterface::loadFromCoinModel (  CoinModel & modelObject, bool keepSo
     //    <<numberErrors
     //    <<CoinMessageEol;
   }
+  modelPtr_->optimizationDirection_ = modelObject.optimizationDirection();  
   return numberErrors;
 }
 

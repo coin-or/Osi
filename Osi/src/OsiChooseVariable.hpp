@@ -244,6 +244,47 @@ protected:
   bool trustStrongForSolution_;
 };
 
+/** This class is the placeholder for the pseudocosts used by OsiChooseStrong.
+    It can also be used by any other pseudocost based strong branching
+    algorithm.
+*/
+
+class OsiPseudoCosts {
+protected:
+   // Data
+  /// Total of all changes up
+  double * upTotalChange_;
+  /// Total of all changes down
+  double * downTotalChange_;
+  /// Number of times up
+  int * upNumber_;
+  /// Number of times down
+  int * downNumber_;
+  /// Number of objects (could be found from solver)
+  int numberObjects_;
+  /// Number before we trust
+  int numberBeforeTrusted_;
+
+private:
+  void gutsOfDelete();
+  void gutsOfCopy(const OsiPseudoCosts& rhs);
+
+public:
+  OsiPseudoCosts();
+  ~OsiPseudoCosts();
+  OsiPseudoCosts(const OsiPseudoCosts& rhs);
+  OsiPseudoCosts& operator=(const OsiPseudoCosts& rhs);
+
+  /// Number of times before trusted
+  inline int numberBeforeTrusted() const
+  { return numberBeforeTrusted_; }
+  /// Set number of times before trusted
+  inline void setNumberBeforeTrusted(int value)
+  { numberBeforeTrusted_ = value; }
+  /// Initialize the pseudocosts with n entries
+  void initialize(int n);
+};
+
 /** This class chooses a variable to branch on
 
     This chooses the variable and direction with reliability strong branching.
@@ -258,7 +299,7 @@ protected:
        again (after fixing a variable).
 */
 
-class OsiChooseStrong  : public OsiChooseVariable {
+class OsiChooseStrong  : public OsiChooseVariable, public OsiPseudoCosts {
  
 public:
     
@@ -307,13 +348,6 @@ public:
   virtual void updateInformation( int whichObject, int branch, 
 				  double changeInObjective, double changeInValue,
 				  int status);
-  /// Number of times before trusted
-  inline int numberBeforeTrusted() const
-  { return numberBeforeTrusted_;}
-  /// Set number of times before trusted
-  inline void setNumberBeforeTrusted(int value)
-  { numberBeforeTrusted_ = value;}
-
   /** Pseudo Shadow Price mode
       0 - off
       1 - use if no strong info
@@ -328,19 +362,6 @@ public:
 
 
 protected:
-  // Data
-  /// Total of all changes up
-  double * upTotalChange_;
-  /// Total of all changes down
-  double * downTotalChange_;
-  /// Number of times up
-  int * upNumber_;
-  /// Number of times down
-  int * downNumber_;
-  /// Number of objects (could be found from solver)
-  int numberObjects_;
-  /// Number before we trust
-  int numberBeforeTrusted_;
   /** Pseudo Shadow Price mode
       0 - off
       1 - use and multiply by strong info

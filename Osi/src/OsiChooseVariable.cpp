@@ -531,49 +531,111 @@ OsiChooseVariable::updateInformation( int index, int branch,
     downChange_ = object[index]->downEstimate();
 }
 
-OsiChooseStrong::OsiChooseStrong() :
-  OsiChooseVariable(),
+//##############################################################################
+
+void
+OsiPseudoCosts::gutsOfDelete()
+{
+  if (numberObjects_ > 0) {
+    numberObjects_ = 0;
+    numberBeforeTrusted_ = 0;
+    delete[] upTotalChange_;   upTotalChange_ = NULL;
+    delete[] downTotalChange_; downTotalChange_ = NULL;
+    delete[] upNumber_;        upNumber_ = NULL;
+    delete[] downNumber_;      downNumber_ = NULL;
+  }
+}
+
+void
+OsiPseudoCosts::gutsOfCopy(const OsiPseudoCosts& rhs)
+{
+  numberObjects_ = rhs.numberObjects_;
+  numberBeforeTrusted_ = rhs.numberBeforeTrusted_;
+  if (numberObjects_ > 0) {
+    upTotalChange_ = CoinCopyOfArray(rhs.upTotalChange_,numberObjects_);
+    downTotalChange_ = CoinCopyOfArray(rhs.downTotalChange_,numberObjects_);
+    upNumber_ = CoinCopyOfArray(rhs.upNumber_,numberObjects_);
+    downNumber_ = CoinCopyOfArray(rhs.downNumber_,numberObjects_);
+  }
+}
+
+OsiPseudoCosts::OsiPseudoCosts() :
   upTotalChange_(NULL),
   downTotalChange_(NULL),
   upNumber_(NULL),
   downNumber_(NULL),
   numberObjects_(0),
-  numberBeforeTrusted_(0),
+  numberBeforeTrusted_(0)
+{
+}
+
+OsiPseudoCosts::~OsiPseudoCosts()
+{
+  gutsOfDelete();
+}
+
+OsiPseudoCosts::OsiPseudoCosts(const OsiPseudoCosts& rhs) :
+  upTotalChange_(NULL),
+  downTotalChange_(NULL),
+  upNumber_(NULL),
+  downNumber_(NULL),
+  numberObjects_(0),
+  numberBeforeTrusted_(0)
+{
+  gutsOfCopy(rhs);
+}
+
+OsiPseudoCosts&
+OsiPseudoCosts::operator=(const OsiPseudoCosts& rhs)
+{
+  if (this != &rhs) {
+    gutsOfDelete();
+    gutsOfCopy(rhs);
+  }
+  return *this;
+}
+
+void
+OsiPseudoCosts::initialize(int n)
+{
+  gutsOfDelete();
+  numberObjects_ = n;
+  if (numberObjects_ > 0) {
+    upTotalChange_ = new double [numberObjects_];
+    downTotalChange_ = new double [numberObjects_];
+    upNumber_ = new int [numberObjects_];
+    downNumber_ = new int [numberObjects_];
+    CoinZeroN(upTotalChange_,numberObjects_);
+    CoinZeroN(downTotalChange_,numberObjects_);
+    CoinZeroN(upNumber_,numberObjects_);
+    CoinZeroN(downNumber_,numberObjects_);
+  }
+}
+  
+
+//##############################################################################
+
+OsiChooseStrong::OsiChooseStrong() :
+  OsiChooseVariable(),
+  OsiPseudoCosts(),
   shadowPriceMode_(0)
 {
 }
 
 OsiChooseStrong::OsiChooseStrong(const OsiSolverInterface * solver) :
   OsiChooseVariable(solver),
-  upTotalChange_(NULL),
-  downTotalChange_(NULL),
-  upNumber_(NULL),
-  downNumber_(NULL),
-  numberBeforeTrusted_(0),
+  OsiPseudoCosts(),
   shadowPriceMode_(0)
 {
   // create useful arrays
-  numberObjects_ = solver_->numberObjects();
-  upTotalChange_ = new double [numberObjects_];
-  downTotalChange_ = new double [numberObjects_];
-  upNumber_ = new int [numberObjects_];
-  downNumber_ = new int [numberObjects_];
-  CoinZeroN(upTotalChange_,numberObjects_);
-  CoinZeroN(downTotalChange_,numberObjects_);
-  CoinZeroN(upNumber_,numberObjects_);
-  CoinZeroN(downNumber_,numberObjects_);
+  OsiPseudoCosts::initialize(solver_->numberObjects());
 }
 
-OsiChooseStrong::OsiChooseStrong(const OsiChooseStrong & rhs) 
-  : OsiChooseVariable(rhs)
+OsiChooseStrong::OsiChooseStrong(const OsiChooseStrong & rhs) :
+  OsiChooseVariable(rhs),
+  OsiPseudoCosts(rhs),
+  shadowPriceMode_(rhs.shadowPriceMode_)
 {  
-  numberObjects_ = rhs.numberObjects_;
-  numberBeforeTrusted_ = rhs.numberBeforeTrusted_;
-  shadowPriceMode_ = rhs.shadowPriceMode_;
-  upTotalChange_ = CoinCopyOfArray(rhs.upTotalChange_,numberObjects_);
-  downTotalChange_ = CoinCopyOfArray(rhs.downTotalChange_,numberObjects_);
-  upNumber_ = CoinCopyOfArray(rhs.upNumber_,numberObjects_);
-  downNumber_ = CoinCopyOfArray(rhs.downNumber_,numberObjects_);
 }
 
 OsiChooseStrong &
@@ -581,17 +643,8 @@ OsiChooseStrong::operator=(const OsiChooseStrong & rhs)
 {
   if (this != &rhs) {
     OsiChooseVariable::operator=(rhs);
-    delete [] upTotalChange_;
-    delete [] downTotalChange_;
-    delete [] upNumber_;
-    delete [] downNumber_;
-    numberObjects_ = rhs.numberObjects_;
-    numberBeforeTrusted_ = rhs.numberBeforeTrusted_;
+    OsiPseudoCosts::operator=(rhs);
     shadowPriceMode_ = rhs.shadowPriceMode_;
-    upTotalChange_ = CoinCopyOfArray(rhs.upTotalChange_,numberObjects_);
-    downTotalChange_ = CoinCopyOfArray(rhs.downTotalChange_,numberObjects_);
-    upNumber_ = CoinCopyOfArray(rhs.upNumber_,numberObjects_);
-    downNumber_ = CoinCopyOfArray(rhs.downNumber_,numberObjects_);
   }
   return *this;
 }
@@ -631,19 +684,7 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
   int numberObjects = solver_->numberObjects();
   if (numberObjects>numberObjects_) {
     // redo useful arrays
-    delete [] upTotalChange_;
-    delete [] downTotalChange_;
-    delete [] upNumber_;
-    delete [] downNumber_;
-    numberObjects_ = solver_->numberObjects();
-    upTotalChange_ = new double [numberObjects_];
-    downTotalChange_ = new double [numberObjects_];
-    upNumber_ = new int [numberObjects_];
-    downNumber_ = new int [numberObjects_];
-    CoinZeroN(upTotalChange_,numberObjects_);
-    CoinZeroN(downTotalChange_,numberObjects_);
-    CoinZeroN(upNumber_,numberObjects_);
-    CoinZeroN(downNumber_,numberObjects_);
+    OsiPseudoCosts::initialize(numberObjects);
   }
   double check = -COIN_DBL_MAX;
   int checkIndex=0;
@@ -856,14 +897,16 @@ OsiChooseStrong::chooseVariable( OsiSolverInterface * solver, OsiBranchingInform
       if (upNumber_[iObject]<numberBeforeTrusted_||downNumber_[iObject]<numberBeforeTrusted_) {
 	results[numberToDo] = OsiHotInfo(solver,info,const_cast<const OsiObject **> (solver->objects()),iObject);
 	temp[numberToDo++]=iObject;
-      } else if (bestObjectIndex_<0) {
+      } else {
 	const OsiObject * obj = solver->object(iObject);
-	bestObjectIndex_=iObject;
 	double upEstimate = (upTotalChange_[iObject]*obj->upEstimate())/upNumber_[iObject];
 	double downEstimate = (downTotalChange_[iObject]*obj->downEstimate())/downNumber_[iObject];
-	bestWhichWay_ = upEstimate>downEstimate ? 0 : 1;
 	double value = MAXMIN_CRITERION*CoinMin(upEstimate,downEstimate) + (1.0-MAXMIN_CRITERION)*CoinMax(upEstimate,downEstimate);
-	bestTrusted = value;
+	if (value > bestTrusted) {
+	  bestObjectIndex_=iObject;
+	  bestWhichWay_ = upEstimate>downEstimate ? 0 : 1;
+	  bestTrusted = value;
+	}
       }
     }
     int numberFixed=0;

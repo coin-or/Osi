@@ -652,10 +652,6 @@ OsiChooseStrong::operator=(const OsiChooseStrong & rhs)
 
 OsiChooseStrong::~OsiChooseStrong ()
 {
-  delete [] upTotalChange_;
-  delete [] downTotalChange_;
-  delete [] upNumber_;
-  delete [] downNumber_;
 }
 
 // Clone

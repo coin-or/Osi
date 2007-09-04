@@ -3226,6 +3226,13 @@ OsiClpSolverInterface::fillParamMaps()
    assert ((int) OsiProbName==    (int) ClpProbName);
    //strParamMap_[OsiLastStrParam] = ClpLastStrParam;
 }
+// Sets up basis
+void 
+OsiClpSolverInterface::setBasis ( const CoinWarmStartBasis & basis)
+{
+  setBasis(basis,modelPtr_);
+  setWarmStart(&basis); 
+}
 //#define NEW_STATUS
 #ifdef NEW_STATUS
 // Warm start

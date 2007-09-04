@@ -998,6 +998,9 @@ protected:
   void redoScaleFactors(int numberRows,const CoinBigIndex * starts,
 			const int * indices, const double * elements);
 public:
+  /** Sets up working basis as a copy of input and puts in as basis
+  */
+  void setBasis( const CoinWarmStartBasis & basis);
   /// Delete all scale factor stuff and reset option
   void deleteScaleFactors();
   /// If doing fast hot start then ranges are computed

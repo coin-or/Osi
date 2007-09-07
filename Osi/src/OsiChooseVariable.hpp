@@ -283,6 +283,29 @@ public:
   { numberBeforeTrusted_ = value; }
   /// Initialize the pseudocosts with n entries
   void initialize(int n);
+  /// Give the number of objects for which pseudo costs are stored
+  int numberObjects() const
+  { return numberObjects_; }
+
+  /** @name Accessor methods to pseudo costs data */
+  //@{
+  inline double* upTotalChange()
+  { return upTotalChange_; }
+  inline const double* upTotalChange() const 
+  { return upTotalChange_; }
+  inline double* downTotalChange()
+  { return downTotalChange_; }
+  inline const double* downTotalChange() const
+  { return downTotalChange_; }
+  inline int* upNumber()
+  { return upNumber_; }
+  inline const int* upNumber() const
+  { return upNumber_; }
+  inline int* downNumber()
+  { return downNumber_; }
+  inline const int* downNumber() const
+  { return downNumber_; }
+  //@}
 };
 
 /** This class chooses a variable to branch on

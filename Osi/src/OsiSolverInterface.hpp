@@ -1114,11 +1114,12 @@ public:
 
   //---------------------------------------------------------------------------
 
-  /**@name Methods to input a problem */
+  /**@name Methods for problem input and output */
   //@{
-    /** Load in an problem by copying the arguments (the constraints on the
-        rows are given by lower and upper bounds). If a pointer is 0 then the
-        following values are the default:
+    /*! \brief Load in a problem by copying the arguments. The constraints on
+	    the rows are given by lower and upper bounds.
+	
+	If a pointer is 0 then the following values are the default:
         <ul>
           <li> <code>colub</code>: all columns have upper bound infinity
           <li> <code>collb</code>: all columns have lower bound 0 
@@ -1126,28 +1127,32 @@ public:
           <li> <code>rowlb</code>: all rows have lower bound -infinity
 	  <li> <code>obj</code>: all variables have 0 objective coefficient
         </ul>
+
+	Note that the default values for rowub and rowlb produce the
+	constraint -infty <= ax <= infty. This is probably not what you want.
     */
-    virtual void loadProblem(const CoinPackedMatrix& matrix,
-			     const double* collb, const double* colub,   
-			     const double* obj,
-			     const double* rowlb, const double* rowub) = 0;
+    virtual void loadProblem (const CoinPackedMatrix& matrix,
+			      const double* collb, const double* colub,   
+			      const double* obj,
+			      const double* rowlb, const double* rowub) = 0;
 			    
-    /** Load in an problem by assuming ownership of the arguments (the
-        constraints on the rows are given by lower and upper bounds).
-	For default values see the previous method.
+    /*! \brief Load in a problem by assuming ownership of the arguments.
+	    The constraints on the rows are given by lower and upper bounds.
+
+	For default argument values see the matching loadProblem method.
 
 	\warning
-	The arguments passed to this method will be
-	freed using the C++ <code>delete</code> and <code>delete[]</code>
-	functions. 
+	The arguments passed to this method will be freed using the
+	C++ <code>delete</code> and <code>delete[]</code> functions. 
     */
-    virtual void assignProblem(CoinPackedMatrix*& matrix,
-			       double*& collb, double*& colub, double*& obj,
-			       double*& rowlb, double*& rowub) = 0;
+    virtual void assignProblem (CoinPackedMatrix*& matrix,
+			        double*& collb, double*& colub, double*& obj,
+			        double*& rowlb, double*& rowub) = 0;
 
-    /** Load in an problem by copying the arguments (the constraints on the
-	rows are given by sense/rhs/range triplets). If a pointer is 0 then the
-	following values are the default:
+    /*! \brief Load in a problem by copying the arguments.
+	    The constraints on the rows are given by sense/rhs/range triplets.
+	    
+	If a pointer is 0 then the following values are the default:
 	<ul>
           <li> <code>colub</code>: all columns have upper bound infinity
           <li> <code>collb</code>: all columns have lower bound 0 
@@ -1156,85 +1161,114 @@ public:
           <li> <code>rowrhs</code>: all right hand sides are 0
           <li> <code>rowrng</code>: 0 for the ranged rows
         </ul>
-    */
-    virtual void loadProblem(const CoinPackedMatrix& matrix,
-			     const double* collb, const double* colub,
-			     const double* obj,
-			     const char* rowsen, const double* rowrhs,   
-			     const double* rowrng) = 0;
 
-    /** Load in an problem by assuming ownership of the arguments (the
-        constraints on the rows are given by sense/rhs/range triplets). For
-        default values see the previous method.
+	Note that the default values for rowsen, rowrhs, and rowrng produce the
+	constraint ax >= 0.
+    */
+    virtual void loadProblem (const CoinPackedMatrix& matrix,
+			      const double* collb, const double* colub,
+			      const double* obj,
+			      const char* rowsen, const double* rowrhs,   
+			      const double* rowrng) = 0;
+
+    /*! \brief Load in a problem by assuming ownership of the arguments.
+	    The constraints on the rows are given by sense/rhs/range triplets.
+	
+	For default argument values see the matching loadProblem method.
 
 	\warning
-	The arguments passed to this method will be
-	freed using the C++ <code>delete</code> and <code>delete[]</code>
-	functions. 
+	The arguments passed to this method will be freed using the
+	C++ <code>delete</code> and <code>delete[]</code> functions. 
     */
-    virtual void assignProblem(CoinPackedMatrix*& matrix,
-			       double*& collb, double*& colub, double*& obj,
-			       char*& rowsen, double*& rowrhs,
-			       double*& rowrng) = 0;
+    virtual void assignProblem (CoinPackedMatrix*& matrix,
+			        double*& collb, double*& colub, double*& obj,
+			        char*& rowsen, double*& rowrhs,
+			        double*& rowrng) = 0;
 
-    /** Just like the other loadProblem() methods except that the matrix is
-	given in a standard column major ordered format (without gaps). */
-    virtual void loadProblem(const int numcols, const int numrows,
-			     const CoinBigIndex * start, const int* index,
-			     const double* value,
-			     const double* collb, const double* colub,   
-			     const double* obj,
-			     const double* rowlb, const double* rowub) = 0;
-
-    /** Just like the other loadProblem() methods except that the matrix is
-	given in a standard column major ordered format (without gaps). */
-    virtual void loadProblem(const int numcols, const int numrows,
-			     const CoinBigIndex * start, const int* index,
-			     const double* value,
-			     const double* collb, const double* colub,   
-			     const double* obj,
-			     const char* rowsen, const double* rowrhs,   
-  			     const double* rowrng) = 0;
-    /** This loads a model from a coinModel object - returns number of errors.
-
-        modelObject not const as may be changed as part of process.
-        If keepSolution true will try and keep warmStart
-    */
-     virtual int loadFromCoinModel (  CoinModel & modelObject, bool keepSolution=false);
-
-    /** Read a problem in MPS format from the given filename.
+    /*! \brief Load in a problem by copying the arguments. The constraint
+	    matrix is is specified with standard column-major
+	    column starts / row indices / coefficients vectors. 
+	    The constraints on the rows are given by lower and upper bounds.
     
-	The default implementation uses CoinMpsIO::readMps() to read
-	the MPS file and returns the number of errors encountered.
-   */
-    virtual int readMps(const char *filename,
+      The matrix vectors must be gap-free. Note that <code>start</code> must
+      have <code>numcols+1</code> entries so that the length of the last column
+      can be calculated as <code>start[numcols]-start[numcols-1]</code>.
+
+      See the previous loadProblem method using rowlb and rowub for default
+      argument values.
+    */
+    virtual void loadProblem (const int numcols, const int numrows,
+			      const CoinBigIndex * start, const int* index,
+			      const double* value,
+			      const double* collb, const double* colub,   
+			      const double* obj,
+			      const double* rowlb, const double* rowub) = 0;
+
+    /*! \brief Load in a problem by copying the arguments. The constraint
+	    matrix is is specified with standard column-major
+	    column starts / row indices / coefficients vectors. 
+	    The constraints on the rows are given by sense/rhs/range triplets.
+    
+      The matrix vectors must be gap-free. Note that <code>start</code> must
+      have <code>numcols+1</code> entries so that the length of the last column
+      can be calculated as <code>start[numcols]-start[numcols-1]</code>.
+
+      See the previous loadProblem method using sense/rhs/range for default
+      argument values.
+    */
+    virtual void loadProblem (const int numcols, const int numrows,
+			      const CoinBigIndex * start, const int* index,
+			      const double* value,
+			      const double* collb, const double* colub,   
+			      const double* obj,
+			      const char* rowsen, const double* rowrhs,   
+  			      const double* rowrng) = 0;
+
+    /*! \brief Load a model from a CoinModel object. Return the number of
+	    errors encountered.
+
+      The modelObject parameter cannot be const as it may be changed as part
+      of process. If keepSolution is true will try and keep warmStart.
+    */
+    virtual int loadFromCoinModel (CoinModel & modelObject,
+				   bool keepSolution=false);
+
+    /*! \brief Read a problem in MPS format from the given filename.
+    
+      The default implementation uses CoinMpsIO::readMps() to read
+      the MPS file and returns the number of errors encountered.
+    */
+    virtual int readMps (const char *filename,
 			 const char *extension = "mps") ;
 
-    /** Read a problem in MPS format from the given full filename.
+    /*! \brief Read a problem in MPS format from the given full filename.
     
-	This uses CoinMpsIO::readMps() to read
-	the MPS file and returns the number of errors encountered.
-	It also may return an array of set information
-   */
-  virtual int readMps(const char *filename, const char*extension,
+      This uses CoinMpsIO::readMps() to read the MPS file and returns the
+      number of errors encountered. It also may return an array of set
+      information
+    */
+    virtual int readMps (const char *filename, const char*extension,
 			int & numberSets, CoinSet ** & sets);
 
-    /** Read a problem in GMPL format from the given filenames.
+    /*! \brief Read a problem in GMPL format from the given filenames.
     
-        Will only work if glpk installed
-   */
-   virtual int readGMPL(const char *filename, const char * dataname=NULL);
-    /** Write the problem in MPS format to the specified file.
+      The default implementation uses CoinMpsIO::readGMPL(). This capability
+      is available only if the third-party package Glpk is installed.
+    */
+    virtual int readGMPL (const char *filename, const char *dataname=NULL);
+
+    /*! \brief Write the problem in MPS format to the specified file.
 
       If objSense is non-zero, a value of -1.0 causes the problem to be
       written with a maximization objective; +1.0 forces a minimization
-      objective. If objSense is zero, the choice is left to implementation.
+      objective. If objSense is zero, the choice is left to the implementation.
     */
-    virtual void writeMps(const char *filename,
-			  const char *extension = "mps",
-			  double objSense=0.0) const = 0;
+    virtual void writeMps (const char *filename,
+			   const char *extension = "mps",
+			   double objSense=0.0) const = 0;
 
-    /** Write the problem in MPS format to the specified file.
+    /*! \brief Write the problem in MPS format to the specified file with
+	    more control over the output.
 
 	Row and column names may be null.
 	formatType is
@@ -1246,11 +1280,11 @@ public:
 
 	Returns non-zero on I/O error
     */
-    int writeMpsNative(const char *filename, 
-		       const char ** rowNames, const char ** columnNames,
-		       int formatType=0,int numberAcross=2,
-		       double objSense=0.0, int numberSOS=0,
-		       const CoinSet * setInfo=NULL) const ;
+    int writeMpsNative (const char *filename, 
+		        const char ** rowNames, const char ** columnNames,
+		        int formatType=0,int numberAcross=2,
+		        double objSense=0.0, int numberSOS=0,
+		        const CoinSet * setInfo=NULL) const ;
 
 /***********************************************************************/
 // Lp files 

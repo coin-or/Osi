@@ -189,6 +189,17 @@ CoinPackedMatrix &BuildExmip1Mtx ()
 // Short tests contributed by Vivian DeSmedt. Thanks!
 //#############################################################################
 
+/*
+  DeSmedt Problem #1
+
+  Initially, max 3*x1 +   x2			x* = [  5 0 ]
+		 2*x1 +   x2 <= 10	   row_act = [ 10 5 ]
+		   x1 + 3*x2 <= 15
+
+  Test for solver status, expected solution, row activity. Then change
+  objective to [1 1], resolve, check again for solver status, expected
+  solution [3 4] and expected row activity [10 15].
+*/
 bool test1VivianDeSmedt(OsiSolverInterface *s)
 {
 	bool ret = true;
@@ -260,15 +271,6 @@ bool test1VivianDeSmedt(OsiSolverInterface *s)
 	s->setObjCoeff(1, 1);
 
 	s->resolve();
-	// Check that status of rows is atUpperBound
-	const CoinWarmStartBasis* basis =
-	  dynamic_cast <const CoinWarmStartBasis*>(s->getWarmStart()) ;
-	if (basis) {
-	  //assert (basis->getArtifStatus(0)==CoinWarmStartBasis::atUpperBound);
-	  if (basis->getArtifStatus(0)!=CoinWarmStartBasis::atUpperBound)
-	    printf("Testing issue - should tight L row give atUpper or atLower status\n");
-	  delete basis ;
-	} 
 
 	ret = ret && s->isProvenOptimal();
 	ret = ret && !s->isProvenPrimalInfeasible();
@@ -2124,6 +2126,117 @@ void testObjOffsetAndLimits (const OsiSolverInterface *emptySi,
 
 
 /*
+  Check that solver returns the proper status for artificial variables. The OSI
+  convention is that this status should be reported as if the artificial uses a
+  positive coefficient. Specifically:
+
+  ax <= b  ==>  ax + s = b,       0 <= s <= infty
+  ax >= b  ==>  ax + s = b,  -infty <= s <= 0
+
+  If the constraint is tight at optimum, then for a minimisation problem the
+  status should be atLowerBound for a <= constraint, atUpperBound for a >=
+  constraint. The test problem is
+
+  	    min -x1 + x2
+	    s.t. x1      <=  2	(c0)
+		      x2 >= 44	(c1)
+  
+  At optimum, z* = 42
+	      artifStatus[c0] = atLowerBound
+	      artifStatus[c1] = atUpperBound
+*/
+
+void testArtifStatus (const OsiSolverInterface *emptySi)
+
+{ OsiSolverInterface *si = emptySi->clone() ;
+  double infty = si->getInfinity() ;
+
+  testingMessage("Testing status for artificial variables.\n") ;
+/*
+  Set up the example problem in packed column-major vector format and load it
+  into the solver.
+*/
+  int colCnt = 2 ;
+  int rowCnt = 2 ;
+  int indices[] = {0, 1} ;
+  double coeffs[] = {1.0, 1.0} ;
+  CoinBigIndex starts[] = {0, 1, 2} ;
+  double obj[] = {-1.0, 1.0} ;
+
+  double vubs[2] ;
+  double vlbs[2] ;
+
+  vubs[0] = infty ;
+  vubs[1] = infty ;
+  vlbs[0] = -infty ;
+  vlbs[1] = -infty ;
+
+  double rubs[2] ;
+  double rlbs[2] ;
+
+  rubs[0] = 2.0 ;
+  rubs[1] = infty ;
+  rlbs[0] = -infty ;
+  rlbs[1] = 44 ;
+
+  si->loadProblem(colCnt,rowCnt,
+		  starts,indices,coeffs,vlbs,vubs,obj,rlbs,rubs) ;
+/*
+  Solve and ask for a warm start, then check the status of artificials.
+*/
+  si->initialSolve() ;
+  if (!si->isProvenOptimal())
+  { std::cout
+      << "Solver failed to find optimal solution." << std::endl ;
+    failureMessage(*si,"testArtifStatus: no optimal solution.") ;
+    return ; }
+
+  double z = si->getObjValue() ;
+  CoinRelFltEq eq ;
+  if (!eq(z,42.0))
+  { std::cout
+      << "Incorrect objective " << z << "; expected 42." << std::endl ;
+    failureMessage(*si,"testArtifStatus: incorrect optimal objective.") ;
+    return ; }
+
+  CoinWarmStart *ws = si->getWarmStart() ;
+  CoinWarmStartBasis *wsb = dynamic_cast<CoinWarmStartBasis *>(ws) ;
+
+  if (wsb == 0)
+  { std::cout << "No basis!" << std::endl ;
+    failureMessage(*si,"testArtifStatus: no basis.") ;
+    return ; }
+
+  CoinWarmStartBasis::Status stat0,stat1 ;
+/*
+  Finally, the point of the exercise. We should have stat0 = atLowerBound and
+  stat1 = atUpperBound.
+*/
+  stat0 = wsb->getArtifStatus(0) ;
+  stat1 = wsb->getArtifStatus(1) ;
+  if (stat0 != CoinWarmStartBasis::atLowerBound)
+  { std::cout
+      << "Incorrect status " << stat0 << " for tight <= constraint."
+      << " Expected " << CoinWarmStartBasis::atLowerBound << "." << std::endl ;
+    failureMessage(*si,
+	"testArtifStatus: incorrect status for tight <= constraint.") ; }
+
+  if (stat1 != CoinWarmStartBasis::atUpperBound)
+  { std::cout
+      << "Incorrect status " << stat1 << " for tight >= constraint."
+      << " Expected " << CoinWarmStartBasis::atUpperBound << "." << std::endl ;
+    failureMessage(*si,
+	"testArtifStatus: incorrect status for tight >= constraint.") ; }
+/*
+  Clean up.
+*/
+  delete wsb ;
+  delete si ;
+
+  return ; }
+
+
+/*
   Test the writeMps and writeMpsNative functions by loading a problem,
   writing it out to a file, reloading it, and solving.
   
@@ -2135,7 +2248,7 @@ void testObjOffsetAndLimits (const OsiSolverInterface *emptySi,
 void testWriteMps (const OsiSolverInterface *emptySi, std::string fn)
 
 {
-  testingMessage("Testing writeMps and writeMpsNative.") ;
+  testingMessage("Testing writeMps and writeMpsNative.\n") ;
 
   CoinRelFltEq eq(1.0e-8) ;
 
@@ -2212,7 +2325,7 @@ void testWriteMps (const OsiSolverInterface *emptySi, std::string fn)
 void testWriteLp (const OsiSolverInterface *emptySi, std::string fn)
 
 {
-  testingMessage("Testing writeLp and writeLpNative.") ;
+  testingMessage("Testing writeLp and writeLpNative.\n") ;
 
   CoinRelFltEq eq(1.0e-8) ;
 
@@ -2288,7 +2401,7 @@ void testLoadAndAssignProblem (const OsiSolverInterface *emptySi,
   thorough, we should do another eight ...
 */
   {
-    testingMessage("Testing loadProblem and assignProblem methods.") ;
+    testingMessage("Testing loadProblem and assignProblem methods.\n") ;
     OsiSolverInterface * base = exmip1Si->clone();
     OsiSolverInterface *  si1 = emptySi->clone();
     OsiSolverInterface *  si2 = emptySi->clone();
@@ -2834,7 +2947,8 @@ void testAddToEmptySystem (const OsiSolverInterface *emptySi,
     {
       // Add empty columns
       for (i=0;i<3;i++)
-	si->addCol(CoinPackedVector(),0.0,10.0,objective[i]);
+      { const CoinPackedVector reqdBySunCC ;
+	si->addCol(reqdBySunCC,0.0,10.0,objective[i]) ; }
 
       // Add rows
       si->addRow(row1,2.0,100.0);
@@ -2872,7 +2986,8 @@ void testAddToEmptySystem (const OsiSolverInterface *emptySi,
     {
       // Add empty columns
       for (i=0;i<3;i++)
-	si->addCol(CoinPackedVector(),0.0,10.0,objective[i]);
+      { const CoinPackedVector reqdBySunCC ;
+	si->addCol(reqdBySunCC,0.0,10.0,objective[i]) ; }
       
       // Add rows
       si->addRows(2,starts,column,row12E,NULL,ub);
@@ -2915,7 +3030,8 @@ void testAddToEmptySystem (const OsiSolverInterface *emptySi,
     {
       // Add empty rows
       for (i=0;i<2;i++)
-	si->addRow(CoinPackedVector(),2.0,100.0);
+      { const CoinPackedVector reqdBySunCC ;
+	si->addRow(reqdBySunCC,2.0,100.0) ; }
 
       // Add columns
       if ( volSolverInterface ) {
@@ -2958,7 +3074,8 @@ void testAddToEmptySystem (const OsiSolverInterface *emptySi,
     {
       // Add empty rows
       for (i=0;i<2;i++)
-	si->addRow(CoinPackedVector(),2.0,100.0);
+      { const CoinPackedVector reqdBySunCC ;
+	si->addRow(reqdBySunCC,2.0,100.0) ; }
       
       // Add columns
       if ( volSolverInterface ) {
@@ -3505,7 +3622,6 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 				 const std::string & netlibDir)
 {
 
-  int i;
   CoinRelFltEq eq;
 
   std::string fn = mpsDir+"exmip1";
@@ -4198,7 +4314,10 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     CoinPackedMatrix pm1 = *(si->getMatrixByRow());
 
     // Get a row of the matrix to make a cut
-    CoinPackedVector pv =exmip1Si->getMatrixByRow()->getVector(1);
+    const CoinShallowPackedVector neededBySunCC =
+				exmip1Si->getMatrixByRow()->getVector(1) ;
+    CoinPackedVector pv = neededBySunCC ;
+
     pv.setElement(0,3.14*pv.getElements()[0]);
 
     OsiRowCut rc;
@@ -4216,7 +4335,9 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     assert(pm1.getNumRows()==pm2.getNumRows()-1);
     int i;
     for( i=0; i<pm1.getNumRows(); ++i ) {
-      assert( pm1.getVector(i) == pm2.getVector(i) );
+      const CoinShallowPackedVector neededBySunCC1 = pm1.getVector(i) ;
+      const CoinShallowPackedVector neededBySunCC2 = pm2.getVector(i) ;
+      assert( neededBySunCC1 ==  neededBySunCC2 );
     }
     // Test that last row of pm2 is same as added cut
     assert( pm2.getVector(pm2.getNumRows()-1).isEquivalent(pv) );
@@ -4237,7 +4358,9 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     CoinPackedMatrix pm1 = *(si->getMatrixByCol());
 
     // Get a row of the matrix to make a cut
-    CoinPackedVector pv =exmip1Si->getMatrixByRow()->getVector(1);
+    const CoinShallowPackedVector neededBySunCC =
+				exmip1Si->getMatrixByRow()->getVector(1) ;
+    CoinPackedVector pv = neededBySunCC ;
     pv.setElement(0,3.14*pv.getElements()[0]);
 
     OsiRowCut rc;
@@ -4269,7 +4392,9 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 
     int i;
     for( i=0; i<pm1ByRow.getNumRows(); ++i ) {
-      assert( pm1ByRow.getVector(i) == pm2ByRow.getVector(i) );
+      const CoinShallowPackedVector neededBySunCC1 = pm1ByRow.getVector(i) ;
+      const CoinShallowPackedVector neededBySunCC2 = pm2ByRow.getVector(i) ;
+      assert( neededBySunCC1 ==  neededBySunCC2 );
     }
     // Test that last row of pm2 is same as added cut
     assert( pm2ByRow.getVector(pm2ByRow.getNumRows()-1).isEquivalent(pv) );
@@ -4439,6 +4564,14 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     delete si;
 #endif
   }
+
+/*
+  Do a check to see if the solver returns the correct status for artificial
+  variables. See the routine for detailed comments. Vol has no basis, hence no
+  status.
+*/
+  if (!volSolverInterface)
+    testArtifStatus(emptySi) ;
 
   // Perform tests that are embodied in functions
   if ( !volSolverInterface && !symSolverInterface)

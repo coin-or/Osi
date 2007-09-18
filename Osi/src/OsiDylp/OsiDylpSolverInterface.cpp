@@ -308,6 +308,32 @@ namespace {
   refactoring the basis more often (on the premise that this will reduce
   numerical inaccuracy in calculations involving the basis inverse).
 
+  <strong>Status of Logical Variables</strong>
+  The OSI convention for the status of logical (artificial) variables assumes
+  that logicals always have a positive coefficient:
+  <ul>
+    <li> ax <= b becomes ax + s = b for 0 <= s <= infty
+    <li> ax >= b becomes ax + s = b for -infty <= s <= 0
+    <li> blow <= ax <= b becomes ax + s = b for 0 <= s <= b-blow
+  </ul>
+  If you want a convenient justification for the assumption that all logicals
+  have a positive coefficient, recognise that this is the assumption required
+  in order to claim that the reduced cost of the slack is the negative of the
+  dual for the associated constraint.
+
+  On the down side, this convention means that the status of the artificial is
+  opposite the constraint: a tight <= constraint, for example, will have an
+  artificial that's nonbasic at lower bound.
+
+  In ODSI, this purity of concept is obscured by the fact that dylp expects >=
+  constraints to be transformed to <= constraints. The routine do_lp takes care
+  of this, transparently to the rest of the code. It also flips the dual
+  variable on the way out, so that we get the right result for >= constraints.
+  In detail: ax >= b is transformed to -ax <= -b and solved as -ax + s = -b,
+  0 <= s <= infty. On the way back out, multiplication by -1 would give
+  ax - s = b, which is equivalent to ax >= b for 0 <= s <= infty. To make this
+  all consistent, we multiply s by -1 so that we have ax + s = b,
+  -infty <= s <= 0, and multiply the associated dual by -1.
 */
 
 namespace {
@@ -4416,7 +4442,7 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
     }
 #   ifdef DYLP_POSTMORTEM
 /*
-  Note that sense and strength are unimportant, execpt that we need something
+  Note that sense and strength are unimportant, except that we need something
   stronger than OsiHintIgnore.
 */
     setHintParam(OsiDoReducePrint,saveSense,OsiHintTry,&saveInfo) ;

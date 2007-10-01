@@ -1218,7 +1218,7 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
 */
   std::string solverName = "Unknown solver" ;
   boolResult = si->getStrParam(OsiSolverName,solverName) ;
-  if (boolResult = false)
+  if (boolResult == false)
   { failureMessage(solverName,"OsiSolverName parameter get.") ;
     allOK = false ; }
 /*

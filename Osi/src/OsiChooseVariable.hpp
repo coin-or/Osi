@@ -97,10 +97,12 @@ public:
   /// Given a candidate fill in useful information e.g. estimates
   virtual void updateInformation( const OsiBranchingInformation *info,
 				  int branch, OsiHotInfo * hotInfo);
+#if 0
   /// Given a branch fill in useful information e.g. estimates
   virtual void updateInformation( int whichObject, int branch, 
 				  double changeInObjective, double changeInValue,
 				  int status);
+#endif
   /// Objective value for feasible solution
   inline double goodObjectiveValue() const
   { return goodObjectiveValue_;}
@@ -284,28 +286,33 @@ public:
   /// Initialize the pseudocosts with n entries
   void initialize(int n);
   /// Give the number of objects for which pseudo costs are stored
-  int numberObjects() const
+  inline int numberObjects() const
   { return numberObjects_; }
 
   /** @name Accessor methods to pseudo costs data */
   //@{
-  inline double* upTotalChange()
-  { return upTotalChange_; }
-  inline const double* upTotalChange() const 
-  { return upTotalChange_; }
-  inline double* downTotalChange()
-  { return downTotalChange_; }
-  inline const double* downTotalChange() const
-  { return downTotalChange_; }
-  inline int* upNumber()
-  { return upNumber_; }
-  inline const int* upNumber() const
-  { return upNumber_; }
-  inline int* downNumber()
-  { return downNumber_; }
-  inline const int* downNumber() const
-  { return downNumber_; }
+  inline double* upTotalChange()               { return upTotalChange_; }
+  inline const double* upTotalChange() const   { return upTotalChange_; }
+
+  inline double* downTotalChange()             { return downTotalChange_; }
+  inline const double* downTotalChange() const { return downTotalChange_; }
+
+  inline int* upNumber()                       { return upNumber_; }
+  inline const int* upNumber() const           { return upNumber_; }
+
+  inline int* downNumber()                     { return downNumber_; }
+  inline const int* downNumber() const         { return downNumber_; }
   //@}
+
+  /// Given a candidate fill in useful information e.g. estimates
+  virtual void updateInformation(const OsiBranchingInformation *info,
+				  int branch, OsiHotInfo * hotInfo);
+#if 0
+  /// Given a branch fill in useful information e.g. estimates
+  virtual void updateInformation( int whichObject, int branch, 
+				  double changeInObjective, double changeInValue,
+				  int status);
+#endif
 };
 
 /** This class chooses a variable to branch on
@@ -322,7 +329,7 @@ public:
        again (after fixing a variable).
 */
 
-class OsiChooseStrong  : public OsiChooseVariable, public OsiPseudoCosts {
+class OsiChooseStrong  : public OsiChooseVariable {
  
 public:
     
@@ -364,13 +371,6 @@ public:
   */
   virtual int chooseVariable( OsiSolverInterface * solver, OsiBranchingInformation *info, bool fixVariables);
 
-  /// Given a candidate fill in useful information e.g. estimates
-  virtual void updateInformation(const OsiBranchingInformation *info,
-				  int branch, OsiHotInfo * hotInfo);
-  /// Given a branch fill in useful information e.g. estimates
-  virtual void updateInformation( int whichObject, int branch, 
-				  double changeInObjective, double changeInValue,
-				  int status);
   /** Pseudo Shadow Price mode
       0 - off
       1 - use if no strong info
@@ -383,6 +383,18 @@ public:
   inline void setShadowPriceMode(int value)
   { shadowPriceMode_ = value;}
 
+  /** Accessor method to pseudo cost object*/
+  const OsiPseudoCosts* pseudoCosts() const
+  { return pseudoCosts_; }
+
+  /** A feww pass-through methods to access members of pseudoCosts_ as if they
+      were members of OsiChooseStrong object */
+  inline int numberBeforeTrusted() const {
+    return pseudoCosts_->numberBeforeTrusted(); }
+  inline void setNumberBeforeTrusted(int value) {
+    pseudoCosts_->setNumberBeforeTrusted(value); }
+  inline int numberObjects() const {
+    return pseudoCosts_->numberObjects(); }
 
 protected:
   /** Pseudo Shadow Price mode
@@ -391,6 +403,9 @@ protected:
       2 - use 
   */
   int shadowPriceMode_;
+
+  /** The pseudo costs for the chooser */
+  OsiPseudoCosts* pseudoCosts_;
 };
 
 /** This class contains the result of strong branching on a variable

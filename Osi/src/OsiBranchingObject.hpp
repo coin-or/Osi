@@ -375,6 +375,13 @@ public:
 public:
   /// data
 
+  /** State of search
+      0 - no solution
+      1 - only heuristic solutions
+      2 - branched to a solution 
+      3 - no solution but many nodes
+  */
+  int stateOfSearch_;
   /// Value of objective function (in minimization sense)
   double objectiveValue_;
   /// Value of objective cutoff (in minimization sense)

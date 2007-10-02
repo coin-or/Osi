@@ -516,7 +516,7 @@ OsiChooseVariable::updateInformation(const OsiBranchingInformation *info,
   upChange_ = object[index]->upEstimate();
   downChange_ = object[index]->downEstimate();
 }
-#if 0
+#if 1
 // Given a branch fill in useful information e.g. estimates
 void 
 OsiChooseVariable::updateInformation( int index, int branch, 
@@ -1051,7 +1051,7 @@ OsiPseudoCosts::updateInformation(const OsiBranchingInformation *info,
     }
   }  
 }
-#if 0
+#if 1
 // Given a branch fill in useful information e.g. estimates
 void 
 OsiPseudoCosts::updateInformation(int index, int branch, 
@@ -1059,7 +1059,7 @@ OsiPseudoCosts::updateInformation(int index, int branch,
 				  double changeInValue,
 				  int status)
 {
-  assert (index<solver_->numberObjects());
+  //assert (index<solver_->numberObjects());
   assert (branch<2);
   assert (changeInValue>0.0);
   assert (branch<2);

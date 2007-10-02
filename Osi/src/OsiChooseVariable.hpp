@@ -97,7 +97,7 @@ public:
   /// Given a candidate fill in useful information e.g. estimates
   virtual void updateInformation( const OsiBranchingInformation *info,
 				  int branch, OsiHotInfo * hotInfo);
-#if 0
+#if 1
   /// Given a branch fill in useful information e.g. estimates
   virtual void updateInformation( int whichObject, int branch, 
 				  double changeInObjective, double changeInValue,
@@ -273,7 +273,7 @@ private:
 
 public:
   OsiPseudoCosts();
-  ~OsiPseudoCosts();
+  virtual ~OsiPseudoCosts();
   OsiPseudoCosts(const OsiPseudoCosts& rhs);
   OsiPseudoCosts& operator=(const OsiPseudoCosts& rhs);
 
@@ -307,7 +307,7 @@ public:
   /// Given a candidate fill in useful information e.g. estimates
   virtual void updateInformation(const OsiBranchingInformation *info,
 				  int branch, OsiHotInfo * hotInfo);
-#if 0
+#if 1 
   /// Given a branch fill in useful information e.g. estimates
   virtual void updateInformation( int whichObject, int branch, 
 				  double changeInObjective, double changeInValue,
@@ -450,6 +450,12 @@ public:
   /// Down change  - invalid if n-way
   inline double downChange() const
   { assert (branchingObject_->numberBranches()==2); return changes_[0];}
+  /// Set up change  - invalid if n-way
+  inline void setUpChange(double value)
+  { assert (branchingObject_->numberBranches()==2); changes_[1] = value;}
+  /// Set down change  - invalid if n-way
+  inline void setDownChange(double value)
+  { assert (branchingObject_->numberBranches()==2); changes_[0] = value;}
   /// Change on way k
   inline double change(int k) const
   { return changes_[k];}
@@ -470,6 +476,12 @@ public:
   /// Down status  - invalid if n-way
   inline int downStatus() const
   { assert (branchingObject_->numberBranches()==2); return statuses_[0];}
+  /// Set up status  - invalid if n-way
+  inline void setUpStatus(int value)
+  { assert (branchingObject_->numberBranches()==2); statuses_[1] = value;}
+  /// Set down status  - invalid if n-way
+  inline void setDownStatus(int value)
+  { assert (branchingObject_->numberBranches()==2); statuses_[0] = value;}
   /// Status on way k
   inline int status(int k) const
   { return statuses_[k];}

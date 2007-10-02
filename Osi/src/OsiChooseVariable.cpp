@@ -681,7 +681,7 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
   numberOnList_=0;
   numberUnsatisfied_=0;
   int numberObjects = solver_->numberObjects();
-  if (numberObjects>numberObjects()) {
+  if (numberObjects>pseudoCosts_->numberObjects()) {
     // redo useful arrays
     pseudoCosts_->initialize(numberObjects);
   }
@@ -730,7 +730,7 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
   const double* downTotalChange = pseudoCosts_->downTotalChange();
   const int* upNumber = pseudoCosts_->upNumber();
   const int* downNumber = pseudoCosts_->downNumber();
-  const int numberBeforeTrusted = numberBeforeTrusted();
+  const int numberBeforeTrusted = pseudoCosts_->numberBeforeTrusted();
   for ( i=0;i<numberObjects;i++) {
     sumUp += upTotalChange[i];
     numberUp += upNumber[i];
@@ -890,7 +890,7 @@ OsiChooseStrong::chooseVariable( OsiSolverInterface * solver, OsiBranchingInform
     const double* downTotalChange = pseudoCosts_->downTotalChange();
     const int* upNumber = pseudoCosts_->upNumber();
     const int* downNumber = pseudoCosts_->downNumber();
-    const int numberBeforeTrusted = numberBeforeTrusted();
+    const int numberBeforeTrusted = pseudoCosts_->numberBeforeTrusted();
 
     int numberLeft = CoinMin(numberStrong_-numberStrongDone_,numberUnsatisfied_);
     int numberToDo=0;

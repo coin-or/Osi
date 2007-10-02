@@ -351,6 +351,7 @@ OsiChooseVariable::clearGoodSolution()
   goodSolution_ = NULL;
   goodObjectiveValue_ = COIN_DBL_MAX;
 }
+
 /*  This is a utility function which does strong branching on
     a list of objects and stores the results in OsiHotInfo.objects.
     On entry the object sequence is stored in the OsiHotInfo object
@@ -363,10 +364,9 @@ OsiChooseVariable::clearGoodSolution()
      3 - returning because max time
 */
 int 
-OsiChooseVariable::doStrongBranching( OsiSolverInterface * solver, 
-				      OsiBranchingInformation *info, int numberToDo,
-				      OsiHotInfo * results, int returnCriterion,
-				      int & numberDone)
+OsiChooseStrong::doStrongBranching( OsiSolverInterface * solver, 
+				    OsiBranchingInformation *info,
+				    int numberToDo, int returnCriterion)
 {
 
   // Might be faster to extend branch() to return bounds changed
@@ -378,11 +378,11 @@ OsiChooseVariable::doStrongBranching( OsiSolverInterface * solver,
   const double * upper = info->upper_;
   saveLower = CoinCopyOfArray(info->lower_,numberColumns);
   saveUpper = CoinCopyOfArray(info->upper_,numberColumns);
-  numberDone=0;
+  numResults_=0;
   int returnCode=0;
   double timeStart = CoinCpuTime();
   for (int iDo=0;iDo<numberToDo;iDo++) {
-    OsiHotInfo * result = results + iDo;
+    OsiHotInfo * result = results_ + iDo;
     // For now just 2 way
     OsiBranchingObject * branch = result->branchingObject();
     assert (branch->numberBranches()==2);
@@ -410,7 +410,6 @@ OsiChooseVariable::doStrongBranching( OsiSolverInterface * solver,
     // can check if we got solution
     // status is 0 finished, 1 infeasible and 2 unfinished and 3 is solution
     int status0 = result->updateInformation(thisSolver,info,this);
-    numberStrongDone_++;
     numberStrongIterations_ += thisSolver->getIterationCount();
     if (status0==3) {
       // new solution already saved
@@ -478,7 +477,7 @@ OsiChooseVariable::doStrongBranching( OsiSolverInterface * solver,
       from the evaluation loop and assume the node will be reoptimised by the
       caller.
     */
-    numberDone++;
+    numResults_++;
     if (status0==1&&status1==1) {
       // infeasible
       returnCode=-1;
@@ -504,6 +503,7 @@ OsiChooseVariable::doStrongBranching( OsiSolverInterface * solver,
   solver->unmarkHotStart();
   return returnCode;
 }
+
 // Given a candidate fill in useful information e.g. estimates
 void 
 OsiChooseVariable::updateInformation(const OsiBranchingInformation *info,
@@ -516,7 +516,7 @@ OsiChooseVariable::updateInformation(const OsiBranchingInformation *info,
   upChange_ = object[index]->upEstimate();
   downChange_ = object[index]->downEstimate();
 }
-#if 1
+#if 0
 // Given a branch fill in useful information e.g. estimates
 void 
 OsiChooseVariable::updateInformation( int index, int branch, 
@@ -620,23 +620,29 @@ OsiPseudoCosts::initialize(int n)
 OsiChooseStrong::OsiChooseStrong() :
   OsiChooseVariable(),
   shadowPriceMode_(0),
-  pseudoCosts_()
+  pseudoCosts_(),
+  results_(NULL),
+  numResults_(0)
 {
 }
 
 OsiChooseStrong::OsiChooseStrong(const OsiSolverInterface * solver) :
   OsiChooseVariable(solver),
   shadowPriceMode_(0),
-  pseudoCosts_()
+  pseudoCosts_(),
+  results_(NULL),
+  numResults_(0)
 {
   // create useful arrays
-  pseudoCosts_->initialize(solver_->numberObjects());
+  pseudoCosts_.initialize(solver_->numberObjects());
 }
 
 OsiChooseStrong::OsiChooseStrong(const OsiChooseStrong & rhs) :
   OsiChooseVariable(rhs),
   shadowPriceMode_(rhs.shadowPriceMode_),
-  pseudoCosts_(rhs.pseudoCosts_)
+  pseudoCosts_(rhs.pseudoCosts_),
+  results_(NULL),
+  numResults_(0)
 {  
 }
 
@@ -647,6 +653,9 @@ OsiChooseStrong::operator=(const OsiChooseStrong & rhs)
     OsiChooseVariable::operator=(rhs);
     shadowPriceMode_ = rhs.shadowPriceMode_;
     pseudoCosts_ = rhs.pseudoCosts_;
+    delete[] results_;
+    results_ = NULL;
+    numResults_ = 0;
   }
   return *this;
 }
@@ -654,7 +663,7 @@ OsiChooseStrong::operator=(const OsiChooseStrong & rhs)
 
 OsiChooseStrong::~OsiChooseStrong ()
 {
-  delete pseudoCosts_;
+  delete[] results_;
 }
 
 // Clone
@@ -681,9 +690,9 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
   numberOnList_=0;
   numberUnsatisfied_=0;
   int numberObjects = solver_->numberObjects();
-  if (numberObjects>pseudoCosts_->numberObjects()) {
+  if (numberObjects>pseudoCosts_.numberObjects()) {
     // redo useful arrays
-    pseudoCosts_->initialize(numberObjects);
+    pseudoCosts_.initialize(numberObjects);
   }
   double check = -COIN_DBL_MAX;
   int checkIndex=0;
@@ -726,11 +735,11 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
   double numberUp=0.0;
   double sumDown=0.0;
   double numberDown=0.0;
-  const double* upTotalChange = pseudoCosts_->upTotalChange();
-  const double* downTotalChange = pseudoCosts_->downTotalChange();
-  const int* upNumber = pseudoCosts_->upNumber();
-  const int* downNumber = pseudoCosts_->downNumber();
-  const int numberBeforeTrusted = pseudoCosts_->numberBeforeTrusted();
+  const double* upTotalChange = pseudoCosts_.upTotalChange();
+  const double* downTotalChange = pseudoCosts_.downTotalChange();
+  const int* upNumber = pseudoCosts_.upNumber();
+  const int* downNumber = pseudoCosts_.downNumber();
+  const int numberBeforeTrusted = pseudoCosts_.numberBeforeTrusted();
   for ( i=0;i<numberObjects;i++) {
     sumUp += upTotalChange[i];
     numberUp += upNumber[i];
@@ -870,6 +879,15 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
   delete [] info->indexRegion_;
   return numberUnsatisfied_;
 }
+
+void
+OsiChooseStrong::resetResults(int num)
+{
+  delete[] results_;
+  numResults_ = 0;
+  results_ = new OsiHotInfo[num];
+}
+  
 /* Choose a variable
    Returns - 
    -1 Node is infeasible
@@ -886,16 +904,15 @@ int
 OsiChooseStrong::chooseVariable( OsiSolverInterface * solver, OsiBranchingInformation *info, bool fixVariables)
 {
   if (numberUnsatisfied_) {
-    const double* upTotalChange = pseudoCosts_->upTotalChange();
-    const double* downTotalChange = pseudoCosts_->downTotalChange();
-    const int* upNumber = pseudoCosts_->upNumber();
-    const int* downNumber = pseudoCosts_->downNumber();
-    const int numberBeforeTrusted = pseudoCosts_->numberBeforeTrusted();
+    const double* upTotalChange = pseudoCosts_.upTotalChange();
+    const double* downTotalChange = pseudoCosts_.downTotalChange();
+    const int* upNumber = pseudoCosts_.upNumber();
+    const int* downNumber = pseudoCosts_.downNumber();
+    const int numberBeforeTrusted = pseudoCosts_.numberBeforeTrusted();
 
     int numberLeft = CoinMin(numberStrong_-numberStrongDone_,numberUnsatisfied_);
     int numberToDo=0;
-    int * temp = (int *) useful_;
-    OsiHotInfo * results = new OsiHotInfo [numberLeft];
+    resetResults(numberLeft);
     int returnCode=0;
     bestObjectIndex_ = -1;
     bestWhichWay_ = -1;
@@ -905,8 +922,8 @@ OsiChooseStrong::chooseVariable( OsiSolverInterface * solver, OsiBranchingInform
     for (int i=0;i<numberLeft;i++) {
       int iObject = list_[i];
       if (upNumber[iObject]<numberBeforeTrusted||downNumber[iObject]<numberBeforeTrusted) {
-	results[numberToDo] = OsiHotInfo(solver,info,const_cast<const OsiObject **> (solver->objects()),iObject);
-	temp[numberToDo++]=iObject;
+	results_[numberToDo++] = OsiHotInfo(solver, info,
+					    solver->objects(), iObject);
       } else {
 	const OsiObject * obj = solver->object(iObject);
 	double upEstimate = (upTotalChange[iObject]*obj->upEstimate())/upNumber[iObject];
@@ -921,22 +938,19 @@ OsiChooseStrong::chooseVariable( OsiSolverInterface * solver, OsiBranchingInform
     }
     int numberFixed=0;
     if (numberToDo) {
-      int numberDone=0;
-      returnCode = doStrongBranching(solver,info,numberToDo,results,1,numberDone);
+      returnCode = doStrongBranching(solver, info, numberToDo, 1);
       if (returnCode>=0&&returnCode<=2) {
 	if (returnCode) {
-	  if (returnCode==2)
-	    numberToDo = numberDone;
 	  returnCode=4;
 	  if (bestObjectIndex_>=0)
 	    returnCode=3;
 	}
-	for (int i=0;i<numberToDo;i++) {
-	  int iObject = temp[i];
+	for (int i=0;i<numResults_;i++) {
+	  int iObject = results_[i].whichObject();
 	  double upEstimate;
-	  if (results[i].upStatus()!=1) {
-	    assert (results[i].upStatus()>=0);
-	    upEstimate = results[i].upChange();
+	  if (results_[i].upStatus()!=1) {
+	    assert (results_[i].upStatus()>=0);
+	    upEstimate = results_[i].upChange();
 	  } else {
 	    // infeasible - just say expensive
 	    if (info->cutoff_<1.0e50)
@@ -956,9 +970,9 @@ OsiChooseStrong::chooseVariable( OsiSolverInterface * solver, OsiBranchingInform
 	    }
 	  }
 	  double downEstimate;
-	  if (results[i].downStatus()!=1) {
-	    assert (results[i].downStatus()>=0);
-	    downEstimate = results[i].downChange();
+	  if (results_[i].downStatus()!=1) {
+	    assert (results_[i].downStatus()>=0);
+	    downEstimate = results_[i].downChange();
 	  } else {
 	    // infeasible - just say expensive
 	    if (info->cutoff_<1.0e50)
@@ -999,7 +1013,6 @@ OsiChooseStrong::chooseVariable( OsiSolverInterface * solver, OsiBranchingInform
     } else {
       bestObjectIndex_=list_[0];
     }
-    delete [] results;
     if ( bestObjectIndex_ >=0 ) {
       OsiObject * obj = solver->objects()[bestObjectIndex_];
       obj->setWhichWay(	bestWhichWay_);
@@ -1051,7 +1064,7 @@ OsiPseudoCosts::updateInformation(const OsiBranchingInformation *info,
     }
   }  
 }
-#if 1
+#if 0
 // Given a branch fill in useful information e.g. estimates
 void 
 OsiPseudoCosts::updateInformation(int index, int branch, 
@@ -1090,7 +1103,8 @@ OsiHotInfo::OsiHotInfo() :
 }
 
 OsiHotInfo::OsiHotInfo(OsiSolverInterface * solver,
-		       const OsiBranchingInformation * info, const OsiObject ** objects,
+		       const OsiBranchingInformation * info,
+		       const OsiObject * const * objects,
 		       int whichObject) :
   originalObjectiveValue_(COIN_DBL_MAX),
   whichObject_(whichObject)

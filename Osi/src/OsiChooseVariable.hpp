@@ -69,22 +69,6 @@ public:
      If fixVariables is true then 2,3,4 are all really same as problem changed
   */
   virtual int chooseVariable( OsiSolverInterface * solver, OsiBranchingInformation *info, bool fixVariables);
-  /**  This is a utility function which does strong branching on
-       a list of objects and stores the results in OsiHotInfo.objects.
-       On entry the object sequence is stored in the OsiHotInfo object
-       and maybe more.
-       It returns -
-       -1 - one branch was infeasible both ways
-       0 - all inspected - nothing can be fixed
-       1 - all inspected - some can be fixed (returnCriterion==0)
-       2 - may be returning early - one can be fixed (last one done) (returnCriterion==1) 
-       3 - returning because max time
-       
-  */
-  int doStrongBranching( OsiSolverInterface * solver, 
-			 OsiBranchingInformation *info, int numberToDo,
-			 OsiHotInfo * results, int returnCriterion,
-			 int & numberDone);
   /// Returns true if solution looks feasible against given objects
   bool feasibleSolution(const OsiBranchingInformation * info,
 			const double * solution,
@@ -97,7 +81,7 @@ public:
   /// Given a candidate fill in useful information e.g. estimates
   virtual void updateInformation( const OsiBranchingInformation *info,
 				  int branch, OsiHotInfo * hotInfo);
-#if 1
+#if 0
   /// Given a branch fill in useful information e.g. estimates
   virtual void updateInformation( int whichObject, int branch, 
 				  double changeInObjective, double changeInValue,
@@ -307,7 +291,7 @@ public:
   /// Given a candidate fill in useful information e.g. estimates
   virtual void updateInformation(const OsiBranchingInformation *info,
 				  int branch, OsiHotInfo * hotInfo);
-#if 1 
+#if 0 
   /// Given a branch fill in useful information e.g. estimates
   virtual void updateInformation( int whichObject, int branch, 
 				  double changeInObjective, double changeInValue,
@@ -384,17 +368,38 @@ public:
   { shadowPriceMode_ = value;}
 
   /** Accessor method to pseudo cost object*/
-  const OsiPseudoCosts* pseudoCosts() const
+  const OsiPseudoCosts& pseudoCosts() const
   { return pseudoCosts_; }
 
   /** A feww pass-through methods to access members of pseudoCosts_ as if they
       were members of OsiChooseStrong object */
   inline int numberBeforeTrusted() const {
-    return pseudoCosts_->numberBeforeTrusted(); }
+    return pseudoCosts_.numberBeforeTrusted(); }
   inline void setNumberBeforeTrusted(int value) {
-    pseudoCosts_->setNumberBeforeTrusted(value); }
+    pseudoCosts_.setNumberBeforeTrusted(value); }
   inline int numberObjects() const {
-    return pseudoCosts_->numberObjects(); }
+    return pseudoCosts_.numberObjects(); }
+
+protected:
+
+  /**  This is a utility function which does strong branching on
+       a list of objects and stores the results in OsiHotInfo.objects.
+       On entry the object sequence is stored in the OsiHotInfo object
+       and maybe more.
+       It returns -
+       -1 - one branch was infeasible both ways
+       0 - all inspected - nothing can be fixed
+       1 - all inspected - some can be fixed (returnCriterion==0)
+       2 - may be returning early - one can be fixed (last one done) (returnCriterion==1) 
+       3 - returning because max time
+       
+  */
+  int doStrongBranching( OsiSolverInterface * solver, 
+			 OsiBranchingInformation *info,
+			 int numberToDo, int returnCriterion);
+
+  /** Clear out the results array */
+  void resetResults(int num);
 
 protected:
   /** Pseudo Shadow Price mode
@@ -405,7 +410,13 @@ protected:
   int shadowPriceMode_;
 
   /** The pseudo costs for the chooser */
-  OsiPseudoCosts* pseudoCosts_;
+  OsiPseudoCosts pseudoCosts_;
+
+  /** The results of the strong branching done on the candidates where the
+      pseudocosts were not sufficient */
+  OsiHotInfo* results_;
+  /** The number of OsiHotInfo objetcs that contain information */
+  int numResults_;
 };
 
 /** This class contains the result of strong branching on a variable
@@ -421,7 +432,8 @@ public:
 
   /// Constructor from useful information
   OsiHotInfo ( OsiSolverInterface * solver, 
-	       const OsiBranchingInformation *info, const OsiObject ** objects,
+	       const OsiBranchingInformation *info,
+	       const OsiObject * const * objects,
 	       int whichObject);
 
   /// Copy constructor 

@@ -6,15 +6,35 @@
 #include "OsiConfig.h"
 #include "CoinTime.hpp"
 
-#ifndef OSICBC_DFLT_SOLVER
-#define OSICBC_CLP_DFLT_SOLVER
-#define OSICBC_DFLT_SOLVER OsiClpSolverInterface
-#define OSICBC_DFLT_SOLVER_HPP "OsiClpSolverInterface.hpp"
-#endif
-
 #include "CoinHelperFunctions.hpp"
 #include "CoinIndexedVector.hpp"
+
+/*
+  Default solver configuration: In any environment, clp is the default if you
+  do nothing.
+  
+  The necessary definitions will be handled by the configure script (based on
+  the value specified for --with-osicbc-default-solver) in any environment
+  where configure is available. The results can be found in inc/config_osi.h,
+  which is created during configuration from config_osi.h.in and placed
+  in the build directory.
+
+  In an environment which does not use configure (MS Visual Studio, for example)
+  the preferred method is to edit the definitions in inc/OsiConfig.h. The
+  symbols are left undefined by default because some older environments (e.g.,
+  MS Visual Studio v7 or earlier) will not accept an #include directive which
+  uses a macro to specify the file. In such an environment, if you want to use
+  a solver other than OsiClp, you'll need to make the changes here.
+*/
+
+#ifndef OSICBC_DFLT_SOLVER
+#define OSICBC_DFLT_SOLVER OsiClpSolverInterface
+#define OSICBC_CLP_DFLT_SOLVER
+#include "OsiClpSolverInterface.hpp"
+#else
 #include OSICBC_DFLT_SOLVER_HPP
+#endif
+
 #include "OsiCbcSolverInterface.hpp"
 #include "OsiCuts.hpp"
 #include "OsiRowCut.hpp"

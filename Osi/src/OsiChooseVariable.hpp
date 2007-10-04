@@ -69,22 +69,6 @@ public:
      If fixVariables is true then 2,3,4 are all really same as problem changed
   */
   virtual int chooseVariable( OsiSolverInterface * solver, OsiBranchingInformation *info, bool fixVariables);
-  /**  This is a utility function which does strong branching on
-       a list of objects and stores the results in OsiHotInfo.objects.
-       On entry the object sequence is stored in the OsiHotInfo object
-       and maybe more.
-       It returns -
-       -1 - one branch was infeasible both ways
-       0 - all inspected - nothing can be fixed
-       1 - all inspected - some can be fixed (returnCriterion==0)
-       2 - may be returning early - one can be fixed (last one done) (returnCriterion==1) 
-       3 - returning because max time
-       
-  */
-  int doStrongBranching( OsiSolverInterface * solver, 
-			 OsiBranchingInformation *info, int numberToDo,
-			 OsiHotInfo * results, int returnCriterion,
-			 int & numberDone);
   /// Returns true if solution looks feasible against given objects
   bool feasibleSolution(const OsiBranchingInformation * info,
 			const double * solution,
@@ -97,10 +81,12 @@ public:
   /// Given a candidate fill in useful information e.g. estimates
   virtual void updateInformation( const OsiBranchingInformation *info,
 				  int branch, OsiHotInfo * hotInfo);
+#if 0
   /// Given a branch fill in useful information e.g. estimates
   virtual void updateInformation( int whichObject, int branch, 
 				  double changeInObjective, double changeInValue,
 				  int status);
+#endif
   /// Objective value for feasible solution
   inline double goodObjectiveValue() const
   { return goodObjectiveValue_;}
@@ -271,7 +257,7 @@ private:
 
 public:
   OsiPseudoCosts();
-  ~OsiPseudoCosts();
+  virtual ~OsiPseudoCosts();
   OsiPseudoCosts(const OsiPseudoCosts& rhs);
   OsiPseudoCosts& operator=(const OsiPseudoCosts& rhs);
 
@@ -284,28 +270,33 @@ public:
   /// Initialize the pseudocosts with n entries
   void initialize(int n);
   /// Give the number of objects for which pseudo costs are stored
-  int numberObjects() const
+  inline int numberObjects() const
   { return numberObjects_; }
 
   /** @name Accessor methods to pseudo costs data */
   //@{
-  inline double* upTotalChange()
-  { return upTotalChange_; }
-  inline const double* upTotalChange() const 
-  { return upTotalChange_; }
-  inline double* downTotalChange()
-  { return downTotalChange_; }
-  inline const double* downTotalChange() const
-  { return downTotalChange_; }
-  inline int* upNumber()
-  { return upNumber_; }
-  inline const int* upNumber() const
-  { return upNumber_; }
-  inline int* downNumber()
-  { return downNumber_; }
-  inline const int* downNumber() const
-  { return downNumber_; }
+  inline double* upTotalChange()               { return upTotalChange_; }
+  inline const double* upTotalChange() const   { return upTotalChange_; }
+
+  inline double* downTotalChange()             { return downTotalChange_; }
+  inline const double* downTotalChange() const { return downTotalChange_; }
+
+  inline int* upNumber()                       { return upNumber_; }
+  inline const int* upNumber() const           { return upNumber_; }
+
+  inline int* downNumber()                     { return downNumber_; }
+  inline const int* downNumber() const         { return downNumber_; }
   //@}
+
+  /// Given a candidate fill in useful information e.g. estimates
+  virtual void updateInformation(const OsiBranchingInformation *info,
+				  int branch, OsiHotInfo * hotInfo);
+#if 0 
+  /// Given a branch fill in useful information e.g. estimates
+  virtual void updateInformation( int whichObject, int branch, 
+				  double changeInObjective, double changeInValue,
+				  int status);
+#endif
 };
 
 /** This class chooses a variable to branch on
@@ -322,7 +313,7 @@ public:
        again (after fixing a variable).
 */
 
-class OsiChooseStrong  : public OsiChooseVariable, public OsiPseudoCosts {
+class OsiChooseStrong  : public OsiChooseVariable {
  
 public:
     
@@ -364,13 +355,6 @@ public:
   */
   virtual int chooseVariable( OsiSolverInterface * solver, OsiBranchingInformation *info, bool fixVariables);
 
-  /// Given a candidate fill in useful information e.g. estimates
-  virtual void updateInformation(const OsiBranchingInformation *info,
-				  int branch, OsiHotInfo * hotInfo);
-  /// Given a branch fill in useful information e.g. estimates
-  virtual void updateInformation( int whichObject, int branch, 
-				  double changeInObjective, double changeInValue,
-				  int status);
   /** Pseudo Shadow Price mode
       0 - off
       1 - use if no strong info
@@ -383,6 +367,39 @@ public:
   inline void setShadowPriceMode(int value)
   { shadowPriceMode_ = value;}
 
+  /** Accessor method to pseudo cost object*/
+  const OsiPseudoCosts& pseudoCosts() const
+  { return pseudoCosts_; }
+
+  /** A feww pass-through methods to access members of pseudoCosts_ as if they
+      were members of OsiChooseStrong object */
+  inline int numberBeforeTrusted() const {
+    return pseudoCosts_.numberBeforeTrusted(); }
+  inline void setNumberBeforeTrusted(int value) {
+    pseudoCosts_.setNumberBeforeTrusted(value); }
+  inline int numberObjects() const {
+    return pseudoCosts_.numberObjects(); }
+
+protected:
+
+  /**  This is a utility function which does strong branching on
+       a list of objects and stores the results in OsiHotInfo.objects.
+       On entry the object sequence is stored in the OsiHotInfo object
+       and maybe more.
+       It returns -
+       -1 - one branch was infeasible both ways
+       0 - all inspected - nothing can be fixed
+       1 - all inspected - some can be fixed (returnCriterion==0)
+       2 - may be returning early - one can be fixed (last one done) (returnCriterion==1) 
+       3 - returning because max time
+       
+  */
+  int doStrongBranching( OsiSolverInterface * solver, 
+			 OsiBranchingInformation *info,
+			 int numberToDo, int returnCriterion);
+
+  /** Clear out the results array */
+  void resetResults(int num);
 
 protected:
   /** Pseudo Shadow Price mode
@@ -391,6 +408,15 @@ protected:
       2 - use 
   */
   int shadowPriceMode_;
+
+  /** The pseudo costs for the chooser */
+  OsiPseudoCosts pseudoCosts_;
+
+  /** The results of the strong branching done on the candidates where the
+      pseudocosts were not sufficient */
+  OsiHotInfo* results_;
+  /** The number of OsiHotInfo objetcs that contain information */
+  int numResults_;
 };
 
 /** This class contains the result of strong branching on a variable
@@ -406,7 +432,8 @@ public:
 
   /// Constructor from useful information
   OsiHotInfo ( OsiSolverInterface * solver, 
-	       const OsiBranchingInformation *info, const OsiObject ** objects,
+	       const OsiBranchingInformation *info,
+	       const OsiObject * const * objects,
 	       int whichObject);
 
   /// Copy constructor 
@@ -435,6 +462,12 @@ public:
   /// Down change  - invalid if n-way
   inline double downChange() const
   { assert (branchingObject_->numberBranches()==2); return changes_[0];}
+  /// Set up change  - invalid if n-way
+  inline void setUpChange(double value)
+  { assert (branchingObject_->numberBranches()==2); changes_[1] = value;}
+  /// Set down change  - invalid if n-way
+  inline void setDownChange(double value)
+  { assert (branchingObject_->numberBranches()==2); changes_[0] = value;}
   /// Change on way k
   inline double change(int k) const
   { return changes_[k];}
@@ -455,6 +488,12 @@ public:
   /// Down status  - invalid if n-way
   inline int downStatus() const
   { assert (branchingObject_->numberBranches()==2); return statuses_[0];}
+  /// Set up status  - invalid if n-way
+  inline void setUpStatus(int value)
+  { assert (branchingObject_->numberBranches()==2); statuses_[1] = value;}
+  /// Set down status  - invalid if n-way
+  inline void setDownStatus(int value)
+  { assert (branchingObject_->numberBranches()==2); statuses_[0] = value;}
   /// Status on way k
   inline int status(int k) const
   { return statuses_[k];}

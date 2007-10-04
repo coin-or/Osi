@@ -104,16 +104,21 @@
    features. */
 /* #define ODSI_STATISTICS */
 
+/*
+  For additional information about how to set OSICBC_DFLT_SOLVER,
+  OSICBC_DFLT_SOLVER_CLP, and OSICBC_DFLT_SOLVER_HPP, please see comments at
+  the beginning of OsiCbcSolverInterface.cpp.
+*/
 /* define to the name of the default solver interface class, e.g.,
    OsiClpSolverInterface */
-#define OSICBC_DFLT_SOLVER OsiClpSolverInterface
+/* #define OSICBC_DFLT_SOLVER OsiClpSolverInterface */
 
 /* define this symbol if clp is the default solver */
-#define OSICBC_DFLT_SOLVER_CLP 1
+/* #define OSICBC_DFLT_SOLVER_CLP 1 */
 
 /* define to the name of the .hpp file for the default solver interface class,
    e.g., "OsiClpSolverInterface.hpp" (include quotes) */
-#define OSICBC_DFLT_SOLVER_HPP "OsiClpSolverInterface.hpp"
+/* #define OSICBC_DFLT_SOLVER_HPP "OsiClpSolverInterface.hpp" */
 
 #endif /* HAVE_CONFIG_H */
 

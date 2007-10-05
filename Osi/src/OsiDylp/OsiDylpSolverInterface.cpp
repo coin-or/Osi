@@ -2690,6 +2690,9 @@ inline void ODSI::addRow (const CoinPackedVectorBase &coin_row,
 { contyp_enum ctypi ;
   double rhsi,rhslowi ;
 
+  rhsi = 0 ;
+  rhslowi = 0 ;
+
   gen_rowiparms(&ctypi,&rhsi,&rhslowi,sense,rhs,range) ;
   add_row(coin_row,'a',ctypi,rhsi,rhslowi,0) ;
 

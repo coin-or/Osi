@@ -5145,6 +5145,9 @@ OsiClpSolverInterface::crunch()
     small->dual();
     if (small->problemStatus()==0) {
       modelPtr_->setProblemStatus(0);
+      // Scaling may have changed - if so pass across
+      if (modelPtr_->scalingFlag()==4)
+	modelPtr_->scaling(small->scalingFlag());
       ((ClpSimplexOther *) modelPtr_)->afterCrunch(*small,whichRow,whichColumn,nBound);
     } else if (small->problemStatus()!=3) {
       modelPtr_->setProblemStatus(1);

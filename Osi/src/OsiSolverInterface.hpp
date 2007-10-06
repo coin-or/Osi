@@ -701,13 +701,13 @@ public:
   virtual void setObjective(const double * array);
 
   /** Set the lower bounds for all columns
-      array [getNumCols()] is an array of values for the objective.
+      array [getNumCols()] is an array of values for the lower bounds.
       This defaults to a series of set operations and is here for speed.
   */
   virtual void setColLower(const double * array);
 
   /** Set the upper bounds for all columns
-      array [getNumCols()] is an array of values for the objective.
+      array [getNumCols()] is an array of values for the upper bounds.
       This defaults to a series of set operations and is here for speed.
   */
   virtual void setColUpper(const double * array);

@@ -908,7 +908,12 @@ OsiChooseStrong::chooseVariable( OsiSolverInterface * solver, OsiBranchingInform
     const double* downTotalChange = pseudoCosts_.downTotalChange();
     const int* upNumber = pseudoCosts_.upNumber();
     const int* downNumber = pseudoCosts_.downNumber();
-    const int numberBeforeTrusted = pseudoCosts_.numberBeforeTrusted();
+    int numberBeforeTrusted = pseudoCosts_.numberBeforeTrusted();
+    // Somehow we can get here with it 0 !
+    if (!numberBeforeTrusted) {
+      numberBeforeTrusted=5;
+      pseudoCosts_.setNumberBeforeTrusted(numberBeforeTrusted);
+    }
 
     int numberLeft = CoinMin(numberStrong_-numberStrongDone_,numberUnsatisfied_);
     int numberToDo=0;

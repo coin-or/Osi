@@ -516,7 +516,7 @@ OsiChooseVariable::updateInformation(const OsiBranchingInformation *info,
   upChange_ = object[index]->upEstimate();
   downChange_ = object[index]->downEstimate();
 }
-#if 0
+#if 1
 // Given a branch fill in useful information e.g. estimates
 void 
 OsiChooseVariable::updateInformation( int index, int branch, 
@@ -908,7 +908,12 @@ OsiChooseStrong::chooseVariable( OsiSolverInterface * solver, OsiBranchingInform
     const double* downTotalChange = pseudoCosts_.downTotalChange();
     const int* upNumber = pseudoCosts_.upNumber();
     const int* downNumber = pseudoCosts_.downNumber();
-    const int numberBeforeTrusted = pseudoCosts_.numberBeforeTrusted();
+    int numberBeforeTrusted = pseudoCosts_.numberBeforeTrusted();
+    // Somehow we can get here with it 0 !
+    if (!numberBeforeTrusted) {
+      numberBeforeTrusted=5;
+      pseudoCosts_.setNumberBeforeTrusted(numberBeforeTrusted);
+    }
 
     int numberLeft = CoinMin(numberStrong_-numberStrongDone_,numberUnsatisfied_);
     int numberToDo=0;
@@ -1064,7 +1069,7 @@ OsiPseudoCosts::updateInformation(const OsiBranchingInformation *info,
     }
   }  
 }
-#if 0
+#if 1
 // Given a branch fill in useful information e.g. estimates
 void 
 OsiPseudoCosts::updateInformation(int index, int branch, 

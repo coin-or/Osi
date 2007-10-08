@@ -128,6 +128,7 @@ public:
       
       This means that Clpsimplex flips artificials as it works
       in terms of row activities
+      Returns 0 if OK, 1 if problem is bad e.g. duplicate elements, too large ...
   */
   virtual int setBasisStatus(const int* cstat, const int* rstat);
   

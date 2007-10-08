@@ -4358,6 +4358,7 @@ OsiClpSolverInterface::getBasisStatus(int* cstat, int* rstat) const
 }
 
 //Set the status of structural/artificial variables 
+//Returns 0 if OK, 1 if problem is bad e.g. duplicate elements, too large ...
 int 
 OsiClpSolverInterface::setBasisStatus(const int* cstat, const int* rstat)
 {
@@ -4468,6 +4469,9 @@ OsiClpSolverInterface::setBasisStatus(const int* cstat, const int* rstat)
   }
   // say first time
   modelPtr_->statusOfProblem(true);
+  // May be bad model
+  if (modelPtr_->status()==4)
+    return 1;
   // Save 
   basis_ = getBasis(modelPtr_);
   return 0;

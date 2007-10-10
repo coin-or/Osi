@@ -371,6 +371,10 @@ public:
   const OsiPseudoCosts& pseudoCosts() const
   { return pseudoCosts_; }
 
+  /** Accessor method to pseudo cost object*/
+  OsiPseudoCosts& pseudoCosts()
+  { return pseudoCosts_; }
+
   /** A feww pass-through methods to access members of pseudoCosts_ as if they
       were members of OsiChooseStrong object */
   inline int numberBeforeTrusted() const {

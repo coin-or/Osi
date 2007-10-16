@@ -1914,7 +1914,7 @@ fi
 coin_has_cc=yes
 
 save_cflags="$CFLAGS"
-# For sparc-sun-solaris, promote Studio/Workshop compiler to front of list.
+# For *-*-solaris*, promote Studio/Workshop compiler to front of list.
 # ToDo: If Studio/Workshop cc is not present, we may find /usr/ucb/cc, which
 # is likely to be a non-functional shell. But many installations will have
 # both cc and gcc, so promoting gcc isn't good either. How to test reliably?
@@ -1925,7 +1925,7 @@ case $build in
 	     else
 	       comps="gcc cl"
 	     fi ;;
-  sparc-sun-solaris*)
+  *-*-solaris*)
   	     comps="cc xlc gcc pgcc icc" ;;
   *-linux-*) comps="xlc gcc cc pgcc icc" ;;
   *)         comps="xlc_r xlc cc gcc pgcc icc" ;;
@@ -2828,7 +2828,7 @@ rm -f conftest.err conftest.$ac_objext \
         coin_add_cflags="-Ae"
         coin_dbg_cflags="-g"
         ;;
-      *-sun-*)
+      *-*-solaris*)
         coin_opt_cflags="-xO4"
         coin_dbg_cflags="-g"
         ;;
@@ -3101,7 +3101,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 coin_has_cxx=yes
 
 save_cxxflags="$CXXFLAGS"
-# For sparc-sun-solaris, promote Studio/Workshop compiler to front of list.
+# For *-*-solaris*, promote Studio/Workshop compiler to front of list.
 case $build in
   *-cygwin* | *-mingw*)
   	     if test "$enable_doscompile" = msvc ; then
@@ -3109,7 +3109,7 @@ case $build in
 	     else
 	       comps="g++ cl"
 	     fi ;;
-  sparc-sun-solaris*)
+  *-*-solaris*)
   	     comps="CC xlC aCC g++ c++ pgCC icpc gpp cxx cc++ cl FCC KCC RCC" ;;
   *-darwin*) comps="g++ c++ CC" ;;
           *) comps="xlC aCC CC g++ c++ pgCC icpc gpp cxx cc++ cl FCC KCC RCC" ;;
@@ -3673,7 +3673,7 @@ rm -f conftest.err conftest.$ac_objext \
             ;;
         esac
         ;;
-      *-sun-*)
+      *-*-solaris*)
           coin_opt_cxxflags="-O4"
           coin_dbg_cxxflags="-g"
         ;;
@@ -20177,7 +20177,7 @@ if test $enable_shared = yes; then
         RPATH_FLAGS=nothing ;;
     *-mingw32)
         RPATH_FLAGS=nothing ;;
-    *-sun-*)
+    *-*-solaris*)
         RPATH_FLAGS=
         for dir in $abs_lib_dir; do
           RPATH_FLAGS="$RPATH_FLAGS -R$dir"

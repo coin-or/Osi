@@ -122,13 +122,12 @@ void testingMessage( const char * const msg )
 //#############################################################################
 
 // A helper function to compare the equivalence of two vectors
-static bool
-equivalentVectors(const OsiSolverInterface * si1,
-		  const OsiSolverInterface * si2,
-		  double tol,
-		  const double * v1,
-		  const double * v2,
-		  int size)
+bool equivalentVectors (const OsiSolverInterface * si1,
+			const OsiSolverInterface * si2,
+			double tol,
+			const double * v1,
+			const double * v2,
+			int size)
 {
   bool retVal = true;
   CoinRelFltEq eq(tol);
@@ -3101,6 +3100,128 @@ void testAddToEmptySystem (const OsiSolverInterface *emptySi,
   }
 }
 
+/*
+  OsiPresolve has the property that it will report the correct (untransformed)
+  objective for the presolved problem.
+
+  Test OsiPresolve by checking the objective that we get by optimising the
+  presolved problem. Then postsolve to get back to the original problem
+  statement and check that we have the same objective without further
+  iterations. The problems are a selection of problems from
+  Data/Sample. In particular, e226 is in the list by virtue of having a
+  constant offset (7.113) defined for the objective, and p0201 is in the list
+  because presolve (as of 071015) finds no reductions.
+
+  The objective for finnis (1.7279106559e+05) is not the same as the
+  objective used by Netlib (1.7279096547e+05), but solvers clp, dylp,
+  glpk, and cplex agree that it's correct.
+
+  This test could be made stronger, but more brittle, by checking for the
+  expected size of the constraint system after presolve.
+
+  Returns the number of errors encountered.
+*/
+int testOsiPresolve (const OsiSolverInterface *emptySi,
+		   const std::string &sampleDir)
+
+{ typedef std::pair<std::string,double> probPair ;
+  std::vector<probPair> sampleProbs ;
+
+  sampleProbs.push_back(probPair("brandy",1.5185098965e+03)) ;
+  sampleProbs.push_back(probPair("e226",(-18.751929066+7.113))) ;
+  sampleProbs.push_back(probPair("finnis",1.7279106559e+05)) ;
+  sampleProbs.push_back(probPair("p0201",6875)) ;
+
+  CoinRelFltEq eq(1.0e-8) ;
+
+  int errs = 0 ;
+
+  std::string solverName = "Unknown solver" ;
+  bool boolResult = emptySi->getStrParam(OsiSolverName,solverName) ;
+  if (boolResult == false)
+  { failureMessage(solverName,"OsiSolverName parameter get.") ;
+    errs++ ; }
+
+  std::cout << "Testing OsiPresolve ... " << std::endl ;
+
+  for (int i = 0 ; i < sampleProbs.size() ; i++)
+  { OsiSolverInterface * si = emptySi->clone();
+
+    std::string mpsName = sampleProbs[i].first ;
+    double correctObj = sampleProbs[i].second ;
+
+    std::string fn = sampleDir+mpsName ;
+    int mpsErrs = si->readMps(fn.c_str(),"mps") ;
+    if (mpsErrs != 0)
+    { std::cout << "Could not read " << fn << "; skipping." << std::endl ;
+      delete si ;
+      errs++ ;
+      continue ; }
+/*
+  Set up for presolve. Allow very slight (1.0e-8) bound relaxation to retain
+  feasibility. Discard integrality information (false) and limit the number of
+  presolve passes to 5.
+*/
+    OsiSolverInterface *presolvedModel ;
+    OsiPresolve pinfo ;
+    presolvedModel = pinfo.presolvedModel(*si,1.0e-8,false,5) ;
+    if (presolvedModel == 0)
+    { std::cout
+	<< "No presolved model produced for " << mpsName
+	<< "; skipping." << std::endl ;
+      delete si ;
+      errs++ ;
+      continue ; }
+/*
+  Optimise the presolved model and check the objective.  We need to turn off
+  any native presolve, which may or may not affect the objective.
+*/
+    presolvedModel->setHintParam(OsiDoPresolveInInitial,false) ;
+    presolvedModel->initialSolve() ;
+    double objValue = presolvedModel->getObjValue() ;
+    int iters = presolvedModel->getIterationCount() ;
+    if (!eq(correctObj,objValue))
+    { int oldprec = std::cout.precision(12) ;
+      std::cout
+	<< "Incorrect presolve objective " << objValue << " for " << mpsName
+	<< " in " << iters << " iterations; expected " << correctObj
+	<< ", |error| = " << CoinAbs(correctObj-objValue) << "." << std::endl ;
+      std::cout.precision(oldprec) ;
+      delete si ;
+      errs++ ;
+      continue ; }
+/*
+  Postsolve to return to the original formulation. The presolvedModel should
+  no longer be needed once we've executed postsolve. Check that we get the
+  correct objective wihout iterations. As before, turn off any native
+  presolve.
+*/
+    pinfo.postsolve(true) ;
+    delete presolvedModel ;
+    si->setHintParam(OsiDoPresolveInResolve,false) ;
+    si->resolve() ;
+    objValue = si->getObjValue() ;
+    iters = si->getIterationCount() ;
+    if (!eq(correctObj,objValue))
+    { std::cout
+	<< "Incorrect postsolve objective " << objValue << " for " << mpsName
+	<< " in " << iters << " iterations; expected " << correctObj
+	<< ", |error| = " << CoinAbs(correctObj-objValue) << "." << std::endl ;
+      errs++ ; }
+    if (iters != 0)
+    { std::cout
+	<< "Postsolve for " << mpsName << " required "
+	<< iters << " iterations; expected 0. Possible problem." << std::endl ;
+      errs++ ; }
+
+    delete si ; }
+
+  if (errs == 0)
+  { std::cout << " ok." << std::endl ; }
+  else
+  { failureMessage(solverName,"errors during OsiPresolve test.") ; }
+
+  return (errs) ; }
 
 /*
   Test the simplex portion of the OSI interface.
@@ -4524,47 +4645,15 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     delete s;
   }
 
-  // Test presolve
-  if ( !volSolverInterface /*&& !fmpSolverInterface*/ && !symSolverInterface ) {
-#if 1
-    printf("\
-*** WARNING *** ACHTUNG *** FIGYELEM ***\n\
-    Test presolve needs to be changed to use a problem that's already\n\
-    in Data/Sample.\n\
-*** WARNING *** ACHTUNG *** FIGYELEM ***\n");
-#else
-    OsiSolverInterface * si = emptySi->clone();
-    std::string fn = netlibDir+"25fv47";
-    si->readMps(fn.c_str(),"mps");
-    OsiSolverInterface * presolvedModel;
-    OsiPresolve pinfo;
-    int numberPasses=5; // can change this
-    /* Use a tolerance of 1.0e-8 for feasibility, treat problem as
-       not being integer, do "numberpasses" passes */
-    presolvedModel = pinfo.presolvedModel(*si,1.0e-8,false,numberPasses);
-    assert(presolvedModel);
-    // switch off any native presolve
-    presolvedModel->setHintParam(OsiDoPresolveInInitial,false);
-    presolvedModel->initialSolve();
-    double objValue = presolvedModel->getObjValue();
-    if( !eq(objValue,5.5018458883e+03) )
-      failureMessage(solverName,"OsiPresolved model has wrong objective");
-    pinfo.postsolve(true);
+/*
+  Test OsiPresolve. This is a `bolt on' presolve, distinct from any presolve
+  that might be innate to the solver.
 
-
-    delete presolvedModel;
-    si->setHintParam(OsiDoPresolveInResolve,false);
-    si->setHintParam(OsiDoDualInResolve,false);
-    si->resolve();
-    objValue = si->getObjValue();
-    if( !eq(objValue,5.5018458883e+03) )
-      failureMessage(solverName,"OsiPresolve - final objective wrong");
-    if (si->getIterationCount())
-      failureMessage(solverName,"OsiPresolve - minor error, needs iterations");
-    delete si;
-#endif
-  }
-
+  The conditional here used to exclude OsiFmp. Perhaps it should again, but no
+  one's tested it since OsiFmp was originally developed.
+*/
+  if ( !volSolverInterface && !symSolverInterface )
+    testOsiPresolve(emptySi,mpsDir) ;
 /*
   Do a check to see if the solver returns the correct status for artificial
   variables. See the routine for detailed comments. Vol has no basis, hence no

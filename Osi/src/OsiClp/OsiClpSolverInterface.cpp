@@ -2136,12 +2136,14 @@ OsiClpSolverInterface::deleteCols(const int num, const int * columnIndices)
     delete [] indices;
   }
   // synchronize integers (again)
-  int numberColumns = modelPtr_->numberColumns();
-  for (int i=0;i<numberColumns;i++) {
-    if (modelPtr_->isInteger(i))
-      integerInformation_[i]=1;
-    else
-      integerInformation_[i]=0;
+  if (integerInformation_) {
+    int numberColumns = modelPtr_->numberColumns();
+    for (int i=0;i<numberColumns;i++) {
+      if (modelPtr_->isInteger(i))
+	integerInformation_[i]=1;
+      else
+	integerInformation_[i]=0;
+    }
   }
   basis_.deleteColumns(num,columnIndices);
   linearObjective_ = modelPtr_->objective();

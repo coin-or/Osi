@@ -3144,7 +3144,7 @@ int testOsiPresolve (const OsiSolverInterface *emptySi,
 
   std::cout << "Testing OsiPresolve ... " << std::endl ;
 
-  for (int i = 0 ; i < sampleProbs.size() ; i++)
+  for (unsigned i = 0 ; i < sampleProbs.size() ; i++)
   { OsiSolverInterface * si = emptySi->clone();
 
     std::string mpsName = sampleProbs[i].first ;

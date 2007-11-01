@@ -850,6 +850,7 @@ OsiSolverInterface::getAuxiliaryInfo() const
 void OsiSolverInterface::activateRowCutDebugger (const char * modelName)
 {
   delete rowCutDebugger_;
+  rowCutDebugger_=NULL; // so won't use in new
   rowCutDebugger_ = new OsiRowCutDebugger(*this,modelName);
 }
 /* Activate debugger using full solution array.
@@ -859,6 +860,7 @@ void OsiSolverInterface::activateRowCutDebugger (const char * modelName)
 void OsiSolverInterface::activateRowCutDebugger (const double * solution)
 {
   delete rowCutDebugger_;
+  rowCutDebugger_=NULL; // so won't use in new
   rowCutDebugger_ = new OsiRowCutDebugger(*this,solution);
 }
 //-------------------------------------------------------------------

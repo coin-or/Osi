@@ -862,6 +862,9 @@ public:
   //@{
   /// Get pointer to Clp model
   ClpSimplex * getModelPtr() const ;
+  /// Set pointer to Clp model and return old
+  inline ClpSimplex * swapModelPtr(ClpSimplex * newModel)
+  { ClpSimplex * model = modelPtr_; modelPtr_=newModel;return model;}
   /// Get special options
   inline unsigned int specialOptions() const
   { return specialOptions_;}

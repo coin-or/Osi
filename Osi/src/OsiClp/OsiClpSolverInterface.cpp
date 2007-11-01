@@ -5952,16 +5952,16 @@ bool
 OsiClpDisasterHandler::check() const
 {
   // Exit if really large number of iterations
-  if (model_->numberIterations()> 100000+100*(model_->numberRows()+model_->numberColumns()))
+  if (model_->numberIterations()> model_->baseIteration()+100000+100*(model_->numberRows()+model_->numberColumns()))
     return true;
   if ((whereFrom_&2)==0||!model_->nonLinearCost()) {
     // dual
-    if (model_->numberIterations()<model_->numberRows()+1000) {
+    if (model_->numberIterations()<model_->baseIteration()+model_->numberRows()+1000) {
       return false;
     } else if (phase_<2) {
-      if (model_->numberIterations()> 2*model_->numberRows()+2000||
-	  model_->numberDualInfeasibilitiesWithoutFree()||
+      if (model_->numberIterations()> model_->baseIteration()+2*model_->numberRows()+2000||
 	  model_->largestDualError()>=1.0e-1) {
+	// had model_->numberDualInfeasibilitiesWithoutFree()||
 #ifdef COIN_DEVELOP
 	printf("trouble in phase %d\n",phase_);
 #endif
@@ -5971,7 +5971,7 @@ OsiClpDisasterHandler::check() const
       }
     } else {
       assert (phase_==2);
-      if (model_->numberIterations()> 3*model_->numberRows()+2000||
+      if (model_->numberIterations()> model_->baseIteration()+3*model_->numberRows()+2000||
 	  model_->largestPrimalError()>=1.0e3) {
 #ifdef COIN_DEVELOP
 	printf("trouble in phase %d\n",phase_);
@@ -5983,10 +5983,10 @@ OsiClpDisasterHandler::check() const
     }
   } else {
     // primal
-    if (model_->numberIterations()<model_->numberRows()+4000) {
+    if (model_->numberIterations()<model_->baseIteration()+model_->numberRows()+4000) {
       return false;
     } else if (phase_<2) {
-      if (model_->numberIterations()> 2*model_->numberRows()+2000+
+      if (model_->numberIterations()> model_->baseIteration()+2*model_->numberRows()+2000+
 	  model_->numberColumns()/2&&
 	  model_->numberDualInfeasibilitiesWithoutFree()>0&&
 	  model_->numberPrimalInfeasibilities()>0&&
@@ -6000,7 +6000,7 @@ OsiClpDisasterHandler::check() const
       }
     } else {
       assert (phase_==2);
-      if (model_->numberIterations()> 3*model_->numberRows()+2000||
+      if (model_->numberIterations()> model_->baseIteration()+3*model_->numberRows()+2000||
 	  model_->largestPrimalError()>=1.0e3) {
 #ifdef COIN_DEVELOP
 	printf("trouble in phase %d\n",phase_);

@@ -28,6 +28,7 @@ Osi/MSVisualStudio/v8/OsiExamplesSpecific/OsiExamplesSpecific.vcproj -text
 Osi/MSVisualStudio/v8/libOsi/libOsi.vcproj -text
 Osi/MSVisualStudio/v8/libOsiCbc/libOsiCbc.vcproj -text
 Osi/MSVisualStudio/v8/libOsiClp/libOsiClp.vcproj -text
+Osi/MSVisualStudio/v8/libOsiSym/libOsiSym.vcproj -text
 Osi/MSVisualStudio/v8/libOsiVol/libOsiVol.vcproj -text
 Osi/configure -text
 Osi/configure.ac -text

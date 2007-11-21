@@ -60,7 +60,7 @@ public:
    /* Move the pointer to the rootnode of the warmStart to another
       node which will change the underlying tree 
    */
-   virtual void setRoot(bc_node *root) {} //FIX_ME! Ask Prof. Ralphs.
+   // virtual void setRoot(bc_node *root) {} //FIX_ME! Ask Prof. Ralphs.
 
    /* Write the current warm start info to a file */
    virtual int writeToFile(char * f);

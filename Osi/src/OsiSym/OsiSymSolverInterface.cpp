@@ -861,6 +861,7 @@ void OsiSymSolverInterface::loadProblem(const CoinPackedMatrix& matrix,
       matind = new int[numelem]; 
       matval = new double [numelem]; 
 
+      matbeg[0] = 0;
       for (i = 0; i<numcols; i++){
 	 matbeg[i+1] = matbeg[i] + lengths[i];
 	 if (lengths[i]){

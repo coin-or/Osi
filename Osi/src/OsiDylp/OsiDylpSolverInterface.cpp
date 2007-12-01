@@ -5793,9 +5793,11 @@ CoinWarmStart* ODSI::getWarmStart () const
   This routine installs the basis snapshot from an OsiDylpWarmStartBasis
   (ODWSB) object and sets ODSI options so that dylp will attempt a warm start
   on the next call to \link OsiDylpSolverInterface::resolve ODSI::resolve
-  \endlink.  A basis with 0 rows and 0 columns, or a null parameter, is taken
-  as a request to delete the existing warm start information held in
-  activeBasis.
+  \endlink.  A basis with 0 rows and 0 columns, is taken as a request to
+  delete the existing warm start information held in activeBasis.
+
+  By definition, a parameter of 0 is taken as a request to update the current
+  warm start from the solver.
 
   The size (rows x columns) of the constraint system should be equal or
   larger than the ODSWB information.  The final basis built for dylp can
@@ -5829,20 +5831,21 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
   CWSB::Status osi_statlogi,osi_statconi,osi_statvarj ;
 
 /*
-  A null parameter says delete the current active basis and return.
+  By definition, a null parameter is a request to update the active basis from
+  the solver. Since ODSI does this on every call to the solver, no further
+  action is required. All we need to do here is assert that activeBasis
+  exists.
 */
   if (!ws)
   { 
 #   if ODSI_TRACK_ACTIVE > 0
     std::cout
       << "ODSI(" << std::hex << this
-      << ")::setWarmStart: deleting active basis "
+      << ")::setWarmStart: sync request; current active basis is "
       << activeBasis << std::dec
-      << "(null param)." << std::endl ;
+      << "." << std::endl ;
 #   endif
-    delete activeBasis ;
-    activeBasis = 0 ;
-    activeIsModified = false ;
+    assert(activeBasis) ;
     return (true) ; }
 /*
   Use a dynamic cast to make sure we have a CWSB. Then check the size ---

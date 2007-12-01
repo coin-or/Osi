@@ -58,7 +58,7 @@
   ODWSB_TRACK_BASIS	track basis manipulations
 
 */
-#define ODWSB_TRACK_BASIS 1
+// #define ODWSB_TRACK_BASIS 1
 
 namespace {
   char sccsid[] UNUSED = "@(#)OsiDylpWarmStartBasis.cpp	1.7	11/06/04" ;

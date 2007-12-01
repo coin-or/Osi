@@ -141,7 +141,9 @@ void test_starts (const std::string& mpsDir)
     { std::cout << " no throw! ... FAILURE!" ; }
     delete ws ; }
 /*
-  Back to our regular programming.
+  Make sure that the warm start information is sufficient (and persistent) by
+  discarding the current ODSI object and then installing the warm start
+  information in a new ODSI object.
 */
   std::cout << "Discarding current ODSI object ... \n" ;
   delete osi ;

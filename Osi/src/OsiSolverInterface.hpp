@@ -381,8 +381,9 @@ public:
     
       Return true or false depending on whether the warm start information was
       accepted or not.
-      By definition, a call to setWarmStart with an empty warm start object
-      should remove the warm start information held in the solver interface.
+      By definition, a call to setWarmStart with a null parameter should
+      cause the solver interface to refresh its warm start information
+      from the underlying solver.
    */
     virtual bool setWarmStart(const CoinWarmStart* warmstart) = 0;
   //@}

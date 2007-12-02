@@ -841,172 +841,156 @@ bool OGSI::isIterationLimitReached() const
 	return isIterationLimitReached_;
 }
 
+
 //#############################################################################
 // WarmStart related methods
 //#############################################################################
 
-CoinWarmStart* OGSI::getWarmStart() const
+/*
+  Return a warm start object matching the current state of the solver.
+
+  Nonbasic fixed variables (LPX_NS) are translated to CWSB::atLowerBound.
+*/
+CoinWarmStart *OGSI::getWarmStart() const
+
 {
-	CoinWarmStartBasis *ws = NULL;
-	LPX *model = getMutableModelPtr();
+/*
+  Create an empty basis and size it to the correct dimensions.
+*/
+  CoinWarmStartBasis *ws = new CoinWarmStartBasis() ;
+  int numcols = getNumCols() ;
+  int numrows = getNumRows() ;
+  ws->setSize(numcols,numrows) ;
+/*
+  Walk the rows. Retrieve the status information from the glpk model and
+  store it in the CWSB object.
+*/
+  for (int i = 0 ; i < numrows ; i++)
+  { int stati = lpx_get_row_stat(lp_,i+1) ;
+    switch (stati)
+    { case LPX_BS:
+      { ws->setArtifStatus(i,CoinWarmStartBasis::basic) ;
+	break ; }
+      case LPX_NS:
+      case LPX_NL:
+      { ws->setArtifStatus(i,CoinWarmStartBasis::atLowerBound) ;
+	break ; }
+      case LPX_NU:
+      { ws->setArtifStatus(i,CoinWarmStartBasis::atUpperBound) ;
+	break ; }
+      case LPX_NF:
+      { ws->setArtifStatus(i,CoinWarmStartBasis::isFree) ;
+	break ; }
+      default:
+      { assert(false) ;
+	break ; } } }
+/*
+  And repeat for the columns.
+*/
+  for (int j = 0 ; j < numcols ; j++)
+  { int statj = lpx_get_col_stat(lp_,j+1) ;
+    switch (statj)
+    { case LPX_BS:
+      { ws->setStructStatus(j,CoinWarmStartBasis::basic) ;
+	break ; }
+      case LPX_NS:
+      case LPX_NL:
+      { ws->setStructStatus(j,CoinWarmStartBasis::atLowerBound) ;
+	break ; }
+      case LPX_NU:
+      { ws->setStructStatus(j,CoinWarmStartBasis::atUpperBound) ;
+	break ; }
+      case LPX_NF:
+      { ws->setStructStatus(j,CoinWarmStartBasis::isFree) ;
+	break ; }
+      default:
+      { assert(false) ;
+	break ; } } }
 
-	ws = new CoinWarmStartBasis();
-
-	int numcols = getNumCols();
-	int numrows = getNumRows();
-	ws->setSize( numcols, numrows );
-
-	int i;
-	for( i = 0; i < numrows; i++ )
-	{
-		int stat;
-		double val;
-		double dualVal;
-		stat=lpx_get_row_stat(model,i+1);
-		val=lpx_get_row_prim(model,i+1);
-		dualVal=lpx_get_row_dual(model,i+1);
-		switch( stat ) {
-		case LPX_BS:
-			ws->setArtifStatus( i, CoinWarmStartBasis::basic );
-			break;
-
-		case LPX_NS: // ??? I'am not completly sure it's the best interpretation.
-		case LPX_NL:
-			ws->setArtifStatus( i, CoinWarmStartBasis::atLowerBound );
-			break;
-
-		case LPX_NU:
-			ws->setArtifStatus( i, CoinWarmStartBasis::atUpperBound );
-			break;
-
-		case LPX_NF:
-			ws->setArtifStatus( i, CoinWarmStartBasis::isFree );
-			break;
-
-		default:
-			assert( false );
-			break;
-		}
-		//		ws->setArtifValue( i, val);
-		//		ws->setArtifDualValue( i, dualVal );
-	}
-
-	int j;
-	for( j = 0; j < numcols; j++ )
-	{
-		int stat;
-		//		double val;
-		//		double dualVal;
-	        stat=lpx_get_col_stat(model,j+1);
-		switch( stat ) {
-		case LPX_BS:
-			ws->setStructStatus( j, CoinWarmStartBasis::basic );
-			break;
-
-		case LPX_NS: // ??? I'am not completly sure it's the best interpretation.
-		case LPX_NL:
-			ws->setStructStatus( j, CoinWarmStartBasis::atLowerBound );
-			break;
-
-		case LPX_NU:
-			ws->setStructStatus( j, CoinWarmStartBasis::atUpperBound );
-			break;
-
-		case LPX_NF:
-			ws->setStructStatus( j, CoinWarmStartBasis::isFree );
-			break;
-
-		default:
-			assert( false );
-			break;
-		}
-		//		ws->setStructValue( j, val );
-		//		ws->setStructDualValue( j, dualVal );
-	}
-
-	return ws;
-}
+  return (ws) ; }
 
 //-----------------------------------------------------------------------------
 
-bool OGSI::setWarmStart(const CoinWarmStart* warmstart)
+/*
+  Set the given warm start information in the solver.
+  
+  By definition, a null warmstart parameter is interpreted as `refresh warm
+  start information from the solver.' Since OGSI does not cache warm start
+  information, no action is required.
+*/
+
+bool OGSI::setWarmStart (const CoinWarmStart* warmstart)
+
 {
+/*
+  If this is a simple refresh request, we're done.
+*/
+  if (warmstart == 0)
+  { return (true) ; }
+/*
+  Check that the parameter is a CWSB of the appropriate size.
+*/
+  const CoinWarmStartBasis *ws =
+      dynamic_cast<const CoinWarmStartBasis *>(warmstart) ;
+  if (ws == 0)
+  { return false ; }
 	
-	const CoinWarmStartBasis *ws = 
-	  dynamic_cast<const CoinWarmStartBasis *>(warmstart);
-	LPX *model = getMutableModelPtr();
+  int numcols = ws->getNumStructural() ;
+  int numrows = ws->getNumArtificial() ;
 	
-	if( !ws )
-		return false;
-	
-	int numcols = ws->getNumStructural();
-	int numrows = ws->getNumArtificial();
-	
-	if( numcols != getNumCols() || numrows != getNumRows() )
-		return false;
-	
-	freeCachedData( OGSI::FREECACHED_RESULTS );
-	
-	int i;
-	for( i = 0; i < numrows; i++)
-	{
-		int stat;
-		switch( ws->getArtifStatus(i) )
-		{
-		case CoinWarmStartBasis::basic:
-			stat = LPX_BS;
-			break;
+  if (numcols != getNumCols() || numrows != getNumRows())
+  { return (false) ; }
+/*
+  Looks like a basis. Translate to the appropriate codes for glpk and install.
+  Row status first (logical/artificial variables), then column status
+  (architectural variables).
+*/
+  for (int i = 0 ; i < numrows ; i++)
+  { int stati ;
 
-		case CoinWarmStartBasis::atLowerBound:
-			stat = LPX_NL;
-			break;
+    switch (ws->getArtifStatus(i))
+    { case CoinWarmStartBasis::basic:
+      { stati = LPX_BS ;
+	break ; }
+      case CoinWarmStartBasis::atLowerBound:
+      { stati = LPX_NL ;
+	break ; }
+      case CoinWarmStartBasis::atUpperBound:
+      { stati = LPX_NU ;
+	break ; }
+      case CoinWarmStartBasis::isFree:
+      { stati = LPX_NF ;
+	break ; }
+      default:
+      { assert(false) ;
+	return (false) ; } }		
 
-		case CoinWarmStartBasis::atUpperBound:
-			stat = LPX_NU;
-			break;
+    lpx_set_row_stat(lp_,i+1,stati) ; }
+  
+  for (int j = 0 ; j < numcols ; j++)
+  { int statj ;
 
-		case CoinWarmStartBasis::isFree:
-			stat = LPX_NF;
-			break;
+    switch (ws->getStructStatus(j))
+    { case CoinWarmStartBasis::basic:
+      { statj = LPX_BS ;
+	break ; }
+      case CoinWarmStartBasis::atLowerBound:
+      { statj = LPX_NL ;
+	break ; }
+      case CoinWarmStartBasis::atUpperBound:
+      { statj = LPX_NU ;
+	break ; }
+      case CoinWarmStartBasis::isFree:
+      { statj = LPX_NF ;
+	break ; }
+      default:
+      { assert(false) ;
+	return (false) ; } }
 
-		default:  // unknown row status
-			assert( false );
-			return false;
-		}		
-		lpx_set_row_stat( model, i+1, stat );
-	}
-	
-	int j;
-	for( j = 0; j < numcols; j++)
-	{
-		int stat;
-		switch( ws->getStructStatus( j ) )
-		{
-		case CoinWarmStartBasis::basic:
-			stat = LPX_BS;
-			break;
+    lpx_set_col_stat(lp_,j+1,statj) ; }
 
-		case CoinWarmStartBasis::atLowerBound:
-			stat = LPX_NL;
-			break;
+  return (true) ; }
 
-		case CoinWarmStartBasis::atUpperBound:
-			stat = LPX_NU;
-			break;
-
-		case CoinWarmStartBasis::isFree:
-			stat = LPX_NF;
-			break;
-
-		default:  // unknown col status
-			assert( false );
-			return false;
-		}
-		lpx_set_col_stat( model, j+1, stat );
-	}
-	
-	return true;
-}
 
 //#############################################################################
 // Hotstart related methods (primarily used in strong branching)

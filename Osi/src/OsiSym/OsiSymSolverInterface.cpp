@@ -72,12 +72,12 @@ OsiSymSolverInterface::OsiSymSolverInterface()
 /*===========================================================================*/
 
 void OsiSymSolverInterface::loadProblem()
-{
-
+{   
+   void *user;
+   
    sym_load_problem(env_);
-   
-   setApplicationData((void *) (env_->user));
-   
+   sym_get_user_data(env_, &user);
+   setApplicationData((void *) (user));   
 }
 
 /*===========================================================================*/
@@ -86,12 +86,7 @@ void OsiSymSolverInterface::loadProblem()
 void OsiSymSolverInterface::branchAndBound()
 {
    freeCachedResults();
-
-   if (env_->warm_start){
-      sym_warm_solve(env_);
-   } else {
-      sym_solve(env_);
-   }
+   sym_solve(env_);
 
 }
 
@@ -328,19 +323,17 @@ bool OsiSymSolverInterface::setDblParam(OsiDblParam key, double value)
 
    switch(key){
       
+    case OsiDualTolerance:
+    case OsiPrimalTolerance:
+       sym_set_dbl_param(env_, "granularity", value);
+       sym_set_dbl_param(env_, "LP_granularity", value);
+       return true;
     case OsiDualObjectiveLimit:
     case OsiPrimalObjectiveLimit:
-    case OsiDualTolerance:
-       env_->par.lp_par.granularity = value;
-       return true;
-    case OsiPrimalTolerance:
-       env_->par.lp_par.granularity = value;
-       return true;
     case OsiLastDblParam:
        return false;
-
     case OsiObjOffset:
-       env_->mip->obj_offset = -value;
+       sym_set_dbl_param(env_, "obj_offset", -value);      
        return true;
        
     default:
@@ -551,21 +544,19 @@ bool OsiSymSolverInterface::getDblParam(OsiDblParam key, double& value) const
 
    switch(key){
       
+    case OsiDualTolerance:
+    case OsiPrimalTolerance:
+       sym_get_dbl_param(env_, "LP_granularity", &value);
+       return true;
     case OsiDualObjectiveLimit:
     case OsiPrimalObjectiveLimit:
-    case OsiDualTolerance:
-       value = env_->par.lp_par.granularity;
-       return true;
-    case OsiPrimalTolerance:
-       value = env_->par.lp_par.granularity;
-       return true;
     case OsiLastDblParam:
        return false;
        
     case OsiObjOffset:
-       value = -env_->mip->obj_offset;
-      return true;
-
+       sym_get_dbl_param(env_, "obj_offset", &value);
+       value = -value;
+       return true;
     default:
       return false;
    }
@@ -866,17 +857,18 @@ void OsiSymSolverInterface::loadProblem(const CoinPackedMatrix& matrix,
 
    if (numelem){
 
-      matbeg = (int*)calloc(ISIZE,(numcols + 1));
-      matind = (int*)malloc(ISIZE*numelem);
-      matval = (double *)malloc(DSIZE*numelem);
+      matbeg = new int [numcols + 1]; 
+      matind = new int[numelem]; 
+      matval = new double [numelem]; 
 
+      matbeg[0] = 0;
       for (i = 0; i<numcols; i++){
 	 matbeg[i+1] = matbeg[i] + lengths[i];
 	 if (lengths[i]){
 	    memcpy(matind + matbeg[i], matindS + matbegS[i] , 
-		   ISIZE * lengths[i]);
+		   sizeof(int) * lengths[i]);
 	    memcpy(matval + matbeg[i], matvalS + matbegS[i] , 
-		   DSIZE * lengths[i]);
+		   sizeof(double) * lengths[i]);
 	 }
       }
    }
@@ -886,7 +878,12 @@ void OsiSymSolverInterface::loadProblem(const CoinPackedMatrix& matrix,
 
    if(!isColOrdered)
       delete symMatrix;
-   
+
+   if(numelem){
+      delete [] matbeg;
+      delete [] matind;
+      delete [] matval;
+   }   
 }
 
 /*===========================================================================*/
@@ -985,7 +982,7 @@ void OsiSymSolverInterface::loadProblem(const int numcols, const int numrows,
 					const double* rowrhs, 
 					const double* rowrng)   
 {
-
+   void *user;
    freeAllMemory();
 
    sym_explicit_load_problem(env_, numcols, numrows, const_cast<int*>(start), 
@@ -996,10 +993,11 @@ void OsiSymSolverInterface::loadProblem(const int numcols, const int numrows,
 			     const_cast<double*>(obj), NULL, 
 			     const_cast<char*>(rowsen), 
 			     const_cast<double*>(rowrhs), 
-			     const_cast<double*>(rowrng), TRUE); 
-			 
-   setApplicationData((void *) (env_->user));
-    
+			     const_cast<double*>(rowrng), true); 
+
+
+   sym_get_user_data(env_, &user);
+   setApplicationData((void *) (user));    
 }
 
 /*===========================================================================*/
@@ -1325,7 +1323,7 @@ bool OsiSymSolverInterface::isBinary(int colIndex) const
 
 bool OsiSymSolverInterface::isInteger(int colIndex) const
 {
-   int value;
+   char value;
    if(!sym_is_integer(env_, colIndex, &value)){
       return ((bool)value);
    }
@@ -1383,17 +1381,35 @@ const CoinPackedMatrix * OsiSymSolverInterface::getMatrixByRow() const
 const CoinPackedMatrix * OsiSymSolverInterface::getMatrixByCol() const
 {
 
+   int m, n, nz, *matind, *matbeg;
+   double *matval;  
+
+
+   m = getNumRows();
+   n = getNumCols();
+   nz = getNumElements();
+
+   matbeg = new int[n + 1];
+   matind = new int[nz];
+   matval = new double[nz];
+   
+   sym_get_matrix(env_, &nz, matbeg, matind, matval);
+
    if(!matrixByCol_){
       matrixByCol_ =
-	 new CoinPackedMatrix(true, env_->mip->m, env_->mip->n, env_->mip->nz,
-			      env_->mip->matval, env_->mip->matind, 
-			      env_->mip->matbeg, 0);
+	 new CoinPackedMatrix(true, m, n, nz,
+			      matval, matind, 
+			      matbeg, 0);
    }else{
-      matrixByCol_->copyOf(true, env_->mip->m, env_->mip->n, env_->mip->nz,
-			   env_->mip->matval, env_->mip->matind, 
-			   env_->mip->matbeg, 0);
+      matrixByCol_->copyOf(true, m, n, nz,
+			   matval, matind, 
+			   matbeg, 0);
    }
 
+   delete [] matbeg; 
+   delete [] matind;
+   delete [] matval;
+   
    return matrixByCol_;
 }
 
@@ -1682,23 +1698,32 @@ void OsiSymSolverInterface::writeMps(const char *filename,
 				     double objSense) const
 {
 
-   const CoinPackedMatrix * colMat = getMatrixByCol();
-      
-
+   int i, n; 
    char ** colnames = 0;
    char ** rownames = 0;
-   CoinMpsIO mps;
-   mps.setMpsData(*colMat, getInfinity(), env_->mip->lb, 
-				       env_->mip->ub, 
-				       env_->mip->obj, env_->mip->is_int, 
-				       env_->mip->sense, env_->mip->rhs,
-				       env_->mip->rngval, colnames, rownames);
+   const CoinPackedMatrix * colMat = getMatrixByCol();
+   char * isInteger; 
 
+   n = getNumCols();
+   isInteger = new char[n];
+      
+   for( i = 0; i < n; i++){
+      sym_is_integer(env_, i, &isInteger[i]);
+   }
+
+   CoinMpsIO mps;
+   mps.setMpsData(*colMat, getInfinity(), getColLower(), 
+		  getColUpper(), getObjCoefficients(), isInteger, 
+		  getRowSense(), getRightHandSide(),
+		  getRowRange(), colnames, rownames);
+   
    string f(filename);
    string e(extension);
    string fullname = f + "." + e;
 
    mps.writeMps(fullname.c_str());
+   
+   delete [] isInteger;
 
 }
 
@@ -1725,8 +1750,6 @@ void OsiSymSolverInterface::applyRowCut( const OsiRowCut & rc)
 void OsiSymSolverInterface::applyColCut( const OsiColCut & cc) 
 {
 
-   /* assuming the given bounds are feasible */ //FIXME
-
    int i;
 
    const CoinPackedVector & lbs = cc.lbs();
@@ -1738,14 +1761,14 @@ void OsiSymSolverInterface::applyColCut( const OsiColCut & cc)
    freeCachedData(KEEPCACHED_ROW);
    
    for(i = 0; i<lbs.getNumElements(); i++){
-      env_->mip->lb[colInd[i]] = colVal[i];
+      sym_set_col_lower(env_, colInd[i], colVal[i]);
    }		    
-
+   
    colInd = ubs.getIndices();
    colVal = ubs.getElements();
-
+   
    for(i = 0; i<ubs.getNumElements(); i++){
-      env_->mip->ub[colInd[i]] = colVal[i];
+      sym_set_col_upper(env_, colInd[i], colVal[i]);
    }		    
 }
 

@@ -174,7 +174,10 @@ public:
   /**  Change column numbers after preprocessing
    */
   virtual void resetSequenceEtc(int numberColumns, const int * originalColumns) {}
-  
+  /// Updates stuff like pseudocosts before threads
+  virtual void updateBefore(const OsiObject * rhs) {}
+  /// Updates stuff like pseudocosts after threads finished
+  virtual void updateAfter(const OsiObject * rhs, const OsiObject * baseObject) {}
 
 protected:
   /// data

@@ -199,6 +199,23 @@ public:
       /// Return true if column is continuous
       virtual bool isContinuous(int colNumber) const;
 
+#if 0
+      /// Return true if column is binary
+      virtual bool isBinary(int columnNumber) const;
+  
+      /** Return true if column is integer.
+          Note: This function returns true if the the column
+          is binary or a general integer.
+      */
+      virtual bool isInteger(int columnNumber) const;
+  
+      /// Return true if column is general integer
+      virtual bool isIntegerNonBinary(int columnNumber) const;
+  
+      /// Return true if column is binary and not fixed at either bound
+      virtual bool isFreeBinary(int columnNumber) const;
+#endif
+  
       /// Get pointer to row-wise copy of matrix
       virtual const CoinPackedMatrix * getMatrixByRow() const;
   
@@ -221,14 +238,14 @@ public:
       virtual const double * getReducedCost() const;
   
       /** Get pointer to array[getNumRows()] of row activity levels (constraint
-                    matrix times the solution vector */
+  	matrix times the solution vector */
       virtual const double * getRowActivity() const;
   
       /// Get objective function value
       virtual double getObjValue() const;
   
       /** Get how many iterations it took to solve the problem (whatever
-                    "iteration" mean to the solver. */
+	  "iteration" mean to the solver. */
       virtual int getIterationCount() const;
   
       /** Get as many dual rays as the solver can provide. (In case of proven
@@ -256,6 +273,12 @@ public:
       */
       virtual std::vector<double*> getPrimalRays(int maxNumRays) const;
   
+#if 0
+      /** Get vector of indices of solution which are integer variables 
+  	presently at fractional values */
+      virtual OsiVectorInt getFractionalIndices(const double etol=1.e-05)
+	const;
+#endif
     //@}
   //@}
   
@@ -271,8 +294,8 @@ public:
 
       /** Set a a set of objective function coefficients */
       virtual void setObjCoeffSet(const int* indexFirst,
-                                  const int* indexLast,
-                                  const double* coeffList);
+				  const int* indexLast,
+				  const double* coeffList);
 
       /** Set a single column lower bound<br>
     	  Use -DBL_MAX for -infinity. */
@@ -285,8 +308,8 @@ public:
       /** Set a single column lower and upper bound<br>
     	  The default implementation just invokes <code>setColLower()</code> and
     	  <code>setColUpper()</code> */
-    virtual void setColBounds( int elementIndex,
-                                double lower, double upper );
+      virtual void setColBounds( int elementIndex,
+    				 double lower, double upper );
     
       /** Set the bounds on a number of columns simultaneously<br>
     	  The default implementation just invokes <code>setCollower()</code> and
@@ -296,8 +319,8 @@ public:
     	  @param boundList the new lower/upper bound pairs for the variables
       */
       virtual void setColSetBounds(const int* indexFirst,
-                                    const int* indexLast,
-                                    const double* boundList);
+				   const int* indexLast,
+				   const double* boundList);
       
       /** Set a single row lower bound<br>
     	  Use -DBL_MAX for -infinity. */
@@ -311,11 +334,11 @@ public:
     	  The default implementation just invokes <code>setRowLower()</code> and
     	  <code>setRowUpper()</code> */
       virtual void setRowBounds( int elementIndex,
-                                  double lower, double upper );
+    				 double lower, double upper );
     
       /** Set the type of a single row<br> */
       virtual void setRowType(int index, char sense, double rightHandSide,
-                                double range);
+    			      double range);
     
       /** Set the bounds on a number of rows simultaneously<br>
     	  The default implementation just invokes <code>setRowLower()</code> and
@@ -325,8 +348,8 @@ public:
     	  @param boundList the new lower/upper bound pairs for the constraints
       */
       virtual void setRowSetBounds(const int* indexFirst,
-                                     const int* indexLast,
-                                     const double* boundList);
+    				   const int* indexLast,
+    				   const double* boundList);
     
       /** Set the type of a number of rows simultaneously<br>
     	  The default implementation just invokes <code>setRowType()</code> and
@@ -338,10 +361,10 @@ public:
     	  @param rangeList the new ranges
       */
       virtual void setRowSetTypes(const int* indexFirst,
-                                    const int* indexLast,
-                                    const char* senseList,
-                                    const double* rhsList,
-                                    const double* rangeList);
+				  const int* indexLast,
+				  const char* senseList,
+				  const double* rhsList,
+				  const double* rangeList);
     //@}
     
     //-------------------------------------------------------------------------
@@ -352,10 +375,10 @@ public:
       /** Set the index-th variable to be an integer variable */
       virtual void setInteger(int index);
       /** Set the variables listed in indices (which is of length len) to be
-                    continuous variables */
+	  continuous variables */
       virtual void setContinuous(const int* indices, int len);
       /** Set the variables listed in indices (which is of length len) to be
-                integer variables */
+	  integer variables */
       virtual void setInteger(const int* indices, int len);
     //@}
     
@@ -394,35 +417,62 @@ public:
     //@{
       /** */
       virtual void addCol(const CoinPackedVectorBase& vec,
-                          const double collb, const double colub,   
-                          const double obj);
+			  const double collb, const double colub,   
+			  const double obj);
       /** */
       virtual void addCols(const int numcols,
-                            const CoinPackedVectorBase * const * cols,
-                            const double* collb, const double* colub,   
-                            const double* obj);
+			   const CoinPackedVectorBase * const * cols,
+			   const double* collb, const double* colub,   
+			   const double* obj);
       /** */
       virtual void deleteCols(const int num, const int * colIndices);
     
       /** */
       virtual void addRow(const CoinPackedVectorBase& vec,
-                            const double rowlb, const double rowub);
+    			  const double rowlb, const double rowub);
       /** */
       virtual void addRow(const CoinPackedVectorBase& vec,
-                          const char rowsen, const double rowrhs,   
-                          const double rowrng);
+    			  const char rowsen, const double rowrhs,   
+    			  const double rowrng);
       /** */
       virtual void addRows(const int numrows,
-                            const CoinPackedVectorBase * const * rows,
-                            const double* rowlb, const double* rowub);
+			   const CoinPackedVectorBase * const * rows,
+			   const double* rowlb, const double* rowub);
       /** */
       virtual void addRows(const int numrows,
-                            const CoinPackedVectorBase * const * rows,
-                            const char* rowsen, const double* rowrhs,   
-                            const double* rowrng);
+			   const CoinPackedVectorBase * const * rows,
+    			   const char* rowsen, const double* rowrhs,   
+    			   const double* rowrng);
       /** */
       virtual void deleteRows(const int num, const int * rowIndices);
     
+#if 0
+  // ??? implemented in OsiSolverInterface
+      //-----------------------------------------------------------------------
+      /** Apply a collection of cuts.<br>
+    	  Only cuts which have an <code>effectiveness >= effectivenessLb</code>
+    	  are applied.
+    	  <ul>
+    	    <li> ReturnCode.numberIneffective() -- number of cuts which were
+                 not applied because they had an
+    	         <code>effectiveness < effectivenessLb</code>
+    	    <li> ReturnCode.numberInconsistent() -- number of invalid cuts
+    	    <li> ReturnCode.numberInconsistentWrtIntegerModel() -- number of
+                 cuts that are invalid with respect to this integer model
+            <li> ReturnCode.numberInfeasible() -- number of cuts that would
+    	         make this integer model infeasible
+            <li> ReturnCode.numberApplied() -- number of integer cuts which
+    	         were applied to the integer model
+            <li> cs.size() == numberIneffective() +
+                              numberInconsistent() +
+    			      numberInconsistentWrtIntegerModel() +
+    			      numberInfeasible() +
+    			      nubmerApplied()
+          </ul>
+      */
+      virtual ApplyCutsReturnCode applyCuts(const OsiCuts & cs,
+    					    double effectivenessLb = 0.0);
+#endif
     //@}
   //@}
 
@@ -442,10 +492,10 @@ public:
         </ul>
     */
     virtual void loadProblem(const CoinPackedMatrix& matrix,
-                              const double* collb, const double* colub,   
-                              const double* obj,
-                              const double* rowlb, const double* rowub);
-
+			     const double* collb, const double* colub,   
+			     const double* obj,
+			     const double* rowlb, const double* rowub);
+			    
     /** Load in an problem by assuming ownership of the arguments (the
         constraints on the rows are given by lower and upper bounds). For
         default values see the previous method. <br>
@@ -454,8 +504,8 @@ public:
 	functions. 
     */
     virtual void assignProblem(CoinPackedMatrix*& matrix,
-                                double*& collb, double*& colub, double*& obj,
-                                double*& rowlb, double*& rowub);
+			       double*& collb, double*& colub, double*& obj,
+			       double*& rowlb, double*& rowub);
 
     /** Load in an problem by copying the arguments (the constraints on the
 	rows are given by sense/rhs/range triplets). If a pointer is 0 then the
@@ -470,10 +520,10 @@ public:
         </ul>
     */
     virtual void loadProblem(const CoinPackedMatrix& matrix,
-                              const double* collb, const double* colub,
-                              const double* obj,
-                              const char* rowsen, const double* rowrhs,   
-                              const double* rowrng);
+			     const double* collb, const double* colub,
+			     const double* obj,
+			     const char* rowsen, const double* rowrhs,   
+			     const double* rowrng);
 
     /** Load in an problem by assuming ownership of the arguments (the
         constraints on the rows are given by sense/rhs/range triplets). For
@@ -483,40 +533,40 @@ public:
 	functions. 
     */
     virtual void assignProblem(CoinPackedMatrix*& matrix,
-                                double*& collb, double*& colub, double*& obj,
-                                char*& rowsen, double*& rowrhs,
-                                double*& rowrng);
+			       double*& collb, double*& colub, double*& obj,
+			       char*& rowsen, double*& rowrhs,
+			       double*& rowrng);
 
     /** Just like the other loadProblem() methods except that the matrix is
 	given in a standard column major ordered format (without gaps). */
     virtual void loadProblem(const int numcols, const int numrows,
-                              const int* start, const int* index,
-                              const double* value,
-                              const double* collb, const double* colub,   
-                              const double* obj,
-                              const double* rowlb, const double* rowub);
+			     const int* start, const int* index,
+			     const double* value,
+			     const double* collb, const double* colub,   
+			     const double* obj,
+			     const double* rowlb, const double* rowub);
 
     /** Just like the other loadProblem() methods except that the matrix is
 	given in a standard column major ordered format (without gaps). */
     virtual void loadProblem(const int numcols, const int numrows,
-                              const int* start, const int* index,
-                              const double* value,
-                              const double* collb, const double* colub,   
-                              const double* obj,
-                              const char* rowsen, const double* rowrhs,   
-                              const double* rowrng);
+			     const int* start, const int* index,
+			     const double* value,
+			     const double* collb, const double* colub,   
+			     const double* obj,
+			     const char* rowsen, const double* rowrhs,   
+			     const double* rowrng);
 
     /** Read an mps file from the given filename */
     virtual int readMps(const char *filename,
-                         const char *extension = "mps");
+			 const char *extension = "mps");
 
     /** Write the problem into an mps file of the given filename.
 	If objSense is non zero then -1.0 forces the code to write a
 	maximization objective and +1.0 to write a minimization one.
 	If 0.0 then solver can do what it wants */
     virtual void writeMps(const char *filename,
-                           const char *extension = "mps",
-                           double objSense=0.0) const;
+			  const char *extension = "mps",
+                          double objSense=0.0) const;
   //@}
 
   //---------------------------------------------------------------------------
@@ -653,9 +703,8 @@ private:
   /**@name Private methods */
   //@{
   
-  int  Mskerr;
-  int  MSKsolverused_;
-  bool basischg_;
+  int Mskerr;
+  int MSKsolverused_;
 
   int InitialSolver;
 

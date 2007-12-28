@@ -46,7 +46,9 @@ DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/inc
 ########################################################################
 
 # Here list all the header files that are required by a user of the library,
-# and that therefore should be installed in 'install'
-include_HEADERS = OsiDylpMessages.hpp \
+# and that therefore should be installed in 'install/coin'
+includecoindir = $(includedir)/coin
+includecoin_HEADERS = \
+	OsiDylpMessages.hpp \
 	OsiDylpSolverInterface.hpp \
 	OsiDylpWarmStartBasis.hpp

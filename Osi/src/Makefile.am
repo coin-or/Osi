@@ -95,8 +95,9 @@ endif
 ########################################################################
 
 # Here list all the header files that are required by a user of the library,
-# and that therefore should be installed in 'install'
-include_HEADERS = \
+# and that therefore should be installed in 'install/coin'
+includecoindir = $(includedir)/coin
+includecoin_HEADERS = \
 	../inc/config_osi.h \
 	OsiAuxInfo.hpp \
 	OsiBranchingObject.hpp \
@@ -128,8 +129,8 @@ install-exec-local:
 	echo "#define HAVE_CONFIG_H" >>bla
 	echo "#endif" >> bla
 	cat $(srcdir)/$(ConfigHeader) >> bla
-	$(install_sh_DATA) bla $(DESTDIR)$(includedir)/$(ConfigHeader)
+	$(install_sh_DATA) bla $(DESTDIR)$(includecoindir)/$(ConfigHeader)
 	rm -f bla
 
 uninstall-local:
-	rm -f $(DESTDIR)$(includedir)/$(ConfigHeader)
+	rm -f $(DESTDIR)$(includecoindir)/$(ConfigHeader)

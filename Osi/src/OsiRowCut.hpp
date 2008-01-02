@@ -60,7 +60,7 @@ public:
       int size, 
       const int * colIndices, 
       const double * elements,
-      bool testForDuplicateIndex = true );
+      bool testForDuplicateIndex = COIN_DEFAULT_VALUE_FOR_DUPLICATE);
     /// Set row elements from a packed vector
     OsiRowCut_inline void setRow( const CoinPackedVector & v );
     /// Get row elements

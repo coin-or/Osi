@@ -19,6 +19,12 @@ The Base cut class contains:
 / // count of how many times the cut has been tested
 #endif
 
+#ifndef COIN_NOTEST_DUPLICATE
+#define COIN_DEFAULT_VALUE_FOR_DUPLICATE true
+#else
+#define COIN_DEFAULT_VALUE_FOR_DUPLICATE false
+#endif
+
 
 class OsiCut  {
   

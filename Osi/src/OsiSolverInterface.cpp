@@ -152,6 +152,34 @@ OsiSolverInterface::isFreeBinary(int colIndex) const
     ) return true;
   else return false;
 }
+/*  Return array of column length
+    0 - continuous
+    1 - binary (may get fixed later)
+    2 - general integer (may get fixed later)
+*/
+const char * 
+OsiSolverInterface::columnType(bool refresh) const
+{
+  if (!columnType_||refresh) {
+    const int numCols = getNumCols() ;
+    if (!columnType_)
+      columnType_ = new char [numCols];
+    const double * cu = getColUpper();
+    const double * cl = getColLower();
+    for (int i = 0 ; i < numCols ; ++i) {
+      if (!isContinuous(i)) {
+	if ((cu[i]== 1 || cu[i]== 0) && 
+	    (cl[i]== 0 || cl[i]==1))
+	  columnType_[i]=1;
+	else
+	  columnType_[i]=2;
+      } else {
+	columnType_[i]=0;
+      }
+    }
+  }
+  return columnType_;
+}
 
 //#############################################################################
 // Built-in (i.e., slow) methods for problem modification
@@ -914,6 +942,7 @@ OsiSolverInterface::OsiSolverInterface () :
   rowCutDebugger_(NULL),
   handler_(NULL),
   defaultHandler_(true),
+  columnType_(NULL),
   appDataEtc_(NULL),
   ws_(NULL)
 {
@@ -934,6 +963,8 @@ OsiSolverInterface::setInitialData()
     handler_ = NULL;
   }
   defaultHandler_=true;
+  delete [] columnType_;
+  columnType_ = NULL;
   intParam_[OsiMaxNumIteration] = 9999999;
   intParam_[OsiMaxNumIterationHotStart] = 9999999;
   intParam_[OsiNameDiscipline] = 0;
@@ -1004,6 +1035,8 @@ OsiSolverInterface::OsiSolverInterface (const OsiSolverInterface & rhs) :
   rowNames_ = rhs.rowNames_ ;
   colNames_ = rhs.colNames_ ;
   objName_ = rhs.objName_ ;
+  // NULL as number of columns not known
+  columnType_ = NULL;
 }
 
 //-------------------------------------------------------------------
@@ -1024,6 +1057,7 @@ OsiSolverInterface::~OsiSolverInterface ()
   for (int i=0;i<numberObjects_;i++) 
     delete object_[i];
   delete [] object_;
+  delete [] columnType_;
 }
 
 //----------------------------------------------------------------
@@ -1075,6 +1109,9 @@ OsiSolverInterface::operator=(const OsiSolverInterface& rhs)
     rowNames_ = rhs.rowNames_ ;
     colNames_ = rhs.colNames_ ;
     objName_ = rhs.objName_ ;
+    delete [] columnType_;
+    // NULL as number of columns not known
+    columnType_ = NULL;
   }
   return *this;
 }

@@ -403,6 +403,26 @@ public:
   
   /// Return true if column is continuous
   virtual bool isContinuous(int colNumber) const;
+  /// Return true if variable is binary
+  virtual bool isBinary(int colIndex) const;
+  
+  /** Return true if column is integer.
+      Note: This function returns true if the the column
+      is binary or a general integer.
+  */
+  virtual bool isInteger(int colIndex) const;
+  
+  /// Return true if variable is general integer
+  virtual bool isIntegerNonBinary(int colIndex) const;
+  
+  /// Return true if variable is binary and not fixed at either bound
+  virtual bool isFreeBinary(int colIndex) const; 
+  /**  Return array of column length
+       0 - continuous
+       1 - binary (may get fixed later)
+       2 - general integer (may get fixed later)
+  */
+  virtual const char * columnType(bool refresh=false) const;
   
   
   /// Get pointer to row-wise copy of matrix

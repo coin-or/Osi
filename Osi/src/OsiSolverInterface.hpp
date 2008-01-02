@@ -519,6 +519,12 @@ public:
 
     /// Return true if variable is binary and not fixed at either bound
     virtual bool isFreeBinary(int colIndex) const; 
+    /**  Return array of column length
+         0 - continuous
+         1 - binary (may get fixed later)
+         2 - general integer (may get fixed later)
+    */
+    virtual const char * columnType(bool refresh=false) const;
   
     /// Get pointer to row-wise copy of matrix
     virtual const CoinPackedMatrix * getMatrixByRow() const = 0;
@@ -1778,6 +1784,12 @@ protected:
 
   /// Integer and ... information (integer info normally at beginning)
   OsiObject ** object_;
+  /** Column type
+      0 - continuous
+      1 - binary (may get fixed later)
+      2 - general integer (may get fixed later)
+  */
+  mutable char * columnType_;
 
   //@}
   

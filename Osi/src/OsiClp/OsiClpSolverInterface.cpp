@@ -1839,7 +1839,112 @@ bool OsiClpSolverInterface::isContinuous(int colNumber) const
   if ( integerInformation_[colNumber]==0 ) return true;
   return false;
 }
-//------------------------------------------------------------------
+bool 
+OsiClpSolverInterface::isBinary(int colNumber) const
+{
+#ifndef NDEBUG
+  int n = modelPtr_->numberColumns();
+  if (colNumber<0||colNumber>=n) {
+    indexError(colNumber,"isBinary");
+  }
+#endif
+  if ( integerInformation_==NULL || integerInformation_[colNumber]==0 ) {
+    return false;
+  } else {
+    const double * cu = getColUpper();
+    const double * cl = getColLower();
+    if ((cu[colNumber]== 1 || cu[colNumber]== 0) && 
+	(cl[colNumber]== 0 || cl[colNumber]==1))
+      return true;
+    else 
+      return false;
+  }
+}
+//-----------------------------------------------------------------------------
+bool 
+OsiClpSolverInterface::isInteger(int colNumber) const
+{
+#ifndef NDEBUG
+  int n = modelPtr_->numberColumns();
+  if (colNumber<0||colNumber>=n) {
+    indexError(colNumber,"isInteger");
+  }
+#endif
+  if ( integerInformation_==NULL || integerInformation_[colNumber]==0 ) 
+    return false;
+  else
+    return true;
+}
+//-----------------------------------------------------------------------------
+bool 
+OsiClpSolverInterface::isIntegerNonBinary(int colNumber) const
+{
+#ifndef NDEBUG
+  int n = modelPtr_->numberColumns();
+  if (colNumber<0||colNumber>=n) {
+    indexError(colNumber,"isIntegerNonBinary");
+  }
+#endif
+  if ( integerInformation_==NULL || integerInformation_[colNumber]==0 ) {
+    return false;
+  } else {
+    return !isBinary(colNumber);
+  }
+}
+//-----------------------------------------------------------------------------
+bool 
+OsiClpSolverInterface::isFreeBinary(int colNumber) const
+{
+#ifndef NDEBUG
+  int n = modelPtr_->numberColumns();
+  if (colNumber<0||colNumber>=n) {
+    indexError(colNumber,"isFreeBinary");
+  }
+#endif
+  if ( integerInformation_==NULL || integerInformation_[colNumber]==0 ) {
+    return false;
+  } else {
+    const double * cu = getColUpper();
+    const double * cl = getColLower();
+    if ((cu[colNumber]== 1) && (cl[colNumber]== 0))
+      return true;
+    else 
+      return false;
+  }
+}
+/*  Return array of column length
+    0 - continuous
+    1 - binary (may get fixed later)
+    2 - general integer (may get fixed later)
+*/
+const char * 
+OsiClpSolverInterface::columnType(bool refresh) const
+{
+  if (!columnType_||refresh) {
+    const int numCols = getNumCols() ;
+    if (!columnType_)
+      columnType_ = new char [numCols];
+    if ( integerInformation_==NULL ) {
+      memset(columnType_,0,numCols);
+    } else {
+      const double * cu = getColUpper();
+      const double * cl = getColLower();
+      for (int i = 0 ; i < numCols ; ++i) {
+	if (integerInformation_[i]) {
+	  if ((cu[i]== 1 || cu[i]== 0) && 
+	      (cl[i]== 0 || cl[i]==1))
+	    columnType_[i]=1;
+	  else
+	    columnType_[i]=2;
+	} else {
+	  columnType_[i]=0;
+	}
+      }
+    }
+  }
+  return columnType_;
+}
+
 
 //------------------------------------------------------------------
 // Row and column copies of the matrix ...

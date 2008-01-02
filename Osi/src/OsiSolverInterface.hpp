@@ -376,6 +376,15 @@ public:
       start object wil be returned.
     */
     virtual CoinWarmStart* getWarmStart() const = 0;
+    /** \brief Get warm start information.
+
+      Return warm start information for the current state of the solver
+      interface. If there is no valid warm start information, an empty warm
+      start object wil be returned.  This does not necessarily create an 
+      object - may just point to one.  must Delete set true if user
+      should delete returned object.
+    */
+    virtual CoinWarmStart* getPointerToWarmStart(bool & mustDelete) ;
 
     /** \brief Set warm start information.
     
@@ -1070,7 +1079,14 @@ public:
       warm start information if all deleted rows are loose.
     */
     virtual void deleteRows(const int num, const int * rowIndices) = 0;
-  
+
+    /**  If solver wants it can save a copy of "base" (continuous) model here
+     */
+    virtual void saveBaseModel() {};
+    /**  Strip off rows to get to this number of rows.
+         If solver wants it can restore a copy of "base" (continuous) model here
+     */
+    virtual void restoreBaseModel(int numberRows);
     //-----------------------------------------------------------------------
     /** Apply a collection of cuts.
 

@@ -639,6 +639,20 @@ OsiSolverInterface::addRows( CoinModel & modelObject)
     return -1;
   }
 }
+/*  Strip off rows to get to this number of rows.
+    If solver wants it can restore a copy of "base" (continuous) model here
+*/
+void 
+OsiSolverInterface::restoreBaseModel(int numberRows)
+{
+  int currentNumberCuts = getNumRows()-numberRows;
+  int *which = new int[currentNumberCuts];
+  for (int i = 0 ; i < currentNumberCuts ; i++)
+    which[i] = i+numberRows;
+  deleteRows(currentNumberCuts,which);
+  delete [] which;
+}
+  
 // This loads a model from a coinModel object - returns number of errors
 int 
 OsiSolverInterface::loadFromCoinModel (  CoinModel & modelObject, bool keepSolution)
@@ -1664,6 +1678,20 @@ OsiSolverInterface::getBInvCol(int col, double* vec) const
   // Throw an exception
   throw CoinError("Needs coding for this interface", "getBInvCol",
 		  "OsiSolverInterface");
+}
+/* Get warm start information.
+   Return warm start information for the current state of the solver
+   interface. If there is no valid warm start information, an empty warm
+   start object wil be returned.  This does not necessarily create an 
+   object - may just point to one.  must Delete set true if user
+   should delete returned object.
+   OsiClp version always returns pointer and false.
+*/
+CoinWarmStart* 
+OsiSolverInterface::getPointerToWarmStart(bool & mustDelete) 
+{
+  mustDelete = true;
+  return getWarmStart();
 }
 
 /* Get basic indices (order of indices corresponds to the

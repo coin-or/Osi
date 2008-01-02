@@ -281,6 +281,17 @@ public:
   /** Set warmstarting information. Return true/false depending on whether
       the warmstart information was accepted or not. */
   virtual bool setWarmStart(const CoinWarmStart* warmstart);
+  /** \brief Get warm start information.
+      
+      Return warm start information for the current state of the solver
+      interface. If there is no valid warm start information, an empty warm
+      start object wil be returned.  This does not necessarily create an 
+      object - may just point to one.  must Delete set true if user
+      should delete returned object.
+      OsiClp version always returns pointer and false.
+  */
+  virtual CoinWarmStart* getPointerToWarmStart(bool & mustDelete) ;
+
   //@}
   
   //---------------------------------------------------------------------------
@@ -685,6 +696,13 @@ public:
 
   /** */
   virtual void deleteRows(const int num, const int * rowIndices);
+  /**  If solver wants it can save a copy of "base" (continuous) model here
+   */
+  virtual void saveBaseModel() ;
+  /**  Strip off rows to get to this number of rows.
+       If solver wants it can restore a copy of "base" (continuous) model here
+  */
+  virtual void restoreBaseModel(int numberRows);
   
   //-----------------------------------------------------------------------
   /** Apply a collection of row cuts which are all effective.
@@ -1051,7 +1069,7 @@ protected:
   int numberSOS_;
   /// SOS set info
   CoinSet * setInfo_;
-  /// Alternate model (hot starts)
+  /// Alternate model (hot starts) - but also could be permanent and used for crunch
   ClpSimplex * smallModel_;
   /// factorization for hot starts
   ClpFactorization * factorization_;
@@ -1131,6 +1149,8 @@ protected:
   ClpSimplex * baseModel_;
   /// Number of rows when last "scaled"
   int lastNumberRows_;
+  /// Continuous model
+  ClpSimplex * continuousModel_;
   /// Row scale factors (has inverse at end)
   CoinDoubleArrayWithLength rowScale_; 
   /// Column scale factors (has inverse at end)

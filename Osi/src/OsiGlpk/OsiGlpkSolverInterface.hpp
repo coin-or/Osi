@@ -90,6 +90,10 @@ public:
     virtual bool isDualObjectiveLimitReached() const;
     /// Iteration limit reached?
     virtual bool isIterationLimitReached() const;
+    /// Time limit reached?
+    virtual bool isTimeLimitReached() const;
+    /// (Integer) Feasible solution found?
+    virtual bool isFeasible() const;
   //@}
 
   //---------------------------------------------------------------------------
@@ -780,6 +784,8 @@ private:
   // Status information
   /// glpk stopped on iteration limit
   bool isIterationLimitReached_;
+  /// glpk stopped on time limit
+  bool isTimeLimitReached_;
   /// glpk abandoned the problem 
   bool isAbandoned_;
   /*! \brief  glpk stopped on lower objective limit
@@ -798,6 +804,8 @@ private:
   bool isPrimInfeasible_;
   /// glpk declared the problem dual infeasible
   bool isDualInfeasible_;
+  /// glpk declared the problem feasible
+  bool isFeasible_;
 
   /**@name Cached information derived from the GLPK model */
   //@{

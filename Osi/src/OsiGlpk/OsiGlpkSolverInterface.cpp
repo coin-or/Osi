@@ -176,9 +176,11 @@ void OGSI::initialSolve()
   If we ever reach the default case, we're deeply confused.
 */
   isIterationLimitReached_ = false ;
+  isTimeLimitReached_ = false;
   isAbandoned_ = false ;
   isPrimInfeasible_ = false ;
   isDualInfeasible_ = false ;
+  isFeasible_ = false ;
   isObjLowerLimitReached_ = false ;
   isObjUpperLimitReached_ = false ;
 
@@ -195,6 +197,8 @@ void OGSI::initialSolve()
     { isObjUpperLimitReached_ = true ;
       break ; }
     case LPX_E_TMLIM:
+    { isTimeLimitReached_ = true ;
+    } // no break here, so we still report abandoned
     case LPX_E_FAULT:
     case LPX_E_SING:
     { isAbandoned_ = true ;
@@ -207,6 +211,15 @@ void OGSI::initialSolve()
       break ; }
     default:
     { assert(false) ; } }
+    
+  switch (lpx_get_status(model))
+  { case LPX_OPT:
+  	case LPX_FEAS:
+  	{ isFeasible_ = true ;
+  		break ; }
+  	default:
+  	{ }
+  }
 	  
   // Record that simplex was most recent
   bbWasLast_ = 0 ;
@@ -231,11 +244,13 @@ void OGSI::resolve()
   iter_used_ = lpx_get_int_parm(model,LPX_K_ITCNT) ;
 
   isIterationLimitReached_ = false ;
+  isTimeLimitReached_ = false ;
   isAbandoned_ = false ;
   isObjLowerLimitReached_ = false ;
   isObjUpperLimitReached_ = false ;
   isPrimInfeasible_ = false ;
   isDualInfeasible_ = false ;
+  isFeasible_ = false ;
 
   switch (err)
   { case LPX_E_OK:
@@ -250,6 +265,8 @@ void OGSI::resolve()
     { isObjUpperLimitReached_ = true ;
       break ; }
     case LPX_E_TMLIM:
+    { isTimeLimitReached_ = true ;
+    } // no break here, so we still report abandoned
     case LPX_E_FAULT:
     case LPX_E_SING:
     { isAbandoned_ = true ;
@@ -262,6 +279,15 @@ void OGSI::resolve()
       break ; }
     default:
     { assert(false) ; } }
+
+  switch (lpx_get_status(model))
+  { case LPX_OPT:
+  	case LPX_FEAS:
+  	{ isFeasible_ = true ;
+  		break ; }
+  	default:
+  	{ }
+  }
 
   // Record that simplex was most recent
   bbWasLast_ = 0 ;
@@ -340,25 +366,17 @@ void OGSI::branchAndBound ()
 */
     iter_used_ = lpx_get_int_parm(model,LPX_K_ITCNT) ;
     isIterationLimitReached_ = false ;
+		isTimeLimitReached_ = false ;
     isAbandoned_ = false ;
     isPrimInfeasible_ = false ;
     isDualInfeasible_ = false ;
+    isFeasible_ = false ;
+    isObjLowerLimitReached_ = false ;
+    isObjUpperLimitReached_ = false ;
 
     switch (err)
     { case LPX_E_OK:
-      { int mip_status = lpx_mip_status(model) ;
-	switch (mip_status)
-	{ case LPX_I_OPT:
-	  { break ; }
-	  case LPX_I_NOFEAS:
-	  { isPrimInfeasible_ = false ;
-	    break ; }
-	  case LPX_I_UNDEF:
-	  case LPX_I_FEAS:
-	  { break ; }
-	  default:
-	  { assert(false) ;
-	    break ; } }
+      { 
 	break ; }
       case LPX_E_NOPFS:
       { isPrimInfeasible_ = true ;
@@ -366,8 +384,9 @@ void OGSI::branchAndBound ()
       case LPX_E_NODFS:
       { isDualInfeasible_ = true ;
 	break ; }
-      case LPX_E_ITLIM:
       case LPX_E_TMLIM:
+      { isTimeLimitReached_ = true ; } // no break
+      case LPX_E_ITLIM:
       { isIterationLimitReached_ = true ;
 	break ; }
       case LPX_E_SING:
@@ -379,6 +398,24 @@ void OGSI::branchAndBound ()
       default:
       { assert(false) ;
 	break ; } }
+	
+	//check this also if err!=LPX_E_OPT, so we know about feasibility in case time/resource limit is reached  
+	int mip_status = lpx_mip_status(model) ;
+	switch (mip_status)
+	{ case LPX_I_OPT:
+	  { isFeasible_ = true ;
+	  	break ; }
+	  case LPX_I_NOFEAS:
+	  { isPrimInfeasible_ = true ;
+	    break ; }
+	  case LPX_I_UNDEF:
+	  { break ; }
+	  case LPX_I_FEAS:
+	  { isFeasible_ = true ;
+	  	break ; }
+	  default:
+	  { assert(false) ;
+	    break ; } }
 /*
   The final action is to note that our last call to glpk was the MIP solver.
 */
@@ -841,6 +878,16 @@ bool OGSI::isIterationLimitReached() const
 	return isIterationLimitReached_;
 }
 
+
+bool OGSI::isTimeLimitReached() const
+{
+	return isTimeLimitReached_;
+}
+
+bool OGSI::isFeasible() const
+{
+	return isFeasible_;
+}
 
 //#############################################################################
 // WarmStart related methods
@@ -3125,9 +3172,11 @@ void OGSI::gutsOfConstructor()
   hotStartRStatSize_ = 0;
 
   isIterationLimitReached_ = false;
+  isTimeLimitReached_ = false;
   isAbandoned_ = false;
   isPrimInfeasible_ = false;
   isDualInfeasible_ = false;
+  isFeasible_ = false;
 
   lp_ = lpx_create_prob();
   assert( lp_ != NULL );
@@ -3238,8 +3287,10 @@ void OGSI::freeCachedResults()
         iter_used_ = 0;
 	isAbandoned_ = false;
 	isIterationLimitReached_ = false;
+	isTimeLimitReached_ = false;
 	isPrimInfeasible_ = false;
 	isDualInfeasible_ = false;
+	isFeasible_ = false;
 	delete [] colsol_;
 	delete [] rowsol_;
 	delete [] redcost_;

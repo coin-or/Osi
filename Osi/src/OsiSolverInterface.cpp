@@ -2096,7 +2096,8 @@ OsiSolverInterface::forceFeasible()
     infeasibility += object_[i]->feasibleRegion(this,&info);
   return infeasibility;
 }
-/* Set all variables to bounds if reduced cost >= gap
+/* 
+   For variables currently at bound, fix at bound if reduced cost >= gap
    Returns number fixed
 */
 int 

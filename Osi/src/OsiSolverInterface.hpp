@@ -57,11 +57,11 @@ class OsiObject;
 */
 
 class OsiSolverInterface  {
-   friend void OsiSolverInterfaceCommonUnitTest(
+   friend int OsiSolverInterfaceCommonUnitTest(
       const OsiSolverInterface* emptySi,
       const std::string & mpsDir,
       const std::string & netlibDir);
-   friend void OsiSolverInterfaceMpsUnitTest(
+   friend int OsiSolverInterfaceMpsUnitTest(
       const std::vector<OsiSolverInterface*> & vecSiP,
       const std::string & mpsDir);
 
@@ -617,13 +617,48 @@ public:
 				const int* indexLast,
 				const double* coeffList);
 
+    /** Set the objective coefficients for all columns.
+
+	array [getNumCols()] is an array of values for the objective.
+	This defaults to a series of set operations and is here for speed.
+    */
+    virtual void setObjective(const double * array);
+
+    /** Set the objective function sense.
+
+        Use 1 for minimisation (default), -1 for maximisation.
+
+	\note
+	Implementors note that objective function sense is a parameter of
+	the OSI, not a property of the problem. Objective sense can be
+	set prior to problem load and should not be affected by loading a
+	new problem.
+    */
+    virtual void setObjSense(double s) = 0;
+  
+
     /** Set a single column lower bound.
 	Use -getInfinity() for -infinity. */
     virtual void setColLower( int elementIndex, double elementValue ) = 0;
     
+    /** Set the lower bounds for all columns.
+
+	array [getNumCols()] is an array of values for the lower bounds.
+	This defaults to a series of set operations and is here for speed.
+    */
+    virtual void setColLower(const double * array);
+
     /** Set a single column upper bound.
 	Use getInfinity() for infinity. */
     virtual void setColUpper( int elementIndex, double elementValue ) = 0;
+
+    /** Set the upper bounds for all columns.
+
+	array [getNumCols()] is an array of values for the upper bounds.
+	This defaults to a series of set operations and is here for speed.
+    */
+    virtual void setColUpper(const double * array);
+    
     
     /** Set a single column lower and upper bound.
 	The default implementation just invokes setColLower() and
@@ -635,15 +670,15 @@ public:
     }
   
     /** Set the upper and lower bounds of a set of columns.
-	The default implementation just invokes setColBounds() over
-	and over again.
-	For each column, boundList must contain both a lower and
+
+	The default implementation just invokes setColBounds() over and over
+	again.  For each column, boundList must contain both a lower and
 	upper bound, in that order.
     */
     virtual void setColSetBounds(const int* indexFirst,
 				 const int* indexLast,
 				 const double* boundList);
-    
+
     /** Set a single row lower bound.
 	Use -getInfinity() for -infinity. */
     virtual void setRowLower( int elementIndex, double elementValue ) = 0;
@@ -660,18 +695,21 @@ public:
        setRowLower(elementIndex, lower);
        setRowUpper(elementIndex, upper);
     }
-  
-    /** Set the type of a single row */
-    virtual void setRowType(int index, char sense, double rightHandSide,
-			    double range) = 0;
-  
+
     /** Set the bounds on a set of rows.
-	The default implementation just invokes setRowBounds()
-	over and over again.
+
+	The default implementation just invokes setRowBounds() over and over
+	again.  For each row, boundList must contain both a lower and
+	upper bound, in that order.
     */
     virtual void setRowSetBounds(const int* indexFirst,
 				 const int* indexLast,
 				 const double* boundList);
+  
+  
+    /** Set the type of a single row */
+    virtual void setRowType(int index, char sense, double rightHandSide,
+			    double range) = 0;
   
     /** Set the type of a set of rows.
 	The default implementation just invokes setRowType()
@@ -683,54 +721,37 @@ public:
 				const double* rhsList,
 				const double* rangeList);
 
-  /// Set the objective function sense.
-  /// (1 for min (default), -1 for max)
-  virtual void setObjSense(double s) = 0;
-  
-  /** Set the primal solution variable values
-  
-      colsol[getNumCols()] is an array of values for the primal variables.
-      These values are copied to memory owned by the solver interface object
-      or the solver.  They will be returned as the result of getColSolution()
-      until changed by another call to setColSolution() or by a call to any
-      solver routine.  Whether the solver makes use of the solution in any
-      way is solver-dependent.
-  */
-  virtual void setColSolution(const double *colsol) = 0;
+    /** Set the primal solution variable values
 
-  /** Set dual solution variable values
+	colsol[getNumCols()] is an array of values for the primal variables.
+	These values are copied to memory owned by the solver interface
+	object or the solver.  They will be returned as the result of
+	getColSolution() until changed by another call to setColSolution() or
+	by a call to any solver routine.  Whether the solver makes use of the
+	solution in any way is solver-dependent.
+    */
+    virtual void setColSolution(const double *colsol) = 0;
 
-      rowprice[getNumRows()] is an array of values for the dual
-      variables. These values are copied to memory owned by the solver
-      interface object or the solver.  They will be returned as the result of
-      getRowPrice() until changed by another call to setRowPrice() or by a
-      call to any solver routine.  Whether the solver makes use of the
-      solution in any way is solver-dependent.
-  */
+    /** Set dual solution variable values
 
- virtual void setRowPrice(const double * rowprice) = 0;
+	rowprice[getNumRows()] is an array of values for the dual variables.
+	These values are copied to memory owned by the solver interface
+	object or the solver.  They will be returned as the result of
+	getRowPrice() until changed by another call to setRowPrice() or by a
+	call to any solver routine.  Whether the solver makes use of the
+	solution in any way is solver-dependent.
+    */
+    virtual void setRowPrice(const double * rowprice) = 0;
 
-  /** Set the objective coefficients for all columns
-      array [getNumCols()] is an array of values for the objective.
-      This defaults to a series of set operations and is here for speed.
-  */
-  virtual void setObjective(const double * array);
+    /** Fix variables at bound based on reduced cost
+    
+	For variables currently at bound, fix the variable at bound if the
+	reduced cost exceeds the gap. Return the number of variables fixed.
 
-  /** Set the lower bounds for all columns
-      array [getNumCols()] is an array of values for the lower bounds.
-      This defaults to a series of set operations and is here for speed.
-  */
-  virtual void setColLower(const double * array);
-
-  /** Set the upper bounds for all columns
-      array [getNumCols()] is an array of values for the upper bounds.
-      This defaults to a series of set operations and is here for speed.
-  */
-  virtual void setColUpper(const double * array);
-  /** Set all variables to bounds if reduced cost >= gap.
-      Returns number fixed
-  */
-  virtual int reducedCostFix(double gap, bool justInteger=true);
+	If justInteger is set to false, the routine will also fix continuous
+	variables, but the test still assumes a delta of 1.0.
+    */
+    virtual int reducedCostFix(double gap, bool justInteger=true);
   //@}
 
   //-------------------------------------------------------------------------
@@ -1099,21 +1120,21 @@ public:
 	Only cuts which have an <code>effectiveness >= effectivenessLb</code>
 	are applied.
 	<ul>
-	  <li> ReturnCode.numberIneffective() -- number of cuts which were
+	  <li> ReturnCode.getNumineffective() -- number of cuts which were
 	       not applied because they had an
 	       <code>effectiveness < effectivenessLb</code>
-	  <li> ReturnCode.numberInconsistent() -- number of invalid cuts
-	  <li> ReturnCode.numberInconsistentWrtIntegerModel() -- number of
+	  <li> ReturnCode.getNuminconsistent() -- number of invalid cuts
+	  <li> ReturnCode.getNuminconsistentWrtIntegerModel() -- number of
 	       cuts that are invalid with respect to this integer model
-	  <li> ReturnCode.numberInfeasible() -- number of cuts that would
+	  <li> ReturnCode.getNuminfeasible() -- number of cuts that would
 	       make this integer model infeasible
-	  <li> ReturnCode.numberApplied() -- number of integer cuts which
+	  <li> ReturnCode.getNumApplied() -- number of integer cuts which
 	       were applied to the integer model
-	  <li> cs.size() == numberIneffective() +
-			    numberInconsistent() +
-			    numberInconsistentWrtIntegerModel() +
-			    numberInfeasible() +
-			    nubmerApplied()
+	  <li> cs.size() == getNumineffective() +
+			    getNuminconsistent() +
+			    getNuminconsistentWrtIntegerModel() +
+			    getNuminfeasible() +
+			    getNumApplied()
 	</ul>
     */
     virtual ApplyCutsReturnCode applyCuts(const OsiCuts & cs,
@@ -1832,7 +1853,7 @@ private:
     compiled with debugging. Also, if this method is compiled with
     optimization, the compilation takes 10-15 minutes and the machine pages
     (has 256M core memory!)... */
-void
+int
 OsiSolverInterfaceCommonUnitTest(
    const OsiSolverInterface* emptySi,
    const std::string & mpsDir,
@@ -1841,7 +1862,7 @@ OsiSolverInterfaceCommonUnitTest(
 //#############################################################################
 /** A function that tests that a lot of problems given in MPS files (mostly
     the NETLIB problems) solve properly with all the specified solvers. */
-void
+int
 OsiSolverInterfaceMpsUnitTest(
    const std::vector<OsiSolverInterface*> & vecSiP,
    const std::string & mpsDir);

@@ -1,5 +1,34 @@
 // Copyright (C) 2000, International Business Machines
 // Corporation and others.  All Rights Reserved.
+
+/*
+		!!  MAINTAINERS  PLEASE  READ  !!
+
+The OSI unit test is gradually undergoing a conversion.
+
+The current approach is to use asserts in tests; the net effect is that the
+unit test chokes and dies as soon as something goes wrong. The new approach is
+to soldier on until it becomes pointless (i.e., something has gone wrong which
+makes further testing pointless). The general idea is to return the maximum
+amount of useful information with each run.
+
+If you work on this code, please keep these conventions in mind:
+
+  * Tests should be encapsulated in subroutines. If you have a moment, factor
+    something out of the main routine --- it'd be nice to get it down under
+    500 lines.
+
+  * All test routines should be defined in the file-local namespace.
+
+  * Test routines should return 0 if there are no issues, a positive count if
+    the test uncovered nonfatal problems, and a negative count if the test
+    uncovered fatal problems (in the sense that further testing is pointless).
+
+  -- lh, 08.01.07 --
+*/
+
+
+
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)
@@ -15,6 +44,7 @@
 #include <cassert>
 #include <vector>
 #include <iostream>
+#include <iomanip>
 #include <sstream>
 #include <cstdio>
 
@@ -2052,27 +2082,59 @@ bool testHintParam(OsiSolverInterface * si, int k, bool sense,
 
 
 /*
-  Test whether the solver handles a constant in the objecitive function, and
-  whether the dual and primal objective limit methods return the right values.
-  The routine does NOT test whether they are capable of stopping the solver
-  at the limits, before optimality is reached.
+  Test functionality related to the objective function:
+    * Does the solver properly handle a constant offset?
+    * Does the solver properly handle primal and dual objective limits? This
+      routine only checks for the correct answers. It does not check whether
+      the solver stops early due to objective limits.
+    * Does the solver properly handle minimisation / maximisation via
+      setObjSense?
+
+  The return value is the number of failures recorded by the routine.
 */
 
-void testObjOffsetAndLimits (const OsiSolverInterface *emptySi,
-			     const std::string &mpsDir)
+int testObjFunctions (const OsiSolverInterface *emptySi,
+		       const std::string &mpsDir)
 
 { OsiSolverInterface *si = emptySi->clone() ;
-  CoinRelFltEq eq;
+  CoinRelFltEq eq ;
+  int errCnt = 0 ;
+  int i ;
+
+  std::cout
+    << "Testing functionality related to the objective." << std::endl ;
 
   std::string solverName = "Unknown solver" ;
   si->getStrParam(OsiSolverName,solverName) ;
-
+/*
+  Check for default objective sense. This should be minimisation.
+*/
+  double dfltSense = si->getObjSense() ;
+  if (dfltSense != 1.0)
+  { if (dfltSense == -1.0)
+    { std::cout
+	<< "Warning: solver's default objective sense is maximisation."
+	<< std::endl ; }
+    else
+    { std::cout
+	<< "Warning: solver's default objective sense is " << dfltSense
+	<< ", an indeterminate value." << std::endl ; }
+    failureMessage(solverName,
+      "Default objective sense is not minimisation.") ;
+    errCnt++ ; }
 /*
   Read in e226; chosen because it has an offset defined in the mps file.
+  We can't continue if we can't read the test problem.
 */
   std::string fn = mpsDir+"e226" ;
   int mpsRc = si->readMps(fn.c_str(),"mps") ;
-  assert(mpsRc == 0) ;
+  if (mpsRc != 0)
+  { std::cout
+      << "testObjFunctions: failed to read test problem e226." << std::endl ;
+    failureMessage(solverName, "read test problem e226") ;
+    errCnt++ ;
+    delete si ;
+    return (errCnt) ; }
 /*
   Solve and test for the correct objective value.
 */
@@ -2082,46 +2144,129 @@ void testObjOffsetAndLimits (const OsiSolverInterface *emptySi,
   double objOffset = +7.113 ;
   if (!eq(objValue,(objNoOffset+objOffset)))
   { std::cout
-      << "Solver returned obj = " << objValue
-      << ", expected " << objNoOffset+objOffset << "." << std::endl ;
+      << "testObjFunctions: Solver returned obj = " << objValue
+      << ", expected " << objNoOffset << "+" << objOffset
+      << " = " << objNoOffset+objOffset << "." << std::endl ;
     failureMessage(solverName,
-		   "getObjValue with constant in objective function") ; }
+		   "getObjValue with constant in objective function") ;
+    errCnt++ ; }
 /*
-  Test objective limit methods. There's no attempt to use either to stop the
-  solver early. All we're doing here is checking that the routines return the
-  correct value when the limits are exceeded. The primal limit represents an
-  acceptable level of `goodness'; to be true, we should be below it. The dual
-  limit represents an unacceptable level of `badness'; to be true, we should be
-  above it. Note that the limits specified below are contradictory.
+  Test objective limit methods. If no limit has been specified, they should
+  return false.
 */
   if (si->isPrimalObjectiveLimitReached())
   { failureMessage(solverName,
       "false positive, isPrimalObjectiveLimitReached, "
-      "default (no) limit") ; }
+      "default (no) limit") ;
+    errCnt++ ; }
   if (si->isDualObjectiveLimitReached())
   { failureMessage(solverName,
       "false positive, isDualObjectiveLimitReached, "
-      "default (no) limit") ; }
-  double primalObjLim = -5.0 ;
-  double dualObjLim = -15.0 ;
-  si->setDblParam(OsiPrimalObjectiveLimit,primalObjLim) ;
-  si->setDblParam(OsiDualObjectiveLimit,dualObjLim) ;
-  if (!si->isPrimalObjectiveLimitReached())
-  { std::cout
-      << "Objective " << objValue << ", primal limit " << primalObjLim
-      << "." << std::endl ;
-    failureMessage(solverName,
-      "false negative, isPrimalObjectiveLimitReached.") ; }
-  if (!si->isDualObjectiveLimitReached())
-  { std::cout
-      << "Objective " << objValue << ", dual limit " << dualObjLim
-      << "." << std::endl ;
-    failureMessage(solverName,
-      "false negative, isDualObjectiveLimitReached.") ; }
+      "default (no) limit") ;
+    errCnt++ ; }
+/*
+  Test objective limit methods. There's no attempt to see if the solver stops
+  early when given a limit that's tighter than the optimal objective.  All
+  we're doing here is checking that the routines return the correct value
+  when the limits are exceeded. For minimisation (maximisation) the primal
+  limit represents an acceptable level of `goodness'; to be true, we should
+  be below (above) it. The dual limit represents an unacceptable level of
+  `badness'; to be true, we should be above (below) it.
+
+  The loop performs two iterations, first for maximisation, then for
+  minimisation. For maximisation, z* = 111.65096. The second iteration is
+  sort of redundant, but it does test the ability to switch back to
+  minimisation.
+*/
+  double expectedObj[2] = { 111.650960689, objNoOffset+objOffset } ;
+  double primalObjLim[2] = { 100.0, -5.0 } ;
+  double dualObjLim[2] = { 120.0, -15.0 } ;
+  double optSense[2] = { -1.0, 1.0 } ;
+  std::string maxmin[2] = { "max", "min" } ;
+  for (i = 0 ; i <= 1 ; i++)
+  { si->setObjSense(optSense[i]) ;
+    si->initialSolve() ;
+    objValue = si->getObjValue() ;
+    if (!eq(objValue,expectedObj[i]))
+    { std::cout
+	<< maxmin[i] << "(e226) = " << objValue
+	<< ", expected " << expectedObj[i]
+	<< ", err = " << objValue-expectedObj[i] << "." << std::endl ;
+      failureMessage(solverName,
+	"incorrect objective during max/min switch") ;
+      errCnt++ ; }
+
+    si->setDblParam(OsiPrimalObjectiveLimit,primalObjLim[i]) ;
+    si->setDblParam(OsiDualObjectiveLimit,dualObjLim[i]) ;
+    if (!si->isPrimalObjectiveLimitReached())
+    { std::cout
+	<< maxmin[i] << "(e226) z* = " << objValue
+	<< ", primal limit " << primalObjLim[i]
+	<< "." << std::endl ;
+      failureMessage(solverName,
+	"false negative, isPrimalObjectiveLimitReached.") ;
+      errCnt++ ; }
+    if (!si->isDualObjectiveLimitReached())
+    { std::cout
+	<< maxmin[i] << "(e226) z* = " << objValue
+	<< ", dual limit " << dualObjLim[i]
+	<< "." << std::endl ;
+      failureMessage(solverName,
+	"false negative, isDualObjectiveLimitReached.") ;
+      errCnt++ ; } }
 
   delete si ;
+  si = 0 ;
 
-  return ; }
+/*
+  Finally, check that the objective sense is treated as a parameter of the
+  solver, not a property of the problem. The test clones emptySi, inverts the
+  default objective sense, clones a second solver, then loads and optimises
+  e226.
+*/
+  si = emptySi->clone() ;
+  dfltSense = si->getObjSense() ;
+  dfltSense = -dfltSense ;
+  si->setObjSense(dfltSense) ;
+  OsiSolverInterface *si2 = si->clone() ;
+  delete si ;
+  si = 0 ;
+  if (si2->getObjSense() != dfltSense)
+  { std::cout
+      << "objective sense is not preserved by clone." << std::endl ;
+    failureMessage(solverName,"objective sense is not preserved by clone") ;
+    errCnt++ ; }
+  mpsRc = si2->readMps(fn.c_str(),"mps") ;
+  if (mpsRc != 0)
+  { std::cout
+      << "testObjFunctions: failed 2nd read test problem e226." << std::endl ;
+    failureMessage(solverName, "2nd read test problem e226") ;
+    errCnt++ ;
+    delete si2 ;
+    return (errCnt+1) ; }
+  if (si2->getObjSense() != dfltSense)
+  { std::cout
+      << "objective sense is not preserved by problem load." << std::endl ;
+    failureMessage(solverName,
+      "objective sense is not preserved by problem load") ;
+    errCnt++ ; }
+  si2->initialSolve() ;
+  if (dfltSense < 0)
+  { i = 0 ; }
+  else
+  { i = 1 ; }
+  objValue = si2->getObjValue() ;
+  if (!eq(objValue,expectedObj[i]))
+  { std::cout
+      << maxmin[i] << "(e226) = " << objValue
+      << ", expected " << expectedObj[i] << "." << std::endl ;
+    failureMessage(solverName,
+      "incorrect objective, load problem after set objective sense ") ;
+    errCnt++ ; }
+  
+  delete si2 ;
+
+  return (errCnt) ; }
 
 
 /*
@@ -3342,7 +3487,7 @@ void testSimplex (const OsiSolverInterface *emptySi, std::string mpsDir)
   limitations of the volume solver, it must be the last solver in vecEmptySiP.
 */
 
-void OsiSolverInterfaceMpsUnitTest
+int OsiSolverInterfaceMpsUnitTest
   (const std::vector<OsiSolverInterface*> & vecEmptySiP,
    const std::string & mpsDir)
 
@@ -3730,6 +3875,8 @@ void OsiSolverInterfaceMpsUnitTest
       <<" seconds."
       <<std::endl;
   }
+
+  return (0) ;
 }
 
 
@@ -3737,28 +3884,51 @@ void OsiSolverInterfaceMpsUnitTest
 // The main event
 //#############################################################################
 
-void
+
+/*
+  The order of tests should be examined. As it stands, we test immediately for
+  the ability to read an mps file and bail if we can't do it. But quite a few
+  tests could be performed without reading an mps file.  -- lh, 080107 --
+*/
+
+int
 OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 				 const std::string & mpsDir,
 				 const std::string & netlibDir)
 {
 
-  CoinRelFltEq eq;
+  CoinRelFltEq eq ;
+  int intResult ;
+  int errCnt = 0 ;
 
-  std::string fn = mpsDir+"exmip1";
-  OsiSolverInterface * exmip1Si = emptySi->clone();
-  exmip1Si->readMps(fn.c_str(),"mps");
-
-  // Test that solverInterface knows its name.
-  // The name is used for displaying messages when testing
-  std::string solverName;
+/*
+  Test if the si knows its name. The name will be used for displaying messages
+  when testing.
+*/
+  std::string solverName ;
   {
-    OsiSolverInterface * si = emptySi->clone();
-    bool supportsSolverName = si->getStrParam(OsiSolverName,solverName);
-    assert( supportsSolverName );
-    assert( solverName != "Unknown Solver" );
-    delete si;
+    OsiSolverInterface *si = emptySi->clone() ;
+    bool supportsSolverName = si->getStrParam(OsiSolverName,solverName) ;
+    if (!supportsSolverName)
+    { solverName = "Unknown Solver" ;
+      failureMessage(solverName,"getStrParam(OsiSolverName)") ;
+      errCnt++ ; }
+    else
+    if (solverName == "Unknown Solver")
+    { failureMessage(solverName,"solver does not know its own name") ;
+      errCnt++ ; }
+    delete si ;
   }
+/*
+  See if we can read an MPS file. We're dead in the water if we can't do this.
+*/
+  std::string fn = mpsDir+"exmip1" ;
+  OsiSolverInterface *exmip1Si = emptySi->clone() ;
+  intResult = exmip1Si->readMps(fn.c_str(),"mps") ;
+  if (intResult != 0)
+  { failureMessage(*exmip1Si,"readMps failed to read exmip1 example") ;
+    errCnt += intResult ;
+    return (errCnt) ; }
 
   // Test that the solver correctly handles row and column names.
 
@@ -3835,12 +4005,15 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   }
 
   // Test constants in objective function, dual and primal objective limit
-  // functions.
+  // functions, objective sense (max/min).
   // Do not perform test if Vol solver, because it requires problems of a
   // special form and can not solve netlib e226.
 
   if ( !volSolverInterface )
-  { testObjOffsetAndLimits(emptySi,mpsDir) ; }
+  { intResult = testObjFunctions(emptySi,mpsDir) ;
+    if (intResult < 0)
+    { errCnt -= intResult ;
+      return (-errCnt) ; } }
 
   // Test that values returned from an empty solverInterface
   {
@@ -4698,7 +4871,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   }
   /*
     Orphan comment? If anyone happens to poke at the code that this belongs
-    to, move it. My guess is it should go somewhere in the deSmedt tests.
+    to, move it. My (lh) guess is it should go somewhere in the deSmedt tests.
 
     With this matrix we have a primal/dual infeas problem. Leaving the first
     row makes it primal feas, leaving the first col makes it dual feas.

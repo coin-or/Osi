@@ -3176,6 +3176,8 @@ void OGSI::gutsOfConstructor()
   isAbandoned_ = false;
   isPrimInfeasible_ = false;
   isDualInfeasible_ = false;
+  isObjLowerLimitReached_ = false ;
+  isObjUpperLimitReached_ = false ;
   isFeasible_ = false;
 
   lp_ = lpx_create_prob();

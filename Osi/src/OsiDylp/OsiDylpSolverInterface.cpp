@@ -995,7 +995,7 @@ void ODSI::add_col (const CoinPackedVectorBase& coin_colj,
 /*
   Add the column.
 */
-  bool r = consys_addcol_pk(consys,vtypj,pk_colj,objj,vlbj,vubj) ;
+  bool r = consys_addcol_pk(consys,vtypj,pk_colj,objj*obj_sense,vlbj,vubj) ;
   pkvec_free(pk_colj) ;
   if (!r)
   { lp_retval = lpFATAL ; }
@@ -1322,12 +1322,9 @@ void ODSI::dylp_ioinit ()
   variable names to be passed in to dylp, which makes for much friendlier
   output.
 
-  The routine is built on load_problem(matrix,sense/rhs/range), so the
   first thing it does is unpack the expected operands from the CoinMpsIO
-  object.
-
-  The next action is to destroy the existing problem. Existing options and
-  tolerances settings are not affected.
+  object.  The next action is to destroy the existing problem. Existing
+  options and tolerances settings are not affected.
 
   The routine then builds an empty consys_struct of the proper size with a
   call to construct_consys. The main body of the routine fills the constraint
@@ -1427,26 +1424,12 @@ void ODSI::load_problem (const CoinMpsIO &mps)
   
   pkvec_struct* colj = pkvec_new(m) ;
 
-/*
-  The little hack here for the upper bound on general integer variables is
-  needed because CoinMpsIO forces 1e30 as the upper bound for a general
-  integer, but the MIR cut generators fail to see this as infinity and generate
-  bogus cuts. If ever CoinMpsIO is fixed, this should come out!
-*/
   for (int j = 0 ; j < n ; j++)
   { const CoinShallowPackedVector coin_col = matrix2->getVector(j) ;
     packed_vector(coin_col,n,colj) ;
     colj->nme = const_cast<char *>(mps.columnName(j)) ;
-#   if COIN_BOGUS_MPSIO > 0
-    double uj ;
-    if (vtyp[j] == vartypINT && col_upper[j] >= 1e30)
-    { uj = odsiInfinity ; }
-    else
-    { uj = col_upper[j] ; }
-    r = consys_addcol_pk(consys,vtyp[j],colj,obj[j],col_lower[j],uj) ;
-#   else
-    r = consys_addcol_pk(consys,vtyp[j],colj,obj[j],col_lower[j],col_upper[j]) ;
-#   endif
+    r = consys_addcol_pk(consys,vtyp[j],colj,obj[j]*obj_sense,
+			 col_lower[j],col_upper[j]) ;
     if (!r)
     { break ; } }
 
@@ -1545,7 +1528,7 @@ void ODSI::load_problem (const CoinPackedMatrix& matrix,
     double vlbj = col_lower?col_lower[j]:0 ;
     double vubj = col_upper?col_upper[j]:odsiInfinity ;
     colj->nme = 0 ;
-    r = consys_addcol_pk(consys,vartypCON,colj,objj,vlbj,vubj) ;
+    r = consys_addcol_pk(consys,vartypCON,colj,objj*obj_sense,vlbj,vubj) ;
     if (!r)
     { break ; } }
 
@@ -1648,7 +1631,7 @@ void ODSI::load_problem (const int colcnt, const int rowcnt,
     double vlbj = col_lower?col_lower[j]:0 ;
     double vubj = col_upper?col_upper[j]:odsiInfinity ;
     colj->nme = 0 ;
-    r = consys_addcol_pk(consys,vartypCON,colj,objj,vlbj,vubj) ;
+    r = consys_addcol_pk(consys,vartypCON,colj,objj*obj_sense,vlbj,vubj) ;
     if (!r)
     { break ; } }
 
@@ -5556,7 +5539,6 @@ bool ODSI::isDualObjectiveLimitReached () const
   double objval = getObjValue() ;
 
   getDblParam(OsiDualObjectiveLimit,objlim) ;
-  objlim *= getObjSense() ;
 
   if (getObjSense() > 0)
     return (objval > objlim) ;
@@ -5583,7 +5565,6 @@ bool ODSI::isPrimalObjectiveLimitReached () const
   double objval = getObjValue() ;
 
   getDblParam(OsiPrimalObjectiveLimit,objlim) ;
-  objlim *= getObjSense() ;
 
   if (getObjSense() > 0)
     return (objval < objlim) ;

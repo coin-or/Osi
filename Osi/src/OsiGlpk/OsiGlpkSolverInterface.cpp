@@ -911,6 +911,9 @@ CoinWarmStart *OGSI::getWarmStart() const
 /*
   Walk the rows. Retrieve the status information from the glpk model and
   store it in the CWSB object.
+  The convention in Osi regarding the status of a row when on bounds is different from Glpk.
+  Thus, Glpk's at-lower-bound will be mapped to Osi's at-upper-bound
+   and  Glpk's at-upper-bound will be mapped to Osi's at-lower-bound. 
 */
   for (int i = 0 ; i < numrows ; i++)
   { int stati = lpx_get_row_stat(lp_,i+1) ;
@@ -920,10 +923,10 @@ CoinWarmStart *OGSI::getWarmStart() const
 	break ; }
       case LPX_NS:
       case LPX_NL:
-      { ws->setArtifStatus(i,CoinWarmStartBasis::atLowerBound) ;
+      { ws->setArtifStatus(i,CoinWarmStartBasis::atUpperBound) ;
 	break ; }
       case LPX_NU:
-      { ws->setArtifStatus(i,CoinWarmStartBasis::atUpperBound) ;
+      { ws->setArtifStatus(i,CoinWarmStartBasis::atLowerBound) ;
 	break ; }
       case LPX_NF:
       { ws->setArtifStatus(i,CoinWarmStartBasis::isFree) ;
@@ -964,6 +967,9 @@ CoinWarmStart *OGSI::getWarmStart() const
   By definition, a null warmstart parameter is interpreted as `refresh warm
   start information from the solver.' Since OGSI does not cache warm start
   information, no action is required.
+  The convention in Osi regarding the status of a row when on bounds is different from Glpk.
+  Thus, Osi's at-upper-bound will be mapped to Glpk's at-lower-bound
+   and  Osi's at-lower-bound will be mapped to Glpk's at-upper-bound. 
 */
 
 bool OGSI::setWarmStart (const CoinWarmStart* warmstart)
@@ -1000,10 +1006,10 @@ bool OGSI::setWarmStart (const CoinWarmStart* warmstart)
       { stati = LPX_BS ;
 	break ; }
       case CoinWarmStartBasis::atLowerBound:
-      { stati = LPX_NL ;
+      { stati = LPX_NU ;
 	break ; }
       case CoinWarmStartBasis::atUpperBound:
-      { stati = LPX_NU ;
+      { stati = LPX_NL ;
 	break ; }
       case CoinWarmStartBasis::isFree:
       { stati = LPX_NF ;

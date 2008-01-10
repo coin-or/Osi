@@ -1109,7 +1109,7 @@ public:
 
     /**  If solver wants it can save a copy of "base" (continuous) model here
      */
-    virtual void saveBaseModel() {};
+    virtual void saveBaseModel() {}
     /**  Strip off rows to get to this number of rows.
          If solver wants it can restore a copy of "base" (continuous) model here
      */

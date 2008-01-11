@@ -1210,6 +1210,7 @@ void OsiClpSolverInterface::markHotStart()
     ClpSimplex * small;
     if (!keepModel) {
       small = ((ClpSimplexOther *) modelPtr_)->crunch(rhs,whichRow,whichColumn,nBound,true);
+      small->specialOptions_ |= 262144;
       if (small&&(specialOptions_&131072)!=0) {
 	assert (lastNumberRows_>=0);
 	int numberRows2 = small->numberRows();
@@ -1281,6 +1282,7 @@ void OsiClpSolverInterface::markHotStart()
     if ((specialOptions_&256)!=0||1) {
       // only need to do this on second pass in CbcNode
       if (modelPtr_->logLevel()<2) small->setLogLevel(0);
+      small->specialOptions_ |= 262144;
       small->dual();
       if (keepModel&&!small->auxiliaryModel_) {
         // put back
@@ -5290,6 +5292,7 @@ OsiClpSolverInterface::crunch()
   ClpSimplex * small = ((ClpSimplexOther *) modelPtr_)->crunch(rhs,whichRow,whichColumn,
                                                                nBound,false,tightenBounds);
   if (small) {
+    small->specialOptions_ |= 262144;
     if ((specialOptions_&131072)!=0) {
       assert (lastNumberRows_>=0);
       int numberRows2 = small->numberRows();

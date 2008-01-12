@@ -1210,7 +1210,8 @@ void OsiClpSolverInterface::markHotStart()
     ClpSimplex * small;
     if (!keepModel) {
       small = ((ClpSimplexOther *) modelPtr_)->crunch(rhs,whichRow,whichColumn,nBound,true);
-      small->specialOptions_ |= 262144;
+      if (small)
+	small->specialOptions_ |= 262144;
       if (small&&(specialOptions_&131072)!=0) {
 	assert (lastNumberRows_>=0);
 	int numberRows2 = small->numberRows();

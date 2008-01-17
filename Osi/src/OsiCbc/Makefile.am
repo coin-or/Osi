@@ -38,8 +38,13 @@ AM_CPPFLAGS = \
 
 # Plus the appropriate include directories for the default solver. The
 # underlying configuration macro (Osi/m4/ac_osicbc_config.m4) is set up to
-# handle any Osi solver, but I'll leave it to individual OsiXxx maintainers to
-# add their solver here when they've done the testing.  -- lh, July 2006 --
+# handle any Osi solver. Individual OsiXxx maintainers can add their solver
+# here when they've done the testing. Typically, you want to duplicate the
+# include directories specified for AM_CPPFLAGS in OsiXXX/Makefile.am, keeping
+# in mind the common directories above do not need to be specified again.
+# The current set matches existing Osi interfaces (excluding OSL and Vol) as of
+# January 2008. Most of these are untested!
+# -- lh, January 2008 --
 
 if OSICBC_DFLT_SOLVER_CLP
   AM_CPPFLAGS += -I`$(CYGPATH_W) $(srcdir)/../OsiClp` \
@@ -47,11 +52,51 @@ if OSICBC_DFLT_SOLVER_CLP
 	-I`$(CYGPATH_W) $(CLPOBJDIR)/inc`
 endif
 
+if OSICBC_DFLT_SOLVER_CPX
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(srcdir)/../OsiCpx` \
+	-I`$(CYGPATH_W) $(CPXINCDIR)`
+endif
+
 if OSICBC_DFLT_SOLVER_DYLP
   AM_CPPFLAGS += -I`$(CYGPATH_W) $(srcdir)/../OsiDylp` \
 	-I`$(CYGPATH_W) $(DYLPSRCDIR)/src/Dylp` \
 	-I`$(CYGPATH_W) $(DYLPSRCDIR)/src/DylpStdLib` \
 	-I`$(CYGPATH_W) $(DYLPOBJDIR)/inc`
+endif
+
+if OSICBC_DFLT_SOLVER_FMP
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(srcdir)/../OsiFmp` \
+	-I`$(CYGPATH_W) $(FMPINCDIR)`
+endif
+
+if OSICBC_DFLT_SOLVER_GLPK
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(srcdir)/../OsiGlpk` \
+	-I`$(CYGPATH_W) $(GLPKINCDIR)`
+endif
+
+if OSICBC_DFLT_SOLVER_GLPK
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(srcdir)/../OsiGlpk` \
+	-I`$(CYGPATH_W) $(GLPKINCDIR)`
+endif
+
+if OSICBC_DFLT_SOLVER_MSK
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(srcdir)/../OsiMsk` \
+	-I`$(CYGPATH_W) $(MSKINCDIR)`
+endif
+
+if OSICBC_DFLT_SOLVER_SPX
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(srcdir)/../OsiSpx` \
+	-I`$(CYGPATH_W) $(SPXINCDIR)`
+endif
+
+if OSICBC_DFLT_SOLVER_SYM
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(srcdir)/../OsiSym` \
+	-I`$(CYGPATH_W) $(SYMPHONYSRCDIR)/include`
+endif
+
+if OSICBC_DFLT_SOLVER_XPR
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(srcdir)/../OsiXpr` \
+	-I`$(CYGPATH_W) $(XPRINCDIR)`
 endif
 
 # This line is necessary to allow VPATH compilation with MS compilers

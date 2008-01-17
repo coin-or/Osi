@@ -46,16 +46,45 @@ host_triplet = @host@
 
 # Plus the appropriate include directories for the default solver. The
 # underlying configuration macro (Osi/m4/ac_osicbc_config.m4) is set up to
-# handle any Osi solver, but I'll leave it to individual OsiXxx maintainers to
-# add their solver here when they've done the testing.  -- lh, July 2006 --
+# handle any Osi solver. Individual OsiXxx maintainers can add their solver
+# here when they've done the testing. Typically, you want to duplicate the
+# include directories specified for AM_CPPFLAGS in OsiXXX/Makefile.am, keeping
+# in mind the common directories above do not need to be specified again.
+# The current set matches existing Osi interfaces (excluding OSL and Vol) as of
+# January 2008. Most of these are untested!
+# -- lh, January 2008 --
 @OSICBC_DFLT_SOLVER_CLP_TRUE@am__append_1 = -I`$(CYGPATH_W) $(srcdir)/../OsiClp` \
 @OSICBC_DFLT_SOLVER_CLP_TRUE@	-I`$(CYGPATH_W) $(CLPSRCDIR)/src` \
 @OSICBC_DFLT_SOLVER_CLP_TRUE@	-I`$(CYGPATH_W) $(CLPOBJDIR)/inc`
 
-@OSICBC_DFLT_SOLVER_DYLP_TRUE@am__append_2 = -I`$(CYGPATH_W) $(srcdir)/../OsiDylp` \
+@OSICBC_DFLT_SOLVER_CPX_TRUE@am__append_2 = -I`$(CYGPATH_W) $(srcdir)/../OsiCpx` \
+@OSICBC_DFLT_SOLVER_CPX_TRUE@	-I`$(CYGPATH_W) $(CPXINCDIR)`
+
+@OSICBC_DFLT_SOLVER_DYLP_TRUE@am__append_3 = -I`$(CYGPATH_W) $(srcdir)/../OsiDylp` \
 @OSICBC_DFLT_SOLVER_DYLP_TRUE@	-I`$(CYGPATH_W) $(DYLPSRCDIR)/src/Dylp` \
 @OSICBC_DFLT_SOLVER_DYLP_TRUE@	-I`$(CYGPATH_W) $(DYLPSRCDIR)/src/DylpStdLib` \
 @OSICBC_DFLT_SOLVER_DYLP_TRUE@	-I`$(CYGPATH_W) $(DYLPOBJDIR)/inc`
+
+@OSICBC_DFLT_SOLVER_FMP_TRUE@am__append_4 = -I`$(CYGPATH_W) $(srcdir)/../OsiFmp` \
+@OSICBC_DFLT_SOLVER_FMP_TRUE@	-I`$(CYGPATH_W) $(FMPINCDIR)`
+
+@OSICBC_DFLT_SOLVER_GLPK_TRUE@am__append_5 = -I`$(CYGPATH_W) \
+@OSICBC_DFLT_SOLVER_GLPK_TRUE@	$(srcdir)/../OsiGlpk` \
+@OSICBC_DFLT_SOLVER_GLPK_TRUE@	-I`$(CYGPATH_W) $(GLPKINCDIR)` \
+@OSICBC_DFLT_SOLVER_GLPK_TRUE@	-I`$(CYGPATH_W) \
+@OSICBC_DFLT_SOLVER_GLPK_TRUE@	$(srcdir)/../OsiGlpk` \
+@OSICBC_DFLT_SOLVER_GLPK_TRUE@	-I`$(CYGPATH_W) $(GLPKINCDIR)`
+@OSICBC_DFLT_SOLVER_MSK_TRUE@am__append_6 = -I`$(CYGPATH_W) $(srcdir)/../OsiMsk` \
+@OSICBC_DFLT_SOLVER_MSK_TRUE@	-I`$(CYGPATH_W) $(MSKINCDIR)`
+
+@OSICBC_DFLT_SOLVER_SPX_TRUE@am__append_7 = -I`$(CYGPATH_W) $(srcdir)/../OsiSpx` \
+@OSICBC_DFLT_SOLVER_SPX_TRUE@	-I`$(CYGPATH_W) $(SPXINCDIR)`
+
+@OSICBC_DFLT_SOLVER_SYM_TRUE@am__append_8 = -I`$(CYGPATH_W) $(srcdir)/../OsiSym` \
+@OSICBC_DFLT_SOLVER_SYM_TRUE@	-I`$(CYGPATH_W) $(SYMPHONYSRCDIR)/include`
+
+@OSICBC_DFLT_SOLVER_XPR_TRUE@am__append_9 = -I`$(CYGPATH_W) $(srcdir)/../OsiXpr` \
+@OSICBC_DFLT_SOLVER_XPR_TRUE@	-I`$(CYGPATH_W) $(XPRINCDIR)`
 
 subdir = src/OsiCbc
 DIST_COMMON = $(includecoin_HEADERS) $(srcdir)/Makefile.am \
@@ -354,7 +383,9 @@ libOsiCbc_la_LDFLAGS = $(LT_LDFLAGS)
 AM_CPPFLAGS = -I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` -I`$(CYGPATH_W) \
 	$(COINUTILSOBJDIR)/inc` -I`$(CYGPATH_W) $(CBCSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(CBCOBJDIR)/inc` -I`$(CYGPATH_W) \
-	$(srcdir)/..` $(am__append_1) $(am__append_2)
+	$(srcdir)/..` $(am__append_1) $(am__append_2) $(am__append_3) \
+	$(am__append_4) $(am__append_5) $(am__append_6) \
+	$(am__append_7) $(am__append_8) $(am__append_9)
 
 # This line is necessary to allow VPATH compilation with MS compilers
 # on Cygwin

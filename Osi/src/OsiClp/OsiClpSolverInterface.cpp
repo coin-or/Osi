@@ -5383,6 +5383,7 @@ OsiNodeSimple::OsiNodeSimple(OsiSolverInterface & model,
   int i;
   // Hard coded integer tolerance
 #define INTEGER_TOLERANCE 1.0e-6
+  ///////// Start of Strong branching code - can be ignored
   // Number of strong branching candidates
 #define STRONG_BRANCHING 5
 #ifdef STRONG_BRANCHING
@@ -5396,7 +5397,6 @@ OsiNodeSimple::OsiNodeSimple(OsiSolverInterface & model,
     upMovement[i]=0.0;
     chosen[i]=-1;
   }
-#endif
   variable_=-1;
   // This has hard coded integer tolerance
   double mostAway=INTEGER_TOLERANCE;
@@ -5412,7 +5412,6 @@ OsiNodeSimple::OsiNodeSimple(OsiSolverInterface & model,
     if (fabs(value-nearest)>INTEGER_TOLERANCE)
       numberAway++;
     if (fabs(value-nearest)>mostAway) {
-#ifdef STRONG_BRANCHING
       double away = fabs(value-nearest);
       if (away>upMovement[iSmallest]) {
 	//add to list
@@ -5429,18 +5428,8 @@ OsiNodeSimple::OsiNodeSimple(OsiSolverInterface & model,
 	  }
 	}
       }
-#else
-      mostAway=fabs(value-nearest);
-      variable_=i;
-      value_=value;
-      if (value<=nearest)
-	way_=1; // up
-      else
-	way_=-1; // down
-#endif
     }
   }
-#ifdef STRONG_BRANCHING
   int numberStrong=0;
   for (i=0;i<STRONG_BRANCHING;i++) {
     if (chosen[i]>=0) { 
@@ -5590,6 +5579,32 @@ OsiNodeSimple::OsiNodeSimple(OsiSolverInterface & model,
     // Delete the snapshot
     model.unmarkHotStart();
   }
+  ////// End of Strong branching
+#else
+  variable_=-1;
+  // This has hard coded integer tolerance
+  double mostAway=INTEGER_TOLERANCE;
+  int numberAway=0;
+  for (i=0;i<numberIntegers;i++) {
+    int iColumn = integer[i];
+    lower_[i]=(int)lower[iColumn];
+    upper_[i]=(int)upper[iColumn];
+    double value = solution[iColumn];
+    value = max(value,(double) lower_[i]);
+    value = min(value,(double) upper_[i]);
+    double nearest = floor(value+0.5);
+    if (fabs(value-nearest)>INTEGER_TOLERANCE)
+      numberAway++;
+    if (fabs(value-nearest)>mostAway) {
+      mostAway=fabs(value-nearest);
+      variable_=i;
+      value_=value;
+      if (value<=nearest)
+	way_=1; // up
+      else
+	way_=-1; // down
+    }
+  }
 #endif
 }
 
@@ -5658,6 +5673,7 @@ OsiClpSolverInterface::branchAndBound() {
   initialSolve();
 
   if (isProvenOptimal()&&!isDualObjectiveLimitReached()) {
+    // Continuous is feasible - find integers
     int numberIntegers=0;
     int numberColumns = getNumCols();
     int iColumn;
@@ -5699,6 +5715,7 @@ OsiClpSolverInterface::branchAndBound() {
     int numberNodes =0;
     
     OsiNodeSimple bestNode;
+    ////// Start main while of branch and bound
     // while until nothing on stack
     while (branchingTree.size()) {
       // last node
@@ -5736,7 +5753,7 @@ OsiClpSolverInterface::branchAndBound() {
           dynamic_cast<const CoinWarmStartBasis*>(ws);
         assert (wsb!=NULL); // make sure not volume
         numberIterations += getIterationCount();
-        // fix on djs
+        // fix on reduced costs
         int nFixed0=0,nFixed1=0;
         double cutoff;
         getDblParam(OsiDualObjectiveLimit,cutoff);
@@ -5793,6 +5810,7 @@ OsiClpSolverInterface::branchAndBound() {
                  <<std::endl;
       }
     }
+    ////// End main while of branch and bound
     std::cout<<"Search took "
              <<numberIterations
              <<" iterations and "<<numberNodes<<" nodes"

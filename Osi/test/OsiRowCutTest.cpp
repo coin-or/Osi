@@ -266,6 +266,7 @@ OsiRowCutUnitTest(const OsiSolverInterface * baseSiP,
       assert(   c != rc  );
     }
   }
+#ifndef COIN_NOTEST_DUPLICATE
   {
     // Test consistent
     OsiSolverInterface * imP = baseSiP->clone();
@@ -307,6 +308,7 @@ OsiRowCutUnitTest(const OsiSolverInterface * baseSiP,
     assert( c.infeasible(*imP) );
     delete imP;
   }
+#endif
   {
     // Test consistent(IntegerModel) method.
     OsiSolverInterface * imP = baseSiP->clone();

@@ -6642,6 +6642,314 @@ OsiClpSolverInterface::restoreBaseModel(int numberRows)
     OsiSolverInterface::restoreBaseModel(numberRows);
   }
 }
+// Tighten bounds - lightweight
+int 
+OsiClpSolverInterface::tightenBounds()
+{
+  //CoinPackedMatrix matrixByRow(*getMatrixByRow());
+  int numberRows = getNumRows();
+  int numberColumns = getNumCols();
+
+  int iRow,iColumn;
+
+  // Row copy
+  //const double * elementByRow = matrixByRow.getElements();
+  //const int * column = matrixByRow.getIndices();
+  //const CoinBigIndex * rowStart = matrixByRow.getVectorStarts();
+  //const int * rowLength = matrixByRow.getVectorLengths();
+
+  const double * columnUpper = getColUpper();
+  const double * columnLower = getColLower();
+  const double * rowUpper = getRowUpper();
+  const double * rowLower = getRowLower();
+
+  // Column copy of matrix
+  const double * element = getMatrixByCol()->getElements();
+  const int * row = getMatrixByCol()->getIndices();
+  const CoinBigIndex * columnStart = getMatrixByCol()->getVectorStarts();
+  const int * columnLength = getMatrixByCol()->getVectorLengths();
+  const double *objective = getObjCoefficients() ;
+  double direction = getObjSense();
+  double * down = new double [numberRows];
+  double * up = new double [numberRows];
+  double * sum = new double [numberRows];
+  int * type = new int [numberRows];
+  CoinZeroN(down,numberRows);
+  CoinZeroN(up,numberRows);
+  CoinZeroN(sum,numberRows);
+  CoinZeroN(type,numberRows);
+  double infinity = getInfinity();
+  for (iColumn=0;iColumn<numberColumns;iColumn++) {
+    CoinBigIndex start = columnStart[iColumn];
+    CoinBigIndex end = start + columnLength[iColumn];
+    double lower = columnLower[iColumn];
+    double upper = columnUpper[iColumn];
+    if (lower==upper) {
+      for (CoinBigIndex j=start;j<end;j++) {
+	int iRow = row[j];
+	double value = element[j];
+	sum[iRow]+=2.0*fabs(value*lower);
+	if ((type[iRow]&1)==0)
+	  down[iRow] += value*lower;
+	if ((type[iRow]&2)==0)
+	  up[iRow] += value*lower;
+      }
+    } else {
+      for (CoinBigIndex j=start;j<end;j++) {
+	int iRow = row[j];
+	double value = element[j];
+	if (value>0.0) {
+	  if ((type[iRow]&1)==0) {
+	    if (lower!=-infinity) {
+	      down[iRow] += value*lower;
+	      sum[iRow]+=fabs(value*lower);
+	    } else {
+	      type[iRow] |= 1;
+	    }
+	  }
+	  if ((type[iRow]&2)==0) {
+	    if (upper!=infinity) {
+	      up[iRow] += value*upper;
+	      sum[iRow]+=fabs(value*upper);
+	    } else {
+	      type[iRow] |= 2;
+	    }
+	  }
+	} else {
+	  if ((type[iRow]&1)==0) {
+	    if (upper!=infinity) {
+	      down[iRow] += value*upper;
+	      sum[iRow]+=fabs(value*upper);
+	    } else {
+	      type[iRow] |= 1;
+	    }
+	  }
+	  if ((type[iRow]&2)==0) {
+	    if (lower!=-infinity) {
+	      up[iRow] += value*lower;
+	      sum[iRow]+=fabs(value*lower);
+	    } else {
+	      type[iRow] |= 2;
+	    }
+	  }
+	}
+      }
+    }
+  }
+  int nTightened=0;
+  double tolerance = 1.0e-6;
+  for (iRow=0;iRow<numberRows;iRow++) {
+    if ((type[iRow]&1)!=0)
+      down[iRow]=-infinity;
+    if (down[iRow]>rowUpper[iRow]) {
+      if (down[iRow]>rowUpper[iRow]+tolerance+1.0e-8*sum[iRow]) {
+	// infeasible
+#ifdef COIN_DEVELOP
+	printf("infeasible on row %d\n",iRow);
+#endif
+	nTightened=-1;
+	break;
+      } else {
+	down[iRow]=rowUpper[iRow];
+      }
+    }
+    if ((type[iRow]&2)!=0)
+      up[iRow]=infinity;
+    if (up[iRow]<rowLower[iRow]) {
+      if (up[iRow]<rowLower[iRow]-tolerance-1.0e-8*sum[iRow]) {
+	// infeasible
+#ifdef COIN_DEVELOP
+	printf("infeasible on row %d\n",iRow);
+#endif
+	nTightened=-1;
+	break;
+      } else {
+	up[iRow]=rowLower[iRow];
+      }
+    }
+  }
+  if (nTightened)
+    numberColumns=0; // so will skip
+  for (iColumn=0;iColumn<numberColumns;iColumn++) {
+    CoinBigIndex start = columnStart[iColumn];
+    CoinBigIndex end = start + columnLength[iColumn];
+    double lower = columnLower[iColumn];
+    double upper = columnUpper[iColumn];
+    double gap = upper-lower;
+    if (!gap)
+      continue;
+    int canGo=0;
+    if (integerInformation_[iColumn]) {
+      if (lower!=floor(lower+0.5)) {
+#ifdef COIN_DEVELOP
+	printf("increasing lower bound on %d from %g to %g\n",iColumn,
+	       lower,ceil(lower));
+#endif
+	lower=ceil(lower);
+	gap=upper-lower;
+	setColLower(iColumn,lower);
+      }
+      if (upper!=floor(upper+0.5)) {
+#ifdef COIN_DEVELOP
+	printf("decreasing upper bound on %d from %g to %g\n",iColumn,
+	       upper,floor(upper));
+#endif
+	upper=floor(upper);
+	gap=upper-lower;
+	setColUpper(iColumn,upper);
+      }
+      double newLower=lower;
+      double newUpper=upper;
+      for (CoinBigIndex j=start;j<end;j++) {
+	int iRow = row[j];
+	double value = element[j];
+	if (value>0.0) {
+	  if ((type[iRow]&1)==0) {
+	    // has to be at most something
+	    if (down[iRow] + value*gap > rowUpper[iRow]+tolerance) {
+	      double newGap = (rowUpper[iRow]-down[iRow])/value;
+	      // adjust
+	      newGap += 1.0e-10*sum[iRow];
+	      newGap = floor(newGap);
+	      if (lower+newGap<newUpper)
+		newUpper=lower+newGap;
+	    }
+	  }
+	  if (down[iRow]<rowLower[iRow])
+	    canGo |=1; // can't go down without affecting result
+	  if ((type[iRow]&2)==0) {
+	    // has to be at least something
+	    if (up[iRow] - value*gap < rowLower[iRow]-tolerance) {
+	      double newGap = (up[iRow]-rowLower[iRow])/value;
+	      // adjust
+	      newGap += 1.0e-10*sum[iRow];
+	      newGap = floor(newGap);
+	      if (upper-newGap>newLower)
+		newLower=upper-newGap;
+	    }
+	  }
+	  if (up[iRow]>rowUpper[iRow])
+	    canGo |=2; // can't go up without affecting result
+	} else {
+	  if ((type[iRow]&1)==0) {
+	    // has to be at least something
+	    if (down[iRow] - value*gap > rowUpper[iRow]+tolerance) {
+	      double newGap = -(rowUpper[iRow]-down[iRow])/value;
+	      // adjust
+	      newGap += 1.0e-10*sum[iRow];
+	      newGap = floor(newGap);
+	      if (upper-newGap>newLower)
+		newLower=upper-newGap;
+	    }
+	  }
+	  if (up[iRow]>rowUpper[iRow])
+	    canGo |=1; // can't go down without affecting result
+	  if ((type[iRow]&2)==0) {
+	    // has to be at most something
+	    if (up[iRow] + value*gap < rowLower[iRow]-tolerance) {
+	      double newGap = -(up[iRow]-rowLower[iRow])/value;
+	      // adjust
+	      newGap += 1.0e-10*sum[iRow];
+	      newGap = floor(newGap);
+	      if (lower+newGap<newUpper)
+		newUpper=lower+newGap;
+	    }
+	  }
+	  if (down[iRow]<rowLower[iRow])
+	    canGo |=2; // can't go up without affecting result
+	}
+      }
+      if (newUpper<upper||newLower>lower) {
+	nTightened++;
+	if (newLower>newUpper) {
+	  // infeasible
+#if COIN_DEVELOP>1
+	  printf("infeasible on column %d\n",iColumn);
+#endif
+	  nTightened=-1;
+	  break;
+	} else {
+	  setColLower(iColumn,newLower);
+	  setColUpper(iColumn,newUpper);
+	}
+	for (CoinBigIndex j=start;j<end;j++) {
+	  int iRow = row[j];
+	  double value = element[j];
+	  if (value>0.0) {
+	    if ((type[iRow]&1)==0) {
+	      down[iRow] += value*(newLower-lower);
+	    }
+	    if ((type[iRow]&2)==0) {
+	      up[iRow] += value*(newUpper-upper);
+	    }
+	  } else {
+	    if ((type[iRow]&1)==0) {
+	      down[iRow] += value*(newUpper-upper);
+	    }
+	    if ((type[iRow]&2)==0) {
+	      up[iRow] += value*(newLower-lower);
+	    }
+	  }
+	}
+      } else {
+	if (canGo!=3) {
+	  double objValue = direction*objective[iColumn];
+	  if (objValue>=0.0&&(canGo&1)==0) {
+#if COIN_DEVELOP>1
+	    printf("dual fix down on column %d\n",iColumn);
+#endif
+	    nTightened++;;
+	    setColUpper(iColumn,lower);
+	  } else if (objValue<=0.0&&(canGo&2)==0) {
+#if COIN_DEVELOP>1
+	    printf("dual fix up on column %d\n",iColumn);
+#endif
+	    nTightened++;;
+	    setColLower(iColumn,upper);
+	  }
+	}	    
+      }
+    } else {
+      // just do dual tests
+      for (CoinBigIndex j=start;j<end;j++) {
+	int iRow = row[j];
+	double value = element[j];
+	if (value>0.0) {
+	  if (down[iRow]<rowLower[iRow])
+	    canGo |=1; // can't go down without affecting result
+	  if (up[iRow]>rowUpper[iRow])
+	    canGo |=2; // can't go up without affecting result
+	} else {
+	  if (up[iRow]>rowUpper[iRow])
+	    canGo |=1; // can't go down without affecting result
+	  if (down[iRow]<rowLower[iRow])
+	    canGo |=2; // can't go up without affecting result
+	}
+      }
+      if (canGo!=3) {
+	double objValue = direction*objective[iColumn];
+	if (objValue>=0.0&&(canGo&1)==0) {
+#if COIN_DEVELOP>1
+	  printf("dual fix down on continuous column %d\n",iColumn);
+#endif
+	  nTightened++;;
+	  setColUpper(iColumn,lower);
+	} else if (objValue<=0.0&&(canGo&2)==0) {
+#if COIN_DEVELOP>1
+	  printf("dual fix up on continuoe column %d\n",iColumn);
+#endif
+	  nTightened++;;
+	  setColLower(iColumn,upper);
+	}
+      }
+    }
+  }
+  delete [] type;
+  delete [] down;
+  delete [] up;
+  delete [] sum;
+  return nTightened;
+}
   
 //#############################################################################
 // Constructors / Destructor / Assignment

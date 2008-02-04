@@ -951,6 +951,8 @@ public:
   /// Pass in initial solve options
   inline void setSolveOptions(const ClpSolve & options)
   { solveOptions_ = options;}
+  /// Tighten bounds - lightweight
+  int tightenBounds();
   //@}
   
   //---------------------------------------------------------------------------

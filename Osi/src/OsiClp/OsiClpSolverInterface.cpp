@@ -6646,6 +6646,8 @@ OsiClpSolverInterface::restoreBaseModel(int numberRows)
 int 
 OsiClpSolverInterface::tightenBounds()
 {
+  if (!integerInformation_)
+    return 0; // no integers
   //CoinPackedMatrix matrixByRow(*getMatrixByRow());
   int numberRows = getNumRows();
   int numberColumns = getNumCols();

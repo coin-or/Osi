@@ -54,7 +54,7 @@ noinst_PROGRAMS = unitTest$(EXEEXT)
 @COIN_HAS_CLP_TRUE@am__append_3 = ../src/OsiClp/libOsiClp.la \
 @COIN_HAS_CLP_TRUE@	$(CLPOBJDIR)/src/libClp.la
 
-@COIN_HAS_CLP_TRUE@am__append_4 = `cat $(CLPOBJDIR)/clp_addlibs.txt`
+@COIN_HAS_CLP_TRUE@am__append_4 = `cat $(CLPDOCDIR)/clp_addlibs.txt`
 @COIN_HAS_CBC_TRUE@am__append_5 = OsiCbcSolverInterfaceTest.cpp
 @COIN_HAS_CBC_TRUE@am__append_6 = -I`$(CYGPATH_W) $(CBCSRCDIR)/src` \
 @COIN_HAS_CBC_TRUE@	-I`$(CYGPATH_W) $(CBCOBJDIR)/inc` \
@@ -63,7 +63,7 @@ noinst_PROGRAMS = unitTest$(EXEEXT)
 @COIN_HAS_CBC_TRUE@am__append_7 = ../src/OsiCbc/libOsiCbc.la \
 @COIN_HAS_CBC_TRUE@	$(CBCOBJDIR)/src/libCbc.la
 
-@COIN_HAS_CBC_TRUE@am__append_8 = `cat $(CBCOBJDIR)/cbc_addlibs.txt`
+@COIN_HAS_CBC_TRUE@am__append_8 = `cat $(CBCDOCDIR)/cbc_addlibs.txt`
 @COIN_HAS_ASL_TRUE@@COIN_HAS_CBC_TRUE@am__append_9 = $(ASLLIB)
 @COIN_HAS_ASL_TRUE@@COIN_HAS_CBC_TRUE@am__append_10 = $(ASL_CPPFLAGS) -DCOIN_HAS_ASL
 @COIN_HAS_SYMPHONY_TRUE@am__append_11 = OsiSymSolverInterfaceTest.cpp
@@ -73,9 +73,9 @@ noinst_PROGRAMS = unitTest$(EXEEXT)
 @COIN_HAS_SYMPHONY_TRUE@am__append_13 = ../src/OsiSym/libOsiSym.la \
 @COIN_HAS_SYMPHONY_TRUE@	$(SYMPHONYOBJDIR)/src/libSym.la
 
-@COIN_HAS_SYMPHONY_TRUE@am__append_14 = `cat $(SYMPHONYOBJDIR)/sym_addlibs.txt`
+@COIN_HAS_SYMPHONY_TRUE@am__append_14 = `cat $(SYMPHONYDOCDIR)/sym_addlibs.txt`
 @COIN_HAS_CGL_TRUE@am__append_15 = $(CGLOBJDIR)/src/libCgl.la
-@COIN_HAS_CGL_TRUE@am__append_16 = `cat $(CGLOBJDIR)/cgl_addlibs.txt`
+@COIN_HAS_CGL_TRUE@am__append_16 = `cat $(CGLDOCDIR)/cgl_addlibs.txt`
 @COIN_HAS_CPX_TRUE@am__append_17 = OsiCpxSolverInterfaceTest.cpp
 @COIN_HAS_CPX_TRUE@am__append_18 = -I`$(CYGPATH_W) $(CPXINCDIR)` \
 @COIN_HAS_CPX_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiCpx`
@@ -90,7 +90,7 @@ noinst_PROGRAMS = unitTest$(EXEEXT)
 @COIN_HAS_DYLP_TRUE@am__append_22 = ../src/OsiDylp/libOsiDylp.la \
 @COIN_HAS_DYLP_TRUE@	$(DYLPOBJDIR)/src/Dylp/libDylp.la
 
-@COIN_HAS_DYLP_TRUE@am__append_23 = `cat $(DYLPOBJDIR)/dylp_addlibs.txt`
+@COIN_HAS_DYLP_TRUE@am__append_23 = `cat $(DYLPDOCDIR)/dylp_addlibs.txt`
 @COIN_HAS_FMP_TRUE@am__append_24 = OsiFmpSolverInterfaceTest.cpp
 @COIN_HAS_FMP_TRUE@am__append_25 = -I`$(CYGPATH_W) $(srcdir)/../src/OsiFmp`
 @COIN_HAS_FMP_TRUE@am__append_26 = ../src/OsiFmp/libOsiFmp.la
@@ -121,7 +121,7 @@ noinst_PROGRAMS = unitTest$(EXEEXT)
 @COIN_HAS_VOL_TRUE@am__append_41 = ../src/OsiVol/libOsiVol.la \
 @COIN_HAS_VOL_TRUE@	$(VOLOBJDIR)/src/libVol.la
 
-@COIN_HAS_VOL_TRUE@am__append_42 = `cat $(VOLOBJDIR)/vol_addlibs.txt`
+@COIN_HAS_VOL_TRUE@am__append_42 = `cat $(VOLDOCDIR)/vol_addlibs.txt`
 @COIN_HAS_XPR_TRUE@am__append_43 = OsiXprSolverInterfaceTest.cpp
 @COIN_HAS_XPR_TRUE@am__append_44 = -I`$(CYGPATH_W) $(XPRINCDIR)` \
 @COIN_HAS_XPR_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiXpr`
@@ -246,16 +246,20 @@ AUTOMAKE = @AUTOMAKE@
 AUX_DIR = @AUX_DIR@
 AWK = @AWK@
 BUILDTOOLSDIR = @BUILDTOOLSDIR@
+CBCDOCDIR = @CBCDOCDIR@
 CBCOBJDIR = @CBCOBJDIR@
 CBCSRCDIR = @CBCSRCDIR@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CDEFS = @CDEFS@
 CFLAGS = @CFLAGS@
+CGLDOCDIR = @CGLDOCDIR@
 CGLOBJDIR = @CGLOBJDIR@
 CGLSRCDIR = @CGLSRCDIR@
+CLPDOCDIR = @CLPDOCDIR@
 CLPOBJDIR = @CLPOBJDIR@
 CLPSRCDIR = @CLPSRCDIR@
+COINUTILSDOCDIR = @COINUTILSDOCDIR@
 COINUTILSOBJDIR = @COINUTILSOBJDIR@
 COINUTILSSRCDIR = @COINUTILSSRCDIR@
 COIN_BUILD_GLPK_FALSE = @COIN_BUILD_GLPK_FALSE@
@@ -306,6 +310,7 @@ DBG_CFLAGS = @DBG_CFLAGS@
 DBG_CXXFLAGS = @DBG_CXXFLAGS@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
+DYLPDOCDIR = @DYLPDOCDIR@
 DYLPOBJDIR = @DYLPOBJDIR@
 DYLPSRCDIR = @DYLPSRCDIR@
 ECHO = @ECHO@
@@ -332,8 +337,8 @@ LIBEXT = @LIBEXT@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@ $(am__append_4) $(am__append_8) $(am__append_14) \
 	$(am__append_16) $(am__append_23) $(am__append_42) `cat \
-	$(OSIOBJDIR)/osi_addlibs.txt` `cat \
-	$(COINUTILSOBJDIR)/coinutils_addlibs.txt` $(ADDLIBS)
+	$(OSIDOCDIR)/osi_addlibs.txt` `cat \
+	$(COINUTILSDOCDIR)/coinutils_addlibs.txt` $(ADDLIBS)
 LIBTOOL = @LIBTOOL@
 LIBTOOLM4 = @LIBTOOLM4@
 LN_S = @LN_S@
@@ -372,6 +377,7 @@ OSICBC_DFLT_SOLVER_VOL_FALSE = @OSICBC_DFLT_SOLVER_VOL_FALSE@
 OSICBC_DFLT_SOLVER_VOL_TRUE = @OSICBC_DFLT_SOLVER_VOL_TRUE@
 OSICBC_DFLT_SOLVER_XPR_FALSE = @OSICBC_DFLT_SOLVER_XPR_FALSE@
 OSICBC_DFLT_SOLVER_XPR_TRUE = @OSICBC_DFLT_SOLVER_XPR_TRUE@
+OSIDOCDIR = @OSIDOCDIR@
 OSIOBJDIR = @OSIOBJDIR@
 OSISRCDIR = @OSISRCDIR@
 OSLINCDIR = @OSLINCDIR@
@@ -390,9 +396,11 @@ SHELL = @SHELL@
 SPXINCDIR = @SPXINCDIR@
 SPXLIB = @SPXLIB@
 STRIP = @STRIP@
+SYMPHONYDOCDIR = @SYMPHONYDOCDIR@
 SYMPHONYOBJDIR = @SYMPHONYOBJDIR@
 SYMPHONYSRCDIR = @SYMPHONYSRCDIR@
 VERSION = @VERSION@
+VOLDOCDIR = @VOLDOCDIR@
 VOLOBJDIR = @VOLOBJDIR@
 VOLSRCDIR = @VOLSRCDIR@
 VPATH_DISTCLEANFILES = @VPATH_DISTCLEANFILES@

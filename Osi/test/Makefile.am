@@ -49,7 +49,7 @@ if COIN_HAS_CLP
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiClp`
   unitTest_LDADD += ../src/OsiClp/libOsiClp.la \
 	$(CLPOBJDIR)/src/libClp.la
-  LIBS  += `cat $(CLPOBJDIR)/clp_addlibs.txt`
+  LIBS  += `cat $(CLPDOCDIR)/clp_addlibs.txt`
 endif
 
 if COIN_HAS_CBC
@@ -59,7 +59,7 @@ if COIN_HAS_CBC
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiCbc`
   unitTest_LDADD += ../src/OsiCbc/libOsiCbc.la \
 	$(CBCOBJDIR)/src/libCbc.la
-  LIBS += `cat $(CBCOBJDIR)/cbc_addlibs.txt`
+  LIBS += `cat $(CBCDOCDIR)/cbc_addlibs.txt`
 if COIN_HAS_ASL
   unitTest_LDADD += $(ASLLIB)
   AM_CPPFLAGS += $(ASL_CPPFLAGS) -DCOIN_HAS_ASL
@@ -72,12 +72,12 @@ if COIN_HAS_SYMPHONY
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiSym`
   unitTest_LDADD += ../src/OsiSym/libOsiSym.la \
 	$(SYMPHONYOBJDIR)/src/libSym.la
-  LIBS += `cat $(SYMPHONYOBJDIR)/sym_addlibs.txt`
+  LIBS += `cat $(SYMPHONYDOCDIR)/sym_addlibs.txt`
 endif
 
 if COIN_HAS_CGL
   unitTest_LDADD += $(CGLOBJDIR)/src/libCgl.la
-  LIBS += `cat $(CGLOBJDIR)/cgl_addlibs.txt`
+  LIBS += `cat $(CGLDOCDIR)/cgl_addlibs.txt`
 endif
 
 if COIN_HAS_CPX
@@ -95,7 +95,7 @@ if COIN_HAS_DYLP
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiDylp`
   unitTest_LDADD += ../src/OsiDylp/libOsiDylp.la \
 	$(DYLPOBJDIR)/src/Dylp/libDylp.la
-  LIBS += `cat $(DYLPOBJDIR)/dylp_addlibs.txt`
+  LIBS += `cat $(DYLPDOCDIR)/dylp_addlibs.txt`
 endif
 
 if COIN_HAS_FMP
@@ -138,7 +138,7 @@ if COIN_HAS_VOL
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiVol`
   unitTest_LDADD += ../src/OsiVol/libOsiVol.la \
 	$(VOLOBJDIR)/src/libVol.la
-  LIBS += `cat $(VOLOBJDIR)/vol_addlibs.txt`
+  LIBS += `cat $(VOLDOCDIR)/vol_addlibs.txt`
 endif
 
 if COIN_HAS_XPR
@@ -150,8 +150,8 @@ endif
 
 # Finally the Coin library (many of the above need it)
 unitTest_LDADD += ../src/libOsi.la $(COINUTILSOBJDIR)/src/libCoinUtils.la
-LIBS += `cat $(OSIOBJDIR)/osi_addlibs.txt` \
-	`cat $(COINUTILSOBJDIR)/coinutils_addlibs.txt` $(ADDLIBS)
+LIBS += `cat $(OSIDOCDIR)/osi_addlibs.txt` \
+	`cat $(COINUTILSDOCDIR)/coinutils_addlibs.txt` $(ADDLIBS)
 
 test: unitTest$(EXEEXT)
 	if test x"$(DIRNETLIB)" != x; then \

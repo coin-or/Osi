@@ -208,6 +208,8 @@ public:
     inline void eraseRowCut(int i);
     /// Remove i'th column cut from collection
     inline void eraseColCut(int i); 
+    /// Get pointer to i'th row cut and remove ptr from collection
+    inline OsiRowCut * rowCutPtrAndZap(int i);
     /*! \brief Clear all row cuts without deleting them
     
       Handy in case one wants to use CGL without managing cuts in one of
@@ -444,6 +446,15 @@ void OsiCuts::eraseColCut(int i)
 {   
   delete colCutPtrs_[i];
   colCutPtrs_.erase( colCutPtrs_.begin()+i );
+}
+/// Get pointer to i'th row cut and remove ptr from collection
+OsiRowCut * 
+OsiCuts::rowCutPtrAndZap(int i)
+{
+  OsiRowCut * cut = rowCutPtrs_[i];
+  rowCutPtrs_[i]=NULL;
+  rowCutPtrs_.erase( rowCutPtrs_.begin()+i ); 
+  return cut;
 }
 void OsiCuts::dumpCuts()
 {

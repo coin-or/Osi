@@ -1045,6 +1045,9 @@ public:
   /** Sets up working basis as a copy of input and puts in as basis
   */
   void setBasis( const CoinWarmStartBasis & basis);
+  /// Just puts current basis_ into ClpSimplex model
+  inline void setBasis( )
+  { setBasis(basis_,modelPtr_);}
   /// Delete all scale factor stuff and reset option
   void deleteScaleFactors();
   /// If doing fast hot start then ranges are computed

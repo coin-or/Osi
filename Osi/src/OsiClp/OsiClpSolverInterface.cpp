@@ -3447,7 +3447,7 @@ OsiClpSolverInterface::getBasis(ClpSimplex * model) const
   //basis.print();
   return basis;
 }
-// Sets up basis
+// Sets up basis  
 void 
 OsiClpSolverInterface::setBasis ( const CoinWarmStartBasis & basis,
 				  ClpSimplex * model)

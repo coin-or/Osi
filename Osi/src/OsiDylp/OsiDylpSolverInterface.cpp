@@ -5305,8 +5305,6 @@ const CoinPackedMatrix* ODSI::getMatrixByCol () const
 */
   int col_count = getNumCols() ;
   int coeff_count = consys->mtx.coeffcnt ;
-  assert((col_count > 0 && coeff_count > 0) ||
-	 (col_count == 0 && coeff_count == 0)) ;
 
   int* start = new int[col_count+1] ;
   int* len = new int[col_count] ;

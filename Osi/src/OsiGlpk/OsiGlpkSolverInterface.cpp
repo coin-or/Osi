@@ -299,8 +299,7 @@ void OGSI::resolve()
 /*
   Call glpk's built-in MIP solver. Any halfway recent version (from glpk 4.4,
   at least) will have lpx_intopt, a branch-and-cut solver. The presence of cut
-  generators is more recent. LPX_K_USECUTS appears in 4.9; the parameter value
-  appears to be unused in this version. LPX_C_ALL appears in 4.10.
+  generators is more recent.
 */
 void OGSI::branchAndBound ()
 
@@ -314,8 +313,7 @@ void OGSI::branchAndBound ()
   we can manage.
 
   lpx_intopt does not require an optimal LP solution as a starting point, so
-  we can call it directly. Enable cuts if they're available. This is a bit of a
-  pain, as the interface has changed since it was first introduced in 4.9.
+  we can call it directly.
 
   lpx_integer needs an initial optimal solution to the relaxation.
 */
@@ -323,13 +321,6 @@ void OGSI::branchAndBound ()
   { int err = LPX_E_FAULT ;
 
 #   ifdef GLPK_HAS_INTOPT
-#   ifdef LPX_K_USECUTS
-#   ifdef LPX_C_ALL
-    lpx_set_int_parm(model,LPX_K_USECUTS,LPX_C_ALL) ;
-#   else
-    lpx_set_int_parm(model,LPX_K_USECUTS,0) ;
-#   endif
-#   endif
     err = lpx_intopt(model) ;
 #   else
     if (lpx_get_status(model) != LPX_OPT)
@@ -347,8 +338,9 @@ void OGSI::branchAndBound ()
   LPX_I_UNDEF says the MIP solution is undefined. LPX_I_FEAS says that in
   integer feasible solution was found but not proven optimal (termination of
   search due to some limit is the common cause). It's not clear what to do
-  with these last two; currently, they are not really reflected in
-  termination status.
+  with LPX_I_UNDEF; currently, it is not really reflected in
+  termination status. LPX_I_FEAS is reflected by the OsiGlpk specific method
+  isFeasible().
 
   Various other codes are returned by lpx_intopt (lpx_integer returns a
   subset of these).  LPX_E_NOPFS (LPX_E_NODFS) indicate no primal (dual)
@@ -356,7 +348,8 @@ void OGSI::branchAndBound ()
   attempting the root relaxation. LPX_E_ITLIM (LPX_E_TMLIM) indicate
   iteration (time) limit reached. Osi doesn't provide for time limit, so lump
   it in with iteration limit (an arguable choice, but seems better than the
-  alternatives).  LPX_E_SING (lp solver failed due to singular basis) is
+  alternatives) and have extra method isTimeLimitReached().
+  LPX_E_SING (lp solver failed due to singular basis) is
   legimately characterised as abandoned.  LPX_E_FAULT indicates a structural
   problem (problem not of class MIP, or an integer variable has a non-integer
   bound), which really translates into internal confusion in OsiGlpk.
@@ -3070,6 +3063,12 @@ void OGSI::gutsOfCopy (const OsiGlpkSolverInterface &source)
   intParam = lpx_get_int_parm(srclpx,LPX_K_MSGLEV) ;
   lpx_set_int_parm(lpx,LPX_K_MSGLEV,intParam) ;
   messageHandler()->setLogLevel(intParam) ;
+
+# ifdef LPX_K_USECUTS
+  intParam=lpx_get_int_parm(lp_,LPX_K_USECUTS);
+  lpx_set_int_parm(lp_,LPX_K_USECUTS,intParam);
+# endif
+  
 /*
   Now --- do we have a problem loaded? If not, we're done.
 */
@@ -3216,6 +3215,20 @@ void OGSI::gutsOfConstructor()
 */
   lpx_set_int_parm(lp_,LPX_K_MSGLEV,1) ;
   messageHandler()->setLogLevel(1) ;
+  
+/*
+  Enable cuts if they're available. This is a bit of a pain,
+  as the interface has changed since it was first introduced in 4.9.
+  LPX_K_USECUTS appears in 4.9; the parameter value
+  appears to be unused in this version. LPX_C_ALL appears in 4.10.
+*/
+# ifdef LPX_K_USECUTS
+# ifdef LPX_C_ALL
+  lpx_set_int_parm(lp_,LPX_K_USECUTS,LPX_C_ALL) ;
+# else
+  lpx_set_int_parm(lp_,LPX_K_USECUTS,0) ;
+# endif
+# endif
 }
 
 //-----------------------------------------------------------------------------

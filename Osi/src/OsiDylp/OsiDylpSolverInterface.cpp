@@ -103,17 +103,18 @@ namespace {
 #define ODSI_STRICTLY_FRESH 1
 
 /*
-  The following symbols are useful only for detailed debugging.
+  The following symbols are useful only for detailed debugging. Leave them set
+  to 0 to disable traces.
 
   ODSI_TRACK_FRESH	track how a solution is made stale/fresh
   ODSI_TRACK_SOLVERS	track creation, use, and deletion of ODSI objects
-  ODSI_TRACK_ACTIVE	track creation and deletion of activeBasis (the
+  ODSI_TRACK_ACTIVE	track creation and deletion of the active basis (the
 			active warm start object)
 */
 
-// #define ODSI_TRACK_FRESH 1
-// #define ODSI_TRACK_SOLVERS 1
-// #define ODSI_TRACK_ACTIVE 1
+#define ODSI_TRACK_FRESH 0
+#define ODSI_TRACK_SOLVERS 0
+#define ODSI_TRACK_ACTIVE 0
 
 /*! \brief Define to enable paranoid checks.
 
@@ -132,8 +133,6 @@ namespace {
 #ifndef ODSI_PARANOIA
 # define ODSI_PARANOIA 1
 #endif
-#undef ODSI_PARANOIA
-#define ODSI_PARANOIA 2
 
 
 /*! \brief Define to enable statistics collection in dylp
@@ -1151,18 +1150,20 @@ void ODSI::pessimal_primal ()
   { pessbasis->setArtifStatus(inv(i),CWSB::basic) ;
     pessbasis->setConStatus(inv(i),CWSB::atLowerBound) ; }
 /*
-  Set pessbasis to be the active basis and return.
+  Set pessbasis to be the active basis and return. The basis state is modified
+  because we havn't set the basis into an lpprob object.
 */
 # if ODSI_TRACK_ACTIVE > 0
   std::cout
     << "ODSI(" << std::hex << this
     << ")::pessimal_primal: replacing active basis "
-    << activeBasis << " with " << pessbasis << std::dec
+    << activeBasis.basis << " with " << pessbasis << std::dec
     << "." << std::endl ;
 # endif
-  delete activeBasis ;
-  activeIsModified = true ;
-  activeBasis = pessbasis ;
+  delete activeBasis.basis ;
+  activeBasis.basis = pessbasis ;
+  activeBasis.condition = ODSI::basisModified ;
+  activeBasis.balance = 0 ;
   
   return ; }
 
@@ -1784,11 +1785,7 @@ ODSI::OsiDylpSolverInterface ()
     solvername("dylp"),
     mps_debug(0),
     hotstart_fallback(0),
-    activeBasis(0),
-    activeIsModified(false),
     solnIsFresh(false),
-    addedColCnt(0),
-    addedRowCnt(0),
 
     _objval(0),
     _col_obj(0),
@@ -1820,6 +1817,12 @@ ODSI::OsiDylpSolverInterface ()
     saved_matrix_by_row(0)
 
 {
+/*
+  Initialise active basis structure.
+*/
+  activeBasis.basis = 0 ;
+  activeBasis.condition = ODSI::basisNone ;
+  activeBasis.balance = 0 ;
 /*
   Replace the OSI default messages with ODSI messages.
 */
@@ -1876,10 +1879,6 @@ ODSI::OsiDylpSolverInterface (const OsiDylpSolverInterface& src)
     solvername(src.solvername),
     mps_debug(src.mps_debug),
     hotstart_fallback(0),	// do not copy hot start information
-    activeBasis(0),
-    activeIsModified(false),
-    addedColCnt(src.addedColCnt),
-    addedRowCnt(src.addedRowCnt),
   
     _objval(src._objval),
     _col_obj(0),
@@ -1926,9 +1925,12 @@ ODSI::OsiDylpSolverInterface (const OsiDylpSolverInterface& src)
   CLONE(lpopts_struct,src.resolveOptions,resolveOptions) ;
   CLONE(lptols_struct,src.tolerances,tolerances) ;
 
-  if (src.activeBasis)
-  { activeBasis = src.activeBasis->clone() ;
-    activeIsModified = src.activeIsModified ; }
+  if (src.activeBasis.condition != ODSI::basisNone)
+  { activeBasis.basis = src.activeBasis.basis->clone() ; }
+  else
+  { activeBasis.basis = 0 ; }
+  activeBasis.condition = src.activeBasis.condition ;
+  activeBasis.balance = src.activeBasis.balance ;
 
   int n = getNumCols() ;
   int m = getNumRows() ;
@@ -2009,12 +2011,12 @@ OsiDylpSolverInterface &ODSI::operator= (const OsiDylpSolverInterface &rhs)
     odsiInfinity = rhs.odsiInfinity ;
     mps_debug = rhs.mps_debug ;
 
-    if (rhs.activeBasis)
-    { activeBasis = rhs.activeBasis->clone() ;
-      activeIsModified = rhs.activeIsModified ; }
-
-    addedColCnt = rhs.addedColCnt ;
-    addedRowCnt = rhs.addedRowCnt ;
+    if (rhs.activeBasis.condition != ODSI::basisNone)
+    { activeBasis.basis = rhs.activeBasis.basis->clone() ; }
+    else
+    { activeBasis.basis = 0 ; }
+    activeBasis.condition = rhs.activeBasis.condition ;
+    activeBasis.balance = rhs.activeBasis.balance ;
 
     _objval = rhs._objval ;
     _col_obj = 0 ;
@@ -2131,23 +2133,22 @@ void ODSI::destruct_problem (bool preserve_interface)
     << "ODSI(" << std::hex << this << std::dec
     << ")::destruct_problem." << std::endl ;
 # endif
-  addedColCnt = 0 ;
-  addedRowCnt = 0 ;
  
   if (hotstart_fallback)
   { delete hotstart_fallback ;
     hotstart_fallback = 0 ; }
-  if (activeBasis)
+  if (activeBasis.condition != ODSI::basisNone)
   { 
 #   if ODSI_TRACK_ACTIVE > 0
     std::cout
       << "ODSI(" << std::hex << this
       << ")::destruct_problem: deleting active basis "
-      << activeBasis << std::dec << "." << std::endl ;
+      << activeBasis.basis << std::dec << "." << std::endl ;
 #   endif
-    delete activeBasis ;
-    activeBasis = 0 ;
-    activeIsModified = false ; }
+    delete activeBasis.basis ;
+    activeBasis.basis = 0 ;
+    activeBasis.condition = ODSI::basisNone ;
+    activeBasis.balance = 0 ; }
 
   destruct_cache(true,true) ;
 
@@ -2739,35 +2740,42 @@ void ODSI::deleteRows (int count, const int* rows)
     << " rows." << std::endl ;
 # endif
 /*
-  Now, see if there's an active basis. If so, check that all the constraints
-  to be deleted are slack. If they are, we can delete them from activeBasis
-  and still guarantee a valid basis. If not, throw away activeBasis.
+  If there's an active basis, check that all the constraints we deleted were
+  slack. If they were, we can delete them from the active basis and still
+  guarantee a valid basis. If not, we'll need to do some work if the client
+  ever asks us to use this basis.
 */
-  if (activeBasis)
-  { bool allslack = true ;
+  if (activeBasis.condition != ODSI::basisNone)
+  { int nonbasicLogical = 0 ;
     OsiDylpWarmStartBasis *odwsb =
-      dynamic_cast<OsiDylpWarmStartBasis *>(activeBasis) ;
+      dynamic_cast<OsiDylpWarmStartBasis *>(activeBasis.basis) ;
     for (int k = count-1 ; k >= 0 ; k--)
     { int i = lclrows[k] ;
       if (odwsb->getArtifStatus(i) != CWSB::basic)
-      { allslack = false ;
-	break ; } }
-    if (allslack == true)
-    { odwsb->compressRows(count,rows) ;
-      activeIsModified = true ;
-      resolveOptions->forcewarm = true ; }
+      { nonbasicLogical++ ; } }
+    odwsb->compressRows(count,rows) ;
+    resolveOptions->forcewarm = true ;
+    activeBasis.balance += nonbasicLogical ;
+    if (activeBasis.balance == 0)
+    { activeBasis.condition = ODSI::basisModified ; }
     else
-    { 
-#     if ODSI_TRACK_ACTIVE > 0
-      std::cout
-	<< "ODSI(" << std::hex << this
-	<< ")::deleteRows: deleted tight constraints, deleting basis "
-	<< activeBasis << std::dec
-	<< "." << std::endl ;
-#     endif
-      delete activeBasis ;
-      activeBasis = 0 ;
-      activeIsModified = false ; } }
+    { activeBasis.condition = ODSI::basisDamaged ; }
+
+#   if ODSI_TRACK_ACTIVE > 0
+    if (nonbasicLogical > 0)
+    { std::cout
+	<< "ODSI(" << std::hex << this << std::dec 
+	<< ")::deleteRows: deleted " << nonbasicLogical
+	<< " tight constraints, basis "
+	<< std::hex << activeBasis.basis << std::dec
+	<< " is " ;
+      if (activeBasis.balance == 0)
+      { std::cout << "undamaged" ; }
+      else
+      { std::cout << "damaged" ; }
+      std::cout << "." << std::endl ; }
+#   endif
+  }
 
   destruct_cache(true,false) ; }
 
@@ -2918,34 +2926,45 @@ void ODSI::deleteCols (int count, const int* cols)
 # endif
 /*
   Now, see if there's an active basis. If so, check that all the variables to
-  be deleted are nonbasic. If they are, we can delete them from activeBasis
-  and still guarantee a valid basis. If not, throw away activeBasis.
+  be deleted are nonbasic. If they are, we can delete them from the active
+  basis and still guarantee a valid basis.
+
+  Deletion of basic variables is problematic, in the sense that we'll be short
+  when it comes time to use the basis. SetWarmStart will simply force as many
+  logicals as needed into the basis. Still, this isn't something to be done
+  lightly, and ODSI can be compiled to issue a warning.
 */
-  if (activeBasis)
-  { bool allnonbasic = true ;
+  if (activeBasis.condition != ODSI::basisNone)
+  { int basicVariable = 0 ;
     OsiDylpWarmStartBasis *odwsb =
-      dynamic_cast<OsiDylpWarmStartBasis *>(activeBasis) ;
+      dynamic_cast<OsiDylpWarmStartBasis *>(activeBasis.basis) ;
     for (int k = count-1 ; k >= 0 ; k--)
     { int j = lclcols[k] ;
       if (odwsb->getStructStatus(j) == CWSB::basic)
-      { allnonbasic = false ;
-	break ; } }
-    if (allnonbasic == true)
-    { odwsb->deleteColumns(count,cols) ;
-      activeIsModified = true ;
-      resolveOptions->forcewarm = true ; }
+      { basicVariable++ ; } }
+    odwsb->deleteColumns(count,cols) ;
+    resolveOptions->forcewarm = true ;
+    activeBasis.balance -= basicVariable ;
+    if (activeBasis.balance == 0)
+    { activeBasis.condition = ODSI::basisModified ; }
     else
-    { 
-#     if ODSI_TRACK_ACTIVE > 0
-      std::cout
-	<< "ODSI(" << std::hex << this
-	<< ")::deleteCols: deleted basic variables, deleting basis "
-	<< activeBasis << std::dec
-	<< "." << std::endl ;
+    { activeBasis.condition = ODSI::basisDamaged ; }
+
+#   if ODSI_TRACK_ACTIVE > 0
+    if (basicVariable > 0)
+    { std::cout
+	<< "ODSI(" << std::hex << this << std::dec
+	<< ")::deleteCols: deleted " << basicVariable
+	<< " basic variables; basis "
+	<< std::hex << activeBasis.basis << std::dec
+	<< " is " ;
+      if (activeBasis.balance == 0)
+      { std::cout << "undamaged" ; }
+      else
+      { std::cout << "damaged" ; }
+      std::cout << "." << std::endl ; }
 #     endif
-      delete activeBasis ;
-      activeBasis = 0 ;
-      activeIsModified = false ; } }
+  }
 
   destruct_cache(false,true) ; }
 
@@ -4443,6 +4462,9 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
   corresponding dual is flipped. (Or just look at it as yA = (-y)(-A).)  We
   need to walk the basis here. If dylp is in dynamic mode, there may be fewer
   active constraints than when we started.
+
+  NOTE: Stefan Vigerske reports a status problem that may well boil down to
+  this bit of code. Strike me I probably want to flip the row status.
 */
   if (flips > 0)
   { for (ndx = lpprob->consys->concnt ; ndx > 0 ; ndx--)
@@ -4580,12 +4602,13 @@ void ODSI::initialSolve ()
   std::cout
     << "ODSI(" << std::hex << this
     << ")::initialSolve(1): deleting active basis "
-    << activeBasis << std::dec
+    << activeBasis.basis << std::dec
     << "." << std::endl ;
 # endif
-  delete activeBasis ;
-  activeBasis = 0 ;
-  activeIsModified = false ;
+  delete activeBasis.basis ;
+  activeBasis.basis = 0 ;
+  activeBasis.condition = ODSI::basisNone ;
+  activeBasis.balance = 0 ;
   destruct_col_cache(false) ;
   destruct_row_cache(false) ;
 /*
@@ -4677,12 +4700,13 @@ void ODSI::initialSolve ()
       std::cout
 	<< "ODSI(" << std::hex << this
 	<< ")::initialSolve(2): deleting active basis "
-	<< activeBasis << std::dec
+	<< activeBasis.basis << std::dec
 	<< "." << std::endl ;
 #     endif
-      delete activeBasis ;
-      activeBasis = 0 ;
-      activeIsModified = false ; }
+      delete activeBasis.basis ;
+      activeBasis.basis = 0 ;
+      activeBasis.condition = ODSI::basisNone ;
+      activeBasis.balance = 0 ; }
 #   ifdef ODSI_INFOMSGS
     hdl->message(ODSI_SHORTSTATS,messages_)
       << consys->nme << secondLPTime-startTime
@@ -4726,12 +4750,14 @@ void ODSI::initialSolve ()
     { _objval = -getObjSense()*getInfinity() ; }
     else
     { _objval = getObjSense()*lpprob->obj ; }
-    activeBasis = this->getWarmStart() ;
+    activeBasis.basis = this->getWarmStart() ;
+    activeBasis.condition = ODSI::basisFresh ;
+    activeBasis.balance = 0 ;
 #   if ODSI_TRACK_ACTIVE > 0
     std::cout
       << "ODSI(" << std::hex << this
       << ")::initialSolve: setting active basis "
-      << activeBasis << std::dec
+      << activeBasis.basis << std::dec
       << "." << std::endl ;
 #   endif
   }
@@ -5642,7 +5668,7 @@ void ODSI::branchAndBound ()
 /*!
   This routine returns an empty OsiDylpWarmStartBasis object. Its purpose is
   to provide a way to give a client a warm start basis object of the
-  appropriate type, which can resized and modified as desired.
+  appropriate type, which can be cloned, resized, and modified as desired.
 */
 
 CoinWarmStart *ODSI::getEmptyWarmStart () const
@@ -5664,15 +5690,22 @@ CoinWarmStart* ODSI::getWarmStart () const
   be invisible outside the solver. The status of nonbasic logicals is not
   reported, nor does dylp expect to receive it. For completeness, however,
   getWarmStart will synthesize status information for nonbasic logicals.
+
+  getWarmStart doesn't install an activeBasis, though it will clone from it if
+  it's present. This is a debatable decision. For now, I'm more comfortable
+  with explicitly installing activeBasis at the appropriate call points within
+  ODSI. I don't want to worry about the client calling getWarmStart and
+  installing activeBasis in a way I didn't anticipate.
 */
 
 { int i,j,k,m,n ;
   flags statj ;
 
 /*
-  If we have an active basis, return a clone.
+  If we have a fresh active basis, return a clone.
 */
-  if (activeBasis) { return (activeBasis->clone()) ; }
+  if (activeBasis.condition == ODSI::basisFresh)
+  { return (activeBasis.basis->clone()) ; }
 /*
   Create an empty ODWSB object. If no solution exists, we can return
   immediately.
@@ -5768,6 +5801,70 @@ CoinWarmStart* ODSI::getWarmStart () const
   return (wsb) ; }
 
 
+/*
+  A helper routine to patch a basis with excess basic variables. This comes
+  about due to deletion of tight constraints. Ideally, we could scan the
+  basis looking for basic variables at bound and force them to be nonbasic.
+  Unfortunately, we can't do that, because by definition we'll arrive here
+  only if the solution is stale due to changes in the constraint system.
+
+  Given that the routine is trivially small, why not just integrate it with
+  setWarmStart? Because setWarmStart can be called by the client to impose a
+  basis.  This bit of patching is needed only to correct the active basis
+  held within ODSI, and that's only necessary at a call to resolve().
+  (Arguably, we could check if the basis parameter matches ODSI's active
+  basis or hot start fallback basis, but this seems a bit more clean.)
+
+  Why, then, does setWarmStart handle the case of balance < 0? Because we can
+  process the entire basis, as given, before we're confronted with the need to
+  find a few more basic variables. So the user's basis will be set as given,
+  and fixed if necessary.
+*/
+
+void ODSI::reduceActiveBasis ()
+
+{ int n = getNumCols() ;
+  int m = getNumRows() ;
+  CoinWarmStartBasis *wsb = dynamic_cast<CWSB *>(activeBasis.basis) ;
+
+# if ODSI_TRACK_ACTIVE > 0
+  std::cout
+      << "ODSI(" << std::hex << this
+      << ")::reduceActiveBasis: active basis is "
+      << activeBasis.basis << std::dec
+      << ", entering balance " << activeBasis.balance
+      << "." << std::endl ;
+#   endif
+
+  assert(activeBasis.balance > 0) ;
+
+/*
+  Start pushing variables out of the basis until it's balanced. Arbitrarily set
+  to nonbasic at lower bound. If we bring the basis into balance, we can change
+  its condition to basisModified.
+*/
+  for (int j = 0 ; j < n && activeBasis.balance > 0 ; j++)
+  { if (wsb->getStructStatus(j) == CWSB::basic)
+    { wsb->setStructStatus(j,CWSB::atLowerBound) ;
+      activeBasis.balance-- ; } }
+  if (activeBasis.balance == 0)
+  { activeBasis.condition == ODSI::basisModified ; }
+
+# if ODSI_TRACK_ACTIVE > 0
+  std::cout
+      << "ODSI(" << std::hex << this
+      << ")::reduceActiveBasis: basis patch " << std::dec ;
+  if (activeBasis.balance == 0)
+  { std::cout << "succeeded." ; }
+  else
+  { std::cout << "failed." ; }
+  std::cout << std::endl ;
+# endif
+
+  return ; }
+
+
+
 /*!
   This routine installs the basis snapshot from an OsiDylpWarmStartBasis
   (ODWSB) object and sets ODSI options so that dylp will attempt a warm start
@@ -5812,8 +5909,8 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
 /*
   By definition, a null parameter is a request to update the active basis from
   the solver. Since ODSI does this on every call to the solver, no further
-  action is required. All we need to do here is assert that activeBasis
-  exists.
+  action is required. All we need to do here is assert that an active basis
+  exists and is minimally consistent.
 */
   if (!ws)
   { 
@@ -5821,10 +5918,12 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
     std::cout
       << "ODSI(" << std::hex << this
       << ")::setWarmStart: sync request; current active basis is "
-      << activeBasis << std::dec
+      << activeBasis.basis << std::dec
       << "." << std::endl ;
 #   endif
-    assert(activeBasis) ;
+    assert(activeBasis.basis) ;
+    assert(activeBasis.condition == ODSI::basisFresh) ;
+    assert(activeBasis.balance == 0) ;
     return (true) ; }
 /*
   Use a dynamic cast to make sure we have a CWSB. Then check the size ---
@@ -5842,12 +5941,13 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
     std::cout
       << "ODSI(" << std::hex << this
       << ")::setWarmStart: deleting active basis "
-      << activeBasis << std::dec
+      << activeBasis.basis << std::dec
       << " (0x0 CWSB)." << std::endl ;
 #   endif
-    delete activeBasis ;
-    activeBasis = 0 ;
-    activeIsModified = false ;
+    delete activeBasis.basis ;
+    activeBasis.basis = 0 ;
+    activeBasis.condition = ODSI::basisNone ;
+    activeBasis.balance = 0 ;
     return (true) ; }
 /*
   Use a dynamic cast to see if we have an OsiDylpWarmStartBasis. If not,
@@ -5870,12 +5970,13 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
     std::cout
       << "ODSI(" << std::hex << this
       << ")::setWarmStart: deleting active basis "
-      << activeBasis << std::dec
+      << activeBasis.basis << std::dec
       << " (0x0 ODWSB)." << std::endl ;
 #   endif
-    delete activeBasis ;
-    activeBasis = 0 ;
-    activeIsModified = false ;
+    delete activeBasis.basis ;
+    activeBasis.basis = 0 ;
+    activeBasis.condition = ODSI::basisNone ;
+    activeBasis.balance = 0 ;
     if (ourBasis == true) delete wsb ;
     return (true) ; }
 /*
@@ -6076,25 +6177,26 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
   wsb is the active basis, and we're simply installing it in lpprob). If we
   already have a copy, so much the better.
 */
-  if (wsb != activeBasis)
+  if (wsb != activeBasis.basis)
   { 
 #   if ODSI_TRACK_ACTIVE > 0
     std::cout
       << "ODSI(" << std::hex << this
       << ")::setWarmStart: replacing active basis "
-      << activeBasis << " with " ;
+      << activeBasis.basis << " with " ;
 #   endif
-    delete activeBasis ;
+    delete activeBasis.basis ;
     if (ourBasis == false)
-    { activeBasis = wsb->clone() ; }
+    { activeBasis.basis = wsb->clone() ; }
     else
-    { activeBasis = const_cast<OsiDylpWarmStartBasis *>(wsb) ;
+    { activeBasis.basis = const_cast<OsiDylpWarmStartBasis *>(wsb) ;
       ourBasis = false ; }
 #   if ODSI_TRACK_ACTIVE > 0
     std::cout
-      << activeBasis << std::dec << "." << std::endl ;
+      << activeBasis.basis << std::dec << "." << std::endl ;
 #   endif
-    activeIsModified = false ; }
+    activeBasis.condition = ODSI::basisFresh ;
+    activeBasis.balance = 0 ; }
   
   if (ourBasis == true) delete wsb ;
 
@@ -6109,7 +6211,7 @@ void ODSI::resolve ()
 
   If we're reoptimising, then the basis should be ready and we should have
   warm start information. For our purposes here, that boils down to the
-  presence of an activeBasis object (created by setWarmStart() or a recent call
+  presence of an active basis (created by setWarmStart() or a recent call
   to the solver).
 
   Note that we don't actually force a warm start unless we install the active
@@ -6141,37 +6243,47 @@ void ODSI::resolve ()
     dy_initbasis(count,initialSolveOptions->factor+5,0) ;
     basis_ready = true ; }
 /*
-  We can hope that activeBasis is already installed in the lpprob, but there
-  are several circumstances to trap for here:
-    * The user has been playing with cuts since the last call to dylp, but
-      kept within the rules for modifying the active basis. In this case
-      activeIsModified will be true, and we need to install it.
+  We can hope that the active basis is already installed in the lpprob, but
+  there are several circumstances to trap for here:
+
+    * The user has modified the constraint system since the last call to dylp.
+      Depending on the modifications, the basis may be useable (basisModified)
+      or it may need some patching (basisDamaged). setWarmStart can handle
+      everything except a damaged basis with excess basic variables; for this
+      we'll call a helper (reduceActiveBasis) first.
+
     * The solver has been used by some other ODSI object since the last
       call by this object. In this case, we've just done a detach_dylp()
-      and dylp_owner will be null. Again, we need to install activeBasis.
+      and dylp_owner will be null. Again, we need to install the active
+      basis (which may be modified or damaged).
+
   If we have an active basis, install it and force dylp to warm start. If the
   installation fails, remove activeBasis and throw.
 */
-  if (!activeBasis)
-  { throw CoinError("Warm start failed --- empty active basis.",
+  if (activeBasis.condition == ODSI::basisNone)
+  { throw CoinError("Warm start failed --- no active basis.",
 		    "resolve","OsiDylpSolverInterface") ; }
   else
-  if (activeBasis && (activeIsModified == true || dylp_owner == 0))
-  { if (setWarmStart(activeBasis) == false)
+  if (dylp_owner == 0 || activeBasis.condition != ODSI::basisFresh)
+  { if (activeBasis.condition == ODSI::basisDamaged && activeBasis.balance > 0)
+    { reduceActiveBasis() ; }
+    if (setWarmStart(activeBasis.basis) == false)
     { 
 #     if ODSI_TRACK_ACTIVE > 0
       std::cout
 	<< "ODSI(" << std::hex << this
 	<< ")::resolve: deleting basis "
-	<< activeBasis << std::dec
+	<< activeBasis.basis << std::dec
 	<< "." << std::endl ;
 #     endif
-      delete activeBasis ;
-      activeBasis = 0 ;
-      activeIsModified = false ;
+      delete activeBasis.basis ;
+      activeBasis.basis = 0 ;
+      activeBasis.condition = ODSI::basisNone ;
+      activeBasis.balance = 0 ;
       
       throw CoinError("Warm start failed --- invalid active basis.",
 		      "resolve","OsiDylpSolverInterface") ; }
+
     resolveOptions->forcewarm = true ; }
 /*
   Choose options appropriate for reoptimising and go to it. Phase is not
@@ -6224,12 +6336,13 @@ void ODSI::resolve ()
   std::cout
     << "ODSI(" << std::hex << this
     << ")::resolve: deleting active basis "
-    << activeBasis << std::dec
+    << activeBasis.basis << std::dec
     << "." << std::endl ;
 # endif
-  delete activeBasis ;
-  activeBasis = 0 ;
-  activeIsModified = false ;
+  delete activeBasis.basis ;
+  activeBasis.basis = 0 ;
+  activeBasis.condition = ODSI::basisNone ;
+  activeBasis.balance = 0 ;
   if (lpOK && flgon(lpprob->ctlopts,lpctlDYVALID))
   { dylp_owner = this ;
 #   ifdef ODSI_INFOMSGS
@@ -6241,14 +6354,18 @@ void ODSI::resolve ()
     { _objval = -getObjSense()*getInfinity() ; }
     else
     { _objval = getObjSense()*lpprob->obj ; }
-    activeBasis = this->getWarmStart() ;
+    activeBasis.basis = this->getWarmStart() ;
+    activeBasis.condition = ODSI::basisFresh ;
+    activeBasis.balance = 0 ;
+
 #   if ODSI_TRACK_ACTIVE > 0
     std::cout
       << "ODSI(" << std::hex << this
       << ")::resolve: setting active basis "
-      << activeBasis << std::dec
+      << activeBasis.basis << std::dec
       << "." << std::endl ;
 #   endif
+
     resolveOptions->forcewarm = false ; }
   else
   { dylp_owner = 0 ; }
@@ -6416,23 +6533,25 @@ void ODSI::solveFromHotStart ()
   std::cout
     << "ODSI(" << std::hex << this
     << ")::solveFromHotStart: deleting active basis "
-    << activeBasis << std::dec
+    << activeBasis.basis << std::dec
     << "." << std::endl ;
 # endif
-  delete activeBasis ;
-  activeBasis = 0 ;
-  activeIsModified = false ;
+  delete activeBasis.basis ;
+  activeBasis.basis = 0 ;
+  activeBasis.condition = ODSI::basisNone ;
+  activeBasis.balance = 0 ;
   if (lpOK && flgon(lpprob->ctlopts,lpctlDYVALID))
   { if (lpprob->lpret == lpUNBOUNDED)
     { _objval = -getObjSense()*getInfinity() ; }
     else
     { _objval = getObjSense()*lpprob->obj ; }
-    activeBasis = this->getWarmStart() ;
+    activeBasis.basis = this->getWarmStart() ;
+    activeBasis.condition = ODSI::basisFresh ;
 #   if ODSI_TRACK_ACTIVE > 0
     std::cout
       << "ODSI(" << std::hex << this
       << ")::solveFromHotStart: setting active basis "
-      << activeBasis << std::dec
+      << activeBasis.basis << std::dec
       << "." << std::endl ;
 #   endif
   }

@@ -510,7 +510,7 @@ OsiMskSolverInterface::setIntParam(OsiIntParam key, int value)
       hotStartMaxIteration_ = max(0,value);
       retval = true;
       break;
-    #if MSK_OSI_HAS_NAME_DISCIPLINE > 1
+    #if MSK_OSI_HAS_NAME_DISCIPLINE > 0
     case OsiNameDiscipline:
       retval = false;
       break;
@@ -648,7 +648,7 @@ OsiMskSolverInterface::getIntParam(OsiIntParam key, int& value) const
       value = hotStartMaxIteration_;
       retval = true;
       break;
-      #if MSK_OSI_HAS_NAME_DISCIPLINE > 1
+      #if MSK_OSI_HAS_NAME_DISCIPLINE > 0
       case OsiNameDiscipline:
         retval = false;
         break;

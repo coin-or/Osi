@@ -165,7 +165,7 @@ void test_starts (const std::string& mpsDir)
 
   int level = 5 ;
   level |= 0x10 ;
-  osi->setHintParam(OsiDoReducePrint,true,OsiForceDo,&level) ;
+  osi->setHintParam(OsiDoReducePrint,false,OsiForceDo,&level) ;
   osi->getHintParam(OsiDoReducePrint,sense,strength,p_info) ;
   std::cout << "Verbosity now maxed at "
 	    << *reinterpret_cast<int *>(p_info) << ".\n" ;

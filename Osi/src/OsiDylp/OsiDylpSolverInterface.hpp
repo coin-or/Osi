@@ -416,7 +416,12 @@ public:
 
   CoinWarmStart *getWarmStart() const ;
 
-  /*! \brief Apply a warm start object. */
+  /*! \brief Apply a warm start object.
+  
+    By definition, a null parameter is a request to synch the warm start basis
+    with the solver. ODSI interprets a 0x0 basis as a request to remove warm
+    start information.
+  */
 
   bool setWarmStart(const CoinWarmStart *warmStart) ;
 
@@ -781,27 +786,59 @@ private:
 
   bool mps_debug ;
 
-  /*! \brief Warm start object used as a fallback for hot start */
+  /*! \brief Warm start object used as a fallback for hot start
+  
+    If some other ODSI object uses the underlying solver between calls
+    to #solveFromHotStart(), the solver must be reloaded. This basis is kept
+    for just such a situation.
+  */
 
   CoinWarmStart *hotstart_fallback ;
 
-  /*! \brief Current basis
-  
-    Set with each successful return from the solver (where successful means a
-    result of optimal, infeasible, unbounded, or iterlim), or by an explicit
-    call to #setWarmStart() with a valid basis. Note that calling
-    #setWarmStart() with an empty basis or a null parameter is taken as a
-    request to delete activeBasis.
+  /*! \brief Codes for basis condition
+
+    - basisNone: no basis exists
+    - basisFresh: the basis is in sync with the solver
+    - basisModified: `good' constraint system modifications have occurred
+    - basisDamaged: `bad' constraint system modifications have occurred
+
+    `Good' modifications are deletion of a loose constraint (specifically, a
+    constraint with a basic logical) or a variable at bound (specifically, a
+    nonbasic variable). `Bad' modifications are deletion of a tight constraint
+    (specifically, a constraint with a nonbasic logical) or deletion of a
+    variable not at bound (specifically, a basic variable). Bad modifications
+    will in general cause the basis to be primal and/or dual infeasible after
+    it's patched up.
+
+    A subtle point: basisModified will also be used in situations where ODSI
+    has constructed a basis but not set it into a lpprob structure. This is the
+    case when a solution is invented for a newly loaded problem.
   */
 
-  CoinWarmStart *activeBasis ;
+  enum basisCondition
+  { basisNone = 0, basisFresh, basisModified, basisDamaged } ;
 
-  /*! \brief Current basis is modified
+  /*! \brief Active basis
 
-    True if #activeBasis exists and has been modified since the last call
-    to dylp.
+    The active basis is set with each successful return from the solver
+    (where successful means a result of optimal, infeasible, unbounded, or
+    iterlim), or by an explicit call to #setWarmStart() with a valid basis.
+    By definition, calling #setWarmStart() with a null parameter is a request
+    to synch the active basis with the solver (a noop for ODSI). Calling
+    #setWarmStart() with an empty (0x0) basis is taken as a request to delete
+    activeBasis.
+
+    Condition will take a value from the #basisCondition enum (which see).
+
+    Balance records whether we have an excess or shortage of basic variables.
+    Deletion of tight constraints will result in an excess. Deletion of basic
+    variables will result in a shortage.
   */
-  bool activeIsModified ;
+
+  struct
+  { CoinWarmStart *basis ;
+    basisCondition condition ;
+    int balance ; } activeBasis ;
 
   /*! \brief The most recent solution from dylp is valid.
 
@@ -809,28 +846,6 @@ private:
     constraint system have rendered the solution invalid.
   */
   bool solnIsFresh ;
-
-  /*! \brief Columns (variables) added during existence of this ODSI object
-
-    This variable counts the number of columns added over the lifetime of
-    this ODSI object. Used to generate unique column names, since ODSI does
-    not provide a way for the client to supply a name.  Unique names are
-    necessary in order that writeMps can dump the system in mps format.
-    Reset to 0 when the constraint system is reloaded.
-  */
-
-  int addedColCnt ;
-
-  /*! \brief Rows (constraints)  added during existence of this ODSI object
-
-    This variable counts the number of rows added over the lifetime of this
-    ODSI object. Used to generate unique rows names, since ODSI does not
-    provide a way for the client to supply a name.  Unique names are
-    necessary in order that writeMps can dump the system in mps format.
-    Reset to 0 when the constraint system is reloaded.
-  */
-
-  int addedRowCnt ;
 
 //@}
 
@@ -1013,6 +1028,7 @@ private:
   void unimp_hint(bool dylpSense, bool hintSense,
 		 OsiHintStrength hintStrength, const char *msgString) ;
   void pessimal_primal() ;
+  void reduceActiveBasis() ;
 
 //@}
 

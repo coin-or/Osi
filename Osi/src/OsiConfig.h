@@ -18,6 +18,7 @@
  */
 
 #ifndef __OSICONFIG_H__
+#define __OSICONFIG_H__
 
 #ifdef HAVE_CONFIG_H
 #include "config_osi.h"

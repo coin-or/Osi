@@ -2277,20 +2277,30 @@ int testObjFunctions (const OsiSolverInterface *emptySi,
   ax <= b  ==>  ax + s = b,       0 <= s <= infty
   ax >= b  ==>  ax + s = b,  -infty <= s <= 0
 
-  If the constraint is tight at optimum, then for a minimisation problem the
-  status should be atLowerBound for a <= constraint, atUpperBound for a >=
-  constraint. The test problem is
+  If the constraint is tight at optimum, then the status should be
+  atLowerBound for a <= constraint, atUpperBound for a >= constraint. The
+  test problem is
 
-  	    min -x1 + x2
-	    s.t. x1      <=  2	(c0)
-		      x2 >= 44	(c1)
+      x1      >= -5	(c0)
+      x1      <=  2	(c1)
+           x2 >= 44	(c2)
+	   x2 <= 51	(c3)
+
+  This is evaluated for two objectives, so that we have all combinations of
+  tight constraints under minimisation and maximisation.
+
+		max x1-x2	min x1-x2
+
+	  obj	  -42		  -56
+
+	  c0	  basic		  upper
+	  c1	  lower		  basic
+	  c2	  upper		  basic
+	  c3	  basic		  lower
   
-  At optimum, z* = 42
-	      artifStatus[c0] = atLowerBound
-	      artifStatus[c1] = atUpperBound
 */
 
-void testArtifStatus (const OsiSolverInterface *emptySi)
+int testArtifStatus (const OsiSolverInterface *emptySi)
 
 { OsiSolverInterface *si = emptySi->clone() ;
   double infty = si->getInfinity() ;
@@ -2301,83 +2311,97 @@ void testArtifStatus (const OsiSolverInterface *emptySi)
   into the solver.
 */
   int colCnt = 2 ;
-  int rowCnt = 2 ;
-  int indices[] = {0, 1} ;
-  double coeffs[] = {1.0, 1.0} ;
-  CoinBigIndex starts[] = {0, 1, 2} ;
-  double obj[] = {-1.0, 1.0} ;
+  int rowCnt = 4 ;
+  int indices[] = {0, 1, 2, 3} ;
+  double coeffs[] = {1.0, 1.0, 1.0, 1.0} ;
+  CoinBigIndex starts[] = {0, 2, 4} ;
+  double obj[] = {1.0, -1.0} ;
 
-  double vubs[2] ;
-  double vlbs[2] ;
+  double vubs[] = {  infty,  infty } ;
+  double vlbs[] = { -infty, -infty } ;
 
-  vubs[0] = infty ;
-  vubs[1] = infty ;
-  vlbs[0] = -infty ;
-  vlbs[1] = -infty ;
-
-  double rubs[2] ;
-  double rlbs[2] ;
-
-  rubs[0] = 2.0 ;
-  rubs[1] = infty ;
-  rlbs[0] = -infty ;
-  rlbs[1] = 44 ;
+  double rubs[] = {  infty, 2.0,  infty, 51.0 } ;
+  double rlbs[] = { -5.0, -infty, 44.0,  -infty } ;
+  std::string contype[] = { ">=", "<=", ">=", "<=" } ;
+  std::string statCode[] = { "isFree", "basic",
+			     "atUpperBound", "atLowerBound" } ;
+  std::string sense[] = { "maximise", "minimise" } ;
 
   si->loadProblem(colCnt,rowCnt,
 		  starts,indices,coeffs,vlbs,vubs,obj,rlbs,rubs) ;
 /*
-  Solve and ask for a warm start, then check the status of artificials.
+  Vectors for objective sense and correct answers. Maximise first.
 */
-  si->initialSolve() ;
-  if (!si->isProvenOptimal())
-  { std::cout
-      << "Solver failed to find optimal solution." << std::endl ;
-    failureMessage(*si,"testArtifStatus: no optimal solution.") ;
-    return ; }
-
-  double z = si->getObjValue() ;
-  CoinRelFltEq eq ;
-  if (!eq(z,42.0))
-  { std::cout
-      << "Incorrect objective " << z << "; expected 42." << std::endl ;
-    failureMessage(*si,"testArtifStatus: incorrect optimal objective.") ;
-    return ; }
-
-  CoinWarmStart *ws = si->getWarmStart() ;
-  CoinWarmStartBasis *wsb = dynamic_cast<CoinWarmStartBasis *>(ws) ;
-
-  if (wsb == 0)
-  { std::cout << "No basis!" << std::endl ;
-    failureMessage(*si,"testArtifStatus: no basis.") ;
-    return ; }
-
-  CoinWarmStartBasis::Status stat0,stat1 ;
+  double objSense[] = { -1.0, 1.0 } ;
+  double zopt[] = { -42.0, -56 } ;
+  CoinWarmStartBasis::Status goodStatus[] =
+      { CoinWarmStartBasis::basic,
+	CoinWarmStartBasis::atLowerBound,
+	CoinWarmStartBasis::atUpperBound,
+	CoinWarmStartBasis::basic,
+	CoinWarmStartBasis::atUpperBound,
+	CoinWarmStartBasis::basic,
+	CoinWarmStartBasis::basic,
+	CoinWarmStartBasis::atLowerBound } ;
 /*
-  Finally, the point of the exercise. We should have stat0 = atLowerBound and
-  stat1 = atUpperBound.
+  Get to work. Open a loop, set the objective sense, solve the problem, and
+  then check the results: We should have an optimal solution, with the correct
+  objective. We should be able to ask for a warm start basis, and it should
+  show the correct status.
 */
-  stat0 = wsb->getArtifStatus(0) ;
-  stat1 = wsb->getArtifStatus(1) ;
-  if (stat0 != CoinWarmStartBasis::atLowerBound)
-  { std::cout
-      << "Incorrect status " << stat0 << " for tight <= constraint."
-      << " Expected " << CoinWarmStartBasis::atLowerBound << "." << std::endl ;
-    failureMessage(*si,
-	"testArtifStatus: incorrect status for tight <= constraint.") ; }
+  int errCnt = 0 ;
+  CoinRelFltEq eq ;
 
-  if (stat1 != CoinWarmStartBasis::atUpperBound)
-  { std::cout
-      << "Incorrect status " << stat1 << " for tight >= constraint."
-      << " Expected " << CoinWarmStartBasis::atUpperBound << "." << std::endl ;
-    failureMessage(*si,
-	"testArtifStatus: incorrect status for tight >= constraint.") ; }
+  for (int iter = 0 ; iter <= 1 ; iter++)
+  { si->setObjSense(objSense[iter]) ;
+    si->initialSolve() ;
+    if (!si->isProvenOptimal())
+    { errCnt++ ;
+      std::cout
+	<< "Solver failed to find optimal solution ("
+	<< sense[iter] << ")." << std::endl ;
+      failureMessage(*si,"testArtifStatus: no optimal solution.") ;
+      continue ; }
+
+    double z = si->getObjValue() ;
+    if (!eq(z,zopt[iter]))
+    { errCnt++ ;
+      std::cout
+	<< "Incorrect objective " << z << " (" << sense[iter]
+	<< "); expected " << zopt[iter] << "." << std::endl ;
+      failureMessage(*si,"testArtifStatus: incorrect optimal objective.") ;
+      continue ; }
+
+    CoinWarmStart *ws = si->getWarmStart() ;
+    CoinWarmStartBasis *wsb = dynamic_cast<CoinWarmStartBasis *>(ws) ;
+
+    if (wsb == 0)
+    { errCnt++ ;
+      std::cout << "No basis! (" << sense[iter] << ")." << std::endl ;
+      failureMessage(*si,"testArtifStatus: no basis.") ;
+      continue ; }
+
+    CoinWarmStartBasis::Status stati ;
+
+    for (int i = 0 ; i < rowCnt ; i++)
+    { stati = wsb->getArtifStatus(i) ;
+
+      if (stati != goodStatus[iter*rowCnt+i])
+      { errCnt++ ;
+	std::cout
+	  << "Incorrect status " << statCode[stati] << " for " << contype[i]
+	  << " constraint c" << i << " (" << sense[iter] << "), expected "
+	  << statCode[goodStatus[iter*rowCnt+i]] << "." << std::endl ;
+	failureMessage(*si,
+	    "testArtifStatus: incorrect status for artificial.") ; } }
+    
+    delete ws ; }
 /*
   Clean up.
 */
-  delete wsb ;
   delete si ;
 
-  return ; }
+  return (errCnt) ; }
 
 
 /*
@@ -4833,7 +4857,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   status.
 */
   if (!volSolverInterface)
-    testArtifStatus(emptySi) ;
+    errCnt += testArtifStatus(emptySi) ;
 
   // Perform tests that are embodied in functions
   if ( !volSolverInterface && !symSolverInterface)

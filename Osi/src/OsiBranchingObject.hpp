@@ -483,7 +483,9 @@ public:
   virtual double branch(OsiSolverInterface * solver)=0;
 
   inline int firstBranch() const { return firstBranch_; }
-
+  /// Way returns -1 on down +1 on up
+  inline int way() const
+  { return !branchIndex_ ? firstBranch_ : -firstBranch_;}
 protected:
   /// Which way was first branch -1 = down, +1 = up
   int firstBranch_;

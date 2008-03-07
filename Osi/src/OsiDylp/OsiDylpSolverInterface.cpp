@@ -5756,14 +5756,17 @@ CoinWarmStart* ODSI::getWarmStart () const
   atLowerBound) constraints, if the corresponding logical isn't already
   marked as basic, use the value of the dual to select one of atLowerBound
   (negative dual) or (for range constraints) atUpperBound (positive dual).
+
+  If we're maximising, reverse that (using objSense).
 */
   const double *y = getRowPrice() ;
+  double objSense = getObjSense() ;
   for (i = 0 ; i < m ; i++)
   { if (getStatus(conStatus,i) == CWSB::isFree)
     { setStatus(artifStatus,i,CWSB::basic) ; }
     else
     if (getStatus(artifStatus,i) == CWSB::isFree)
-    { if (y[i] > 0)
+    { if (y[i]*objSense > 0)
       { setStatus(artifStatus,i,CWSB::atUpperBound) ; }
       else
       { setStatus(artifStatus,i,CWSB::atLowerBound) ; } } }

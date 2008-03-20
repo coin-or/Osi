@@ -82,8 +82,28 @@
 #include "OsiCbcSolverInterface.hpp"
 #endif
 
-// Function Prototypes. Function definitions is in this file.
-void testingMessage( const char * const msg );
+namespace {
+
+/*
+  If anyone is feeling ambitious, it'd be a really good idea to handle i/o for
+  the unittest by way of a standard CoinMessageHandler. Might require a bit of
+  tweaking in CoinMessageHandler.
+*/
+ 
+// Display message on stdout and stderr. Flush cout buffer before printing the
+// message, so that output comes out in order in spite of buffered cout.
+
+void testingMessage( const char * const msg )
+{
+  std::cout.flush() ;
+  std::cerr <<msg;
+  //cout <<endl <<"*****************************************"
+  //     <<endl <<msg <<endl;
+}
+
+}	// end file-local namespace
+
+
 
 //----------------------------------------------------------------
 // unitTest [-nobuf] [-mpsDir=V1] [-netlibDir=V2] [-testOsiSolverInterface]
@@ -106,8 +126,12 @@ void testingMessage( const char * const msg );
 //----------------------------------------------------------------
 
 int main (int argc, const char *argv[])
-{
+
+{ int errCnt,totalErrCnt ;
+
   int i;
+
+  totalErrCnt = 0 ;
 
   /*
     Makes debugging output more comprehensible. Still suffers from interleave
@@ -432,6 +456,11 @@ int main (int argc, const char *argv[])
     return 0;
   }
 
+/*
+  Run the OsiXXX class test for each solver. It's up to the solver implementor
+  to decide whether or not to run OsiSolverInterfaceCommonUnitTest. Arguably
+  this should be required.
+*/
 #ifdef COIN_HAS_OSL
   testingMessage( "Testing OsiOslSolverInterface\n" );
   OsiOslSolverInterfaceUnitTest(mpsDir,netlibDir);
@@ -459,7 +488,12 @@ int main (int argc, const char *argv[])
 
 #ifdef COIN_HAS_DYLP
   testingMessage( "Testing OsiDylpSolverInterface\n" );
-  OsiDylpSolverInterfaceUnitTest(mpsDir,netlibDir);
+  errCnt = OsiDylpSolverInterfaceUnitTest(mpsDir,netlibDir);
+  if (errCnt)
+  { std::cerr
+      << "OsiDylpSolverInterface testing issue: "
+      << errCnt << " errors reported by OsiDylp unit test." << std::endl ;
+    totalErrCnt += errCnt ; }
 #endif
   
 #ifdef COIN_HAS_GLPK
@@ -476,10 +510,12 @@ int main (int argc, const char *argv[])
   testingMessage( "Testing OsiClpSolverInterface\n" );
   OsiClpSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
+
 #ifdef COIN_HAS_MSK
   testingMessage( "Testing OsiMskSolverInterface\n" );
   OsiMskSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
+
 #ifdef COIN_HAS_CBC
   testingMessage( "Testing OsiCbcSolverInterface\n" );
   OsiCbcSolverInterfaceUnitTest(mpsDir,netlibDir);
@@ -490,6 +526,10 @@ int main (int argc, const char *argv[])
   OsiSymSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
+/*
+  Each solver has run its specialised unit test. Check now to see if we need to
+  run through the Netlib problems.
+*/
   if (parms.find("-testOsiSolverInterface") != parms.end())
   {
     // Create vector of solver interfaces
@@ -557,7 +597,7 @@ int main (int argc, const char *argv[])
     vecSi.push_back(volSi);
 #endif
 
-    testingMessage( "Testing OsiSolverInterface\n" );
+    testingMessage( "Testing OsiSolverInterface on Netlib problems.\n" );
     OsiSolverInterfaceMpsUnitTest(vecSi,netlibDir);
 
     unsigned int i;
@@ -565,22 +605,19 @@ int main (int argc, const char *argv[])
       delete vecSi[i];
   }
   else {
-    testingMessage( "***Skipped Testing of OsiSolverInterface    ***\n" );
-    testingMessage( "***use -testOsiSolverInterface to test class***\n" );
+    testingMessage(
+       "***Skipped Testing of OsiSolverInterface on Netlib problems***\n" );
+    testingMessage( "***use -testOsiSolverInterface to run them.***\n" );
   }
-
-  testingMessage( "All tests completed successfully\n" );
+/*
+  We're done. Report on the results.
+*/
+  if (totalErrCnt)
+  { std::cout.flush() ;
+    std::cerr
+      << "Tests completed with " << totalErrCnt << " errors." << std::endl ; }
+  else
+  { testingMessage("All tests completed successfully\n") ; }
   return 0;
-}
-
- 
-// Display message on stdout and stderr. Flush cout buffer before printing the
-// message, so that output comes out in order in spite of buffered cout.
-void testingMessage( const char * const msg )
-{
-  std::cout.flush() ;
-  std::cerr <<msg;
-  //cout <<endl <<"*****************************************"
-  //     <<endl <<msg <<endl;
 }
 

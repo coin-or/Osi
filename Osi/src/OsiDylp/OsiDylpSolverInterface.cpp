@@ -5851,7 +5851,7 @@ void ODSI::reduceActiveBasis ()
     { wsb->setStructStatus(j,CWSB::atLowerBound) ;
       activeBasis.balance-- ; } }
   if (activeBasis.balance == 0)
-  { activeBasis.condition == ODSI::basisModified ; }
+  { activeBasis.condition = ODSI::basisModified ; }
 
 # if ODSI_TRACK_ACTIVE > 0
   std::cout

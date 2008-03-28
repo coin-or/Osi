@@ -206,18 +206,19 @@ OsiVolSolverInterface::assignProblem(CoinPackedMatrix*& matrix,
 	 CoinFillN(objcoeffs_, colnum, -OsiVolInfinity);
       }
 
-    colsol_    = new double[maxNumcols_];
-    int c;
-    for ( c=0; c<colnum; c++ ) {
-      if ( fabs(collower_[c]) < fabs(colupper_[c]) ) {
-        colsol_[c] = collower_[c];
+      colsol_    = new double[maxNumcols_];
+      int c;
+      for ( c=0; c<colnum; c++ ) {
+	if ( fabs(collower_[c]) < fabs(colupper_[c]) ) {
+	  colsol_[c] = collower_[c];
+	}
+	else {
+	  colsol_[c] = colupper_[c];
+	}
       }
-      else {
-        colsol_[c] = colupper_[c];
-      }
-    }
 
       rc_        = new double[maxNumcols_];
+      continuous_ = new bool[maxNumcols_];
    }
 }
 
@@ -322,18 +323,19 @@ OsiVolSolverInterface::assignProblem(CoinPackedMatrix*& matrix,
 	 CoinFillN(objcoeffs_, colnum, -OsiVolInfinity);
       }
 
-    colsol_    = new double[maxNumcols_];
-    int c;
-    for ( c=0; c<colnum; c++ ) {
-      if ( fabs(collower_[c]) < fabs(colupper_[c]) ) {
-        colsol_[c] = collower_[c];
+      colsol_    = new double[maxNumcols_];
+      int c;
+      for ( c=0; c<colnum; c++ ) {
+	if ( fabs(collower_[c]) < fabs(colupper_[c]) ) {
+	  colsol_[c] = collower_[c];
+	}
+	else {
+	  colsol_[c] = colupper_[c];
+	}
       }
-      else {
-        colsol_[c] = colupper_[c];
-      }
-    }
 
       rc_        = new double[maxNumcols_];
+      continuous_ = new bool[maxNumcols_];
    }
 }
 

@@ -183,7 +183,7 @@ bool equivalentVectors (const OsiSolverInterface * si1,
 // A routine to build a CoinPackedMatrix matching the exmip1 example.
 //#############################################################################
 
-CoinPackedMatrix &BuildExmip1Mtx ()
+const CoinPackedMatrix &BuildExmip1Mtx ()
 /*
   Simple function to build a packed matrix for the exmip1 example used in
   tests. The function exists solely to hide the intermediate variables.
@@ -209,7 +209,7 @@ CoinPackedMatrix &BuildExmip1Mtx ()
 		      2.8, -1.2,
 		      5.6, 1.0, 1.9 } ;
 
-  static CoinPackedMatrix exmip1mtx =
+  static const CoinPackedMatrix exmip1mtx =
     CoinPackedMatrix(true,&rowndxs[0],&colndxs[0],&coeffs[0],14) ;
 
   return (exmip1mtx) ; }
@@ -1202,6 +1202,88 @@ bool test15VivianDeSmedt(OsiSolverInterface *s)
 
 	return ret;
 }
+
+/*
+  Another test case submitted by Vivian De Smedt.  The test is to modify the
+  objective function and check that the solver's optimum point tracks
+  correctly. The initial problem is
+
+  max  3*x1 +   x2
+
+  s.t. 2*x1 +   x2 <= 10
+	 x1 + 3*x2 <= 15
+
+  with optimum z* = 15 at (x1,x2) = (5,0). Then the objective is changed to
+  x1 + x2, with new optimum z* = 7 at (3,4).
+
+  The volume algorithm doesn't return exact solution values, so relax the
+  test for correctness when we're checking the solution.
+*/
+
+int changeObjAndResolve (const OsiSolverInterface *emptySi)
+
+{ OsiSolverInterface *s = emptySi->clone() ;
+  double dEmpty = 0 ;
+  int iEmpty = 0 ;
+  CoinBigIndex iEmpty2 = 0 ;
+
+  int errCnt = 0 ;
+
+/*
+  Establish an empty problem. Establish empty columns with bounds and objective
+  coefficient only. Finally, insert constraint coefficients and set for
+  maximisation.
+*/
+  s->loadProblem(0,0,&iEmpty2,&iEmpty,&dEmpty,
+		 &dEmpty,&dEmpty,&dEmpty,&dEmpty,&dEmpty) ;
+
+  CoinPackedVector c ;
+  s->addCol(c,0,10,3) ;
+  s->addCol(c,0,10,1) ;
+
+  double inf = s->getInfinity() ;
+  CoinPackedVector r1 ;
+  r1.insert(0,2) ;
+  r1.insert(1,1) ;
+  s->addRow(r1,-inf,10) ;
+
+  r1.clear() ;
+  r1.insert(0,1) ;
+  r1.insert(1,3) ;
+  s->addRow(r1,-inf,15) ;
+
+  s->setObjSense(-1) ;
+/*
+  Optimise for 3*x1 + x2 and check for correctness.
+*/
+  s->initialSolve() ;
+
+  const double *colSol = s->getColSolution() ;
+  if (colSol[0] < 4.5)
+  { failureMessage(*s,"changeObjAndResolve: colsol[0] bad value") ;
+    errCnt++ ; }
+  if (colSol[1] > 0.5)
+  { failureMessage(*s,"changeObjAndResolve: colsol[1] bad value") ;
+    errCnt++ ; }
+/*
+  Set objective to x1 + x2 and reoptimise.
+*/
+  s->setObjCoeff(0,1) ;
+  s->setObjCoeff(1,1) ;
+
+  s->resolve() ;
+
+  colSol = s->getColSolution() ;
+  if (colSol[0] < 2.3 || colSol[0] > 3.7)
+  { failureMessage(*s,"changeObjAndResolve: colsol[0] bad value") ;
+    errCnt++ ; }
+  if (colSol[1] < 3.5 || colSol[1] > 4.5)
+  { failureMessage(*s,"changeObjAndResolve: colsol[1] bad value") ;
+    errCnt++ ; }
+
+  delete s ;
+  return (errCnt) ; }
+
 
 //#############################################################################
 // Routines to test various feature groups
@@ -3910,9 +3992,14 @@ int OsiSolverInterfaceMpsUnitTest
 
 
 /*
-  The order of tests should be examined. As it stands, we test immediately for
-  the ability to read an mps file and bail if we can't do it. But quite a few
-  tests could be performed without reading an mps file.  -- lh, 080107 --
+  The order of tests should be examined. As it stands, we test immediately
+  for the ability to read an mps file and bail if we can't do it. But quite a
+  few tests could be performed without reading an mps file.  -- lh, 080107 --
+
+  Gradually, oh so gradually, the Osi unit test is converting to produce some
+  information about failed tests, and this routine now returns a count.
+  Whenever you revise a test, please take the time to produce a count of
+  errors.
 */
 
 int
@@ -3943,6 +4030,9 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       errCnt++ ; }
     delete si ;
   }
+  { std::string temp = ": running common unit tests.\n" ;
+    temp = solverName + temp ;
+    testingMessage(temp.c_str()) ; }
 /*
   See if we can read an MPS file. We're dead in the water if we can't do this.
 */
@@ -4183,7 +4273,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 
   // Test matrixByCol method
   {
-    CoinPackedMatrix &goldmtx = BuildExmip1Mtx() ;
+    const CoinPackedMatrix &goldmtx = BuildExmip1Mtx() ;
     OsiSolverInterface & si = *exmip1Si->clone();
     CoinPackedMatrix sm = *si.getMatrixByCol();
     sm.removeGaps();
@@ -4789,59 +4879,12 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 
     delete si;
   }
-
-  // Test case submitted by Vivian De Smedt (slightly modifed to work with
-  // Vol Algorithm).
-
-  {
-    OsiSolverInterface *s = emptySi->clone();
-    double dEmpty = 0;
-    int iEmpty = 0;
-    CoinBigIndex iEmpty2 = 0;
-    //char cEmpty = '?';
-
-    s->loadProblem(0, 0, &iEmpty2, &iEmpty, &dEmpty, &dEmpty, &dEmpty, &dEmpty, &dEmpty, &dEmpty);
-    double inf = s->getInfinity();
-    CoinPackedVector c;
-
-    s->addCol(c, 0, 10, 3);
-    s->addCol(c, 0, 10, 1);
-
-    CoinPackedVector r1;
-    r1.insert(0, 2);
-    r1.insert(1, 1);
-    s->addRow(r1, -inf, 10);
-
-    CoinPackedVector r2;
-    r2.insert(0, 1);
-    r2.insert(1, 3);
-    s->addRow(r2, -inf, 15);
-
-    s->setObjSense(-1);
-
-    s->initialSolve() ;
-    const double * colSol = s->getColSolution();
-    // Don't test for exact answer, because Vol algorithm
-    // only returns an appoximate solution
-    if ( colSol[0]<4.5 )
-      failureMessage(*s,"colsol[0] bad value");
-    if ( colSol[1]>0.5 )
-      failureMessage(*s,"colsol[1] bad value");
-
-    s->setObjCoeff(0, 1);
-    s->setObjCoeff(1, 1);
-
-    s->resolve();
-    colSol = s->getColSolution();
-    // Don't test for exact answer, because Vol algorithm
-    // only returns an appoximate solution
-    if( colSol[0]<2.3 || colSol[0]>3.7 )
-      failureMessage(*s,"colsol[0] bad value");
-    if( colSol[1]<3.5 || colSol[1]>4.5 )
-      failureMessage(*s,"colsol[1] bad value");
-    delete s;
-  }
-
+/*
+  A test to see if resolve gets the correct answer after changing the
+  objective. Safe for Vol, as the result is checked by testing an interval on
+  the primal solution.
+*/
+  errCnt += changeObjAndResolve(emptySi) ;
 /*
   Test OsiPresolve. This is a `bolt on' presolve, distinct from any presolve
   that might be innate to the solver.
@@ -4888,11 +4931,15 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       {
         bool test = test_functions[i].first(s);
         if (!test)
-          failureMessage(*s, testName);
+        { failureMessage(*s, testName);
+	  errCnt++ ; }
       }
       delete s;
     }
   }
+
+  return (errCnt) ; }
+
   /*
     Orphan comment? If anyone happens to poke at the code that this belongs
     to, move it. My (lh) guess is it should go somewhere in the deSmedt tests.
@@ -4909,5 +4956,3 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
           0  0  5  0 -6  >= -4
           2 -4  0  6  0  >=  5
   */
-}
-

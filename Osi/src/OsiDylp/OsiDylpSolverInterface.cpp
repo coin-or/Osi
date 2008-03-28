@@ -5851,7 +5851,7 @@ void ODSI::reduceActiveBasis ()
     { wsb->setStructStatus(j,CWSB::atLowerBound) ;
       activeBasis.balance-- ; } }
   if (activeBasis.balance == 0)
-  { activeBasis.condition == ODSI::basisModified ; }
+  { activeBasis.condition = ODSI::basisModified ; }
 
 # if ODSI_TRACK_ACTIVE > 0
   std::cout
@@ -5996,9 +5996,8 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
   create an empty ODWSB object (see comments with getWarmStart).
 
   Create a dylp basis_struct and status vector of sufficient size to hold the
-  information in the OsiDylpWarmStartBasis. This space may well be freed or
-  realloc'd by dylp, so use standard calloc to acquire it.  We'll only use as
-  much of the basis as is needed for the active constraints.
+  information in the OsiDylpWarmStartBasis.  We'll only use as much of the
+  basis as is needed for the active constraints.
 */
   if (!(varcnt <= getNumCols() && concnt <= getNumRows()))
   { handler_->message(ODSI_ODWSBBADSIZE,messages_)
@@ -6126,6 +6125,9 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
   other object, and there are no vectors here at all. Because dylp relies on
   lpprob->colsze and lpprob->rowsze for the allocated capacity of actvars, x,
   and y, we need to reallocate them too.
+
+  This space may well be freed and/or realloc'd by dylp, so use standard calloc
+  to acquire it.
 */
   if (lpprob->colsze < varcnt)
   { if (lpprob->status)
@@ -6180,7 +6182,7 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
   wsb is the active basis, and we're simply installing it in lpprob). If we
   already have a copy, so much the better.
 */
-  if (wsb != activeBasis.basis)
+  if (wsb != dynamic_cast<OsiDylpWarmStartBasis *>(activeBasis.basis))
   { 
 #   if ODSI_TRACK_ACTIVE > 0
     std::cout

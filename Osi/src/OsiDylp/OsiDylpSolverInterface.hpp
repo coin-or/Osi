@@ -99,7 +99,7 @@ typedef enum { startInvalid = 0,
 
 class OsiDylpSolverInterface: virtual public OsiSolverInterface
 
-{ friend void OsiDylpSolverInterfaceUnitTest(const std::string &mpsDir,
+{ friend int OsiDylpSolverInterfaceUnitTest(const std::string &mpsDir,
 					     const std::string &netLibDir) ;
 
 /*
@@ -1114,7 +1114,7 @@ private:
     an exhaustive test, but it'll (usually) catch gross problems.
 */
 
-void OsiDylpSolverInterfaceUnitTest(const std::string & mpsDir,
+int OsiDylpSolverInterfaceUnitTest(const std::string & mpsDir,
 				    const std::string &netLibDir) ;
 
 #endif // OsiDylpSolverInterface_H

@@ -6182,7 +6182,7 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
   wsb is the active basis, and we're simply installing it in lpprob). If we
   already have a copy, so much the better.
 */
-  if (wsb != activeBasis.basis)
+  if (wsb != dynamic_cast<OsiDylpWarmStartBasis *>(activeBasis.basis))
   { 
 #   if ODSI_TRACK_ACTIVE > 0
     std::cout

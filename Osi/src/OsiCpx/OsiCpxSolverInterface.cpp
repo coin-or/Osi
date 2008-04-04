@@ -1405,7 +1405,7 @@ std::vector<double*> OsiCpxSolverInterface::getDualRays(int maxNumRays) const
    CoinFillN(clb, newcols, 0.0);
    CoinFillN(cub, newcols, getInfinity());
 
-   solver.addCols(newcols, cols, clb, cub, obj+numcols);
+   solver.addCols(newcols, cols, clb, cub, obj);
    delete[] index;
    delete[] cols;
    delete[] clb;
@@ -1415,7 +1415,7 @@ std::vector<double*> OsiCpxSolverInterface::getDualRays(int maxNumRays) const
    solver.setObjSense(1.0); // minimize
    solver.initialSolve();
 
-   const double* solverpi = getRowPrice();
+   const double* solverpi = solver.getRowPrice();
    double* pi = new double[numrows];
    for ( i = numrows - 1; i >= 0; --i) {
       pi[i] = -solverpi[i];

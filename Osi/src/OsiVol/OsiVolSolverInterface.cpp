@@ -6,6 +6,7 @@
 #  pragma warning(disable:4786)
 #endif
 
+#include <cstdlib>
 #include <numeric>
 #include <cassert>
 #include <cmath>

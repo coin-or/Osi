@@ -101,6 +101,44 @@ OsiSolverInterface::isBinary(int colIndex) const
     ) return true;
   else return false;
 }
+
+
+//#############################################################################
+// Method for getting a column solution that is guaranteed to be
+// between the column lower and upper bounds. 
+// 
+// This method is was introduced for Cgl. Osi developers can
+// improve performance for their favorite solvers by 
+// overriding this method and providing an implementation that caches
+// strictColSolution_.
+//#############################################################################
+
+const double * 
+OsiSolverInterface::getStrictColSolution()
+{
+  const double * colSolution = getColSolution();
+  const double * colLower = getColLower();
+  const double * colUpper = getColUpper();
+  const int numCols = getNumCols();
+
+  strictColSolution_.clear();
+  strictColSolution_.insert(strictColSolution_.end(),colSolution, colSolution+numCols);
+
+  for (int i=numCols-1; i> 0; --i){
+    if (colSolution[i] <= colUpper[i]){
+      if (colSolution[i] >= colLower[i]){
+	continue;
+      } else {
+	strictColSolution_[i] = colLower[i];
+      }
+    } else {
+      strictColSolution_[i] = colUpper[i];
+    }
+  }
+  return &strictColSolution_[0];
+}
+
+
 //-----------------------------------------------------------------------------
 bool 
 OsiSolverInterface::isInteger(int colIndex) const

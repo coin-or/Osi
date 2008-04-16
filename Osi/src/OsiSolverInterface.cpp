@@ -196,7 +196,7 @@ OsiSolverInterface::isFreeBinary(int colIndex) const
     2 - general integer (may get fixed later)
 */
 const char * 
-OsiSolverInterface::columnType(bool refresh) const
+OsiSolverInterface::getColType(bool refresh) const
 {
   if (!columnType_||refresh) {
     const int numCols = getNumCols() ;

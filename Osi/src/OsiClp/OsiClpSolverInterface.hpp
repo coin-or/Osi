@@ -422,7 +422,7 @@ public:
        1 - binary (may get fixed later)
        2 - general integer (may get fixed later)
   */
-  virtual const char * columnType(bool refresh=false) const;
+  virtual const char * getColType(bool refresh=false) const;
   
   
   /// Get pointer to row-wise copy of matrix

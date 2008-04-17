@@ -521,10 +521,18 @@ public:
     virtual bool isFreeBinary(int colIndex) const; 
     /**  Return array of column length
          0 - continuous
-         1 - binary (may get fixed later)
+         1 - binary (may get fixed to 0 or 1 later)
+         2 - general integer (may get fixed later)
+	 Deprecated usage
+    */
+    inline const char * columnType(bool refresh=false) const
+    { return getColType(refresh);}
+    /**  Return array of column length
+         0 - continuous
+         1 - binary (may get fixed to 0 or 1 later)
          2 - general integer (may get fixed later)
     */
-    virtual const char * columnType(bool refresh=false) const;
+    virtual const char * getColType(bool refresh=false) const;
   
     /// Get pointer to row-wise copy of matrix
     virtual const CoinPackedMatrix * getMatrixByRow() const = 0;
@@ -546,6 +554,11 @@ public:
   //@{
     /// Get pointer to array[getNumCols()] of primal variable values
     virtual const double * getColSolution() const = 0;
+
+    /** Get pointer to an array[getNumCols()] of primal variable values
+     that are guaranteed to be between the column lower and upper
+     bounds. */
+    const double * getStrictColSolution();
 
     /// Get pointer to array[getNumRows()] of dual variable values
     virtual const double * getRowPrice() const = 0;
@@ -1834,6 +1847,8 @@ private:
     /** Warm start information used for hot starts when the default
        hot start implementation is used. */
     CoinWarmStart* ws_;
+    /// Column solution satisfying lower and upper column bounds
+    std::vector<double> strictColSolution_;
 
     /// Row names
     OsiNameVec rowNames_ ;

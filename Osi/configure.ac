@@ -12,7 +12,7 @@
 
 AC_PREREQ(2.59)
 
-AC_INIT([Osi],[0.98stable],[coin-osi@list.coin-or.org])
+AC_INIT([Osi],[0.98.1],[coin-osi@list.coin-or.org])
 
 AC_COPYRIGHT([
 Copyright 2006 International Business Machines and others.

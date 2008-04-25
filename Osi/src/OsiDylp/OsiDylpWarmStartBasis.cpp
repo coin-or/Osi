@@ -49,8 +49,6 @@
 #ifndef ODSI_PARANOIA
 # define ODSI_PARANOIA 1
 #endif
-#undef ODSI_PARANOIA
-#define ODSI_PARANOIA 2
 
 /*
   The following symbol is useful only for detailed debugging.
@@ -480,7 +478,7 @@ void ODWSB::compressRows (int tgtCnt, const int *tgts)
 
 /*
   deleteRows takes an unordered list of target indices with duplicates and
-  removes them from the basis. The strategy is to preprocesses the list into
+  removes them from the basis. The strategy is to preprocess the list into
   an ordered list without duplicates, suitable for compressRows.
 */
 /*!

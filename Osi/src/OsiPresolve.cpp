@@ -556,6 +556,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 # else
 # if 1
     // normal operation --- all transforms enabled
+    bool slackSingleton = true;
     bool slackd = true;
     bool doubleton = true;
     bool tripleton = true;
@@ -840,7 +841,8 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 	if (prob->status_)
 	  break;
       }
-
+	  
+      bool stopLoop=false;
       {
 	int * hinrow = prob->hinrow_;
 	int numberDropped=0;
@@ -850,11 +852,25 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 	//printf("%d rows dropped after pass %d\n",numberDropped,
 	//     iLoop+1);
 	if (numberDropped==lastDropped)
-	  break;
+	  stopLoop=true;
 	else
 	  lastDropped = numberDropped;
       }
-      if (paction_ == paction0)
+      // Do this here as not very loopy
+      if (slackSingleton) {
+        // On most passes do not touch costed slacks
+        if (paction_ != paction0&&!stopLoop) {
+          paction_ = slack_singleton_action::presolve(prob, paction_,NULL);
+        } else {
+          // do costed if Clp (at end as ruins rest of presolve)
+          paction_ = slack_singleton_action::presolve(prob, paction_,NULL);
+          stopLoop=true;
+        }
+      }
+#if	PRESOLVE_DEBUG
+      check_sol(prob,1.0e0);
+#endif
+      if (paction_ == paction0||stopLoop)
 	break;
 	  
     } // End of major pass loop

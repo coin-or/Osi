@@ -33,11 +33,14 @@ public:
   virtual bool invalidCut(const OsiRowCut & rowcut) const;
 
   /// Return optimal solution
-  const double * optimalSolution() const
+  inline const double * optimalSolution() const
   { return optimalSolution_;}
 
   /// Return number of columns in optimal solution
-  int numberColumns() const { return (numberColumns_) ; }
+  inline int numberColumns() const { return (numberColumns_) ; }
+  /// Return value of optimal solution
+  inline double optimalValue() const
+  { return optimalValue_;}
   //@}
 
   /**@name Activate Debugger */
@@ -55,6 +58,8 @@ public:
   bool activate(const OsiSolverInterface & si, const double * solution);
   /// Redo solution after preprocessing
   void redoSolution(int numberColumns,const int * originalColumns);
+  /// Print optimal solution (returns -1 bad debug, 0 on optimal, 1 not)
+  int printOptimalSolution(const OsiSolverInterface & si) const;
   //@}
 
   /**@name Test if on Optimal Path */
@@ -113,6 +118,8 @@ private:
 
   /**@name Private member data */
   //@{
+  /// Value of optimal solution
+  double optimalValue_;
   /// number of columns in problem
   int numberColumns_;
   /// Whether integer or not

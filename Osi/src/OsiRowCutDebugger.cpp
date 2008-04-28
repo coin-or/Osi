@@ -143,6 +143,52 @@ bool OsiRowCutDebugger::active() const
   return (integerVariable_!=NULL);
 }
 
+// Print optimal solution
+int
+OsiRowCutDebugger::printOptimalSolution(const OsiSolverInterface & si) const
+{
+  if (integerVariable_) {
+    int nCols=si.getNumCols(); 
+    if (nCols!=numberColumns_)
+      return -1; // check user has not modified problem
+    int i;
+    const double * collower = si.getColLower();
+    const double * colupper = si.getColUpper();
+    int bad[2]={-1,-1};
+    int onOptimalPath=0;
+    for (i=0;i<numberColumns_;i++) {
+      if (integerVariable_[i]) {
+	// value of integer variable in solution
+	double value=optimalSolution_[i];
+	bool ok=true;
+	if (value>colupper[i]+1.0e-3 || value<collower[i]-1.0e-3) {
+	  onOptimalPath=0;
+	  if (bad[0]<0) {
+	    bad[0]=i;
+	  } else {
+	    bad[1]=i;
+	  }
+	  ok=false;
+	  printf("* ");
+	}
+	if (value||!ok)
+	  printf("%d %g\n",i,value);
+      }
+    }
+    for (i=0;i<2;i++) {
+      if (bad[i]>=0) {
+	int iColumn=bad[i];
+	printf("BAD %d %g <= %g <= %g\n",
+	       iColumn,collower[iColumn],
+	       optimalSolution_[iColumn],colupper[iColumn]);
+      }
+    }
+    return onOptimalPath;
+  } else {
+    // no information
+    return -1;
+  }
+}
 // Activate using name of model
 // returns whether debug activated
 bool OsiRowCutDebugger::activate( const OsiSolverInterface & si, 
@@ -1110,6 +1156,16 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
     expectedNumberColumns=353;
   }
 
+  // seymour1
+  else if ( modelL == "seymour_1" ) {
+    probType=continuousWith0_1;
+    int intIndicesAt1[]=
+{0,2,3,4,6,7,8,11,12,15,18,22,23,25,27,31,32,34,35,36,37,39,40,41,42,44,45,46,49,51,54,55,56,58,61,62,63,65,67,68,69,70,71,75,79,81,82,84,85,86,87,88,89,91,93,94,95,97,98,99,101,102,103,104,106,108,110,111,112,116,118,119,120,122,123,125,126,128,129,130,131,135,140,141,142,143,144,148,149,151,152,153,156,158,160,162,163,164,165,167,169,170,173,177,178,179,181,182,186,188,189,192,193,200,201,202,203,204,211,214,218,226,227,228,231,233,234,235,238,242,244,246,249,251,252,254,257,259,260,263,266,268,270,271,276,278,284,286,288,289,291,292,299,305,307,308,311,313,315,316,317,319,321,325,328,332,334,335,337,338,340,343,346,347,354,355,357,358,365,369,372,373,374,375,376,379,381,383,386,392,396,399,402,403,412,416,423,424,425,427,430,431,432,436,437,438,440,441,443,449,450,451,452};
+    int numIndices = sizeof(intIndicesAt1)/sizeof(int);
+    intSoln.setConstant(numIndices,intIndicesAt1,1.0);
+    probType=generalMip;
+    expectedNumberColumns=1372;
+  }
 
   // check to see if the model parameter is 
   // a known problem.
@@ -1222,6 +1278,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
       assert( eq(siCopy->getObjValue(),3.2368421052632));
 #endif
       assert (siCopy->isProvenOptimal());
+      optimalValue_ = siCopy->getObjValue();
       // Save column solution
       CoinCopyN(siCopy->getColSolution(),numberColumns_,optimalSolution_);
 
@@ -1282,12 +1339,14 @@ OsiRowCutDebugger::activate(const OsiSolverInterface & si, const double * soluti
   if (siCopy->isProvenOptimal()) {
     // Save column solution
     CoinCopyN(siCopy->getColSolution(),numberColumns_,optimalSolution_);
+    optimalValue_ = siCopy->getObjValue();
   } else {
     // bad solution
     delete [] integerVariable_;
     delete [] optimalSolution_;
     integerVariable_=NULL;
     optimalSolution_=NULL;
+    optimalValue_ = COIN_DBL_MAX;
   }
   
   delete siCopy;
@@ -1300,7 +1359,8 @@ OsiRowCutDebugger::activate(const OsiSolverInterface & si, const double * soluti
 // Default Constructor 
 //-------------------------------------------------------------------
 OsiRowCutDebugger::OsiRowCutDebugger ()
-: numberColumns_(0),
+  :optimalValue_(COIN_DBL_MAX),
+  numberColumns_(0),
   integerVariable_(NULL),
   optimalSolution_(NULL)
 {
@@ -1314,7 +1374,8 @@ OsiRowCutDebugger::OsiRowCutDebugger ()
 OsiRowCutDebugger::OsiRowCutDebugger ( 
         const OsiSolverInterface & si, 
         const char * model)
-: numberColumns_(0),
+  :optimalValue_(COIN_DBL_MAX),
+   numberColumns_(0),
   integerVariable_(NULL),
   optimalSolution_(NULL)
 {
@@ -1323,7 +1384,8 @@ OsiRowCutDebugger::OsiRowCutDebugger (
 // Constructor with full solution (only integers need be correct)
 OsiRowCutDebugger::OsiRowCutDebugger (const OsiSolverInterface & si, 
                                       const double * solution)
-: numberColumns_(0),
+  :optimalValue_(COIN_DBL_MAX),
+   numberColumns_(0),
   integerVariable_(NULL),
   optimalSolution_(NULL)
 {
@@ -1336,6 +1398,7 @@ OsiRowCutDebugger::OsiRowCutDebugger (const OsiSolverInterface & si,
 OsiRowCutDebugger::OsiRowCutDebugger (const OsiRowCutDebugger & source)
 {  
   // copy 
+  optimalValue_ = source.optimalValue_;
   numberColumns_=source.numberColumns_;
   integerVariable_=new bool[numberColumns_];
   optimalSolution_=new double[numberColumns_];
@@ -1363,6 +1426,7 @@ OsiRowCutDebugger::operator=(const OsiRowCutDebugger& rhs)
     delete [] integerVariable_;
     delete [] optimalSolution_;
     // copy 
+    optimalValue_ = rhs.optimalValue_;
     numberColumns_=rhs.numberColumns_;
     integerVariable_=new bool[numberColumns_];
     optimalSolution_=new double[numberColumns_];

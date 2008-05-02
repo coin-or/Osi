@@ -1909,6 +1909,8 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
     msg << "." ;
     failureMessage(solverName,msg.str()) ; }
 
+  delete si ;
+
   return ;
 }
 
@@ -2058,7 +2060,9 @@ void testSettingSolutions (OsiSolverInterface &proto)
   { failureMessage(*si,"Errors handling imposed column/row solutions.") ; }
 
   delete [] dummyColSol ;
+  delete [] colShouldBe ;
   delete [] dummyRowSol ;
+  delete [] rowShouldBe ;
 
   delete si ;
 
@@ -3368,7 +3372,8 @@ void testAddToEmptySystem (const OsiSolverInterface *emptySi,
   glpk, and cplex agree that it's correct.
 
   This test could be made stronger, but more brittle, by checking for the
-  expected size of the constraint system after presolve.
+  expected size of the constraint system after presolve. It would also be good
+  to add a maximisation problem and check for signs of reduced costs and duals.
 
   Returns the number of errors encountered.
 */
@@ -3401,6 +3406,8 @@ int testOsiPresolve (const OsiSolverInterface *emptySi,
     std::string mpsName = sampleProbs[i].first ;
     double correctObj = sampleProbs[i].second ;
 
+    std::cout << "  testing presolve on " << mpsName << "." << std::endl ;
+
     std::string fn = sampleDir+mpsName ;
     int mpsErrs = si->readMps(fn.c_str(),"mps") ;
     if (mpsErrs != 0)
@@ -3432,7 +3439,7 @@ int testOsiPresolve (const OsiSolverInterface *emptySi,
     double objValue = presolvedModel->getObjValue() ;
     int iters = presolvedModel->getIterationCount() ;
     if (!eq(correctObj,objValue))
-    { int oldprec = std::cout.precision(12) ;
+    { std::streamsize oldprec = std::cout.precision(12) ;
       std::cout
 	<< "Incorrect presolve objective " << objValue << " for " << mpsName
 	<< " in " << iters << " iterations; expected " << correctObj

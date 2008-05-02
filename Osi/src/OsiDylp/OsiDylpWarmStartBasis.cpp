@@ -49,6 +49,8 @@
 #ifndef ODSI_PARANOIA
 # define ODSI_PARANOIA 1
 #endif
+// #undef ODSI_PARANOIA
+// #define ODSI_PARANOIA 2
 
 /*
   The following symbol is useful only for detailed debugging.
@@ -860,6 +862,10 @@ void ODWSB::checkBasis () const
 
   if (retval == false)
   { std::cerr << "Basis consistency check failed!" << std::endl ; }
+# if ODSI_PARANOIA >= 3
+  else
+  { std::cerr << "Basis consistency check passed!" << std::endl ; }
+# endif
   
   return ; }
 

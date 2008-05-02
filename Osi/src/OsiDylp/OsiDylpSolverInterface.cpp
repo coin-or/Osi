@@ -112,9 +112,9 @@ namespace {
 			active warm start object)
 */
 
-#define ODSI_TRACK_FRESH 0
-#define ODSI_TRACK_SOLVERS 0
-#define ODSI_TRACK_ACTIVE 0
+// #define ODSI_TRACK_FRESH 1
+// #define ODSI_TRACK_SOLVERS 1
+// #define ODSI_TRACK_ACTIVE 1
 
 /*! \brief Define to enable paranoid checks.
 
@@ -133,6 +133,8 @@ namespace {
 #ifndef ODSI_PARANOIA
 # define ODSI_PARANOIA 1
 #endif
+// #undef ODSI_PARANOIA
+// #define ODSI_PARANOIA 2
 
 
 /*! \brief Define to enable statistics collection in dylp
@@ -1136,7 +1138,7 @@ void ODSI::pessimal_primal ()
     else
     if (ubj < odsiInfinity)
     { xj = ubj ;
-      statj = CWSB::atLowerBound ; }
+      statj = CWSB::atUpperBound ; }
     else
     { xj = 0 ;
       statj = CWSB::isFree ; }
@@ -5702,9 +5704,9 @@ CoinWarmStart* ODSI::getWarmStart () const
   flags statj ;
 
 /*
-  If we have a fresh active basis, return a clone.
+  If we have an active basis, whatever the condition, return a clone.
 */
-  if (activeBasis.condition == ODSI::basisFresh)
+  if (activeBasis.condition != ODSI::basisNone)
   { return (activeBasis.basis->clone()) ; }
 /*
   Create an empty ODWSB object. If no solution exists, we can return

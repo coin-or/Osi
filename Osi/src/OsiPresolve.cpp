@@ -1,9 +1,17 @@
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
 
-//#define PRESOLVE_CONSISTENCY	1
-//#define PRESOLVE_DEBUG	1
-//#define PRESOLVE_SUMMARY 1
+/*
+  Debug compile symbols for CoinPresolve.
+
+  DEFINE THE SAME SET OF SYMBOLS when building the various CoinPresolve*.cpp
+  files in CoinUtils. Without consistent symbol definitions, the results will
+  be somewhere between garbage and a core dump.
+*/
+
+// #define PRESOLVE_CONSISTENCY	1
+// #define PRESOLVE_DEBUG	1
+// #define PRESOLVE_SUMMARY 1
 
 #include <stdio.h>
 
@@ -210,13 +218,37 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
       }
     }
 /*
-  Nor this, assuming the si's clone function works.
+  If we're feasible, load the presolved system into the solver. Presumably we
+  could skip model update and copying of status and solution if presolve took
+  no action.
 */
     if (prob.status_ == 0) {
-      // feasible
     
       prob.update_model(presolvedModel_, nrows_, ncols_, nelems_);
-      // copy status and solution
+
+#     if PRESOLVE_CONSISTENCY > 0
+      if (doStatus)
+      { int basicCnt = 0 ;
+	int i ;
+	CoinWarmStartBasis::Status status ;
+	for (i = 0 ; i < prob.ncols_ ; i++)
+	{ status = (CoinWarmStartBasis::Status) prob.getColumnStatus(i);
+	  if (status == CoinWarmStartBasis::basic) basicCnt++ ; }
+	for (i = 0 ; i < prob.nrows_ ; i++)
+	{ status = (CoinWarmStartBasis::Status) prob.getRowStatus(i);
+	  if (status == CoinWarmStartBasis::basic) basicCnt++ ; }
+
+	assert (basicCnt == prob.nrows_) ;
+      }
+#     endif
+
+/*
+  Install the status and primal solution, if we've been carrying them along.
+
+  The code that copies status is efficient but brittle. The current definitions
+  for CoinWarmStartBasis::Status and CoinPrePostsolveMatrix::Status are in
+  one-to-one correspondence. This code will fail if that ever changes.
+*/
       if (doStatus) {
 	presolvedModel_->setColSolution(prob.sol_);
 	CoinWarmStartBasis *basis = 
@@ -242,7 +274,10 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
 	prob.acts_=NULL;
 	prob.colstat_=NULL;
       }
-      
+/*
+  Copy original column and row information from the CoinPresolveMatrix object
+  so it'll be available for postsolve.
+*/
       int ncolsNow = presolvedModel_->getNumCols();
       memcpy(originalColumn_,prob.originalColumn_,ncolsNow*sizeof(int));
       delete [] prob.originalColumn_;
@@ -251,6 +286,7 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
       memcpy(originalRow_,prob.originalRow_,nrowsNow*sizeof(int));
       delete [] prob.originalRow_;
       prob.originalRow_=NULL;
+
       // now clean up integer variables.  This can modify original
       {
 	int numberChanges=0;
@@ -306,12 +342,11 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
     int nrowsAfter = presolvedModel_->getNumRows();
     int ncolsAfter = presolvedModel_->getNumCols();
     CoinBigIndex nelsAfter = presolvedModel_->getNumElements();
-    presolvedModel_->messageHandler()->message(COIN_PRESOLVE_STATS,
-					       messages)
-						 <<nrowsAfter<< -(nrows_ - nrowsAfter)
-						 << ncolsAfter<< -(ncols_ - ncolsAfter)
-						 <<nelsAfter<< -(nelems_ - nelsAfter)
-						 <<CoinMessageEol;
+    presolvedModel_->messageHandler()->message(COIN_PRESOLVE_STATS, messages)
+			   <<nrowsAfter<< -(nrows_ - nrowsAfter)
+			   << ncolsAfter<< -(ncols_ - ncolsAfter)
+			   <<nelsAfter<< -(nelems_ - nelsAfter)
+			   <<CoinMessageEol;
   } else {
     gutsOfDestroy();
     delete presolvedModel_;
@@ -383,18 +418,43 @@ OsiPresolve::postsolve(bool updateStatus)
   } 
   delete presolvedBasis;
 
-  // CoinPostsolveMatrix object assumes ownership of sol, acts, colstat.
-  CoinPostsolveMatrix prob(presolvedModel_,
-		       ncols0,
-		       nrows0,
-		       nelems0,
-		       presolvedModel_->getObjSense(),
-		       // end prepost
-		       
-		       sol, acts,
-		       colstat, rowstat);
-    
+# if PRESOLVE_CONSISTENCY > 0
+  if (updateStatus)
+  { int basicCnt = 0 ;
+    int i ;
+    for (i = 0 ; i < ncols ; i++)
+    { if (colstat[i] == CoinWarmStartBasis::basic) basicCnt++ ; }
+    for (i = 0 ; i < nrows ; i++)
+    { if (rowstat[i] == CoinWarmStartBasis::basic) basicCnt++ ; }
+
+    assert (basicCnt == nrows) ;
+  }
+# endif
+
+/*
+  Postsolve back to the original problem.  The CoinPostsolveMatrix object
+  assumes ownership of sol, acts, colstat, and rowstat.
+*/
+  CoinPostsolveMatrix prob(presolvedModel_, ncols0, nrows0, nelems0,
+			   presolvedModel_->getObjSense(),
+			   sol, acts, colstat, rowstat);
+
   postsolve(prob);
+
+
+# if PRESOLVE_CONSISTENCY > 0
+  if (updateStatus)
+  { int basicCnt = 0 ;
+    int i ;
+    for (i = 0 ; i < ncols0 ; i++)
+    { if (prob.getColumnStatus(i) == CoinWarmStartBasis::basic) basicCnt++ ; }
+    for (i = 0 ; i < nrows0 ; i++)
+    { if (prob.getRowStatus(i) == CoinWarmStartBasis::basic) basicCnt++ ; }
+
+    assert (basicCnt == nrows0) ;
+  }
+# endif
+
   originalModel_->setColSolution(sol);
   if (updateStatus) {
     CoinWarmStartBasis *basis = 
@@ -442,7 +502,7 @@ OsiPresolve::setOriginalModel(OsiSolverInterface * model)
 static int ATOI(const char *name)
 {
  return true;
-#if	DEBUG_PRESOLVE || PRESOLVE_SUMMARY
+#if	PRESOLVE_DEBUG || PRESOLVE_SUMMARY
   if (getenv(name)) {
     int val = atoi(getenv(name));
     printf("%s = %d\n", name, val);
@@ -459,9 +519,7 @@ static int ATOI(const char *name)
 }
 #endif
 
-// #define DEBUG_PRESOLVE 1
-
-#if DEBUG_PRESOLVE
+#if PRESOLVE_DEBUG
 // Anonymous namespace for debug routines
 namespace {
 
@@ -503,7 +561,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 
   prob->status_=0; // say feasible
 
-# if DEBUG_PRESOLVE
+# if PRESOLVE_DEBUG
   const CoinPresolveAction *pactiond = 0 ;
   presolve_check_sol(prob) ;
 # endif
@@ -515,7 +573,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 */
   paction_ = make_fixed(prob, paction_);
 
-# if DEBUG_PRESOLVE
+# if PRESOLVE_DEBUG
   check_and_tell(prob,paction_,pactiond) ;
 # endif
 
@@ -659,7 +717,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 							notFinished);
 	  if (prob->status_)
 	    break;
-#	  if DEBUG_PRESOLVE
+#	  if PRESOLVE_DEBUG
 	  check_and_tell(prob,paction_,pactiond) ;
 #	  endif
 	}
@@ -668,7 +726,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 	  paction_ = doubleton_action::presolve(prob, paction_);
 	  if (prob->status_)
 	    break;
-#	  if DEBUG_PRESOLVE
+#	  if PRESOLVE_DEBUG
 	  check_and_tell(prob,paction_,pactiond) ;
 #	  endif
 	}
@@ -677,7 +735,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 	  paction_ = tripleton_action::presolve(prob, paction_);
 	  if (prob->status_)
 	    break;
-#	  if DEBUG_PRESOLVE
+#	  if PRESOLVE_DEBUG
 	  check_and_tell(prob,paction_,pactiond) ;
 #	  endif
 	}
@@ -686,7 +744,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 	  paction_ = do_tighten_action::presolve(prob, paction_);
 	  if (prob->status_)
 	    break;
-#	  if DEBUG_PRESOLVE
+#	  if PRESOLVE_DEBUG
 	  check_and_tell(prob,paction_,pactiond) ;
 #	  endif
 	}
@@ -695,7 +753,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 	  paction_ = forcing_constraint_action::presolve(prob, paction_);
 	  if (prob->status_)
 	    break;
-#	  if DEBUG_PRESOLVE
+#	  if PRESOLVE_DEBUG
 	  check_and_tell(prob,paction_,pactiond) ;
 #	  endif
 	}
@@ -704,7 +762,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 	  paction_ = implied_free_action::presolve(prob, paction_,fill_level);
 	  if (prob->status_)
 	    break;
-#	  if DEBUG_PRESOLVE
+#	  if PRESOLVE_DEBUG
 	  check_and_tell(prob,paction_,pactiond) ;
 #	  endif
 	}
@@ -714,7 +772,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 			  prob->hinrow_,prob->nrows_) ;
 #	endif
 
-#	if 0 && DEBUG_PRESOLVE
+#	if 0 && PRESOLVE_DEBUG
 
     /* 
       For reasons that escape me just now, the linker is unable to find
@@ -802,7 +860,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 	for (itry=0;itry<5;itry++) {
 	  const CoinPresolveAction * const paction2 = paction_;
 	  paction_ = remove_dual_action::presolve(prob, paction_);
-#	  if DEBUG_PRESOLVE
+#	  if PRESOLVE_DEBUG
 	  check_and_tell(prob,paction_,pactiond) ;
 #	  endif
 	  if (prob->status_)
@@ -810,7 +868,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 	  if (ifree) {
 	    int fill_level=0; // switches off substitution
 	    paction_ = implied_free_action::presolve(prob, paction_,fill_level);
-#	    if DEBUG_PRESOLVE
+#	    if PRESOLVE_DEBUG
 	    check_and_tell(prob,paction_,pactiond) ;
 #	    endif
 	    if (prob->status_)
@@ -826,7 +884,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
         if ((presolveActions_&1)!=0)
           prob->setPresolveOptions(prob->presolveOptions()|1);
 	paction_ = dupcol_action::presolve(prob, paction_);
-#	if DEBUG_PRESOLVE
+#	if PRESOLVE_DEBUG
 	check_and_tell(prob,paction_,pactiond) ;
 #	endif
 	if (prob->status_)
@@ -835,7 +893,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
       
       if (duprow) {
 	paction_ = duprow_action::presolve(prob, paction_);
-#	if DEBUG_PRESOLVE
+#	if PRESOLVE_DEBUG
 	check_and_tell(prob,paction_,pactiond) ;
 #	endif
 	if (prob->status_)
@@ -868,7 +926,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
         }
       }
 #if	PRESOLVE_DEBUG
-      check_sol(prob,1.0e0);
+      presolve_check_sol(prob,1.0e0);
 #endif
       if (paction_ == paction0||stopLoop)
 	break;
@@ -881,17 +939,17 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 */
   if (!prob->status_) {
     paction_ = drop_zero_coefficients(prob, paction_);
-#   if DEBUG_PRESOLVE
+#   if PRESOLVE_DEBUG
     check_and_tell(prob,paction_,pactiond) ;
 #   endif
 
     paction_ = drop_empty_cols_action::presolve(prob, paction_);
-#   if DEBUG_PRESOLVE
+#   if PRESOLVE_DEBUG
     check_and_tell(prob,paction_,pactiond) ;
 #   endif
 
     paction_ = drop_empty_rows_action::presolve(prob, paction_);
-#   if DEBUG_PRESOLVE
+#   if PRESOLVE_DEBUG
     check_and_tell(prob,paction_,pactiond) ;
 #   endif
   }
@@ -925,40 +983,37 @@ void OsiPresolve::postsolve(CoinPostsolveMatrix &prob)
 {
   const CoinPresolveAction *paction = paction_;
 
-#if	DEBUG_PRESOLVE
+#if	PRESOLVE_DEBUG
   printf("Begin POSTSOLVING\n") ;
   if (prob.colstat_)
   { presolve_check_nbasic(&prob);
     presolve_check_sol(&prob); }
-#endif
-  
-#if	DEBUG_PRESOLVE
   presolve_check_duals(&prob);
 #endif
   
   
   while (paction) {
-#   if DEBUG_PRESOLVE
+#   if PRESOLVE_DEBUG
     printf("POSTSOLVING %s\n", paction->name());
 #   endif
 
     paction->postsolve(&prob);
     
-#   if DEBUG_PRESOLVE
+#   if PRESOLVE_DEBUG
     if (prob.colstat_)
     { presolve_check_nbasic(&prob);
       presolve_check_sol(&prob); }
 #   endif
     paction = paction->next;
-#   if DEBUG_PRESOLVE
+#   if PRESOLVE_DEBUG
     presolve_check_duals(&prob);
 #   endif
   }    
-# if DEBUG_PRESOLVE
+# if PRESOLVE_DEBUG
     printf("End POSTSOLVING\n") ;
 # endif
   
-#if	0 && DEBUG_PRESOLVE
+#if	0 && PRESOLVE_DEBUG
 
   << This block of checks will require some work to get it to compile. >>
 
@@ -986,7 +1041,7 @@ void OsiPresolve::postsolve(CoinPostsolveMatrix &prob)
   
 #endif
   
-#if	0 && DEBUG_PRESOLVE
+#if	0 && PRESOLVE_DEBUG
 
   << This block of checks will require some work to get it to compile. >>
 
@@ -1090,6 +1145,7 @@ static inline double getTolerance(const OsiSolverInterface  *si, OsiDblParam key
 // ncols may be larger than si.getNumCols() in postsolve,
 // this at that point si will be the reduced problem,
 // but we need to reserve enough space for the original problem.
+
 CoinPrePostsolveMatrix::CoinPrePostsolveMatrix(const OsiSolverInterface * si,
 					     int ncols_in,
 					     int nrows_in,
@@ -1098,13 +1154,10 @@ CoinPrePostsolveMatrix::CoinPrePostsolveMatrix(const OsiSolverInterface * si,
   nelems_(si->getNumElements()),
   ncols0_(ncols_in),
   nrows0_(nrows_in),
-  bulk0_(2*nelems_in),
   bulkRatio_(2.0),
 
   mcstrt_(new CoinBigIndex[ncols_in+1]),
   hincol_(new int[ncols_in+1]),
-  hrow_  (new int   [2*nelems_in]),
-  colels_(new double[2*nelems_in]),
 
   cost_(new double[ncols_in]),
   clo_(new double[ncols_in]),
@@ -1124,6 +1177,10 @@ CoinPrePostsolveMatrix::CoinPrePostsolveMatrix(const OsiSolverInterface * si,
   messages_()
 
 {
+  bulk0_ = bulkRatio_*nelems_in ;
+  hrow_ = new int [bulk0_] ;
+  colels_ = new double[bulk0_] ;
+
   si->getDblParam(OsiObjOffset,originalOffset_);
   int ncols = si->getNumCols();
   int nrows = si->getNumRows();
@@ -1186,8 +1243,6 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
   // temporary init
   mrstrt_(new CoinBigIndex[nrows_in+1]),
   hinrow_(new int[nrows_in+1]),
-  rowels_(new double[2*nelems_in]),
-  hcol_(new int[2*nelems_in]),
   integerType_(new unsigned char[ncols0_in]),
   tuning_(false),
   startTime_(0.0),
@@ -1205,8 +1260,12 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
   presolveOptions_(0)
 
 {
+
+  rowels_ = new double [bulk0_] ;
+  hcol_ = new int [bulk0_] ;
+
   nrows_ = si->getNumRows() ;
-  const int bufsize = 2*nelems_in;
+  const int bufsize = bulkRatio_*nelems_in;
 
   // Set up change bits
   rowChanged_ = new unsigned char[nrows_];
@@ -1412,18 +1471,32 @@ CoinPostsolveMatrix::CoinPostsolveMatrix(OsiSolverInterface*  si,
 
 				       unsigned char *colstat_in,
 				       unsigned char *rowstat_in) :
-  CoinPrePostsolveMatrix(si,
-			ncols0_in, nrows0_in, nelems0),
 
-  free_list_(0),
-  maxlink_(2*nelems0),
-  link_(new int[/*maxlink*/ 2*nelems0]),
-      
+  CoinPrePostsolveMatrix(si, ncols0_in, nrows0_in, nelems0),
+/*
+  Used only to mark processed columns and rows so that debugging routines know
+  what to check.
+*/
+# if PRESOLVE_DEBUG || PRESOLVE_CONSISTENCY
   cdone_(new char[ncols0_in]),
   rdone_(new char[nrows0_in])
+# else
+  cdone_(0),
+  rdone_(0)
+# endif
 
 {
-  bulk0_ = maxlink_ ;
+/*
+  The CoinPrePostsolveMatrix constructor will set bulk0_ to bulkRatio_*nelems0.
+  By default, bulkRatio_ is 2. This is certainly larger than absolutely
+  necessary, but good for efficiency (minimises the need to compress the bulk
+  store). The main storage arrays for the threaded column-major representation
+  (hrow_, colels_, link_) should be allocated to this size.
+*/
+  free_list_ = 0 ;
+  maxlink_ = bulk0_ ;
+  link_ = new int[maxlink_] ;
+
   nrows_ = si->getNumRows() ;
   ncols_ = si->getNumCols() ;
 
@@ -1456,32 +1529,17 @@ CoinPostsolveMatrix::CoinPostsolveMatrix(OsiSolverInterface*  si,
   CoinDisjointCopyN(m->getElements(),     nelemsr, colels_);
 
 
-#if	0 && DEBUG_PRESOLVE
-  presolve_check_costs(model, &colcopy);
-#endif
-
-  // This determines the size of the data structure that contains
-  // the matrix being postsolved.  Links are taken from the free_list
-  // to recreate matrix entries that were presolved away,
-  // and links are added to the free_list when entries created during
-  // presolve are discarded.  There is never a need to gc this list.
-  // Naturally, it should contain
-  // exactly nelems0 entries "in use" when postsolving is done,
-  // but I don't know whether the matrix could temporarily get
-  // larger during postsolving.  Substitution into more than two
-  // rows could do that, in principle.  I am being very conservative
-  // here by reserving much more than the amount of space I probably need.
-  //  int bufsize = 2*nelems0;
-
+# if PRESOLVE_DEBUG || PRESOLVE_CONSISTENCY
   memset(cdone_, -1, ncols0_);
   memset(rdone_, -1, nrows0_);
+# endif
 
   rowduals_ = new double[nrows0_];
   CoinDisjointCopyN(si->getRowPrice(), nrows1, rowduals_);
-
   rcosts_ = new double[ncols0_];
   CoinDisjointCopyN(si->getReducedCost(), ncols1, rcosts_);
-#if 0
+
+#if PRESOLVE_DEBUG
   // check accuracy of reduced costs (rcosts_ is recalculated reduced costs)
   si->getMatrixByCol()->transposeTimes(rowduals_,rcosts_);
   const double * obj =si->getObjCoefficients();
@@ -1505,6 +1563,7 @@ CoinPostsolveMatrix::CoinPostsolveMatrix(OsiSolverInterface*  si,
 	assert (fabs(rowduals_[i])<1.0e-5);
   }
 #endif
+
   if (maxmin<0.0) {
     // change so will look as if minimize
     int i;
@@ -1515,10 +1574,12 @@ CoinPostsolveMatrix::CoinPostsolveMatrix(OsiSolverInterface*  si,
     }
   }
 
-  //CoinDisjointCopyN(si->getRowUpper(), nrows1, rup_);
-  //CoinDisjointCopyN(si->getRowLower(), nrows1, rlo_);
-
+/*
+  CoinPresolve requires both column solution and row activity for correct
+  operation.
+*/
   CoinDisjointCopyN(si->getColSolution(), ncols1, sol_);
+  CoinDisjointCopyN(si->getRowActivity(), nrows1, acts_) ;
   si->setDblParam(OsiObjOffset,originalOffset_);
 
   for (int j=0; j<ncols1; j++) {

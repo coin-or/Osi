@@ -70,7 +70,7 @@ public:
   */
   virtual int chooseVariable( OsiSolverInterface * solver, OsiBranchingInformation *info, bool fixVariables);
   /// Returns true if solution looks feasible against given objects
-  bool feasibleSolution(const OsiBranchingInformation * info,
+  virtual bool feasibleSolution(const OsiBranchingInformation * info,
 			const double * solution,
 			int numberObjects,
 			const OsiObject ** objects);

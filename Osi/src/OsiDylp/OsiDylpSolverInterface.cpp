@@ -4191,7 +4191,7 @@ bool ODSI::setHintParam (OsiHintParam key, bool sense,
       else
       { initial_gtxecho = false ;
 	resolve_gtxecho = false ; }
-      messageHandler()->setLogLevel(verbosity) ;
+      messageHandler()->setLogLevel(verbosity&0x7) ;
       dy_setprintopts((verbosity&0x7),initialSolveOptions) ;
       dy_setprintopts((verbosity&0x7),resolveOptions) ;
       retval = true ;

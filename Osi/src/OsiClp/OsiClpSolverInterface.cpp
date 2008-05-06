@@ -855,11 +855,13 @@ OsiClpSolverInterface::setupForRepeatedUse(int senseOfAdventure, int printOut)
       messageLevel--;
     stopPrinting = (messageLevel<=0);
   }
+#ifndef COIN_DEVELOP
   if (stopPrinting) {
     CoinMessages * messagesPointer = modelPtr_->messagesPointer();
     // won't even build messages 
     messagesPointer->setDetailMessages(100,10000,(int *) NULL);
   }
+#endif
 }
 #ifndef NDEBUG
 // For errors to make sure print to screen
@@ -7022,16 +7024,24 @@ OsiClpSolverInterface::tightenBounds()
 	double objValue = direction*objective[iColumn];
 	if (objValue>=0.0&&(canGo&1)==0) {
 #if COIN_DEVELOP>2
-	  printf("dual fix down on continuous column %d\n",iColumn);
+	  printf("dual fix down on continuous column %d lower %g\n",
+		 iColumn,lower);
 #endif
-	  nTightened++;;
-	  setColUpper(iColumn,lower);
+	  // Only if won't cause numerical problems
+	  if (lower>-1.0e10) {
+	    nTightened++;;
+	    setColUpper(iColumn,lower);
+	  }
 	} else if (objValue<=0.0&&(canGo&2)==0) {
 #if COIN_DEVELOP>2
-	  printf("dual fix up on continuous column %d\n",iColumn);
+	  printf("dual fix up on continuous column %d upper %g\n",
+		 iColumn,upper);
 #endif
-	  nTightened++;;
-	  setColLower(iColumn,upper);
+	  // Only if won't cause numerical problems
+	  if (upper<1.0e10) {
+	    nTightened++;;
+	    setColLower(iColumn,upper);
+	  }
 	}
       }
     }

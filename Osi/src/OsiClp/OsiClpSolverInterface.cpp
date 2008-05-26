@@ -10,7 +10,6 @@
 #endif
  
 #include "CoinTime.hpp"
-
 #include "CoinHelperFunctions.hpp"
 #include "CoinIndexedVector.hpp"
 #include "CoinModel.hpp"
@@ -774,9 +773,11 @@ void OsiClpSolverInterface::resolve()
   modelPtr_->popMessageHandler(saveHandler,oldDefault);
   modelPtr_->messageHandler()->setLogLevel(saveMessageLevel);
   if (saveSolveType==2) {
+    int saveStatus = modelPtr_->problemStatus_;
     enableSimplexInterface(doingPrimal);
+    modelPtr_->problemStatus_=saveStatus;
   }
-#ifdef COIN_DEVELOP
+#ifdef COIN_DEVELOP_x
   extern bool doingDoneBranch;
   if (doingDoneBranch) {
     if (modelPtr_->numberIterations())
@@ -4357,7 +4358,7 @@ OsiClpSolverInterface::enableSimplexInterface(bool doingPrimal)
   modelPtr_->startup(0);
 #else
   int returnCode=modelPtr_->startup(0);
-  assert (!returnCode);
+  assert (!returnCode||returnCode==2);
 #endif
   modelPtr_->specialOptions_=saveOptions;
   modelPtr_->numberIterations_=saveIts;
@@ -4388,7 +4389,8 @@ OsiClpSolverInterface::disableSimplexInterface()
 void 
 OsiClpSolverInterface::enableFactorization() const
 {
-  saveData_.scalingFlag_=specialOptions_;
+  specialOptions_ &= ~0x80000000;
+  saveData_.specialOptions_=specialOptions_;
   int saveStatus = modelPtr_->problemStatus_;
   if ((specialOptions_&(1+8))!=1+8)
     setSpecialOptionsMutable((1+8)|specialOptions_);
@@ -4396,7 +4398,7 @@ OsiClpSolverInterface::enableFactorization() const
   modelPtr_->startup(0);
 #else
   int returnCode=modelPtr_->startup(0);
-  assert (!returnCode);
+  assert (!returnCode||returnCode==2);
 #endif
   modelPtr_->problemStatus_=saveStatus;
 }
@@ -4405,7 +4407,7 @@ OsiClpSolverInterface::enableFactorization() const
 void 
 OsiClpSolverInterface::disableFactorization() const
 {
-  specialOptions_=saveData_.scalingFlag_;
+  specialOptions_=saveData_.specialOptions_;
   // declare optimality anyway  (for message handler)
   modelPtr_->setProblemStatus(0);
   // message will not appear anyway
@@ -5346,7 +5348,7 @@ OsiClpSolverInterface::setHintParam(OsiHintParam key, bool yesNo,
         specialOptions_=0;
       }
       // set normal
-      specialOptions_ &= (1023+3*8192+3*65536);
+      specialOptions_ &= (1023+3*8192+7*65536);
       if (otherInformation!=NULL) {
         int * array = (int *) otherInformation;
         if (array[0]>=0||array[0]<=2)
@@ -6738,7 +6740,7 @@ OsiClpSolverInterface::restoreBaseModel(int numberRows)
 int 
 OsiClpSolverInterface::tightenBounds()
 {
-  if (!integerInformation_)
+  if (!integerInformation_||(specialOptions_&262144)!=0)
     return 0; // no integers
   //CoinPackedMatrix matrixByRow(*getMatrixByRow());
   int numberRows = getNumRows();

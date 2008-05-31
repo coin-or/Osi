@@ -907,6 +907,9 @@ public:
   inline unsigned int specialOptions() const
   { return specialOptions_;}
   void setSpecialOptions(unsigned int value);
+  /// Last algorithm used , 1 = primal, 2 = dual
+  inline int lastAlgorithm() const
+  { return lastAlgorithm_;}
   /// Get scaling action option
   inline int cleanupScaling() const
   { return cleanupScaling_;}

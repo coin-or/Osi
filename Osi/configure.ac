@@ -66,7 +66,10 @@ AC_COIN_HAS_PROJECT(Vol)
 #                            Third party solvers                            #
 #############################################################################
 
-# Check which third party solvers are available ToDo!
+# Check which third party solvers are available. Cplex detection has been
+# tested on a semi-regular basis, and Mosek detection most likely works. For
+# the rest, it's anyone's guess.  -- lh, 080529 --
+
 AC_COIN_HAS_USER_LIBRARY([Cplex],[CPX],[cplex.h],[CPXgetstat])
 AC_COIN_HAS_USER_LIBRARY([FortMP],[FMP])  #ToDo! is Fortran?
 AC_COIN_HAS_USER_LIBRARY([Mosek],[MSK],[mosek.h],[MSK_openmosek])
@@ -74,10 +77,24 @@ AC_COIN_HAS_USER_LIBRARY([Osl],[OSL],[ekk_c_api.h],[ekk_simplex])
 AC_COIN_HAS_USER_LIBRARY([Soplex],[SPX],[spxsolver.h]) # ToDo
 AC_COIN_HAS_USER_LIBRARY([Xpress],[XPR],[xprs.h],[XPRSsetintcontrol])
 
+# Glpk can be supplied as a ThirdParty code, or as an external library in the
+# same was as the previous solvers.
+
 AC_COIN_HAS_GLPK(Glpk)
 
 # We need Ampl in case we're using Cbc and it's build with Ampl.
+
 AC_COIN_HAS_ASL
+
+
+#############################################################################
+#		  Capability Tests					    #
+#############################################################################
+
+# Windows has lots of annoying quirks. Presence of this header file is
+# necessary to suppress one of them.
+
+AC_CHECK_HEADERS([windows.h])
 
 #############################################################################
 #                 Configuration options for individual OSIs                 #

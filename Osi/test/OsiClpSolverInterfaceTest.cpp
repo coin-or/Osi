@@ -1544,6 +1544,8 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
         rowArray->checkClear();
       }
       printf("\n");
+      delete rowArray;
+      delete columnArray;
     }
     // may not be needed - but cleaner
     m.disableFactorization();

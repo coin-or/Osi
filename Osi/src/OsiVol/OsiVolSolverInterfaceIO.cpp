@@ -403,7 +403,7 @@ OsiVolSolverInterface::readMps(const char *filename, const char *extension)
 	       reader.getObjCoefficients(),
 	       reader.getRowLower(), reader.getRowUpper());
    int nc = getNumCols();
-   continuous_= new bool[maxNumcols_];
+   assert (continuous_);
    CoinFillN(continuous_, nc, true);
    return retVal;
 }

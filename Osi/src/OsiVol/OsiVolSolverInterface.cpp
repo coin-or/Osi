@@ -981,6 +981,12 @@ void
 OsiVolSolverInterface::setColSolution(const double *colsol)
 {
    CoinDisjointCopyN(colsol, getNumCols(), colsol_);
+  // Compute the left hand side (row activity levels)
+  if (isZeroOneMinusOne_) {
+    colMatrixOneMinusOne_->timesMajor(colsol_, lhs_);
+  } else {
+    colMatrix_.times(colsol_, lhs_);
+  }
 }
 
 //-----------------------------------------------------------------------
@@ -989,6 +995,7 @@ void
 OsiVolSolverInterface::setRowPrice(const double *rowprice)
 {
    CoinDisjointCopyN(rowprice, getNumRows(), rowprice_);
+   compute_rc_(rowprice_, rc_);
 }
 
 //#############################################################################
@@ -1217,6 +1224,7 @@ OsiVolSolverInterface::OsiVolSolverInterface () :
    rowMatrix_(),
    colMatrixCurrent_(true),
    colMatrix_(),
+   isZeroOneMinusOne_(false),
 
    colupper_(0),
    collower_(0),
@@ -1262,6 +1270,7 @@ OsiVolSolverInterface::OsiVolSolverInterface(const OsiVolSolverInterface& x) :
    rowMatrix_(),
    colMatrixCurrent_(true),
    colMatrix_(),
+   isZeroOneMinusOne_(false),
 
    colupper_(0),
    collower_(0),

@@ -1379,6 +1379,7 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
   intResult = si->readMps(fn.c_str(),"mps") ;
   if (intResult != 0)
   { failureMessage(solverName,"Read MPS input file.") ;
+    delete si;
     return ; }
 
   OsiSolverInterface::OsiNameVec rowNames ;
@@ -1456,6 +1457,7 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
     boolResult = si->setIntParam(OsiNameDiscipline,nameDiscipline) ;
     if (boolResult == false)
     { failureMessage(solverName,"OsiNameDiscipline = 0 parameter set") ;
+      delete si;
       return ; } }
 /*
   This block of tests for default names should pass even if the underlying
@@ -1514,6 +1516,7 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
       { msg << "; " << errCnt << " naming errors" ; }
       msg << "." ;
       failureMessage(solverName,msg.str()) ; }
+    delete si;
     return ; }
 /*
   Switch back to lazy names. The previous names should again be available.
@@ -1523,6 +1526,7 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
   boolResult = si->setIntParam(OsiNameDiscipline,nameDiscipline) ;
   if (boolResult == false)
   { failureMessage(solverName,"OsiNameDiscipline = 1 parameter set.") ;
+    delete si;
     return ; }
   rowNames = si->getRowNames() ;
   rowNameCnt = rowNames.size() ;
@@ -1580,6 +1584,7 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
   si->addRow(newRow,-4.2, .42) ;
   if (si->getNumRows() != m+1)
   { failureMessage(solverName,"add new row") ;
+    delete si;
     return ; }
   rowNames = si->getRowNames() ;
   rowNameCnt = rowNames.size() ;
@@ -1654,6 +1659,7 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
   si->addCol(newCol,-4.2, .42, 42.0) ;
   if (si->getNumCols() != n+1)
   { failureMessage(solverName,"add new column") ;
+    delete si;
     return ; }
   colNames = si->getColNames() ;
   colNameCnt = colNames.size() ;
@@ -1836,6 +1842,7 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
   boolResult = si->setIntParam(OsiNameDiscipline,nameDiscipline) ;
   if (boolResult == false)
   { failureMessage(solverName,"OsiNameDiscipline = 2 parameter set") ;
+    delete si;
     return ; }
   m = si->getNumRows() ;
   rowNames = si->getRowNames() ;
@@ -1910,7 +1917,6 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
     failureMessage(solverName,msg.str()) ; }
 
   delete si ;
-
   return ;
 }
 

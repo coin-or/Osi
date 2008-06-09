@@ -646,6 +646,30 @@ public:
   LPX * getModelPtr();
 
   //@}
+  
+  /**@name Static instance counter methods */
+  /** GLPK has a context which must be freed after all GLPK LPs (or MIPs) are freed.
+   * It is automatically created when the first LP is created.   
+      This method:
+      <ul>
+        <li>Increments by 1 the number of uses of the GLPK environment.
+      </ul>
+  */
+  static void incrementInstanceCounter() { ++numInstances_; }
+    
+  /** GLPK has a context which must be freed after all GLPK LPs (or MIPs) are freed.
+      This method:
+      <ul>
+      <li>Decrements by 1 the number of uses of the GLPK environment.
+      <li>Deletes the GLPK environment when the number of uses is change to 0 from 1.
+      </ul>
+  */
+  static void decrementInstanceCounter();
+    
+  /// Return the number of LP/MIP instances of instantiated objects using the GLPK environment.
+  static unsigned int getNumInstances() { return numInstances_; }
+  //@}
+
 
   /**@name Constructors and destructor */
   //@{
@@ -728,6 +752,10 @@ private:
   //@{
   /// GPLK model represented by this class instance
   mutable LPX* lp_;
+  
+  /// number of GLPK instances currently in use (counts only those created by OsiGlpk) 
+  static unsigned int numInstances_;
+
 
   // Remember whether simplex or b&b was most recently done
   // 0 = simplex;  1 = b&b

@@ -2818,6 +2818,7 @@ OGSI::OsiGlpkSolverInterface ()
 OsiSolverInterface()
 {
 	gutsOfConstructor();
+  incrementInstanceCounter();
 
 # if OGSI_TRACK_SOLVERS > 0
   std::cout
@@ -2852,6 +2853,7 @@ OsiSolverInterface(source)
 {
 	gutsOfConstructor();
 	gutsOfCopy( source );
+  incrementInstanceCounter();
 
 # if OGSI_TRACK_SOLVERS > 0
   std::cout
@@ -2867,6 +2869,7 @@ OsiSolverInterface(source)
 OGSI::~OsiGlpkSolverInterface ()
 {
 	gutsOfDestructor();
+  decrementInstanceCounter();
 
 # if OGSI_TRACK_SOLVERS > 0
   std::cout
@@ -3409,3 +3412,14 @@ void OGSI::setColName (int ndx, std::string name)
 
   return ; }
 
+
+//-----------------------------------------------------------------------------
+
+unsigned int OsiGlpkSolverInterface::numInstances_ = 0;
+
+void OsiGlpkSolverInterface::decrementInstanceCounter()
+{
+  assert( numInstances_ != 0 );
+  if ( --numInstances_ == 0 )
+  	glp_free_env();
+}

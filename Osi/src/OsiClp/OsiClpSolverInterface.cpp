@@ -805,12 +805,17 @@ void OsiClpSolverInterface::resolve()
 void 
 OsiClpSolverInterface::lexSolve()
 {
+#if 1
+  abort();
+#else
   ((ClpSimplexPrimal *) modelPtr_)->lexSolve();
   printf("itA %d\n",modelPtr_->numberIterations());
   modelPtr_->primal();
   printf("itB %d\n",modelPtr_->numberIterations());
   basis_ = getBasis(modelPtr_);
+#endif
 }
+
 /* Sets up solver for repeated use by Osi interface.
    The normal usage does things like keeping factorization around so can be used.
    Will also do things like keep scaling and row copy of matrix if

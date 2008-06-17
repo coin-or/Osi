@@ -6743,7 +6743,7 @@ OsiClpSolverInterface::restoreBaseModel(int numberRows)
 }
 // Tighten bounds - lightweight
 int 
-OsiClpSolverInterface::tightenBounds()
+OsiClpSolverInterface::tightenBounds(int lightweight)
 {
   if (!integerInformation_||(specialOptions_&262144)!=0)
     return 0; // no integers
@@ -6772,6 +6772,106 @@ OsiClpSolverInterface::tightenBounds()
   const double *objective = getObjCoefficients() ;
   double direction = getObjSense();
   double * down = new double [numberRows];
+  if (lightweight) {
+    int * first = new int[numberRows];
+    CoinZeroN(first,numberRows);
+    CoinZeroN(down,numberRows);
+    double * sum = new double [numberRows];
+    CoinZeroN(sum,numberRows);
+    int numberTightened=0;
+    for (int iColumn=0;iColumn<numberColumns;iColumn++) {
+      CoinBigIndex start = columnStart[iColumn];
+      CoinBigIndex end = start + columnLength[iColumn];
+      double lower = columnLower[iColumn];
+      double upper = columnUpper[iColumn];
+      if (lower==upper) {
+	for (CoinBigIndex j=start;j<end;j++) {
+	  int iRow = row[j];
+	  double value = element[j];
+	  down[iRow] += value*lower;
+	  sum[iRow] += fabs(value*lower);
+	}
+      } else {
+	for (CoinBigIndex j=start;j<end;j++) {
+	  int iRow = row[j];
+	  int n=first[iRow];
+	  if (n==0&&element[j])
+	    first[iRow]=-iColumn-1;
+	  else if (n<0) 
+	    first[iRow]=2;
+	}
+      }
+    }
+    double tolerance = 1.0e-6;
+    const char * integerInformation = modelPtr_->integerType_;
+    for (int iRow=0;iRow<numberRows;iRow++) {
+      int iColumn = first[iRow];
+      if (iColumn<0) {
+	iColumn = -iColumn-1;
+	if ((integerInformation&&integerInformation[iColumn])||lightweight==2) {
+	  double lowerRow = rowLower[iRow];
+	  if (lowerRow>-1.0e20)
+	    lowerRow -= down[iRow];
+	  double upperRow = rowUpper[iRow];
+	  if (upperRow<1.0e20)
+	    upperRow -= down[iRow];
+	  double lower = columnLower[iColumn];
+	  double upper = columnUpper[iColumn];
+	  double value=0.0;
+	  for (CoinBigIndex j = columnStart[iColumn];
+	       j<columnStart[iColumn]+columnLength[iColumn];j++) {
+	    if (iRow==row[j]) {
+	      value=element[j];
+	      break;
+	    }
+	  }
+	  assert (value);
+	  // convert rowLower and Upper to implied bounds on column
+	  double newLower=-COIN_DBL_MAX;
+	  double newUpper=COIN_DBL_MAX;
+	  if (value>0.0) {
+	    if (lowerRow>-1.0e20)
+	      newLower = lowerRow/value;
+	    if (upperRow<1.0e20)
+	      newUpper = upperRow/value;
+	  } else {
+	    if (upperRow<1.0e20)
+	      newLower = upperRow/value;
+	    if (lowerRow>-1.0e20)
+	      newUpper = lowerRow/value;
+	  }
+	  double tolerance2 = 1.0e-6+1.0e-8*sum[iRow];
+	  if (integerInformation&&integerInformation[iColumn]) {
+	    if (newLower-floor(newLower)<tolerance2) 
+	      newLower=floor(newLower);
+	    else
+	      newLower=ceil(newLower);
+	    if (ceil(newUpper)-newUpper<tolerance2) 
+	      newUpper=ceil(newUpper);
+	    else
+	      newUpper=floor(newUpper);
+	  }
+	  if (newLower>lower+10.0*tolerance2||
+	      newUpper<upper-10.0*tolerance2) {
+	    numberTightened++;
+	    newLower = CoinMax(lower,newLower);
+	    newUpper = CoinMin(upper,newUpper);
+	    if (newLower>newUpper+tolerance) {
+	      //printf("XXYY inf on bound\n");
+	      numberTightened=-1;
+	      break;
+	    }
+	    setColLower(iColumn,newLower);
+	    setColUpper(iColumn,CoinMax(newLower,newUpper));
+	  }
+	}
+      }
+    }
+    delete [] first;
+    delete [] down;
+    delete [] sum;
+    return numberTightened;
+  }
   double * up = new double [numberRows];
   double * sum = new double [numberRows];
   int * type = new int [numberRows];

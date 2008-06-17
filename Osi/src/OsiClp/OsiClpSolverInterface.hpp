@@ -972,8 +972,10 @@ public:
   /// Pass in initial solve options
   inline void setSolveOptions(const ClpSolve & options)
   { solveOptions_ = options;}
-  /// Tighten bounds - lightweight
-  int tightenBounds();
+  /** Tighten bounds - lightweight or very lightweight
+      0 - normal, 1 lightweight but just integers, 2 lightweight and all
+  */
+  virtual int tightenBounds(int lightweight=0);
   //@}
   
   //---------------------------------------------------------------------------

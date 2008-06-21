@@ -6587,21 +6587,11 @@ OsiClpSolverInterface::branchAndBound() {
 	      newNode.parent_ = kNode;
 	      // push on stack
 	      branchingTree.push_back(newNode);
-#if 0
-	      } else {
-		// integer solution - save
-		bestNode = node;
-		// set cutoff (hard coded tolerance)
-		setDblParam(OsiDualObjectiveLimit,(bestNode.objectiveValue_-1.0e-5)*direction);
-		std::cout<<"Integer solution of "
-			 <<bestNode.objectiveValue_
-			 <<" found after "<<numberIterations
-			 <<" iterations and "<<numberNodes<<" nodes"
-                 <<std::endl;
-	      }
-#endif
 	    }
-	  }
+	  } else {
+	    // infeasible
+	    delete ws;
+ 	  }
         } else {
           // maximum iterations - exit
           std::cout<<"Exiting on maximum iterations"

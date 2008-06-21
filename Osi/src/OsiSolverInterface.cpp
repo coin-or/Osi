@@ -2083,6 +2083,8 @@ OsiSolverInterface::deleteBranchingInfo(int numberDeleted, const int * which)
 	  obj->setColumnNumber(jColumn);
 	  object_[numberObjects_++]=obj;
 	  numberIntegers_++;
+	} else {
+	  delete obj;
 	}
       } else {
 	// not integer - all I know about is SOS

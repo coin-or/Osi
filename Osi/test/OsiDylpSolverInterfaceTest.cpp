@@ -71,7 +71,7 @@ int test_starts (const std::string& mpsDir)
 
   double exmip1MinObj = 3.23684210526 ;
   double exmip1MaxObj = 4.5 ;
-  double old_prec = std::cout.precision() ;
+  std::streamsize old_prec = std::cout.precision() ;
 
   if (!osi)
   { std::cout

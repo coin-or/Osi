@@ -964,6 +964,7 @@ OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & n
     d[0]=iCol;
     m.deleteCols(1,d);
     delete [] d;
+    delete cwsb;
     d=NULL;
     m.resolve();
     objValue = m.getObjValue();
@@ -973,6 +974,7 @@ OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & n
     iCol = m.getNumCols()-1;
     cwsb = dynamic_cast<CoinWarmStartBasis *>(m.getWarmStart()) ;
     stati =  cwsb->getStructStatus(iCol) ;
+    delete cwsb;
     m.deleteCols(1,&iCol);
     if (stati == CoinWarmStartBasis::basic)
     { m.initialSolve() ; }

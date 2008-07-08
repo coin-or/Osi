@@ -321,6 +321,10 @@ public:
   /// Set pointer back to object which created
   inline void setOriginalObject(const OsiObject * object)
   {originalObject_=object;}
+  /** Double checks in case node can change its mind!
+      Returns objective value
+      Can change objective etc */
+  virtual void checkIsCutoff(double cutoff) {}
   /// For debug
   int columnNumber() const;
   /** \brief Print something about branch - only if log level high

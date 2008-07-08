@@ -7,11 +7,34 @@
 #  pragma warning(disable:4786)
 #endif
 
+/*
+  And more Windows stuff. This header is required in order to turn off a
+  pop-up window that is displayed when a program crashes. The window requires
+  a click to clear, which means a sequence of test runs is blocked until a
+  human comes by and clicks. Laci points out that some bright bulb at Microsoft
+  added `#define small char' in a header included by windows.h. Not that anyone
+  would ever consider using such an exotic character sequence as a variable
+  name.
+
+  The authors of the OSI unit test neither admit nor deny that the OSI unit
+  test crashes, and inclusion of this code should in no way be interpreted as
+  an admission or denial that the OSI unit test might actually crash.
+
+  Well, maybe on Windows ... but I'm sure it's Microsoft's fault   :-)
+*/
+
+#include "OsiConfig.h"
+
+#ifdef HAVE_WINDOWS_H
+# include <windows.h>
+# if defined(small)
+#   undef small
+# endif
+#endif
+
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
-
-#include "OsiConfig.h"
 
 #include <cassert>
 #include <iostream>
@@ -101,6 +124,131 @@ void testingMessage( const char * const msg )
   //     <<endl <<msg <<endl;
 }
 
+
+/*
+  Utility routine to process command line parameters. An unrecognised parameter
+  will trigger the help message and a return value of false.
+  
+  This should be replaced with the one of the standard CoinUtils parameter
+  mechanisms.
+*/
+bool processParameters (int argc, const char **argv,
+			std::map<std::string,std::string> &parms)
+
+{ 
+/*
+  Initialise the parameter keywords.
+*/
+  std::set<std::string> definedKeyWords;
+  definedKeyWords.insert("-cerr2cout");
+  definedKeyWords.insert("-mpsDir");
+  definedKeyWords.insert("-netlibDir");
+  definedKeyWords.insert("-testOsiSolverInterface");
+  definedKeyWords.insert("-nobuf");
+  definedKeyWords.insert("-cutsOnly");
+/*
+  Set default values for data directories.
+*/
+  const char dirsep =  CoinFindDirSeparator() ;
+  std::string pathTmp ;
+
+  pathTmp = ".." ;
+  pathTmp += dirsep ;
+  pathTmp += ".." ;
+  pathTmp += dirsep ;
+  pathTmp += "Data" ;
+  pathTmp += dirsep ;
+
+  parms["-mpsDir"] = pathTmp + "Sample"  ;
+  parms["-netlibDir"] = pathTmp + "Data" ;
+
+/*
+  Read the command line parameters and fill a map of parameter keys and
+  associated data. The parser allows for parameters which are only a keyword,
+  or parameters of the form keyword=value (no spaces).
+*/
+  for (int i = 1 ; i < argc ; i++)
+  { std::string parm(argv[i]) ;
+    std::string key,value ;
+    std::string::size_type eqPos = parm.find('=');
+
+    if (eqPos == std::string::npos)
+    { key = parm ; }
+    else
+    { key = parm.substr(0,eqPos) ;
+      value = parm.substr(eqPos+1) ; }
+/*
+  Is the specifed key valid?
+*/
+    if (definedKeyWords.find(key) == definedKeyWords.end())
+    { std::cerr << "Undefined parameter \"" << key << "\"." << std::endl ;
+      std::cerr
+	<< "Usage: "
+	<< "unitTest [-nobuf] [-mpsDir=V1] [-netlibDir=V2] "
+        << "[-testOsiSolverInterface] [-cutsOnly]" << std::endl ;
+      std::cerr << "  where:" << std::endl ;
+      std::cerr
+	<< "    "
+	<< "-cerr2cout: redirect cerr to cout; sometimes useful." << std::endl
+	<< "\t" << "to synchronise cout & cerr." << std::endl ;
+      std::cerr
+	<< "    "
+	<< "-mpsDir: directory containing mps test files." << std::endl
+        << "\t" << "Default value V1=\"../../Data/Sample\"" << std::endl ;
+      std::cerr
+	<< "    "
+	<< "-netlibDir: directory containing netlib files." << std::endl
+        << "\t" << "Default value V2=\"../../Data/Netlib\"" << std::endl ;
+      std::cerr
+	<< "    "
+	<< "-testOsiSolverInterface: "
+        << "run each OSI on the netlib problem set." << std::endl
+	<< "\t"
+	<< "Default is to not run the netlib problem set." << std::endl ;
+      std::cerr
+	<< "    "
+	<< "-cutsOnly: If specified, only OsiCut tests are run." << std::endl ;
+      std::cerr
+	<< "    "
+        << "-nobuf: use unbuffered output." << std::endl
+	<< "\t" << "Default is buffered output." << std::endl ;
+      
+      return (false) ; }
+/*
+  Valid keyword; stash the value for later reference.
+*/
+    parms[key]=value ; }
+/*
+  Tack the directory separator onto the data directories so we don't have to
+  worry about it later.
+*/
+  parms["-mpsDir"] += dirsep ;
+  parms["-netlibDir"] += dirsep ;
+/*
+  Did the user request unbuffered i/o? It seems we need to go after this
+  through stdio --- using pubsetbuf(0,0) on the C++ streams has no
+  discernible affect. Nor, for that matter, did setting the unitbuf flag on
+  the streams. Why? At a guess, sync_with_stdio connects the streams to the
+  stdio buffers, and the C++ side isn't programmed to change them?
+*/
+  if (parms.find("-nobuf") != parms.end())
+  { // std::streambuf *coutBuf, *cerrBuf ;
+    // coutBuf = std::cout.rdbuf() ;
+    // coutBuf->pubsetbuf(0,0) ;
+    // cerrBuf = std::cerr.rdbuf() ;
+    // cerrBuf->pubsetbuf(0,0) ;
+    setbuf(stderr,0) ;
+    setbuf(stdout,0) ; }
+/*
+  Did the user request a redirect for cerr? This must occur before any i/o is
+  performed.
+*/
+  if (parms.find("-cerr2cout") != parms.end())
+  { std::cerr.rdbuf(std::cout.rdbuf()) ; }
+
+  return (true) ; }
+
+
 }	// end file-local namespace
 
 
@@ -128,109 +276,45 @@ void testingMessage( const char * const msg )
 int main (int argc, const char *argv[])
 
 { int errCnt,totalErrCnt ;
-
-  int i;
-
   totalErrCnt = 0 ;
 
-  /*
-    Makes debugging output more comprehensible. Still suffers from interleave
-    of cout (stdout) and cerr (stderr), but -nobuf deals with that.
-  */
-  std::ios::sync_with_stdio() ;
+/*
+  Start off with various bits of initialisation that don't really belong
+  anywhere else.
 
+  First off, synchronise C++ stream i/o with C stdio. This makes debugging
+  output a bit more comprehensible. It still suffers from interleave of cout
+  (stdout) and cerr (stderr), but -nobuf deals with that.
+*/
+  std::ios::sync_with_stdio() ;
+/*
+  Suppress an popup window that Windows shows in response to a crash. See
+  note at head of file.
+*/
+#ifdef HAVE_WINDOWS_H
+  SetErrorMode(SEM_FAILCRITICALERRORS|SEM_NOGPFAULTERRORBOX) ;
+#endif
+/*
+  Might as well make use of this convenient Xpress feature.
+*/
 #ifdef COIN_HAS_XPR
   OsiXprSolverInterface::setLogFileName("xprCallTrace.txt");
 #endif
 
-  // define valid parameter keywords
-  std::set<std::string> definedKeyWords;
-  definedKeyWords.insert("-cerr2cout");
-  definedKeyWords.insert("-mpsDir");
-  definedKeyWords.insert("-netlibDir");
-  definedKeyWords.insert("-testOsiSolverInterface");
-  definedKeyWords.insert("-nobuf");
-  definedKeyWords.insert("-cutsOnly");
+/*
+  Process command line parameters.
+*/
+  std::map<std::string,std::string> parms ;
 
-  // Create a map of parameter keys and associated data
-  std::map<std::string,std::string> parms;
-  for ( i=1; i<argc; i++ ) {
-    std::string parm(argv[i]);
-    std::string key,value;
-    // unsigned int  eqPos = parm.find('=');
-    std::string::size_type eqPos = parm.find('=');
+  if (processParameters(argc,argv,parms) == false)
+  { return (1) ; }
 
-    // Does parm contain an '='
-    if ( eqPos==std::string::npos ) {
-      //Parm does not contain '='
-      key = parm;
-    }
-    else {
-      key=parm.substr(0,eqPos);
-      value=parm.substr(eqPos+1);
-    }
-
-    // Is specifed key valid?
-    if ( definedKeyWords.find(key) == definedKeyWords.end() ) {
-      // invalid key word.
-      // Write help text
-      std::cerr << "Undefined parameter \"" <<key <<"\".\n";
-      std::cerr << "Correct usage: \n";
-      std::cerr << "  unitTest [-nobuf] [-mpsDir=V1] [-netlibDir=V2]" ;
-      std::cerr << " [-testOsiSolverInterface] [-cutsOnly]\n";
-      std::cerr << "where:\n";
-      std::cerr << "  -cerr2cout: redirect cerr to cout; sometimes useful\n" ;
-      std::cerr << "	    to synchronise cout & cerr.\n" ;
-      std::cerr << "  -mpsDir: directory containing mps test files\n";
-      std::cerr << "        Default value V1=\"../../Data/Sample\"\n";
-      std::cerr << "  -netlibDir: directory containing netlib files\n";
-      std::cerr << "        Default value V2=\"../../Data/Netlib\"\n";
-      std::cerr << "  -testOsiSolverInterface\n";
-      std::cerr << "        If specified, then OsiSolveInterface::unitTest\n";
-      std::cerr << "        is run.\n";
-      std::cerr << "  -cutsOnly: If specified, only OsiCut tests are run.\n";
-      std::cerr << "  -nobuf: unbuffered output.\n" ;
-      return 1;
-    }
-    parms[key]=value;
-  }
+  std::string mpsDir = parms["-mpsDir"] ;
+  std::string netlibDir = parms["-netlibDir"] ;
 
 /*
-  Use unbuffered i/o? We need to go after this through stdio --- using
-  pubsetbuf(0,0) on the C++ streams has no discernible affect. Nor, for
-  that matter, did setting the unitbuf flag on the streams. Why? At a guess,
-  sync_with_stdio connects the streams to the stdio buffers, and the C++
-  side isn't programmed to change them?
+  Test Osi{Row,Col}Cut routines.
 */
-
-  if (parms.find("-nobuf") != parms.end())
-  { // std::streambuf *coutBuf, *cerrBuf ;
-    // coutBuf = std::cout.rdbuf() ;
-    // coutBuf->pubsetbuf(0,0) ;
-    // cerrBuf = std::cerr.rdbuf() ;
-    // cerrBuf->pubsetbuf(0,0) ;
-    setbuf(stderr,0) ;
-    setbuf(stdout,0) ; }
-
-  // Redirect cerr? This must occur before any i/o is performed.
-  if (parms.find("-cerr2cout") != parms.end())
-  { std::cerr.rdbuf(std::cout.rdbuf()) ; }
-
-  const char dirsep =  CoinFindDirSeparator();
-  // Set directory containing mps data files.
-  std::string mpsDir;
-  if (parms.find("-mpsDir") != parms.end())
-    mpsDir=parms["-mpsDir"] + dirsep;
-  else 
-    mpsDir = dirsep == '/' ? "../../Data/Sample/" : "..\\..\\Data\\Sample\\";
- 
-  // Set directory containing netlib data files.
-  std::string netlibDir;
-  if (parms.find("-netlibDir") != parms.end())
-    netlibDir=parms["-netlibDir"] + dirsep;
-  else 
-    netlibDir = dirsep == '/' ? "../../Data/Netlib/" : "..\\..\\Data\\Netlib\\";
-
 #ifdef COIN_HAS_OSL  
   {
     OsiOslSolverInterface oslSi;

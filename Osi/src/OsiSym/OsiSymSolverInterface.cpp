@@ -1847,7 +1847,7 @@ OsiSymSolverInterface::OsiSymSolverInterface(const OsiSymSolverInterface & si)
 
 OsiSolverInterface * OsiSymSolverInterface::clone(bool copyData) const
 {
-   return new OsiSymSolverInterface(*this);
+   return (new OsiSymSolverInterface(*this));
 }
 
 /*===========================================================================*/
@@ -1860,8 +1860,9 @@ OsiSymSolverInterface & OsiSymSolverInterface::operator=(const OsiSymSolverInter
 
    if(this != &rhs){
 
+      sym_close_environment(env_);
+      gutsOfDestructor();      
       env_= sym_create_copy_environment(rhs.getSymphonyEnvironment());
-
       gutsOfConstructor();
 
       /* Note that, if the user structure was set by 

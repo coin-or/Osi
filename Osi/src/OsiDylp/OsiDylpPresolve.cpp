@@ -104,6 +104,7 @@
 #include <OsiDylpSolverInterface.hpp>
 #include <OsiDylpWarmStartBasis.hpp>
 #include "OsiDylpMessages.hpp"
+#include "CoinHelperFunctions.hpp"
 #include "CoinPresolveMatrix.hpp"
 
 namespace {
@@ -155,7 +156,7 @@ namespace {	// Anonymous namespace for debug routines
 	  1<<8	check constraint lhs for NaN/Inf
 	  1<<9	check constraint lhs for accuracy, feasibility (row bounds)
 
-  These will likely grow in the future. Mstrix checks work only if
+  These will likely grow in the future. Matrix checks work only if
   PRESOLVE_CONSISTENCY is defined. Solution checks work only if PRESOLVE_DEBUG
   is defined.
 
@@ -167,20 +168,20 @@ void check_and_tell (ioid chn, const CoinPresolveMatrix *preObj_,
 
 { const CoinPresolveAction *current ;
 
-  outfmt(chn,true,"PRESOLVE: ") ;
+  dyio_outfmt(chn,true,"PRESOLVE: ") ;
   if (first == 0 && mark == 0)
-  { outfmt(chn,true,"checking prior to start.") ; }
+  { dyio_outfmt(chn,true,"checking prior to start.") ; }
   else
   if (first == mark)
-  { outfmt(chn,true,"no transforms since last check.") ; }
+  { dyio_outfmt(chn,true,"no transforms since last check.") ; }
   else
-  { outfmt(chn,true,"applied") ;
+  { dyio_outfmt(chn,true,"applied") ;
     for (current = first ;
 	 current != mark && current != 0 ;
 	 current = current->next)
-    { outfmt(chn,true," %s",current->name()) ; }
+    { dyio_outfmt(chn,true," %s",current->name()) ; }
     mark = first ; }
-  outfmt(chn,true,"\n") ;
+  dyio_outfmt(chn,true,"\n") ;
 
 # if !PRESOLVE_CONSISTENCY
   chkMtx = 0 ;
@@ -416,7 +417,7 @@ void ODSI::doPresolve ()
     { const CoinPresolveAction *const lastAction = postActions_ ;
 
 #     ifdef PRESOLVE_DEBUG
-      outfmt(local_logchn,true,"Starting major pass %d\n",currentPass) ;
+      dyio_outfmt(local_logchn,true,"Starting major pass %d\n",currentPass) ;
 #     endif
 
 /*
@@ -791,6 +792,10 @@ void ODSI::installPresolve ()
   presolved problem: status, primal and dual solutions, and primal and dual
   activity.
 
+  Recall that COIN postsolve is schizophrenic about maximisation: it'll deal
+  with max/min for the objective coefficients, but we have to pass in the duals
+  and reduced costs as if we're minimising.
+
   The call to assignPresolvetoPostsolve will destroy preObj and set the pointer
   to null.
 */
@@ -804,15 +809,32 @@ CoinPostsolveMatrix *ODSI::initialisePostsolve (CoinPresolveMatrix *&preObj)
   postObj->setStatus(ws) ;
   delete ws ;
 
-  const double *temp ;
+  int n = getNumCols() ;
+  int m = getNumRows() ;
+
+  const double *temp = 0 ;
+  double *tempNonConst = 0 ;
+
+  if (getObjSense() < 0)
+  { tempNonConst = new double [CoinMax(n,m)] ; }
   temp = getColSolution() ;
   postObj->setColSolution(temp,-1) ;
   temp = getRowActivity() ;
   postObj->setRowActivity(temp,-1) ;
   temp = getRowPrice() ;
-  postObj->setRowPrice(temp,-1) ;
+  if (getObjSense() < 0)
+  { std::transform(temp,temp+m,tempNonConst,std::negate<double>()) ;
+    postObj->setRowPrice(tempNonConst,-1) ; }
+  else
+  { postObj->setRowPrice(temp,-1) ; }
   temp = getReducedCost() ;
-  postObj->setReducedCost(temp,-1) ;
+  if (getObjSense() < 0)
+  { std::transform(temp,temp+n,tempNonConst,std::negate<double>()) ;
+    postObj->setReducedCost(tempNonConst,-1) ; }
+  else
+  { postObj->setReducedCost(temp,-1) ; }
+
+  if (tempNonConst != 0) delete [] tempNonConst ;
 
   return (postObj) ; }
 
@@ -826,21 +848,26 @@ CoinPostsolveMatrix *ODSI::initialisePostsolve (CoinPresolveMatrix *&preObj)
 void ODSI::doPostsolve ()
 
 { handler_->message(ODSI_POSTSOL,messages_) << "start" << CoinMessageEol ;
+
 # if PRESOLVE_CONSISTENCY
+  handler_->setLogLevel(6) ;
   presolve_check_threads(postObj_) ;
   presolve_check_free_list(postObj_) ;
 # endif
 # if PRESOLVE_DEBUG
   presolve_check_sol(postObj_) ;
+  presolve_check_reduced_costs(0) ;
   presolve_check_reduced_costs(postObj_) ;
   presolve_check_duals(postObj_) ;
 # endif
+
   while (postActions_ != 0)
   { const CoinPresolveAction *postAction = postActions_ ;
     postActions_ = postAction->next ;
     handler_->message(ODSI_POSTSOL_ACT,messages_)
       << postAction->name() << CoinMessageEol ;
     postAction->postsolve(postObj_) ;
+
 #   if PRESOLVE_CONSISTENCY
     presolve_check_threads(postObj_) ;
     presolve_check_free_list(postObj_) ;
@@ -850,7 +877,21 @@ void ODSI::doPostsolve ()
     presolve_check_reduced_costs(postObj_) ;
     presolve_check_duals(postObj_) ;
 #   endif
+
     delete postAction ; }
+
+# if PRESOLVE_CONSISTENCY
+  handler_->setLogLevel(6) ;
+  presolve_check_threads(postObj_) ;
+  presolve_check_free_list(postObj_) ;
+# endif
+# if PRESOLVE_DEBUG
+  presolve_check_sol(postObj_) ;
+  presolve_check_reduced_costs(0) ;
+  presolve_check_reduced_costs(postObj_) ;
+  presolve_check_duals(postObj_) ;
+# endif
+
   handler_->message(ODSI_POSTSOL,messages_) << "complete" << CoinMessageEol ;
   
   return ; }
@@ -862,8 +903,18 @@ void ODSI::doPostsolve ()
   system, setting the corresponding basis as the new active basis for
   this ODSI object.
 
-  There's a really annoying problem here --- CoinWarmStartBasis does not
-  support superbasic status, and postsolve will return superbasic status.
+  Right now, all we use is the basis --- a call to dylp regenerates everything
+  else.
+
+  Possible problems:
+  
+    * CoinPresolve supports a notion of superbasic status. This shouldn't
+      appear in the final result, but there's no easy way to check short of
+      scanning the basis. Too much work for an error that may never occur.
+
+    * If I ever decide to make use of the reduced costs and duals returned by
+      postsolve, remember that they will be produced for a minimisation problem
+      and must be negated for maximisation. See initialisePostsolve, above.
 */
 
 void ODSI::installPostsolve ()

@@ -13,6 +13,7 @@
 #include "OsiSolverInterface.hpp"
 #include "CoinWarmStartBasis.hpp"
 #include "ClpEventHandler.hpp"
+#include "ClpNode.hpp"
 #include "CoinIndexedVector.hpp"
 
 class OsiRowCut;
@@ -48,6 +49,7 @@ public:
   
   /// Invoke solver's built-in enumeration algorithm
   virtual void branchAndBound();
+
   //@}
   
   ///@name OsiSimplexInterface methods 
@@ -278,6 +280,9 @@ public:
   
   /// Get warmstarting information
   virtual CoinWarmStart* getWarmStart() const;
+  /// Get warmstarting information
+  inline CoinWarmStartBasis* getPointerToWarmStart() 
+  { return &basis_;}
   /** Set warmstarting information. Return true/false depending on whether
       the warmstart information was accepted or not. */
   virtual bool setWarmStart(const CoinWarmStart* warmstart);
@@ -307,6 +312,19 @@ public:
   virtual void solveFromHotStart();
   /// Delete the snapshot
   virtual void unmarkHotStart();
+  /** Start faster dual - returns negative if problems 1 if infeasible,
+      Options to pass to solver
+      1 - create external reduced costs for columns
+      2 - create external reduced costs for rows
+      4 - create external row activity (columns always done)
+      Above only done if feasible
+      When set resolve does less work
+  */
+  int startFastDual(int options);
+  /// Stop fast dual
+  void stopFastDual();
+  /// Sets integer tolerance and increment
+  void setStuff(double tolerance,double increment);
   //@}
   
   //---------------------------------------------------------------------------
@@ -954,8 +972,10 @@ public:
   /// Pass in initial solve options
   inline void setSolveOptions(const ClpSolve & options)
   { solveOptions_ = options;}
-  /// Tighten bounds - lightweight
-  int tightenBounds();
+  /** Tighten bounds - lightweight or very lightweight
+      0 - normal, 1 lightweight but just integers, 2 lightweight and all
+  */
+  virtual int tightenBounds(int lightweight=0);
   //@}
   
   //---------------------------------------------------------------------------
@@ -1051,6 +1071,8 @@ public:
   /// Just puts current basis_ into ClpSimplex model
   inline void setBasis( )
   { setBasis(basis_,modelPtr_);}
+  /// Warm start difference from basis_ to statusArray
+  CoinWarmStartDiff * getBasisDiff(const unsigned char * statusArray) const ;
   /// Delete all scale factor stuff and reset option
   void deleteScaleFactors();
   /// If doing fast hot start then ranges are computed
@@ -1064,6 +1086,16 @@ public:
   /// Pass in sos stuff from AMPl
   void setSOSData(int numberSOS,const char * type,
 		  const int * start,const int * indices, const double * weights=NULL);
+  /// Compute largest amount any at continuous away from bound
+  void computeLargestAway();
+  /// Get largest amount continuous away from bound
+  inline double largestAway() const
+  { return largestAway_;}
+  /// Set largest amount continuous away from bound
+  inline void setLargestAway(double value)
+  { largestAway_ = value;}
+  /// Sort of lexicographic resolve
+  void lexSolve();
 protected:
   //@}
   
@@ -1093,6 +1125,8 @@ protected:
       only used in hotstarts so can be casual */
   mutable double * rowActivity_;
   mutable double * columnActivity_;
+  /// Stuff for fast dual
+  ClpNodeStuff stuff_;
   /// Number of SOS sets
   int numberSOS_;
   /// SOS set info
@@ -1108,6 +1142,8 @@ protected:
       If (upper-lower)*element < this then element is
       taken out and cut relaxed. */
   double smallestChangeInCut_;
+  /// Largest amount continuous away from bound
+  double largestAway_;
   /// Arrays for hot starts
   char * spareArrays_;
   /** Warmstart information to be used in resolves. */
@@ -1115,7 +1151,7 @@ protected:
   /** The original iteration limit before hotstarts started. */
   int itlimOrig_;
   
-  /// Last algorithm used
+  /// Last algorithm used , 1 = primal, 2 = dual
   mutable int lastAlgorithm_;
   
   /// To say if destructor should delete underlying model
@@ -1171,6 +1207,7 @@ protected:
       At present 0 is normal, 1 doing fast hotstarts, 2 is can do quick check
       65536 Keep simple i.e. no auxiliary model or crunch etc
       131072 Try and keep scaling factors around
+      262144 Don't try and tighten bounds (funny global cuts)
   */
   mutable unsigned int specialOptions_;
   /// Copy of model when option 131072 set
@@ -1239,6 +1276,7 @@ public:
   /// are we in trouble
   inline bool inTrouble() const
   { return inTrouble_;}
+  
   //@}
   
   

@@ -905,6 +905,13 @@ public:
      Normally I presume you would want the same language.
      If not then you could use underlying model pointer */
   //@{
+  /** Pass in a message handler
+  
+    It is the client's responsibility to destroy a message handler installed
+    by this routine; it will not be destroyed when the solver interface is
+    destroyed. 
+  */
+  virtual void passInMessageHandler(CoinMessageHandler * handler);
   /// Set language
   void newLanguage(CoinMessages::Language language);
   void setLanguage(CoinMessages::Language language)

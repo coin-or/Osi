@@ -7253,6 +7253,19 @@ OsiClpSolverInterface::computeLargestAway()
   if (numberRows>4000)
     modelPtr_->setSpecialOptions(modelPtr_->specialOptions()&~(2048+4096));
 }
+// Pass in Message handler (not deleted at end)
+void 
+OsiClpSolverInterface::passInMessageHandler(CoinMessageHandler * handler)
+{
+  if (defaultHandler_) {
+    delete handler_;
+    handler_ = NULL;
+  }
+  defaultHandler_=false;
+  handler_=handler;
+  if (modelPtr_)
+    modelPtr_->passInMessageHandler(handler);
+}
   
 //#############################################################################
 // Constructors / Destructor / Assignment

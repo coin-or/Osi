@@ -1492,7 +1492,7 @@ public:
     by this routine; it will not be destroyed when the solver interface is
     destroyed. 
   */
-  void passInMessageHandler(CoinMessageHandler * handler);
+  virtual void passInMessageHandler(CoinMessageHandler * handler);
   /// Set language
   void newLanguage(CoinMessages::Language language);
   inline void setLanguage(CoinMessages::Language language)

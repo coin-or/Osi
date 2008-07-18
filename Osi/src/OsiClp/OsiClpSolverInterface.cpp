@@ -61,6 +61,7 @@ void OsiClpSolverInterface::initialSolve()
   // get original log levels
   int saveMessageLevel=modelPtr_->logLevel();
   int messageLevel=messageHandler()->logLevel();
+  int saveMessageLevel2 = messageLevel;
   // Set message handler
   solver.passInMessageHandler(handler_);
   // But keep log level
@@ -371,6 +372,7 @@ void OsiClpSolverInterface::initialSolve()
   if (saveSolveType==2) {
     enableSimplexInterface(doingPrimal);
   }
+  handler_->setLogLevel(saveMessageLevel2);
   if (modelPtr_->problemStatus_==3&&lastAlgorithm_==2)
     modelPtr_->computeObjectiveValue();
   // mark so we can pick up objective value quickly

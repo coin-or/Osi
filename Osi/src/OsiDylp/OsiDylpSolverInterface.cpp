@@ -5826,7 +5826,6 @@ CoinWarmStart* ODSI::getWarmStart () const
 void ODSI::reduceActiveBasis ()
 
 { int n = getNumCols() ;
-  int m = getNumRows() ;
   CoinWarmStartBasis *wsb = dynamic_cast<CWSB *>(activeBasis.basis) ;
 
 # if ODSI_TRACK_ACTIVE > 0

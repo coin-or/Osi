@@ -95,7 +95,7 @@ namespace {
   recent call to dylp. The OSI specification says that problem modifications
   should invalidate the current solution. In practice this nicety is
   sometimes stretched a bit. Defining ODSI_STRICTLY_FRESH will cause ODSI to
-  throw an exception if asked for stale solution data. Otherise, it will
+  throw an exception if asked for stale solution data. Otherwise, it will
   ignore the problem and return stale data. At any log level greater than 0,
   you'll get a warning.
 */
@@ -4464,9 +4464,6 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
   corresponding dual is flipped. (Or just look at it as yA = (-y)(-A).)  We
   need to walk the basis here. If dylp is in dynamic mode, there may be fewer
   active constraints than when we started.
-
-  NOTE: Stefan Vigerske reports a status problem that may well boil down to
-  this bit of code. Strike me I probably want to flip the row status.
 */
   if (flips > 0)
   { for (ndx = lpprob->consys->concnt ; ndx > 0 ; ndx--)

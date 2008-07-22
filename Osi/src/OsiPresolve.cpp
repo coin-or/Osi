@@ -1265,7 +1265,7 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
   hcol_ = new int [bulk0_] ;
 
   nrows_ = si->getNumRows() ;
-  const int bufsize = bulkRatio_*nelems_in;
+  const CoinBigIndex bufsize = bulkRatio_*nelems_in ;
 
   // Set up change bits
   rowChanged_ = new unsigned char[nrows_];

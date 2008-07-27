@@ -6718,8 +6718,8 @@ OsiClpSolverInterface::restoreBaseModel(int numberRows)
 {
   if (continuousModel_&&continuousModel_->numberRows()==numberRows) {
     modelPtr_->numberRows_ = numberRows;
-    ClpDisjointCopyN ( continuousModel_->columnLower_, modelPtr_->numberColumns_,modelPtr_->columnLower_ );
-    ClpDisjointCopyN ( continuousModel_->columnUpper_, modelPtr_->numberColumns_,modelPtr_->columnUpper_ );
+    //ClpDisjointCopyN ( continuousModel_->columnLower_, modelPtr_->numberColumns_,modelPtr_->columnLower_ );
+    //ClpDisjointCopyN ( continuousModel_->columnUpper_, modelPtr_->numberColumns_,modelPtr_->columnUpper_ );
     if (continuousModel_->rowCopy_) {
       modelPtr_->copy(continuousModel_->rowCopy_,modelPtr_->rowCopy_);
     } else {

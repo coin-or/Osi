@@ -1916,8 +1916,7 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
     msg << "." ;
     failureMessage(solverName,msg.str()) ; }
 
-  delete si;
-
+  delete si ;
   return ;
 }
 
@@ -2643,7 +2642,7 @@ void testWriteLp (const OsiSolverInterface *emptySi, std::string fn)
 
 /*
   Test load and assign problem. The first batch of tests loads up eight
-  solvers, using each variable of loadProblem and assignProblem, runs
+  solvers, using each variant of loadProblem and assignProblem, runs
   initialSolve for all, then checks all values for all variants.
 */
 

@@ -122,7 +122,7 @@ bool OsiRowCutDebugger::onOptimalPath(const OsiSolverInterface & si) const
     const double * colupper = si.getColUpper();
     bool onOptimalPath=true;
     for (i=0;i<numberColumns_;i++) {
-      if (integerVariable_[i]) {
+      if (si.isInteger(i)) {
 	// value of integer variable in solution
 	double value=optimalSolution_[i]; 
 	if (value>colupper[i]+1.0e-3 || value<collower[i]-1.0e-3) {

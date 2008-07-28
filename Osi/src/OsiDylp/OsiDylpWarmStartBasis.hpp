@@ -67,8 +67,8 @@ class OsiDylpWarmStartBasis : public CoinWarmStartBasis
   inline void setConStatus (int i, Status st)
 
   { char &st_byte = constraintStatus_[i>>2] ;
-    st_byte &= ~(3 << ((i&3)<<1)) ;
-    st_byte |= (st << ((i&3)<<1)) ; }
+    st_byte = static_cast<char>(st_byte & ~(3 << ((i&3)<<1))) ;
+    st_byte = static_cast<char>(st_byte | (st << ((i&3)<<1))) ; }
 
 
   /*! \brief Return the status array for constraints. */

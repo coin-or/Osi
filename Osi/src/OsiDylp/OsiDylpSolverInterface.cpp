@@ -95,7 +95,7 @@ namespace {
   recent call to dylp. The OSI specification says that problem modifications
   should invalidate the current solution. In practice this nicety is
   sometimes stretched a bit. Defining ODSI_STRICTLY_FRESH will cause ODSI to
-  throw an exception if asked for stale solution data. Otherise, it will
+  throw an exception if asked for stale solution data. Otherwise, it will
   ignore the problem and return stale data. At any log level greater than 0,
   you'll get a warning.
 */
@@ -5829,7 +5829,6 @@ CoinWarmStart* ODSI::getWarmStart () const
 void ODSI::reduceActiveBasis ()
 
 { int n = getNumCols() ;
-  int m = getNumRows() ;
   CoinWarmStartBasis *wsb = dynamic_cast<CWSB *>(activeBasis.basis) ;
 
 # if ODSI_TRACK_ACTIVE > 0

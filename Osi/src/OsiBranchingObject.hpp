@@ -143,13 +143,13 @@ public:
   { return numberWays_;}
   /// Set maximum number of ways branch may have
   inline void setNumberWays(int numberWays)
-  { numberWays_ = numberWays;}
+  { numberWays_ = static_cast<short int>(numberWays) ; }
   /** Return preferred way to branch.  If two
       then way=0 means down and 1 means up, otherwise
       way points to preferred branch
   */
   inline void setWhichWay(int way)
-  { whichWay_ = way;}
+  { whichWay_ = static_cast<short int>(way) ; }
   /** Return current preferred way to branch.  If two
       then way=0 means down and 1 means up, otherwise
       way points to preferred branch
@@ -309,7 +309,7 @@ public:
   /** Set the state of the branching object.
   */
   inline void setBranchingIndex(int branchIndex)
-  {branchIndex_=branchIndex;}
+  { branchIndex_ = static_cast<short int>(branchIndex) ; }
 
   /// Current value
   inline double value() const

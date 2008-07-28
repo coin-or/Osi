@@ -84,7 +84,7 @@ OsiObject::checkInfeasibility(const OsiBranchingInformation * info) const
 {
   int way;
   double saveInfeasibility = infeasibility_;
-  int saveWhichWay = whichWay_;
+  short int saveWhichWay = whichWay_ ;
   double value = infeasibility(info,way);
   infeasibility_ = saveInfeasibility;
   whichWay_ = saveWhichWay;
@@ -583,7 +583,7 @@ OsiSimpleInteger::infeasibility(const OsiBranchingInformation * info, int & whic
   }
   if (preferredWay_>=0&&returnValue)
     whichWay = preferredWay_;
-  whichWay_=whichWay;
+  whichWay_ = static_cast<short int>(whichWay) ;
   return returnValue;
 }
 

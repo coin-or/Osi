@@ -154,7 +154,7 @@ LIBS += `cat $(OSIOBJDIR)/osi_addlibs.txt` \
 	`cat $(COINUTILSOBJDIR)/coinutils_addlibs.txt` $(ADDLIBS)
 
 test: unitTest$(EXEEXT)
-	if test x"$(DIRNETLIB)" != x; then \
+	@if test x"$(DIRNETLIB)" != x; then \
 		NETLIBARG="-netlibDir $(DIRNETLIB) -testOsiSolverInterface"; \
 	fi; \
 	./unitTest$(EXEEXT) $$NETLIBARG

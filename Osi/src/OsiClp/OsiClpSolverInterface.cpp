@@ -61,6 +61,7 @@ void OsiClpSolverInterface::initialSolve()
   // get original log levels
   int saveMessageLevel=modelPtr_->logLevel();
   int messageLevel=messageHandler()->logLevel();
+  int saveMessageLevel2 = messageLevel;
   // Set message handler
   solver.passInMessageHandler(handler_);
   // But keep log level
@@ -371,6 +372,7 @@ void OsiClpSolverInterface::initialSolve()
   if (saveSolveType==2) {
     enableSimplexInterface(doingPrimal);
   }
+  handler_->setLogLevel(saveMessageLevel2);
   if (modelPtr_->problemStatus_==3&&lastAlgorithm_==2)
     modelPtr_->computeObjectiveValue();
   // mark so we can pick up objective value quickly
@@ -7253,6 +7255,27 @@ OsiClpSolverInterface::computeLargestAway()
   if (numberRows>4000)
     modelPtr_->setSpecialOptions(modelPtr_->specialOptions()&~(2048+4096));
 }
+// Pass in Message handler (not deleted at end)
+void 
+OsiClpSolverInterface::passInMessageHandler(CoinMessageHandler * handler)
+{
+  if (defaultHandler_) {
+    delete handler_;
+    handler_ = NULL;
+  }
+  defaultHandler_=false;
+  handler_=handler;
+  if (modelPtr_)
+    modelPtr_->passInMessageHandler(handler);
+}
+// Set log level (will also set underlying solver's log level)
+void 
+OsiClpSolverInterface::setLogLevel(int value)
+{
+  handler_->setLogLevel(value);
+  if (modelPtr_)
+    modelPtr_->setLogLevel(value);
+}
   
 //#############################################################################
 // Constructors / Destructor / Assignment
@@ -7331,7 +7354,7 @@ OsiClpDisasterHandler::check() const
     if (model_->numberIterations()<model_->baseIteration()+model_->numberRows()+1000) {
       return false;
     } else if (phase_<2) {
-      if (model_->numberIterations()> model_->baseIteration()+2*model_->numberRows()+2000||
+      if (model_->numberIterations()> model_->baseIteration()+2*model_->numberRows()+model_->numberColumns()+2000||
 	  model_->largestDualError()>=1.0e-1) {
 	// had model_->numberDualInfeasibilitiesWithoutFree()||
 #ifdef COIN_DEVELOP
@@ -7354,7 +7377,7 @@ OsiClpDisasterHandler::check() const
       }
     } else {
       assert (phase_==2);
-      if (model_->numberIterations()> model_->baseIteration()+3*model_->numberRows()+2000||
+      if (model_->numberIterations()> model_->baseIteration()+3*model_->numberRows()+model_->numberColumns()+2000||
 	  model_->largestPrimalError()>=1.0e3) {
 #ifdef COIN_DEVELOP
 	printf("trouble in phase %d\n",phase_);
@@ -7366,11 +7389,11 @@ OsiClpDisasterHandler::check() const
     }
   } else {
     // primal
-    if (model_->numberIterations()<model_->baseIteration()+model_->numberRows()+4000) {
+    if (model_->numberIterations()<model_->baseIteration()+2*model_->numberRows()+model_->numberColumns()+4000) {
       return false;
     } else if (phase_<2) {
-      if (model_->numberIterations()> model_->baseIteration()+2*model_->numberRows()+2000+
-	  model_->numberColumns()/2&&
+      if (model_->numberIterations()> model_->baseIteration()+3*model_->numberRows()+2000+
+	  model_->numberColumns()&&
 	  model_->numberDualInfeasibilitiesWithoutFree()>0&&
 	  model_->numberPrimalInfeasibilities()>0&&
 	  model_->nonLinearCost()->changeInCost()>1.0e8) {

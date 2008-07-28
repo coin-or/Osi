@@ -79,7 +79,7 @@ namespace { /* unnamed:file */
 
 typedef struct { OsiDylpMessageID_enum inID ;
 		 int exID ;
-		 int lvl ;
+		 char lvl ;
 		 const char *fmt ; } MsgDefn ;
 
 static MsgDefn us_en_defns[] = {

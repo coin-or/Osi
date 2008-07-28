@@ -99,6 +99,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="..\..\..\..\Osi\src;..\..\..\..\Osi\src\OsiClp;..\..\..\..\Clp\src;..\..\..\..\CoinUtils\src;..\..\..\..\Cgl\src;..\..\..\..\Cgl\src\CglLiftAndProject;..\..\..\..\Cgl\src\CglFlowCover;..\..\..\..\Cgl\src\CglMixedIntegerRounding;..\..\..\..\Cgl\src\CglClique;..\..\..\..\Cgl\src\CglOddHole;..\..\..\..\Cgl\src\CglKnapsackCover;..\..\..\..\Cgl\src\CglGomory;..\..\..\..\Cgl\src\CglSimpleRounding;..\..\..\..\Cgl\src\CglProbing;..\..\..\..\BuildTools\headers;..\..\..\..\SYMPHONY\include;..\..\..\..\Cgl\src\CglTwomir;..\..\..\..\Cgl\src\CglLandP;..\..\..\..\Cgl\src\CglRedSplit"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"

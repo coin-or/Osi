@@ -2065,7 +2065,7 @@ OsiCpxSolverInterface::addRow(const CoinPackedVectorBase& vec,
 		    const_cast<double*>(vec.getElements()),
 		    NULL, NULL );
   checkCPXerror( err, "CPXaddrows", "addRow" );
-  if( rowsen == 'R' )
+  if( sense == 'R' )
     {
       int row = getNumRows() - 1;
       err = CPXchgrngval( env_, getLpPtr( OsiCpxSolverInterface::FREECACHED_ROW ), 1, &row, &range );
@@ -3302,7 +3302,7 @@ void OsiCpxSolverInterface::getBInvARow(int row, double* z, double * slack)
     for(int i=0; i<nrow; i++) {
       if(ind_bas[i] == ind_slack) {  // slack for row is basic; whole row
                                      // must be flipped
-	for(int j=0; j<ncol; j++) {
+	for(int j=0; j<nrow; j++) {
 	  z[j] = -z[j];
 	}
 	if(slack != NULL) {
@@ -3331,6 +3331,24 @@ void OsiCpxSolverInterface::getBInvRow(int row, double* z) const {
     printf("### ERROR: OsiCpxSolverInterface::getBInvRow(): Unable to get row %d of the basis inverse\n", row);
     exit(1);
   }
+  int *ind_bas = new int[nrow];
+  getBasics(ind_bas);
+  if (ind_bas[row]>=ncol) { // binv row corresponds to a slack variable
+  	int Arow=ind_bas[row]-ncol; // Arow is the number of the row in the problem matrix which this slack belongs to
+    char sense;
+    status = CPXgetsense(env_, lp, &sense, Arow, Arow);
+    if(status) {
+      printf("### ERROR: OsiCpxSolverInterface::getBInvRow(): Unable to get senses for row %d\n", Arow);
+      exit(1);
+    }
+    if(sense == 'G') { // slack has coeff -1 in Cplex; thus row in binv must be flipped 
+    	for(int j=0; j<nrow; j++) {
+    	  z[j] = -z[j];
+    	}
+    }
+  }
+  delete[] ind_bas;
+/*  
   char sense;
   status = CPXgetsense(env_, lp, &sense, row, row);
   if(status) {
@@ -3348,7 +3366,7 @@ void OsiCpxSolverInterface::getBInvRow(int row, double* z) const {
                            // slack has coeff -1 in Cplex and is basic; 
                            // row of invB must be flipped
 
-	for(int j=0; j<ncol; j++) {
+	for(int j=0; j<nrow; j++) {
 	  z[j] = -z[j];
 	}
 	break;
@@ -3356,6 +3374,7 @@ void OsiCpxSolverInterface::getBInvRow(int row, double* z) const {
     }
     delete[] ind_bas;
   }
+*/
 } /* getBInvRow */
  
 /**********************************************************************/

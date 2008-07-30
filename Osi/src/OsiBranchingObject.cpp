@@ -1150,7 +1150,7 @@ OsiSOS::infeasibility(const OsiBranchingInformation * info,int & whichWay) const
 	otherInfeasibility_ = CoinMax(1.0e-12,upEstimate);
 	whichWay = 0;
       }
-      whichWay_=whichWay;
+      whichWay_=static_cast<short>(whichWay);
       value=infeasibility_;
     }
     return value;

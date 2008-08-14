@@ -1654,14 +1654,14 @@ OsiCpxSolverInterface::setRowType(int i, char sense, double rightHandSide,
     rowsense_[i] = sense;
   }
 
-  err = CPXchgrhs( env_, getLpPtr( OsiCpxSolverInterface::KEEPCACHED_ROW ),
+  err = CPXchgrhs( env_, getLpPtr( OsiCpxSolverInterface::KEEPCACHED_PROBLEM ),
 		   1, &i, &rightHandSide );
   checkCPXerror( err, "CPXchgrhs", "setRowType" );
   if(rhs_ != NULL) {
     rhs_[i] = rightHandSide;
   }
   err = CPXchgrngval( env_, 
-		      getLpPtr( OsiCpxSolverInterface::KEEPCACHED_ROW ),
+		      getLpPtr( OsiCpxSolverInterface::KEEPCACHED_PROBLEM ),
 		      1, &i, &range );
   checkCPXerror( err, "CPXchgrngval", "setRowType" );
   if(rowrange_ != NULL) {

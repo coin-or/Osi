@@ -1654,18 +1654,26 @@ OsiCpxSolverInterface::setRowType(int i, char sense, double rightHandSide,
     rowsense_[i] = sense;
   }
 
-  err = CPXchgrhs( env_, getLpPtr( OsiCpxSolverInterface::FREECACHED_ROW ),
+  err = CPXchgrhs( env_, getLpPtr( OsiCpxSolverInterface::KEEPCACHED_ROW ),
 		   1, &i, &rightHandSide );
   checkCPXerror( err, "CPXchgrhs", "setRowType" );
   if(rhs_ != NULL) {
     rhs_[i] = rightHandSide;
   }
   err = CPXchgrngval( env_, 
-		      getLpPtr( OsiCpxSolverInterface::FREECACHED_ROW ),
+		      getLpPtr( OsiCpxSolverInterface::KEEPCACHED_ROW ),
 		      1, &i, &range );
   checkCPXerror( err, "CPXchgrngval", "setRowType" );
   if(rowrange_ != NULL) {
     rowrange_[i] = range;
+  }
+  
+  if (rowlower_ != NULL || rowupper_ != NULL)
+  {
+  	double dummy;
+  	convertSenseToBound(sense, rightHandSide, range, 
+  			rowlower_ ? rowlower_[i] : dummy,
+  			rowupper_ ? rowupper_[i] : dummy);
   }
 }
 //-----------------------------------------------------------------------------

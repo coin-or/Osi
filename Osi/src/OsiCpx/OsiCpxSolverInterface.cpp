@@ -1624,13 +1624,15 @@ OsiCpxSolverInterface::setRowType(int i, char sense, double rightHandSide,
 
   int err;
 
+  // in CPLEX, ranged constraints are interpreted as rhs <= coeff*x <= rhs+range, which is different from Osi
+  double cpxrhs = rightHandSide;
   if (sense == 'R') {
      assert( range >= 0.0 );
-     rightHandSide -= range;
+     cpxrhs -= range;
   }
   if (sense == 'N') {
      sense = 'R';
-     rightHandSide = -getInfinity();
+     cpxrhs = -getInfinity();
      range = 2*getInfinity();
   }
 
@@ -1655,7 +1657,7 @@ OsiCpxSolverInterface::setRowType(int i, char sense, double rightHandSide,
   }
 
   err = CPXchgrhs( env_, getLpPtr( OsiCpxSolverInterface::KEEPCACHED_PROBLEM ),
-		   1, &i, &rightHandSide );
+		   1, &i, &cpxrhs );
   checkCPXerror( err, "CPXchgrhs", "setRowType" );
   if(rhs_ != NULL) {
     rhs_[i] = rightHandSide;

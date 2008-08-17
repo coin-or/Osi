@@ -23,7 +23,7 @@ extern "C" {
 */
 
 class OsiGlpkSolverInterface : virtual public OsiSolverInterface {
-  friend void OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
+  friend int OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
   
 public:
   
@@ -895,6 +895,6 @@ private:
     have to be compiled into the library. And that's a gain, because the
     library should be compiled with optimization on, but this method should be
     compiled with debugging. */
-void OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
+int OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 #endif // OsiGlpkSolverInterface_H

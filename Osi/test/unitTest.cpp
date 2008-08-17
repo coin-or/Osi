@@ -543,7 +543,7 @@ int main (int argc, const char *argv[])
 
 #ifdef COIN_HAS_VOL
   testingMessage( "Testing OsiVolSolverInterface\n" );
-  OsiVolSolverInterfaceUnitTest(mpsDir,netlibDir);
+  totalErrCnt += OsiVolSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
 #ifdef COIN_HAS_DYLP
@@ -558,7 +558,7 @@ int main (int argc, const char *argv[])
   
 #ifdef COIN_HAS_GLPK
   testingMessage( "Testing OsiGlpkSolverInterface\n" );
-  OsiGlpkSolverInterfaceUnitTest(mpsDir,netlibDir);
+  totalErrCnt += OsiGlpkSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
   
 #ifdef COIN_HAS_FMP
@@ -568,7 +568,7 @@ int main (int argc, const char *argv[])
   
 #ifdef COIN_HAS_CLP
   testingMessage( "Testing OsiClpSolverInterface\n" );
-  OsiClpSolverInterfaceUnitTest(mpsDir,netlibDir);
+  totalErrCnt += OsiClpSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
 #ifdef COIN_HAS_MSK
@@ -578,12 +578,12 @@ int main (int argc, const char *argv[])
 
 #ifdef COIN_HAS_CBC
   testingMessage( "Testing OsiCbcSolverInterface\n" );
-  OsiCbcSolverInterfaceUnitTest(mpsDir,netlibDir);
+  totalErrCnt += OsiCbcSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
 #ifdef COIN_HAS_SYMPHONY
   testingMessage( "Testing OsiSymSolverInterface\n" );
-  OsiSymSolverInterfaceUnitTest(mpsDir,netlibDir);
+  totalErrCnt += OsiSymSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
 /*
@@ -675,9 +675,9 @@ int main (int argc, const char *argv[])
   if (totalErrCnt)
   { std::cout.flush() ;
     std::cerr
-      << "Tests completed with " << totalErrCnt << " errors." << std::endl ; }
-  else
+      << "Tests completed with " << totalErrCnt << " errors." << std::endl ; 
+  } else
   { testingMessage("All tests completed successfully\n") ; }
-  return 0;
+  return totalErrCnt;
 }
 

@@ -1284,7 +1284,13 @@ int changeObjAndResolve (const OsiSolverInterface *emptySi)
   delete s ;
   return (errCnt) ; }
 
-
+/** This code is taken from some bug reports of Sebastian Nowozin.
+ * It demonstrates some issues he had with OsiClp which partially seem to be fixed.
+ * https://projects.coin-or.org/Osi/ticket/54
+ * https://projects.coin-or.org/Osi/ticket/55
+ * https://projects.coin-or.org/Osi/ticket/56
+ * https://projects.coin-or.org/Osi/ticket/58
+*/
 bool test16SebastianNowozin(OsiSolverInterface *s) {	
 	CoinPackedMatrix* matrix = new CoinPackedMatrix(false, 0, 0);
 	matrix->setDimensions(0, 4);
@@ -1295,6 +1301,8 @@ bool test16SebastianNowozin(OsiSolverInterface *s) {
 
 	s->loadProblem(*matrix, varLB, varUB, objective, NULL, NULL);
 	s->setObjSense(1);
+	
+	delete matrix;
 
 	// Outer iterations
 	s->setObjective(objective);
@@ -1375,7 +1383,7 @@ bool test16SebastianNowozin(OsiSolverInterface *s) {
 	s->disableFactorization();
 
 	// Remove constraint
-	int rows_to_delete_arr[] = { 0, };
+	int rows_to_delete_arr[] = { 0 };
 	s->deleteRows(1, rows_to_delete_arr);
 
 	// Add something to the objective and resolve
@@ -1389,6 +1397,55 @@ bool test16SebastianNowozin(OsiSolverInterface *s) {
 	// BUG3: getColSolution is NULL
 	if (!s->getColSolution()) {
 		failureMessage(*s, "getColSolution on solved problem is NULL");
+		return false;
+	}
+
+	return true;
+}
+
+/** This code checks an issue reported by Sebastian Nowozin in OsiClp ticket 57.
+ * He said, that OsiClpSolverInterface::getReducedGradient() requires a prior call
+ * to both enableSimplexInterface(true) and enableFactorization(),
+ * but only checks/asserts the simplex interface.
+*/
+bool test17SebastianNowozin(OsiSolverInterface *s) {	
+	CoinPackedMatrix* matrix = new CoinPackedMatrix(false, 0, 0);
+	matrix->setDimensions(0, 4);
+
+	double objective[] = { 0.1, 0.2, -0.1, -0.2, };
+	double varLB[] = { 0.0, 0.0, 0.0, 0.0, };
+	double varUB[] = { 1.0, 1.0, 1.0, 1.0, };
+
+	s->loadProblem(*matrix, varLB, varUB, objective, NULL, NULL);
+	s->setObjSense(1);
+	
+	delete matrix;
+
+	CoinPackedVector row1;	// x_2 + x_3 - x_0 <= 0
+	row1.insert(0, -1.0);
+	row1.insert(2, 1.0);
+	row1.insert(3, 1.0);
+	s->addRow(row1, -s->getInfinity(), 0.0);
+	
+	s->initialSolve();
+	if (!s->isProvenOptimal()) {
+		failureMessage(*s, "did not solve problem to optimality");
+		return false;
+	}
+	
+	// here we do not call s->enableFactorization() first
+	try {
+		s->enableSimplexInterface(true);
+	} catch (CoinError e) {
+		failureMessage(*s, string("enableSimplexInterface(true) threw exception: ")+e.message());
+		return false;
+	}
+	
+	try {
+		double dummy[4] = { 1., 1., 1., 1.};
+		s->getReducedGradient(dummy, dummy, dummy);
+	} catch (CoinError e) {
+		failureMessage(*s, string("getReducedGradient threw exception: ")+e.message());
 		return false;
 	}
 
@@ -5048,7 +5105,8 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     test_functions.push_back(std::pair<TestFunction, const char*>(&test14VivianDeSmedt,"test14VivianDeSmedt"));
     test_functions.push_back(std::pair<TestFunction, const char*>(&test15VivianDeSmedt,"test15VivianDeSmedt"));
     if ( !dylpSolverInterface )
-    	test_functions.push_back(std::pair<TestFunction, const char*>(&test16SebastianNowozin, "test16SebastianNowozin"));
+      test_functions.push_back(std::pair<TestFunction, const char*>(&test16SebastianNowozin, "test16SebastianNowozin"));
+   	test_functions.push_back(std::pair<TestFunction, const char*>(&test17SebastianNowozin, "test17SebastianNowozin"));
 
     unsigned int i;
     for (i = 0; i < test_functions.size(); ++i) {

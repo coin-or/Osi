@@ -1285,6 +1285,117 @@ int changeObjAndResolve (const OsiSolverInterface *emptySi)
   return (errCnt) ; }
 
 
+bool test16SebastianNowozin(OsiSolverInterface *s) {	
+	CoinPackedMatrix* matrix = new CoinPackedMatrix(false, 0, 0);
+	matrix->setDimensions(0, 4);
+
+	double objective[] = { 0.1, 0.2, -0.1, -0.2, };
+	double varLB[] = { 0.0, 0.0, 0.0, 0.0, };
+	double varUB[] = { 1.0, 1.0, 1.0, 1.0, };
+
+	s->loadProblem(*matrix, varLB, varUB, objective, NULL, NULL);
+	s->setObjSense(1);
+
+	// Outer iterations
+	s->setObjective(objective);
+//	si->messageHandler()->setLogLevel(0);	// no verbosity
+	s->resolve();	// Warm-start
+	if (!s->isProvenOptimal()) {
+		failureMessage(*s, "resolve does not solve problem");
+		return false;
+	}
+	std::cout << "obj 1: si->getObjValue() returns " << s->getObjValue() << std::endl;
+	if ((s->getObjValue() - (-0.3)) > 1e-6) {
+		failureMessage(*s, "resolve gives wrong optimal value");
+		return false;
+	}
+	
+	const double* primal = s->getColSolution();
+	if (!primal) {
+		failureMessage(*s, "got no primal column solution");
+		return false;
+	}
+
+	// BUG2: if getNumRows() == 0, the following call to enableFactorization()
+	// (and enableSimplexInterface) fails with
+	//
+	//     Clp3002W Empty problem - 0 rows, 4 columns and 0 elements
+	//     bug1: OsiClpSolverInterface.cpp:4317: virtual void
+	//        OsiClpSolverInterface::enableFactorization() const: Assertion
+	//        `!returnCode' failed.
+	//
+	try {
+		s->enableFactorization();
+		s->enableSimplexInterface(true);
+	} catch (CoinError e) {
+		failureMessage(*s, std::string("enableFactorization or enableSimplexInterface threw CoinError: ")+e.message());
+		return false;
+	}
+	if (!primal) {
+		failureMessage(*s, "cannot do simplex interface");
+		return false;
+	}
+	s->disableFactorization();
+
+	// Add two constraints and resolve
+	CoinPackedVector row1;	// x_2 + x_3 - x_0 <= 0
+	row1.insert(0, -1.0);
+	row1.insert(2, 1.0);
+	row1.insert(3, 1.0);
+	s->addRow(row1, -s->getInfinity(), 0.0);
+
+	CoinPackedVector row2;	// x_1 + x_2 - x_4 <= 0
+	row2.insert(0, 1.0);
+	row2.insert(1, 1.0);
+	row2.insert(3, -1.0);
+	s->addRow(row2, -s->getInfinity(), 0.0);
+
+	s->resolve();
+	if (!s->isProvenOptimal()) {
+		failureMessage(*s, "second resolve does not solve problem");
+		return false;
+	}
+	std::cout << "obj 2: si->getObjValue() returns " << s->getObjValue() << std::endl;
+	primal = s->getColSolution();
+	if (!primal) {
+		failureMessage(*s, "getColSolution on solved problem is NULL");
+		return false;
+	}
+
+	// Simulate another constraint generation run where we need calls to Binv*
+	try {
+		s->enableFactorization();
+		s->enableSimplexInterface(true);
+	} catch (CoinError e) {
+		failureMessage(*s, std::string("enableFactorization or enableSimplexInterface threw CoinError: ")+e.message());
+		return false;
+	}
+	assert(s->canDoSimplexInterface() > 0);
+	// (...) constraint generation here
+	s->disableFactorization();
+
+	// Remove constraint
+	int rows_to_delete_arr[] = { 0, };
+	s->deleteRows(1, rows_to_delete_arr);
+
+	// Add something to the objective and resolve
+	std::transform(objective, objective + 4, objective, std::bind2nd(std::plus<double>(), 0.15));
+	s->setObjective(objective);
+	s->resolve();
+	if (!s->isProvenOptimal()) {
+		failureMessage(*s, "third resolve does not solve problem");
+		return false;
+	}
+	// BUG3: getColSolution is NULL
+	if (!s->getColSolution()) {
+		failureMessage(*s, "getColSolution on solved problem is NULL");
+		return false;
+	}
+
+	return true;
+}
+
+
 //#############################################################################
 // Routines to test various feature groups
 //#############################################################################
@@ -4936,6 +5047,8 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     test_functions.push_back(std::pair<TestFunction, const char*>(&test13VivianDeSmedt,"test13VivianDeSmedt"));
     test_functions.push_back(std::pair<TestFunction, const char*>(&test14VivianDeSmedt,"test14VivianDeSmedt"));
     test_functions.push_back(std::pair<TestFunction, const char*>(&test15VivianDeSmedt,"test15VivianDeSmedt"));
+    if ( !dylpSolverInterface )
+    	test_functions.push_back(std::pair<TestFunction, const char*>(&test16SebastianNowozin, "test16SebastianNowozin"));
 
     unsigned int i;
     for (i = 0; i < test_functions.size(); ++i) {

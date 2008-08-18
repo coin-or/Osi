@@ -1324,26 +1324,16 @@ bool test16SebastianNowozin(OsiSolverInterface *s) {
 		return false;
 	}
 
-	// BUG2: if getNumRows() == 0, the following call to enableFactorization()
-	// (and enableSimplexInterface) fails with
-	//
-	//     Clp3002W Empty problem - 0 rows, 4 columns and 0 elements
-	//     bug1: OsiClpSolverInterface.cpp:4317: virtual void
-	//        OsiClpSolverInterface::enableFactorization() const: Assertion
-	//        `!returnCode' failed.
-	//
-	try {
-		s->enableFactorization();
-		s->enableSimplexInterface(true);
-	} catch (CoinError e) {
-		failureMessage(*s, std::string("enableFactorization or enableSimplexInterface threw CoinError: ")+e.message());
-		return false;
+	if (s->canDoSimplexInterface()>=2) {
+		try {
+			s->enableFactorization();
+			s->enableSimplexInterface(true);
+		} catch (CoinError e) {
+			failureMessage(*s, std::string("enableFactorization or enableSimplexInterface threw CoinError: ")+e.message());
+			return false;
+		}
+		s->disableFactorization();
 	}
-	if (!primal) {
-		failureMessage(*s, "cannot do simplex interface");
-		return false;
-	}
-	s->disableFactorization();
 
 	// Add two constraints and resolve
 	CoinPackedVector row1;	// x_2 + x_3 - x_0 <= 0
@@ -1371,16 +1361,17 @@ bool test16SebastianNowozin(OsiSolverInterface *s) {
 	}
 
 	// Simulate another constraint generation run where we need calls to Binv*
-	try {
-		s->enableFactorization();
-		s->enableSimplexInterface(true);
-	} catch (CoinError e) {
-		failureMessage(*s, std::string("enableFactorization or enableSimplexInterface threw CoinError: ")+e.message());
-		return false;
+	if (s->canDoSimplexInterface()>=2) {
+		try {
+			s->enableFactorization();
+			s->enableSimplexInterface(true);
+		} catch (CoinError e) {
+			failureMessage(*s, std::string("enableFactorization or enableSimplexInterface threw CoinError: ")+e.message());
+			return false;
+		}
+		// (...) constraint generation here
+		s->disableFactorization();
 	}
-	assert(s->canDoSimplexInterface() > 0);
-	// (...) constraint generation here
-	s->disableFactorization();
 
 	// Remove constraint
 	int rows_to_delete_arr[] = { 0 };
@@ -1394,7 +1385,6 @@ bool test16SebastianNowozin(OsiSolverInterface *s) {
 		failureMessage(*s, "third resolve does not solve problem");
 		return false;
 	}
-	// BUG3: getColSolution is NULL
 	if (!s->getColSolution()) {
 		failureMessage(*s, "getColSolution on solved problem is NULL");
 		return false;
@@ -1408,7 +1398,9 @@ bool test16SebastianNowozin(OsiSolverInterface *s) {
  * to both enableSimplexInterface(true) and enableFactorization(),
  * but only checks/asserts the simplex interface.
 */
-bool test17SebastianNowozin(OsiSolverInterface *s) {	
+bool test17SebastianNowozin(OsiSolverInterface *s) {
+  if (s->canDoSimplexInterface()<2)
+    return true;
 	CoinPackedMatrix* matrix = new CoinPackedMatrix(false, 0, 0);
 	matrix->setDimensions(0, 4);
 
@@ -5104,7 +5096,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     test_functions.push_back(std::pair<TestFunction, const char*>(&test13VivianDeSmedt,"test13VivianDeSmedt"));
     test_functions.push_back(std::pair<TestFunction, const char*>(&test14VivianDeSmedt,"test14VivianDeSmedt"));
     test_functions.push_back(std::pair<TestFunction, const char*>(&test15VivianDeSmedt,"test15VivianDeSmedt"));
-    if ( !dylpSolverInterface )
+    if ( !dylpSolverInterface ) //TODO; took out DyLP here because it's crashing with a seg.fault
       test_functions.push_back(std::pair<TestFunction, const char*>(&test16SebastianNowozin, "test16SebastianNowozin"));
    	test_functions.push_back(std::pair<TestFunction, const char*>(&test17SebastianNowozin, "test17SebastianNowozin"));
 

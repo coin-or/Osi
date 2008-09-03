@@ -55,7 +55,7 @@
 */
 
 class OsiSymSolverInterface : virtual public OsiSolverInterface {
-   friend void OsiSymSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
+   friend int OsiSymSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
    
 public:
    ///@name Solve methods 
@@ -816,6 +816,6 @@ private:
     have to be compiled into the library. And that's a gain, because the
     library should be compiled with optimization on, but this method should be
     compiled with debugging. */
-void OsiSymSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
+int OsiSymSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 #endif

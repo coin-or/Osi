@@ -23,7 +23,7 @@ static const double OsiVolInfinity = 1.0e31;
 
 class OsiVolSolverInterface :
    virtual public OsiSolverInterface, public VOL_user_hooks {
-   friend void OsiVolSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
+   friend int OsiVolSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 private:
   class OsiVolMatrixOneMinusOne_ {
@@ -858,7 +858,7 @@ private:
     compiled with debugging. Also, if this method is compiled with
     optimization, the compilation takes 10-15 minutes and the machine pages
     (has 256M core memory!)... */
-void
+int
 OsiVolSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 #endif

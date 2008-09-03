@@ -64,7 +64,7 @@ CoinPackedMatrix &BuildExmip1Mtx ()
 
 //--------------------------------------------------------------------------
 // test solution methods.
-void
+int
 OsiCbcSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir)
 {
   
@@ -1040,21 +1040,23 @@ OsiCbcSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     m.branchAndBound();
   }
 #endif
+  int errCnt = 0;
   // Do common solverInterface testing 
   {
     OsiCbcSolverInterface m;
-    OsiSolverInterfaceCommonUnitTest(&m, mpsDir,netlibDir);
+    errCnt += OsiSolverInterfaceCommonUnitTest(&m, mpsDir,netlibDir);
   }
   {
     OsiCbcSolverInterface mm;
     OsiCbcSolverInterface m(&mm);
-    OsiSolverInterfaceCommonUnitTest(&m, mpsDir,netlibDir);
+    errCnt += OsiSolverInterfaceCommonUnitTest(&m, mpsDir,netlibDir);
   }
 #ifdef COIN_HAS_OSL
   {
     OsiOslSolverInterface mm;
     OsiCbcSolverInterface m(&mm);
-    OsiSolverInterfaceCommonUnitTest(&m, mpsDir,netlibDir);
+    errCnt += OsiSolverInterfaceCommonUnitTest(&m, mpsDir,netlibDir);
   }
 #endif
+  return errCnt;
 }

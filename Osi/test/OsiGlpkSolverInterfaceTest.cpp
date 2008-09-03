@@ -45,13 +45,14 @@
 
 
 //--------------------------------------------------------------------------
-void
+int
 OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir)
 {
+	int errCnt = 0;
   // Do common solverInterface testing 
   {
     OsiGlpkSolverInterface m;
-    OsiSolverInterfaceCommonUnitTest(&m, mpsDir,netlibDir);
+    errCnt += OsiSolverInterfaceCommonUnitTest(&m, mpsDir,netlibDir);
   }
   
   // Test default constructor
@@ -1153,5 +1154,6 @@ OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & n
     assert(fabs(val - 3.23) < 0.01) ;
   }
 
+  return errCnt;
 }
 #endif

@@ -1987,9 +1987,10 @@ const CoinPackedMatrix * OsiClpSolverInterface::getMatrixByRow() const
 {
   if ( matrixByRow_ == NULL ) {
     matrixByRow_ = new CoinPackedMatrix();
-    matrixByRow_->reverseOrderedCopyOf(*modelPtr_->matrix());
-    matrixByRow_->removeGaps();
     matrixByRow_->setExtraGap(0.0);
+    matrixByRow_->setExtraMajor(0.0);
+    matrixByRow_->reverseOrderedCopyOf(*modelPtr_->matrix());
+    //matrixByRow_->removeGaps();
 #if 0
     CoinPackedMatrix back;
     std::cout<<"start check"<<std::endl;
@@ -3957,6 +3958,8 @@ OsiClpSolverInterface::replaceMatrix(const CoinPackedMatrix & matrix)
     modelPtr_->matrix_=new ClpPackedMatrix(matrix);
   } else {
     CoinPackedMatrix matrix2;
+    matrix2.setExtraGap(0.0);
+    matrix2.setExtraMajor(0.0);
     matrix2.reverseOrderedCopyOf(matrix);
     modelPtr_->matrix_=new ClpPackedMatrix(matrix2);
   }    
@@ -7151,6 +7154,18 @@ OsiClpSolverInterface::tightenBounds(int lightweight)
   delete [] sum;
   return nTightened;
 }
+// Return number of entries in L part of current factorization
+CoinBigIndex 
+OsiClpSolverInterface::getSizeL() const
+{
+  return modelPtr_->factorization_->numberElementsL();
+}
+// Return number of entries in U part of current factorization
+CoinBigIndex 
+OsiClpSolverInterface::getSizeU() const
+{
+  return modelPtr_->factorization_->numberElementsU();
+}
 /* Start faster dual - returns negative if problems 1 if infeasible,
    Options to pass to solver
    1 - create external reduced costs for columns
@@ -7185,7 +7200,10 @@ OsiClpSolverInterface::computeLargestAway()
 {
   // get largest scaled away from bound
   ClpSimplex temp=*modelPtr_;
+  temp.setLogLevel(0);
   temp.dual();
+  if (temp.status()==1)
+    temp.primal(); // may mean we have optimal so continuous cutoff
   temp.dual(0,7);
   double largestScaled=1.0e-12;
   double largest=1.0e-12;

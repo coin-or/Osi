@@ -1450,6 +1450,12 @@ public:
   /// Return a CoinSnapshot
   virtual CoinSnapshot * snapshot(bool createArrays=true) const;
 #endif
+#ifdef COIN_FACTORIZATION_INFO
+  /// Return number of entries in L part of current factorization
+  virtual CoinBigIndex getSizeL() const;
+  /// Return number of entries in U part of current factorization
+  virtual CoinBigIndex getSizeU() const;
+#endif
   //@}
 
   //---------------------------------------------------------------------------

@@ -985,6 +985,10 @@ public:
       0 - normal, 1 lightweight but just integers, 2 lightweight and all
   */
   virtual int tightenBounds(int lightweight=0);
+  /// Return number of entries in L part of current factorization
+  virtual CoinBigIndex getSizeL() const;
+  /// Return number of entries in U part of current factorization
+  virtual CoinBigIndex getSizeU() const;
   //@}
   
   //---------------------------------------------------------------------------

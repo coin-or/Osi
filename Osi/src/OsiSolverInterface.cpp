@@ -2174,6 +2174,20 @@ OsiSolverInterface::reducedCostFix(double gap, bool justInteger)
   
   return numberFixed;
 }
+#ifdef COIN_FACTORIZATION_INFO
+// Return number of entries in L part of current factorization
+CoinBigIndex 
+OsiSolverInterface::getSizeL() const
+{
+  return -1;
+}
+// Return number of entries in U part of current factorization
+CoinBigIndex 
+OsiSolverInterface::getSizeU() const
+{
+  return -1;
+}
+#endif
 #ifdef CBC_NEXT_VERSION
 /*
   Solve 2**N (N==depth) problems and return solutions and bases.

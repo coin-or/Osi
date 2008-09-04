@@ -181,6 +181,8 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
 */
     paction_ = presolve(&prob) ;
     result = 0 ; 
+    // Get rid of useful arrays
+    prob.deleteStuff();
 /*
   This we don't need to do unless presolve actually reduced the system.
 */
@@ -618,7 +620,10 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
     bool slackd = true;
     bool doubleton = true;
     bool tripleton = true;
+#define NO_FORCING
+#ifndef NO_FORCING
     bool forcing = true;
+#endif
     bool ifree = true;
     bool zerocost = true;
     bool dupcol = true;
@@ -646,6 +651,12 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
     // stop x+y+z==1
     if ((presolveActions_&8)!=0)
       prob->setPresolveOptions(prob->presolveOptions()|4);
+    // switch on stuff which can't be unrolled easily
+    if ((presolveActions_&16)!=0)
+      prob->setPresolveOptions(prob->presolveOptions()|16);
+    // switch on gub stuff
+    if ((presolveActions_&32)!=0)
+      prob->setPresolveOptions(prob->presolveOptions()|32);
     
     /*
       The main loop (just below) starts with a minor loop that does
@@ -682,7 +693,15 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 
 
     int iLoop;
-
+    if (dupcol) {
+      // maybe allow integer columns to be checked
+      if ((presolveActions_&1)!=0)
+	prob->setPresolveOptions(prob->presolveOptions()|1);
+      paction_ = dupcol_action::presolve(prob, paction_);
+    }
+    if (duprow) {
+      paction_ = duprow_action::presolve(prob, paction_);
+    }
     // Check number rows dropped
     int lastDropped=0;
     /*
@@ -699,15 +718,26 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 
       const CoinPresolveAction * const paction0 = paction_;
       // look for substitutions with no fill
-      int fill_level=2;
-      //fill_level=10;
-      //printf("** fill_level == 10 !\n");
+      int fill_level=3;
+#define IMPLIED 3
+#define IMPLIED2 1
+#if IMPLIED!=3
+#if IMPLIED>0&&IMPLIED<11
+      fill_level=IMPLIED;
+      printf("** fill_level == %d !\n",fill_level);
+#endif
+#if IMPLIED>11&&IMPLIED<21
+      fill_level=-(IMPLIED-10);
+      printf("** fill_level == %d !\n",fill_level);
+#endif
+#endif
       int whichPass=0;
 /*
   Apply inexpensive transforms until convergence.
 */
       while (1) {
 	whichPass++;
+	prob->pass_++;
 	const CoinPresolveAction * const paction1 = paction_;
 
 	if (slackd) {
@@ -720,6 +750,13 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 #	  if PRESOLVE_DEBUG
 	  check_and_tell(prob,paction_,pactiond) ;
 #	  endif
+	}
+
+	if (dual&&whichPass==1) {
+	  // this can also make E rows so do one bit here
+	  paction_ = remove_dual_action::presolve(prob, paction_);
+	  if (prob->status_)
+	    break;
 	}
 
 	if (doubleton) {
@@ -749,6 +786,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 #	  endif
 	}
 
+#ifndef NO_FORCING
 	if (forcing) {
 	  paction_ = forcing_constraint_action::presolve(prob, paction_);
 	  if (prob->status_)
@@ -757,8 +795,9 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 	  check_and_tell(prob,paction_,pactiond) ;
 #	  endif
 	}
+#endif
 
-	if (ifree) {
+	if (ifree&&(whichPass%5)==1) {
 	  paction_ = implied_free_action::presolve(prob, paction_,fill_level);
 	  if (prob->status_)
 	    break;
@@ -866,8 +905,13 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 	  if (prob->status_)
 	    break;
 	  if (ifree) {
+#if IMPLIED2 ==0
 	    int fill_level=0; // switches off substitution
-	    paction_ = implied_free_action::presolve(prob, paction_,fill_level);
+#elif IMPLIED2!=99
+	    int fill_level=IMPLIED2;
+#endif
+	    if ((itry&1)==0)
+	      paction_ = implied_free_action::presolve(prob, paction_,fill_level);
 #	    if PRESOLVE_DEBUG
 	    check_and_tell(prob,paction_,pactiond) ;
 #	    endif
@@ -877,6 +921,16 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 	  if (paction_ == paction2)
 	    break;
 	}
+      } else if (ifree) {
+	// just free
+#if IMPLIED2 ==0
+	int fill_level=0; // switches off substitution
+#elif IMPLIED2!=99
+	int fill_level=IMPLIED2;
+#endif
+	paction_ = implied_free_action::presolve(prob, paction_,fill_level);
+	if (prob->status_)
+	  break;
       }
 
       if (dupcol) {
@@ -898,6 +952,9 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 #	endif
 	if (prob->status_)
 	  break;
+      }
+      if ((presolveActions_&32)!=0) {
+	paction_ = gubrow_action::presolve(prob, paction_);
       }
 	  
       bool stopLoop=false;
@@ -1177,7 +1234,7 @@ CoinPrePostsolveMatrix::CoinPrePostsolveMatrix(const OsiSolverInterface * si,
   messages_()
 
 {
-  bulk0_ = bulkRatio_*nelems_in ;
+  bulk0_ = (CoinBigIndex) (bulkRatio_*nelems_in) ;
   hrow_ = new int [bulk0_] ;
   colels_ = new double[bulk0_] ;
 
@@ -1258,14 +1315,13 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
   nextRowsToDo_(new int[nrows_in]),
   numberNextRowsToDo_(0),
   presolveOptions_(0)
-
 {
 
   rowels_ = new double [bulk0_] ;
   hcol_ = new int [bulk0_] ;
 
   nrows_ = si->getNumRows() ;
-  const CoinBigIndex bufsize = bulkRatio_*nelems_in ;
+  const CoinBigIndex bufsize = (CoinBigIndex) (bulkRatio_*nelems_in);
 
   // Set up change bits
   rowChanged_ = new unsigned char[nrows_];
@@ -1411,6 +1467,8 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
   // this must come after the calls to presolve_prefix
   mcstrt_[ncols_] = bufsize-1;
   mrstrt_[nrows_] = bufsize-1;
+  // Allocate useful arrays
+  initializeStuff();
 
 #if	CHECK_CONSISTENCY
   consistent(false);

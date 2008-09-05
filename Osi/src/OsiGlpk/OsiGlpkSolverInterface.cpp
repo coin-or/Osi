@@ -241,6 +241,16 @@ void OGSI::resolve()
 
   // lpx_simplex will use the current basis if possible
   int err = lpx_simplex(model) ;
+
+#ifdef LPX_E_BADB
+  // in Glpk 4.30 a resolve fails if the initial basis is invalid
+  // thus, we construct a (advanced) basis first and try again
+  if (err == LPX_E_BADB) {
+  	lpx_adv_basis(model);
+  	err = lpx_simplex(model) ;
+  }
+#endif
+  
   iter_used_ = lpx_get_int_parm(model,LPX_K_ITCNT) ;
 
   isIterationLimitReached_ = false ;

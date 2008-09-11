@@ -620,7 +620,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
     bool slackd = true;
     bool doubleton = true;
     bool tripleton = true;
-#define NO_FORCING
+    //#define NO_FORCING
 #ifndef NO_FORCING
     bool forcing = true;
 #endif
@@ -718,8 +718,9 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 
       const CoinPresolveAction * const paction0 = paction_;
       // look for substitutions with no fill
+      //#define IMPLIED 3
+#ifdef IMPLIED
       int fill_level=3;
-#define IMPLIED 3
 #define IMPLIED2 1
 #if IMPLIED!=3
 #if IMPLIED>0&&IMPLIED<11
@@ -730,6 +731,9 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
       fill_level=-(IMPLIED-10);
       printf("** fill_level == %d !\n",fill_level);
 #endif
+#endif
+#else
+      int fill_level=2;
 #endif
       int whichPass=0;
 /*
@@ -905,10 +909,12 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 	  if (prob->status_)
 	    break;
 	  if (ifree) {
+#ifdef IMPLIED
 #if IMPLIED2 ==0
 	    int fill_level=0; // switches off substitution
 #elif IMPLIED2!=99
 	    int fill_level=IMPLIED2;
+#endif
 #endif
 	    if ((itry&1)==0)
 	      paction_ = implied_free_action::presolve(prob, paction_,fill_level);
@@ -923,10 +929,12 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 	}
       } else if (ifree) {
 	// just free
+#ifdef IMPLIED
 #if IMPLIED2 ==0
 	int fill_level=0; // switches off substitution
 #elif IMPLIED2!=99
 	int fill_level=IMPLIED2;
+#endif
 #endif
 	paction_ = implied_free_action::presolve(prob, paction_,fill_level);
 	if (prob->status_)

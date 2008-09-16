@@ -5730,8 +5730,8 @@ OsiNodeSimple::gutsOfConstructor(OsiSolverInterface & model,
     lower_[i]=(int)lower[iColumn];
     upper_[i]=(int)upper[iColumn];
     double value = solution[iColumn];
-    value = max(value,(double) lower_[i]);
-    value = min(value,(double) upper_[i]);
+    value = CoinMax(value,(double) lower_[i]);
+    value = CoinMin(value,(double) upper_[i]);
     double nearest = floor(value+0.5);
     if (fabs(value-nearest)>INTEGER_TOLERANCE)
       numberAway++;
@@ -5781,8 +5781,8 @@ OsiNodeSimple::gutsOfConstructor(OsiSolverInterface & model,
     // just one - makes it easy
     int iColumn = integer[variable_];
     double value = solution[iColumn];
-    value = max(value,(double) lower_[variable_]);
-    value = min(value,(double) upper_[variable_]);
+    value = CoinMax(value,(double) lower_[variable_]);
+    value = CoinMin(value,(double) upper_[variable_]);
     double nearest = floor(value+0.5);
     value_=value;
     if (value<=nearest)
@@ -5799,8 +5799,8 @@ OsiNodeSimple::gutsOfConstructor(OsiSolverInterface & model,
 	int iColumn = integer[iInt];
 	double value = solutionValue[i]; // value of variable in original
 	double objectiveChange;
-	value = max(value,(double) lower_[iInt]);
-	value = min(value,(double) upper_[iInt]);
+	value = CoinMax(value,(double) lower_[iInt]);
+	value = CoinMin(value,(double) upper_[iInt]);
 
 	// try down
 
@@ -5879,22 +5879,22 @@ OsiNodeSimple::gutsOfConstructor(OsiSolverInterface & model,
           //   <<" value "<<solutionValue[i]
           //   <<std::endl;
 	  bool better = false;
-	  if (min(upMovement[i],downMovement[i])>best) {
+	  if (CoinMin(upMovement[i],downMovement[i])>best) {
 	    // smaller is better
 	    better=true;
-	  } else if (min(upMovement[i],downMovement[i])>best-1.0e-5) {
-	    if (max(upMovement[i],downMovement[i])>best2+1.0e-5) {
+	  } else if (CoinMin(upMovement[i],downMovement[i])>best-1.0e-5) {
+	    if (CoinMax(upMovement[i],downMovement[i])>best2+1.0e-5) {
 	      // smaller is about same, but larger is better
 	      better=true;
 	    }
 	  }
 	  if (better) {
-	    best = min(upMovement[i],downMovement[i]);
-	    best2 = max(upMovement[i],downMovement[i]);
+	    best = CoinMin(upMovement[i],downMovement[i]);
+	    best2 = CoinMax(upMovement[i],downMovement[i]);
 	    variable_ = iInt;
 	    double value = solutionValue[i];
-	    value = max(value,(double) lower_[variable_]);
-	    value = min(value,(double) upper_[variable_]);
+	    value = CoinMax(value,(double) lower_[variable_]);
+	    value = CoinMin(value,(double) upper_[variable_]);
 	    value_=value;
 	    if (upMovement[i]<=downMovement[i])
 	      way_=1; // up
@@ -5918,8 +5918,8 @@ OsiNodeSimple::gutsOfConstructor(OsiSolverInterface & model,
     lower_[i]=(int)lower[iColumn];
     upper_[i]=(int)upper[iColumn];
     double value = solution[iColumn];
-    value = max(value,(double) lower_[i]);
-    value = min(value,(double) upper_[i]);
+    value = CoinMax(value,(double) lower_[i]);
+    value = CoinMin(value,(double) upper_[i]);
     double nearest = floor(value+0.5);
     if (fabs(value-nearest)>INTEGER_TOLERANCE)
       numberAway++;

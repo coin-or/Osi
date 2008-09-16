@@ -507,7 +507,7 @@ OsiMskSolverInterface::setIntParam(OsiIntParam key, int value)
       break;
       
     case OsiMaxNumIterationHotStart:
-      hotStartMaxIteration_ = max(0,value);
+      hotStartMaxIteration_ = CoinMax(0,value);
       retval = true;
       break;
     #if MSK_OSI_HAS_NAME_DISCIPLINE > 0
@@ -3348,8 +3348,8 @@ void OsiMskSolverInterface::setRowPrice(const double * rs)
     {    
       redcost[j] = getObjCoefficients()[j]-redcost[j];
     
-      tslx[j] = max(0.0,redcost[j]);
-      tsux[j] = max(0.0,-redcost[j]);    
+      tslx[j] = CoinMax(0.0,redcost[j]);
+      tsux[j] = CoinMax(0.0,-redcost[j]);    
     }
 
     if( definedSolution( MSK_SOL_BAS ) == true )
@@ -3366,8 +3366,8 @@ void OsiMskSolverInterface::setRowPrice(const double * rs)
                                &tsuc[i], 
                                &sn);
 
-        tslc[i] = max(0.0,rowsol_[i]);
-        tsuc[i] = max(0.0,-rowsol_[i]);
+        tslc[i] = CoinMax(0.0,rowsol_[i]);
+        tsuc[i] = CoinMax(0.0,-rowsol_[i]);
 
         checkMSKerror(err,"MSK_putsolutioni","setRowPrice");
 
@@ -3412,8 +3412,8 @@ void OsiMskSolverInterface::setRowPrice(const double * rs)
     {
       for( int i = 0; i < nr; ++i )
       {    
-        tslc[i] = max(0.0,rowsol_[i]);
-        tsuc[i] = max(0.0,-rowsol_[i]);
+        tslc[i] = CoinMax(0.0,rowsol_[i]);
+        tsuc[i] = CoinMax(0.0,-rowsol_[i]);
         tskc[i] = MSK_SK_UNK;
       }
 

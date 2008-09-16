@@ -3062,7 +3062,7 @@ void ODSI::assert_same (double d1, double d2, bool exact)
   assert(!exact && CoinFinite(d1) && CoinFinite(d2)) ;
 
   static const double epsilon UNUSED = 1.e-10 ;
-  double tol UNUSED = std::max(fabs(d1),fabs(d2))+1 ;
+  double tol UNUSED = CoinMax(fabs(d1),fabs(d2))+1 ;
   double diff UNUSED = fabs(d1 - d2) ;
 
   assert(diff <= tol*epsilon) ; }
@@ -3218,8 +3218,8 @@ void ODSI::assert_same (const lpprob_struct& l1, const lpprob_struct& l2,
 /*
   Vectors: x, y, status
 */
-  int min_col = idx(std::min(l1.colsze, l2.colsze)) ;
-  int min_row = idx(std::min(l1.rowsze, l2.rowsze)) ;
+  int min_col = idx(CoinMin(l1.colsze, l2.colsze)) ;
+  int min_row = idx(CoinMin(l1.rowsze, l2.rowsze)) ;
 
   assert_same(l1.status,l2.status,min_col,exact) ;
   assert_same(l1.x,l2.x,min_row, exact) ;
@@ -4177,10 +4177,10 @@ bool ODSI::setHintParam (OsiHintParam key, bool sense,
       else
       { if (sense == true)
 	{ verbosity -= strength ;
-	  verbosity = max(verbosity,0) ; }
+	  verbosity = CoinMax(verbosity,0) ; }
 	else
 	{ verbosity += strength ;
-	  verbosity = min(verbosity,4) ; } }
+	  verbosity = CoinMin(verbosity,4) ; } }
       info_[key] = reinterpret_cast<void *>(verbosity) ;
 
       dy_setprintopts(0,initialSolveOptions) ;

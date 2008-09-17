@@ -180,7 +180,9 @@ bool
 OsiBabSolver::mipFeasible() const
 {
   assert (solver_);
-  if (solverType_!=3)
+  if (solverType_==0)
+    return true;
+  else if (solverType_!=3)
     return solver_->isProvenOptimal();
   else
     return mipBound_<1.0e50;

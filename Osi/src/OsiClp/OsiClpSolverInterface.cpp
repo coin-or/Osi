@@ -223,8 +223,11 @@ void OsiClpSolverInterface::initialSolve()
         delete model2;
         //printf("Resolving from postsolved model\n");
         // later try without (1) and check duals before solve
-	if (!stopped)
-	  solver.primal(1);
+	if (!stopped) {
+	  bool inCbcOrOther = (modelPtr_->specialOptions()&0x03000000)!=0;
+	  if (!inCbcOrOther||model2->status()!=1) // may want to skip if infeasible
+	    solver.primal(1);
+	}
         solver.setNumberIterations(solver.numberIterations()+numberIterations);
       }
       lastAlgorithm_=1; // primal

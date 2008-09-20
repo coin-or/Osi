@@ -113,6 +113,7 @@ void OsiClpSolverInterface::initialSolve()
   */
   bool doPrimal = (basis_.numberBasicStructurals()>0);
   setBasis(basis_,&solver);
+  bool inCbcOrOther = (modelPtr_->specialOptions()&0x03000000)!=0;
   if ((!defaultHints||doPrimal)&&!solveOptions_.getSpecialOption(6)) {
     // scaling
     // save initial state
@@ -198,20 +199,152 @@ void OsiClpSolverInterface::initialSolve()
         //       <<std::endl;
         // up dual bound for safety
         //model2->setDualBound(1.0e11);
+	OsiClpDisasterHandler handler(this);
+	if (inCbcOrOther) {
+	  handler.setSimplex(model2);
+	  handler.setWhereFrom(4);
+	  model2->setDisasterHandler(&handler);
+	}
         model2->dual(0);
+	if (inCbcOrOther) {
+	  if(handler.inTrouble()) {
+#ifdef COIN_DEVELOP
+	    printf("dual trouble a\n");
+#endif
+	    // try just going back in
+	    handler.setPhase(1);
+	    model2->dual();
+	    if (handler.inTrouble()) {
+#ifdef COIN_DEVELOP
+	      printf("dual trouble b\n");
+#endif
+	      // try primal with original basis
+	      handler.setPhase(2);
+	      setBasis(basis_,model2);
+	      model2->primal();
+	    }
+	    if(handler.inTrouble()) {
+#ifdef COIN_DEVELOP
+	      printf("disaster - treat as infeasible\n");
+#endif
+	      model2->setProblemStatus(1);
+	    }
+	  }
+	  // reset
+	  model2->setDisasterHandler(NULL);
+	}
         // check if clp thought it was in a loop
         if (model2->status()==3&&!model2->hitMaximumIterations()) {
           // switch algorithm
+	  OsiClpDisasterHandler handler(this);
+	  if (inCbcOrOther) {
+	    handler.setSimplex(model2);
+	    handler.setWhereFrom(6);
+	    model2->setDisasterHandler(&handler);
+	  }
           model2->primal();
+	  if (inCbcOrOther) {
+	    if(handler.inTrouble()) {
+#ifdef COIN_DEVELOP
+	      printf("primal trouble a\n");
+#endif
+	      // try just going back in (but with dual)
+	      handler.setPhase(1);
+	      model2->dual();
+	      if (handler.inTrouble()) {
+#ifdef COIN_DEVELOP
+		printf("primal trouble b\n");
+#endif
+		// try primal with original basis
+		handler.setPhase(2);
+		setBasis(basis_,model2);
+		model2->dual();
+	      }
+	      if(handler.inTrouble()) {
+#ifdef COIN_DEVELOP
+		printf("disaster - treat as infeasible\n");
+#endif
+		model2->setProblemStatus(1);
+	      }
+	    }
+	    // reset
+	    model2->setDisasterHandler(NULL);
+	  }
         }
       } else {
         // up infeasibility cost for safety
         //model2->setInfeasibilityCost(1.0e10);
+	OsiClpDisasterHandler handler(this);
+	if (inCbcOrOther) {
+	  handler.setSimplex(model2);
+	  handler.setWhereFrom(6);
+	  model2->setDisasterHandler(&handler);
+	}
         model2->primal(1);
+	if (inCbcOrOther) {
+	  if(handler.inTrouble()) {
+#ifdef COIN_DEVELOP
+	    printf("primal trouble a\n");
+#endif
+	    // try just going back in (but with dual)
+	    handler.setPhase(1);
+	    model2->dual();
+	    if (handler.inTrouble()) {
+#ifdef COIN_DEVELOP
+	      printf("primal trouble b\n");
+#endif
+	      // try primal with original basis
+	      handler.setPhase(2);
+	      setBasis(basis_,model2);
+	      model2->dual();
+	    }
+	    if(handler.inTrouble()) {
+#ifdef COIN_DEVELOP
+	      printf("disaster - treat as infeasible\n");
+#endif
+	      model2->setProblemStatus(1);
+	    }
+	  }
+	  // reset
+	  model2->setDisasterHandler(NULL);
+	}
         // check if clp thought it was in a loop
         if (model2->status()==3&&!model2->hitMaximumIterations()) {
           // switch algorithm
-          model2->dual();
+	  OsiClpDisasterHandler handler(this);
+	  if (inCbcOrOther) {
+	    handler.setSimplex(model2);
+	    handler.setWhereFrom(4);
+	    model2->setDisasterHandler(&handler);
+	  }
+	  model2->dual(0);
+	  if (inCbcOrOther) {
+	    if(handler.inTrouble()) {
+#ifdef COIN_DEVELOP
+	      printf("dual trouble a\n");
+#endif
+	      // try just going back in
+	      handler.setPhase(1);
+	      model2->dual();
+	      if (handler.inTrouble()) {
+#ifdef COIN_DEVELOP
+		printf("dual trouble b\n");
+#endif
+		// try primal with original basis
+		handler.setPhase(2);
+		setBasis(basis_,model2);
+		model2->primal();
+	      }
+	      if(handler.inTrouble()) {
+#ifdef COIN_DEVELOP
+		printf("disaster - treat as infeasible\n");
+#endif
+		model2->setProblemStatus(1);
+	      }
+	    }
+	    // reset
+	    model2->setDisasterHandler(NULL);
+	  }
         }
       }
       model2->setPerturbation(savePerturbation);
@@ -223,8 +356,44 @@ void OsiClpSolverInterface::initialSolve()
         delete model2;
         //printf("Resolving from postsolved model\n");
         // later try without (1) and check duals before solve
-	if (!stopped)
-	  solver.primal(1);
+	if (!stopped) {
+	  if (!inCbcOrOther||model2->status()!=1) {
+	    OsiClpDisasterHandler handler(this);
+	    if (inCbcOrOther) {
+	      handler.setSimplex(&solver); // as "borrowed"
+	      handler.setWhereFrom(6);
+	      solver.setDisasterHandler(&handler);
+	    }
+	    solver.primal(1);
+	    if (inCbcOrOther) {
+	      if(handler.inTrouble()) {
+#ifdef COIN_DEVELOP
+		printf("primal trouble a\n");
+#endif
+		// try just going back in (but with dual)
+		handler.setPhase(1);
+		solver.dual();
+		if (handler.inTrouble()) {
+#ifdef COIN_DEVELOP
+		  printf("primal trouble b\n");
+#endif
+		  // try primal with original basis
+		  handler.setPhase(2);
+		  setBasis(basis_,&solver);
+		  solver.dual();
+		}
+		if(handler.inTrouble()) {
+#ifdef COIN_DEVELOP
+		  printf("disaster - treat as infeasible\n");
+#endif
+		  solver.setProblemStatus(1);
+		}
+	      }
+	      // reset
+	      solver.setDisasterHandler(NULL);
+	    }
+	  }
+	}
         solver.setNumberIterations(solver.numberIterations()+numberIterations);
       }
       lastAlgorithm_=1; // primal
@@ -379,6 +548,7 @@ void OsiClpSolverInterface::initialSolve()
   modelPtr_->upperIn_=0.0;
   time1 = CoinCpuTime()-time1;
   totalTime += time1;
+  assert (!modelPtr_->disasterHandler());
   if (lastAlgorithm_<1||lastAlgorithm_>2)
     lastAlgorithm_=1;
   //std::cout<<time1<<" seconds - total "<<totalTime<<std::endl;

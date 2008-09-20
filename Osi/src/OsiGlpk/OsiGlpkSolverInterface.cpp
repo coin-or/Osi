@@ -3219,9 +3219,13 @@ void OGSI::gutsOfConstructor()
 
   lpx_set_prob_name(lp_,const_cast<char *>(probName_.c_str())) ;
 
-  lpx_set_int_parm(lp_,LPX_K_PRESOL,0) ;
-  lpx_set_int_parm(lp_,LPX_K_DUAL,1) ;
-  lpx_set_int_parm(lp_,LPX_K_SCALE,3) ;
+/* Stefan: with the new simplex algorithm in Glpk 4.31, some netlib instances (e.g., dfl001)
+   take very long or get into a cycle.
+   Thus, let's try to leave parameters onto their defaults.
+*/
+//  lpx_set_int_parm(lp_,LPX_K_PRESOL,0) ;
+//  lpx_set_int_parm(lp_,LPX_K_DUAL,1) ;
+//  lpx_set_int_parm(lp_,LPX_K_SCALE,3) ;
 /*
   Printing is a bit more complicated. Set the log level in the handler and set
   the print parameter in glpk.

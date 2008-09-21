@@ -217,15 +217,15 @@ void OsiClpSolverInterface::initialSolve()
       model2->setPerturbation(savePerturbation);
       if (model2!=&solver) {
         int numberIterations = model2->numberIterations();
-        bool stopped = model2->status()==3;
+        int presolvedStatus = model2->status()==3;
         pinfo.postsolve(true);
         
         delete model2;
         //printf("Resolving from postsolved model\n");
         // later try without (1) and check duals before solve
-	if (!stopped) {
+	if (presolvedStatus!=3) {
 	  bool inCbcOrOther = (modelPtr_->specialOptions()&0x03000000)!=0;
-	  if (!inCbcOrOther||model2->status()!=1) // may want to skip if infeasible
+	  if (!inCbcOrOther||presolvedStatus!=1) // may want to skip if infeasible
 	    solver.primal(1);
 	}
         solver.setNumberIterations(solver.numberIterations()+numberIterations);

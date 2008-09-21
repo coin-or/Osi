@@ -350,14 +350,14 @@ void OsiClpSolverInterface::initialSolve()
       model2->setPerturbation(savePerturbation);
       if (model2!=&solver) {
         int numberIterations = model2->numberIterations();
-        bool stopped = model2->status()==3;
+        int presolvedStatus = model2->status()==3;
         pinfo.postsolve(true);
         
         delete model2;
         //printf("Resolving from postsolved model\n");
         // later try without (1) and check duals before solve
-	if (!stopped) {
-	  if (!inCbcOrOther||model2->status()!=1) {
+	if (presolvedStatus!=3) {
+	  if (!inCbcOrOther||presolvedStatus!=1) {
 	    OsiClpDisasterHandler handler(this);
 	    if (inCbcOrOther) {
 	      handler.setSimplex(&solver); // as "borrowed"

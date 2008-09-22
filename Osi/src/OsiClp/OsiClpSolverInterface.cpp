@@ -350,7 +350,7 @@ void OsiClpSolverInterface::initialSolve()
       model2->setPerturbation(savePerturbation);
       if (model2!=&solver) {
         int numberIterations = model2->numberIterations();
-        int presolvedStatus = model2->status()==3;
+        int presolvedStatus = model2->status();
         pinfo.postsolve(true);
         
         delete model2;

@@ -274,6 +274,10 @@ public:
   inline int numberBranchesLeft() const
   {return numberBranches_-branchIndex_;}
 
+  /// Increment the number of branch arms left for this branching object
+  inline void incrementNumberBranchesLeft()
+  { numberBranches_ ++;}
+
   /** Set the number of branch arms left for this branching object
       Just for forcing
   */

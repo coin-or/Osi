@@ -283,6 +283,9 @@ public:
   /// Get warmstarting information
   inline CoinWarmStartBasis* getPointerToWarmStart() 
   { return &basis_;}
+  /// Get warmstarting information
+  inline const CoinWarmStartBasis* getConstPointerToWarmStart() const 
+  { return &basis_;}
   /** Set warmstarting information. Return true/false depending on whether
       the warmstart information was accepted or not. */
   virtual bool setWarmStart(const CoinWarmStart* warmstart);
@@ -1086,6 +1089,8 @@ public:
   { setBasis(basis_,modelPtr_);}
   /// Warm start difference from basis_ to statusArray
   CoinWarmStartDiff * getBasisDiff(const unsigned char * statusArray) const ;
+  /// Warm start from statusArray
+  CoinWarmStartBasis * getBasis(const unsigned char * statusArray) const ;
   /// Delete all scale factor stuff and reset option
   void deleteScaleFactors();
   /// If doing fast hot start then ranges are computed

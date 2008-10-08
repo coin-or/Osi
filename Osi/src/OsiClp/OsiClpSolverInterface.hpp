@@ -9,6 +9,7 @@
 #include <map>
 
 #include "ClpSimplex.hpp"
+#include "ClpLinearObjective.hpp"
 #include "CoinPackedMatrix.hpp"
 #include "OsiSolverInterface.hpp"
 #include "CoinWarmStartBasis.hpp"
@@ -18,6 +19,7 @@
 
 class OsiRowCut;
 class OsiClpUserSolver;
+class OsiClpDisasterHandler;
 class CoinSet;
 #ifndef COIN_DBL_MAX
 static const double OsiClpInfinity = DBL_MAX;
@@ -992,6 +994,18 @@ public:
   virtual CoinBigIndex getSizeL() const;
   /// Return number of entries in U part of current factorization
   virtual CoinBigIndex getSizeU() const;
+  /// Get disaster handler
+  const OsiClpDisasterHandler * disasterHandler() const
+  { return disasterHandler_;}
+  /// Pass in disaster handler
+  void passInDisasterHandler(OsiClpDisasterHandler * handler);
+  /// Get fake objective
+  ClpLinearObjective * fakeObjective() const
+  { return fakeObjective_;}
+  /// Set fake objective (and take ownership)
+  void setFakeObjective(ClpLinearObjective * fakeObjective);
+  /// Set fake objective
+  void setFakeObjective(double * fakeObjective);
   //@}
   
   //---------------------------------------------------------------------------
@@ -1221,6 +1235,7 @@ protected:
       128 Model will only change in column bounds
       256 Clean up model before hot start
       512 Give user direct access to Clp regions in getBInvARow etc
+      1024 Don't "borrow" model in initialSolve
       Bits above 8192 give where called from in Cbc
       At present 0 is normal, 1 doing fast hotstarts, 2 is can do quick check
       65536 Keep simple i.e. no auxiliary model or crunch etc
@@ -1234,6 +1249,10 @@ protected:
   int lastNumberRows_;
   /// Continuous model
   ClpSimplex * continuousModel_;
+  /// Possible disaster handler
+  OsiClpDisasterHandler * disasterHandler_ ;
+  /// Fake objective
+  ClpLinearObjective * fakeObjective_;
   /// Row scale factors (has inverse at end)
   CoinDoubleArrayWithLength rowScale_; 
   /// Column scale factors (has inverse at end)
@@ -1252,6 +1271,8 @@ public:
   virtual bool check() const ;
   /// saves information for next attempt
   virtual void saveInfo();
+  /// Type of disaster 0 can fix, 1 abort
+  virtual int typeOfDisaster();
   //@}
   
   

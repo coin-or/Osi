@@ -46,30 +46,64 @@ static int hiResolveTry=9999999;
 //#############################################################################
 void OsiClpSolverInterface::initialSolve()
 {
-  ClpSimplex solver(true);
+  bool deleteSolver;
+  ClpSimplex * solver;
   double time1 = CoinCpuTime();
-  solver.borrowModel(*modelPtr_);
+  int userFactorizationFrequency = modelPtr_->factorization()->maximumPivots();
+  int totalIterations=0;
+  bool abortSearch=false;
+  ClpObjective * savedObjective=NULL;
+  double savedDualLimit=modelPtr_->dblParam_[ClpDualObjectiveLimit];
+  if (fakeObjective_) {
+    // See if all with costs fixed
+    int numberColumns = modelPtr_->numberColumns_;
+    const double * obj = modelPtr_->objective();
+    const double * lower = modelPtr_->columnLower();
+    const double * upper = modelPtr_->columnUpper();
+    int i;
+    for (i=0;i<numberColumns;i++) {
+      double objValue = obj[i];
+      if (objValue) {
+	if (lower[i]!=upper[i])
+	  break;
+      }
+    }
+    if (i==numberColumns) {
+      // Set fake
+      savedObjective=modelPtr_->objective_;
+      modelPtr_->objective_=fakeObjective_;
+      modelPtr_->dblParam_[ClpDualObjectiveLimit]=COIN_DBL_MAX;
+      //modelPtr_->setMoreSpecialOptions(modelPtr_->moreSpecialOptions()|32);
+    }
+  }
+  if ((specialOptions_&1024)==0) {
+    solver = new ClpSimplex(true);
+    deleteSolver=true;
+    solver->borrowModel(*modelPtr_);
+    // See if user set factorization frequency
+    // borrowModel does not move
+    solver->factorization()->maximumPivots(userFactorizationFrequency);
+  } else {
+    solver = modelPtr_;
+    deleteSolver=false;
+  }
   // Treat as if user simplex not enabled
-  int saveSolveType=solver.solveType();
-  bool doingPrimal = solver.algorithm()>0;
+  int saveSolveType=solver->solveType();
+  bool doingPrimal = solver->algorithm()>0;
   if (saveSolveType==2) {
     disableSimplexInterface();
-    solver.setSolveType(1);
+    solver->setSolveType(1);
   }
-  int saveOptions = solver.specialOptions();
-  solver.setSpecialOptions(saveOptions|64|32768); // go as far as possible
+  int saveOptions = solver->specialOptions();
+  solver->setSpecialOptions(saveOptions|64|32768); // go as far as possible
   // get original log levels
   int saveMessageLevel=modelPtr_->logLevel();
   int messageLevel=messageHandler()->logLevel();
   int saveMessageLevel2 = messageLevel;
   // Set message handler
-  solver.passInMessageHandler(handler_);
+  solver->passInMessageHandler(handler_);
   // But keep log level
-  solver.messageHandler()->setLogLevel(saveMessageLevel);
-  // See if user set factorization frequency
-  int userFactorizationFrequency = modelPtr_->factorization()->maximumPivots();
-  // borrowModel does not move
-  solver.factorization()->maximumPivots(userFactorizationFrequency);
+  solver->messageHandler()->setLogLevel(saveMessageLevel);
   // set reasonable defaults
   bool takeHint;
   OsiHintStrength strength;
@@ -81,7 +115,7 @@ void OsiClpSolverInterface::initialSolve()
       messageLevel--;
   }
   if (messageLevel<saveMessageLevel)
-    solver.messageHandler()->setLogLevel(messageLevel);
+    solver->messageHandler()->setLogLevel(messageLevel);
   // Allow for specialOptions_==1+8 forcing saving factorization
   int startFinishOptions=0;
   if ((specialOptions_&9)==(1+8)) {
@@ -112,32 +146,32 @@ void OsiClpSolverInterface::initialSolve()
     If not then see if dual feasible (and allow for gubs etc?)
   */
   bool doPrimal = (basis_.numberBasicStructurals()>0);
-  setBasis(basis_,&solver);
+  setBasis(basis_,solver);
   bool inCbcOrOther = (modelPtr_->specialOptions()&0x03000000)!=0;
   if ((!defaultHints||doPrimal)&&!solveOptions_.getSpecialOption(6)) {
     // scaling
     // save initial state
-    const double * rowScale1 = solver.rowScale();
+    const double * rowScale1 = solver->rowScale();
     if (modelPtr_->solveType()==1) {
       gotHint = (getHintParam(OsiDoScale,takeHint,strength));
       assert (gotHint);
       if (strength==OsiHintIgnore||takeHint) {
-        if (!solver.scalingFlag())
-          solver.scaling(3);
+        if (!solver->scalingFlag())
+          solver->scaling(3);
       } else {
-        solver.scaling(0);
+        solver->scaling(0);
       }
     } else {
-      solver.scaling(0);
+      solver->scaling(0);
     }
-    //solver.setDualBound(1.0e6);
-    //solver.setDualTolerance(1.0e-7);
+    //solver->setDualBound(1.0e6);
+    //solver->setDualTolerance(1.0e-7);
     
     //ClpDualRowSteepest steep;
-    //solver.setDualRowPivotAlgorithm(steep);
-    //solver.setPrimalTolerance(1.0e-8);
+    //solver->setDualRowPivotAlgorithm(steep);
+    //solver->setPrimalTolerance(1.0e-8);
     //ClpPrimalColumnSteepest steepP;
-    //solver.setPrimalColumnPivotAlgorithm(steepP);
+    //solver->setPrimalColumnPivotAlgorithm(steepP);
     
     // sort out hints;
     // algorithm 0 whatever, -1 force dual, +1 force primal
@@ -161,12 +195,12 @@ void OsiClpSolverInterface::initialSolve()
     assert (gotHint);
     if (strength!=OsiHintIgnore&&takeHint) {
       ClpPresolve pinfo;
-      ClpSimplex * model2 = pinfo.presolvedModel(solver,1.0e-8);
+      ClpSimplex * model2 = pinfo.presolvedModel(*solver,1.0e-8);
       if (!model2) {
         // problem found to be infeasible - whats best?
-        model2 = &solver;
+        model2 = solver;
       } else {
-	model2->setSpecialOptions(solver.specialOptions());
+	model2->setSpecialOptions(solver->specialOptions());
       }
       
       // change from 200 (unless changed)
@@ -184,9 +218,9 @@ void OsiClpSolverInterface::initialSolve()
         // look further
         bool crashResult=false;
         if (doCrash>0)
-          crashResult =  (solver.crash(1000.0,1)>0);
+          crashResult =  (solver->crash(1000.0,1)>0);
         else if (doCrash==0&&algorithm>0)
-          crashResult =  (solver.crash(1000.0,1)>0);
+          crashResult =  (solver->crash(1000.0,1)>0);
         doPrimal=crashResult;
       }
       if (algorithm<0)
@@ -199,34 +233,52 @@ void OsiClpSolverInterface::initialSolve()
         //       <<std::endl;
         // up dual bound for safety
         //model2->setDualBound(1.0e11);
-	OsiClpDisasterHandler handler(this);
+	disasterHandler_->setOsiModel(this);
 	if (inCbcOrOther) {
-	  handler.setSimplex(model2);
-	  handler.setWhereFrom(4);
-	  model2->setDisasterHandler(&handler);
+	  disasterHandler_->setSimplex(model2);
+	  disasterHandler_->setWhereFrom(4);
+	  model2->setDisasterHandler(disasterHandler_);
 	}
         model2->dual(0);
+	totalIterations += model2->numberIterations();
 	if (inCbcOrOther) {
-	  if(handler.inTrouble()) {
+	  if(disasterHandler_->inTrouble()) {
 #ifdef COIN_DEVELOP
 	    printf("dual trouble a\n");
 #endif
+	    if (disasterHandler_->typeOfDisaster()) {
+	      // We want to abort 
+	      abortSearch=true;
+	      goto disaster;
+	    }
 	    // try just going back in
-	    handler.setPhase(1);
+	    disasterHandler_->setPhase(1);
 	    model2->dual();
-	    if (handler.inTrouble()) {
+	    totalIterations += model2->numberIterations();
+	    if (disasterHandler_->inTrouble()) {
 #ifdef COIN_DEVELOP
 	      printf("dual trouble b\n");
 #endif
+	      if (disasterHandler_->typeOfDisaster()) {
+		// We want to abort 
+		abortSearch=true;
+		goto disaster;
+	      }
 	      // try primal with original basis
-	      handler.setPhase(2);
+	      disasterHandler_->setPhase(2);
 	      setBasis(basis_,model2);
 	      model2->primal();
+	      totalIterations += model2->numberIterations();
 	    }
-	    if(handler.inTrouble()) {
+	    if(disasterHandler_->inTrouble()) {
 #ifdef COIN_DEVELOP
 	      printf("disaster - treat as infeasible\n");
 #endif
+	      if (disasterHandler_->typeOfDisaster()) {
+		// We want to abort 
+		abortSearch=true;
+		goto disaster;
+	      }
 	      model2->setProblemStatus(1);
 	    }
 	  }
@@ -236,34 +288,52 @@ void OsiClpSolverInterface::initialSolve()
         // check if clp thought it was in a loop
         if (model2->status()==3&&!model2->hitMaximumIterations()) {
           // switch algorithm
-	  OsiClpDisasterHandler handler(this);
+	  disasterHandler_->setOsiModel(this);
 	  if (inCbcOrOther) {
-	    handler.setSimplex(model2);
-	    handler.setWhereFrom(6);
-	    model2->setDisasterHandler(&handler);
+	    disasterHandler_->setSimplex(model2);
+	    disasterHandler_->setWhereFrom(6);
+	    model2->setDisasterHandler(disasterHandler_);
 	  }
           model2->primal();
+	  totalIterations += model2->numberIterations();
 	  if (inCbcOrOther) {
-	    if(handler.inTrouble()) {
+	    if(disasterHandler_->inTrouble()) {
 #ifdef COIN_DEVELOP
 	      printf("primal trouble a\n");
 #endif
+	      if (disasterHandler_->typeOfDisaster()) {
+		// We want to abort 
+		abortSearch=true;
+		goto disaster;
+	      }
 	      // try just going back in (but with dual)
-	      handler.setPhase(1);
+	      disasterHandler_->setPhase(1);
 	      model2->dual();
-	      if (handler.inTrouble()) {
+	      totalIterations += model2->numberIterations();
+	      if (disasterHandler_->inTrouble()) {
 #ifdef COIN_DEVELOP
 		printf("primal trouble b\n");
 #endif
+		if (disasterHandler_->typeOfDisaster()) {
+		  // We want to abort 
+		  abortSearch=true;
+		  goto disaster;
+		}
 		// try primal with original basis
-		handler.setPhase(2);
+		disasterHandler_->setPhase(2);
 		setBasis(basis_,model2);
 		model2->dual();
+		totalIterations += model2->numberIterations();
 	      }
-	      if(handler.inTrouble()) {
+	      if(disasterHandler_->inTrouble()) {
 #ifdef COIN_DEVELOP
 		printf("disaster - treat as infeasible\n");
 #endif
+		if (disasterHandler_->typeOfDisaster()) {
+		  // We want to abort 
+		  abortSearch=true;
+		  goto disaster;
+		}
 		model2->setProblemStatus(1);
 	      }
 	    }
@@ -274,34 +344,52 @@ void OsiClpSolverInterface::initialSolve()
       } else {
         // up infeasibility cost for safety
         //model2->setInfeasibilityCost(1.0e10);
-	OsiClpDisasterHandler handler(this);
+	disasterHandler_->setOsiModel(this);
 	if (inCbcOrOther) {
-	  handler.setSimplex(model2);
-	  handler.setWhereFrom(6);
-	  model2->setDisasterHandler(&handler);
+	  disasterHandler_->setSimplex(model2);
+	  disasterHandler_->setWhereFrom(6);
+	  model2->setDisasterHandler(disasterHandler_);
 	}
         model2->primal(1);
+	totalIterations += model2->numberIterations();
 	if (inCbcOrOther) {
-	  if(handler.inTrouble()) {
+	  if(disasterHandler_->inTrouble()) {
 #ifdef COIN_DEVELOP
 	    printf("primal trouble a\n");
 #endif
+	    if (disasterHandler_->typeOfDisaster()) {
+	      // We want to abort 
+	      abortSearch=true;
+	      goto disaster;
+	    }
 	    // try just going back in (but with dual)
-	    handler.setPhase(1);
+	    disasterHandler_->setPhase(1);
 	    model2->dual();
-	    if (handler.inTrouble()) {
+	    totalIterations += model2->numberIterations();
+	    if (disasterHandler_->inTrouble()) {
 #ifdef COIN_DEVELOP
 	      printf("primal trouble b\n");
 #endif
+	      if (disasterHandler_->typeOfDisaster()) {
+		// We want to abort 
+		abortSearch=true;
+		goto disaster;
+	      }
 	      // try primal with original basis
-	      handler.setPhase(2);
+	      disasterHandler_->setPhase(2);
 	      setBasis(basis_,model2);
 	      model2->dual();
+	      totalIterations += model2->numberIterations();
 	    }
-	    if(handler.inTrouble()) {
+	    if(disasterHandler_->inTrouble()) {
 #ifdef COIN_DEVELOP
 	      printf("disaster - treat as infeasible\n");
 #endif
+	      if (disasterHandler_->typeOfDisaster()) {
+		// We want to abort 
+		abortSearch=true;
+		goto disaster;
+	      }
 	      model2->setProblemStatus(1);
 	    }
 	  }
@@ -311,34 +399,52 @@ void OsiClpSolverInterface::initialSolve()
         // check if clp thought it was in a loop
         if (model2->status()==3&&!model2->hitMaximumIterations()) {
           // switch algorithm
-	  OsiClpDisasterHandler handler(this);
+	  disasterHandler_->setOsiModel(this);
 	  if (inCbcOrOther) {
-	    handler.setSimplex(model2);
-	    handler.setWhereFrom(4);
-	    model2->setDisasterHandler(&handler);
+	    disasterHandler_->setSimplex(model2);
+	    disasterHandler_->setWhereFrom(4);
+	    model2->setDisasterHandler(disasterHandler_);
 	  }
 	  model2->dual(0);
+	  totalIterations += model2->numberIterations();
 	  if (inCbcOrOther) {
-	    if(handler.inTrouble()) {
+	    if(disasterHandler_->inTrouble()) {
 #ifdef COIN_DEVELOP
 	      printf("dual trouble a\n");
 #endif
+	      if (disasterHandler_->typeOfDisaster()) {
+		// We want to abort 
+		abortSearch=true;
+		goto disaster;
+	      }
 	      // try just going back in
-	      handler.setPhase(1);
+	      disasterHandler_->setPhase(1);
 	      model2->dual();
-	      if (handler.inTrouble()) {
+	      totalIterations += model2->numberIterations();
+	      if (disasterHandler_->inTrouble()) {
 #ifdef COIN_DEVELOP
 		printf("dual trouble b\n");
 #endif
+		if (disasterHandler_->typeOfDisaster()) {
+		  // We want to abort 
+		  abortSearch=true;
+		goto disaster;
+		}
 		// try primal with original basis
-		handler.setPhase(2);
+		disasterHandler_->setPhase(2);
 		setBasis(basis_,model2);
 		model2->primal();
+		totalIterations += model2->numberIterations();
 	      }
-	      if(handler.inTrouble()) {
+	      if(disasterHandler_->inTrouble()) {
 #ifdef COIN_DEVELOP
 		printf("disaster - treat as infeasible\n");
 #endif
+		if (disasterHandler_->typeOfDisaster()) {
+		  // We want to abort 
+		  abortSearch=true;
+		  goto disaster;
+		}
 		model2->setProblemStatus(1);
 	      }
 	    }
@@ -348,8 +454,7 @@ void OsiClpSolverInterface::initialSolve()
         }
       }
       model2->setPerturbation(savePerturbation);
-      if (model2!=&solver) {
-        int numberIterations = model2->numberIterations();
+      if (model2!=solver) {
         int presolvedStatus = model2->status();
         pinfo.postsolve(true);
         
@@ -358,158 +463,213 @@ void OsiClpSolverInterface::initialSolve()
         // later try without (1) and check duals before solve
 	if (presolvedStatus!=3) {
 	  if (!inCbcOrOther||presolvedStatus!=1) {
-	    OsiClpDisasterHandler handler(this);
+	    disasterHandler_->setOsiModel(this);
 	    if (inCbcOrOther) {
-	      handler.setSimplex(&solver); // as "borrowed"
-	      handler.setWhereFrom(6);
-	      solver.setDisasterHandler(&handler);
+	      disasterHandler_->setSimplex(solver); // as "borrowed"
+	      disasterHandler_->setWhereFrom(6);
+	      solver->setDisasterHandler(disasterHandler_);
 	    }
-	    solver.primal(1);
+	    solver->primal(1);
+	    totalIterations += solver->numberIterations();
 	    if (inCbcOrOther) {
-	      if(handler.inTrouble()) {
+	      if(disasterHandler_->inTrouble()) {
 #ifdef COIN_DEVELOP
 		printf("primal trouble a\n");
 #endif
+		if (disasterHandler_->typeOfDisaster()) {
+		  // We want to abort 
+		  abortSearch=true;
+		  goto disaster;
+		}
 		// try just going back in (but with dual)
-		handler.setPhase(1);
-		solver.dual();
-		if (handler.inTrouble()) {
+		disasterHandler_->setPhase(1);
+		solver->dual();
+		totalIterations += solver->numberIterations();
+		if (disasterHandler_->inTrouble()) {
 #ifdef COIN_DEVELOP
 		  printf("primal trouble b\n");
 #endif
+		  if (disasterHandler_->typeOfDisaster()) {
+		    // We want to abort 
+		    abortSearch=true;
+		    goto disaster;
+		  }
 		  // try primal with original basis
-		  handler.setPhase(2);
-		  setBasis(basis_,&solver);
-		  solver.dual();
+		  disasterHandler_->setPhase(2);
+		  setBasis(basis_,solver);
+		  solver->dual();
+		  totalIterations += solver->numberIterations();
 		}
-		if(handler.inTrouble()) {
+		if(disasterHandler_->inTrouble()) {
 #ifdef COIN_DEVELOP
 		  printf("disaster - treat as infeasible\n");
 #endif
-		  solver.setProblemStatus(1);
+		  if (disasterHandler_->typeOfDisaster()) {
+		    // We want to abort 
+		    abortSearch=true;
+		    goto disaster;
+		  }
+		  solver->setProblemStatus(1);
 		}
 	      }
 	      // reset
-	      solver.setDisasterHandler(NULL);
+	      solver->setDisasterHandler(NULL);
 	    }
 	  }
 	}
-        solver.setNumberIterations(solver.numberIterations()+numberIterations);
       }
       lastAlgorithm_=1; // primal
-      //if (solver.numberIterations())
-      //printf("****** iterated %d\n",solver.numberIterations());
+      //if (solver->numberIterations())
+      //printf("****** iterated %d\n",solver->numberIterations());
     } else {
       // do we want crash
       if (doCrash>0)
-        solver.crash(1000.0,2);
+        solver->crash(1000.0,2);
       else if (doCrash==0)
-        solver.crash(1000.0,0);
+        solver->crash(1000.0,0);
       if (algorithm<0)
         doPrimal=false;
       else if (algorithm>0)
         doPrimal=true;
-      OsiClpDisasterHandler handler(this);
-      handler.setSimplex(&solver); // as "borrowed"
+      disasterHandler_->setOsiModel(this);
+      disasterHandler_->setSimplex(solver); // as "borrowed"
       bool inCbcOrOther = (modelPtr_->specialOptions()&0x03000000)!=0;
       if (!doPrimal) 
-	handler.setWhereFrom(4);
+	disasterHandler_->setWhereFrom(4);
       else
-	handler.setWhereFrom(6);
+	disasterHandler_->setWhereFrom(6);
       if (inCbcOrOther)
-	solver.setDisasterHandler(&handler);
+	solver->setDisasterHandler(disasterHandler_);
       if (!doPrimal) {
         //printf("doing dual\n");
-        solver.dual(0);
+        solver->dual(0);
+	totalIterations += solver->numberIterations();
 	if (inCbcOrOther) {
-	  if(handler.inTrouble()) {
+	  if(disasterHandler_->inTrouble()) {
 #ifdef COIN_DEVELOP
 	    printf("dual trouble a\n");
 #endif
+	    if (disasterHandler_->typeOfDisaster()) {
+	      // We want to abort 
+	      abortSearch=true;
+	      goto disaster;
+	    }
 	    // try just going back in
-	    handler.setPhase(1);
-	    solver.dual();
-	    if (handler.inTrouble()) {
+	    disasterHandler_->setPhase(1);
+	    solver->dual();
+	    totalIterations += solver->numberIterations();
+	    if (disasterHandler_->inTrouble()) {
 #ifdef COIN_DEVELOP
 	      printf("dual trouble b\n");
 #endif
+	      if (disasterHandler_->typeOfDisaster()) {
+		// We want to abort 
+		abortSearch=true;
+		goto disaster;
+	      }
 	      // try primal with original basis
-	      handler.setPhase(2);
-	      setBasis(basis_,&solver);
-	      solver.primal();
+	      disasterHandler_->setPhase(2);
+	      setBasis(basis_,solver);
+	      solver->primal();
+	      totalIterations += solver->numberIterations();
 	    }
-	    if(handler.inTrouble()) {
+	    if(disasterHandler_->inTrouble()) {
 #ifdef COIN_DEVELOP
 	      printf("disaster - treat as infeasible\n");
 #endif
-	      solver.setProblemStatus(1);
+	      if (disasterHandler_->typeOfDisaster()) {
+		// We want to abort 
+		abortSearch=true;
+		goto disaster;
+	      }
+	      solver->setProblemStatus(1);
 	    }
 	  }
 	  // reset
-	  solver.setDisasterHandler(NULL);
+	  solver->setDisasterHandler(NULL);
 	}
         lastAlgorithm_=2; // dual
         // check if clp thought it was in a loop
-        if (solver.status()==3&&!solver.hitMaximumIterations()) {
+        if (solver->status()==3&&!solver->hitMaximumIterations()) {
           // switch algorithm
-          solver.primal(0);
+          solver->primal(0);
+	  totalIterations += solver->numberIterations();
           lastAlgorithm_=1; // primal
         }
       } else {
         //printf("doing primal\n");
-        solver.primal(1);
+        solver->primal(1);
+	totalIterations += solver->numberIterations();
 	if (inCbcOrOther) {
-	  if(handler.inTrouble()) {
+	  if(disasterHandler_->inTrouble()) {
 #ifdef COIN_DEVELOP
 	    printf("primal trouble a\n");
 #endif
+	    if (disasterHandler_->typeOfDisaster()) {
+	      // We want to abort 
+	      abortSearch=true;
+	      goto disaster;
+	    }
 	    // try just going back in (but with dual)
-	    handler.setPhase(1);
-	    solver.dual();
-	    if (handler.inTrouble()) {
+	    disasterHandler_->setPhase(1);
+	    solver->dual();
+	    totalIterations += solver->numberIterations();
+	    if (disasterHandler_->inTrouble()) {
 #ifdef COIN_DEVELOP
 	      printf("primal trouble b\n");
 #endif
+	      if (disasterHandler_->typeOfDisaster()) {
+		// We want to abort 
+		abortSearch=true;
+		goto disaster;
+	      }
 	      // try primal with original basis
-	      handler.setPhase(2);
-	      setBasis(basis_,&solver);
-	      solver.dual();
+	      disasterHandler_->setPhase(2);
+	      setBasis(basis_,solver);
+	      solver->dual();
+	      totalIterations += solver->numberIterations();
 	    }
-	    if(handler.inTrouble()) {
+	    if(disasterHandler_->inTrouble()) {
 #ifdef COIN_DEVELOP
 	      printf("disaster - treat as infeasible\n");
 #endif
-	      solver.setProblemStatus(1);
+	      if (disasterHandler_->typeOfDisaster()) {
+		// We want to abort 
+		abortSearch=true;
+		goto disaster;
+	      }
+	      solver->setProblemStatus(1);
 	    }
 	  }
 	  // reset
-	  solver.setDisasterHandler(NULL);
+	  solver->setDisasterHandler(NULL);
 	}
         lastAlgorithm_=1; // primal
         // check if clp thought it was in a loop
-        if (solver.status()==3&&!solver.hitMaximumIterations()) {
+        if (solver->status()==3&&!solver->hitMaximumIterations()) {
           // switch algorithm
-          solver.dual(0);
+          solver->dual(0);
+	  totalIterations += solver->numberIterations();
           lastAlgorithm_=2; // dual
         }
       }
     }
     // If scaled feasible but unscaled infeasible take action
-    if (!solver.status()&&cleanupScaling_) {
-      solver.cleanup(cleanupScaling_);
+    if (!solver->status()&&cleanupScaling_) {
+      solver->cleanup(cleanupScaling_);
     }
-    basis_ = getBasis(&solver);
+    basis_ = getBasis(solver);
     //basis_.print();
-    const double * rowScale2 = solver.rowScale();
-    solver.setSpecialOptions(saveOptions);
+    const double * rowScale2 = solver->rowScale();
+    solver->setSpecialOptions(saveOptions);
     if (!rowScale1&&rowScale2) {
       // need to release memory
-      if (!solver.savedRowScale_) {
-	solver.setRowScale(NULL);
-	solver.setColumnScale(NULL);
+      if (!solver->savedRowScale_) {
+	solver->setRowScale(NULL);
+	solver->setColumnScale(NULL);
       } else {
-	solver.rowScale_=NULL;
-	solver.columnScale_=NULL;
+	solver->rowScale_=NULL;
+	solver->columnScale_=NULL;
       }
     }
   } else {
@@ -519,28 +679,47 @@ void OsiClpSolverInterface::initialSolve()
     OsiHintStrength strength;
     getHintParam(OsiDoInBranchAndCut,yesNo,strength);
     if (yesNo) {
-      solver.setSpecialOptions(solver.specialOptions()|1024);
+      solver->setSpecialOptions(solver->specialOptions()|1024);
     }
-    solver.initialSolve(options);
+    solver->initialSolve(options);
     lastAlgorithm_ = 2; // say dual
     // If scaled feasible but unscaled infeasible take action
-    if (!solver.status()&&cleanupScaling_) {
-      solver.cleanup(cleanupScaling_);
+    if (!solver->status()&&cleanupScaling_) {
+      solver->cleanup(cleanupScaling_);
     }
-    basis_ = getBasis(&solver);
+    basis_ = getBasis(solver);
     //basis_.print();
   }
-  solver.messageHandler()->setLogLevel(saveMessageLevel);
-  solver.returnModel(*modelPtr_);
+  solver->messageHandler()->setLogLevel(saveMessageLevel);
+ disaster:
+  if (deleteSolver) {
+    solver->returnModel(*modelPtr_);
+    delete solver;
+  }
   if (startFinishOptions) {
     int save = modelPtr_->logLevel();
     if (save<2) modelPtr_->setLogLevel(0);
     modelPtr_->dual(0,startFinishOptions);
+    totalIterations += modelPtr_->numberIterations();
     modelPtr_->setLogLevel(save);
   }
   if (saveSolveType==2) {
     enableSimplexInterface(doingPrimal);
   }
+  if (savedObjective) {
+    // fix up
+    modelPtr_->dblParam_[ClpDualObjectiveLimit]=savedDualLimit;
+    //modelPtr_->setMoreSpecialOptions(modelPtr_->moreSpecialOptions()&(~32));
+    modelPtr_->objective_=savedObjective;
+    if (!modelPtr_->problemStatus_) {
+      CoinZeroN(modelPtr_->dual_,modelPtr_->numberRows_);
+      CoinZeroN(modelPtr_->reducedCost_,modelPtr_->numberColumns_);
+      if (modelPtr_->dj_&&(modelPtr_->whatsChanged_&1)!=0)
+	CoinZeroN(modelPtr_->dj_,modelPtr_->numberColumns_+modelPtr_->numberRows_);
+      modelPtr_->computeObjectiveValue();
+    }
+  }
+  modelPtr_->setNumberIterations(totalIterations);
   handler_->setLogLevel(saveMessageLevel2);
   if (modelPtr_->problemStatus_==3&&lastAlgorithm_==2)
     modelPtr_->computeObjectiveValue();
@@ -549,6 +728,10 @@ void OsiClpSolverInterface::initialSolve()
   time1 = CoinCpuTime()-time1;
   totalTime += time1;
   assert (!modelPtr_->disasterHandler());
+  if (abortSearch) {
+    lastAlgorithm_=-911;
+    modelPtr_->setProblemStatus(4);
+  }
   if (lastAlgorithm_<1||lastAlgorithm_>2)
     lastAlgorithm_=1;
   //std::cout<<time1<<" seconds - total "<<totalTime<<std::endl;
@@ -593,6 +776,32 @@ void OsiClpSolverInterface::resolve()
     if (modelPtr_->problemStatus()==0) {
       modelPtr_->setNumberIterations(0);
       return;
+    }
+  }
+  int totalIterations=0;
+  bool abortSearch=false;
+  ClpObjective * savedObjective=NULL;
+  double savedDualLimit=modelPtr_->dblParam_[ClpDualObjectiveLimit];
+  if (fakeObjective_) {
+    // See if all with costs fixed
+    int numberColumns = modelPtr_->numberColumns_;
+    const double * obj = modelPtr_->objective();
+    const double * lower = modelPtr_->columnLower();
+    const double * upper = modelPtr_->columnUpper();
+    int i;
+    for (i=0;i<numberColumns;i++) {
+      double objValue = obj[i];
+      if (objValue) {
+	if (lower[i]!=upper[i])
+	  break;
+      }
+    }
+    if (i==numberColumns) {
+      // Set fake
+      savedObjective=modelPtr_->objective_;
+      modelPtr_->objective_=fakeObjective_;
+      modelPtr_->dblParam_[ClpDualObjectiveLimit]=COIN_DBL_MAX;
+      //modelPtr_->setMoreSpecialOptions(modelPtr_->moreSpecialOptions()|32);
     }
   }
   // If using Clp initialSolve and primal - just do here
@@ -735,21 +944,24 @@ void OsiClpSolverInterface::resolve()
       model2->factorization()->maximumPivots(userFactorizationFrequency);
     if (algorithm<0) {
       model2->dual();
+      totalIterations += model2->numberIterations();
       // check if clp thought it was in a loop
       if (model2->status()==3&&!model2->hitMaximumIterations()) {
 	// switch algorithm
 	model2->primal();
+	totalIterations += model2->numberIterations();
       }
     } else {
       model2->primal(1);
+      totalIterations += model2->numberIterations();
       // check if clp thought it was in a loop
       if (model2->status()==3&&!model2->hitMaximumIterations()) {
 	// switch algorithm
 	model2->dual();
+	totalIterations += model2->numberIterations();
       }
     }
     if (model2!=modelPtr_) {
-      int numberIterations = model2->numberIterations();
       int finalStatus=model2->status();
       pinfo.postsolve(true);
     
@@ -757,7 +969,7 @@ void OsiClpSolverInterface::resolve()
       // later try without (1) and check duals before solve
       if (finalStatus!=3&&(finalStatus||modelPtr_->status()==-1)) {
         modelPtr_->primal(1);
-        modelPtr_->setNumberIterations(modelPtr_->numberIterations()+numberIterations);
+	totalIterations += modelPtr_->numberIterations();
         lastAlgorithm_=1; // primal
         //if (modelPtr_->numberIterations())
         //printf("****** iterated %d\n",modelPtr_->numberIterations());
@@ -773,15 +985,15 @@ void OsiClpSolverInterface::resolve()
 	modelPtr_->setPerturbation(100);
       //modelPtr_->messageHandler()->setLogLevel(1);
       //writeMpsNative("bad",NULL,NULL,2,1,1.0);
-      OsiClpDisasterHandler handler(this);
+      disasterHandler_->setOsiModel(this);
       bool inCbcOrOther = (modelPtr_->specialOptions()&0x03000000)!=0;
 #ifdef CLP_AUXILIARY_MODEL
       if (((modelPtr_->specialOptions()&1024)==0||(specialOptions_ &128)!=0)&&
           modelPtr_->auxiliaryModel_) {
         if ((specialOptions_&128)==0) {
-	  handler.setWhereFrom(0); // dual
+	  disasterHandler_->setWhereFrom(0); // dual
 	  if (inCbcOrOther)
-	    modelPtr_->setDisasterHandler(&handler);
+	    modelPtr_->setDisasterHandler(disasterHandler_);
 	  bool specialScale;
 	  if ((specialOptions_&131072)!=0&&!modelPtr_->rowScale_) {
 	    modelPtr_->rowScale_ = rowScale_.array();
@@ -791,6 +1003,7 @@ void OsiClpSolverInterface::resolve()
 	    specialScale=false;
 	  }
           modelPtr_->dual(0,startFinishOptions);
+	  totalIterations += modelPtr_->numberIterations();
 	  if (specialScale) {
 	    modelPtr_->rowScale_ = NULL;
 	    modelPtr_->columnScale_ = NULL;
@@ -799,9 +1012,9 @@ void OsiClpSolverInterface::resolve()
           double * rhs = modelPtr_->auxiliaryModel_->lower_;
           int numberTightened = ((ClpSimplexOther *)modelPtr_)->tightenIntegerBounds(rhs);
           if (numberTightened>=0) {
-	    handler.setWhereFrom(0); // dual
+	    disasterHandler_->setWhereFrom(0); // dual
 	    if (inCbcOrOther)
-	      modelPtr_->setDisasterHandler(&handler);
+	      modelPtr_->setDisasterHandler(disasterHandler_);
 	    bool specialScale;
 	    if ((specialOptions_&131072)!=0&&!modelPtr_->rowScale_) {
 	      modelPtr_->rowScale_ = rowScale_.array();
@@ -811,6 +1024,7 @@ void OsiClpSolverInterface::resolve()
 	      specialScale=false;
 	    }
 	    modelPtr_->dual(0,0);
+	    totalIterations += modelPtr_->numberIterations();
 	    if (specialScale) {
 	      modelPtr_->rowScale_ = NULL;
 	      modelPtr_->columnScale_ = NULL;
@@ -822,9 +1036,9 @@ void OsiClpSolverInterface::resolve()
       } else {
 #endif
  	if((specialOptions_&1)==0/*||true*/) {
-	  handler.setWhereFrom(0); // dual
+	  disasterHandler_->setWhereFrom(0); // dual
 	  if (inCbcOrOther)
-	    modelPtr_->setDisasterHandler(&handler);
+	    modelPtr_->setDisasterHandler(disasterHandler_);
 	  bool specialScale;
 	  if ((specialOptions_&131072)!=0&&!modelPtr_->rowScale_) {
 	    modelPtr_->rowScale_ = rowScale_.array();
@@ -834,12 +1048,16 @@ void OsiClpSolverInterface::resolve()
 	    specialScale=false;
 	  }
           modelPtr_->dual(0,startFinishOptions);
+	  totalIterations += modelPtr_->numberIterations();
 	  if (specialScale) {
 	    modelPtr_->rowScale_ = NULL;
 	    modelPtr_->columnScale_ = NULL;
 	  }
         } else {
           crunch();
+	  totalIterations += modelPtr_->numberIterations();
+	  if (modelPtr_->problemStatus()==4)
+	    goto disaster;
 	  // should have already been fixed if problems
 	  inCbcOrOther=false;
         }
@@ -847,20 +1065,37 @@ void OsiClpSolverInterface::resolve()
       }
 #endif
       if (inCbcOrOther) {
-	if(handler.inTrouble()) {
+	if(disasterHandler_->inTrouble()) {
+	  if (disasterHandler_->typeOfDisaster()) {
+	    // We want to abort 
+	    abortSearch=true;
+	    goto disaster;
+	  }
 	  // try just going back in
-	  handler.setPhase(1);
+	  disasterHandler_->setPhase(1);
 	  modelPtr_->dual();
-	  if (handler.inTrouble()) {
+	  totalIterations += modelPtr_->numberIterations();
+	  if (disasterHandler_->inTrouble()) {
+	    if (disasterHandler_->typeOfDisaster()) {
+	      // We want to abort 
+	      abortSearch=true;
+	      goto disaster;
+	    }
 	    // try primal with original basis
-	    handler.setPhase(2);
+	    disasterHandler_->setPhase(2);
 	    setBasis(basis_,modelPtr_);
 	    modelPtr_->primal();
+	    totalIterations += modelPtr_->numberIterations();
 	  }
-	  if(handler.inTrouble()) {
+	  if(disasterHandler_->inTrouble()) {
 #ifdef COIN_DEVELOP
 	    printf("disaster - treat as infeasible\n");
 #endif
+	    if (disasterHandler_->typeOfDisaster()) {
+	      // We want to abort 
+	      abortSearch=true;
+	      goto disaster;
+	    }
 	    modelPtr_->setProblemStatus(1);
 	  }
 	}
@@ -884,6 +1119,7 @@ void OsiClpSolverInterface::resolve()
         }
         if (nBad) {
           modelPtr_->primal(1);
+    totalIterations += modelPtr_->numberIterations();
           printf("%d fixed basic - %d iterations\n",nBad,modelPtr_->numberIterations());
         }
       }
@@ -903,6 +1139,7 @@ void OsiClpSolverInterface::resolve()
 	if (modelPtr_->maximumIterations()>100000+numberIterations)
 	  modelPtr_->setMaximumIterations(numberIterations + 1000 + 2*numberRows+numberColumns);
 	modelPtr_->primal(0,startFinishOptions);
+	totalIterations += modelPtr_->numberIterations();
 	modelPtr_->setMaximumIterations(saveMax);
 	lastAlgorithm_=1; // primal
         if (modelPtr_->status()==3&&!modelPtr_->hitMaximumIterations()) {
@@ -912,6 +1149,7 @@ void OsiClpSolverInterface::resolve()
 	  CoinWarmStartBasis allSlack;
 	  setBasis(allSlack,modelPtr_);
 	  modelPtr_->dual();
+	  totalIterations += modelPtr_->numberIterations();
           if (modelPtr_->status()==3&&!modelPtr_->hitMaximumIterations()) {
 	    if (modelPtr_->numberPrimalInfeasibilities()) {
 #ifdef COIN_DEVELOP
@@ -931,11 +1169,13 @@ void OsiClpSolverInterface::resolve()
     } else {
       //printf("doing primal\n");
       modelPtr_->primal(1,startFinishOptions);
+      totalIterations += modelPtr_->numberIterations();
       lastAlgorithm_=1; // primal
       // check if clp thought it was in a loop
       if (modelPtr_->status()==3&&!modelPtr_->hitMaximumIterations()) {
 	// switch algorithm
 	modelPtr_->dual();
+	totalIterations += modelPtr_->numberIterations();
 	lastAlgorithm_=2; // dual
       }
     }
@@ -946,6 +1186,7 @@ void OsiClpSolverInterface::resolve()
     modelPtr_->cleanup(cleanupScaling_);
   }
   basis_ = getBasis(modelPtr_);
+ disaster:
   //printf("basis after dual\n");
   //basis_.print();
   modelPtr_->popMessageHandler(saveHandler,oldDefault);
@@ -963,7 +1204,25 @@ void OsiClpSolverInterface::resolve()
     doingDoneBranch=false;
   }
 #endif
+  modelPtr_->setNumberIterations(totalIterations);
   //modelPtr_->setSolveType(saveSolveType);
+  if (abortSearch) {
+    lastAlgorithm_=-911;
+    modelPtr_->setProblemStatus(4);
+  }
+  if (savedObjective) {
+    // fix up
+    modelPtr_->dblParam_[ClpDualObjectiveLimit]=savedDualLimit;
+    //modelPtr_->setMoreSpecialOptions(modelPtr_->moreSpecialOptions()&(~32));
+    modelPtr_->objective_=savedObjective;
+    if (!modelPtr_->problemStatus_) {
+      CoinZeroN(modelPtr_->dual_,modelPtr_->numberRows_);
+      CoinZeroN(modelPtr_->reducedCost_,modelPtr_->numberColumns_);
+      if (modelPtr_->dj_&&(modelPtr_->whatsChanged_&1)!=0)
+	CoinZeroN(modelPtr_->dj_,modelPtr_->numberColumns_+modelPtr_->numberRows_);
+      modelPtr_->computeObjectiveValue();
+    }
+  }
   modelPtr_->setSpecialOptions(saveOptions); // restore
   if (modelPtr_->problemStatus_==3&&lastAlgorithm_==2)
     modelPtr_->computeObjectiveValue();
@@ -1285,6 +1544,32 @@ bool OsiClpSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
 void OsiClpSolverInterface::markHotStart()
 {
   modelPtr_->setProblemStatus(0);
+  saveData_.perturbation_=0;
+  ClpObjective * savedObjective=NULL;
+  double savedDualLimit=modelPtr_->dblParam_[ClpDualObjectiveLimit];
+  if (fakeObjective_) {
+    // See if all with costs fixed
+    int numberColumns = modelPtr_->numberColumns_;
+    const double * obj = modelPtr_->objective();
+    const double * lower = modelPtr_->columnLower();
+    const double * upper = modelPtr_->columnUpper();
+    int i;
+    for (i=0;i<numberColumns;i++) {
+      double objValue = obj[i];
+      if (objValue) {
+	if (lower[i]!=upper[i])
+	  break;
+      }
+    }
+    if (i==numberColumns) {
+      // Set fake
+      savedObjective=modelPtr_->objective_;
+      modelPtr_->objective_=fakeObjective_;
+      modelPtr_->dblParam_[ClpDualObjectiveLimit]=COIN_DBL_MAX;
+      //modelPtr_->setMoreSpecialOptions(modelPtr_->moreSpecialOptions()|32);
+      saveData_.perturbation_=1;
+    }
+  }
 #define CLEAN_HOT_START
 #ifdef CLEAN_HOT_START
   if ((specialOptions_&65536)!=0) {
@@ -1362,7 +1647,20 @@ void OsiClpSolverInterface::markHotStart()
       rowActivity_=upRange;
       columnActivity_=downRange;
     }
-#endif
+#endif 
+    if (savedObjective) {
+      // fix up
+      modelPtr_->dblParam_[ClpDualObjectiveLimit]=savedDualLimit;
+      //modelPtr_->setMoreSpecialOptions(modelPtr_->moreSpecialOptions()&(~32));
+      modelPtr_->objective_=savedObjective;
+      if (!modelPtr_->problemStatus_) {
+	CoinZeroN(modelPtr_->dual_,modelPtr_->numberRows_);
+	CoinZeroN(modelPtr_->reducedCost_,modelPtr_->numberColumns_);
+	if (modelPtr_->dj_&&(modelPtr_->whatsChanged_&1)!=0)
+	  CoinZeroN(modelPtr_->dj_,modelPtr_->numberColumns_+modelPtr_->numberRows_);
+	modelPtr_->computeObjectiveValue();
+      }
+    }
     return;
   }
 #endif
@@ -1480,6 +1778,12 @@ void OsiClpSolverInterface::markHotStart()
       columnActivity_= new double[numberColumns];
       CoinMemcpyN(modelPtr_->primalColumnSolution(),numberColumns,columnActivity_);
       modelPtr_->setProblemStatus(1);
+      if (savedObjective) {
+	// fix up
+	modelPtr_->dblParam_[ClpDualObjectiveLimit]=savedDualLimit;
+	//modelPtr_->setMoreSpecialOptions(modelPtr_->moreSpecialOptions()&(~32));
+	modelPtr_->objective_=savedObjective;
+      }
       return;
     }
     int clpOptions = modelPtr_->specialOptions();
@@ -1498,6 +1802,7 @@ void OsiClpSolverInterface::markHotStart()
       // only need to do this on second pass in CbcNode
       if (modelPtr_->logLevel()<2) small->setLogLevel(0);
       small->specialOptions_ |= 262144;
+      small->moreSpecialOptions_ = modelPtr_->moreSpecialOptions_;
       small->dual();
 #ifdef CLP_AUXILIARY_MODEL
       if (keepModel&&!small->auxiliaryModel_) {
@@ -1525,6 +1830,12 @@ void OsiClpSolverInterface::markHotStart()
 	columnActivity_= new double[numberColumns];
  CoinMemcpyN(modelPtr_->primalColumnSolution(),	numberColumns,columnActivity_);
 	modelPtr_->setProblemStatus(1);
+	if (savedObjective) {
+	  // fix up
+	  modelPtr_->dblParam_[ClpDualObjectiveLimit]=savedDualLimit;
+	  //modelPtr_->setMoreSpecialOptions(modelPtr_->moreSpecialOptions()&(~32));
+	  modelPtr_->objective_=savedObjective;
+	}
 	return;
       } else {
 	// update model
@@ -1566,10 +1877,31 @@ void OsiClpSolverInterface::markHotStart()
       columnActivity_=downRange;
     }
   }
+    if (savedObjective) {
+      // fix up
+      modelPtr_->dblParam_[ClpDualObjectiveLimit]=savedDualLimit;
+      //modelPtr_->setMoreSpecialOptions(modelPtr_->moreSpecialOptions()&(~32));
+      modelPtr_->objective_=savedObjective;
+      if (!modelPtr_->problemStatus_) {
+	CoinZeroN(modelPtr_->dual_,modelPtr_->numberRows_);
+	CoinZeroN(modelPtr_->reducedCost_,modelPtr_->numberColumns_);
+	if (modelPtr_->dj_&&(modelPtr_->whatsChanged_&1)!=0)
+	  CoinZeroN(modelPtr_->dj_,modelPtr_->numberColumns_+modelPtr_->numberRows_);
+	modelPtr_->computeObjectiveValue();
+      }
+    }
 }
 
 void OsiClpSolverInterface::solveFromHotStart()
 {
+  ClpObjective * savedObjective=NULL;
+  double savedDualLimit=modelPtr_->dblParam_[ClpDualObjectiveLimit];
+  if (saveData_.perturbation_) {
+    // Set fake
+    savedObjective=modelPtr_->objective_;
+    modelPtr_->objective_=fakeObjective_;
+    modelPtr_->dblParam_[ClpDualObjectiveLimit]=COIN_DBL_MAX;
+  }
   int numberRows = modelPtr_->numberRows();
   int numberColumns = modelPtr_->numberColumns();
   modelPtr_->getIntParam(ClpMaxNumIteration,itlimOrig_);
@@ -1732,6 +2064,19 @@ void OsiClpSolverInterface::solveFromHotStart()
       CoinMemcpyN(saveUpper,number,modelPtr_->upperRegion()+extraCopy);
     }
     modelPtr_->setIntParam(ClpMaxNumIteration,itlimOrig_);
+    if (savedObjective) {
+      // fix up
+      modelPtr_->dblParam_[ClpDualObjectiveLimit]=savedDualLimit;
+      //modelPtr_->setMoreSpecialOptions(modelPtr_->moreSpecialOptions()&(~32));
+      modelPtr_->objective_=savedObjective;
+      if (!modelPtr_->problemStatus_) {
+	CoinZeroN(modelPtr_->dual_,modelPtr_->numberRows_);
+	CoinZeroN(modelPtr_->reducedCost_,modelPtr_->numberColumns_);
+	if (modelPtr_->dj_&&(modelPtr_->whatsChanged_&1)!=0)
+	  CoinZeroN(modelPtr_->dj_,modelPtr_->numberColumns_+modelPtr_->numberRows_);
+	modelPtr_->computeObjectiveValue();
+      }
+    }
     return;
   }
 #endif
@@ -1959,6 +2304,19 @@ void OsiClpSolverInterface::solveFromHotStart()
     // and back bounds
     CoinMemcpyN(saveLower,number,smallModel_->lowerRegion());
     CoinMemcpyN(saveUpper,number,smallModel_->upperRegion());
+  }
+  if (savedObjective) {
+    // fix up
+    modelPtr_->dblParam_[ClpDualObjectiveLimit]=savedDualLimit;
+    //modelPtr_->setMoreSpecialOptions(modelPtr_->moreSpecialOptions()&(~32));
+    modelPtr_->objective_=savedObjective;
+    if (!modelPtr_->problemStatus_) {
+      CoinZeroN(modelPtr_->dual_,modelPtr_->numberRows_);
+      CoinZeroN(modelPtr_->reducedCost_,modelPtr_->numberColumns_);
+      if (modelPtr_->dj_&&(modelPtr_->whatsChanged_&1)!=0)
+	CoinZeroN(modelPtr_->dj_,modelPtr_->numberColumns_+modelPtr_->numberRows_);
+      modelPtr_->computeObjectiveValue();
+    }
   }
   modelPtr_->setIntParam(ClpMaxNumIteration,itlimOrig_);
 }
@@ -3081,11 +3439,13 @@ cleanupScaling_(0),
 specialOptions_(0x80000000),
 baseModel_(NULL),
 lastNumberRows_(0),
-continuousModel_(NULL)
+continuousModel_(NULL),
+fakeObjective_(NULL)
 {
   //printf("in default %x\n",this);
   modelPtr_=NULL;
   notOwned_=false;
+  disasterHandler_ = new OsiClpDisasterHandler();
   reset();
 }
 
@@ -3153,6 +3513,14 @@ whichRange_(NULL)
     continuousModel_ = new ClpSimplex(*rhs.continuousModel_);
   else
     continuousModel_ = NULL;
+  if ( rhs.disasterHandler_  ) 
+    disasterHandler_ = dynamic_cast<OsiClpDisasterHandler *>(rhs.disasterHandler_->clone());
+  else
+    disasterHandler_ = NULL;
+  if (rhs.fakeObjective_)
+    fakeObjective_ = new ClpLinearObjective(*rhs.fakeObjective_);
+  else
+    fakeObjective_ = NULL;
   linearObjective_ = modelPtr_->objective();
   if ( rhs.ws_ ) 
     ws_ = new CoinWarmStartBasis(*rhs.ws_);
@@ -3208,8 +3576,10 @@ cleanupScaling_(0),
 specialOptions_(0x80000000),
 baseModel_(NULL),
 lastNumberRows_(0),
-continuousModel_(NULL)
+continuousModel_(NULL),
+fakeObjective_(NULL)
 {
+  disasterHandler_ = new OsiClpDisasterHandler();
   //printf("in borrow %x - > %x\n",&rhs,this);
   modelPtr_ = rhs;
   basis_.resize(modelPtr_->numberRows(),modelPtr_->numberColumns());
@@ -3245,6 +3615,8 @@ OsiClpSolverInterface::~OsiClpSolverInterface ()
     delete modelPtr_;
   delete baseModel_;
   delete continuousModel_;
+  delete disasterHandler_;
+  delete fakeObjective_;
   delete ws_;
   delete [] rowActivity_;
   delete [] columnActivity_;
@@ -3280,6 +3652,16 @@ OsiClpSolverInterface::operator=(const OsiClpSolverInterface& rhs)
       continuousModel_ = new ClpSimplex(*rhs.continuousModel_);
     else
       continuousModel_ = NULL;
+    delete disasterHandler_;
+    if ( rhs.disasterHandler_  ) 
+      disasterHandler_ = dynamic_cast<OsiClpDisasterHandler *>(rhs.disasterHandler_->clone());
+    else
+      disasterHandler_ = NULL;
+    delete fakeObjective_;
+    if (rhs.fakeObjective_)
+      fakeObjective_ = new ClpLinearObjective(*rhs.fakeObjective_);
+    else
+      fakeObjective_ = NULL;
     notOwned_=false;
     linearObjective_ = modelPtr_->objective();
     saveData_ = rhs.saveData_;
@@ -5577,7 +5959,7 @@ OsiClpSolverInterface::setHintParam(OsiHintParam key, bool yesNo,
         specialOptions_=0;
       }
       // set normal
-      specialOptions_ &= (1023+3*8192+7*65536);
+      specialOptions_ &= (2047+3*8192+7*65536);
       if (otherInformation!=NULL) {
         int * array = (int *) otherInformation;
         if (array[0]>=0||array[0]<=2)
@@ -5596,6 +5978,8 @@ OsiClpSolverInterface::crunch()
 {
   int numberColumns = modelPtr_->numberColumns();
   int numberRows = modelPtr_->numberRows();
+  int totalIterations=0;
+  bool abortSearch=false;
   // Use dual region
   double * rhs = modelPtr_->dualRowSolution();
   int * whichRow = new int[3*numberRows];
@@ -5637,12 +6021,12 @@ OsiClpSolverInterface::crunch()
       small->setColumnScale(columnScale2);
       small->specialOptions_ |= 131072;
     }
-    OsiClpDisasterHandler handler(this);
+    disasterHandler_->setOsiModel(this);
     bool inCbcOrOther = (modelPtr_->specialOptions()&0x03000000)!=0;
     if (inCbcOrOther) {
-      handler.setSimplex(small);
-      handler.setWhereFrom(1); // crunch
-      small->setDisasterHandler(&handler);
+      disasterHandler_->setSimplex(small);
+      disasterHandler_->setWhereFrom(1); // crunch
+      small->setDisasterHandler(disasterHandler_);
     }
 #if 0
     const double * obj =small->objective();
@@ -5657,8 +6041,10 @@ OsiClpSolverInterface::crunch()
     else
       small->primal(); // No objective - use primal!
 #else
+    small->moreSpecialOptions_ = modelPtr_->moreSpecialOptions_;
     small->dual();
 #endif
+    totalIterations += small->numberIterations();
     if (small->problemStatus()==0) {
       modelPtr_->setProblemStatus(0);
       // Scaling may have changed - if so pass across
@@ -5681,23 +6067,40 @@ OsiClpSolverInterface::crunch()
     } else {
       if (small->problemStatus_==3) {
 	// may be problems
-	if (inCbcOrOther&&handler.inTrouble()) {
+	if (inCbcOrOther&&disasterHandler_->inTrouble()) {
+	  if (disasterHandler_->typeOfDisaster()) {
+	    // We want to abort 
+	    abortSearch=true;
+	    goto disaster;
+	  }
 	  // in case scaling bad
 	  small->setRowScale(NULL);
 	  small->setColumnScale(NULL);
     	  // try just going back in
-	  handler.setPhase(1);
+	  disasterHandler_->setPhase(1);
 	  small->dual();
-	  if (handler.inTrouble()) {
+	  totalIterations += small->numberIterations();
+	  if (disasterHandler_->inTrouble()) {
+	    if (disasterHandler_->typeOfDisaster()) {
+	      // We want to abort 
+	      abortSearch=true;
+	      goto disaster;
+	    }
 	    // try primal on original model
-	    handler.setPhase(2);
-	    handler.setOsiModel(this);
-	    modelPtr_->setDisasterHandler(&handler);
+	    disasterHandler_->setPhase(2);
+	    disasterHandler_->setOsiModel(this);
+	    modelPtr_->setDisasterHandler(disasterHandler_);
 	    modelPtr_->primal();
-	    if(handler.inTrouble()) {
+	    totalIterations += modelPtr_->numberIterations();
+	    if(disasterHandler_->inTrouble()) {
 #ifdef COIN_DEVELOP
 	      printf("disaster crunch - treat as infeasible\n");
 #endif
+	      if (disasterHandler_->typeOfDisaster()) {
+		// We want to abort 
+		abortSearch=true;
+		goto disaster;
+	      }
 	      modelPtr_->setProblemStatus(1);
 	    }
 	    // give up for now
@@ -5714,9 +6117,15 @@ OsiClpSolverInterface::crunch()
 	modelPtr_->setProblemStatus(3);
       }
     }
+  disaster:
     delete small;
   } else {
     modelPtr_->setProblemStatus(1);
+  }
+  modelPtr_->setNumberIterations(totalIterations);
+  if (abortSearch) {
+    lastAlgorithm_=-911;
+    modelPtr_->setProblemStatus(4);
   }
   delete [] whichRow;
   delete [] whichColumn;
@@ -6952,6 +7361,16 @@ OsiClpSolverInterface::saveBaseModel()
   continuousModel_ = new ClpSimplex(*modelPtr_);
   //continuousModel_->createRim(63);
 }
+// Pass in disaster handler
+void 
+OsiClpSolverInterface::passInDisasterHandler(OsiClpDisasterHandler * handler)
+{
+  delete disasterHandler_;
+  if ( handler  ) 
+    disasterHandler_ = dynamic_cast<OsiClpDisasterHandler *>(handler->clone());
+  else
+    disasterHandler_ = NULL;
+}
 /*  Strip off rows to get to this number of rows.
     If solver wants it can restore a copy of "base" (continuous) model here
 */
@@ -7531,6 +7950,24 @@ OsiClpSolverInterface::setLogLevel(int value)
   if (modelPtr_)
     modelPtr_->setLogLevel(value);
 }
+// Set fake objective (and take ownership)
+void 
+OsiClpSolverInterface::setFakeObjective(ClpLinearObjective * fakeObjective)
+{
+  delete fakeObjective_;
+  fakeObjective_ = fakeObjective;
+}
+// Set fake objective
+void 
+OsiClpSolverInterface::setFakeObjective(double * fakeObjective)
+{
+  delete fakeObjective_;
+  if (fakeObjective)
+    fakeObjective_ = new ClpLinearObjective(fakeObjective,
+					    modelPtr_->numberColumns_);
+  else
+    fakeObjective_ = NULL;
+}
   
 //#############################################################################
 // Constructors / Destructor / Assignment
@@ -7677,6 +8114,12 @@ void
 OsiClpDisasterHandler::saveInfo()
 {
   inTrouble_=true;
+}
+// Type of disaster 0 can fix, 1 abort
+int 
+OsiClpDisasterHandler::typeOfDisaster()
+{
+  return 0;
 }
 /* set model. */
 void 

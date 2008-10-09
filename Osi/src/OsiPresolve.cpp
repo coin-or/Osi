@@ -332,6 +332,13 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
 						       <<CoinMessageEol;
 	  if (!result&&totalPasses>0) {
 	    result = -1; // round again
+	    const CoinPresolveAction *paction = paction_;
+	    while (paction) {
+	      const CoinPresolveAction *next = paction->next;
+	      delete paction;
+	      paction = next;
+	    }
+	    paction_=NULL;
 	  }
 	}
       }

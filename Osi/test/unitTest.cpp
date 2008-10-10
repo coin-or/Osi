@@ -7,30 +7,7 @@
 #  pragma warning(disable:4786)
 #endif
 
-/*
-  And more Windows stuff. This header is required in order to turn off a
-  pop-up window that is displayed when a program crashes. The window requires
-  a click to clear, which means a sequence of test runs is blocked until a
-  human comes by and clicks. Laci points out that some bright bulb at Microsoft
-  added `#define small char' in a header included by windows.h. Not that anyone
-  would ever consider using such an exotic character sequence as a variable
-  name.
-
-  The authors of the OSI unit test neither admit nor deny that the OSI unit
-  test crashes, and inclusion of this code should in no way be interpreted as
-  an admission or denial that the OSI unit test might actually crash.
-
-  Well, maybe on Windows ... but I'm sure it's Microsoft's fault   :-)
-*/
-
 #include "OsiConfig.h"
-
-#ifdef HAVE_WINDOWS_H
-# include <windows.h>
-# if defined(small)
-#   undef small
-# endif
-#endif
 
 #ifdef NDEBUG
 #undef NDEBUG
@@ -45,6 +22,7 @@
 #include "OsiCuts.hpp"
 #include "CoinHelperFunctions.hpp"
 #include "CoinSort.hpp"
+#include "CoinError.hpp"
 #include "OsiSolverInterface.hpp"
 #include "OsiRowCutDebugger.hpp"
 
@@ -291,9 +269,7 @@ int main (int argc, const char *argv[])
   Suppress an popup window that Windows shows in response to a crash. See
   note at head of file.
 */
-#ifdef HAVE_WINDOWS_H
-  SetErrorMode(SEM_FAILCRITICALERRORS|SEM_NOGPFAULTERRORBOX) ;
-#endif
+  WindowsErrorPopupBlocker();
 /*
   Might as well make use of this convenient Xpress feature.
 */
@@ -567,7 +543,7 @@ int main (int argc, const char *argv[])
 
 #ifdef COIN_HAS_VOL
   testingMessage( "Testing OsiVolSolverInterface\n" );
-  OsiVolSolverInterfaceUnitTest(mpsDir,netlibDir);
+  totalErrCnt += OsiVolSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
 #ifdef COIN_HAS_DYLP
@@ -582,7 +558,7 @@ int main (int argc, const char *argv[])
   
 #ifdef COIN_HAS_GLPK
   testingMessage( "Testing OsiGlpkSolverInterface\n" );
-  OsiGlpkSolverInterfaceUnitTest(mpsDir,netlibDir);
+  totalErrCnt += OsiGlpkSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
   
 #ifdef COIN_HAS_FMP
@@ -592,7 +568,7 @@ int main (int argc, const char *argv[])
   
 #ifdef COIN_HAS_CLP
   testingMessage( "Testing OsiClpSolverInterface\n" );
-  OsiClpSolverInterfaceUnitTest(mpsDir,netlibDir);
+  totalErrCnt += OsiClpSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
 #ifdef COIN_HAS_MSK
@@ -602,12 +578,12 @@ int main (int argc, const char *argv[])
 
 #ifdef COIN_HAS_CBC
   testingMessage( "Testing OsiCbcSolverInterface\n" );
-  OsiCbcSolverInterfaceUnitTest(mpsDir,netlibDir);
+  totalErrCnt += OsiCbcSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
 #ifdef COIN_HAS_SYMPHONY
   testingMessage( "Testing OsiSymSolverInterface\n" );
-  OsiSymSolverInterfaceUnitTest(mpsDir,netlibDir);
+  totalErrCnt += OsiSymSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
 /*
@@ -699,9 +675,9 @@ int main (int argc, const char *argv[])
   if (totalErrCnt)
   { std::cout.flush() ;
     std::cerr
-      << "Tests completed with " << totalErrCnt << " errors." << std::endl ; }
-  else
+      << "Tests completed with " << totalErrCnt << " errors." << std::endl ; 
+  } else
   { testingMessage("All tests completed successfully\n") ; }
-  return 0;
+  return totalErrCnt;
 }
 

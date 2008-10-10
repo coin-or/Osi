@@ -210,7 +210,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
   std::string modelL; //name in lowercase 
   int iput=0;
   for (i=0;i<(int) strlen(model);i++) {
-    char value=tolower(model[i]);
+    char value=static_cast<char>(tolower(model[i]));
     if (value=='/') {
       iput=0;
       modelL.erase();

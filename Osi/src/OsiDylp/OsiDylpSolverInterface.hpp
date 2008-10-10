@@ -685,7 +685,7 @@ public:
 //@{
 
   lpopts_struct *initialSolveOptions,*resolveOptions ;
-  lptols_struct* tolerances ;
+  lptols_struct *tolerances ;
 
 //@}
 
@@ -703,9 +703,9 @@ private:
 */
 //@{
 
-  consys_struct* consys ;
-  lpprob_struct* lpprob ;
-  lpstats_struct* statistics ;
+  consys_struct *consys ;
+  lpprob_struct *lpprob ;
+  lpstats_struct *statistics ;
 
 //@}
 

@@ -737,7 +737,7 @@ CoinWarmStart* OsiCpxSolverInterface::getWarmStart() const
 
 bool OsiCpxSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
 {
-  debugMessage("OsiCpxSolverInterface::setWarmStart(%p)\n", warmstart);
+  debugMessage("OsiCpxSolverInterface::setWarmStart(%p)\n", (void*)warmstart);
 
   const CoinWarmStartBasis* ws = dynamic_cast<const CoinWarmStartBasis*>(warmstart);
   int numcols, numrows, i, restat;
@@ -1454,7 +1454,7 @@ void OsiCpxSolverInterface::setObjCoeffSet(const int* indexFirst,
 					   const int* indexLast,
 					   const double* coeffList)
 {
-  debugMessage("OsiCpxSolverInterface::setObjCoeffSet(%p, %p, %p)\n", indexFirst, indexLast, coeffList);
+  debugMessage("OsiCpxSolverInterface::setObjCoeffSet(%p, %p, %p)\n", (void*)indexFirst, (void*)indexLast, (void*)coeffList);
 
    const int cnt = indexLast - indexFirst;
    //   int err = CPXchgobj(env_,
@@ -1534,7 +1534,7 @@ void OsiCpxSolverInterface::setColSetBounds(const int* indexFirst,
 					    const int* indexLast,
 					    const double* boundList)
 {
-  debugMessage("OsiCpxSolverInterface::setColSetBounds(%p, %p, %p)\n", indexFirst, indexLast, boundList);
+  debugMessage("OsiCpxSolverInterface::setColSetBounds(%p, %p, %p)\n", (void*)indexFirst, (void*)indexLast, (void*)boundList);
 
    const int cnt = indexLast - indexFirst;
    if (cnt <= 0)
@@ -1624,13 +1624,15 @@ OsiCpxSolverInterface::setRowType(int i, char sense, double rightHandSide,
 
   int err;
 
+  // in CPLEX, ranged constraints are interpreted as rhs <= coeff*x <= rhs+range, which is different from Osi
+  double cpxrhs = rightHandSide;
   if (sense == 'R') {
      assert( range >= 0.0 );
-     rightHandSide -= range;
+     cpxrhs -= range;
   }
   if (sense == 'N') {
      sense = 'R';
-     rightHandSide = -getInfinity();
+     cpxrhs = -getInfinity();
      range = 2*getInfinity();
   }
 
@@ -1655,7 +1657,7 @@ OsiCpxSolverInterface::setRowType(int i, char sense, double rightHandSide,
   }
 
   err = CPXchgrhs( env_, getLpPtr( OsiCpxSolverInterface::KEEPCACHED_PROBLEM ),
-		   1, &i, &rightHandSide );
+		   1, &i, &cpxrhs );
   checkCPXerror( err, "CPXchgrhs", "setRowType" );
   if(rhs_ != NULL) {
     rhs_[i] = rightHandSide;
@@ -1667,13 +1669,21 @@ OsiCpxSolverInterface::setRowType(int i, char sense, double rightHandSide,
   if(rowrange_ != NULL) {
     rowrange_[i] = range;
   }
+  
+  if (rowlower_ != NULL || rowupper_ != NULL)
+  {
+  	double dummy;
+  	convertSenseToBound(sense, rightHandSide, range, 
+  			rowlower_ ? rowlower_[i] : dummy,
+  			rowupper_ ? rowupper_[i] : dummy);
+  }
 }
 //-----------------------------------------------------------------------------
 void OsiCpxSolverInterface::setRowSetBounds(const int* indexFirst,
 					    const int* indexLast,
 					    const double* boundList)
 {
-  debugMessage("OsiCpxSolverInterface::setRowSetBounds(%p, %p, %p)\n", indexFirst, indexLast, boundList);
+  debugMessage("OsiCpxSolverInterface::setRowSetBounds(%p, %p, %p)\n", (void*)indexFirst, (void*)indexLast, (void*)boundList);
 
    const int cnt = indexLast - indexFirst;
    if (cnt <= 0)
@@ -1702,7 +1712,7 @@ OsiCpxSolverInterface::setRowSetTypes(const int* indexFirst,
 				      const double* rangeList)
 {
   debugMessage("OsiCpxSolverInterface::setRowSetTypes(%p, %p, %p, %p, %p)\n", 
-     indexFirst, indexLast, senseList, rhsList, rangeList);
+  		(void*)indexFirst, (void*)indexLast, (void*)senseList, (void*)rhsList, (void*)rangeList);
 
    const int cnt = indexLast - indexFirst;
    if (cnt <= 0)
@@ -1822,7 +1832,7 @@ OsiCpxSolverInterface::setInteger(int index)
 void
 OsiCpxSolverInterface::setContinuous(const int* indices, int len)
 {
-  debugMessage("OsiCpxSolverInterface::setContinuous(%p, %d)\n", indices, len);
+  debugMessage("OsiCpxSolverInterface::setContinuous(%p, %d)\n", (void*)indices, len);
 
   for( int i = 0; i < len; ++i )
      setContinuous(indices[i]);
@@ -1831,7 +1841,7 @@ OsiCpxSolverInterface::setContinuous(const int* indices, int len)
 void
 OsiCpxSolverInterface::setInteger(const int* indices, int len)
 {
-  debugMessage("OsiCpxSolverInterface::setInteger(%p, %d)\n", indices, len);
+  debugMessage("OsiCpxSolverInterface::setInteger(%p, %d)\n", (void*)indices, len);
 
   for( int i = 0; i < len; ++i )
      setInteger(indices[i]);
@@ -1852,7 +1862,7 @@ void OsiCpxSolverInterface::setObjSense(double s)
 
 void OsiCpxSolverInterface::setColSolution(const double * cs) 
 {
-  debugMessage("OsiCpxSolverInterface::setColSolution(%p)\n", cs);
+  debugMessage("OsiCpxSolverInterface::setColSolution(%p)\n", (void*)cs);
 
   int nc = getNumCols();
 
@@ -1884,7 +1894,7 @@ void OsiCpxSolverInterface::setColSolution(const double * cs)
 
 void OsiCpxSolverInterface::setRowPrice(const double * rs) 
 {
-  debugMessage("OsiCpxSolverInterface::setRowPrice(%p)\n", rs);
+  debugMessage("OsiCpxSolverInterface::setRowPrice(%p)\n", (void*)rs);
 
   int nr = getNumRows();
 
@@ -1919,7 +1929,7 @@ OsiCpxSolverInterface::addCol(const CoinPackedVectorBase& vec,
 			      const double collb, const double colub,   
 			      const double obj)
 {
-  debugMessage("OsiCpxSolverInterface::addCol(%p, %g, %g, %g)\n", &vec, collb, colub, obj);
+  debugMessage("OsiCpxSolverInterface::addCol(%p, %g, %g, %g)\n", (void*)&vec, collb, colub, obj);
 
   int nc = getNumCols();
   assert(coltypesize_ >= nc);
@@ -1946,7 +1956,7 @@ OsiCpxSolverInterface::addCols(const int numcols,
 			       const double* collb, const double* colub,   
 			       const double* obj)
 {
-  debugMessage("OsiCpxSolverInterface::addCols(%d, %p, %p, %p, %p)\n", numcols, cols, collb, colub, obj);
+  debugMessage("OsiCpxSolverInterface::addCols(%d, %p, %p, %p, %p)\n", numcols, (void*)cols, (void*)collb, (void*)colub, (void*)obj);
 
   int nc = getNumCols();
   assert(coltypesize_ >= nc);
@@ -1992,7 +2002,7 @@ OsiCpxSolverInterface::addCols(const int numcols,
 void 
 OsiCpxSolverInterface::deleteCols(const int num, const int * columnIndices)
 {
-  debugMessage("OsiCpxSolverInterface::deleteCols(%d, %p)\n", num, columnIndices);
+  debugMessage("OsiCpxSolverInterface::deleteCols(%d, %p)\n", num, (void*)columnIndices);
 
   int ncols = getNumCols();
   int *delstat = new int[ncols];
@@ -2018,7 +2028,7 @@ void
 OsiCpxSolverInterface::addRow(const CoinPackedVectorBase& vec,
 			      const double rowlb, const double rowub)
 {
-  debugMessage("OsiCpxSolverInterface::addRow(%p, %g, %g)\n", &vec, rowlb, rowub);
+  debugMessage("OsiCpxSolverInterface::addRow(%p, %g, %g)\n", (void*)&vec, rowlb, rowub);
 
   char sense;
   double rhs, range;
@@ -2032,7 +2042,7 @@ OsiCpxSolverInterface::addRow(const CoinPackedVectorBase& vec,
 			      const char rowsen, const double rowrhs,   
 			      const double rowrng)
 {
-  debugMessage("OsiCpxSolverInterface::addRow(%p, %c, %g, %g)\n", &vec, rowsen, rowrhs, rowrng);
+  debugMessage("OsiCpxSolverInterface::addRow(%p, %c, %g, %g)\n", (void*)&vec, rowsen, rowrhs, rowrng);
 
   int err;
   int rmatbeg = 0;
@@ -2065,7 +2075,7 @@ OsiCpxSolverInterface::addRow(const CoinPackedVectorBase& vec,
 		    const_cast<double*>(vec.getElements()),
 		    NULL, NULL );
   checkCPXerror( err, "CPXaddrows", "addRow" );
-  if( rowsen == 'R' )
+  if( sense == 'R' )
     {
       int row = getNumRows() - 1;
       err = CPXchgrngval( env_, getLpPtr( OsiCpxSolverInterface::FREECACHED_ROW ), 1, &row, &range );
@@ -2078,7 +2088,7 @@ OsiCpxSolverInterface::addRows(const int numrows,
 			       const CoinPackedVectorBase * const * rows,
 			       const double* rowlb, const double* rowub)
 {
-  debugMessage("OsiCpxSolverInterface::addRows(%d, %p, %p, %p)\n", numrows, rows, rowlb, rowub);
+  debugMessage("OsiCpxSolverInterface::addRows(%d, %p, %p, %p)\n", numrows, (void*)rows, (void*)rowlb, (void*)rowub);
 
   int i;
 
@@ -2092,7 +2102,7 @@ OsiCpxSolverInterface::addRows(const int numrows,
 			       const char* rowsen, const double* rowrhs,   
 			       const double* rowrng)
 {
-  debugMessage("OsiCpxSolverInterface::addRows(%d, %p, %p, %p, %p)\n", numrows, rows, rowsen, rowrhs, rowrng);
+  debugMessage("OsiCpxSolverInterface::addRows(%d, %p, %p, %p, %p)\n", numrows, (void*)rows, (void*)rowsen, (void*)rowrhs, (void*)rowrng);
 
   int i;
 
@@ -2103,7 +2113,7 @@ OsiCpxSolverInterface::addRows(const int numrows,
 void 
 OsiCpxSolverInterface::deleteRows(const int num, const int * rowIndices)
 {
-  debugMessage("OsiCpxSolverInterface::deleteRows(%d, %p)\n", num, rowIndices);
+  debugMessage("OsiCpxSolverInterface::deleteRows(%d, %p)\n", num, (void*)rowIndices);
 
   int nrows = getNumRows();
   int *delstat = new int[nrows];
@@ -2127,7 +2137,7 @@ OsiCpxSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
 				    const double* obj,
 				    const double* rowlb, const double* rowub )
 {
-  debugMessage("OsiCpxSolverInterface::loadProblem(1)(%p, %p, %p, %p, %p, %p)\n", &matrix, collb, colub, obj, rowlb, rowub);
+  debugMessage("OsiCpxSolverInterface::loadProblem(1)(%p, %p, %p, %p, %p, %p)\n", (void*)&matrix, (void*)collb, (void*)colub, (void*)obj, (void*)rowlb, (void*)rowub);
 
   const double inf = getInfinity();
   
@@ -2179,7 +2189,7 @@ OsiCpxSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
 				    const double* rowrng )
 {
   debugMessage("OsiCpxSolverInterface::loadProblem(2)(%p, %p, %p, %p, %p, %p, %p)\n",
-     &matrix, collb, colub, obj, rowsen, rowrhs, rowrng);
+  		(void*)&matrix, (void*)collb, (void*)colub, (void*)obj, (void*)rowsen, (void*)rowrhs, (void*)rowrng);
 
   char *lclRowsen = NULL ;
   double *lclRowrhs = NULL ;
@@ -2378,7 +2388,7 @@ OsiCpxSolverInterface::loadProblem(const int numcols, const int numrows,
 				   const double* rowrng )
 {
   debugMessage("OsiCpxSolverInterface::loadProblem(4)(%d, %d, %p, %p, %p, %p, %p, %p, %p, %p, %p)\n",
-     numcols, numrows, start, index, value, collb, colub, obj, rowsen, rowrhs, rowrng);
+  		numcols, numrows, (void*)start, (void*)index, (void*)value, (void*)collb, (void*)colub, (void*)obj, (void*)rowsen, (void*)rowrhs, (void*)rowrng);
 
   const int nc = numcols;
   const int nr = numrows;
@@ -2674,7 +2684,7 @@ OsiCpxSolverInterface::OsiCpxSolverInterface( const OsiCpxSolverInterface & sour
     coltypesize_(0),
     probtypemip_(false)
 {
-  debugMessage("OsiCpxSolverInterface::OsiCpxSolverInterface(%p)\n", &source);
+  debugMessage("OsiCpxSolverInterface::OsiCpxSolverInterface(%p)\n", (void*)&source);
 
   incrementInstanceCounter();  
   gutsOfConstructor();
@@ -2698,7 +2708,7 @@ OsiCpxSolverInterface::~OsiCpxSolverInterface()
 //-------------------------------------------------------------------
 OsiCpxSolverInterface& OsiCpxSolverInterface::operator=( const OsiCpxSolverInterface& rhs )
 {
-  debugMessage("OsiCpxSolverInterface::operator=(%p)\n", &rhs);
+  debugMessage("OsiCpxSolverInterface::operator=(%p)\n", (void*)&rhs);
 
   if (this != &rhs)
     {    
@@ -2717,7 +2727,7 @@ OsiCpxSolverInterface& OsiCpxSolverInterface::operator=( const OsiCpxSolverInter
 
 void OsiCpxSolverInterface::applyColCut( const OsiColCut & cc )
 {
-  debugMessage("OsiCpxSolverInterface::applyColCut(%p)\n", &cc);
+  debugMessage("OsiCpxSolverInterface::applyColCut(%p)\n", (void*)&cc);
 
   const double * cplexColLB = getColLower();
   const double * cplexColUB = getColUpper();
@@ -2737,7 +2747,7 @@ void OsiCpxSolverInterface::applyColCut( const OsiColCut & cc )
 
 void OsiCpxSolverInterface::applyRowCut( const OsiRowCut & rowCut )
 {
-  debugMessage("OsiCpxSolverInterface::applyRowCut(%p)\n", &rowCut);
+  debugMessage("OsiCpxSolverInterface::applyRowCut(%p)\n", (void*)&rowCut);
 
   int err = 0;
   double rhs = 0.0;
@@ -3118,7 +3128,7 @@ void OsiCpxSolverInterface::getBasisStatus(int* cstat, int* rstat) const {
 
   int ncol = getNumCols();
   int nrow = getNumRows();
-  const int objsense = getObjSense();
+  const int objsense = (int)getObjSense();
   const double *dual = getRowPrice();
   const double *row_act = getRowActivity();
   const double *rowLower = getRowLower();
@@ -3302,7 +3312,7 @@ void OsiCpxSolverInterface::getBInvARow(int row, double* z, double * slack)
     for(int i=0; i<nrow; i++) {
       if(ind_bas[i] == ind_slack) {  // slack for row is basic; whole row
                                      // must be flipped
-	for(int j=0; j<ncol; j++) {
+	for(int j=0; j<nrow; j++) {
 	  z[j] = -z[j];
 	}
 	if(slack != NULL) {
@@ -3331,6 +3341,24 @@ void OsiCpxSolverInterface::getBInvRow(int row, double* z) const {
     printf("### ERROR: OsiCpxSolverInterface::getBInvRow(): Unable to get row %d of the basis inverse\n", row);
     exit(1);
   }
+  int *ind_bas = new int[nrow];
+  getBasics(ind_bas);
+  if (ind_bas[row]>=ncol) { // binv row corresponds to a slack variable
+  	int Arow=ind_bas[row]-ncol; // Arow is the number of the row in the problem matrix which this slack belongs to
+    char sense;
+    status = CPXgetsense(env_, lp, &sense, Arow, Arow);
+    if(status) {
+      printf("### ERROR: OsiCpxSolverInterface::getBInvRow(): Unable to get senses for row %d\n", Arow);
+      exit(1);
+    }
+    if(sense == 'G') { // slack has coeff -1 in Cplex; thus row in binv must be flipped 
+    	for(int j=0; j<nrow; j++) {
+    	  z[j] = -z[j];
+    	}
+    }
+  }
+  delete[] ind_bas;
+/*  
   char sense;
   status = CPXgetsense(env_, lp, &sense, row, row);
   if(status) {
@@ -3348,7 +3376,7 @@ void OsiCpxSolverInterface::getBInvRow(int row, double* z) const {
                            // slack has coeff -1 in Cplex and is basic; 
                            // row of invB must be flipped
 
-	for(int j=0; j<ncol; j++) {
+	for(int j=0; j<nrow; j++) {
 	  z[j] = -z[j];
 	}
 	break;
@@ -3356,6 +3384,7 @@ void OsiCpxSolverInterface::getBInvRow(int row, double* z) const {
     }
     delete[] ind_bas;
   }
+*/
 } /* getBInvRow */
  
 /**********************************************************************/

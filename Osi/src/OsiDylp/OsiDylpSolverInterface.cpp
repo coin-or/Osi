@@ -4336,7 +4336,7 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
   deletion of empty constraints, but the OSI test suite isn't tolerant of
   changing the sense of constraints, let alone removing a few. Arguably a
   good thing.
-*/
+
   flipped = (bool *) CALLOC(lpprob->consys->concnt+1,sizeof(bool)) ;
   flips = 0 ;
   for (ndx = lpprob->consys->concnt ; ndx > 0 ; ndx--)
@@ -4348,6 +4348,7 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
 	return (lpFATAL) ; }
       flipped[ndx] = true ;
       flips++ ; } }
+*/
 
 /*
   Take an initial run at doing the lp as it comes in. If this doesn't work,
@@ -4464,7 +4465,7 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
   corresponding dual is flipped. (Or just look at it as yA = (-y)(-A).)  We
   need to walk the basis here. If dylp is in dynamic mode, there may be fewer
   active constraints than when we started.
-*/
+
   if (flips > 0)
   { for (ndx = lpprob->consys->concnt ; ndx > 0 ; ndx--)
     { if (flipped[ndx] == true)
@@ -4479,6 +4480,8 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
       { cndx = basis->el[ndx].cndx ;
 	if (flipped[cndx] == true) lpprob->y[ndx] = -lpprob->y[ndx] ; } } }
   FREE(flipped) ;
+*/
+
   solnIsFresh = true ;
 # if ODSI_TRACK_FRESH > 0
   std::cout
@@ -5595,30 +5598,122 @@ bool ODSI::isPrimalObjectiveLimitReached () const
     return (objval > objlim) ; }
 
 
-/*!
-  \todo Will require modification to dylp --- currently it does not report
-	this information.
+/*! \brief Return dual rays emanating from the current extreme point up to
+   	   the limit specified by the client.
+
+  It's straightforward to return all dual rays emanating from the current
+  extreme point. Finding additional dual rays amounts to walking the
+  vertices of the polytope. Dylp's dy_dualRays routine does not support this.
+*/
+/*
+  The primary purpose of this routine is to exchange the vectors handed back by
+  dylp, allocated with malloc, for vectors allocated with new. Otherwise we
+  risk madness when space allocated by malloc is freed by delete.
+
+  Arguably we could beef up the intro so that it would save a warm start,
+  detach the current owner, install the local warm start, resolve, and then
+  ask for the dual rays. But I'm going to hold off on that for this first
+  implementation. We'll see if anyone wants that functionality.
+  -- lh, 080722 --
 */
 
-vector<double*> ODSI::getDualRays (int) const
+vector<double *> ODSI::getDualRays (int maxNumRays) const
 
-{ throw CoinError("Unimplemented method.",
-		  "getDualRays","OsiDylpSolverInterface") ;
+{ int numRays ;
+  double **dylpRays ;
+  std::vector<double *> dualRays ;
 
-  return (vector<double*>(0)) ; }
+  CoinMessageHandler *hdl = messageHandler() ; 
+
+  const char *rtnnme = "ODSI::getDualRays" ;
+
+/*
+  If we don't own the solver, we can't ask for rays. We also need valid data.
+*/
+  if (dylp_owner != this)
+  { hdl->message(ODSI_NOSOLVE,messages_)
+      << rtnnme << "not owner"
+      << CoinMessageEol ;
+    return (dualRays) ; }
+  if (!flgon(lpprob->ctlopts,lpctlDYVALID))
+  { hdl->message(ODSI_NOSOLVE,messages_)
+      << rtnnme << "invalid retained data structures"
+      << CoinMessageEol ;
+    return (dualRays) ; }
+/*
+  Call dylp to get the available rays, up to the maximum requested.
+*/
+  numRays = maxNumRays ;
+  dylpRays = 0 ;
+  if (dy_dualRays(lpprob,&numRays,&dylpRays) == false)
+  { hdl->message(ODSI_FAILEDCALL,messages_)
+      << rtnnme << "dy_dualRays"
+      << CoinMessageEol ;
+    return (dualRays) ; }
+/*
+  Do the space swap, copying malloc'd vectors to new'd vectors. Free the
+  malloc'd vectors.
+*/
+  int m = getNumRows() ;
+  for (int v = 0 ; v < numRays ; v++)
+  { double *tmpVec = CoinCopyOfArray(INV_VEC(double,dylpRays[v]),m) ;
+    dualRays.push_back(tmpVec) ;
+    FREE(dylpRays[v]) ; }
+  FREE(dylpRays) ;
+
+  return (dualRays) ; }
 
 
-/*!
-  \todo Will require modification to dylp --- currently it does not report
-	this information.
+/*! \brief Return primal rays emanating from the current extreme point up to
+   	   the limit specified by the client.
+
+  See comments for getDualRays().
 */
 
-vector<double*> ODSI::getPrimalRays (int) const
+vector<double*> ODSI::getPrimalRays (int maxNumRays) const
 
-{ throw CoinError("Unimplemented method.",
-		  "getPrimalRays","OsiDylpSolverInterface") ;
+{ int numRays ;
+  double **dylpRays ;
+  std::vector<double *> primalRays ;
 
-  return (vector<double*>(0)) ; }
+  CoinMessageHandler *hdl = messageHandler() ; 
+
+  const char *rtnnme = "ODSI::getPrimalRays" ;
+
+/*
+  If we don't own the solver, we can't ask for rays. We also need valid data.
+*/
+  if (dylp_owner != this)
+  { hdl->message(ODSI_NOSOLVE,messages_)
+      << rtnnme << "not owner"
+      << CoinMessageEol ;
+    return (primalRays) ; }
+  if (flgon(lpprob->ctlopts,lpctlDYVALID))
+  { hdl->message(ODSI_NOSOLVE,messages_)
+      << rtnnme << "invalid retained data structures"
+      << CoinMessageEol ;
+    return (primalRays) ; }
+/*
+  Call dylp to get the available rays, up to the maximum requested.
+*/
+  numRays = maxNumRays ;
+  if (dy_primalRays(lpprob,&numRays,&dylpRays) == false)
+  { hdl->message(ODSI_FAILEDCALL,messages_)
+      << rtnnme << "dy_primalRays"
+      << CoinMessageEol ;
+    return (primalRays) ; }
+/*
+  Do the space swap, copying malloc'd vectors to new'd vectors. Free the
+  malloc'd vectors.
+*/
+  int m = getNumRows() ;
+  for (int v = 0 ; v < numRays ; v++)
+  { double *tmpVec = CoinCopyOfArray(INV_VEC(double,dylpRays[v]),m) ;
+    primalRays.push_back(tmpVec) ;
+    FREE(dylpRays[v]) ; }
+  FREE(dylpRays) ;
+
+  return (primalRays) ; }
 
 
 /*!

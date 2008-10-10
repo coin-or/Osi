@@ -37,7 +37,7 @@ Instantiation of OsiClpSolverInterface for the Model Algorithm.
 
 class OsiClpSolverInterface :
   virtual public OsiSolverInterface {
-  friend void OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
+  friend int OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
   
 public:
   //---------------------------------------------------------------------------
@@ -1355,6 +1355,6 @@ protected:
     compiled with debugging. Also, if this method is compiled with
     optimization, the compilation takes 10-15 minutes and the machine pages
     (has 256M core memory!)... */
-void
+int
 OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 #endif

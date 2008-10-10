@@ -52,7 +52,7 @@ OsiClpMessageTest::print()
 
 //--------------------------------------------------------------------------
 // test EKKsolution methods.
-void
+int
 OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir)
 {
   
@@ -1619,6 +1619,6 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
   // Do common solverInterface testing 
   {
     OsiClpSolverInterface m;
-    OsiSolverInterfaceCommonUnitTest(&m, mpsDir,netlibDir);
+    return OsiSolverInterfaceCommonUnitTest(&m, mpsDir,netlibDir);
   }
 }

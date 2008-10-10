@@ -104,11 +104,8 @@ static MsgDefn us_en_defns[] = {
   { ODSI_IGNOREDHINT, 3001, 2, "Ignored unsupported hint; %s." },
   { ODSI_ODWSBSHORTBASIS, 3100, 1,
     "[%s]: basis has only %d variables for %d constraints." },
-  { ODSI_NOSOLVE, 3200, 1, "Impossible to call dylp; %s." },
   // Non-fatal errors (6000 -- 8999)
   { ODSI_UNSUPFORCEDO, 6001, 1, "Attempt to force unsupported hint; %s." },
-  { ODSI_ACCESS_STALE, 6050, 1,
-    "(%s) request to return a value from a stale solution."},
   { ODSI_EMPTYODWSB, 6101, 1, "Empty warm start basis object." },
   { ODSI_NOTODWSB, 6102, 1,
     "The warm start basis object is not a %sWarmStartBasis object." },
@@ -116,6 +113,10 @@ static MsgDefn us_en_defns[] = {
     "Basis size %d x %d does not match constraint system size %d x %d." },
   { ODSI_ODWSBBADSTATUS, 6104, 1,
     "Flipping %s (%d) from %s to %s; lack of finite bound." },
+  { ODSI_ACCESS_STALE, 6200, 1,
+    "(%s) request to return a value from a stale solution."},
+  { ODSI_NOSOLVE, 6201, 1, "(%s) Impossible to call dylp; %s." },
+  { ODSI_FAILEDCALL, 6202, 1, "(%s) Failed call to dylp routine %s." },
   // Fatal errors (9000 and up)
   { ODSI_CONFUSION, 9001, 1,
     "Internal confusion, line %d." },

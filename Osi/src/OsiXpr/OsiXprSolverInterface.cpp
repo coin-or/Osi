@@ -111,6 +111,9 @@ OsiXprSolverInterface::setIntParam(OsiIntParam key, int value)
       case OsiLastIntParam:
 	 retval = false;
 	 break;
+      case OsiNameDiscipline:
+         retval = false;
+	 break;
   }
   return retval;
 }
@@ -179,6 +182,9 @@ OsiXprSolverInterface::getIntParam(OsiIntParam key, int& value) const
 	    retval = false;
 	    break;
 	case OsiLastIntParam:
+	    retval = false;
+	    break;
+        case OsiNameDiscipline:
 	    retval = false;
 	    break;
     }
@@ -1278,6 +1284,7 @@ OsiXprSolverInterface::setContinuous(const int* indices, int len)
       
       XPRS_CHECKED( XPRSchgcoltype, (prob_,len, const_cast<int *>(indices), qctype) );
       freeCachedResults();
+      delete[] qctype;
     }
   }
 }
@@ -1304,6 +1311,7 @@ OsiXprSolverInterface::setInteger(const int* indices, int len)
 
       XPRS_CHECKED( XPRSchgcoltype, (prob_,len, const_cast<int *>(indices), qctype) );
       freeCachedResults();
+      delete[] qctype;
     }
   }
 }
@@ -1597,43 +1605,43 @@ OsiXprSolverInterface::loadProblem(const CoinPackedMatrix& matrix,
 
     fprintf(getLogFilePtr(),"  char rowsen[%d];\n",nr);
     for ( i=0; i<nr; i++ )
-      fprintf(getLogFilePtr(),"	 rowsen[%d]='%c';\n",i,rowsen[i]);
+      fprintf(getLogFilePtr(),"  rowsen[%d]='%c';\n",i,rowsen[i]);
 
     fprintf(getLogFilePtr(),"  double rowrhs[%d];\n",nr);
     for ( i=0; i<nr; i++ )
-      fprintf(getLogFilePtr(),"	 rowrhs[%d]=%f;\n",i,rowrhs[i]);
+      fprintf(getLogFilePtr(),"  rowrhs[%d]=%f;\n",i,rowrhs[i]);
     
     fprintf(getLogFilePtr(),"  double rowrng[%d];\n",nr);
     for ( i=0; i<nr; i++ )
-      fprintf(getLogFilePtr(),"	 rowrng[%d]=%f;\n",i,rowrng[i]);
+      fprintf(getLogFilePtr(),"  rowrng[%d]=%f;\n",i,rowrng[i]);
 
     fprintf(getLogFilePtr(),"  double ob[%d];\n",nc);
     for ( i=0; i<nc; i++ )
-      fprintf(getLogFilePtr(),"	 ob[%d]=%f;\n",i,ob[i]);
+      fprintf(getLogFilePtr(),"  ob[%d]=%f;\n",i,ob[i]);
 
     fprintf(getLogFilePtr(),"  double clb[%d];\n",nc);
     for ( i=0; i<nc; i++ )
-      fprintf(getLogFilePtr(),"	 clb[%d]=%f;\n",i,clb[i]);
+      fprintf(getLogFilePtr(),"  clb[%d]=%f;\n",i,clb[i]);
 
     fprintf(getLogFilePtr(),"  double cub[%d];\n",nc);
     for ( i=0; i<nc; i++ )
-      fprintf(getLogFilePtr(),"	 cub[%d]=%f;\n",i,cub[i]);
+      fprintf(getLogFilePtr(),"  cub[%d]=%f;\n",i,cub[i]);
 
     fprintf(getLogFilePtr(),"  int vectorStarts[%d];\n",nc+1);
     for ( i=0; i<=nc; i++ )
-      fprintf(getLogFilePtr(),"	 vectorStarts[%d]=%d;\n",i,m->getVectorStarts()[i]);
+      fprintf(getLogFilePtr(),"  vectorStarts[%d]=%d;\n",i,m->getVectorStarts()[i]);
 
     fprintf(getLogFilePtr(),"  int vectorLengths[%d];\n",nc);
     for ( i=0; i<nc; i++ )
-      fprintf(getLogFilePtr(),"	 vectorLengths[%d]=%d;\n",i,m->getVectorLengths()[i]);
+      fprintf(getLogFilePtr(),"  vectorLengths[%d]=%d;\n",i,m->getVectorLengths()[i]);
     
     fprintf(getLogFilePtr(),"  int indices[%d];\n",m->getVectorStarts()[nc]);
     for ( i=0; i<m->getVectorStarts()[nc]; i++ )
-      fprintf(getLogFilePtr(),"	 indices[%d]=%d;\n",i,m->getIndices()[i]);
+      fprintf(getLogFilePtr(),"  indices[%d]=%d;\n",i,m->getIndices()[i]);
 
     fprintf(getLogFilePtr(),"  double elements[%d];\n",m->getVectorStarts()[nc]);
     for ( i=0; i<m->getVectorStarts()[nc]; i++ )
-      fprintf(getLogFilePtr(),"	 elements[%d]=%f;\n",i,m->getElements()[i]);
+      fprintf(getLogFilePtr(),"  elements[%d]=%f;\n",i,m->getElements()[i]);
 
     fprintf(getLogFilePtr(),"}\n");
   }

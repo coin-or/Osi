@@ -4942,6 +4942,8 @@ OsiClpSolverInterface::setRowSetTypes(const int* indexFirst,
 void 
 OsiClpSolverInterface::enableSimplexInterface(bool doingPrimal)
 {
+  if (modelPtr_->solveType()==2)
+    return;
   assert (modelPtr_->solveType()==1);
   int saveIts = modelPtr_->numberIterations_;
   modelPtr_->setSolveType(2);

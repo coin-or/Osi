@@ -91,11 +91,6 @@ AC_COIN_HAS_ASL
 #		  Capability Tests					    #
 #############################################################################
 
-# Windows has lots of annoying quirks. Presence of this header file is
-# necessary to suppress one of them.
-
-AC_CHECK_HEADERS([windows.h])
-
 #############################################################################
 #                 Configuration options for individual OSIs                 #
 #############################################################################

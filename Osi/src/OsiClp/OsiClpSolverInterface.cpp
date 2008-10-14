@@ -6925,6 +6925,10 @@ OsiClpSolverInterface::branchAndBound() {
       for (iColumn=0;iColumn<numberColumns;iColumn++) {
 	if( isInteger(iColumn)) {
 	  originalLower[numberIntegers]=(int) lower[iColumn];
+	  if (upper[iColumn]>1.0e9) {
+	    // This is not meant to be a bulletproof code
+	    setColUpper(iColumn,1.0e9);
+	  }
 	  originalUpper[numberIntegers]=(int) upper[iColumn];
 	  which[numberIntegers++]=iColumn;
 	}

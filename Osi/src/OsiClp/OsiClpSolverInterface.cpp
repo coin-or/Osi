@@ -7633,6 +7633,8 @@ OsiClpSolverInterface::tightenBounds(int lightweight)
     CoinBigIndex end = start + columnLength[iColumn];
     double lower = columnLower[iColumn];
     double upper = columnUpper[iColumn];
+    if (lower<-1.0e8&&upper>1.0e8)
+      continue; // Could do severe damage to accuracy
     double gap = upper-lower;
     if (!gap)
       continue;

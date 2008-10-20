@@ -1357,15 +1357,14 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
   for (icol=0;icol<ncols_;icol++) {
     int j;
     for (j=start[icol];j<start[icol]+length[icol];j++) {
-      if (element[j]) {
+      if (fabs(element[j])>ZTOLDP) {
         hrow_[nel]=row[j];
-        colels_[nel++]=element[j];
+	colels_[nel++]=element[j];
       }
     }
     hincol_[icol]=nel-mcstrt_[icol];
     mcstrt_[icol+1]=nel;
   }
-  assert (nelems_>=nel);
 
   // same thing for row rep
   CoinPackedMatrix * m = new CoinPackedMatrix();
@@ -1387,7 +1386,7 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
   for (irow=0;irow<nrows_;irow++) {
     int j;
     for (j=start[irow];j<start[irow]+length[irow];j++) {
-      if (element[j]) {
+      if (fabs(element[j])>ZTOLDP) {
         hcol_[nel]=column[j];
         rowels_[nel++]=element[j];
       }

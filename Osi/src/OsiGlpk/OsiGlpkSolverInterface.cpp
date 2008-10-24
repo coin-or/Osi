@@ -379,6 +379,9 @@ void OGSI::branchAndBound ()
 
     switch (err)
     { case LPX_E_OK:
+#ifdef LPX_E_MIPGAP
+    case LPX_E_MIPGAP:
+#endif
       { 
 	break ; }
       case LPX_E_NOPFS:

@@ -15,7 +15,7 @@
 
 #include <stdio.h>
 
-#include <assert.h>
+#include <cassert>
 #include <iostream>
 
 #include "CoinHelperFunctions.hpp"

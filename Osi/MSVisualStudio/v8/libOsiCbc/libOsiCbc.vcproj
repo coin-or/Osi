@@ -114,6 +114,7 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\..\..\Osi\src\OsiClp,..\..\..\..\Osi\src\OsiCbc,..\..\..\..\Osi\src,..\..\..\..\Cbc\src,..\..\..\..\Clp\src,..\..\..\..\CoinUtils\src,..\..\..\..\BuildTools\headers"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				RuntimeTypeInfo="true"

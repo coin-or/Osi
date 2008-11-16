@@ -372,9 +372,12 @@ void OsiCuts::sort()
 //-------------------------------------------------------------------
 // Get number of in collections
 //------------------------------------------------------------------- 
-int OsiCuts::sizeRowCuts() const { return rowCutPtrs_.size(); }
-int OsiCuts::sizeColCuts() const { return colCutPtrs_.size(); }
-int OsiCuts::sizeCuts()    const { return sizeRowCuts()+sizeColCuts(); }
+int OsiCuts::sizeRowCuts() const {
+  return static_cast<int>(rowCutPtrs_.size()); }
+int OsiCuts::sizeColCuts() const {
+  return static_cast<int>(colCutPtrs_.size()); }
+int OsiCuts::sizeCuts()    const {
+  return static_cast<int>(sizeRowCuts()+sizeColCuts()); }
 
 //----------------------------------------------------------------
 // Get i'th cut from the collection

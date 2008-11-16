@@ -728,12 +728,12 @@ void OsiClpSolverInterface::initialSolve()
   time1 = CoinCpuTime()-time1;
   totalTime += time1;
   assert (!modelPtr_->disasterHandler());
+  if (lastAlgorithm_<1||lastAlgorithm_>2)
+    lastAlgorithm_=1;
   if (abortSearch) {
     lastAlgorithm_=-911;
     modelPtr_->setProblemStatus(4);
   }
-  if (lastAlgorithm_<1||lastAlgorithm_>2)
-    lastAlgorithm_=1;
   //std::cout<<time1<<" seconds - total "<<totalTime<<std::endl;
 }
 //-----------------------------------------------------------------------------

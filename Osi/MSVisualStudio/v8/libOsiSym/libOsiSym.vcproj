@@ -4,6 +4,7 @@
 	Version="8.00"
 	Name="libOsiSym"
 	ProjectGUID="{AC0F178A-9719-44F3-9891-9138B126DC78}"
+	RootNamespace="libOsiSym"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -179,14 +180,6 @@
 				>
 			</File>
 		</Filter>
-		<File
-			RelativePath="..\..\..\..\osi\src\osisym\OsiSymSolverInterface.cpp~"
-			>
-		</File>
-		<File
-			RelativePath="..\..\..\..\osi\src\osisym\SymWarmStart.hpp~"
-			>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>

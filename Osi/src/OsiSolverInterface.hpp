@@ -823,7 +823,7 @@ public:
 
     /*! \brief Return the name of the objective function */
 
-    virtual std::string getObjName (unsigned maxLen = (unsigned)std::string::npos) const ;
+  virtual std::string getObjName (unsigned maxLen = static_cast<unsigned>(std::string::npos)) const ;
 
     /*! \brief Set the name of the objective function */
 
@@ -837,7 +837,7 @@ public:
       maxLen to limit the length.
     */
     virtual std::string getRowName(int rowIndex,
-				   unsigned maxLen = (unsigned)std::string::npos) const ;
+				   unsigned maxLen = static_cast<unsigned>(std::string::npos)) const ;
 
     /*! \brief Return a pointer to a vector of row names
 
@@ -882,7 +882,7 @@ public:
       maxLen to limit the length.
     */
     virtual std::string getColName(int colIndex,
-				   unsigned maxLen = (unsigned)std::string::npos) const ;
+				   unsigned maxLen = static_cast<unsigned>(std::string::npos)) const ;
 
     /*! \brief Return a pointer to a vector of column names
 

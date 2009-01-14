@@ -976,7 +976,7 @@ OsiSOS::infeasibility(const OsiBranchingInformation * info,int & whichWay) const
     assert (sum>0.0);
     // probably best to use pseudo duals
     double value = lastNonZero-firstNonZero+1;
-    value *= 0.5/((double) numberMembers_);
+    value *= 0.5/static_cast<double> (numberMembers_);
     infeasibility_=value;
     otherInfeasibility_=1.0-value;
     if (info->defaultDual_>=0.0) {

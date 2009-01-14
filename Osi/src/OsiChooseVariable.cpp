@@ -720,7 +720,7 @@ OsiChooseStrong::setupList ( OsiBranchingInformation *info, bool initialize)
       double sumPi=0.0;
       for (i=0;i<numberRows;i++) 
 	sumPi += fabs(pi[i]);
-      sumPi /= ((double) numberRows);
+      sumPi /= static_cast<double> (numberRows);
       // and scale back
       sumPi *= 0.01;
       info->defaultDual_ = sumPi; // switch on

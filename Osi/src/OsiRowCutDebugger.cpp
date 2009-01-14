@@ -209,7 +209,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
   // only consider charcters between '/' and '.'
   std::string modelL; //name in lowercase 
   int iput=0;
-  for (i=0;i<(int) strlen(model);i++) {
+  for (i=0;i<static_cast<int> (strlen(model));i++) {
     char value=static_cast<char>(tolower(model[i]));
     if (value=='/') {
       iput=0;

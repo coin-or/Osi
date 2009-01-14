@@ -91,7 +91,8 @@ public:
 					     bool keepIntegers=true,
 					     int numberPasses=5,
                                              const char * prohibited=NULL,
-					     bool doStatus=true);
+					     bool doStatus=true,
+					     const char * rowProhibited=NULL);
 
   /*! \brief Restate the solution to the presolved problem in terms of the
 	     original problem and load it into the original model.
@@ -126,6 +127,14 @@ public:
 
   /// Return a pointer to the original rows
   const int * originalRows() const;
+
+  /// Return number of rows in original model
+  inline int getNumRows() const
+  { return nrows_;}
+
+  /// Return number of columns in original model
+  inline int getNumCols() const
+  { return ncols_;}
 
   /** "Magic" number. If this is non-zero then any elements with this value
       may change and so presolve is very limited in what can be done

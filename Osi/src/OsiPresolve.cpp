@@ -98,7 +98,8 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
 			    bool keepIntegers,
 			    int numberPasses,
                             const char * prohibited,
-			    bool doStatus)
+			    bool doStatus,
+			    const char * rowProhibited)
 {
   ncols_ = si.getNumCols();
   nrows_ = si.getNumRows();
@@ -142,9 +143,10 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
 
     
     CoinPresolveMatrix prob(ncols_,
-			maxmin,
-			presolvedModel_,
-			nrows_, nelems_,doStatus,nonLinearValue_,prohibited);
+			    maxmin,
+			    presolvedModel_,
+			    nrows_, nelems_,doStatus,nonLinearValue_,prohibited,
+			    rowProhibited);
     // make sure row solution correct
     if (doStatus) {
       double *colels	= prob.colels_;
@@ -259,12 +261,12 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
 	int i;
 	for (i=0;i<prob.ncols_;i++) {
 	  CoinWarmStartBasis::Status status = 
-	    (CoinWarmStartBasis::Status ) prob.getColumnStatus(i);
+	    static_cast<CoinWarmStartBasis::Status> (prob.getColumnStatus(i));
 	  basis->setStructStatus(i,status);
 	}
 	for (i=0;i<prob.nrows_;i++) {
 	  CoinWarmStartBasis::Status status = 
-	    (CoinWarmStartBasis::Status ) prob.getRowStatus(i);
+	    static_cast<CoinWarmStartBasis::Status> (prob.getRowStatus(i));
 	  basis->setArtifStatus(i,status);
 	}
 	presolvedModel_->setWarmStart(basis);
@@ -472,12 +474,12 @@ OsiPresolve::postsolve(bool updateStatus)
     int i;
     for (i=0;i<ncols0;i++) {
       CoinWarmStartBasis::Status status = 
-	(CoinWarmStartBasis::Status ) prob.getColumnStatus(i);
+	static_cast<CoinWarmStartBasis::Status> (prob.getColumnStatus(i));
       basis->setStructStatus(i,status);
     }
     for (i=0;i<nrows0;i++) {
       CoinWarmStartBasis::Status status = 
-	(CoinWarmStartBasis::Status ) prob.getRowStatus(i);
+	static_cast<CoinWarmStartBasis::Status> (prob.getRowStatus(i));
       basis->setArtifStatus(i,status);
     }
     originalModel_->setWarmStart(basis);
@@ -1293,17 +1295,16 @@ static bool isGapFree(const CoinPackedMatrix& matrix)
   return (! (i >= 0));
 }
 CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
-				     double maxmin_,
-				     // end prepost members
-
-				     OsiSolverInterface * si,
-
-				     // rowrep
-				     int nrows_in,
-				     CoinBigIndex nelems_in,
-			       bool doStatus,
-			       double nonLinearValue,
-                                       const char * prohibited) :
+				       double maxmin_,
+				       // end prepost members
+				       OsiSolverInterface * si,
+				       // rowrep
+				       int nrows_in,
+				       CoinBigIndex nelems_in,
+				       bool doStatus,
+				       double nonLinearValue,
+                                       const char * prohibited,
+				       const char * rowProhibited) :
 
   CoinPrePostsolveMatrix(si,
 			ncols0_in, nrows_in, nelems_in),
@@ -1432,7 +1433,14 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
   } else {
     anyProhibited_ = false;
   }
-
+  // Any rows special?
+  if (rowProhibited) {
+    anyProhibited_ = true;
+    for (int irow=0;irow<nrows_;irow++) {
+      if (rowProhibited[irow])
+	setRowProhibited(irow);
+    }
+  }
   if (doStatus) {
     // allow for status and solution
     sol_ = new double[ncols_];

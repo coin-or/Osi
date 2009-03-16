@@ -1238,7 +1238,7 @@ protected:
       1024 Don't "borrow" model in initialSolve
       Bits above 8192 give where called from in Cbc
       At present 0 is normal, 1 doing fast hotstarts, 2 is can do quick check
-      65536 Keep simple i.e. no auxiliary model or crunch etc
+      65536 Keep simple i.e. no  crunch etc
       131072 Try and keep scaling factors around
       262144 Don't try and tighten bounds (funny global cuts)
   */

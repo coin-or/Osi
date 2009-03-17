@@ -1651,7 +1651,7 @@ void OsiClpSolverInterface::markHotStart()
     return;
   }
 #endif
-  if ((specialOptions_&8192)==0) { // ||(specialOptions_&65536)!=0) {
+  if ((specialOptions_&8192)==0&&false) { // ||(specialOptions_&65536)!=0) {
     delete ws_;
     ws_ = dynamic_cast<CoinWarmStartBasis*>(getWarmStart());
     int numberRows = modelPtr_->numberRows();

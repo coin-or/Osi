@@ -752,6 +752,12 @@ public:
       getBInvCol()).
   */
   virtual void getBasics(int* index) const;
+  /// switches CPLEX to prob type LP
+  void switchToLP();
+
+  /// switches CPLEX to prob type MIP
+  void switchToMIP();
+
   //@}
 /***************************************************************************/
 
@@ -771,12 +777,6 @@ protected:
 private:
   /**@name Private static class functions  */
   //@{
-  /// switches CPLEX to prob type LP
-  void switchToLP();
-
-  /// switches CPLEX to prob type MIP
-  void switchToMIP();
-
   /// resizes coltype_ vector to be able to store at least minsize elements
   void resizeColType( int minsize );
 
@@ -830,6 +830,7 @@ private:
   /// free all allocated memory
   void freeAllMemory();
 
+  
   /// Just for testing purposes
   void printBounds(); 
   //@}

@@ -8428,8 +8428,16 @@ OsiClpDisasterHandler::check() const
 	  if (frequency>100)
 	    frequency=100;
 	  model_->setFactorizationFrequency(frequency);
-	  model_->setDualBound(CoinMax(1.0001e8,
-				       CoinMin(10.0*osiModel_->largestAway(),1.e10)));
+	  double oldBound = model_->dualBound();
+	  double newBound = CoinMax(1.0001e8,
+				    CoinMin(10.0*osiModel_->largestAway(),1.e10));
+	  if (newBound!=oldBound) {
+	    model_->setDualBound(newBound);
+	    if (model_->upperRegion()&&model_->algorithm()<0) {
+	      // need to fix up fake bounds
+	      (static_cast<ClpSimplexDual *>(model_))->resetFakeBounds(0);
+	    }
+	  }
 	  osiModel_->setLargestAway(-1.0);
 	}
 	return true;

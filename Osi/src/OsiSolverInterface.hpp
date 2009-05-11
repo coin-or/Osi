@@ -71,6 +71,7 @@ public:
   class ApplyCutsReturnCode {
     friend class OsiSolverInterface;
     friend class OsiOslSolverInterface;
+    friend class OsiClpSolverInterface;
 
   public:
     ///@name Constructors and desctructors

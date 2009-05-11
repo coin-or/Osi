@@ -1960,10 +1960,11 @@ void OsiClpSolverInterface::markHotStart()
       double * upRange=new double [numberToDo];
       int * whichDown = new int [numberToDo];
       int * whichUp = new int [numberToDo];
-      small->gutsOfSolution(NULL,NULL,false);
+      smallModel_->setFactorization(*factorization_);
+      smallModel_->gutsOfSolution(NULL,NULL,false);
       // Tell code we can increase costs in some cases
-      small->setCurrentDualTolerance(0.0);
-      static_cast<ClpSimplexOther *> (small)->dualRanging(numberToDo,which,
+      smallModel_->setCurrentDualTolerance(0.0);
+      static_cast<ClpSimplexOther *> (smallModel_)->dualRanging(numberToDo,which,
                          upRange, whichUp, downRange, whichDown);
       delete [] whichDown;
       delete [] whichUp;
@@ -3974,6 +3975,67 @@ OsiClpSolverInterface::applyRowCuts(int numberCuts, const OsiRowCut ** cuts)
   delete [] indices;
   delete [] elements;
 
+}
+//#############################################################################
+// Apply Cuts
+//#############################################################################
+
+OsiSolverInterface::ApplyCutsReturnCode
+OsiClpSolverInterface::applyCuts( const OsiCuts & cs, double effectivenessLb ) 
+{
+  OsiSolverInterface::ApplyCutsReturnCode retVal;
+  int i;
+
+  // Loop once for each column cut
+  for ( i=0; i<cs.sizeColCuts(); i ++ ) {
+    if ( cs.colCut(i).effectiveness() < effectivenessLb ) {
+      retVal.incrementIneffective();
+      continue;
+    }
+    if ( !cs.colCut(i).consistent() ) {
+      retVal.incrementInternallyInconsistent();
+      continue;
+    }
+    if ( !cs.colCut(i).consistent(*this) ) {
+      retVal.incrementExternallyInconsistent();
+      continue;
+    }
+    if ( cs.colCut(i).infeasible(*this) ) {
+      retVal.incrementInfeasible();
+      continue;
+    }
+    applyColCut( cs.colCut(i) );
+    retVal.incrementApplied();
+  }
+
+  // Loop once for each row cut
+  const OsiRowCut ** addCuts = new const OsiRowCut* [cs.sizeRowCuts()];
+  int nAdd=0;
+  for ( i=0; i<cs.sizeRowCuts(); i ++ ) {
+    if ( cs.rowCut(i).effectiveness() < effectivenessLb ) {
+      retVal.incrementIneffective();
+      continue;
+    }
+    if ( !cs.rowCut(i).consistent() ) {
+      retVal.incrementInternallyInconsistent();
+      continue;
+    }
+    if ( !cs.rowCut(i).consistent(*this) ) {
+      retVal.incrementExternallyInconsistent();
+      continue;
+    }
+    if ( cs.rowCut(i).infeasible(*this) ) {
+      retVal.incrementInfeasible();
+      continue;
+    }
+    addCuts[nAdd++] = cs.rowCutPtr(i);
+    retVal.incrementApplied();
+  }
+  // now apply
+  applyRowCuts(nAdd,addCuts);
+  delete [] addCuts;
+  
+  return retVal;
 }
 // Extend scale factors
 void 

@@ -1002,7 +1002,7 @@ void OsiClpSolverInterface::resolve()
       //writeMpsNative("bad",NULL,NULL,2,1,1.0);
       disasterHandler_->setOsiModel(this);
       bool inCbcOrOther = (modelPtr_->specialOptions()&0x03000000)!=0;
-      if((specialOptions_&1)==0/*||true*/) {
+      if((specialOptions_&1)==0||(specialOptions_&2048)!=0/*||true*/) {
 	disasterHandler_->setWhereFrom(0); // dual
 	if (inCbcOrOther)
 	  modelPtr_->setDisasterHandler(disasterHandler_);
@@ -2776,7 +2776,7 @@ OsiClpSolverInterface::setObjective(const double * array)
 {
   // Say can't gurantee optimal basis etc
   lastAlgorithm_=999;
-  modelPtr_->whatsChanged_ &= 0xffff;
+  modelPtr_->whatsChanged_ &= (0xffff&~64);
   CoinMemcpyN(array,modelPtr_->numberColumns(),
 		    modelPtr_->objective());
 }
@@ -2789,7 +2789,7 @@ OsiClpSolverInterface::setColLower(const double * array)
 {
   // Say can't gurantee optimal basis etc
   lastAlgorithm_=999;
-  modelPtr_->whatsChanged_ &= 0x1ffff;
+  modelPtr_->whatsChanged_ &= (0x1ffff&128);
   CoinMemcpyN(array,modelPtr_->numberColumns(),
 		    modelPtr_->columnLower());
 }
@@ -2802,7 +2802,7 @@ OsiClpSolverInterface::setColUpper(const double * array)
 {
   // Say can't gurantee optimal basis etc
   lastAlgorithm_=999;
-  modelPtr_->whatsChanged_ &= 0x1ffff;
+  modelPtr_->whatsChanged_ &= (0x1ffff&256);
   CoinMemcpyN(array,modelPtr_->numberColumns(),
 		    modelPtr_->columnUpper());
 }
@@ -2840,7 +2840,7 @@ OsiClpSolverInterface::addCol(const CoinPackedVectorBase& vec,
 			      const double obj)
 {
   int numberColumns = modelPtr_->numberColumns();
-  modelPtr_->whatsChanged_ &= 0xffff;
+  modelPtr_->whatsChanged_ &= (0xffff&~(1|2|8|64|128|256));
   modelPtr_->resize(modelPtr_->numberRows(),numberColumns+1);
   linearObjective_ = modelPtr_->objective();
   basis_.resize(modelPtr_->numberRows(),numberColumns+1);
@@ -2874,7 +2874,7 @@ OsiClpSolverInterface::addCols(const int numcols,
 			       const double* collb, const double* colub,   
 			       const double* obj)
 {
-  modelPtr_->whatsChanged_ &= 0xffff;
+  modelPtr_->whatsChanged_ &= (0xffff&~(1|2|8|64|128|256));
   int numberColumns = modelPtr_->numberColumns();
   modelPtr_->resize(modelPtr_->numberRows(),numberColumns+numcols);
   linearObjective_ = modelPtr_->objective();
@@ -2927,7 +2927,7 @@ OsiClpSolverInterface::addCols(const int numcols,
 			       const double* collb, const double* colub,   
 			       const double* obj)
 {
-  modelPtr_->whatsChanged_ &= 0xffff;
+  modelPtr_->whatsChanged_ &= (0xffff&~(1|2|8|64|128|256));
   int numberColumns = modelPtr_->numberColumns();
   modelPtr_->resize(modelPtr_->numberRows(),numberColumns+numcols);
   linearObjective_ = modelPtr_->objective();
@@ -2978,7 +2978,7 @@ OsiClpSolverInterface::addCols(const int numcols,
 void 
 OsiClpSolverInterface::deleteCols(const int num, const int * columnIndices)
 {
-  modelPtr_->whatsChanged_ &= 0xffff;
+  modelPtr_->whatsChanged_ &= (0xffff&~(1|2|8|64|128|256));
   findIntegers(false);
   deleteBranchingInfo(num,columnIndices);
   modelPtr_->deleteColumns(num,columnIndices);
@@ -3026,7 +3026,7 @@ void
 OsiClpSolverInterface::addRow(const CoinPackedVectorBase& vec,
 			      const double rowlb, const double rowub)
 {
-  modelPtr_->whatsChanged_ &= 0xffff;
+  modelPtr_->whatsChanged_ &= (0xffff&~(1|2|4|16|32));
   freeCachedResults0();
   int numberRows = modelPtr_->numberRows();
   modelPtr_->resize(numberRows+1,modelPtr_->numberColumns());
@@ -3043,7 +3043,7 @@ OsiClpSolverInterface::addRow(const CoinPackedVectorBase& vec,
 			      const char rowsen, const double rowrhs,   
 			      const double rowrng)
 {
-  modelPtr_->whatsChanged_ &= 0xffff;
+  modelPtr_->whatsChanged_ &= (0xffff&~(1|2|4|16|32));
   freeCachedResults0();
   int numberRows = modelPtr_->numberRows();
   modelPtr_->resize(numberRows+1,modelPtr_->numberColumns());
@@ -3061,7 +3061,7 @@ void
 OsiClpSolverInterface::addRow(int numberElements, const int * columns, const double * elements,
 			   const double rowlb, const double rowub) 
 {
-  modelPtr_->whatsChanged_ &= 0xffff;
+  modelPtr_->whatsChanged_ &= (0xffff&~(1|2|4|16|32));
   freeCachedResults0();
   int numberRows = modelPtr_->numberRows();
   modelPtr_->resize(numberRows+1,modelPtr_->numberColumns());
@@ -3082,7 +3082,7 @@ OsiClpSolverInterface::addRows(const int numrows,
 			       const CoinPackedVectorBase * const * rows,
 			       const double* rowlb, const double* rowub)
 {
-  modelPtr_->whatsChanged_ &= 0xffff;
+  modelPtr_->whatsChanged_ &= (0xffff&~(1|2|4|16|32));
   freeCachedResults0();
   int numberRows = modelPtr_->numberRows();
   modelPtr_->resize(numberRows+numrows,modelPtr_->numberColumns());
@@ -3116,7 +3116,7 @@ OsiClpSolverInterface::addRows(const int numrows,
 			       const char* rowsen, const double* rowrhs,   
 			       const double* rowrng)
 {
-  modelPtr_->whatsChanged_ &= 0xffff;
+  modelPtr_->whatsChanged_ &= (0xffff&~(1|2|4|16|32));
   freeCachedResults0();
   int numberRows = modelPtr_->numberRows();
   modelPtr_->resize(numberRows+numrows,modelPtr_->numberColumns());
@@ -3145,7 +3145,7 @@ OsiClpSolverInterface::addRows(const int numrows,
 			       const int * rowStarts, const int * columns, const double * element,
 			       const double* rowlb, const double* rowub)
 {
-  modelPtr_->whatsChanged_ &= 0xffff;
+  modelPtr_->whatsChanged_ &= (0xffff&~(1|2|4|16|32));
   freeCachedResults0();
   int numberRows = modelPtr_->numberRows();
   modelPtr_->resize(numberRows+numrows,modelPtr_->numberColumns());
@@ -3177,7 +3177,7 @@ OsiClpSolverInterface::addRows(const int numrows,
 void 
 OsiClpSolverInterface::deleteRows(const int num, const int * rowIndices)
 {
-  modelPtr_->whatsChanged_ &= 0xffff;
+  modelPtr_->whatsChanged_ &= (0xffff&~(1|2|4|16|32));
   // will still be optimal if all rows basic
   bool allBasic=true;
   int numBasis = basis_.getNumArtificial();
@@ -3234,7 +3234,7 @@ OsiClpSolverInterface::loadProblem(const CoinPackedMatrix& matrix,
 				   const double* obj,
 				   const double* rowlb, const double* rowub)
 {
-  modelPtr_->whatsChanged_ &= 0xffff;
+  modelPtr_->whatsChanged_ = 0;
   // Get rid of integer information (modelPtr will get rid of its copy)
   delete [] integerInformation_;
   integerInformation_=NULL;
@@ -3256,7 +3256,7 @@ OsiClpSolverInterface::assignProblem(CoinPackedMatrix*& matrix,
 				     double*& obj,
 				     double*& rowlb, double*& rowub)
 {
-  modelPtr_->whatsChanged_ &= 0xffff;
+  modelPtr_->whatsChanged_ = 0;
   // Get rid of integer information (modelPtr will get rid of its copy)
   loadProblem(*matrix, collb, colub, obj, rowlb, rowub);
   delete matrix;   matrix = NULL;
@@ -3276,7 +3276,7 @@ OsiClpSolverInterface::loadProblem(const CoinPackedMatrix& matrix,
 				   const char* rowsen, const double* rowrhs,   
 				   const double* rowrng)
 {
-  modelPtr_->whatsChanged_ &= 0xffff;
+  modelPtr_->whatsChanged_ = 0;
   // Get rid of integer information (modelPtr will get rid of its copy)
   // assert( rowsen != NULL );
   // assert( rowrhs != NULL );
@@ -3328,7 +3328,7 @@ OsiClpSolverInterface::assignProblem(CoinPackedMatrix*& matrix,
 				     char*& rowsen, double*& rowrhs,
 				     double*& rowrng)
 {
-  modelPtr_->whatsChanged_ &= 0xffff;
+  modelPtr_->whatsChanged_ = 0;
   // Get rid of integer information (modelPtr will get rid of its copy)
   loadProblem(*matrix, collb, colub, obj, rowsen, rowrhs, rowrng);
   delete matrix;   matrix = NULL;
@@ -3350,7 +3350,7 @@ OsiClpSolverInterface::loadProblem(const int numcols, const int numrows,
 				   const double* obj,
 				   const double* rowlb, const double* rowub)
 {
-  modelPtr_->whatsChanged_ &= 0xffff;
+  modelPtr_->whatsChanged_ = 0;
   // Get rid of integer information (modelPtr will get rid of its copy)
   delete [] integerInformation_;
   integerInformation_=NULL;
@@ -3376,7 +3376,7 @@ OsiClpSolverInterface::loadProblem(const int numcols, const int numrows,
 				   const char* rowsen, const double* rowrhs,   
 				   const double* rowrng)
 {
-  modelPtr_->whatsChanged_ &= 0xffff;
+  modelPtr_->whatsChanged_ = 0;
   // Get rid of integer information (modelPtr will get rid of its copy)
   // If any of Rhs NULLs then create arrays
   const char * rowsenUse = rowsen;
@@ -3420,7 +3420,7 @@ OsiClpSolverInterface::loadProblem(const int numcols, const int numrows,
 int 
 OsiClpSolverInterface::loadFromCoinModel (  CoinModel & modelObject, bool keepSolution)
 {
-  modelPtr_->whatsChanged_ &= 0xffff;
+  modelPtr_->whatsChanged_ = 0;
   int numberErrors = 0;
   // Set arrays for normal use
   double * rowLower = modelObject.rowLowerArray();
@@ -3883,7 +3883,7 @@ OsiClpSolverInterface::applyRowCuts(int numberCuts, const OsiRowCut ** cuts)
   int i;
   if (!numberCuts)
     return;
-  modelPtr_->whatsChanged_ &= 0xffff;
+  modelPtr_->whatsChanged_ &= (0xffff&~(1|2|4|16|32));
 #if 0 // was #ifndef NDEBUG
   int nameDiscipline;
   getIntParam(OsiNameDiscipline,nameDiscipline) ;
@@ -4094,7 +4094,7 @@ void OsiClpSolverInterface::deleteScaleFactors()
 
 void OsiClpSolverInterface::applyColCut( const OsiColCut & cc )
 {
-  modelPtr_->whatsChanged_ &= 0x1ffff;
+  modelPtr_->whatsChanged_ &= (0x1ffff&~(128|256));
   // Say can't gurantee optimal basis etc
   lastAlgorithm_=999;
   double * lower = modelPtr_->columnLower();
@@ -4748,14 +4748,14 @@ OsiClpSolverInterface::writeLp(FILE * fp,
 void 
 OsiClpSolverInterface::replaceMatrixOptional(const CoinPackedMatrix & matrix)
 {
-  modelPtr_->whatsChanged_ &= 0xffff;
+  modelPtr_->whatsChanged_ &= (0xffff&~(2|4|8));
   replaceMatrix(matrix);
 }
 // And if it does matter (not used at present)
 void 
 OsiClpSolverInterface::replaceMatrix(const CoinPackedMatrix & matrix)
 {
-  modelPtr_->whatsChanged_ &= 0xffff;
+  modelPtr_->whatsChanged_ &= (0xffff&~(2|4|8));
   delete modelPtr_->matrix_;
   delete modelPtr_->rowCopy_;
   modelPtr_->rowCopy_=NULL;
@@ -5691,7 +5691,7 @@ OsiClpSolverInterface::getReducedGradient(
    reduced costs are properly updated  */
 void OsiClpSolverInterface::setObjectiveAndRefresh(double* c)
 {
-  modelPtr_->whatsChanged_ &= 0xffff;
+  modelPtr_->whatsChanged_ &= (0xffff&~(64));
   assert (modelPtr_->solveType()==2);
   int numberColumns = modelPtr_->numberColumns();
   CoinMemcpyN(c,numberColumns,modelPtr_->objective());
@@ -6316,7 +6316,7 @@ OsiClpSolverInterface::crunch()
 #endif
     smallModel_=small;
     spareArrays_ = spareArrays;
-  } else {
+  } else {  
     assert((modelPtr_->whatsChanged_&0x30000));
     //delete [] spareArrays_;
     //spareArrays_ = NULL;

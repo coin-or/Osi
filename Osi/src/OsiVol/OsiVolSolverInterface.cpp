@@ -329,7 +329,7 @@ OsiVolSolverInterface::colRimResize_(const int newSize)
       double* obj = objcoeffs_;
       double* sol = colsol_;
       double* rc  = rc_;
-      maxNumcols_ = CoinMax(1000, (newsize * 5) / 4);
+      maxNumcols_ = CoinMax(1000, (newSize * 5) / 4);
       colRimAllocator_();
       const int colnum = getNumCols();
       CoinDisjointCopyN(cub , colnum, colupper_);

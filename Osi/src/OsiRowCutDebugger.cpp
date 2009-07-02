@@ -60,6 +60,20 @@ int OsiRowCutDebugger::validateCuts(const OsiCuts & cs,
       for (k=0; k<n; k++){
 	int column=indices[k];
         std::cout<<"( "<<column<<" , "<<elements[k]<<" ) ";
+	if ((k%4)==3)
+	  std::cout <<std::endl;
+      }
+      std::cout <<std::endl;
+      std::cout <<"Non zero solution values are"<<std::endl;
+      int j=0;
+      for (k=0; k<n; k++){
+	int column=indices[k];
+	if (fabs(optimalSolution_[column])>1.0e-9) {
+	  std::cout<<"( "<<column<<" , "<<optimalSolution_[column]<<" ) ";
+	  if ((j%4)==3)
+	    std::cout <<std::endl;
+	  j++;
+	}
       }
       std::cout <<std::endl;
       nbad++;
@@ -103,8 +117,22 @@ bool OsiRowCutDebugger::invalidCut(const OsiRowCut & rcut) const
     for (k=0; k<n; k++){
       int column=indices[k];
       std::cout<<"( "<<column<<" , "<<elements[k]<<" ) ";
+      if ((k%4)==3)
+	std::cout <<std::endl;
     }
-    std::cout<<std::endl;
+    std::cout <<std::endl;
+    std::cout <<"Non zero solution values are"<<std::endl;
+    int j=0;
+    for (k=0; k<n; k++){
+      int column=indices[k];
+      if (fabs(optimalSolution_[column])>1.0e-9) {
+	std::cout<<"( "<<column<<" , "<<optimalSolution_[column]<<" ) ";
+	if ((j%4)==3)
+	  std::cout <<std::endl;
+	j++;
+      }
+    }
+    std::cout <<std::endl;
     bad=true;
   }
   return bad;

@@ -8,7 +8,12 @@
 #undef NDEBUG
 #endif
 #endif
- 
+#ifdef CBC_STATISTICS
+extern int osi_crunch;
+extern int osi_primal;
+extern int osi_dual;
+extern int osi_hot;
+#endif 
 #include "CoinTime.hpp"
 #include "CoinHelperFunctions.hpp"
 #include "CoinIndexedVector.hpp"
@@ -993,6 +998,11 @@ void OsiClpSolverInterface::resolve()
   } else {
     //modelPtr_->setLogLevel(63);
     //modelPtr_->setDualTolerance(1.0e-7);
+    if (false&&modelPtr_->scalingFlag_>0&&!modelPtr_->rowScale_&&
+	!modelPtr_->rowCopy_&&matrixByRow_) {
+      assert (matrixByRow_->getNumElements()==modelPtr_->clpMatrix()->getNumElements());
+      modelPtr_->setNewRowCopy(new ClpPackedMatrix(*matrixByRow_));
+    }
     if (algorithm<0) {
       //writeMps("try1");
       int savePerturbation = modelPtr_->perturbation();
@@ -1022,6 +1032,9 @@ void OsiClpSolverInterface::resolve()
 	  smallModel_=NULL;
 	}
 #endif
+#ifdef CBC_STATISTICS
+	osi_dual++;
+#endif 
 	modelPtr_->dual(0,startFinishOptions);
 	totalIterations += modelPtr_->numberIterations();
 	if (specialScale) {
@@ -1029,6 +1042,9 @@ void OsiClpSolverInterface::resolve()
 	  modelPtr_->columnScale_ = NULL;
 	}
       } else {
+#ifdef CBC_STATISTICS
+	osi_crunch++;
+#endif 
 	crunch();
 	totalIterations += modelPtr_->numberIterations();
 	if (modelPtr_->problemStatus()==4)
@@ -1148,6 +1164,9 @@ void OsiClpSolverInterface::resolve()
       }
 #endif
       //printf("doing primal\n");
+#ifdef CBC_STATISTICS
+      osi_primal++;
+#endif 
       modelPtr_->primal(1,startFinishOptions);
       totalIterations += modelPtr_->numberIterations();
       lastAlgorithm_=1; // primal
@@ -1524,6 +1543,9 @@ bool OsiClpSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
 //#############################################################################
 void OsiClpSolverInterface::markHotStart()
 {
+#ifdef CBC_STATISTICS
+  osi_hot++;
+#endif 
   //printf("HotStart options %x changed %x, small %x spare %x\n",
   // specialOptions_,modelPtr_->whatsChanged_,
   // smallModel_,spareArrays_);
@@ -1560,6 +1582,7 @@ void OsiClpSolverInterface::markHotStart()
 #define CLEAN_HOT_START
 #ifdef CLEAN_HOT_START
   if ((specialOptions_&65536)!=0) {
+    //specialOptions_ |= 65536;
     saveData_.scalingFlag_=modelPtr_->logLevel();
     if (modelPtr_->logLevel()<2)
       modelPtr_->setLogLevel(0);
@@ -1943,9 +1966,19 @@ void OsiClpSolverInterface::markHotStart()
     smallModel_=small;
     if (modelPtr_->logLevel()<2) smallModel_->setLogLevel(0);
     // Setup for strong branching
-    //int numberColumns2 = smallModel_->numberColumns();
+    int numberColumns2 = smallModel_->numberColumns();
     CoinMemcpyN( modelPtr_->columnLower(),numberColumns, saveLowerOriginal);
     CoinMemcpyN( modelPtr_->columnUpper(),numberColumns, saveUpperOriginal);
+    const double * smallLower = smallModel_->columnLower();
+    const double * smallUpper = smallModel_->columnUpper();
+    // But modify if bounds changed in small
+    for (int i=0;i<numberColumns2;i++) {
+      int iColumn = whichColumn[i];
+      saveLowerOriginal[iColumn] = CoinMax(saveLowerOriginal[iColumn],
+					   smallLower[i]);
+      saveUpperOriginal[iColumn] = CoinMin(saveUpperOriginal[iColumn],
+					   smallUpper[i]);
+    }
     if (whichRange_&&whichRange_[0]) {
       // get ranging information
       int numberToDo = whichRange_[0];
@@ -2661,6 +2694,7 @@ const CoinPackedMatrix * OsiClpSolverInterface::getMatrixByRow() const
     std::cout<<"stop check"<<std::endl;
 #endif
   }
+  assert (matrixByRow_->getNumElements()==modelPtr_->clpMatrix()->getNumElements());
   return matrixByRow_;
 }
 
@@ -3218,7 +3252,19 @@ OsiClpSolverInterface::deleteRows(const int num, const int * rowIndices)
     delete [] indices;
   }
   basis_.deleteRows(num,rowIndices);
+  CoinPackedMatrix * saveRowCopy = matrixByRow_;
+  matrixByRow_=NULL;
   freeCachedResults();
+  modelPtr_->setNewRowCopy(NULL);
+  if (saveRowCopy) {
+#if 1
+    matrixByRow_=saveRowCopy;
+    matrixByRow_->deleteRows(num,rowIndices);
+    assert (matrixByRow_->getNumElements()==modelPtr_->clpMatrix()->getNumElements());
+#else
+    delete saveRowCopy;
+#endif
+  }
   lastAlgorithm_ = saveAlgorithm;
   if ((specialOptions_&131072)!=0) 
     lastNumberRows_=modelPtr_->numberRows();
@@ -3531,7 +3577,7 @@ OsiClpSolverInterface::writeMpsNative(const char *filename,
 ClpSimplex * OsiClpSolverInterface::getModelPtr() const
 {
   int saveAlgorithm = lastAlgorithm_;
-  freeCachedResults();
+  //freeCachedResults();
   lastAlgorithm_ = saveAlgorithm;
   //bool inCbcOrOther = (modelPtr_->specialOptions()&0x03000000)!=0;
   return modelPtr_;
@@ -3564,6 +3610,7 @@ smallestChangeInCut_(1.0e-10),
 largestAway_(-1.0),
 spareArrays_(NULL),
 matrixByRow_(NULL),
+matrixByRowAtContinuous_(NULL),  
 integerInformation_(NULL),
 whichRange_(NULL),
 cleanupScaling_(0),
@@ -3628,6 +3675,7 @@ itlimOrig_(9999999),
 lastAlgorithm_(0),
 notOwned_(false),
 matrixByRow_(NULL),
+matrixByRowAtContinuous_(NULL),  
 integerInformation_(NULL),
 whichRange_(NULL)
 {
@@ -3644,6 +3692,8 @@ whichRange_(NULL)
     continuousModel_ = new ClpSimplex(*rhs.continuousModel_);
   else
     continuousModel_ = NULL;
+  if (rhs.matrixByRowAtContinuous_)
+    matrixByRowAtContinuous_ = new CoinPackedMatrix(*rhs.matrixByRowAtContinuous_);
   if ( rhs.disasterHandler_  ) 
     disasterHandler_ = dynamic_cast<OsiClpDisasterHandler *>(rhs.disasterHandler_->clone());
   else
@@ -3701,6 +3751,7 @@ itlimOrig_(9999999),
 lastAlgorithm_(0),
 notOwned_(false),
 matrixByRow_(NULL),
+matrixByRowAtContinuous_(NULL),  
 integerInformation_(NULL),
 whichRange_(NULL),
 cleanupScaling_(0),
@@ -3764,6 +3815,8 @@ OsiClpSolverInterface::~OsiClpSolverInterface ()
   assert(factorization_==NULL);
   assert(spareArrays_==NULL);
   delete [] integerInformation_;
+  delete matrixByRowAtContinuous_;
+  delete matrixByRow_;
 }
 
 //-------------------------------------------------------------------
@@ -3791,6 +3844,13 @@ OsiClpSolverInterface::operator=(const OsiClpSolverInterface& rhs)
       continuousModel_ = new ClpSimplex(*rhs.continuousModel_);
     else
       continuousModel_ = NULL;
+    delete matrixByRowAtContinuous_;
+    delete matrixByRow_;
+    matrixByRow_=NULL;
+    if (rhs.matrixByRowAtContinuous_)
+      matrixByRowAtContinuous_ = new CoinPackedMatrix(*rhs.matrixByRowAtContinuous_);
+    else
+      matrixByRowAtContinuous_=NULL;
     delete disasterHandler_;
     if ( rhs.disasterHandler_  ) 
       disasterHandler_ = dynamic_cast<OsiClpDisasterHandler *>(rhs.disasterHandler_->clone());
@@ -3884,6 +3944,8 @@ OsiClpSolverInterface::applyRowCuts(int numberCuts, const OsiRowCut ** cuts)
   if (!numberCuts)
     return;
   modelPtr_->whatsChanged_ &= (0xffff&~(1|2|4|16|32));
+  CoinPackedMatrix * saveRowCopy = matrixByRow_;
+  matrixByRow_=NULL;
 #if 0 // was #ifndef NDEBUG
   int nameDiscipline;
   getIntParam(OsiNameDiscipline,nameDiscipline) ;
@@ -3969,8 +4031,18 @@ OsiClpSolverInterface::applyRowCuts(int numberCuts, const OsiRowCut ** cuts)
     modelPtr_->createEmptyMatrix();
   //modelPtr_->matrix()->appendRows(numberCuts,rows);
   modelPtr_->clpMatrix()->appendMatrix(numberCuts,0,starts,indices,elements);
+  modelPtr_->setNewRowCopy(NULL);
   freeCachedResults1();
   redoScaleFactors( numberCuts,starts, indices, elements);
+  if (saveRowCopy) {
+#if 1
+    matrixByRow_=saveRowCopy;
+    matrixByRow_->appendRows(numberCuts,starts,indices,elements,0);
+    assert (matrixByRow_->getNumElements()==modelPtr_->clpMatrix()->getNumElements());
+#else
+    delete saveRowCopy;
+#endif
+  }
   delete [] starts;
   delete [] indices;
   delete [] elements;
@@ -6198,6 +6270,10 @@ OsiClpSolverInterface::setHintParam(OsiHintParam key, bool yesNo,
 void 
 OsiClpSolverInterface::crunch()
 {
+  //if (modelPtr_->scalingFlag_>0&&!modelPtr_->rowScale_&&
+  //  modelPtr_->rowCopy_) {
+  //printf("BBBB could crunch2\n");
+  //}
   int numberColumns = modelPtr_->numberColumns();
   int numberRows = modelPtr_->numberRows();
   int totalIterations=0;
@@ -7788,6 +7864,11 @@ OsiClpSolverInterface::saveBaseModel()
 {
   delete continuousModel_;
   continuousModel_ = new ClpSimplex(*modelPtr_);
+  delete matrixByRowAtContinuous_;
+  matrixByRowAtContinuous_ = new CoinPackedMatrix();
+  matrixByRowAtContinuous_->setExtraGap(0.0);
+  matrixByRowAtContinuous_->setExtraMajor(0.0);
+  matrixByRowAtContinuous_->reverseOrderedCopyOf(*modelPtr_->matrix());
   //continuousModel_->createRim(63);
 }
 // Pass in disaster handler
@@ -7817,6 +7898,17 @@ OsiClpSolverInterface::restoreBaseModel(int numberRows)
       modelPtr_->rowCopy_=NULL;
     }
     modelPtr_->copy(continuousModel_->matrix_,modelPtr_->matrix_);
+    if (matrixByRowAtContinuous_) {
+      if (matrixByRow_) {
+	*matrixByRow_ = *matrixByRowAtContinuous_;
+      } else {
+	//printf("BBBB could new\n");
+	// matrixByRow_ = new CoinPackedMatrix(*matrixByRowAtContinuous_);
+      }
+    } else {
+      delete matrixByRow_;
+      matrixByRow_=NULL;
+    }
   } else {
     OsiSolverInterface::restoreBaseModel(numberRows);
   }
@@ -8052,16 +8144,16 @@ OsiClpSolverInterface::tightenBounds(int lightweight)
   if (nTightened)
     numberColumns=0; // so will skip
   for (iColumn=0;iColumn<numberColumns;iColumn++) {
-    CoinBigIndex start = columnStart[iColumn];
-    CoinBigIndex end = start + columnLength[iColumn];
     double lower = columnLower[iColumn];
     double upper = columnUpper[iColumn];
-    if (lower<-1.0e8&&upper>1.0e8)
-      continue; // Could do severe damage to accuracy
     double gap = upper-lower;
     if (!gap)
       continue;
     int canGo=0;
+    CoinBigIndex start = columnStart[iColumn];
+    CoinBigIndex end = start + columnLength[iColumn];
+    if (lower<-1.0e8&&upper>1.0e8)
+      continue; // Could do severe damage to accuracy
     if (integerInformation_[iColumn]) {
       if (lower!=floor(lower+0.5)) {
 #ifdef COIN_DEVELOP

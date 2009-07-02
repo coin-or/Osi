@@ -1217,6 +1217,9 @@ protected:
   /// Pointer to row-wise copy of problem matrix coefficients.
   mutable CoinPackedMatrix *matrixByRow_;  
   
+  /// Pointer to row-wise copy of continuous problem matrix coefficients.
+  CoinPackedMatrix *matrixByRowAtContinuous_;  
+  
   /// Pointer to integer information
   char * integerInformation_;
   

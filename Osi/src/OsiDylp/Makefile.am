@@ -1,4 +1,4 @@
-# Copyright (C) 2006 International Business Machines and others.
+# Copyright (C) 2006, 2009 International Business Machines and others.
 # All Rights Reserved.
 # This file is distributed under the Common Public License.
 
@@ -29,13 +29,24 @@ libOsiDylp_la_LDFLAGS = $(LT_LDFLAGS)
 # "cygpath" stuff is necessary to compile with native compilers on Windows.
 # "top_srcdir" refers to the basic directory for the main package that is
 # being compiled.
-AM_CPPFLAGS = \
+AM_CPPFLAGS = -I`$(CYGPATH_W) $(srcdir)/..`
+
+if COIN_HAS_COINUTILS_PREINSTALLED
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(COINUTILSINSTDIR)/include/coin`
+else
+  AM_CPPFLAGS += \
 	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
-	-I`$(CYGPATH_W) $(COINUTILSOBJDIR)/inc` \
+	-I`$(CYGPATH_W) $(COINUTILSOBJDIR)/inc`
+endif
+
+if COIN_HAS_DYLP_PREINSTALLED
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(DYLPINSTDIR)/include/coin`
+else
+  AM_CPPFLAGS += \
 	-I`$(CYGPATH_W) $(DYLPSRCDIR)/src/DylpStdLib` \
 	-I`$(CYGPATH_W) $(DYLPSRCDIR)/src/Dylp` \
-	-I`$(CYGPATH_W) $(DYLPOBJDIR)/inc` \
-	-I`$(CYGPATH_W) $(srcdir)/..`
+	-I`$(CYGPATH_W) $(DYLPOBJDIR)/inc`
+endif
 
 # This line is necessary to allow VPATH compilation with MS compilers
 # on Cygwin

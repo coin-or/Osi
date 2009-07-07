@@ -1,4 +1,4 @@
-# Copyright (C) 2006 International Business Machines and others.
+# Copyright (C) 2006, 2009 International Business Machines and others.
 # All Rights Reserved.
 # This file is distributed under the Common Public License.
 
@@ -29,12 +29,23 @@ libOsiCbc_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Needed by any OsiCbc configuration.
 
-AM_CPPFLAGS = \
+AM_CPPFLAGS = -I`$(CYGPATH_W) $(srcdir)/..`
+
+if COIN_HAS_COINUTILS_PREINSTALLED
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(COINUTILSINSTDIR)/include/coin`
+else
+  AM_CPPFLAGS += \
 	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
-	-I`$(CYGPATH_W) $(COINUTILSOBJDIR)/inc` \
+	-I`$(CYGPATH_W) $(COINUTILSOBJDIR)/inc`
+endif
+
+if COIN_HAS_CBC_PREINSTALLED
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(CBCINSTDIR)/include/coin`
+else
+  AM_CPPFLAGS += \
 	-I`$(CYGPATH_W) $(CBCSRCDIR)/src` \
-	-I`$(CYGPATH_W) $(CBCOBJDIR)/inc` \
-	-I`$(CYGPATH_W) $(srcdir)/..`
+	-I`$(CYGPATH_W) $(CBCOBJDIR)/inc`
+endif
 
 # Plus the appropriate include directories for the default solver. The
 # underlying configuration macro (Osi/m4/ac_osicbc_config.m4) is set up to
@@ -47,9 +58,14 @@ AM_CPPFLAGS = \
 # -- lh, January 2008 --
 
 if OSICBC_DFLT_SOLVER_CLP
-  AM_CPPFLAGS += -I`$(CYGPATH_W) $(srcdir)/../OsiClp` \
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(srcdir)/../OsiClp`
+if COIN_HAS_CLP_PREINSTALLED
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(CLPINSTDIR)/include/coin`
+else
+  AM_CPPFLAGS += \
 	-I`$(CYGPATH_W) $(CLPSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(CLPOBJDIR)/inc`
+endif
 endif
 
 if OSICBC_DFLT_SOLVER_CPX
@@ -58,20 +74,20 @@ if OSICBC_DFLT_SOLVER_CPX
 endif
 
 if OSICBC_DFLT_SOLVER_DYLP
-  AM_CPPFLAGS += -I`$(CYGPATH_W) $(srcdir)/../OsiDylp` \
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(srcdir)/../OsiDylp`
+if COIN_HAS_DYLP_PREINSTALLED
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(DYLPINSTDIR)/include/coin`
+else
+  AM_CPPFLAGS += \
 	-I`$(CYGPATH_W) $(DYLPSRCDIR)/src/Dylp` \
 	-I`$(CYGPATH_W) $(DYLPSRCDIR)/src/DylpStdLib` \
 	-I`$(CYGPATH_W) $(DYLPOBJDIR)/inc`
+endif
 endif
 
 if OSICBC_DFLT_SOLVER_FMP
   AM_CPPFLAGS += -I`$(CYGPATH_W) $(srcdir)/../OsiFmp` \
 	-I`$(CYGPATH_W) $(FMPINCDIR)`
-endif
-
-if OSICBC_DFLT_SOLVER_GLPK
-  AM_CPPFLAGS += -I`$(CYGPATH_W) $(srcdir)/../OsiGlpk` \
-	-I`$(CYGPATH_W) $(GLPKINCDIR)`
 endif
 
 if OSICBC_DFLT_SOLVER_GLPK

@@ -38,11 +38,22 @@ libOsiSym_la_LDFLAGS = $(LT_LDFLAGS)
 # "cygpath" stuff is necessary to compile with native compilers on Windows.
 # "top_srcdir" refers to the basic directory for the main package that is
 # being compiled.
-AM_CPPFLAGS = \
+AM_CPPFLAGS = -I`$(CYGPATH_W) $(srcdir)/..`
+
+if COIN_HAS_COINUTILS_PREINSTALLED
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(COINUTILSINSTDIR)/include/coin`
+else
+  AM_CPPFLAGS += \
 	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
-	-I`$(CYGPATH_W) $(COINUTILSOBJDIR)/inc` \
-	-I`$(CYGPATH_W) $(SYMPHONYSRCDIR)/include` \
-	-I`$(CYGPATH_W) $(srcdir)/..`
+	-I`$(CYGPATH_W) $(COINUTILSOBJDIR)/inc`
+endif
+
+if COIN_HAS_SYMPHONY_PREINSTALLED
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(SYMPHONYINSTDIR)/include/coin`
+else
+  AM_CPPFLAGS += \
+	-I`$(CYGPATH_W) $(SYMPHONYSRCDIR)/include`
+endif
 
 # This line is necessary to allow VPATH compilation with MS compilers
 # on Cygwin

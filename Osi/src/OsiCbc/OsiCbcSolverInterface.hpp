@@ -696,6 +696,13 @@ public:
     /// Final status of problem - 0 finished, 1 stopped, 2 difficulties
     inline int status() const
   { return modelPtr_->status();}
+  /** Pass in a message handler
+  
+    It is the client's responsibility to destroy a message handler installed
+    by this routine; it will not be destroyed when the solver interface is
+    destroyed. 
+  */
+  virtual void passInMessageHandler(CoinMessageHandler * handler);
   //@}
   
   //---------------------------------------------------------------------------

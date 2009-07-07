@@ -4265,15 +4265,11 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
   Returns: whatever it gets from dylp
 */
 
-{ int retries,ndx,cndx,flips ;
-  basis_struct *basis ;
+{ int retries;
   lpret_enum lpret ;
   lpopts_struct lcl_opts ;
   lptols_struct lcl_tols ;
   flags persistent_flags ;
-  const char *rtnnme = "do_lp" ;
-
-  bool *flipped ;
 
 # ifdef ODSI_INFOMSGS
   int print = 1 ;
@@ -4336,6 +4332,9 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
   deletion of empty constraints, but the OSI test suite isn't tolerant of
   changing the sense of constraints, let alone removing a few. Arguably a
   good thing.
+
+  const char *rtnnme = "do_lp" ;
+  bool *flipped ;
 
   flipped = (bool *) CALLOC(lpprob->consys->concnt+1,sizeof(bool)) ;
   flips = 0 ;
@@ -4465,6 +4464,9 @@ lpret_enum ODSI::do_lp (ODSI_start_enum start)
   corresponding dual is flipped. (Or just look at it as yA = (-y)(-A).)  We
   need to walk the basis here. If dylp is in dynamic mode, there may be fewer
   active constraints than when we started.
+
+  int ndx,cndx,flips ;
+  basis_struct *basis ;
 
   if (flips > 0)
   { for (ndx = lpprob->consys->concnt ; ndx > 0 ; ndx--)

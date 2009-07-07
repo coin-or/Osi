@@ -43,8 +43,8 @@
 
 #include <vector>
 #include <cassert>
-#include <iostream>
 #include "OsiDylpWarmStartBasis.hpp"
+#include "CoinMessageHandler.hpp"
 
 #ifndef ODSI_PARANOIA
 # define ODSI_PARANOIA 1
@@ -803,7 +803,7 @@ void ODWSB::print () const
   there should be exactly enough basic variables for the active constraints.
 */
 
-void ODWSB::checkBasis () const
+void ODWSB::checkBasis (CoinMessageHandler* msghandler) const
 
 { int i ;
   bool retval = true ;
@@ -830,17 +830,20 @@ void ODWSB::checkBasis () const
     logStat = getArtifStatus(i) ;
     if (conStat == CWSB::isFree)
     { if (logStat != CWSB::basic)
-      { std::cerr << "Basis error! Logical for inactive constraint " << i
-		  << " is nonbasic." << std::endl ;
+      { if (msghandler)
+		*msghandler << "Basis error! Logical for inactive constraint " << i
+		  << " is nonbasic." << CoinMessageEol ;
 	retval = false ; } }
     else
     if (conStat == CWSB::atLowerBound)
     { if (logStat == CWSB::basic)
       { numBasicLog++ ; } }
     else
-    { std::cerr << "Basis error! Status of constraint " << i
-		<< " is " << conStat << ". Should be isFree or atLowerBound."
-		<< std::endl ;
+    { 
+      if (msghandler)
+		*msghandler << "Basis error! Status of constraint " << i
+			<< " is " << conStat << ". Should be isFree or atLowerBound."
+			<< CoinMessageEol ;
       retval = false ; } }
 /*
   The number of basic variables (basic structural, plus basic logicals
@@ -852,19 +855,20 @@ void ODWSB::checkBasis () const
 */
   if (numBasicStruct+numBasicLog != numActCons)
   { if (numBasicStruct+numBasicLog < numActCons)
-    { std::cerr << "Basis warning! " ; }
+    { if (msghandler) *msghandler << "Basis warning! " ; }
     else
-    { std::cerr << "Basis error! " ;
+    { if (msghandler) *msghandler << "Basis error! " ;
       retval = false ; }
-    std::cerr << numActCons << " active constraints but ("
+    if (msghandler)
+    	*msghandler << numActCons << " active constraints but ("
 	      << numBasicStruct << "+" << numBasicLog
-	      << ") basic variables." << std::endl ; }
+	      << ") basic variables." << CoinMessageEol ; }
 
   if (retval == false)
-  { std::cerr << "Basis consistency check failed!" << std::endl ; }
+  { if (msghandler) *msghandler << "Basis consistency check failed!" << CoinMessageEol ; }
 # if ODSI_PARANOIA >= 3
   else
-  { std::cerr << "Basis consistency check passed!" << std::endl ; }
+  { if (msghandler) *msghanlder << "Basis consistency check passed!" << CoinMessageEol ; }
 # endif
   
   return ; }

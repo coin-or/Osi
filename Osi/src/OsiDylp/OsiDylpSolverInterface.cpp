@@ -5894,7 +5894,7 @@ CoinWarmStart* ODSI::getWarmStart () const
 
 # if ODSI_PARANOIA >= 2
   if (wsb)
-  { wsb->checkBasis() ; }
+  { wsb->checkBasis(messageHandler()) ; }
 # endif
 
   return (wsb) ; }
@@ -6058,7 +6058,7 @@ bool ODSI::setWarmStart (const CoinWarmStart *ws)
   { wsb = new OsiDylpWarmStartBasis(*cwsb) ;
     ourBasis = true ; }
 # if ODSI_PARANOIA >= 2
-  wsb->checkBasis() ;
+  wsb->checkBasis(messageHandler()) ;
 # endif
   varcnt = wsb->getNumStructural() ;
   concnt = wsb->getNumArtificial() ;

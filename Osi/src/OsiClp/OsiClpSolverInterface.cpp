@@ -2870,6 +2870,16 @@ OsiClpSolverInterface::addCol(int numberElements, const int * rows, const double
   CoinPackedVector column(numberElements, rows, elements);
   addCol(column,collb,colub,obj);
 }
+// Add a named column (primal variable) to the problem.
+void 
+OsiClpSolverInterface::addCol(const CoinPackedVectorBase& vec,
+		      const double collb, const double colub,   
+		      const double obj, std::string name) 
+{
+  int ndx = getNumCols() ;
+  addCol(vec,collb,colub,obj) ;
+  setColName(ndx,name) ;
+}
 //-----------------------------------------------------------------------------
 void 
 OsiClpSolverInterface::addCols(const int numcols,
@@ -3039,6 +3049,15 @@ OsiClpSolverInterface::addRow(const CoinPackedVectorBase& vec,
     modelPtr_->createEmptyMatrix();
   modelPtr_->matrix()->appendRow(vec);
   freeCachedResults1();
+}
+//-----------------------------------------------------------------------------
+void OsiClpSolverInterface::addRow(const CoinPackedVectorBase& vec,
+				const double rowlb, const double rowub,
+				std::string name)
+{
+  int ndx = getNumRows() ;
+  addRow(vec,rowlb,rowub) ;
+  setRowName(ndx,name) ;
 }
 //-----------------------------------------------------------------------------
 void 
@@ -4081,13 +4100,15 @@ void OsiClpSolverInterface::freeCachedResults() const
   //ws_ = NULL;
   if (modelPtr_&&modelPtr_->clpMatrix()) {
     modelPtr_->clpMatrix()->refresh(modelPtr_); // make sure all clean
-#ifndef NDEBUG
     ClpPackedMatrix * clpMatrix = dynamic_cast<ClpPackedMatrix *> (modelPtr_->clpMatrix());
     if (clpMatrix) {
+      if (clpMatrix->getNumRows()>modelPtr_->getNumRows())
+	throw CoinError("Number of rows increased","addCol(s)","OsiClpSolverInterface");
+      if (clpMatrix->getNumCols()>modelPtr_->getNumCols())
+	throw CoinError("Number of columnss increased","addRow(s)","OsiClpSolverInterface");
       assert (clpMatrix->getNumRows()==modelPtr_->getNumRows());
       assert (clpMatrix->getNumCols()==modelPtr_->getNumCols());
     }
-#endif
   }
 }
 
@@ -4464,6 +4485,15 @@ OsiClpSolverInterface::readMps(const char *filename,
     }
     modelPtr_->copyNames(rowNames,columnNames);
   }
+  return numberErrors;
+}
+int 
+OsiClpSolverInterface::readMps(const char *filename, const char*extension,
+			    int & numberSets, CoinSet ** & sets)
+{
+  int numberErrors = readMps(filename,extension);
+  numberSets= numberSOS_;
+  sets = &setInfo_;
   return numberErrors;
 }
 /* Read an mps file from the given filename returns

@@ -112,6 +112,7 @@ includecoin_HEADERS = \
 	OsiCuts.hpp \
 	OsiOpbdpSolve.hpp \
 	OsiPresolve.hpp \
+	OsiSolverBranch.hpp \
 	OsiSolverInterface.hpp \
 	OsiSolverParameters.hpp \
 	OsiRowCut.hpp \

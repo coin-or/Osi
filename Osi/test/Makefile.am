@@ -81,6 +81,8 @@ if COIN_HAS_ASL
   unitTest_LDADD += $(ASLLIB)
   AM_CPPFLAGS += $(ASL_CPPFLAGS) -DCOIN_HAS_ASL
 endif
+  # Need this to handle circular library references (grrrr...)
+  LIBS += ../src/libOsi.la
 endif
 
 if COIN_HAS_SYMPHONY

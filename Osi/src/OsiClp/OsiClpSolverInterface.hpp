@@ -685,11 +685,16 @@ public:
      continuous variable. */
   //@{
 
-  using OsiSolverInterface::addCol ;
+  //using OsiSolverInterface::addCol ;
   /** */
   virtual void addCol(const CoinPackedVectorBase& vec,
                       const double collb, const double colub,   
                       const double obj);
+  /*! \brief Add a named column (primal variable) to the problem.
+  */
+  virtual void addCol(const CoinPackedVectorBase& vec,
+		      const double collb, const double colub,   
+		      const double obj, std::string name) ;
   /** Add a column (primal variable) to the problem. */
   virtual void addCol(int numberElements, const int * rows, const double * elements,
                       const double collb, const double colub,   
@@ -707,11 +712,18 @@ public:
   /** */
   virtual void deleteCols(const int num, const int * colIndices);
   
-  using OsiSolverInterface::addRow ;
   /** */
   virtual void addRow(const CoinPackedVectorBase& vec,
                       const double rowlb, const double rowub);
   /** */
+    /*! \brief Add a named row (constraint) to the problem.
+    
+      The default implementation adds the row, then changes the name. This
+      can surely be made more efficient within an OsiXXX class.
+    */
+    virtual void addRow(const CoinPackedVectorBase& vec,
+			const double rowlb, const double rowub,
+			std::string name) ;
   virtual void addRow(const CoinPackedVectorBase& vec,
                       const char rowsen, const double rowrhs,   
                       const double rowrng);
@@ -877,6 +889,9 @@ public:
   /** Read an mps file from the given filename returns
       number of errors (see OsiMpsReader class) */
   int readMps(const char *filename,bool keepNames,bool allowErrors);
+  /// Read an mps file
+  virtual int readMps (const char *filename, const char*extension,
+			int & numberSets, CoinSet ** & sets);
   
   /** Write the problem into an mps file of the given filename.
       If objSense is non zero then -1.0 forces the code to write a

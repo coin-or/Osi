@@ -880,3 +880,12 @@ OsiCbcSolverInterface::passInMessageHandler(CoinMessageHandler * handler)
   if (modelPtr_)
     modelPtr_->passInMessageHandler(handler);
 }
+// So unit test can find out if NDEBUG set
+bool OsiCbcHasNDEBUG() 
+{
+#ifdef NDEBUG
+  return true;
+#else
+  return false;
+#endif
+}

@@ -193,7 +193,6 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       assert( !fim.isIntegerNonBinary(2) );
       assert( !fim.isIntegerNonBinary(3) );
       assert( !fim.isIntegerNonBinary(4) );
-
       // Test fractionalIndices
       {
         double sol[]={2.9,3.0};
@@ -237,6 +236,7 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       assert( !fim.isIntegerNonBinary(4) );
     }
     // Test some catches
+      if (!OsiClpHasNDEBUG())
     {
       OsiClpSolverInterface solver;
       try {

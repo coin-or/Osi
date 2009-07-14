@@ -185,6 +185,7 @@ OsiCbcSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
 
     }
     // Test some catches
+      if (!OsiCbcHasNDEBUG())
     { bool thrown ;
 
       thrown = false ;

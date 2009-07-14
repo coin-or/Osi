@@ -749,6 +749,8 @@ protected:
   mutable CbcModel * modelPtr_;
   //@}
 };
+// So unit test can find out if NDEBUG set
+bool OsiCbcHasNDEBUG();
 
 //#############################################################################
 /** A function that tests the methods in the OsiCbcSolverInterface class. The

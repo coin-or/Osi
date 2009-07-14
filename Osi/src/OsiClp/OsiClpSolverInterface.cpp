@@ -1,13 +1,6 @@
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
-
 #include <cassert>
-#ifndef CLP_FAST_CODE
-// If NDEBUG defined then Osi unit test fails but code will be slightly faster
-#ifdef NDEBUG
-#undef NDEBUG
-#endif
-#endif
 #ifdef CBC_STATISTICS
 extern int osi_crunch;
 extern int osi_primal;
@@ -1012,7 +1005,29 @@ void OsiClpSolverInterface::resolve()
       //writeMpsNative("bad",NULL,NULL,2,1,1.0);
       disasterHandler_->setOsiModel(this);
       bool inCbcOrOther = (modelPtr_->specialOptions()&0x03000000)!=0;
-      if((specialOptions_&1)==0||(specialOptions_&2048)!=0/*||true*/) {
+#if 0
+      // See how many integers fixed
+      bool skipCrunch=true;
+      const char * integerInformation = modelPtr_->integerType_;
+      if (integerInformation) {
+	int numberColumns = modelPtr_->numberColumns_;
+	const double * lower = modelPtr_->columnLower();
+	const double * upper = modelPtr_->columnUpper();
+	int target=CoinMax(1,numberColumns/10000);
+	for (int i=0;i<numberColumns;i++) {
+	  if (integerInformation[i]) {
+	    if (lower[i]==upper[i]) {
+	      target--;
+	      if (!target) {
+		skipCrunch=false;
+		break;
+	      }
+	    }
+	  }
+	}
+      }
+#endif
+      if((specialOptions_&1)==0||(specialOptions_&2048)!=0/*||skipCrunch*/) {
 	disasterHandler_->setWhereFrom(0); // dual
 	if (inCbcOrOther)
 	  modelPtr_->setDisasterHandler(disasterHandler_);
@@ -3277,6 +3292,8 @@ OsiClpSolverInterface::deleteRows(const int num, const int * rowIndices)
   matrixByRow_=NULL;
   freeCachedResults();
   modelPtr_->setNewRowCopy(NULL);
+  delete modelPtr_->scaledMatrix_;
+  modelPtr_->scaledMatrix_=NULL;
   if (saveRowCopy) {
 #if 1
     matrixByRow_=saveRowCopy;
@@ -4224,6 +4241,10 @@ void OsiClpSolverInterface::freeCachedResults() const
   delete [] rhs_;
   delete [] rowrange_;
   delete matrixByRow_;
+  if (modelPtr_&&modelPtr_->scaledMatrix_) {
+    delete modelPtr_->scaledMatrix_;
+    modelPtr_->scaledMatrix_=NULL;
+  }
   //delete ws_;
   rowsense_=NULL;
   rhs_=NULL;
@@ -4264,6 +4285,8 @@ void OsiClpSolverInterface::freeCachedResults1() const
   matrixByRow_=NULL;
   //ws_ = NULL;
   if (modelPtr_&&modelPtr_->clpMatrix()) {
+    delete modelPtr_->scaledMatrix_;
+    modelPtr_->scaledMatrix_=NULL;
     modelPtr_->clpMatrix()->refresh(modelPtr_); // make sure all clean
 #ifndef NDEBUG
     ClpPackedMatrix * clpMatrix = dynamic_cast<ClpPackedMatrix *> (modelPtr_->clpMatrix());
@@ -7699,6 +7722,9 @@ OsiClpSolverInterface::restoreBaseModel(int numberRows)
     modelPtr_->numberRows_ = numberRows;
     //ClpDisjointCopyN ( continuousModel_->columnLower_, modelPtr_->numberColumns_,modelPtr_->columnLower_ );
     //ClpDisjointCopyN ( continuousModel_->columnUpper_, modelPtr_->numberColumns_,modelPtr_->columnUpper_ );
+    // Could keep copy of scaledMatrix_ around??
+    delete modelPtr_->scaledMatrix_;
+    modelPtr_->scaledMatrix_=NULL;
     if (continuousModel_->rowCopy_) {
       modelPtr_->copy(continuousModel_->rowCopy_,modelPtr_->rowCopy_);
     } else {
@@ -8584,4 +8610,13 @@ OsiClpSolverInterface::generateCpp( FILE * fp)
   fprintf(fp,"%d  osiclpModel->getHintParam(OsiDoReducePrint,saveHint_OsiDoReducePrint,saveStrength_OsiDoReducePrint);\n",add+1);
   fprintf(fp,"%d  osiclpModel->setHintParam(OsiDoReducePrint,%s,%s);\n",add+3,takeHint1 ? "true" : "false",strengthName[strength1].c_str());
   fprintf(fp,"%d  osiclpModel->setHintParam(OsiDoReducePrint,saveHint_OsiDoReducePrint,saveStrength_OsiDoReducePrint);\n",add+6);
+}
+// So unit test can find out if NDEBUG set
+bool OsiClpHasNDEBUG() 
+{
+#ifdef NDEBUG
+  return true;
+#else
+  return false;
+#endif
 }

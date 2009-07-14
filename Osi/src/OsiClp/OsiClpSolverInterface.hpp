@@ -1390,7 +1390,8 @@ protected:
       
   //@}
 };
-
+// So unit test can find out if NDEBUG set
+bool OsiClpHasNDEBUG();
 //#############################################################################
 /** A function that tests the methods in the OsiClpSolverInterface class. The
     only reason for it not to be a member method is that this way it doesn't

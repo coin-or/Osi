@@ -1279,7 +1279,8 @@ protected:
       256 Clean up model before hot start
       512 Give user direct access to Clp regions in getBInvARow etc
       1024 Don't "borrow" model in initialSolve
-      2048 try and reuse everything
+      2048 Don't crunch
+      4096 quick check for optimality
       Bits above 8192 give where called from in Cbc
       At present 0 is normal, 1 doing fast hotstarts, 2 is can do quick check
       65536 Keep simple i.e. no  crunch etc

@@ -717,8 +717,8 @@ private:
 				 double& pcost);
     /** Starting from the primal vector x, run a heuristic to produce
 	an integer solution. This is not done in LP solving. */
-    virtual int heuristics(const VOL_problem& p, 
-			   const VOL_dvector& x, double& heur_val) {
+  virtual int heuristics(const VOL_problem& /*p*/, 
+			 const VOL_dvector& /*x*/, double& heur_val) {
       heur_val = DBL_MAX;
       return 0;
     }

@@ -778,7 +778,7 @@ void OsiClpSolverInterface::resolve()
   assert (gotHint);
   // mark so we can pick up objective value quickly
   modelPtr_->upperIn_=0.0;
-  if (((specialOptions_>>10)&2)!=0) {
+  if ((specialOptions_&4096)!=0) {
     // Quick check to see if optimal
     modelPtr_->checkSolutionInternal();
     if (modelPtr_->problemStatus()==0) {
@@ -2731,12 +2731,12 @@ OsiClpSolverInterface::getMutableMatrixByCol() const
 }
 
 //------------------------------------------------------------------
-std::vector<double*> OsiClpSolverInterface::getDualRays(int maxNumRays) const
+std::vector<double*> OsiClpSolverInterface::getDualRays(int /*maxNumRays*/) const
 {
   return std::vector<double*>(1, modelPtr_->infeasibilityRay());
 }
 //------------------------------------------------------------------
-std::vector<double*> OsiClpSolverInterface::getPrimalRays(int maxNumRays) const
+std::vector<double*> OsiClpSolverInterface::getPrimalRays(int /*maxNumRays*/) const
 {
   return std::vector<double*>(1, modelPtr_->unboundedRay());
 }
@@ -5103,7 +5103,7 @@ OsiClpSolverInterface::setRowName(int rowIndex, std::string name)
 // Return name of row if one exists or Rnnnnnnn
 // we ignore maxLen
 std::string 
-OsiClpSolverInterface::getRowName(int rowIndex, unsigned maxLen) const
+OsiClpSolverInterface::getRowName(int rowIndex, unsigned int /*maxLen*/) const
 { 
 	if (rowIndex == getNumRows())
 		return getObjName();
@@ -5126,7 +5126,7 @@ OsiClpSolverInterface::setColName(int colIndex, std::string name)
 }
 // Return name of col if one exists or Rnnnnnnn
 std::string 
-OsiClpSolverInterface::getColName(int colIndex, unsigned maxLen) const
+OsiClpSolverInterface::getColName(int colIndex, unsigned int /*maxLen*/) const
 {
   return modelPtr_->getColumnName(colIndex);
 }
@@ -5559,9 +5559,9 @@ OsiClpSolverInterface::primalPivotResult(int colIn, int sign,
    Return code: same
 */
 int 
-OsiClpSolverInterface::dualPivotResult(int& colIn, int& sign, 
-			      int colOut, int outStatus, 
-			      double& t, CoinPackedVector* dx)
+OsiClpSolverInterface::dualPivotResult(int& /*colIn*/, int& /*sign*/, 
+				       int /*colOut*/, int /*outStatus*/, 
+				       double& /*t*/, CoinPackedVector* /*dx*/)
 {
   assert (modelPtr_->solveType()==2);
   abort();

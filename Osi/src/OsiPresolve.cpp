@@ -1341,7 +1341,7 @@ static bool isGapFree(const CoinPackedMatrix& matrix)
   return (! (i >= 0));
 }
 CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
-				       double maxmin_,
+				       double /*maxmin_*/,
 				       // end prepost members
 				       OsiSolverInterface * si,
 				       // rowrep
@@ -1528,8 +1528,8 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
     printf("NC: %6d\n", hincol[i]);
 #endif
 
-  presolve_make_memlists(mcstrt_, hincol_, clink_, ncols_);
-  presolve_make_memlists(mrstrt_, hinrow_, rlink_, nrows_);
+  presolve_make_memlists(/*mcstrt_,*/ hincol_, clink_, ncols_);
+  presolve_make_memlists(/*mrstrt_,*/ hinrow_, rlink_, nrows_);
 
   // this allows last col/row to expand up to bufsize-1 (22);
   // this must come after the calls to presolve_prefix
@@ -1544,9 +1544,9 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
 }
 
 void CoinPresolveMatrix::update_model(OsiSolverInterface * si,
-				     int nrows0,
-				     int ncols0,
-				     CoinBigIndex nelems0)
+				      int /*nrows0*/,
+				      int /*ncols0*/,
+				      CoinBigIndex /*nelems0*/)
 {
   int nels=0;
   int i;

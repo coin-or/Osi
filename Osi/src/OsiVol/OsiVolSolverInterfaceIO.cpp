@@ -414,14 +414,16 @@ OsiVolSolverInterface::readMps(const char *filename, const char *extension)
 void 
 OsiVolSolverInterface::writeMps(const char *filename,
 				const char *extension,
-				double objSense) const
+				double /*objSense*/) const
 {
    CoinMpsIO writer;
    writer.setMpsData(*getMatrixByCol(), getInfinity(),
 		     getColLower(), getColUpper(),
-		     getObjCoefficients(), (const char*) 0 /*integrality*/,
+		     getObjCoefficients(), 
+		     reinterpret_cast<const char *> (NULL) /*integrality*/,
 		     getRowLower(), getRowUpper(),
-		     (const char**) 0 /*colnam*/, (const char**) 0 /*rownam*/);
+		     reinterpret_cast<const char **> (NULL) /*colnam*/, 
+		     reinterpret_cast<const char **> (NULL) /*rownam*/);
    std::string fname = filename;
    if (extension)
    { if (extension[0] != '\0' && extension[0] != '.')

@@ -826,7 +826,7 @@ OsiVolSolverInterface::getMatrixByCol() const {
 // Problem information methods (results)
 //#############################################################################
 
-std::vector<double*> OsiVolSolverInterface::getDualRays(int maxNumRays) const
+std::vector<double*> OsiVolSolverInterface::getDualRays(int /*maxNumRays*/) const
 {
   // *FIXME* : must write the method -LL
   throw CoinError("method is not yet written", "getDualRays",
@@ -834,7 +834,7 @@ std::vector<double*> OsiVolSolverInterface::getDualRays(int maxNumRays) const
   return std::vector<double*>();
 }
 //------------------------------------------------------------------
-std::vector<double*> OsiVolSolverInterface::getPrimalRays(int maxNumRays) const
+std::vector<double*> OsiVolSolverInterface::getPrimalRays(int /*maxNumRays*/) const
 {
   // *FIXME* : must write the method -LL
   throw CoinError("method is not yet written", "getPrimalRays",
@@ -1266,6 +1266,7 @@ OsiVolSolverInterface::clone(bool copyData) const {
 //-----------------------------------------------------------------------
 
 OsiVolSolverInterface::OsiVolSolverInterface(const OsiVolSolverInterface& x) :
+  OsiSolverInterface(x),
    rowMatrixCurrent_(true),
    rowMatrix_(),
    colMatrixCurrent_(true),

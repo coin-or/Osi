@@ -1733,7 +1733,7 @@ int OGSI::getIterationCount() const
 
 //-----------------------------------------------------------------------------
 
-std::vector<double*> OGSI::getDualRays(int maxNumRays) const
+std::vector<double*> OGSI::getDualRays(int /*maxNumRays*/) const
 {
 	// ??? not yet implemented.
 	throw CoinError("method is not yet implemented", "getDualRays", "OsiGlpkSolverInterface");
@@ -1742,7 +1742,7 @@ std::vector<double*> OGSI::getDualRays(int maxNumRays) const
 
 //-----------------------------------------------------------------------------
 
-std::vector<double*> OGSI::getPrimalRays(int maxNumRays) const
+std::vector<double*> OGSI::getPrimalRays(int /*maxNumRays*/) const
 {
 	// ??? not yet implemented.
 	throw CoinError("method is not yet implemented", "getPrimalRays", "OsiGlpkSolverInterface");
@@ -2787,7 +2787,7 @@ int OGSI::readMps (const char *filename,
 
 void OGSI::writeMps( const char * filename,
 				       const char * extension,
-				       double objSense ) const
+		     double /*objSense*/ ) const
 {
 	// Could be in OsiSolverInterfaceImpl.
 #if 1
@@ -3143,7 +3143,9 @@ void OGSI::gutsOfCopy (const OsiGlpkSolverInterface &source)
     { int stati = lpx_get_row_stat(srclpx,i) ;
       lpx_set_row_stat(lpx,i,stati) ; }
 
+#ifndef NDEBUG
     int retval = lpx_warm_up(lpx) ;
+#endif
 #   if OGSI_TRACK_SOLVERS > 1
     std::cout
       << "    lpx_warm_up returns " << retval << "." << std::endl ;

@@ -699,6 +699,12 @@ public:
   virtual void addCol(int numberElements, const int * rows, const double * elements,
                       const double collb, const double colub,   
                       const double obj) ;
+  /*! \brief Add a named column (primal variable) to the problem.
+   */
+  virtual void addCol(int numberElements,
+		      const int* rows, const double* elements,
+		      const double collb, const double colub,   
+		      const double obj, std::string name) ;
   /** */
   virtual void addCols(const int numcols,
                        const CoinPackedVectorBase * const * cols,
@@ -730,6 +736,11 @@ public:
   /** Add a row (constraint) to the problem. */
   virtual void addRow(int numberElements, const int * columns, const double * element,
 		      const double rowlb, const double rowub) ;
+    /*! \brief Add a named row (constraint) to the problem.
+    */
+    virtual void addRow(const CoinPackedVectorBase& vec,
+			const char rowsen, const double rowrhs,   
+			const double rowrng, std::string name) ;
   /** */
   virtual void addRows(const int numrows,
                        const CoinPackedVectorBase * const * rows,

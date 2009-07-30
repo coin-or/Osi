@@ -88,7 +88,7 @@ public:
     NOTE - Convention says that an infeasibility of COIN_DBL_MAX means 
     object has worked out it can't be satisfied!
   */
-  virtual double infeasibility(const OsiSolverInterface * solver,int &whichWay) const ;
+  double infeasibility(const OsiSolverInterface * solver,int &whichWay) const ;
   // Faster version when more information available
   virtual double infeasibility(const OsiBranchingInformation * info, int &whichWay) const =0;
   // This does NOT set mutable stuff
@@ -111,7 +111,9 @@ public:
       The branching object has to know how to create branches (fix
       variables, etc.)
   */
-  virtual OsiBranchingObject * createBranch(OsiSolverInterface * solver, const OsiBranchingInformation * info, int way) const = 0;
+  virtual OsiBranchingObject * createBranch(OsiSolverInterface * /*solver*/,
+					    const OsiBranchingInformation * /*info*/,
+					    int /*way*/) const {throw CoinError("Need code","createBranch","OsiBranchingObject");}
   
   /** \brief Return true if object can take part in normal heuristics
   */

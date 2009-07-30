@@ -8179,6 +8179,29 @@ OsiClpSolverInterface::getSizeU() const
 {
   return modelPtr_->factorization_->numberElementsU();
 }
+/* Add a named row (constraint) to the problem.
+ */
+void 
+OsiClpSolverInterface::addRow(const CoinPackedVectorBase& vec,
+       const char rowsen, const double rowrhs,   
+       const double rowrng, std::string name) 
+{
+  int ndx = getNumRows() ;
+  addRow(vec,rowsen,rowrhs,rowrng) ;
+  setRowName(ndx,name) ;
+}
+/* Add a named column (primal variable) to the problem.
+ */
+void 
+OsiClpSolverInterface::addCol(int numberElements,
+       const int* rows, const double* elements,
+       const double collb, const double colub,   
+       const double obj, std::string name) 
+{
+  int ndx = getNumCols() ;
+  addCol(numberElements,rows,elements,collb,colub,obj) ;
+  setColName(ndx,name) ;
+}
 /* Start faster dual - returns negative if problems 1 if infeasible,
    Options to pass to solver
    1 - create external reduced costs for columns

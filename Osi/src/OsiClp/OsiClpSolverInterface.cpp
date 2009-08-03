@@ -689,6 +689,7 @@ void OsiClpSolverInterface::initialSolve()
       solver->setSpecialOptions(solver->specialOptions()|1024);
     }
     solver->initialSolve(options);
+    totalIterations += solver->numberIterations();
     lastAlgorithm_ = 2; // say dual
     // If scaled feasible but unscaled infeasible take action
     if (!solver->status()&&cleanupScaling_) {

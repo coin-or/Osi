@@ -691,6 +691,7 @@ void OsiClpSolverInterface::initialSolve()
       solver->setSpecialOptions(solver->specialOptions()|1024);
     }
     solver->initialSolve(options);
+    totalIterations += solver->numberIterations();
     if (solver->status()==1) {
       // try again (also may be unbounded)
       solver->dual();
@@ -4081,13 +4082,15 @@ void OsiClpSolverInterface::freeCachedResults() const
   //ws_ = NULL;
   if (modelPtr_&&modelPtr_->clpMatrix()) {
     modelPtr_->clpMatrix()->refresh(modelPtr_); // make sure all clean
-#ifndef NDEBUG
     ClpPackedMatrix * clpMatrix = dynamic_cast<ClpPackedMatrix *> (modelPtr_->clpMatrix());
     if (clpMatrix) {
+      if (clpMatrix->getNumRows()>modelPtr_->getNumRows())
+	throw CoinError("Number of rows increased","addCol(s)","OsiClpSolverInterface");
       assert (clpMatrix->getNumRows()==modelPtr_->getNumRows());
+      if (clpMatrix->getNumCols()>modelPtr_->getNumCols())
+	throw CoinError("Number of columnss increased","addRow(s)","OsiClpSolverInterface");
       assert (clpMatrix->getNumCols()==modelPtr_->getNumCols());
     }
-#endif
   }
 }
 

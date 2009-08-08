@@ -447,6 +447,14 @@ public:
   */
   virtual const char * getColType(bool refresh=false) const;
   
+  /** Return true if column is integer but does not have to
+      be declared as such.
+      Note: This function returns true if the the column
+      is binary or a general integer.
+  */
+  bool isOptionalInteger(int colIndex) const;
+  /** Set the index-th variable to be an optional integer variable */
+  void setOptionalInteger(int index);
   
   /// Get pointer to row-wise copy of matrix
   virtual const CoinPackedMatrix * getMatrixByRow() const;

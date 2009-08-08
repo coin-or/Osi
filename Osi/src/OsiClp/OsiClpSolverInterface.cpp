@@ -2691,6 +2691,42 @@ OsiClpSolverInterface::getColType(bool refresh) const
   return columnType_;
 }
 
+/* Return true if column is integer but does not have to
+   be declared as such.
+   Note: This function returns true if the the column
+   is binary or a general integer.
+*/
+bool 
+OsiClpSolverInterface::isOptionalInteger(int colNumber) const
+{
+#ifndef NDEBUG
+  int n = modelPtr_->numberColumns();
+  if (colNumber<0||colNumber>=n) {
+    indexError(colNumber,"isInteger");
+  }
+#endif
+  if ( integerInformation_==NULL || integerInformation_[colNumber]!=2 ) 
+    return false;
+  else
+    return true;
+}
+/* Set the index-th variable to be an optional integer variable */
+void 
+OsiClpSolverInterface::setOptionalInteger(int index)
+{
+  if (!integerInformation_) {
+    integerInformation_ = new char[modelPtr_->numberColumns()];
+    CoinFillN ( integerInformation_, modelPtr_->numberColumns(),static_cast<char> (0));
+  }
+#ifndef NDEBUG
+  int n = modelPtr_->numberColumns();
+  if (index<0||index>=n) {
+    indexError(index,"setInteger");
+  }
+#endif
+  integerInformation_[index]=2;
+  modelPtr_->setInteger(index);
+}
 
 //------------------------------------------------------------------
 // Row and column copies of the matrix ...
@@ -4257,8 +4293,10 @@ void OsiClpSolverInterface::freeCachedResults() const
 #ifndef NDEBUG
     ClpPackedMatrix * clpMatrix = dynamic_cast<ClpPackedMatrix *> (modelPtr_->clpMatrix());
     if (clpMatrix) {
-      assert (clpMatrix->getNumRows()==modelPtr_->getNumRows());
-      assert (clpMatrix->getNumCols()==modelPtr_->getNumCols());
+      if (clpMatrix->getNumCols())
+	assert (clpMatrix->getNumRows()==modelPtr_->getNumRows());
+      if (clpMatrix->getNumRows())
+	assert (clpMatrix->getNumCols()==modelPtr_->getNumCols());
     }
 #endif
   }
@@ -8108,14 +8146,20 @@ OsiClpSolverInterface::tightenBounds(int lightweight)
 #if COIN_DEVELOP>2
 	    printf("dual fix down on column %d\n",iColumn);
 #endif
-	    nTightened++;;
-	    setColUpper(iColumn,lower);
+	    // Only if won't cause numerical problems
+	    if (lower>-1.0e10) {
+	      nTightened++;
+	      setColUpper(iColumn,lower);
+	    }
 	  } else if (objValue<=0.0&&(canGo&2)==0) {
 #if COIN_DEVELOP>2
 	    printf("dual fix up on column %d\n",iColumn);
 #endif
-	    nTightened++;;
-	    setColLower(iColumn,upper);
+	    // Only if won't cause numerical problems
+	    if (upper<1.0e10) {
+	      nTightened++;
+	      setColLower(iColumn,upper);
+	    }
 	  }
 	}	    
       }
@@ -8145,7 +8189,7 @@ OsiClpSolverInterface::tightenBounds(int lightweight)
 #endif
 	  // Only if won't cause numerical problems
 	  if (lower>-1.0e10) {
-	    nTightened++;;
+	    nTightened++;
 	    setColUpper(iColumn,lower);
 	  }
 	} else if (objValue<=0.0&&(canGo&2)==0) {
@@ -8155,7 +8199,7 @@ OsiClpSolverInterface::tightenBounds(int lightweight)
 #endif
 	  // Only if won't cause numerical problems
 	  if (upper<1.0e10) {
-	    nTightened++;;
+	    nTightened++;
 	    setColLower(iColumn,upper);
 	  }
 	}

@@ -7091,14 +7091,20 @@ OsiClpSolverInterface::tightenBounds(int lightweight)
 #if COIN_DEVELOP>2
 	    printf("dual fix down on column %d\n",iColumn);
 #endif
-	    nTightened++;;
-	    setColUpper(iColumn,lower);
+	    // Only if won't cause numerical problems
+	    if (lower>-1.0e10) {
+	      nTightened++;;
+	      setColUpper(iColumn,lower);
+	    }
 	  } else if (objValue<=0.0&&(canGo&2)==0) {
 #if COIN_DEVELOP>2
 	    printf("dual fix up on column %d\n",iColumn);
 #endif
-	    nTightened++;;
-	    setColLower(iColumn,upper);
+	    // Only if won't cause numerical problems
+	    if (upper<1.0e10) {
+	      nTightened++;;
+	      setColLower(iColumn,upper);
+	    }
 	  }
 	}	    
       }

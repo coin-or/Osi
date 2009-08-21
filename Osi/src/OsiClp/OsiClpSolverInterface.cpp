@@ -3005,7 +3005,7 @@ OsiClpSolverInterface::deleteCols(const int num, const int * columnIndices)
 	  break;
 	}
       }
-      OsiSolverInterface::deleteColNames(firstDelete,num2-firstDelete);
+      OsiSolverInterface::deleteColNames(indices[firstDelete],num2-firstDelete);
       num2 = firstDelete;
       assert (num2>=0);
     }
@@ -3215,7 +3215,7 @@ OsiClpSolverInterface::deleteRows(const int num, const int * rowIndices)
 	  break;
 	}
       }
-      OsiSolverInterface::deleteRowNames(firstDelete,num2-firstDelete);
+      OsiSolverInterface::deleteRowNames(indices[firstDelete],num2-firstDelete);
       num2 = firstDelete;
       assert (num2>=0);
     }

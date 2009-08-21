@@ -2282,6 +2282,7 @@ void OsiClpSolverInterface::solveFromHotStart()
       columnScale = smallModel_->columnScale();
     }
     // and do bounds in case dual needs them
+    // may be infeasible
     for (i=0;i<numberColumns2;i++) {
       int iColumn = whichColumn[i];
       if (lowerBig[iColumn]>saveLowerOriginal[iColumn]) {
@@ -2300,13 +2301,22 @@ void OsiClpSolverInterface::solveFromHotStart()
           value /= columnScale[i];
         upperSmall[i]=value;
       }
+      if (upperSmall[i]<lowerSmall[i])
+	break;
     }
+    bool infeasible = (i<numberColumns2);
     // Start of fast iterations
     bool alwaysFinish= ((specialOptions_&32)==0) ? true : false;
     //smallModel_->setLogLevel(1);
     smallModel_->setIntParam(ClpMaxNumIteration,itlim);
     int saveNumberFake = (static_cast<ClpSimplexDual *>(smallModel_))->numberFake_;
-    int status = static_cast<ClpSimplexDual *>(smallModel_)->fastDual(alwaysFinish);
+    int status;
+    if (!infeasible) {
+      status = static_cast<ClpSimplexDual *>(smallModel_)->fastDual(alwaysFinish);
+    } else {
+      status=0;
+      smallModel_->setProblemStatus(1);
+    }
     (static_cast<ClpSimplexDual *>(smallModel_))->numberFake_ = saveNumberFake;
     if (smallModel_->numberIterations()==-98) {
       printf("rrrrrrrrrrrr\n");
@@ -3099,7 +3109,7 @@ OsiClpSolverInterface::deleteCols(const int num, const int * columnIndices)
 	  break;
 	}
       }
-      OsiSolverInterface::deleteColNames(firstDelete,num2-firstDelete);
+      OsiSolverInterface::deleteColNames(indices[firstDelete],num2-firstDelete);
       num2 = firstDelete;
       assert (num2>=0);
     }
@@ -3318,7 +3328,7 @@ OsiClpSolverInterface::deleteRows(const int num, const int * rowIndices)
 	  break;
 	}
       }
-      OsiSolverInterface::deleteRowNames(firstDelete,num2-firstDelete);
+      OsiSolverInterface::deleteRowNames(indices[firstDelete],num2-firstDelete);
       num2 = firstDelete;
       assert (num2>=0);
     }

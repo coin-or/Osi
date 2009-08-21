@@ -150,6 +150,10 @@ bool OsiRowCutDebugger::onOptimalPath(const OsiSolverInterface & si) const
     const double * colupper = si.getColUpper();
     bool onOptimalPath=true;
     for (i=0;i<numberColumns_;i++) {
+      if (collower[i]>colupper[i]+1.0e-12) {
+	printf("Infeasible bounds for %d - %g, %g\n",
+	       i,collower[i],colupper[i]);
+      }
       if (si.isInteger(i)) {
 	// value of integer variable in solution
 	double value=optimalSolution_[i]; 

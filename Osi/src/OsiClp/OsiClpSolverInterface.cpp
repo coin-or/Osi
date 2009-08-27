@@ -2301,7 +2301,7 @@ void OsiClpSolverInterface::solveFromHotStart()
           value /= columnScale[i];
         upperSmall[i]=value;
       }
-      if (upperSmall[i]<lowerSmall[i])
+      if (upperSmall[i]<lowerSmall[i]-1.0e-8)
 	break;
     }
     bool infeasible = (i<numberColumns2);

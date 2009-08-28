@@ -5645,7 +5645,7 @@ vector<double *> ODSI::getDualRays (int maxNumRays) const
 */
   numRays = maxNumRays ;
   dylpRays = 0 ;
-  if (dy_dualRays(lpprob,&numRays,&dylpRays) == false)
+  if (dy_dualRays(lpprob,true,&numRays,&dylpRays,true) == false)
   { hdl->message(ODSI_FAILEDCALL,messages_)
       << rtnnme << "dy_dualRays"
       << CoinMessageEol ;
@@ -5656,7 +5656,7 @@ vector<double *> ODSI::getDualRays (int maxNumRays) const
 */
   int m = getNumRows() ;
   for (int v = 0 ; v < numRays ; v++)
-  { double *tmpVec = CoinCopyOfArray(INV_VEC(double,dylpRays[v]),m) ;
+  { double *tmpVec = CoinCopyOfArray(inv_vec(dylpRays[v]),m) ;
     dualRays.push_back(tmpVec) ;
     FREE(dylpRays[v]) ; }
   FREE(dylpRays) ;
@@ -5708,13 +5708,12 @@ vector<double*> ODSI::getPrimalRays (int maxNumRays) const
 */
   int m = getNumRows() ;
   for (int v = 0 ; v < numRays ; v++)
-  { double *tmpVec = CoinCopyOfArray(INV_VEC(double,dylpRays[v]),m) ;
+  { double *tmpVec = CoinCopyOfArray(inv_vec(dylpRays[v]),m) ;
     primalRays.push_back(tmpVec) ;
     FREE(dylpRays[v]) ; }
   FREE(dylpRays) ;
 
   return (primalRays) ; }
-
 
 /*!
   dylp is strictly a simplex LP solver.

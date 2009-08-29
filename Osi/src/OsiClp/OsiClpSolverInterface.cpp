@@ -62,6 +62,7 @@ void OsiClpSolverInterface::initialSolve()
   ClpObjective * savedObjective=NULL;
   double savedDualLimit=modelPtr_->dblParam_[ClpDualObjectiveLimit];
   if (fakeObjective_) {
+    modelPtr_->setMoreSpecialOptions(modelPtr_->moreSpecialOptions()&(~128));
     // See if all with costs fixed
     int numberColumns = modelPtr_->numberColumns_;
     const double * obj = modelPtr_->objective();
@@ -76,11 +77,14 @@ void OsiClpSolverInterface::initialSolve()
       }
     }
     if (i==numberColumns) {
-      // Set fake
-      savedObjective=modelPtr_->objective_;
-      modelPtr_->objective_=fakeObjective_;
-      modelPtr_->dblParam_[ClpDualObjectiveLimit]=COIN_DBL_MAX;
-      //modelPtr_->setMoreSpecialOptions(modelPtr_->moreSpecialOptions()|32);
+      if ((specialOptions_&524288)==0) {
+	// Set fake
+	savedObjective=modelPtr_->objective_;
+	modelPtr_->objective_=fakeObjective_;
+	modelPtr_->dblParam_[ClpDualObjectiveLimit]=COIN_DBL_MAX;
+      } else {
+	modelPtr_->setMoreSpecialOptions(modelPtr_->moreSpecialOptions()|128);
+      }
     }
   }
   if ((specialOptions_&1024)==0) {
@@ -792,6 +796,7 @@ void OsiClpSolverInterface::resolve()
   ClpObjective * savedObjective=NULL;
   double savedDualLimit=modelPtr_->dblParam_[ClpDualObjectiveLimit];
   if (fakeObjective_) {
+    modelPtr_->setMoreSpecialOptions(modelPtr_->moreSpecialOptions()&(~128));
     // See if all with costs fixed
     int numberColumns = modelPtr_->numberColumns_;
     const double * obj = modelPtr_->objective();
@@ -806,11 +811,14 @@ void OsiClpSolverInterface::resolve()
       }
     }
     if (i==numberColumns) {
-      // Set fake
-      savedObjective=modelPtr_->objective_;
-      modelPtr_->objective_=fakeObjective_;
-      modelPtr_->dblParam_[ClpDualObjectiveLimit]=COIN_DBL_MAX;
-      //modelPtr_->setMoreSpecialOptions(modelPtr_->moreSpecialOptions()|32);
+      if ((specialOptions_&524288)==0) {
+	// Set fake
+	savedObjective=modelPtr_->objective_;
+	modelPtr_->objective_=fakeObjective_;
+	modelPtr_->dblParam_[ClpDualObjectiveLimit]=COIN_DBL_MAX;
+      } else {
+	modelPtr_->setMoreSpecialOptions(modelPtr_->moreSpecialOptions()|128);
+      }
     }
   }
   // If using Clp initialSolve and primal - just do here
@@ -1573,6 +1581,7 @@ void OsiClpSolverInterface::markHotStart()
   ClpObjective * savedObjective=NULL;
   double savedDualLimit=modelPtr_->dblParam_[ClpDualObjectiveLimit];
   if (fakeObjective_) {
+    modelPtr_->setMoreSpecialOptions(modelPtr_->moreSpecialOptions()&(~128));
     // See if all with costs fixed
     int numberColumns = modelPtr_->numberColumns_;
     const double * obj = modelPtr_->objective();
@@ -1587,12 +1596,15 @@ void OsiClpSolverInterface::markHotStart()
       }
     }
     if (i==numberColumns) {
-      // Set fake
-      savedObjective=modelPtr_->objective_;
-      modelPtr_->objective_=fakeObjective_;
-      modelPtr_->dblParam_[ClpDualObjectiveLimit]=COIN_DBL_MAX;
-      //modelPtr_->setMoreSpecialOptions(modelPtr_->moreSpecialOptions()|32);
-      saveData_.perturbation_=1;
+      if ((specialOptions_&524288)==0) {
+	// Set fake
+	savedObjective=modelPtr_->objective_;
+	modelPtr_->objective_=fakeObjective_;
+	modelPtr_->dblParam_[ClpDualObjectiveLimit]=COIN_DBL_MAX;
+	saveData_.perturbation_=1;
+      } else {
+	modelPtr_->setMoreSpecialOptions(modelPtr_->moreSpecialOptions()|128);
+      }
     }
   }
 #define CLEAN_HOT_START
@@ -6133,7 +6145,7 @@ OsiClpSolverInterface::setHintParam(OsiHintParam key, bool yesNo,
         specialOptions_=0;
       }
       // set normal
-      specialOptions_ &= (2047+3*8192+7*65536);
+      specialOptions_ &= (2047+3*8192+15*65536);
       if (otherInformation!=NULL) {
         int * array = static_cast<int *> (otherInformation);
         if (array[0]>=0||array[0]<=2)

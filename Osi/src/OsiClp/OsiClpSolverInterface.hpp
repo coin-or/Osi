@@ -1305,6 +1305,7 @@ protected:
       65536 Keep simple i.e. no  crunch etc
       131072 Try and keep scaling factors around
       262144 Don't try and tighten bounds (funny global cuts)
+      524288 Fake objective and 0-1
   */
   mutable unsigned int specialOptions_;
   /// Copy of model when option 131072 set

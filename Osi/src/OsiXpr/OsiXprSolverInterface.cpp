@@ -1748,7 +1748,7 @@ OsiXprSolverInterface::loadProblem(const int numcols, const int numrows,
   // Set column values to defaults if NULL pointer passed
   int nc = numcols;
   int nr = numrows;
-  int * len = new int[nc];
+  int * len = new int[nc+1];
   double * clb;  
   double * cub;
   double * ob;
@@ -1812,7 +1812,7 @@ OsiXprSolverInterface::loadProblem(const int numcols, const int numrows,
 
     fprintf(getLogFilePtr(),"  int vectorLengths[%d];\n",nc);
     for ( i=0; i<nc; i++ )
-      fprintf(getLogFilePtr(),"  vectorLengths[%d]=%d;\n",i,len[i]);
+      fprintf(getLogFilePtr(),"  vectorLengths[%d]=%d;\n",i,len[i+1]);
     
     fprintf(getLogFilePtr(),"  int indices[%d];\n",start[nc]);
     for ( i=0; i<start[nc]; i++ )
@@ -1832,7 +1832,7 @@ OsiXprSolverInterface::loadProblem(const int numcols, const int numrows,
 			const_cast<double*>(rowrng),
 			ob,
 			const_cast<int*>(start),
-			const_cast<int*>(len),
+			const_cast<int*>(len+1),
 			const_cast<int*>(index),
 			const_cast<double*>(value),
 			clb,

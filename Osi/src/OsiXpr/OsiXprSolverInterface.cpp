@@ -1748,7 +1748,7 @@ OsiXprSolverInterface::loadProblem(const int numcols, const int numrows,
   // Set column values to defaults if NULL pointer passed
   int nc = numcols;
   int nr = numrows;
-  int * len = new int[nc];
+  int * len = new int[nc+1];
   double * clb;  
   double * cub;
   double * ob;

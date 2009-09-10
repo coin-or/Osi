@@ -1207,10 +1207,12 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
   // bell5
   else if ( modelL == "bell5" ) {
     probType=generalMip;
-    int intIndicesV[]={0,1,2,3,4,6,12,13,15,33,34,36,47,48,49,50,
-		       51,52,53,54,56};
-    double intSolnV[] = {1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,11.,
-	2.,38.,2.,498.,125.,10.,17.,41.,19.};
+    int intIndicesV[]={
+      0 ,1 ,2 ,3 ,4 ,6 ,33 ,34 ,36 ,47 ,
+      48 ,49 ,50 ,51 ,52 ,53 ,54 ,56 };
+    double intSolnV[]={
+      1. ,1. ,1. ,1. ,1. ,1. ,1. ,1. ,11. ,2. ,
+      38. ,2. ,498. ,125. ,10. ,17. ,41. ,19. };
     int vecLen = sizeof(intIndicesV)/sizeof(int);
     intSoln.setVector(vecLen,intIndicesV,intSolnV);
     expectedNumberColumns=104;

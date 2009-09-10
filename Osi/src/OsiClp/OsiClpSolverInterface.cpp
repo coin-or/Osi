@@ -6090,8 +6090,16 @@ OsiClpSolverInterface::getBasics(int* index) const
 {
   //assert (modelPtr_->solveType()==2||(specialOptions_&1)!=0);
   assert (index);
-  assert (modelPtr_->pivotVariable());
-  CoinMemcpyN(modelPtr_->pivotVariable(),	modelPtr_->numberRows(),index);
+  if (modelPtr_->pivotVariable()) {
+    CoinMemcpyN(modelPtr_->pivotVariable(),modelPtr_->numberRows(),index);
+  } else {
+    std::cerr<<"getBasics is only available with enableSimplexInterface."
+	     <<std::endl;
+    std::cerr<<"much of the same information can be had from getWarmStart."
+	     <<std::endl;
+    throw CoinError("No pivot variable array","getBasics",
+		    "OsiClpSolverInterface");
+  }
 }
 //Returns true if a basis is available and optimal
 bool 
@@ -6151,6 +6159,10 @@ OsiClpSolverInterface::setHintParam(OsiHintParam key, bool yesNo,
         if (array[0]>=0||array[0]<=2)
           specialOptions_ |= array[0]<<10;
       }
+    }
+    // Printing
+    if (key==OsiDoReducePrint) {
+      handler_->setLogLevel(yesNo ? 0 : 1);
     }
     return true;
   } else {

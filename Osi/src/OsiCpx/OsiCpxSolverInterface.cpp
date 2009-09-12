@@ -2197,10 +2197,24 @@ OsiCpxSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
   int nc=matrix.getNumCols();
   int nr=matrix.getNumRows();
 
-  if( nr == 0 || nc == 0 )   // empty LP?
+  if( nr == 0 && nc == 0 ) {  // empty LP
     gutsOfDestructor();      // -> kill old LP
-  else
-    {
+    return;
+  }
+  
+  if (nr == 0) {
+    int objDirection = CPXgetobjsen( env_, getMutableLpPtr() );
+
+    gutsOfDestructor(); // kill old LP
+    
+    int err = CPXnewcols( env_, getLpPtr(), nc, obj, collb, colub, NULL, NULL);
+    checkCPXerror( err, "CPXcopylp", "loadProblem" );
+    
+    CPXchgobjsen(env_, getLpPtr(), objDirection);
+    
+    return;
+  }
+
       if (rowsen == NULL)
       { lclRowsen = new char[nr] ;
 	CoinFillN(lclRowsen,nr,'G') ;
@@ -2317,7 +2331,6 @@ OsiCpxSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
 
       resizeColType(nc);
       CoinFillN(coltype_, nc, 'C');
-    }
 
   if (lclRowsen != NULL) delete[] lclRowsen ;
   if (lclRowrhs != NULL) delete[] lclRowrhs ;
@@ -2393,9 +2406,22 @@ OsiCpxSolverInterface::loadProblem(const int numcols, const int numrows,
   const int nc = numcols;
   const int nr = numrows;
 
-  if( nr == 0 || nc == 0 ) {
-    // empty LP? -> kill old LP
+  if( nr == 0 && nc == 0 ) {
+    // empty LP -> kill old LP
     gutsOfDestructor();
+    return;
+  }
+  
+  if (nr == 0) {
+    int objDirection = CPXgetobjsen( env_, getMutableLpPtr() );
+
+    gutsOfDestructor(); // kill old LP
+    
+    int err = CPXnewcols( env_, getLpPtr(), nc, obj, collb, colub, NULL, NULL);
+    checkCPXerror( err, "CPXcopylp", "loadProblem" );
+    
+    CPXchgobjsen(env_, getLpPtr(), objDirection);
+    
     return;
   }
 

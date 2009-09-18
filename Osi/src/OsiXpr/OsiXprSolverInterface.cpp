@@ -353,6 +353,9 @@ CoinWarmStart* OsiXprSolverInterface::getWarmStart() const
       case 2:
 	ws->setArtifStatus(i, CoinWarmStartBasis::atUpperBound);
 	break;
+      case 3:
+ 	ws->setArtifStatus(i, CoinWarmStartBasis::isFree);
+ 	break;
       default:	// unknown row status
 	delete ws;
 	ws = NULL;
@@ -374,6 +377,9 @@ CoinWarmStart* OsiXprSolverInterface::getWarmStart() const
       case 2:
 	ws->setStructStatus( i, CoinWarmStartBasis::atUpperBound );
 	break;
+      case 3:
+  ws->setStructStatus(i, CoinWarmStartBasis::isFree);
+  break;
       default:	// unknown column status
 	delete ws;
 	ws = NULL;

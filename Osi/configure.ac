@@ -69,13 +69,14 @@ AC_COIN_HAS_PROJECT(Vol)
 # Check which third party solvers are available. Cplex detection has been
 # tested on a semi-regular basis, and Mosek detection most likely works. For
 # the rest, it's anyone's guess.  -- lh, 080529 --
+# fixed detection of Mosek and Xpress -- stefan, 091003 (linux32, gcc) --
 
 AC_COIN_HAS_USER_LIBRARY([Cplex],[CPX],[cplex.h],[CPXgetstat])
 AC_COIN_HAS_USER_LIBRARY([FortMP],[FMP])  #ToDo! is Fortran?
-AC_COIN_HAS_USER_LIBRARY([Mosek],[MSK],[mosek.h],[MSK_openmosek])
+AC_COIN_HAS_USER_LIBRARY([Mosek],[MSK],[mosek.h],[MSK_makeenv])
 AC_COIN_HAS_USER_LIBRARY([Osl],[OSL],[ekk_c_api.h],[ekk_simplex])
 AC_COIN_HAS_USER_LIBRARY([Soplex],[SPX],[spxsolver.h]) # ToDo
-AC_COIN_HAS_USER_LIBRARY([Xpress],[XPR],[xprs.h],[XPRSsetintcontrol])
+AC_COIN_HAS_USER_LIBRARY([Xpress],[XPR],[xprs.h],[XPRSinit])
 
 # Glpk can be supplied as a ThirdParty code, or as an external library in the
 # same was as the previous solvers.
@@ -118,6 +119,17 @@ else
     AC_OGSI_MIPSOLVER()
   fi
 fi
+
+if test "$GXX" = "yes"; then
+  case "$CXX" in
+    icpc* | */icpc* | icc )
+      ;;
+    *)
+      MSKCXXFLAGS="-Wno-long-long"
+      ;;
+  esac
+fi
+AC_SUBST(MSKCXXFLAGS)
 
 ##############################################################################
 #                   Finishing up by writing all the output                   #

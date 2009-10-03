@@ -30,7 +30,7 @@ unitTest_LDADD =
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows
-AM_CPPFLAGS = \
+AM_CPPFLAGS = $(MSKCXXFLAGS) \
 	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(COINUTILSOBJDIR)/inc` \
 	-I`$(CYGPATH_W) $(srcdir)/../src`

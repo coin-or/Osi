@@ -20,6 +20,8 @@
 #include "OsiColCut.hpp"
 #include "CoinPackedMatrix.hpp"
 
+#include "mosek.h"
+
 void OsiMskSolverInterface::printBounds()
 {
   int nc = getNumCols();

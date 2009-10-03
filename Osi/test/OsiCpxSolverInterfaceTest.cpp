@@ -35,6 +35,7 @@
 // Added so build windows build with dsp files works,
 // when not building with cplex.
 #ifdef COIN_HAS_CPX
+#include "cplex.h"
 
 void OsiCpxSolverInterface::printBounds()
 {
@@ -79,7 +80,6 @@ void OsiCpxSolverInterfaceUnitTest( const std::string & mpsDir, const std::strin
 {
   // Test default constructor
   {
-    assert( OsiCpxSolverInterface::getNumInstances()==0 );
     OsiCpxSolverInterface m;
     assert( m.obj_==NULL );
     assert( m.collower_==NULL );
@@ -96,18 +96,15 @@ void OsiCpxSolverInterfaceUnitTest( const std::string & mpsDir, const std::strin
     assert( m.matrixByCol_==NULL );
     assert( m.coltype_==NULL );
     assert( m.coltypesize_==0 );
-    assert( OsiCpxSolverInterface::getNumInstances()==1 );
     assert( m.getApplicationData() == NULL );
     int i=2346;
     m.setApplicationData(&i);
     assert( *((int *)(m.getApplicationData())) == i );
   }
-  assert( OsiCpxSolverInterface::getNumInstances()==0 );
 
   {    
     CoinRelFltEq eq;
     OsiCpxSolverInterface m;
-    assert( OsiCpxSolverInterface::getNumInstances()==1 );
     std::string fn = mpsDir+"exmip1";
     m.readMps(fn.c_str(),"mps");
     int ad = 13579;
@@ -780,11 +777,7 @@ void OsiCpxSolverInterfaceUnitTest( const std::string & mpsDir, const std::strin
       assert( lhsmbr->getNumElements() == 14 );
     }
     
-    //--------------
-    
-    assert(OsiCpxSolverInterface::getNumInstances()==1);
   }
-  assert(OsiCpxSolverInterface::getNumInstances()==0);
 
     
   // Do common solverInterface testing by calling the

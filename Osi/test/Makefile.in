@@ -485,13 +485,13 @@ unitTest_LDADD = $(am__append_3) $(am__append_7) $(am__append_9) \
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows
-AM_CPPFLAGS = -I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` -I`$(CYGPATH_W) \
-	$(COINUTILSOBJDIR)/inc` -I`$(CYGPATH_W) $(srcdir)/../src` \
-	$(am__append_2) $(am__append_6) $(am__append_10) \
-	$(am__append_12) $(am__append_18) $(am__append_21) \
-	$(am__append_25) $(am__append_28) $(am__append_31) \
-	$(am__append_34) $(am__append_37) $(am__append_40) \
-	$(am__append_44)
+AM_CPPFLAGS = $(MSKCXXFLAGS) -I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
+	-I`$(CYGPATH_W) $(COINUTILSOBJDIR)/inc` -I`$(CYGPATH_W) \
+	$(srcdir)/../src` $(am__append_2) $(am__append_6) \
+	$(am__append_10) $(am__append_12) $(am__append_18) \
+	$(am__append_21) $(am__append_25) $(am__append_28) \
+	$(am__append_31) $(am__append_34) $(am__append_37) \
+	$(am__append_40) $(am__append_44)
 
 # This line is necessary to allow VPATH compilation with MS compilers
 # on Cygwin

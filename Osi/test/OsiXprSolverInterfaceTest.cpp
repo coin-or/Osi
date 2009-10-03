@@ -14,13 +14,9 @@
 
 #include <cassert>
 
-#ifndef __ANSIC_
-#  define __ANSIC_
-#  include <xpresso.h>
-#  undef  __ANSIC_
-#else
-#  include <xpresso.h>
-#endif
+#define __ANSIC_
+#include <xprs.h>
+#undef  __ANSIC_
 
 #include "OsiXprSolverInterface.hpp"
 #include "OsiCuts.hpp"
@@ -155,7 +151,7 @@ OsiXprSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     // Test infinity
     {
       OsiXprSolverInterface si;
-      assert( eq(si.getInfinity(), DPLINF) );
+      assert( eq(si.getInfinity(), XPRS_PLUSINFINITY) );
     }
 
     // Test setting solution

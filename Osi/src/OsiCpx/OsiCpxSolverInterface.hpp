@@ -1,5 +1,3 @@
-//  LAST EDIT: Fri Aug 31 13:54:15 2001 by Tobias Pfender (opt14!bzfpfend) 
-//  Last edit to OsiSimplexMethods: 10/7/05 by F. Margot
 //-----------------------------------------------------------------------------
 // name:     OSI Interface for CPLEX
 // author:   Tobias Pfender
@@ -15,17 +13,10 @@
 #ifndef OsiCpxSolverInterface_H
 #define OsiCpxSolverInterface_H
 
-#include <string>
-#include "cplex.h"
 #include "OsiSolverInterface.hpp"
-#include "CoinPackedMatrix.hpp"
-#include "CoinWarmStartBasis.hpp"
 
-// CPLEX 10.0 removed CPXERR_NO_INT_SOLN
-#if !defined(CPXERR_NO_INT_SOLN)
-#define CPXERR_NO_INT_SOLN CPXERR_NO_SOLN
-#endif
-
+typedef struct cpxlp*  CPXLPptr;
+typedef struct cpxenv* CPXENVptr;
 
 /** CPLEX Solver Interface
 
@@ -109,8 +100,7 @@ public:
     to provide a way to give a client a warm start basis object of the
     appropriate type, which can resized and modified as desired.
   */
-  inline CoinWarmStart *getEmptyWarmStart () const
-  { return (dynamic_cast<CoinWarmStart *>(new CoinWarmStartBasis())) ; }
+  CoinWarmStart *getEmptyWarmStart () const;
 
     /// Get warmstarting information
     virtual CoinWarmStart* getWarmStart() const;
@@ -589,6 +579,16 @@ public:
                           double objSense=0.0) const;
 
   //@}
+    
+    /**@name Message handling */
+    //@{
+    /** Pass in a message handler
+        It is the client's responsibility to destroy a message handler installed
+        by this routine; it will not be destroyed when the solver interface is
+        destroyed. 
+     */
+    void passInMessageHandler(CoinMessageHandler * handler);
+    //@}
 
   //---------------------------------------------------------------------------
 
@@ -631,32 +631,6 @@ public:
 
   /// return a vector of variable types (continous, binary, integer)
   const char* getCtype() const;
-  
-  /**@name Static instance counter methods */
-  /** CPLEX has a context which must be created prior to all other CPLEX calls.  
-      This method:
-      <ul>
-      <li>Increments by 1 the number of uses of the CPLEX environment.
-      <li>Creates the CPLEX context when the number of uses is change to
-      1 from 0.
-      </ul>
-  */
-  static void incrementInstanceCounter(); 
-  
-  /** CPLEX has a context which should be deleted after CPLEX calls.
-      This method:
-      <ul>
-      <li>Decrements by 1 the number of uses of the CPLEX environment.
-      <li>Deletes the CPLEX context when the number of uses is change to
-      0 from 1.
-      </ul>
-  */
-  static void decrementInstanceCounter();
-  
-  /// Return the number of instances of instantiated objects using CPLEX services.
-  static unsigned int getNumInstances();
-  //@}
-  //@}
   
   /**@name Constructors and destructor */
   //@{
@@ -784,18 +758,6 @@ private:
   void freeColType();
   //@}
 
-  /**@name Private static class data */
-  //@{
-  /// CPLEX environment pointer
-  static CPXENVptr env_;
-  /// CPLEX version
-  static int cpxVersionMajor_;
-  static int cpxVersionMinor_;
-  static int cpxVersionMinorMinor_;
-  /// Number of live problem instances
-  static unsigned int numInstances_;
-  //@}
-  
   
   /**@name Private methods */
   //@{
@@ -838,6 +800,8 @@ private:
   
   /**@name Private member data */
   //@{
+  /// CPLEX environment used in this class instance
+  mutable CPXENVptr env_;
   /// CPLEX model represented by this class instance
   mutable CPXLPptr lp_;
 
@@ -916,4 +880,3 @@ private:
 void OsiCpxSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 #endif
-

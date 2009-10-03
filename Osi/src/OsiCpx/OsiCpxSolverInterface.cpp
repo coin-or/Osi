@@ -1,5 +1,3 @@
-//  LAST EDIT: Tue Nov 27 16:30:04 CET 2001 by Laszlo Ladanyi
-//  Last edit to OsiSimplexMethods: 10/6/05 by F. Margot
 //-----------------------------------------------------------------------------
 // name:     OSI Interface for CPLEX
 // author:   Tobias Pfender
@@ -11,16 +9,12 @@
 // Copyright (C) 2000, Tobias Pfender, International Business Machines
 // Corporation and others.  All Rights Reserved.
 
-#if defined(_MSC_VER)
-// Turn off compiler warning about long names
-#  pragma warning(disable:4786)
-#endif
-
 #include <iostream>
 #include <cassert>
 #include <string>
 #include <numeric>
 
+#include "CoinPragma.hpp"
 #include "CoinError.hpp"
 
 #include "OsiCpxSolverInterface.hpp"
@@ -29,6 +23,12 @@
 #include "CoinPackedMatrix.hpp"
 #include "CoinWarmStartBasis.hpp"
 
+#include "cplex.h"
+
+// CPLEX 10.0 removed CPXERR_NO_INT_SOLN
+#if !defined(CPXERR_NO_INT_SOLN)
+#define CPXERR_NO_INT_SOLN CPXERR_NO_SOLN
+#endif
 
 // #define DEBUG 1
 
@@ -81,6 +81,77 @@ checkCPXerror( int err, std::string cpxfuncname, std::string osimethod )
 	" in OsiCpxSolverInterface)" << std::endl;
       throw CoinError( s, osimethod.c_str(), "OsiCpxSolverInterface" );
     }
+}
+
+static bool incompletemessage = false;
+
+static
+void OsiCpxMessageCallbackPrint(CoinMessageHandler* handler, const char* msg)
+{
+	/* cplex adds the newlines into their message, while the coin message handler like to add its own newlines
+	 * we treat the cases where there is a newline in the beginning or no newline at the end separately
+	 * TODO a better way is to scan msg for newlines and to send each line to the handler separately */
+	if( msg[0] == '\n' ) {
+		if (incompletemessage) {
+			*handler << CoinMessageEol;
+			incompletemessage = false;
+		} else
+			handler->message(0, "CPX", " ", ' ') << CoinMessageEol;
+		
+		++msg;
+		
+		if(!*msg)
+			return;
+	}
+	
+	int len = strlen(msg);
+	
+	if( msg[len-1] == '\n') {
+		(const_cast<char*>(msg))[len-1] = '\0';
+		if (incompletemessage) {
+			*handler << msg << CoinMessageEol;
+			incompletemessage = false;
+		} else
+			handler->message(0, "CPX", msg, ' ') << CoinMessageEol;
+	} else {
+		handler->message(0, "CPX", msg, ' ');
+		incompletemessage = true;
+	}
+}
+
+static
+void OsiCpxMessageCallbackResultLog(void* handle, const char* msg)
+{
+	if (!*msg)
+		return;
+	
+	if (handle) {
+		if( ((CoinMessageHandler*)handle)->logLevel() >= 1 )
+			OsiCpxMessageCallbackPrint((CoinMessageHandler*)handle, msg);
+	} else {
+		printf(msg);
+	}
+}
+
+static
+void OsiCpxMessageCallbackWarning(void* handle, const char* msg)
+{
+	if (handle) {
+		if( ((CoinMessageHandler*)handle)->logLevel() >= 0 )
+			OsiCpxMessageCallbackPrint((CoinMessageHandler*)handle, msg);
+	} else {
+		printf(msg);
+	}
+}
+
+static
+void OsiCpxMessageCallbackError(void* handle, const char* msg)
+{
+	if (handle) {
+		OsiCpxMessageCallbackPrint((CoinMessageHandler*)handle, msg);
+	} else {
+		fprintf(stderr, msg);
+	}
 }
 
 void
@@ -182,7 +253,7 @@ OsiCpxSolverInterface::freeColType()
 void OsiCpxSolverInterface::initialSolve()
 {
   debugMessage("OsiCpxSolverInterface::initialSolve()\n");
-
+  
   switchToLP();
 
   int algorithm = 1;
@@ -206,10 +277,10 @@ void OsiCpxSolverInterface::initialSolve()
   else
      CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_OFF );
 
-  if (messageHandler()->logLevel() == 0)
-     CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_OFF );
-  else
-     CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_ON );
+//  if (messageHandler()->logLevel() == 0)
+//     CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_OFF );
+//  else
+//     CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_ON );
 
   if (messageHandler()->logLevel() == 0)
      CPXsetintparam( env_, CPX_PARAM_SIMDISPLAY, 0 );
@@ -275,10 +346,10 @@ void OsiCpxSolverInterface::resolve()
   else
      CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_OFF );
 
-  if (messageHandler()->logLevel() == 0)
-     CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_OFF );
-  else
-     CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_ON );
+//  if (messageHandler()->logLevel() == 0)
+//     CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_OFF );
+//  else
+//     CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_ON );
 
   if (messageHandler()->logLevel() == 0)
      CPXsetintparam( env_, CPX_PARAM_SIMDISPLAY, 0 );
@@ -325,10 +396,10 @@ void OsiCpxSolverInterface::branchAndBound()
 
   CPXLPptr lp = getLpPtr( OsiCpxSolverInterface::FREECACHED_RESULTS );
 
-  if (messageHandler()->logLevel() == 0)
-     CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_OFF );
-  else
-     CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_ON );
+//  if (messageHandler()->logLevel() == 0)
+//     CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_OFF );
+//  else
+//     CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_ON );
 
   if (messageHandler()->logLevel() == 0)
      CPXsetintparam( env_, CPX_PARAM_SIMDISPLAY, 0 );
@@ -664,6 +735,9 @@ bool OsiCpxSolverInterface::isIterationLimitReached() const
 //#############################################################################
 // WarmStart related methods
 //#############################################################################
+
+CoinWarmStart* OsiCpxSolverInterface::getEmptyWarmStart () const
+{ return (dynamic_cast<CoinWarmStart *>(new CoinWarmStartBasis())) ; }
 
 CoinWarmStart* OsiCpxSolverInterface::getWarmStart() const
 {
@@ -1876,10 +1950,12 @@ void OsiCpxSolverInterface::setColSolution(const double * cs)
 	
       // Copy in new col solution.
       CoinDisjointCopyN( cs, nc, colsol_ );
-      
+
       // CPLEX < 7.0 doesn't support setting a col solution without a row solution
       // -> if a row solution exists or CPLEX version >= 7, then pass into CPLEX
-      if ( rowsol_ != NULL || cpxVersionMajor_ >= 7 )
+#if CPX_VERSION < 700
+      if ( rowsol_ != NULL )
+#endif
 	{
 	  int err = CPXcopystart( env_, getMutableLpPtr(), NULL, NULL, 
 				  const_cast<double*>( colsol_ ), 
@@ -2553,6 +2629,36 @@ void OsiCpxSolverInterface::writeMps( const char * filename,
   checkCPXerror( err, "CPXwriteprob", "writeMps" );
 }
 
+void OsiCpxSolverInterface::passInMessageHandler(CoinMessageHandler * handler) {
+	int err;
+  CPXCHANNELptr cpxresults;
+  CPXCHANNELptr cpxwarning;
+  CPXCHANNELptr cpxerror;
+  CPXCHANNELptr cpxlog;
+  err = CPXgetchannels(env_, &cpxresults, &cpxwarning, &cpxerror, &cpxlog);
+	checkCPXerror( err, "CPXgetchannels", "gutsOfConstructor" );
+
+	err = CPXdelfuncdest(env_, cpxresults, messageHandler(), OsiCpxMessageCallbackResultLog);
+	checkCPXerror( err, "CPXdelfuncdest", "gutsOfConstructor" );
+	err = CPXdelfuncdest(env_, cpxlog,     messageHandler(), OsiCpxMessageCallbackResultLog);
+	checkCPXerror( err, "CPXdelfuncdest", "gutsOfConstructor" );
+	err = CPXdelfuncdest(env_, cpxwarning, messageHandler(), OsiCpxMessageCallbackWarning);
+	checkCPXerror( err, "CPXdelfuncdest", "gutsOfConstructor" );
+	err = CPXdelfuncdest(env_, cpxerror,   messageHandler(), OsiCpxMessageCallbackError);
+	checkCPXerror( err, "CPXdelfuncdest", "gutsOfConstructor" );
+
+	OsiSolverInterface::passInMessageHandler(handler);
+	
+	err = CPXaddfuncdest(env_, cpxresults, messageHandler(), OsiCpxMessageCallbackResultLog);
+	checkCPXerror( err, "CPXaddfuncdest", "gutsOfConstructor" );
+	err = CPXaddfuncdest(env_, cpxlog,     messageHandler(), OsiCpxMessageCallbackResultLog);
+	checkCPXerror( err, "CPXaddfuncdest", "gutsOfConstructor" );
+	err = CPXaddfuncdest(env_, cpxwarning, messageHandler(), OsiCpxMessageCallbackWarning);
+	checkCPXerror( err, "CPXaddfuncdest", "gutsOfConstructor" );
+	err = CPXaddfuncdest(env_, cpxerror,   messageHandler(), OsiCpxMessageCallbackError);
+	checkCPXerror( err, "CPXaddfuncdest", "gutsOfConstructor" );
+}
+
 //#############################################################################
 // CPX specific public interfaces
 //#############################################################################
@@ -2579,59 +2685,6 @@ const char * OsiCpxSolverInterface::getCtype() const
 }
 
 //#############################################################################
-// Static instance counter methods
-//#############################################################################
-
-void OsiCpxSolverInterface::incrementInstanceCounter()
-{
-  if ( numInstances_ == 0 )
-    {
-      int err;
-
-#if CPX_VERSION >= 800
-      env_ = CPXopenCPLEX( &err );
-#else
-      env_ = CPXopenCPLEXdevelop( &err );
-#endif
-
-      checkCPXerror( err, "CPXopenCPLEXdevelop", "incrementInstanceCounter" );
-      assert( env_ != NULL );
-#ifndef NDEBUG
-      // Uncomment this to turn on verbose Cplex output
-      //CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_ON ); // for testing purposes
-#endif
-      //char logfileName[]="cplex.log";
-      //char filemode[]="a+";
-      //CPXFILEptr fp = CPXfopen( logfileName, filemode );
-      //CPXsetlogfile( env_, fp );
-      err = sscanf( CPXversion( env_ ), "%d.%d.%d", &cpxVersionMajor_, &cpxVersionMinor_, &cpxVersionMinorMinor_ );
-      assert( err == 3 );
-    }
-  numInstances_++;
-}
-
-//-----------------------------------------------------------------------------
-
-void OsiCpxSolverInterface::decrementInstanceCounter()
-{
-  assert( numInstances_ != 0 );
-  numInstances_--;
-  if ( numInstances_ == 0 )
-    {
-      int err = CPXcloseCPLEX( &env_ );
-      checkCPXerror( err, "CPXcloseCPLEX", "decrementInstanceCounter" );
-      env_ = NULL;
-    }
-}
-
-//-----------------------------------------------------------------------------
-
-unsigned int OsiCpxSolverInterface::getNumInstances()
-{
-  return numInstances_;
-}
-
-//#############################################################################
 // Constructors, destructors clone and assignment
 //#############################################################################
 
@@ -2640,6 +2693,7 @@ unsigned int OsiCpxSolverInterface::getNumInstances()
 //-------------------------------------------------------------------
 OsiCpxSolverInterface::OsiCpxSolverInterface()
   : OsiSolverInterface(),
+    env_(NULL),
     lp_(NULL),
     hotStartCStat_(NULL),
     hotStartCStatSize_(0),
@@ -2666,7 +2720,6 @@ OsiCpxSolverInterface::OsiCpxSolverInterface()
 {
   debugMessage("OsiCpxSolverInterface::OsiCpxSolverInterface()\n");
 
-  incrementInstanceCounter();
   gutsOfConstructor();
 }
 
@@ -2686,6 +2739,7 @@ OsiSolverInterface * OsiCpxSolverInterface::clone(bool copyData) const
 //-------------------------------------------------------------------
 OsiCpxSolverInterface::OsiCpxSolverInterface( const OsiCpxSolverInterface & source )
   : OsiSolverInterface(source),
+    env_(NULL),
     lp_(NULL),
     hotStartCStat_(NULL),
     hotStartCStatSize_(0),
@@ -2712,7 +2766,6 @@ OsiCpxSolverInterface::OsiCpxSolverInterface( const OsiCpxSolverInterface & sour
 {
   debugMessage("OsiCpxSolverInterface::OsiCpxSolverInterface(%p)\n", (void*)&source);
 
-  incrementInstanceCounter();  
   gutsOfConstructor();
   gutsOfCopy( source );
 }
@@ -2726,7 +2779,6 @@ OsiCpxSolverInterface::~OsiCpxSolverInterface()
   debugMessage("OsiCpxSolverInterface::~OsiCpxSolverInterface()\n");
 
   gutsOfDestructor();
-  decrementInstanceCounter();
 }
 
 //----------------------------------------------------------------
@@ -2827,16 +2879,6 @@ void OsiCpxSolverInterface::applyRowCut( const OsiRowCut & rowCut )
 //#############################################################################
 // Private methods (non-static and static) and static data
 //#############################################################################
-
-//------------------------------------------------------------------
-// Static data
-//------------------------------------------------------------------      
-CPXENVptr OsiCpxSolverInterface::env_ = NULL;
-
-int OsiCpxSolverInterface::cpxVersionMajor_ = 0;
-int OsiCpxSolverInterface::cpxVersionMinor_ = 0;
-int OsiCpxSolverInterface::cpxVersionMinorMinor_ = 0;
-unsigned int OsiCpxSolverInterface::numInstances_ = 0;
  
 //-------------------------------------------------------------------
 // Get pointer to CPXLPptr.
@@ -2957,9 +2999,38 @@ void OsiCpxSolverInterface::gutsOfCopy( const OsiCpxSolverInterface & source )
 //-------------------------------------------------------------------
 void OsiCpxSolverInterface::gutsOfConstructor()
 {  
+	int err;
+#if CPX_VERSION >= 800
+	env_ = CPXopenCPLEX( &err );
+#else
+	env_ = CPXopenCPLEXdevelop( &err );
+#endif
+
+	checkCPXerror( err, "CPXopenCPLEXdevelop", "gutsOfConstructor" );
+	assert( env_ != NULL );
+
+  CPXCHANNELptr cpxresults;
+  CPXCHANNELptr cpxwarning;
+  CPXCHANNELptr cpxerror;
+  CPXCHANNELptr cpxlog;
+  err = CPXgetchannels(env_, &cpxresults, &cpxwarning, &cpxerror, &cpxlog);
+	checkCPXerror( err, "CPXgetchannels", "gutsOfConstructor" );
+	
+	err = CPXaddfuncdest(env_, cpxresults, messageHandler(), OsiCpxMessageCallbackResultLog);
+	checkCPXerror( err, "CPXaddfuncdest", "gutsOfConstructor" );
+	err = CPXaddfuncdest(env_, cpxlog,     messageHandler(), OsiCpxMessageCallbackResultLog);
+	checkCPXerror( err, "CPXaddfuncdest", "gutsOfConstructor" );
+	err = CPXaddfuncdest(env_, cpxwarning, messageHandler(), OsiCpxMessageCallbackWarning);
+	checkCPXerror( err, "CPXaddfuncdest", "gutsOfConstructor" );
+	err = CPXaddfuncdest(env_, cpxerror,   messageHandler(), OsiCpxMessageCallbackError);
+	checkCPXerror( err, "CPXaddfuncdest", "gutsOfConstructor" );
+
+	/* turn off all output to screen */
+  err = CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_OFF );
+	checkCPXerror( err, "CPXsetintparam", "gutsOfConstructor" );
+
 #if 0
   // CPXcreateprob was moved to getLpPtr() method.
-  int err;
   lp_ = CPXcreateprob( env_, &err, "OSI_CPLEX" );
   checkCPXerror( err, "CPXcreateprob", "gutsOfConstructor" );
 //  err = CPXchgprobtype(env_,lp_,CPXPROB_LP);
@@ -2978,7 +3049,16 @@ void OsiCpxSolverInterface::gutsOfDestructor()
       lp_=NULL;
       freeAllMemory();
     }
+
+  if ( env_ != NULL )
+  {
+  	int err = CPXcloseCPLEX( &env_ );
+  	checkCPXerror( err, "CPXcloseCPLEX", "gutsOfDestructor" );
+  	env_ = NULL;
+  }
+
   assert( lp_==NULL );
+  assert( env_==NULL );
   assert( obj_==NULL );
   assert( collower_==NULL );
   assert( colupper_==NULL );

@@ -7,11 +7,9 @@
 #include <string>
 #include <cstdio>
 
-#include "xprs.h"
 #include "OsiSolverInterface.hpp"
-//#include "CoinPackedVector.hpp"
-#include "CoinWarmStartBasis.hpp"
 
+typedef struct xo_prob_struct* XPRSprob;
 
 //#############################################################################
 
@@ -86,8 +84,7 @@ public:
   /**@name WarmStart related methods */
   //@{
     /// Get empty warm start object
-    inline CoinWarmStart *getEmptyWarmStart () const
-    { return (dynamic_cast<CoinWarmStart *>(new CoinWarmStartBasis())) ; }
+    CoinWarmStart *getEmptyWarmStart () const;
     /// Get warmstarting information
     virtual CoinWarmStart* getWarmStart() const;
     /** Set warmstarting information. Return true/false depending on whether
@@ -552,6 +549,16 @@ public:
 			  double objSense=0.0) const;
   //@}
 
+    /**@name Message handling */
+    //@{
+    /** Pass in a message handler
+        It is the client's responsibility to destroy a message handler installed
+        by this routine; it will not be destroyed when the solver interface is
+        destroyed. 
+     */
+    void passInMessageHandler(CoinMessageHandler * handler);
+    //@}
+
   //---------------------------------------------------------------------------
 
   /**@name XPRESS specific public interfaces */
@@ -582,6 +589,9 @@ public:
       /** Return the number of instances of instantiated objects using XPRESS
 	  services. */
       static  unsigned int getNumInstances();
+      
+      /** Return a pointer to the XPRESS problem */
+      XPRSprob getLpPtr() { return prob_; }
     //@}
 
     /// Return XPRESS-MP Version number

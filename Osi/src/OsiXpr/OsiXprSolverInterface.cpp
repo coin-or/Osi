@@ -5,18 +5,11 @@
 /* OPEN: have a look at the OPEN tags */
 /* OPEN: read/set more controls ... */
 
-#if defined(_MSC_VER)
-// Turn off compiler warning about long names
-#  pragma warning(disable:4786)
-#endif
-
 #include <cassert>
 #include <numeric>
 #include <sstream>
 
-#ifdef _WIN32
-#define DLL
-#endif
+#include "CoinPragma.hpp"
 
 #define __ANSIC_
 #include <xprs.h>
@@ -30,9 +23,32 @@
 #include "CoinPackedMatrix.hpp"
 #include "OsiRowCut.hpp"
 #include "CoinWarmStartBasis.hpp"
+#include "CoinMessage.hpp"
 
+//#define DEBUG
 
-#define DEBUG
+static
+void XPRS_CC cbMessage(XPRSprob prob, void *vUserDat, const char *msg, int msgLen, int msgType)
+{ 
+	if (vUserDat) {
+		if (msgType < 0 ) {
+			((CoinMessageHandler*)vUserDat)->finish();
+		} else {
+			/* CoinMessageHandler does not recognize that a "\0" string means that a newline should be printed.
+			 * So we let it print a space (followed by a newline).
+			 */
+			if (((CoinMessageHandler*)vUserDat)->logLevel() > 0)
+			  ((CoinMessageHandler*)vUserDat)->message(0, "XPRS", *msg ? msg : " ", ' ') << CoinMessageEol;
+		}
+	} else {
+		if (msgType < 0) {
+			fflush(stdout); 
+		} else {
+			printf("%.*s\n", msgLen, msg); 
+			fflush(stdout); 
+		}
+	}
+} /* cbMessage */
 
 void reporterror(const char *fname, int iline, int ierr)
 {
@@ -86,8 +102,21 @@ OsiXprSolverInterface::resolve(){
 
 void
 OsiXprSolverInterface::branchAndBound(){
+  int status;
 
   freeSolution();
+
+  /* XPRSglobal cannot be called if there is no LP relaxation available yet
+   * -> solve LP relaxation first, if no LP solution available */
+  XPRS_CHECKED( XPRSgetintattrib, (prob_,XPRS_LPSTATUS, &status) );
+  if (status != XPRS_LP_OPTIMAL)
+  	initialSolve();
+
+  XPRS_CHECKED( XPRSgetintattrib, (prob_,XPRS_LPSTATUS, &status) );
+  if (status != XPRS_LP_OPTIMAL) {
+  	messageHandler()->message(0, "XPRS", "XPRESS failed to solve LP relaxation; cannot call XPRSglobal", ' ') << CoinMessageEol;
+  	return;
+  }
 
   XPRS_CHECKED( XPRSglobal, (prob_) );
 
@@ -316,6 +345,11 @@ bool OsiXprSolverInterface::isIterationLimitReached() const
 //#############################################################################
 // WarmStart related methods
 //#############################################################################
+
+CoinWarmStart* OsiXprSolverInterface::getEmptyWarmStart () const
+{
+	return (dynamic_cast<CoinWarmStart *>(new CoinWarmStartBasis()));
+}
 
 CoinWarmStart* OsiXprSolverInterface::getWarmStart() const
 {
@@ -916,7 +950,11 @@ OsiXprSolverInterface::getObjValue() const
    double  objconstant = 0;
 
    if ( isDataLoaded() ) {
-       XPRS_CHECKED( XPRSgetdblattrib, (prob_,XPRS_LPOBJVAL, &objvalue) );
+  	 if ( getNumIntVars() ) {
+  		 XPRS_CHECKED( XPRSgetdblattrib, (prob_,XPRS_MIPOBJVAL, &objvalue) );
+  	 } else {
+  		 XPRS_CHECKED( XPRSgetdblattrib, (prob_,XPRS_LPOBJVAL, &objvalue) );
+  	 }
        OsiSolverInterface::getDblParam(OsiObjOffset, objconstant);	
        		// Constant offset is not saved with the xpress representation,
        		// but it has to be returned from here anyway.
@@ -1207,7 +1245,9 @@ OsiXprSolverInterface::setRowType(int index, char sense, double rightHandSide,
 
     XPRS_CHECKED( XPRSchgrowtype, (prob_,1, mindex, qrtype) );
     XPRS_CHECKED( XPRSchgrhs, (prob_,1, mindex, rhs) );
-    XPRS_CHECKED( XPRSchgrhsrange, (prob_,1, mindex, rng) );
+  	// range is properly defined only for range-type rows, so we call XPRSchgrhsrange only for ranged rows
+    if (sense == 'R')
+    	XPRS_CHECKED( XPRSchgrhsrange, (prob_,1, mindex, rng) );
 
     freeCachedResults();
   }
@@ -1987,6 +2027,17 @@ void OsiXprSolverInterface::writeMps(const char *filename,
   XPRS_CHECKED( XPRSwriteprob, (prob_,filename, "") );
 }
 
+//-----------------------------------------------------------------------------
+// Message Handling
+//-----------------------------------------------------------------------------
+void OsiXprSolverInterface::passInMessageHandler(CoinMessageHandler * handler)
+{
+	OsiSolverInterface::passInMessageHandler(handler);
+	
+  XPRS_CHECKED( XPRSsetcbmessage, (prob_, cbMessage, messageHandler()) );
+}
+
+
 //#############################################################################
 // Static data and methods
 //#############################################################################
@@ -1994,10 +2045,10 @@ void OsiXprSolverInterface::writeMps(const char *filename,
 void
 OsiXprSolverInterface::incrementInstanceCounter()
 {
-
+#ifdef DEBUG
     fprintf( stdout, "incrementInstanceCounter:: numInstances %d\n", 
 	     numInstances_);
-
+#endif
     if ( numInstances_ == 0 ) {          
 	
 	XPRS_CHECKED( XPRSinit, (NULL) );
@@ -2014,8 +2065,10 @@ OsiXprSolverInterface::incrementInstanceCounter()
 void
 OsiXprSolverInterface::decrementInstanceCounter()
 {
+#ifdef DEBUG
     fprintf( stdout, "decrementInstanceCounter:: numInstances %d\n", 
 	     numInstances_);
+#endif
   assert( numInstances_ != 0 );
 
   numInstances_--;
@@ -2032,8 +2085,10 @@ OsiXprSolverInterface::decrementInstanceCounter()
 unsigned int
 OsiXprSolverInterface::getNumInstances()
 {
+#ifdef DEBUG
     fprintf( stdout, "getNumInstances:: numInstances %d\n", 
 	     numInstances_);
+#endif
    return numInstances_;
 }
 
@@ -2328,11 +2383,22 @@ OsiXprSolverInterface::gutsOfConstructor()
     
     XPRS_CHECKED( XPRScreateprob, (&prob_) );  
 
-    /* always create an empty problem to initialize all data structures */
+    XPRS_CHECKED( XPRSsetcbmessage, (prob_, cbMessage, messageHandler()) );
+
+    /* always create an empty problem to initialize all data structures
+     * since the user had no chance to pass in his own message handler, we turn off the output for the following operation
+     */
+
+    int outputlog;
+    XPRS_CHECKED( XPRSgetintcontrol, (prob_, XPRS_OUTPUTLOG, &outputlog) );
+    XPRS_CHECKED( XPRSsetintcontrol, (prob_, XPRS_OUTPUTLOG, 0) );
+    
     int istart = 0;
-    XPRS_CHECKED( XPRSloadlp, ( prob_, "_xprs_", 0, 0, NULL, NULL, NULL, NULL,
+    XPRS_CHECKED( XPRSloadlp, ( prob_, "empty", 0, 0, NULL, NULL, NULL, NULL,
 				&istart,
 				NULL, NULL, NULL, NULL, NULL) );
+
+    XPRS_CHECKED( XPRSsetintcontrol, (prob_, XPRS_OUTPUTLOG, outputlog) );
 
     //OPEN: only switched off for debugging
     //XPRS_CHECKED( XPRSsetlogfile, (prob_,"xpress.log") );

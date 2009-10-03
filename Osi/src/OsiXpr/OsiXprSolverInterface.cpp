@@ -28,7 +28,7 @@
 //#define DEBUG
 
 static
-void XPRS_CC cbMessage(XPRSprob prob, void *vUserDat, const char *msg, int msgLen, int msgType)
+void XPRS_CC OsiXprMessageCallback(XPRSprob prob, void *vUserDat, const char *msg, int msgLen, int msgType)
 { 
 	if (vUserDat) {
 		if (msgType < 0 ) {
@@ -48,7 +48,7 @@ void XPRS_CC cbMessage(XPRSprob prob, void *vUserDat, const char *msg, int msgLe
 			fflush(stdout); 
 		}
 	}
-} /* cbMessage */
+}
 
 void reporterror(const char *fname, int iline, int ierr)
 {
@@ -2034,7 +2034,7 @@ void OsiXprSolverInterface::passInMessageHandler(CoinMessageHandler * handler)
 {
 	OsiSolverInterface::passInMessageHandler(handler);
 	
-  XPRS_CHECKED( XPRSsetcbmessage, (prob_, cbMessage, messageHandler()) );
+  XPRS_CHECKED( XPRSsetcbmessage, (prob_, OsiXprMessageCallback, messageHandler()) );
 }
 
 
@@ -2383,7 +2383,7 @@ OsiXprSolverInterface::gutsOfConstructor()
     
     XPRS_CHECKED( XPRScreateprob, (&prob_) );  
 
-    XPRS_CHECKED( XPRSsetcbmessage, (prob_, cbMessage, messageHandler()) );
+    XPRS_CHECKED( XPRSsetcbmessage, (prob_, OsiXprMessageCallback, messageHandler()) );
 
     /* always create an empty problem to initialize all data structures
      * since the user had no chance to pass in his own message handler, we turn off the output for the following operation

@@ -916,6 +916,7 @@ OsiXprSolverInterface::getObjValue() const
    double  objconstant = 0;
 
    if ( isDataLoaded() ) {
+   //FIXME: this gives the value of the last LP relaxation solved in case of a MIP!
        XPRS_CHECKED( XPRSgetdblattrib, (prob_,XPRS_LPOBJVAL, &objvalue) );
        OsiSolverInterface::getDblParam(OsiObjOffset, objconstant);	
        		// Constant offset is not saved with the xpress representation,
@@ -1207,7 +1208,9 @@ OsiXprSolverInterface::setRowType(int index, char sense, double rightHandSide,
 
     XPRS_CHECKED( XPRSchgrowtype, (prob_,1, mindex, qrtype) );
     XPRS_CHECKED( XPRSchgrhs, (prob_,1, mindex, rhs) );
-    XPRS_CHECKED( XPRSchgrhsrange, (prob_,1, mindex, rng) );
+    // range is properly defined only for range-type rows, so we call XPRSchgrhsrange only for ranged rows
+    if (sense == 'R')
+      XPRS_CHECKED( XPRSchgrhsrange, (prob_,1, mindex, rng) );
 
     freeCachedResults();
   }

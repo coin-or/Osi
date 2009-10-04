@@ -3435,15 +3435,10 @@ void OsiCpxSolverInterface::getBInvACol(int col, double* vec) const {
   int *ind_bas = new int[nrow];
   getBasics(ind_bas);
 
-  for(int i=0; i<nrow; i++) {
-    if(sense[i] == 'G') {
-      int ind_slack = ncol+i;  
-      if(ind_bas[i] == ind_slack) {  // slack for row is basic; whole row
-                                     // must be flipped
-	vec[i] = -vec[i];
-      }
-    }
-  }
+  for(int i=0; i<nrow; i++)
+    if(ind_bas[i] > ncol && sense[ind_bas[i]-ncol] == 'G')
+      vec[i] = -vec[i];  // slack for row is basic; whole row must be flipped
+
   delete[] sense;
   delete[] ind_bas;
 } /* getBInvACol */ 
@@ -3470,15 +3465,10 @@ void OsiCpxSolverInterface::getBInvCol(int col, double* vec) const {
   int *ind_bas = new int[nrow];
   getBasics(ind_bas);
 
-  for(int i=0; i<nrow; i++) {
-    if(sense[i] == 'G') {
-      int ind_slack = ncol+i;  
-      if(ind_bas[i] == ind_slack) {  // slack for row i is basic; whole row
-                                     // must be flipped
-	vec[i] = -vec[i];
-      }
-    }
-  }
+  for(int i=0; i<nrow; i++)
+    if(ind_bas[i] > ncol && sense[ind_bas[i]-ncol] == 'G')
+      vec[i] = -vec[i];  // slack for row i is basic; whole row must be flipped
+
   delete[] sense;
   delete[] ind_bas;
 } /* getBInvCol */

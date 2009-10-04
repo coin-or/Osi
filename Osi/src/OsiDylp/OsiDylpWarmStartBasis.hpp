@@ -18,6 +18,8 @@
 
 #include "CoinWarmStartBasis.hpp"
 
+class CoinMessageHandler;
+
 #define DYLP_INTERNAL
 extern "C" {
 #include "dylp.h"
@@ -216,7 +218,7 @@ class OsiDylpWarmStartBasis : public CoinWarmStartBasis
 
   /*! \brief Performs basis consistency checks (for debug) */
 
-  void checkBasis () const ;
+  void checkBasis (CoinMessageHandler* msghandler = NULL) const ;
 
 //@}
 

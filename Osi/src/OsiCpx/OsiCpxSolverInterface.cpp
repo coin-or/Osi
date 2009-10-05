@@ -2274,15 +2274,26 @@ OsiCpxSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
   int nr=matrix.getNumRows();
 
   if( nr == 0 && nc == 0 ) {  // empty LP
-    gutsOfDestructor();      // -> kill old LP
+  	if (lp_ != NULL) { // kill old LP 
+  		int err = CPXfreeprob( env_, &lp_ );
+  		checkCPXerror( err, "CPXfreeprob", "loadProblem" );
+  		lp_ = NULL;
+  		freeAllMemory();
+  	}
     return;
   }
   
   if (nr == 0) {
     int objDirection = CPXgetobjsen( env_, getMutableLpPtr() );
 
-    gutsOfDestructor(); // kill old LP
+  	if (lp_ != NULL) { // kill old LP 
+  		int err = CPXfreeprob( env_, &lp_ );
+  		checkCPXerror( err, "CPXfreeprob", "loadProblem" );
+  		lp_ = NULL;
+  		freeAllMemory();
+  	}
     
+  	// getLpPtr() call will create new LP
     int err = CPXnewcols( env_, getLpPtr(), nc, obj, collb, colub, NULL, NULL);
     checkCPXerror( err, "CPXcopylp", "loadProblem" );
     
@@ -2483,16 +2494,27 @@ OsiCpxSolverInterface::loadProblem(const int numcols, const int numrows,
   const int nr = numrows;
 
   if( nr == 0 && nc == 0 ) {
-    // empty LP -> kill old LP
-    gutsOfDestructor();
+    // empty LP
+  	if (lp_ != NULL) { // kill old LP 
+  		int err = CPXfreeprob( env_, &lp_ );
+  		checkCPXerror( err, "CPXfreeprob", "loadProblem" );
+  		lp_ = NULL;
+  		freeAllMemory();
+  	}
     return;
   }
   
   if (nr == 0) {
     int objDirection = CPXgetobjsen( env_, getMutableLpPtr() );
 
-    gutsOfDestructor(); // kill old LP
+  	if (lp_ != NULL) { // kill old LP 
+  		int err = CPXfreeprob( env_, &lp_ );
+  		checkCPXerror( err, "CPXfreeprob", "loadProblem" );
+  		lp_ = NULL;
+  		freeAllMemory();
+  	}
     
+  	// getLpPtr() call will create new LP
     int err = CPXnewcols( env_, getLpPtr(), nc, obj, collb, colub, NULL, NULL);
     checkCPXerror( err, "CPXcopylp", "loadProblem" );
     
@@ -3157,7 +3179,12 @@ void
 OsiCpxSolverInterface::reset()
 {
   setInitialData(); // clear base class
-  gutsOfDestructor();
+	if (lp_ != NULL) { // kill old LP 
+		int err = CPXfreeprob( env_, &lp_ );
+		checkCPXerror( err, "CPXfreeprob", "loadProblem" );
+		lp_ = NULL;
+		freeAllMemory();
+	}
 }
 #if CPX_VERSION >= 900
 /**********************************************************************/

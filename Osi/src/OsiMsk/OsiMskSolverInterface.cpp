@@ -86,7 +86,7 @@ static void MSKAPI printlog(void *ptr,
 } 
 
 static 
-void OsiMskStreamFuncLog(MSKuserhandle_t handle, MSKCONST char* str) {
+void MSKAPI OsiMskStreamFuncLog(MSKuserhandle_t handle, MSKCONST char* str) {
 	if (handle) {
 		if (((CoinMessageHandler*)handle)->logLevel() >= 1)
 			((CoinMessageHandler*)handle)->message(0, "MSK", str, ' ') << CoinMessageEol;
@@ -97,7 +97,7 @@ void OsiMskStreamFuncLog(MSKuserhandle_t handle, MSKCONST char* str) {
 }
 
 static 
-void OsiMskStreamFuncWarning(MSKuserhandle_t handle, MSKCONST char* str) {
+void MSKAPI OsiMskStreamFuncWarning(MSKuserhandle_t handle, MSKCONST char* str) {
 	if (handle) {
 		if (((CoinMessageHandler*)handle)->logLevel() >= 0)
 			((CoinMessageHandler*)handle)->message(0, "MSK", str, ' ') << CoinMessageEol;
@@ -108,7 +108,7 @@ void OsiMskStreamFuncWarning(MSKuserhandle_t handle, MSKCONST char* str) {
 }
 
 static 
-void OsiMskStreamFuncError(MSKuserhandle_t handle, MSKCONST char* str) {
+void MSKAPI OsiMskStreamFuncError(MSKuserhandle_t handle, MSKCONST char* str) {
 	if (handle) {
 		((CoinMessageHandler*)handle)->message(0, "MSK", str, ' ') << CoinMessageEol;
 	} else {

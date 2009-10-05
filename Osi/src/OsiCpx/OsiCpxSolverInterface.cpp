@@ -86,7 +86,7 @@ checkCPXerror( int err, std::string cpxfuncname, std::string osimethod )
 static bool incompletemessage = false;
 
 static
-void OsiCpxMessageCallbackPrint(CoinMessageHandler* handler, const char* msg)
+void CPXPUBLIC OsiCpxMessageCallbackPrint(CoinMessageHandler* handler, const char* msg)
 {
 	/* cplex adds the newlines into their message, while the coin message handler like to add its own newlines
 	 * we treat the cases where there is a newline in the beginning or no newline at the end separately
@@ -120,7 +120,7 @@ void OsiCpxMessageCallbackPrint(CoinMessageHandler* handler, const char* msg)
 }
 
 static
-void OsiCpxMessageCallbackResultLog(void* handle, const char* msg)
+void CPXPUBLIC OsiCpxMessageCallbackResultLog(void* handle, const char* msg)
 {
 	if (!*msg)
 		return;
@@ -134,7 +134,7 @@ void OsiCpxMessageCallbackResultLog(void* handle, const char* msg)
 }
 
 static
-void OsiCpxMessageCallbackWarning(void* handle, const char* msg)
+void CPXPUBLIC OsiCpxMessageCallbackWarning(void* handle, const char* msg)
 {
 	if (handle) {
 		if( ((CoinMessageHandler*)handle)->logLevel() >= 0 )
@@ -145,7 +145,7 @@ void OsiCpxMessageCallbackWarning(void* handle, const char* msg)
 }
 
 static
-void OsiCpxMessageCallbackError(void* handle, const char* msg)
+void CPXPUBLIC OsiCpxMessageCallbackError(void* handle, const char* msg)
 {
 	if (handle) {
 		OsiCpxMessageCallbackPrint((CoinMessageHandler*)handle, msg);

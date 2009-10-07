@@ -59,6 +59,10 @@ Osi/m4/ac_osicbc_config.m4 -text
 Osi/m4/ac_osidylp_options.m4 -text
 Osi/m4/ac_osiglpk_options.m4 -text
 Osi/osi_addlibs.txt.in -text
+Osi/src/OsiGrb/Makefile.am -text
+Osi/src/OsiGrb/Makefile.in -text
+Osi/src/OsiGrb/OsiGrbSolverInterface.cpp -text
+Osi/src/OsiGrb/OsiGrbSolverInterface.hpp -text
 /README -text
 /compile -text
 /config.guess -text

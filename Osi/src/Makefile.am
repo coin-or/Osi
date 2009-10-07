@@ -89,6 +89,9 @@ endif
 if COIN_HAS_XPR
   SUBDIRS += OsiXpr
 endif
+if COIN_HAS_GRB
+  SUBDIRS += OsiGrb
+endif
 
 ########################################################################
 #                Headers that need to be installed                     #

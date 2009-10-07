@@ -14,11 +14,9 @@
 
 @SET_MAKE@
 
-# Copyright (C) 2006 International Business Machines and others.
+# Copyright (C) 2009 Stefan Vigerske and others.
 # All Rights Reserved.
 # This file is distributed under the Common Public License.
-
-# Author:  Andreas Waechter           IBM    2006-04-13
 
 
 srcdir = @srcdir@
@@ -43,7 +41,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-subdir = src/OsiFmp
+subdir = src/OsiGrb
 DIST_COMMON = $(includecoin_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -66,9 +64,9 @@ am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includecoindir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libOsiFmp_la_LIBADD =
-am_libOsiFmp_la_OBJECTS = OsiFmpSolverInterface.lo
-libOsiFmp_la_OBJECTS = $(am_libOsiFmp_la_OBJECTS)
+libOsiGrb_la_LIBADD =
+am_libOsiGrb_la_OBJECTS = OsiGrbSolverInterface.lo
+libOsiGrb_la_OBJECTS = $(am_libOsiGrb_la_OBJECTS)
 depcomp = $(SHELL) $(top_srcdir)/../depcomp
 am__depfiles_maybe = depfiles
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
@@ -87,8 +85,8 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(libOsiFmp_la_SOURCES)
-DIST_SOURCES = $(libOsiFmp_la_SOURCES)
+SOURCES = $(libOsiGrb_la_SOURCES)
+DIST_SOURCES = $(libOsiGrb_la_SOURCES)
 includecoinHEADERS_INSTALL = $(INSTALL_HEADER)
 HEADERS = $(includecoin_HEADERS)
 ETAGS = etags
@@ -331,19 +329,17 @@ target_alias = @target_alias@
 AUTOMAKE_OPTIONS = foreign
 
 ########################################################################
-#                             libOsiFmp                                #
+#                             libOsiGrb                                 
 ########################################################################
 
 # Name of the library compiled in this directory.
-lib_LTLIBRARIES = libOsiFmp.la
+lib_LTLIBRARIES = libOsiGrb.la
 
 # List all source files for this library, including headers
-libOsiFmp_la_SOURCES = \
-	OsiFmpSolverInterface.cpp OsiFmpSolverInterface.hpp
-
+libOsiGrb_la_SOURCES = OsiGrbSolverInterface.cpp OsiGrbSolverInterface.hpp
 
 # This is for libtool (on Windows)
-libOsiFmp_la_LDFLAGS = $(LT_LDFLAGS)
+libOsiGrb_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows.
@@ -352,7 +348,7 @@ libOsiFmp_la_LDFLAGS = $(LT_LDFLAGS)
 AM_CPPFLAGS = \
 	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(COINUTILSOBJDIR)/inc` \
-	-I`$(CYGPATH_W) $(FMPINCDIR)` \
+	-I`$(CYGPATH_W) $(GRBINCDIR)` \
 	-I`$(CYGPATH_W) $(srcdir)/..`
 
 
@@ -367,9 +363,7 @@ DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/inc
 # Here list all the header files that are required by a user of the library,
 # and that therefore should be installed in 'install/coin'
 includecoindir = $(includedir)/coin
-includecoin_HEADERS = \
-	OsiFmpSolverInterface.hpp
-
+includecoin_HEADERS = OsiGrbSolverInterface.hpp
 all: all-am
 
 .SUFFIXES:
@@ -383,9 +377,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  src/OsiFmp/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  src/OsiGrb/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  src/OsiFmp/Makefile
+	  $(AUTOMAKE) --foreign  src/OsiGrb/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -430,8 +424,8 @@ clean-libLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-libOsiFmp.la: $(libOsiFmp_la_OBJECTS) $(libOsiFmp_la_DEPENDENCIES) 
-	$(CXXLINK) -rpath $(libdir) $(libOsiFmp_la_LDFLAGS) $(libOsiFmp_la_OBJECTS) $(libOsiFmp_la_LIBADD) $(LIBS)
+libOsiGrb.la: $(libOsiGrb_la_OBJECTS) $(libOsiGrb_la_DEPENDENCIES) 
+	$(CXXLINK) -rpath $(libdir) $(libOsiGrb_la_LDFLAGS) $(libOsiGrb_la_OBJECTS) $(libOsiGrb_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -439,7 +433,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiFmpSolverInterface.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiGrbSolverInterface.Plo@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \

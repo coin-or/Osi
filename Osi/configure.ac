@@ -77,6 +77,7 @@ AC_COIN_HAS_USER_LIBRARY([Mosek],[MSK],[mosek.h],[MSK_makeenv])
 AC_COIN_HAS_USER_LIBRARY([Osl],[OSL],[ekk_c_api.h],[ekk_simplex])
 AC_COIN_HAS_USER_LIBRARY([Soplex],[SPX],[spxsolver.h]) # ToDo
 AC_COIN_HAS_USER_LIBRARY([Xpress],[XPR],[xprs.h],[XPRSinit])
+AC_COIN_HAS_USER_LIBRARY([Gurobi],[GRB],[gurobi_c.h],[GRBloadenv])
 
 # Glpk can be supplied as a ThirdParty code, or as an external library in the
 # same was as the previous solvers.
@@ -152,6 +153,7 @@ AC_CONFIG_FILES([Makefile
                  src/OsiSym/Makefile
                  src/OsiVol/Makefile
                  src/OsiXpr/Makefile
+                 src/OsiGrb/Makefile
                  test/Makefile
 		 osi_addlibs.txt])
 

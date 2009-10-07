@@ -55,6 +55,7 @@ host_triplet = @host@
 @COIN_HAS_SYMPHONY_TRUE@am__append_10 = OsiSym
 @COIN_HAS_VOL_TRUE@am__append_11 = OsiVol
 @COIN_HAS_XPR_TRUE@am__append_12 = OsiXpr
+@COIN_HAS_GRB_TRUE@am__append_13 = OsiGrb
 subdir = src
 DIST_COMMON = $(includecoin_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
@@ -115,7 +116,7 @@ HEADERS = $(includecoin_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DIST_SUBDIRS = . OsiCbc OsiClp OsiCpx OsiDylp OsiFmp OsiGlpk OsiMsk \
-	OsiOsl OsiSpx OsiSym OsiVol OsiXpr
+	OsiOsl OsiSpx OsiSym OsiVol OsiXpr OsiGrb
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ADDLIBS = @ADDLIBS@
@@ -171,6 +172,8 @@ COIN_HAS_FMP_FALSE = @COIN_HAS_FMP_FALSE@
 COIN_HAS_FMP_TRUE = @COIN_HAS_FMP_TRUE@
 COIN_HAS_GLPK_FALSE = @COIN_HAS_GLPK_FALSE@
 COIN_HAS_GLPK_TRUE = @COIN_HAS_GLPK_TRUE@
+COIN_HAS_GRB_FALSE = @COIN_HAS_GRB_FALSE@
+COIN_HAS_GRB_TRUE = @COIN_HAS_GRB_TRUE@
 COIN_HAS_MSK_FALSE = @COIN_HAS_MSK_FALSE@
 COIN_HAS_MSK_TRUE = @COIN_HAS_MSK_TRUE@
 COIN_HAS_OSI_FALSE = @COIN_HAS_OSI_FALSE@
@@ -216,6 +219,8 @@ FMPLIB = @FMPLIB@
 GLPKINCDIR = @GLPKINCDIR@
 GLPKLIB = @GLPKLIB@
 GLPKOBJDIR = @GLPKOBJDIR@
+GRBINCDIR = @GRBINCDIR@
+GRBLIB = @GRBLIB@
 HAVE_EXTERNALS_FALSE = @HAVE_EXTERNALS_FALSE@
 HAVE_EXTERNALS_TRUE = @HAVE_EXTERNALS_TRUE@
 INSTALL_DATA = @INSTALL_DATA@
@@ -398,7 +403,8 @@ DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/inc
 SUBDIRS = . $(am__append_1) $(am__append_2) $(am__append_3) \
 	$(am__append_4) $(am__append_5) $(am__append_6) \
 	$(am__append_7) $(am__append_8) $(am__append_9) \
-	$(am__append_10) $(am__append_11) $(am__append_12)
+	$(am__append_10) $(am__append_11) $(am__append_12) \
+	$(am__append_13)
 
 ########################################################################
 #                Headers that need to be installed                     #

@@ -472,7 +472,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os ADDLIBS FADDLIBS ALWAYS_FALSE_TRUE ALWAYS_FALSE_FALSE CDEFS ADD_CFLAGS DBG_CFLAGS OPT_CFLAGS sol_cc_compiler CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT MPICC CXXDEFS ADD_CXXFLAGS DBG_CXXFLAGS OPT_CXXFLAGS CXX CXXFLAGS ac_ct_CXX MPICXX EGREP INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT LIBTOOLM4 have_autoconf have_automake have_svn BUILDTOOLSDIR AUX_DIR abs_source_dir abs_lib_dir abs_include_dir abs_bin_dir HAVE_EXTERNALS_TRUE HAVE_EXTERNALS_FALSE host host_cpu host_vendor host_os LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CPP CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL ac_c_preproc_warn_flag ac_cxx_preproc_warn_flag RPATH_FLAGS LT_LDFLAGS CBCSRCDIR CBCOBJDIR CBCDOCDIR COIN_HAS_CBC_TRUE COIN_HAS_CBC_FALSE CGLSRCDIR CGLOBJDIR CGLDOCDIR COIN_HAS_CGL_TRUE COIN_HAS_CGL_FALSE CLPSRCDIR CLPOBJDIR CLPDOCDIR COIN_HAS_CLP_TRUE COIN_HAS_CLP_FALSE COINUTILSSRCDIR COINUTILSOBJDIR COINUTILSDOCDIR COIN_HAS_COINUTILS_TRUE COIN_HAS_COINUTILS_FALSE DYLPSRCDIR DYLPOBJDIR DYLPDOCDIR COIN_HAS_DYLP_TRUE COIN_HAS_DYLP_FALSE OSISRCDIR OSIOBJDIR OSIDOCDIR COIN_HAS_OSI_TRUE COIN_HAS_OSI_FALSE SYMPHONYSRCDIR SYMPHONYOBJDIR SYMPHONYDOCDIR COIN_HAS_SYMPHONY_TRUE COIN_HAS_SYMPHONY_FALSE VOLSRCDIR VOLOBJDIR VOLDOCDIR COIN_HAS_VOL_TRUE COIN_HAS_VOL_FALSE CPXINCDIR CPXLIB COIN_HAS_CPX_TRUE COIN_HAS_CPX_FALSE FMPINCDIR FMPLIB COIN_HAS_FMP_TRUE COIN_HAS_FMP_FALSE MSKINCDIR MSKLIB COIN_HAS_MSK_TRUE COIN_HAS_MSK_FALSE OSLINCDIR OSLLIB COIN_HAS_OSL_TRUE COIN_HAS_OSL_FALSE SPXINCDIR SPXLIB COIN_HAS_SPX_TRUE COIN_HAS_SPX_FALSE XPRINCDIR XPRLIB COIN_HAS_XPR_TRUE COIN_HAS_XPR_FALSE GLPKINCDIR GLPKLIB COIN_HAS_GLPK_TRUE COIN_HAS_GLPK_FALSE GLPKOBJDIR COIN_BUILD_GLPK_TRUE COIN_BUILD_GLPK_FALSE ASLLIB ASL_CPPFLAGS COIN_HAS_ASL_TRUE COIN_HAS_ASL_FALSE OSICBC_DFLT_SOLVER_CLP_TRUE OSICBC_DFLT_SOLVER_CLP_FALSE OSICBC_DFLT_SOLVER_CPX_TRUE OSICBC_DFLT_SOLVER_CPX_FALSE OSICBC_DFLT_SOLVER_DYLP_TRUE OSICBC_DFLT_SOLVER_DYLP_FALSE OSICBC_DFLT_SOLVER_FMP_TRUE OSICBC_DFLT_SOLVER_FMP_FALSE OSICBC_DFLT_SOLVER_GLPK_TRUE OSICBC_DFLT_SOLVER_GLPK_FALSE OSICBC_DFLT_SOLVER_MSK_TRUE OSICBC_DFLT_SOLVER_MSK_FALSE OSICBC_DFLT_SOLVER_OSL_TRUE OSICBC_DFLT_SOLVER_OSL_FALSE OSICBC_DFLT_SOLVER_SPX_TRUE OSICBC_DFLT_SOLVER_SPX_FALSE OSICBC_DFLT_SOLVER_SYM_TRUE OSICBC_DFLT_SOLVER_SYM_FALSE OSICBC_DFLT_SOLVER_VOL_TRUE OSICBC_DFLT_SOLVER_VOL_FALSE OSICBC_DFLT_SOLVER_XPR_TRUE OSICBC_DFLT_SOLVER_XPR_FALSE MSKCXXFLAGS LIBEXT VPATH_DISTCLEANFILES LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os ADDLIBS FADDLIBS ALWAYS_FALSE_TRUE ALWAYS_FALSE_FALSE CDEFS ADD_CFLAGS DBG_CFLAGS OPT_CFLAGS sol_cc_compiler CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT MPICC CXXDEFS ADD_CXXFLAGS DBG_CXXFLAGS OPT_CXXFLAGS CXX CXXFLAGS ac_ct_CXX MPICXX EGREP INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT LIBTOOLM4 have_autoconf have_automake have_svn BUILDTOOLSDIR AUX_DIR abs_source_dir abs_lib_dir abs_include_dir abs_bin_dir HAVE_EXTERNALS_TRUE HAVE_EXTERNALS_FALSE host host_cpu host_vendor host_os LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CPP CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL ac_c_preproc_warn_flag ac_cxx_preproc_warn_flag RPATH_FLAGS LT_LDFLAGS CBCSRCDIR CBCOBJDIR CBCDOCDIR COIN_HAS_CBC_TRUE COIN_HAS_CBC_FALSE CGLSRCDIR CGLOBJDIR CGLDOCDIR COIN_HAS_CGL_TRUE COIN_HAS_CGL_FALSE CLPSRCDIR CLPOBJDIR CLPDOCDIR COIN_HAS_CLP_TRUE COIN_HAS_CLP_FALSE COINUTILSSRCDIR COINUTILSOBJDIR COINUTILSDOCDIR COIN_HAS_COINUTILS_TRUE COIN_HAS_COINUTILS_FALSE DYLPSRCDIR DYLPOBJDIR DYLPDOCDIR COIN_HAS_DYLP_TRUE COIN_HAS_DYLP_FALSE OSISRCDIR OSIOBJDIR OSIDOCDIR COIN_HAS_OSI_TRUE COIN_HAS_OSI_FALSE SYMPHONYSRCDIR SYMPHONYOBJDIR SYMPHONYDOCDIR COIN_HAS_SYMPHONY_TRUE COIN_HAS_SYMPHONY_FALSE VOLSRCDIR VOLOBJDIR VOLDOCDIR COIN_HAS_VOL_TRUE COIN_HAS_VOL_FALSE CPXINCDIR CPXLIB COIN_HAS_CPX_TRUE COIN_HAS_CPX_FALSE FMPINCDIR FMPLIB COIN_HAS_FMP_TRUE COIN_HAS_FMP_FALSE MSKINCDIR MSKLIB COIN_HAS_MSK_TRUE COIN_HAS_MSK_FALSE OSLINCDIR OSLLIB COIN_HAS_OSL_TRUE COIN_HAS_OSL_FALSE SPXINCDIR SPXLIB COIN_HAS_SPX_TRUE COIN_HAS_SPX_FALSE XPRINCDIR XPRLIB COIN_HAS_XPR_TRUE COIN_HAS_XPR_FALSE GRBINCDIR GRBLIB COIN_HAS_GRB_TRUE COIN_HAS_GRB_FALSE GLPKINCDIR GLPKLIB COIN_HAS_GLPK_TRUE COIN_HAS_GLPK_FALSE GLPKOBJDIR COIN_BUILD_GLPK_TRUE COIN_BUILD_GLPK_FALSE ASLLIB ASL_CPPFLAGS COIN_HAS_ASL_TRUE COIN_HAS_ASL_FALSE OSICBC_DFLT_SOLVER_CLP_TRUE OSICBC_DFLT_SOLVER_CLP_FALSE OSICBC_DFLT_SOLVER_CPX_TRUE OSICBC_DFLT_SOLVER_CPX_FALSE OSICBC_DFLT_SOLVER_DYLP_TRUE OSICBC_DFLT_SOLVER_DYLP_FALSE OSICBC_DFLT_SOLVER_FMP_TRUE OSICBC_DFLT_SOLVER_FMP_FALSE OSICBC_DFLT_SOLVER_GLPK_TRUE OSICBC_DFLT_SOLVER_GLPK_FALSE OSICBC_DFLT_SOLVER_MSK_TRUE OSICBC_DFLT_SOLVER_MSK_FALSE OSICBC_DFLT_SOLVER_OSL_TRUE OSICBC_DFLT_SOLVER_OSL_FALSE OSICBC_DFLT_SOLVER_SPX_TRUE OSICBC_DFLT_SOLVER_SPX_FALSE OSICBC_DFLT_SOLVER_SYM_TRUE OSICBC_DFLT_SOLVER_SYM_FALSE OSICBC_DFLT_SOLVER_VOL_TRUE OSICBC_DFLT_SOLVER_VOL_FALSE OSICBC_DFLT_SOLVER_XPR_TRUE OSICBC_DFLT_SOLVER_XPR_FALSE MSKCXXFLAGS LIBEXT VPATH_DISTCLEANFILES LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -1107,6 +1107,9 @@ Optional Features:
   --enable-xpress-libcheck
                           use disable-xpress-libcheck to skip the
                           link check at configuration time
+  --enable-gurobi-libcheck
+                          use disable-gurobi-libcheck to skip the
+                          link check at configuration time
   --enable-glpk-libcheck use disable-glpk-libcheck to skip the
                           link check at configuration time
   --enable-osidylp-info   Enable OsiDylp's informational printing (output will
@@ -1140,6 +1143,8 @@ Optional Packages:
   --with-soplex-lib specify the flags used to link with the library Soplex
   --with-xpress-incdir specify the header file directory for library Xpress
   --with-xpress-lib specify the flags used to link with the library Xpress
+  --with-gurobi-incdir specify the header file directory for library Gurobi
+  --with-gurobi-lib specify the flags used to link with the library Gurobi
   --with-glpk-incdir specify the header file directory for library Glpk
   --with-glpk-lib specify the flags used to link with the library Glpk
   --with-asldir           specify path to AMPL solver directory (or BUILD for
@@ -5823,7 +5828,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 5826 "configure"' > conftest.$ac_ext
+  echo '#line 5831 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -6957,7 +6962,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:6960:" \
+echo "$as_me:6965:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -8024,11 +8029,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8027: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8032: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8031: \$? = $ac_status" >&5
+   echo "$as_me:8036: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8292,11 +8297,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8295: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8300: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8299: \$? = $ac_status" >&5
+   echo "$as_me:8304: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8396,11 +8401,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8399: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8404: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8403: \$? = $ac_status" >&5
+   echo "$as_me:8408: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -10741,7 +10746,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 10744 "configure"
+#line 10749 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -10841,7 +10846,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 10844 "configure"
+#line 10849 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -13185,11 +13190,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13188: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13193: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:13192: \$? = $ac_status" >&5
+   echo "$as_me:13197: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -13289,11 +13294,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13292: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13297: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:13296: \$? = $ac_status" >&5
+   echo "$as_me:13301: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -14859,11 +14864,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14862: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14867: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:14866: \$? = $ac_status" >&5
+   echo "$as_me:14871: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -14963,11 +14968,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14966: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14971: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:14970: \$? = $ac_status" >&5
+   echo "$as_me:14975: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -17170,11 +17175,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17173: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17178: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:17177: \$? = $ac_status" >&5
+   echo "$as_me:17182: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -17438,11 +17443,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17441: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17446: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:17445: \$? = $ac_status" >&5
+   echo "$as_me:17450: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -17542,11 +17547,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17545: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17550: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:17549: \$? = $ac_status" >&5
+   echo "$as_me:17554: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -21856,6 +21861,189 @@ fi
 
 
 
+  echo "$as_me:$LINENO: checking if user provides library for Gurobi" >&5
+echo $ECHO_N "checking if user provides library for Gurobi... $ECHO_C" >&6
+
+# Check for header file directory
+
+
+# Check whether --with-gurobi-incdir or --without-gurobi-incdir was given.
+if test "${with_gurobi_incdir+set}" = set; then
+  withval="$with_gurobi_incdir"
+  GRBINCDIR=`cd $withval; pwd`
+fi;
+
+# Check for library directory
+
+
+# Check whether --with-gurobi-lib or --without-gurobi-lib was given.
+if test "${with_gurobi_lib+set}" = set; then
+  withval="$with_gurobi_lib"
+  GRBLIB=$withval
+fi;
+
+# Switch to disable library check if requested
+
+  # Check whether --enable-gurobi-libcheck or --disable-gurobi-libcheck was given.
+if test "${enable_gurobi_libcheck+set}" = set; then
+  enableval="$enable_gurobi_libcheck"
+  gurobi_libcheck=$enableval
+else
+  gurobi_libcheck=yes
+fi;
+
+# At this point, if we're going to use the library, both LBRYINCDIR and
+# LBRYLIB must be defined and not empty.
+
+  if test x"$GRBINCDIR" != x || test x"$GRBLIB" != x; then
+    if test x"$GRBINCDIR" = x || test x"$GRBLIB" = x; then
+      { { echo "$as_me:$LINENO: error: You need to specify both an include directory and link flags to use library Gurobi. Use --with-gurobi-incdir of environment variable $GRBINCDIR to specify the include directory. Use --with-gurobi-lib or environment variable $GRBLIB to specify link flags." >&5
+echo "$as_me: error: You need to specify both an include directory and link flags to use library Gurobi. Use --with-gurobi-incdir of environment variable $GRBINCDIR to specify the include directory. Use --with-gurobi-lib or environment variable $GRBLIB to specify link flags." >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+    coin_has_grb=true
+    echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+  else
+    coin_has_grb=false
+    echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+  fi
+
+# If we have instructions for use, consider header and link checks.
+
+  if test $coin_has_grb = true; then
+
+# If argument 3 (file) is given, check for the file. Typically this will be a
+# header file, but that's not assumed.
+
+    if test -r $GRBINCDIR/gurobi_c.h; then
+
+  :
+else
+  { { echo "$as_me:$LINENO: error: Cannot find file gurobi_c.h in $GRBINCDIR" >&5
+echo "$as_me: error: Cannot find file gurobi_c.h in $GRBINCDIR" >&2;}
+   { (exit 1); exit 1; }; }
+  :
+fi
+
+
+# Now see if we can link the function. There are arguments for and against
+# assuming argument 3 is a header file declaring the function. A correct
+# function declaration is the main argument in favour. Having to cope with
+# possible dependencies or other oddities are the main arguments against.
+# Force the use of C as the best single choice amongst C++, C, and Fortran.
+# Obviously, this has limits.
+
+    if test x"$gurobi_libcheck" != xno; then
+	   coin_save_LIBS="$LIBS"
+	   LIBS="$GRBLIB $ADDLIBS"
+	   coin_GRB_link=no
+	   ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+	   for fnm in GRBloadenv ; do
+	     echo "$as_me:$LINENO: checking whether symbol $fnm is available with GRB" >&5
+echo $ECHO_N "checking whether symbol $fnm is available with GRB... $ECHO_C" >&6
+	     cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+int
+main ()
+{
+$fnm()
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+		  coin_GRB_link=yes
+		  break
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+	   done
+	   ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+	   if test x"$coin_GRB_link" = xyes ; then
+	     LIBS="$coin_save_LIBS"
+	   else
+	     { { echo "$as_me:$LINENO: error: Cannot find symbol(s) GRBloadenv with GRB" >&5
+echo "$as_me: error: Cannot find symbol(s) GRBloadenv with GRB" >&2;}
+   { (exit 1); exit 1; }; }
+	   fi
+	 fi
+
+
+# If we make it this far, we've verified the file and linked the function. Add
+# the necessary link flags to ADDLIBS and define the preprocessor symbol
+# COIN_HAS_LBRY.
+
+    ADDLIBS="$GRBLIB $ADDLIBS"
+
+cat >>confdefs.h <<\_ACEOF
+#define COIN_HAS_GRB 1
+_ACEOF
+
+  fi
+
+# Arrange for configure to substitute LBRYINCDIR and LBRYLIB and create the
+# automake conditional. These actions must occur unconditionally.
+
+
+
+
+
+if test $coin_has_grb = true; then
+  COIN_HAS_GRB_TRUE=
+  COIN_HAS_GRB_FALSE='#'
+else
+  COIN_HAS_GRB_TRUE='#'
+  COIN_HAS_GRB_FALSE=
+fi
+
+
+
 # Glpk can be supplied as a ThirdParty code, or as an external library in the
 # same was as the previous solvers.
 
@@ -22796,7 +22984,7 @@ fi
 
 # Here list all the files that configure should create (except for the
 # configuration header file)
-                                                                                                                                                                          ac_config_files="$ac_config_files Makefile examples/Makefile src/Makefile src/OsiCbc/Makefile src/OsiClp/Makefile src/OsiCpx/Makefile src/OsiDylp/Makefile src/OsiFmp/Makefile src/OsiGlpk/Makefile src/OsiMsk/Makefile src/OsiOsl/Makefile src/OsiSpx/Makefile src/OsiSym/Makefile src/OsiVol/Makefile src/OsiXpr/Makefile test/Makefile osi_addlibs.txt"
+                                                                                                                                                                                    ac_config_files="$ac_config_files Makefile examples/Makefile src/Makefile src/OsiCbc/Makefile src/OsiClp/Makefile src/OsiCpx/Makefile src/OsiDylp/Makefile src/OsiFmp/Makefile src/OsiGlpk/Makefile src/OsiMsk/Makefile src/OsiOsl/Makefile src/OsiSpx/Makefile src/OsiSym/Makefile src/OsiVol/Makefile src/OsiXpr/Makefile src/OsiGrb/Makefile test/Makefile osi_addlibs.txt"
 
 
 # Here put the location and name of the configuration header file
@@ -23089,6 +23277,13 @@ if test -z "${COIN_HAS_XPR_TRUE}" && test -z "${COIN_HAS_XPR_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"COIN_HAS_XPR\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"COIN_HAS_XPR\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${COIN_HAS_GRB_TRUE}" && test -z "${COIN_HAS_GRB_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"COIN_HAS_GRB\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"COIN_HAS_GRB\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -23656,6 +23851,7 @@ do
   "src/OsiSym/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/OsiSym/Makefile" ;;
   "src/OsiVol/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/OsiVol/Makefile" ;;
   "src/OsiXpr/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/OsiXpr/Makefile" ;;
+  "src/OsiGrb/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/OsiGrb/Makefile" ;;
   "test/Makefile" ) CONFIG_FILES="$CONFIG_FILES test/Makefile" ;;
   "osi_addlibs.txt" ) CONFIG_FILES="$CONFIG_FILES osi_addlibs.txt" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
@@ -23908,6 +24104,10 @@ s,@XPRINCDIR@,$XPRINCDIR,;t t
 s,@XPRLIB@,$XPRLIB,;t t
 s,@COIN_HAS_XPR_TRUE@,$COIN_HAS_XPR_TRUE,;t t
 s,@COIN_HAS_XPR_FALSE@,$COIN_HAS_XPR_FALSE,;t t
+s,@GRBINCDIR@,$GRBINCDIR,;t t
+s,@GRBLIB@,$GRBLIB,;t t
+s,@COIN_HAS_GRB_TRUE@,$COIN_HAS_GRB_TRUE,;t t
+s,@COIN_HAS_GRB_FALSE@,$COIN_HAS_GRB_FALSE,;t t
 s,@GLPKINCDIR@,$GLPKINCDIR,;t t
 s,@GLPKLIB@,$GLPKLIB,;t t
 s,@COIN_HAS_GLPK_TRUE@,$COIN_HAS_GLPK_TRUE,;t t

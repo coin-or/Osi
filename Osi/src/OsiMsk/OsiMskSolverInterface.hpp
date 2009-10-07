@@ -1,4 +1,4 @@
-// Osi interface for Mosek ver. 3.1 
+// Osi interface for Mosek ver. 5.0
 // Lower versions are not supported
 //-----------------------------------------------------------------------------
 // name:     OSI Interface for MOSEK

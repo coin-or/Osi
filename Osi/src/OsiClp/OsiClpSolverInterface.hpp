@@ -52,6 +52,14 @@ public:
   /// Invoke solver's built-in enumeration algorithm
   virtual void branchAndBound();
 
+  /** Solve when primal column and dual row solutions are near-optimal
+      options - 0 no presolve (use primal and dual)
+                1 presolve (just use primal)
+		2 no presolve (just use primal)
+      basis -   0 use all slack basis
+                1 try and put some in basis
+  */
+  void crossover(int options,int basis);
   //@}
   
   ///@name OsiSimplexInterface methods 

@@ -7851,7 +7851,7 @@ OsiClpSolverInterface::tightenBounds(int lightweight)
   const double *objective = getObjCoefficients() ;
   double direction = getObjSense();
   double * down = new double [numberRows];
-  if (lightweight) {
+  if (lightweight>0) {
     int * first = new int[numberRows];
     CoinZeroN(first,numberRows);
     CoinZeroN(down,numberRows);
@@ -8240,6 +8240,181 @@ OsiClpSolverInterface::tightenBounds(int lightweight)
       }
     }
   }
+  if (lightweight<0) {
+    // get max down and up again
+    CoinZeroN(down,numberRows);
+    CoinZeroN(up,numberRows);
+    CoinZeroN(type,numberRows);
+    int * seqDown = new int [2*numberRows];
+    int * seqUp=seqDown+numberRows;
+    for (int i=0;i<numberRows;i++) {
+      seqDown[i]=-1;
+      seqUp[i]=-1;
+    }
+    for (iColumn=0;iColumn<numberColumns;iColumn++) {
+      CoinBigIndex start = columnStart[iColumn];
+      CoinBigIndex end = start + columnLength[iColumn];
+      double lower = columnLower[iColumn];
+      double upper = columnUpper[iColumn];
+      if (lower==upper) {
+	for (CoinBigIndex j=start;j<end;j++) {
+	  int iRow = row[j];
+	  double value = element[j];
+	  if ((type[iRow]&1)==0)
+	    down[iRow] += value*lower;
+	  if ((type[iRow]&2)==0)
+	    up[iRow] += value*lower;
+	}
+      } else {
+	for (CoinBigIndex j=start;j<end;j++) {
+	  int iRow = row[j];
+	  double value = element[j];
+	  if (value>0.0) {
+	    if ((type[iRow]&1)==0) {
+	      if (lower>-1.0e8) {
+		down[iRow] += value*lower;
+	      } else if (seqDown[iRow]<0) {
+		seqDown[iRow]=iColumn;
+	      } else {
+		type[iRow] |= 1;
+	      }
+	    }
+	    if ((type[iRow]&2)==0) {
+	      if (upper<1.0e8) {
+		up[iRow] += value*upper;
+		sum[iRow]+=fabs(value*upper);
+	      } else if (seqUp[iRow]<0) {
+		seqUp[iRow]=iColumn;
+	      } else {
+		type[iRow] |= 2;
+	      }
+	    }
+	  } else {
+	    if ((type[iRow]&1)==0) {
+	      if (upper<1.0e8) {
+		down[iRow] += value*upper;
+		sum[iRow]+=fabs(value*upper);
+	      } else if (seqDown[iRow]<0) {
+		seqDown[iRow]=iColumn;
+	      } else {
+		type[iRow] |= 1;
+	      }
+	    }
+	    if ((type[iRow]&2)==0) {
+	      if (lower>-1.0e8) {
+		up[iRow] += value*lower;
+		sum[iRow]+=fabs(value*lower);
+	      } else if (seqUp[iRow]<0) {
+		seqUp[iRow]=iColumn;
+	      } else {
+		type[iRow] |= 2;
+	      }
+	    }
+	  }
+	}
+      }
+    }
+    for (iColumn=0;iColumn<numberColumns;iColumn++) {
+      double lower = columnLower[iColumn];
+      double upper = columnUpper[iColumn];
+      double gap = upper-lower;
+      if (!gap)
+	continue;
+      CoinBigIndex start = columnStart[iColumn];
+      CoinBigIndex end = start + columnLength[iColumn];
+      if (lower<-1.0e8&&upper>1.0e8)
+	continue; // Could do severe damage to accuracy
+      double newLower=upper;
+      double newUpper=lower;
+      bool badUpper=false;
+      bool badLower=false;
+      double objValue = objective[iColumn]*direction;
+      for (CoinBigIndex j=start;j<end;j++) {
+	int iRow = row[j];
+	double value = element[j];
+	if (value>0.0) {
+	  if (rowLower[iRow]>-COIN_DBL_MAX) {
+	    if (!badUpper&&(type[iRow]&1)==0&&
+		(seqDown[iRow]<0||seqDown[iRow]==iColumn)) {
+	      double s=down[iRow];
+	      if (seqDown[iRow]!=iColumn)
+		s -= lower*value;
+	      if (s+newUpper*value<rowLower[iRow]) {
+		newUpper = CoinMax(newUpper,(rowLower[iRow]-s)/value);
+	      }
+	    } else {
+	      badUpper=true;
+	    }
+	  }
+	  if (rowUpper[iRow]<COIN_DBL_MAX) {
+	    if (!badLower&&(type[iRow]&2)==0&&
+		(seqUp[iRow]<0||seqUp[iRow]==iColumn)) {
+	      double s=up[iRow];
+	      if (seqUp[iRow]!=iColumn)
+		s -= upper*value;
+	      if (s+newLower*value>rowUpper[iRow]) {
+		newLower = CoinMin(newLower,(rowUpper[iRow]-s)/value);
+	      }
+	    } else {
+	      badLower=true;
+	    }
+	  }
+	} else {
+	  if (rowUpper[iRow]<COIN_DBL_MAX) {
+	    if (!badUpper&&(type[iRow]&2)==0&&
+		(seqUp[iRow]<0||seqUp[iRow]==iColumn)) {
+	      double s=up[iRow];
+	      if (seqUp[iRow]!=iColumn)
+		s -= lower*value;
+	      if (s+newUpper*value>rowUpper[iRow]) {
+		newUpper = CoinMax(newUpper,(rowUpper[iRow]-s)/value);
+	      }
+	    } else {
+	      badUpper=true;
+	    }
+	  }
+	  if (rowLower[iRow]>-COIN_DBL_MAX) {
+	    if (!badLower&&(type[iRow]&1)==0&&
+		(seqDown[iRow]<0||seqDown[iRow]==iColumn)) {
+	      double s=down[iRow];
+	      if (seqDown[iRow]!=iColumn)
+		s -= lower*value;
+	      if (s+newLower*value<rowLower[iRow]) {
+		newLower = CoinMin(newLower,(rowLower[iRow]-s)/value);
+	      }
+	    } else {
+	      badLower=true;
+	    }
+	  }
+	}
+      }
+      if (badLower||objValue>0.0)
+	newLower=lower;
+      if (badUpper||objValue<0.0)
+	newUpper=upper;
+      if (newUpper<upper||newLower>lower) {
+	nTightened++;
+	if (newLower>newUpper) {
+	  // infeasible
+#if COIN_DEVELOP>0
+	  printf("infeasible on column %d\n",iColumn);
+#endif
+	  nTightened=-1;
+	  break;
+	} else {
+	  newLower=CoinMax(newLower,lower);
+	  newUpper=CoinMin(newUpper,upper);
+	  if (integerInformation_[iColumn]) {
+	    newLower=ceil(newLower-1.0e-5);
+	    newUpper=floor(newUpper+1.0e-5);
+	  }
+	  setColLower(iColumn,newLower);
+	  setColUpper(iColumn,newUpper);
+	}
+      }
+    }
+    delete [] seqDown;
+  }
   delete [] type;
   delete [] down;
   delete [] up;
@@ -8426,6 +8601,282 @@ OsiClpSolverInterface::setFakeObjective(double * fakeObjective)
 					    modelPtr_->numberColumns_);
   else
     fakeObjective_ = NULL;
+}
+/* Solve when primal column and dual row solutions are near-optimal
+   options - 0 no presolve (use primal and dual)
+             1 presolve (just use primal)
+	     2 no presolve (just use primal)
+   basis - 0 use all slack basis
+           1 try and put some in basis
+*/
+void 
+OsiClpSolverInterface::crossover(int options,int basis)
+{
+  int numberRows = modelPtr_->getNumRows();
+  int numberColumns = modelPtr_->getNumCols();
+  // Get row activities and column reduced costs
+  const double * objective = modelPtr_->objective();
+  double direction = modelPtr_->optimizationDirection();
+  double * dual = modelPtr_->dualRowSolution();
+  double * dj = modelPtr_->dualColumnSolution();
+  CoinMemcpyN(objective,numberColumns,dj);
+  if (direction==-1.0) {
+    for (int i=0;i<numberColumns;i++)
+      dj[i] = - dj[i];
+  }
+  modelPtr_->clpMatrix()->transposeTimes(-1.0,dual,dj);
+  double * rowActivity = modelPtr_->primalRowSolution();
+  double * columnActivity = modelPtr_->primalColumnSolution();
+  CoinZeroN(rowActivity,numberRows);
+  modelPtr_->clpMatrix()->times(1.0,columnActivity,rowActivity);
+  modelPtr_->checkSolution();
+  printf("%d primal infeasibilities summing to %g\n",
+	 modelPtr_->numberPrimalInfeasibilities(),
+	 modelPtr_->sumPrimalInfeasibilities());
+  printf("%d dual infeasibilities summing to %g\n",
+	 modelPtr_->numberDualInfeasibilities(),
+	 modelPtr_->sumDualInfeasibilities());
+  // get which variables are fixed
+  double * saveLower=NULL;
+  double * saveUpper=NULL;
+  ClpPresolve pinfo2;
+  bool extraPresolve=false;
+  bool useBoth= (options==0);
+  // create all slack basis
+  modelPtr_->createStatus();
+  // Point to model - so can use in presolved model
+  ClpSimplex * model2 = modelPtr_;
+  double tolerance = modelPtr_->primalTolerance()*10.0;
+  if (options==1) {
+    int numberTotal = numberRows+numberColumns;
+    saveLower = new double [numberTotal];
+    saveUpper = new double [numberTotal];
+    CoinMemcpyN(modelPtr_->columnLower(),numberColumns,saveLower);
+    CoinMemcpyN(modelPtr_->rowLower(),numberRows,saveLower+numberColumns);
+    CoinMemcpyN(modelPtr_->columnUpper(),numberColumns,saveUpper);
+    CoinMemcpyN(modelPtr_->rowUpper(),numberRows,saveUpper+numberColumns);
+    double * lower = modelPtr_->columnLower();
+    double * upper = modelPtr_->columnUpper();
+    double * solution = modelPtr_->primalColumnSolution();
+    int nFix=0;
+    for (int i=0;i<numberColumns;i++) {
+      if (lower[i]<upper[i]&&(lower[i]>-1.0e10||upper[i]<1.0e10)) {
+	double value = solution[i];
+	if (value<lower[i]+tolerance&&value-lower[i]<upper[i]-value) {
+	  solution[i]=lower[i];
+	  upper[i]=lower[i];
+	  nFix++;
+	} else if (value>upper[i]-tolerance&&value-lower[i]>upper[i]-value) {
+	  solution[i]=upper[i];
+	  lower[i]=upper[i];
+	  nFix++;
+	}
+      }
+    }
+#ifdef CLP_INVESTIGATE
+    printf("%d columns fixed\n",nFix);
+#endif
+#if 0
+    int nr=modelPtr_->numberRows();
+    lower = modelPtr_->rowLower();
+    upper = modelPtr_->rowUpper();
+    solution = modelPtr_->primalRowSolution();
+    nFix=0;
+    for (int i=0;i<nr;i++) {
+      if (lower[i]<upper[i]) {
+	double value = solution[i];
+	if (value<lower[i]+tolerance&&value-lower[i]<upper[i]-value) {
+	  solution[i]=lower[i];
+	  upper[i]=lower[i];
+	  nFix++;
+	} else if (value>upper[i]-tolerance&&value-lower[i]>upper[i]-value) {
+	  solution[i]=upper[i];
+	  lower[i]=upper[i];
+	  nFix++;
+	}
+      }
+    }
+#ifdef CLP_INVESTIGATE
+    printf("%d row slacks fixed\n",nFix);
+#endif
+#endif
+    extraPresolve=true;
+    // do presolve
+    model2 = pinfo2.presolvedModel(*modelPtr_,modelPtr_->presolveTolerance(),
+				   false,5,true);
+    if (!model2) {
+      model2=modelPtr_;
+      CoinMemcpyN(saveLower,numberColumns,model2->columnLower());
+      CoinMemcpyN(saveLower+numberColumns,numberRows,model2->rowLower());
+      delete [] saveLower;
+      CoinMemcpyN(saveUpper,numberColumns,model2->columnUpper());
+      CoinMemcpyN(saveUpper+numberColumns,numberRows,model2->rowUpper());
+      delete [] saveUpper;
+      saveLower=NULL;
+      saveUpper=NULL;
+      extraPresolve=false;
+    }
+  }
+  if (model2->factorizationFrequency()==200) {
+    // User did not touch preset
+    model2->defaultFactorizationFrequency();
+  }
+  if (basis) {
+    // throw some into basis 
+    int numberRows = model2->numberRows();
+    int numberColumns = model2->numberColumns();
+    double * dsort = new double[numberColumns];
+    int * sort = new int[numberColumns];
+    int n=0;
+    const double * columnLower = model2->columnLower();
+    const double * columnUpper = model2->columnUpper();
+    double * primalSolution = model2->primalColumnSolution();
+    const double * dualSolution = model2->dualColumnSolution();
+    int i;
+    for ( i=0;i<numberRows;i++) 
+      model2->setRowStatus(i,ClpSimplex::superBasic);
+    for ( i=0;i<numberColumns;i++) {
+      double distance = CoinMin(columnUpper[i]-primalSolution[i],
+				primalSolution[i]-columnLower[i]);
+      if (distance>tolerance) {
+	if (fabs(dualSolution[i])<1.0e-5)
+	  distance *= 100.0;
+	dsort[n]=-distance;
+	sort[n++]=i;
+	model2->setStatus(i,ClpSimplex::superBasic);
+      } else if (distance>tolerance) {
+	model2->setStatus(i,ClpSimplex::superBasic);
+      } else if (primalSolution[i]<=columnLower[i]+tolerance) {
+	model2->setStatus(i,ClpSimplex::atLowerBound);
+	primalSolution[i]=columnLower[i];
+      } else {
+	model2->setStatus(i,ClpSimplex::atUpperBound);
+	primalSolution[i]=columnUpper[i];
+      }
+    }
+    CoinSort_2(dsort,dsort+n,sort);
+    n = CoinMin(numberRows,n);
+    for ( i=0;i<n;i++) {
+      int iColumn = sort[i];
+      model2->setStatus(iColumn,ClpSimplex::basic);
+    }
+    delete [] sort;
+    delete [] dsort;
+  }
+  // Start crossover
+  if (useBoth) {
+    int numberRows = model2->numberRows();
+    int numberColumns = model2->numberColumns();
+    double * rowPrimal = new double [numberRows];
+    double * columnPrimal = new double [numberColumns];
+    double * rowDual = new double [numberRows];
+    double * columnDual = new double [numberColumns];
+    // move solutions
+    CoinMemcpyN(model2->primalRowSolution(),
+		numberRows,rowPrimal);
+    CoinMemcpyN(model2->dualRowSolution(),
+		numberRows,rowDual);
+    CoinMemcpyN(model2->primalColumnSolution(),
+		numberColumns,columnPrimal);
+    CoinMemcpyN(model2->dualColumnSolution(),
+		numberColumns,columnDual);
+    // primal values pass
+    double saveScale = model2->objectiveScale();
+    model2->setObjectiveScale(1.0e-3);
+    model2->primal(2);
+    model2->setObjectiveScale(saveScale);
+    // save primal solution and copy back dual
+    CoinMemcpyN(model2->primalRowSolution(),
+		numberRows,rowPrimal);
+    CoinMemcpyN(rowDual,
+		numberRows,model2->dualRowSolution());
+    CoinMemcpyN(model2->primalColumnSolution(),
+		numberColumns,columnPrimal);
+    CoinMemcpyN(columnDual,
+		numberColumns,model2->dualColumnSolution());
+    // clean up reduced costs and flag variables
+    double * dj = model2->dualColumnSolution();
+    double * cost = model2->objective();
+    double * saveCost = new double[numberColumns];
+    CoinMemcpyN(cost,numberColumns,saveCost);
+    double * saveLower = new double[numberColumns];
+    double * lower = model2->columnLower();
+    CoinMemcpyN(lower,numberColumns,saveLower);
+    double * saveUpper = new double[numberColumns];
+    double * upper = model2->columnUpper();
+    CoinMemcpyN(upper,numberColumns,saveUpper);
+    int i;
+    for ( i=0;i<numberColumns;i++) {
+      if (model2->getStatus(i)==ClpSimplex::basic) {
+	dj[i]=0.0;
+      } else if (model2->getStatus(i)==ClpSimplex::atLowerBound) {
+	if (direction*dj[i]<tolerance) {
+	  if (direction*dj[i]<0.0) {
+	    //if (dj[i]<-1.0e-3)
+	    //printf("bad dj at lb %d %g\n",i,dj[i]);
+	    cost[i] -= dj[i];
+	    dj[i]=0.0;
+	  }
+	} else {
+	  upper[i]=lower[i];
+	}
+      } else if (model2->getStatus(i)==ClpSimplex::atUpperBound) {
+	if (direction*dj[i]>tolerance) {
+	  if (direction*dj[i]>0.0) {
+	    //if (dj[i]>1.0e-3)
+	    //printf("bad dj at ub %d %g\n",i,dj[i]);
+	    cost[i] -= dj[i];
+	    dj[i]=0.0;
+	  }
+	} else {
+	  lower[i]=upper[i];
+	}
+      }
+    }
+    // just dual values pass
+    model2->dual(2);
+    CoinMemcpyN(saveCost,numberColumns,cost);
+    delete [] saveCost;
+    CoinMemcpyN(saveLower,numberColumns,lower);
+    delete [] saveLower;
+    CoinMemcpyN(saveUpper,numberColumns,upper);
+    delete [] saveUpper;
+    // move solutions
+    CoinMemcpyN(rowPrimal,
+		numberRows,model2->primalRowSolution());
+    CoinMemcpyN(columnPrimal,
+		numberColumns,model2->primalColumnSolution());
+    // and finish
+    delete [] rowPrimal;
+    delete [] columnPrimal;
+    delete [] rowDual;
+    delete [] columnDual;
+    model2->setObjectiveScale(1.0e-3);
+    model2->primal(2);
+    model2->setObjectiveScale(saveScale);
+    model2->primal(1);
+  } else {
+    // primal values pass
+    double saveScale = model2->objectiveScale();
+    model2->setObjectiveScale(1.0e-3);
+    model2->primal(2);
+    model2->setObjectiveScale(saveScale);
+    model2->primal(1);
+  }
+  if (extraPresolve) {
+    pinfo2.postsolve(true);
+    delete model2;
+    modelPtr_->primal(1);
+    CoinMemcpyN(saveLower,numberColumns,modelPtr_->columnLower());
+    CoinMemcpyN(saveLower+numberColumns,numberRows,modelPtr_->rowLower());
+    CoinMemcpyN(saveUpper,numberColumns,modelPtr_->columnUpper());
+    CoinMemcpyN(saveUpper+numberColumns,numberRows,modelPtr_->rowUpper());
+    delete [] saveLower;
+    delete [] saveUpper;
+    modelPtr_->primal(1);
+  }
+  // Save basis in Osi object
+  setWarmStart(NULL);
 }
   
 //#############################################################################

@@ -7997,16 +7997,16 @@ OsiClpSolverInterface::tightenBounds(int lightweight)
   if (nTightened)
     numberColumns=0; // so will skip
   for (iColumn=0;iColumn<numberColumns;iColumn++) {
-    CoinBigIndex start = columnStart[iColumn];
-    CoinBigIndex end = start + columnLength[iColumn];
     double lower = columnLower[iColumn];
     double upper = columnUpper[iColumn];
-    if (lower<-1.0e8&&upper>1.0e8)
-      continue; // Could do severe damage to accuracy
     double gap = upper-lower;
     if (!gap)
       continue;
     int canGo=0;
+    CoinBigIndex start = columnStart[iColumn];
+    CoinBigIndex end = start + columnLength[iColumn];
+    if (lower<-1.0e8&&upper>1.0e8)
+      continue; // Could do severe damage to accuracy
     if (integerInformation_[iColumn]) {
       if (lower!=floor(lower+0.5)) {
 #ifdef COIN_DEVELOP
@@ -8128,7 +8128,7 @@ OsiClpSolverInterface::tightenBounds(int lightweight)
 #endif
 	    // Only if won't cause numerical problems
 	    if (lower>-1.0e10) {
-	      nTightened++;;
+	      nTightened++;
 	      setColUpper(iColumn,lower);
 	    }
 	  } else if (objValue<=0.0&&(canGo&2)==0) {
@@ -8137,7 +8137,7 @@ OsiClpSolverInterface::tightenBounds(int lightweight)
 #endif
 	    // Only if won't cause numerical problems
 	    if (upper<1.0e10) {
-	      nTightened++;;
+	      nTightened++;
 	      setColLower(iColumn,upper);
 	    }
 	  }
@@ -8169,7 +8169,7 @@ OsiClpSolverInterface::tightenBounds(int lightweight)
 #endif
 	  // Only if won't cause numerical problems
 	  if (lower>-1.0e10) {
-	    nTightened++;;
+	    nTightened++;
 	    setColUpper(iColumn,lower);
 	  }
 	} else if (objValue<=0.0&&(canGo&2)==0) {
@@ -8179,7 +8179,7 @@ OsiClpSolverInterface::tightenBounds(int lightweight)
 #endif
 	  // Only if won't cause numerical problems
 	  if (upper<1.0e10) {
-	    nTightened++;;
+	    nTightened++;
 	    setColLower(iColumn,upper);
 	  }
 	}

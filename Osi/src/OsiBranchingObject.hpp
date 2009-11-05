@@ -88,7 +88,7 @@ public:
     NOTE - Convention says that an infeasibility of COIN_DBL_MAX means 
     object has worked out it can't be satisfied!
   */
-  virtual double infeasibility(const OsiSolverInterface * solver,int &whichWay) const ;
+  double infeasibility(const OsiSolverInterface * solver,int &whichWay) const ;
   // Faster version when more information available
   virtual double infeasibility(const OsiBranchingInformation * info, int &whichWay) const =0;
   // This does NOT set mutable stuff
@@ -111,7 +111,9 @@ public:
       The branching object has to know how to create branches (fix
       variables, etc.)
   */
-  virtual OsiBranchingObject * createBranch(OsiSolverInterface * solver, const OsiBranchingInformation * info, int way) const = 0;
+  virtual OsiBranchingObject * createBranch(OsiSolverInterface * /*solver*/,
+					    const OsiBranchingInformation * /*info*/,
+					    int /*way*/) const {throw CoinError("Need code","createBranch","OsiBranchingObject");}
   
   /** \brief Return true if object can take part in normal heuristics
   */
@@ -170,14 +172,14 @@ public:
     Bounds may be tightened, so it may be good to be able to reset them to
     their original values.
    */
-  virtual void resetBounds(const OsiSolverInterface * solver) {}
+  virtual void resetBounds(const OsiSolverInterface * ) {}
   /**  Change column numbers after preprocessing
    */
-  virtual void resetSequenceEtc(int numberColumns, const int * originalColumns) {}
+  virtual void resetSequenceEtc(int , const int * ) {}
   /// Updates stuff like pseudocosts before threads
-  virtual void updateBefore(const OsiObject * rhs) {}
+  virtual void updateBefore(const OsiObject * ) {}
   /// Updates stuff like pseudocosts after threads finished
-  virtual void updateAfter(const OsiObject * rhs, const OsiObject * baseObject) {}
+  virtual void updateAfter(const OsiObject * , const OsiObject * ) {}
 
 protected:
   /// data
@@ -281,8 +283,8 @@ public:
   /** Set the number of branch arms left for this branching object
       Just for forcing
   */
-  inline void setNumberBranchesLeft(int value)
-  {assert (value==1&&!branchIndex_); numberBranches_=1;}
+  inline void setNumberBranchesLeft(int /*value*/)
+  {/*assert (value==1&&!branchIndex_);*/ numberBranches_=1;}
 
   /// Decrement the number of branch arms left for this branching object
   inline void decrementNumberBranchesLeft()
@@ -328,12 +330,12 @@ public:
   /** Double checks in case node can change its mind!
       Returns objective value
       Can change objective etc */
-  virtual void checkIsCutoff(double cutoff) {}
+  virtual void checkIsCutoff(double ) {}
   /// For debug
   int columnNumber() const;
   /** \brief Print something about branch - only if log level high
   */
-  virtual void print(const OsiSolverInterface * solver=NULL) const {}
+  virtual void print(const OsiSolverInterface * =NULL) const {}
 
 protected:
 

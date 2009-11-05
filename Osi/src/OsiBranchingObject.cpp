@@ -146,7 +146,7 @@ OsiBranchingObject::OsiBranchingObject()
 }
 
 // Useful constructor
-OsiBranchingObject::OsiBranchingObject (OsiSolverInterface * solver,
+OsiBranchingObject::OsiBranchingObject (OsiSolverInterface * ,
 					 double value)
 {
   originalObject_=NULL;
@@ -228,7 +228,7 @@ OsiBranchingInformation::OsiBranchingInformation ()
 /** Useful constructor
 */
 OsiBranchingInformation::OsiBranchingInformation (const OsiSolverInterface * solver,
-						  bool normalSolver,
+						  bool /*normalSolver*/,
 						  bool owningSolution)
   : timeRemaining_(COIN_DBL_MAX),
     defaultDual_(-1.0),
@@ -832,7 +832,7 @@ OsiSOS::OsiSOS ()
 }
 
 // Useful constructor (which are indices)
-OsiSOS::OsiSOS (const OsiSolverInterface * solver,  int numberMembers,
+OsiSOS::OsiSOS (const OsiSolverInterface * ,  int numberMembers,
 	   const int * which, const double * weights, int type)
   : OsiObject2(),
     numberMembers_(numberMembers),
@@ -1458,7 +1458,7 @@ OsiLotsize::OsiLotsize ()
 
   Loads actual upper & lower bounds for the specified variable.
 */
-OsiLotsize::OsiLotsize (const OsiSolverInterface * solver, 
+OsiLotsize::OsiLotsize (const OsiSolverInterface * , 
 				    int iColumn, int numberPoints,
 			const double * points, bool range)
   : OsiObject2()
@@ -1842,7 +1842,7 @@ OsiLotsize::createBranch(OsiSolverInterface * solver, const OsiBranchingInformat
   copy of the original bounds.
  */
 void 
-OsiLotsize::resetBounds(const OsiSolverInterface * solver)
+OsiLotsize::resetBounds(const OsiSolverInterface * )
 {
 }
 // Return "down" estimate

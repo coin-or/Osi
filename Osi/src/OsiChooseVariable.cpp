@@ -302,7 +302,7 @@ OsiChooseVariable::setupList ( OsiBranchingInformation *info, bool initialize)
    If we have a solution then we can pick up from goodObjectiveValue() and goodSolution()
 */
 int 
-OsiChooseVariable::chooseVariable( OsiSolverInterface * solver, OsiBranchingInformation *info, bool fixVariables)
+OsiChooseVariable::chooseVariable( OsiSolverInterface * solver, OsiBranchingInformation *, bool )
 {
   if (numberUnsatisfied_) {
     bestObjectIndex_=list_[0];
@@ -507,11 +507,11 @@ OsiChooseStrong::doStrongBranching( OsiSolverInterface * solver,
 // Given a candidate fill in useful information e.g. estimates
 void 
 OsiChooseVariable::updateInformation(const OsiBranchingInformation *info,
-				  int branch, OsiHotInfo * hotInfo)
+				  int , OsiHotInfo * hotInfo)
 {
   int index = hotInfo->whichObject();
   assert (index<solver_->numberObjects());
-  assert (branch<2);
+  //assert (branch<2);
   OsiObject ** object = info->solver_->objects();
   upChange_ = object[index]->upEstimate();
   downChange_ = object[index]->downEstimate();
@@ -520,8 +520,8 @@ OsiChooseVariable::updateInformation(const OsiBranchingInformation *info,
 // Given a branch fill in useful information e.g. estimates
 void 
 OsiChooseVariable::updateInformation( int index, int branch, 
-				      double changeInObjective, double changeInValue,
-				      int status)
+				      double , double ,
+				      int )
 {
   assert (index<solver_->numberObjects());
   assert (branch<2);

@@ -71,6 +71,7 @@ public:
   class ApplyCutsReturnCode {
     friend class OsiSolverInterface;
     friend class OsiOslSolverInterface;
+    friend class OsiClpSolverInterface;
 
   public:
     ///@name Constructors and desctructors
@@ -266,7 +267,7 @@ public:
     // Set a hint parameter
     virtual bool setHintParam(OsiHintParam key, bool yesNo=true,
 			      OsiHintStrength strength=OsiHintTry,
-			      void * otherInformation=NULL) {
+			      void * =NULL) {
       if (key==OsiLastHintParam)
 	return false; 
       hintParam_[key] = yesNo;
@@ -1437,9 +1438,9 @@ public:
      The default behavior of this is do nothing so only use where that would not matter
      e.g. strengthening a matrix for MIP
   */
-  virtual void replaceMatrixOptional(const CoinPackedMatrix & matrix) {}
+  virtual void replaceMatrixOptional(const CoinPackedMatrix & ) {}
   /// And if it does matter (not used at present)
-  virtual void replaceMatrix(const CoinPackedMatrix & matrix) {abort();}
+  virtual void replaceMatrix(const CoinPackedMatrix & ) {abort();}
   //@}
 
   //---------------------------------------------------------------------------

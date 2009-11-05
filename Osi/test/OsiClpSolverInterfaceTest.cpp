@@ -735,7 +735,7 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
         assert( siC1.rowrange_==NULL );
         assert( siC1.rowsense_==NULL );
         assert( siC1.rhs_==NULL );
-        assert( siC1.matrixByRow_==NULL );
+        //assert( siC1.matrixByRow_==NULL );
         
         siC1rs  = siC1.getRowSense();
         assert( siC1rs[0]=='G' );

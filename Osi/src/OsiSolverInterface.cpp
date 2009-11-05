@@ -1570,7 +1570,7 @@ OsiSolverInterface::reset()
   doing primal or dual
 */
 void 
-OsiSolverInterface::enableSimplexInterface(bool doingPrimal) {}
+OsiSolverInterface::enableSimplexInterface(bool ) {}
 
 //Undo whatever setting changes the above method had to make
 void 
@@ -1629,7 +1629,7 @@ OsiSolverInterface::basisIsAvailable() const
    artificial will be at lower bound if constraint is tight
 */
 void 
-OsiSolverInterface::getBasisStatus(int* cstat, int* rstat) const 
+OsiSolverInterface::getBasisStatus(int* , int* ) const 
 {
   // Throw an exception
   throw CoinError("Needs coding for this interface", "getBasisStatus",
@@ -1643,7 +1643,7 @@ OsiSolverInterface::getBasisStatus(int* cstat, int* rstat) const
    artificial will be at lower bound if constraint is tight
 */
 int 
-OsiSolverInterface::setBasisStatus(const int* cstat, const int* rstat) 
+OsiSolverInterface::setBasisStatus(const int* , const int* ) 
 {
   // Throw an exception
   throw CoinError("Needs coding for this interface", "setBasisStatus",
@@ -1655,7 +1655,7 @@ OsiSolverInterface::setBasisStatus(const int* cstat, const int* rstat)
    1 is to upper bound, -1 to lower bound
 */
 int 
-OsiSolverInterface::pivot(int colIn, int colOut, int outStatus) 
+OsiSolverInterface::pivot(int , int , int ) 
 {
   // Throw an exception
   throw CoinError("Needs coding for this interface", "pivot",
@@ -1674,9 +1674,9 @@ OsiSolverInterface::pivot(int colIn, int colOut, int outStatus)
    Primal and dual solutions are updated
 */
 int 
-OsiSolverInterface::primalPivotResult(int colIn, int sign, 
-                                      int& colOut, int& outStatus, 
-                                      double& t, CoinPackedVector* dx)
+OsiSolverInterface::primalPivotResult(int, int , 
+                                      int& , int& , 
+                                      double& , CoinPackedVector* )
 {
   // Throw an exception
   throw CoinError("Needs coding for this interface", "primalPivotResult",
@@ -1690,9 +1690,9 @@ OsiSolverInterface::primalPivotResult(int colIn, int sign,
    Return code: same
 */
 int 
-OsiSolverInterface::dualPivotResult(int& colIn, int& sign, 
-                                    int colOut, int outStatus, 
-                                    double& t, CoinPackedVector* dx) 
+OsiSolverInterface::dualPivotResult(int& , int& , 
+                                    int , int , 
+                                    double& , CoinPackedVector* ) 
 {
   // Throw an exception
   throw CoinError("Needs coding for this interface", "dualPivotResult",
@@ -1701,9 +1701,9 @@ OsiSolverInterface::dualPivotResult(int& colIn, int& sign,
 
 //Get the reduced gradient for the cost vector c 
 void 
-OsiSolverInterface::getReducedGradient(double* columnReducedCosts, 
-                                       double * duals,
-                                       const double * c) 
+OsiSolverInterface::getReducedGradient(double* , 
+                                       double * ,
+                                       const double * ) 
 {
   // Throw an exception
   throw CoinError("Needs coding for this interface", "getReducedGradient",
@@ -1713,7 +1713,7 @@ OsiSolverInterface::getReducedGradient(double* columnReducedCosts,
 /* Set a new objective and apply the old basis so that the
    reduced costs are properly updated */
 void 
-OsiSolverInterface::setObjectiveAndRefresh(double* c) 
+OsiSolverInterface::setObjectiveAndRefresh(double* ) 
 {
   // Throw an exception
   throw CoinError("Needs coding for this interface", "setObjectiveAndRefresh",
@@ -1722,7 +1722,7 @@ OsiSolverInterface::setObjectiveAndRefresh(double* c)
 
 //Get a row of the tableau (slack part in slack if not NULL)
 void 
-OsiSolverInterface::getBInvARow(int row, double* z, double * slack) const 
+OsiSolverInterface::getBInvARow(int , double* , double * ) const 
 {
   // Throw an exception
   throw CoinError("Needs coding for this interface", "getBInvARow",
@@ -1730,7 +1730,7 @@ OsiSolverInterface::getBInvARow(int row, double* z, double * slack) const
 }
 
 //Get a row of the basis inverse
-void OsiSolverInterface::getBInvRow(int row, double* z) const 
+void OsiSolverInterface::getBInvRow(int , double* ) const 
 {
   // Throw an exception
   throw CoinError("Needs coding for this interface", "getBInvRow",
@@ -1739,7 +1739,7 @@ void OsiSolverInterface::getBInvRow(int row, double* z) const
 
 //Get a column of the tableau
 void 
-OsiSolverInterface::getBInvACol(int col, double* vec) const 
+OsiSolverInterface::getBInvACol(int , double* ) const 
 {
   // Throw an exception
   throw CoinError("Needs coding for this interface", "getBInvACol",
@@ -1748,7 +1748,7 @@ OsiSolverInterface::getBInvACol(int col, double* vec) const
 
 //Get a column of the basis inverse
 void 
-OsiSolverInterface::getBInvCol(int col, double* vec) const 
+OsiSolverInterface::getBInvCol(int , double* ) const 
 {
   // Throw an exception
   throw CoinError("Needs coding for this interface", "getBInvCol",
@@ -1774,7 +1774,7 @@ OsiSolverInterface::getPointerToWarmStart(bool & mustDelete)
    getBInvCol()).
 */
 void 
-OsiSolverInterface::getBasics(int* index) const 
+OsiSolverInterface::getBasics(int* ) const 
 {
   // Throw an exception
   throw CoinError("Needs coding for this interface", "getBasics",

@@ -6429,12 +6429,15 @@ OsiClpSolverInterface::crunch()
     small->dual(0,7);
 #endif
     totalIterations += small->numberIterations();
-    if (small->problemStatus()==0) {
+    int problemStatus = small->problemStatus();
+    if (problemStatus==0||problemStatus==2) {
       modelPtr_->setProblemStatus(0);
       // Scaling may have changed - if so pass across
       if (modelPtr_->scalingFlag()==4)
 	modelPtr_->scaling(small->scalingFlag());
       static_cast<ClpSimplexOther *> (modelPtr_)->afterCrunch(*small,whichRow,whichColumn,nBound);
+      if (problemStatus==2)
+	modelPtr_->primal(1);
 #if 0
       ClpSimplex save(*modelPtr_);
       save.dual();
@@ -6458,10 +6461,10 @@ OsiClpSolverInterface::crunch()
       spareArrays_ = spareArrays_;
       spareArrays=NULL;
 #endif
-    } else if (small->problemStatus()!=3) {
+    } else if (problemStatus!=3) {
       modelPtr_->setProblemStatus(1);
     } else {
-      if (small->problemStatus_==3) {
+      if (problemStatus==3) {
 	// may be problems
 	if (inCbcOrOther&&disasterHandler_->inTrouble()) {
 	  if (disasterHandler_->typeOfDisaster()) {

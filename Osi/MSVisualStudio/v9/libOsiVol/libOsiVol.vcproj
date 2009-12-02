@@ -4,6 +4,7 @@
 	Version="9.00"
 	Name="libOsiVol"
 	ProjectGUID="{F359370A-340C-4EE0-9B09-5BBE04C769B4}"
+	RootNamespace="libOsiVol"
 	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
@@ -44,7 +45,7 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="..\..\..\..\Vol\src,..\..\..\..\Osi\src,..\..\..\..\CoinUtils\src,..\..\..\..\BuildTools\headers"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -114,7 +115,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\..\..\Vol\src,..\..\..\..\Osi\src,..\..\..\..\CoinUtils\src,..\..\..\..\BuildTools\headers"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"

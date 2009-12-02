@@ -4,6 +4,7 @@
 	Version="9.00"
 	Name="libOsiCbc"
 	ProjectGUID="{A4D8DB82-7DC6-45EE-AF08-2A6DD7E7AB56}"
+	RootNamespace="libOsiCbc"
 	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
@@ -44,7 +45,7 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="..\..\..\..\Osi\src\OsiClp,..\..\..\..\Osi\src\OsiCbc,..\..\..\..\Osi\src,..\..\..\..\Cbc\src,..\..\..\..\Clp\src,..\..\..\..\CoinUtils\src,..\..\..\..\BuildTools\headers"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -114,7 +115,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\..\..\Osi\src\OsiClp,..\..\..\..\Osi\src\OsiCbc,..\..\..\..\Osi\src,..\..\..\..\Cbc\src,..\..\..\..\Clp\src,..\..\..\..\CoinUtils\src,..\..\..\..\BuildTools\headers"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"

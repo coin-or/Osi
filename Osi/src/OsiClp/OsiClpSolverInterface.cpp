@@ -1619,10 +1619,10 @@ void OsiClpSolverInterface::markHotStart()
     int numberColumns = modelPtr_->numberColumns();
     int numberRows = modelPtr_->numberRows();
     // Get space for strong branching 
-    int size = (1+4*(numberRows+numberColumns))*sizeof(double);
+    int size = static_cast<int>((1+4*(numberRows+numberColumns))*sizeof(double));
     // and for save of original column bounds
-    size += 2*numberColumns*sizeof(double);
-    size += (1+4*numberRows+2*numberColumns)*sizeof(int);
+    size += static_cast<int>(2*numberColumns*sizeof(double));
+    size += static_cast<int>((1+4*numberRows+2*numberColumns)*sizeof(int));
     size += numberRows+numberColumns;
     assert (spareArrays_==NULL);
     spareArrays_ = new char[size];
@@ -1727,10 +1727,10 @@ void OsiClpSolverInterface::markHotStart()
     int numberColumns = modelPtr_->numberColumns();
     int numberRows = modelPtr_->numberRows();
     // Get space for crunch and strong branching (too much)
-    int size = (1+4*(numberRows+numberColumns))*sizeof(double);
+    int size = static_cast<int>((1+4*(numberRows+numberColumns))*sizeof(double));
     // and for save of original column bounds
-    size += 2*numberColumns*sizeof(double);
-    size += (1+4*numberRows+2*numberColumns)*sizeof(int);
+    size += static_cast<int>(2*numberColumns*sizeof(double));
+    size += static_cast<int>((1+4*numberRows+2*numberColumns)*sizeof(int));
     size += numberRows+numberColumns;
 #ifdef KEEP_SMALL
     if(smallModel_&&(modelPtr_->whatsChanged_&0x30000)!=0x30000) {
@@ -4216,7 +4216,7 @@ OsiClpSolverInterface::redoScaleFactors(int numberAdd,const CoinBigIndex * start
     assert (lastNumberRows_==numberRows); // ???
     int iRow;
     int newNumberRows = numberRows + numberAdd;
-    rowScale_.extend(2*newNumberRows*sizeof(double));
+    rowScale_.extend(static_cast<int>(2*newNumberRows*sizeof(double)));
     double * rowScale = rowScale_.array();
     double * oldInverseScale = rowScale + lastNumberRows_;
     double * inverseRowScale = rowScale + newNumberRows;
@@ -5237,7 +5237,7 @@ OsiClpSolverInterface::setRowSetTypes(const int* indexFirst,
 #ifndef NDEBUG
   int n = modelPtr_->numberRows();
 #endif
-  const int len = indexLast - indexFirst;
+  const int len = static_cast<int>(indexLast - indexFirst);
   while (indexFirst != indexLast) {
     const int iRow= *indexFirst++;
 #ifndef NDEBUG
@@ -6185,10 +6185,10 @@ OsiClpSolverInterface::crunch()
   // Use dual region
   double * rhs = modelPtr_->dualRowSolution();
   // Get space for strong branching 
-  int size = (1+4*(numberRows+numberColumns))*sizeof(double);
+  int size = static_cast<int>((1+4*(numberRows+numberColumns))*sizeof(double));
   // and for save of original column bounds
-  size += 2*numberColumns*sizeof(double);
-  size += (1+4*numberRows+2*numberColumns)*sizeof(int);
+  size += static_cast<int>(2*numberColumns*sizeof(double));
+  size += static_cast<int>((1+4*numberRows+2*numberColumns)*sizeof(int));
   size += numberRows+numberColumns;
 #ifdef KEEP_SMALL
   char * spareArrays = NULL;
@@ -6429,12 +6429,15 @@ OsiClpSolverInterface::crunch()
     small->dual(0,7);
 #endif
     totalIterations += small->numberIterations();
-    if (small->problemStatus()==0) {
+    int problemStatus = small->problemStatus();
+    if (problemStatus==0||problemStatus==2) {
       modelPtr_->setProblemStatus(0);
       // Scaling may have changed - if so pass across
       if (modelPtr_->scalingFlag()==4)
 	modelPtr_->scaling(small->scalingFlag());
       static_cast<ClpSimplexOther *> (modelPtr_)->afterCrunch(*small,whichRow,whichColumn,nBound);
+      if (problemStatus==2)
+	modelPtr_->primal(1);
 #if 0
       ClpSimplex save(*modelPtr_);
       save.dual();
@@ -6458,10 +6461,10 @@ OsiClpSolverInterface::crunch()
       spareArrays_ = spareArrays_;
       spareArrays=NULL;
 #endif
-    } else if (small->problemStatus()!=3) {
+    } else if (problemStatus!=3) {
       modelPtr_->setProblemStatus(1);
     } else {
-      if (small->problemStatus_==3) {
+      if (problemStatus==3) {
 	// may be problems
 	if (inCbcOrOther&&disasterHandler_->inTrouble()) {
 	  if (disasterHandler_->typeOfDisaster()) {

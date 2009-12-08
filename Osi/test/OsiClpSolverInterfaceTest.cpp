@@ -6,6 +6,10 @@
 #  pragma warning(disable:4786)
 #endif
 
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
+
 #include "OsiConfig.h"
 
 #include <cassert>
@@ -235,14 +239,12 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     // Test some catches
     {
       OsiClpSolverInterface solver;
-#ifndef NDEBUG  /* in optimized mode, the following code crashes */
       try {
         solver.setObjCoeff(0,0.0);
       }
       catch (CoinError e) {
         std::cout<<"Correct throw"<<std::endl;
       }
-#endif
       std::string fn = mpsDir+"exmip1";
       solver.readMps(fn.c_str(),"mps");
       try {
@@ -252,7 +254,6 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
         std::cout<<"** Incorrect throw"<<std::endl;
         abort();
       }
-#ifndef NDEBUG
       try {
         int index[]={0,20};
         double value[]={0.0,0.0,0.0,0.0};
@@ -261,7 +262,6 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
       catch (CoinError e) {
         std::cout<<"Correct throw"<<std::endl;
       }
-#endif
     }
     // Test apply cuts method
     {      
@@ -735,7 +735,7 @@ OsiClpSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
         assert( siC1.rowrange_==NULL );
         assert( siC1.rowsense_==NULL );
         assert( siC1.rhs_==NULL );
-        //assert( siC1.matrixByRow_==NULL );
+        assert( siC1.matrixByRow_==NULL );
         
         siC1rs  = siC1.getRowSense();
         assert( siC1rs[0]=='G' );

@@ -96,7 +96,7 @@ bool OsiRowCut::consistent(const OsiSolverInterface& im) const
    return true;
 }
 
-bool OsiRowCut::infeasible(const OsiSolverInterface &) const
+bool OsiRowCut::infeasible(const OsiSolverInterface &im) const
 {
    if ( lb() > ub() ) return true;
 

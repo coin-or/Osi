@@ -6,6 +6,10 @@
 #  pragma warning(disable:4786)
 #endif
 
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
+
 #include "OsiConfig.h"
 
 #include <cassert>
@@ -182,9 +186,9 @@ OsiCbcSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
     }
     // Test some catches
     { bool thrown ;
-      OsiCbcSolverInterface solver;
-#ifndef NDEBUG /* in optimized mode, the following code crashes */
+
       thrown = false ;
+      OsiCbcSolverInterface solver;
       try {
         solver.setObjCoeff(0,0.0);
       }
@@ -193,7 +197,6 @@ OsiCbcSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
 	thrown = true ;
       }
       assert( thrown == true ) ;
-#endif
 
       std::string fn = mpsDir+"exmip1";
       solver.readMps(fn.c_str(),"mps");
@@ -204,7 +207,7 @@ OsiCbcSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
         std::cout<<"** Incorrect throw"<<std::endl;
         abort();
       }
-#ifndef NDEBUG
+
       thrown = false ;
       try {
         int index[]={0,20};
@@ -216,9 +219,7 @@ OsiCbcSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & ne
 	thrown = true ;
       }
       assert( thrown == true ) ;
-#endif
     }
-
     // Test apply cuts method
     {      
       OsiCbcSolverInterface im(m);

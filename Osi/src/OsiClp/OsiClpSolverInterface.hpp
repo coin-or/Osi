@@ -52,14 +52,6 @@ public:
   /// Invoke solver's built-in enumeration algorithm
   virtual void branchAndBound();
 
-  /** Solve when primal column and dual row solutions are near-optimal
-      options - 0 no presolve (use primal and dual)
-                1 presolve (just use primal)
-		2 no presolve (just use primal)
-      basis -   0 use all slack basis
-                1 try and put some in basis
-  */
-  void crossover(int options,int basis);
   //@}
   
   ///@name OsiSimplexInterface methods 
@@ -455,14 +447,6 @@ public:
   */
   virtual const char * getColType(bool refresh=false) const;
   
-  /** Return true if column is integer but does not have to
-      be declared as such.
-      Note: This function returns true if the the column
-      is binary or a general integer.
-  */
-  bool isOptionalInteger(int colIndex) const;
-  /** Set the index-th variable to be an optional integer variable */
-  void setOptionalInteger(int index);
   
   /// Get pointer to row-wise copy of matrix
   virtual const CoinPackedMatrix * getMatrixByRow() const;
@@ -701,26 +685,15 @@ public:
      continuous variable. */
   //@{
 
-  //using OsiSolverInterface::addCol ;
+  using OsiSolverInterface::addCol ;
   /** */
   virtual void addCol(const CoinPackedVectorBase& vec,
                       const double collb, const double colub,   
                       const double obj);
-  /*! \brief Add a named column (primal variable) to the problem.
-  */
-  virtual void addCol(const CoinPackedVectorBase& vec,
-		      const double collb, const double colub,   
-		      const double obj, std::string name) ;
   /** Add a column (primal variable) to the problem. */
   virtual void addCol(int numberElements, const int * rows, const double * elements,
                       const double collb, const double colub,   
                       const double obj) ;
-  /*! \brief Add a named column (primal variable) to the problem.
-   */
-  virtual void addCol(int numberElements,
-		      const int* rows, const double* elements,
-		      const double collb, const double colub,   
-		      const double obj, std::string name) ;
   /** */
   virtual void addCols(const int numcols,
                        const CoinPackedVectorBase * const * cols,
@@ -734,29 +707,17 @@ public:
   /** */
   virtual void deleteCols(const int num, const int * colIndices);
   
+  using OsiSolverInterface::addRow ;
   /** */
   virtual void addRow(const CoinPackedVectorBase& vec,
                       const double rowlb, const double rowub);
   /** */
-    /*! \brief Add a named row (constraint) to the problem.
-    
-      The default implementation adds the row, then changes the name. This
-      can surely be made more efficient within an OsiXXX class.
-    */
-    virtual void addRow(const CoinPackedVectorBase& vec,
-			const double rowlb, const double rowub,
-			std::string name) ;
   virtual void addRow(const CoinPackedVectorBase& vec,
                       const char rowsen, const double rowrhs,   
                       const double rowrng);
   /** Add a row (constraint) to the problem. */
   virtual void addRow(int numberElements, const int * columns, const double * element,
 		      const double rowlb, const double rowub) ;
-    /*! \brief Add a named row (constraint) to the problem.
-    */
-    virtual void addRow(const CoinPackedVectorBase& vec,
-			const char rowsen, const double rowrhs,   
-			const double rowrng, std::string name) ;
   /** */
   virtual void addRows(const int numrows,
                        const CoinPackedVectorBase * const * rows,
@@ -796,31 +757,6 @@ public:
       This uses array of pointers
   */
   virtual void applyRowCuts(int numberCuts, const OsiRowCut ** cuts);
-    /** Apply a collection of cuts.
-
-	Only cuts which have an <code>effectiveness >= effectivenessLb</code>
-	are applied.
-	<ul>
-	  <li> ReturnCode.getNumineffective() -- number of cuts which were
-	       not applied because they had an
-	       <code>effectiveness < effectivenessLb</code>
-	  <li> ReturnCode.getNuminconsistent() -- number of invalid cuts
-	  <li> ReturnCode.getNuminconsistentWrtIntegerModel() -- number of
-	       cuts that are invalid with respect to this integer model
-	  <li> ReturnCode.getNuminfeasible() -- number of cuts that would
-	       make this integer model infeasible
-	  <li> ReturnCode.getNumApplied() -- number of integer cuts which
-	       were applied to the integer model
-	  <li> cs.size() == getNumineffective() +
-			    getNuminconsistent() +
-			    getNuminconsistentWrtIntegerModel() +
-			    getNuminfeasible() +
-			    getNumApplied()
-	</ul>
-    */
-    virtual ApplyCutsReturnCode applyCuts(const OsiCuts & cs,
-					  double effectivenessLb = 0.0);
-
   //@}
   //@}
   
@@ -916,9 +852,6 @@ public:
   /** Read an mps file from the given filename returns
       number of errors (see OsiMpsReader class) */
   int readMps(const char *filename,bool keepNames,bool allowErrors);
-  /// Read an mps file
-  virtual int readMps (const char *filename, const char*extension,
-			int & numberSets, CoinSet ** & sets);
   
   /** Write the problem into an mps file of the given filename.
       If objSense is non zero then -1.0 forces the code to write a
@@ -1259,9 +1192,6 @@ protected:
   /// Pointer to row-wise copy of problem matrix coefficients.
   mutable CoinPackedMatrix *matrixByRow_;  
   
-  /// Pointer to row-wise copy of continuous problem matrix coefficients.
-  CoinPackedMatrix *matrixByRowAtContinuous_;  
-  
   /// Pointer to integer information
   char * integerInformation_;
   
@@ -1306,14 +1236,11 @@ protected:
       256 Clean up model before hot start
       512 Give user direct access to Clp regions in getBInvARow etc
       1024 Don't "borrow" model in initialSolve
-      2048 Don't crunch
-      4096 quick check for optimality
       Bits above 8192 give where called from in Cbc
       At present 0 is normal, 1 doing fast hotstarts, 2 is can do quick check
       65536 Keep simple i.e. no  crunch etc
       131072 Try and keep scaling factors around
       262144 Don't try and tighten bounds (funny global cuts)
-      524288 Fake objective and 0-1
   */
   mutable unsigned int specialOptions_;
   /// Copy of model when option 131072 set
@@ -1419,8 +1346,7 @@ protected:
       
   //@}
 };
-// So unit test can find out if NDEBUG set
-bool OsiClpHasNDEBUG();
+
 //#############################################################################
 /** A function that tests the methods in the OsiClpSolverInterface class. The
     only reason for it not to be a member method is that this way it doesn't

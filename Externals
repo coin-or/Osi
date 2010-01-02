@@ -1,7 +1,7 @@
 BuildTools    https://projects.coin-or.org/svn/BuildTools/trunk
 ThirdParty/Blas https://projects.coin-or.org/svn/BuildTools/ThirdParty/Blas/trunk
 ThirdParty/Lapack https://projects.coin-or.org/svn/BuildTools/ThirdParty/Lapack/trunk
-ThirdParty/Glpk https://projects.coin-or.org/svn/BuildTools/ThirdParty/Glpk/stable/1.5
+ThirdParty/Glpk https://projects.coin-or.org/svn/BuildTools/ThirdParty/Glpk/stable/1.6
 Data/Netlib   https://projects.coin-or.org/svn/Data/trunk/Netlib
 Data/Sample   https://projects.coin-or.org/svn/Data/trunk/Sample
 CoinUtils     https://projects.coin-or.org/svn/CoinUtils/trunk/CoinUtils

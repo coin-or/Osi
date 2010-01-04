@@ -148,6 +148,13 @@ if COIN_HAS_XPR
   unitTest_LDADD += ../src/OsiXpr/libOsiXpr.la
 endif
 
+if COIN_HAS_GRB
+  unitTest_SOURCES += OsiGrbSolverInterfaceTest.cpp
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(GRBINCDIR)` \
+	-I`$(CYGPATH_W) $(srcdir)/../src/OsiGrb`
+  unitTest_LDADD += ../src/OsiGrb/libOsiGrb.la
+endif
+
 # Finally the Coin library (many of the above need it)
 unitTest_LDADD += ../src/libOsi.la $(COINUTILSOBJDIR)/src/libCoinUtils.la
 LIBS += `cat $(OSIOBJDIR)/osi_addlibs.txt` \

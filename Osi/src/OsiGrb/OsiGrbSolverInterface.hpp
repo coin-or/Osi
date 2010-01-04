@@ -10,6 +10,8 @@
 // Copyright (C) 2009 Humboldt University Berlin and others.
 // All Rights Reserved.
 
+// $Id$
+
 #ifndef OsiGrbSolverInterface_H
 #define OsiGrbSolverInterface_H
 
@@ -25,9 +27,7 @@ typedef struct _GRBenv GRBenv;
  */
 
 class OsiGrbSolverInterface : virtual public OsiSolverInterface {
-	//  friend void OsiGrbSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
-	friend void checkGRBerror(int err, std::string grbfuncname,
-			std::string osimethod);
+  friend void OsiGrbSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 public:
 
@@ -706,11 +706,17 @@ protected:
 private:
 	/**@name Private static class functions  */
 	//@{
-	/// resizes coltype_ vector to be able to store at least minsize elements
-	void resizeColType(int minsize);
+	/// resizes coltype_, colmap_O2G, colmap_G2O vectors to be able to store at least minsize elements
+	void resizeColSpace(int minsize);
 
 	/// frees colsize_ vector
-	void freeColType();
+	void freeColSpace();
+
+	/// resizes colmap_G2O vector to be able to store at least minsize (auxiliary) elements
+	void resizeAuxColSpace(int minsize);
+
+	/// resizes auxcolind vector to current number of rows and inits values to -1
+	void resizeAuxColIndSpace();
 	//@}
 
 	/**@name Private static class data */
@@ -755,6 +761,12 @@ private:
 
 	/// free all allocated memory
 	void freeAllMemory();
+
+	/// converts a normal row into a ranged row by adding an auxiliary variable
+	void convertToRangedRow(int rowidx, double rhs, double range);
+
+	/// converts a ranged row into a normal row by removing its auxiliary variable
+	void convertToNormalRow(int rowidx, char sense, double rhs);
 	//@}
 
 
@@ -818,18 +830,41 @@ private:
 	mutable CoinPackedMatrix *matrixByCol_;
 	//@}
 
-	/**@name Additional information needed for storing MIP problems */
+	/**@name Additional information needed for storing MIP problems and handling ranged rows */
 	//@{
+  /// Stores whether Gurobi' prob type is currently set to MIP
+  mutable bool probtypemip_;
+
+	/// Size of allocated memory for coltype_, colmap_O2G, and (with offset auxcolspace) colmap_G2O.
+  int colspace_;
+
 	/// Pointer to dense vector of variable types (continous, binary, integer)
 	char *coltype_;
 
-	/// Size of allocated memory for coltype_
-	int coltypesize_;
+	/// Number of auxiliary columns in Gurobi model for handling of ranged rows
+	int nauxcols;
 
-	/// Stores whether Gurobi' prob type is currently set to MIP
-	mutable bool probtypemip_;
+	/// Size of allocated memory for colmap_G2O that exceeds colspace_
+	int auxcolspace;
 
-	//@}
+	/// Maps variable indices from Osi to Gurobi
+	/// Is NULL if there are no ranged rows! (assume identity mapping then)
+	int* colmap_O2G;
+
+	/// Maps variable indices from Gurobi to Osi
+	/// A negative value indicates that a variable is an auxiliary variable that was added to handle a ranged row
+	/// -colmap_G2O[i]-1 gives the index of the ranged row in this case
+  /// Is NULL if there are no ranged rows! (assume identity mapping then)
+	int* colmap_G2O;
+
+	/// Current length of auxcolind array.
+	int auxcolindspace;
+
+	/// Gives for each row the index of the corresponding auxiliary variable, if it is a ranged row.
+	/// Otherwise, gives -1.
+  /// Is NULL if there are no ranged rows! (assume -1 for each row then)
+	int* auxcolind;
+  //@}
 };
 
 //#############################################################################
@@ -838,6 +873,6 @@ private:
  have to be compiled into the library. And that's a gain, because the
  library should be compiled with optimization on, but this method should be
  compiled with debugging. */
-//void OsiGrbSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
+void OsiGrbSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 #endif

@@ -45,6 +45,7 @@
 // #undef COIN_HAS_SYMPHONY
 // #undef COIN_HAS_MSK
 // #undef COIN_HAS_CBC
+// #undef COIN_HAS_GRB
 
 #ifdef COIN_HAS_OSL
 #include "OsiOslSolverInterface.hpp"
@@ -81,6 +82,9 @@
 #endif
 #ifdef COIN_HAS_CBC
 #include "OsiCbcSolverInterface.hpp"
+#endif
+#ifdef COIN_HAS_GRB
+#include "OsiGrbSolverInterface.hpp"
 #endif
 
 namespace {
@@ -138,7 +142,7 @@ bool processParameters (int argc, const char **argv,
   pathTmp += dirsep ;
 
   parms["-mpsDir"] = pathTmp + "Sample"  ;
-  parms["-netlibDir"] = pathTmp + "Data" ;
+  parms["-netlibDir"] = pathTmp + "Netlib" ;
 
 /*
   Read the command line parameters and fill a map of parameter keys and
@@ -253,8 +257,7 @@ bool processParameters (int argc, const char **argv,
 
 int main (int argc, const char *argv[])
 
-{ int errCnt,totalErrCnt ;
-  totalErrCnt = 0 ;
+{ int totalErrCnt = 0;
 
 /*
   Start off with various bits of initialisation that don't really belong
@@ -288,6 +291,7 @@ int main (int argc, const char *argv[])
   std::string mpsDir = parms["-mpsDir"] ;
   std::string netlibDir = parms["-netlibDir"] ;
 
+try {
 /*
   Test Osi{Row,Col}Cut routines.
 */
@@ -504,6 +508,24 @@ int main (int argc, const char *argv[])
   }
 #endif
 
+#ifdef COIN_HAS_GRB
+  {
+    OsiGrbSolverInterface grbSi;
+    testingMessage( "Testing OsiRowCut with OsiGrbSolverInterface\n" );
+    OsiRowCutUnitTest(&grbSi,mpsDir);
+  }
+  {
+    OsiGrbSolverInterface grbSi;
+    testingMessage( "Testing OsiColCut with OsiGrbSolverInterface\n" );
+    OsiColCutUnitTest(&grbSi,mpsDir);
+  }
+  {
+    OsiGrbSolverInterface grbSi;
+    testingMessage( "Testing OsiRowCutDebugger with OsiGrbSolverInterface\n" );
+    OsiRowCutDebuggerUnitTest(&grbSi,mpsDir);
+  }
+#endif
+
   testingMessage( "Testing OsiCuts\n" );
   OsiCutsUnitTest();
 
@@ -548,7 +570,7 @@ int main (int argc, const char *argv[])
 
 #ifdef COIN_HAS_DYLP
   testingMessage( "Testing OsiDylpSolverInterface\n" );
-  errCnt = OsiDylpSolverInterfaceUnitTest(mpsDir,netlibDir);
+  int errCnt = OsiDylpSolverInterfaceUnitTest(mpsDir,netlibDir);
   if (errCnt)
   { std::cerr
       << "OsiDylpSolverInterface testing issue: "
@@ -584,6 +606,11 @@ int main (int argc, const char *argv[])
 #ifdef COIN_HAS_SYMPHONY
   testingMessage( "Testing OsiSymSolverInterface\n" );
   totalErrCnt += OsiSymSolverInterfaceUnitTest(mpsDir,netlibDir);
+#endif
+
+#ifdef COIN_HAS_GRB
+  testingMessage( "Testing OsiGrbSolverInterface\n" );
+  OsiGrbSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
 /*
@@ -656,6 +683,10 @@ int main (int argc, const char *argv[])
     OsiSolverInterface * volSi = new OsiVolSolverInterface;
     vecSi.push_back(volSi);
 #endif
+#   if COIN_HAS_GRB
+    OsiSolverInterface * grbSi = new OsiGrbSolverInterface;
+    vecSi.push_back(grbSi);
+#endif
 
     testingMessage( "Testing OsiSolverInterface on Netlib problems.\n" );
     OsiSolverInterfaceMpsUnitTest(vecSi,netlibDir);
@@ -665,10 +696,15 @@ int main (int argc, const char *argv[])
       delete vecSi[i];
   }
   else {
-    testingMessage(
-       "***Skipped Testing of OsiSolverInterface on Netlib problems***\n" );
+    testingMessage( "***Skipped Testing of OsiSolverInterface on Netlib problems***\n" );
     testingMessage( "***use -testOsiSolverInterface to run them.***\n" );
   }
+} catch (CoinError& error) {
+  std::cout.flush();
+  std::cerr << "Caught CoinError exception: ";
+  error.print(true);
+  totalErrCnt += 1;
+}
 /*
   We're done. Report on the results.
 */

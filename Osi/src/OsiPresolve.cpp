@@ -1639,21 +1639,35 @@ CoinPostsolveMatrix::CoinPostsolveMatrix(OsiSolverInterface*  si,
   int nrows1 = nrows_ ;
 
   const CoinPackedMatrix * m = si->getMatrixByCol();
-
+#if 0
   if (! isGapFree(*m)) {
     CoinPresolveAction::throwCoinError("Matrix not gap free",
 				      "CoinPostsolveMatrix");
   }
-
+#endif
   const CoinBigIndex nelemsr = m->getNumElements();
 
-  CoinDisjointCopyN(m->getVectorStarts(), ncols1, mcstrt_);
-  CoinZeroN(mcstrt_+ncols1,ncols0_-ncols1);
-  mcstrt_[ncols_] = nelems0;	// points to end of bulk store
-  CoinDisjointCopyN(m->getVectorLengths(),ncols1,  hincol_);
-  CoinDisjointCopyN(m->getIndices(),      nelemsr, hrow_);
-  CoinDisjointCopyN(m->getElements(),     nelemsr, colels_);
-
+  if (isGapFree(*m)) {
+    CoinDisjointCopyN(m->getVectorStarts(), ncols1, mcstrt_);
+    CoinZeroN(mcstrt_+ncols1,ncols0_-ncols1);
+    mcstrt_[ncols_] = nelems0;	// points to end of bulk store
+    CoinDisjointCopyN(m->getVectorLengths(),ncols1,  hincol_);
+    CoinDisjointCopyN(m->getIndices(),      nelemsr, hrow_);
+    CoinDisjointCopyN(m->getElements(),     nelemsr, colels_);
+  }
+  else
+  {
+    CoinPackedMatrix* mm = new CoinPackedMatrix(*m);
+    if( mm->hasGaps())
+      mm->removeGaps();
+    assert(nelemsr == mm->getNumElements());
+    CoinDisjointCopyN(mm->getVectorStarts(), ncols1, mcstrt_);
+    CoinZeroN(mcstrt_+ncols1,ncols0_-ncols1);
+    mcstrt_[ncols_] = nelems0;  // points to end of bulk store
+    CoinDisjointCopyN(mm->getVectorLengths(),ncols1,  hincol_);
+    CoinDisjointCopyN(mm->getIndices(),      nelemsr, hrow_);
+    CoinDisjointCopyN(mm->getElements(),     nelemsr, colels_);
+  }
 
 # if PRESOLVE_DEBUG || PRESOLVE_CONSISTENCY
   memset(cdone_, -1, ncols0_);

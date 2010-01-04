@@ -127,6 +127,11 @@ noinst_PROGRAMS = unitTest$(EXEEXT)
 @COIN_HAS_XPR_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiXpr`
 
 @COIN_HAS_XPR_TRUE@am__append_45 = ../src/OsiXpr/libOsiXpr.la
+@COIN_HAS_GRB_TRUE@am__append_46 = OsiGrbSolverInterfaceTest.cpp
+@COIN_HAS_GRB_TRUE@am__append_47 = -I`$(CYGPATH_W) $(GRBINCDIR)` \
+@COIN_HAS_GRB_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiGrb`
+
+@COIN_HAS_GRB_TRUE@am__append_48 = ../src/OsiGrb/libOsiGrb.la
 subdir = test
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -149,7 +154,8 @@ am__unitTest_SOURCES_DIST = OsiColCutTest.cpp OsiCutsTest.cpp \
 	OsiDylpSolverInterfaceTest.cpp OsiFmpSolverInterfaceTest.cpp \
 	OsiGlpkSolverInterfaceTest.cpp OsiMskSolverInterfaceTest.cpp \
 	OsiOslSolverInterfaceTest.cpp OsiSpxSolverInterfaceTest.cpp \
-	OsiVolSolverInterfaceTest.cpp OsiXprSolverInterfaceTest.cpp
+	OsiVolSolverInterfaceTest.cpp OsiXprSolverInterfaceTest.cpp \
+	OsiGrbSolverInterfaceTest.cpp
 @COIN_HAS_CLP_TRUE@am__objects_1 =  \
 @COIN_HAS_CLP_TRUE@	OsiClpSolverInterfaceTest.$(OBJEXT)
 @COIN_HAS_CBC_TRUE@am__objects_2 =  \
@@ -174,13 +180,16 @@ am__unitTest_SOURCES_DIST = OsiColCutTest.cpp OsiCutsTest.cpp \
 @COIN_HAS_VOL_TRUE@	OsiVolSolverInterfaceTest.$(OBJEXT)
 @COIN_HAS_XPR_TRUE@am__objects_12 =  \
 @COIN_HAS_XPR_TRUE@	OsiXprSolverInterfaceTest.$(OBJEXT)
+@COIN_HAS_GRB_TRUE@am__objects_13 =  \
+@COIN_HAS_GRB_TRUE@	OsiGrbSolverInterfaceTest.$(OBJEXT)
 am_unitTest_OBJECTS = OsiColCutTest.$(OBJEXT) OsiCutsTest.$(OBJEXT) \
 	OsiRowCutDebuggerTest.$(OBJEXT) OsiRowCutTest.$(OBJEXT) \
 	OsiSolverInterfaceTest.$(OBJEXT) unitTest.$(OBJEXT) \
 	$(am__objects_1) $(am__objects_2) $(am__objects_3) \
 	$(am__objects_4) $(am__objects_5) $(am__objects_6) \
 	$(am__objects_7) $(am__objects_8) $(am__objects_9) \
-	$(am__objects_10) $(am__objects_11) $(am__objects_12)
+	$(am__objects_10) $(am__objects_11) $(am__objects_12) \
+	$(am__objects_13)
 unitTest_OBJECTS = $(am_unitTest_OBJECTS)
 @COIN_HAS_CLP_TRUE@am__DEPENDENCIES_1 = ../src/OsiClp/libOsiClp.la \
 @COIN_HAS_CLP_TRUE@	$(CLPOBJDIR)/src/libClp.la
@@ -205,13 +214,15 @@ am__DEPENDENCIES_3 =
 @COIN_HAS_VOL_TRUE@am__DEPENDENCIES_14 = ../src/OsiVol/libOsiVol.la \
 @COIN_HAS_VOL_TRUE@	$(VOLOBJDIR)/src/libVol.la
 @COIN_HAS_XPR_TRUE@am__DEPENDENCIES_15 = ../src/OsiXpr/libOsiXpr.la
+@COIN_HAS_GRB_TRUE@am__DEPENDENCIES_16 = ../src/OsiGrb/libOsiGrb.la
 unitTest_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2) \
 	$(am__DEPENDENCIES_4) $(am__DEPENDENCIES_5) \
 	$(am__DEPENDENCIES_6) $(am__DEPENDENCIES_7) \
 	$(am__DEPENDENCIES_8) $(am__DEPENDENCIES_9) \
 	$(am__DEPENDENCIES_10) $(am__DEPENDENCIES_11) \
 	$(am__DEPENDENCIES_12) $(am__DEPENDENCIES_13) \
-	$(am__DEPENDENCIES_14) $(am__DEPENDENCIES_15) ../src/libOsi.la \
+	$(am__DEPENDENCIES_14) $(am__DEPENDENCIES_15) \
+	$(am__DEPENDENCIES_16) ../src/libOsi.la \
 	$(COINUTILSOBJDIR)/src/libCoinUtils.la
 depcomp = $(SHELL) $(top_srcdir)/../depcomp
 am__depfiles_maybe = depfiles
@@ -472,7 +483,7 @@ unitTest_SOURCES = OsiColCutTest.cpp OsiCutsTest.cpp \
 	$(am__append_5) $(am__append_11) $(am__append_17) \
 	$(am__append_20) $(am__append_24) $(am__append_27) \
 	$(am__append_30) $(am__append_33) $(am__append_36) \
-	$(am__append_39) $(am__append_43)
+	$(am__append_39) $(am__append_43) $(am__append_46)
 
 # List libraries of COIN projects
 
@@ -481,8 +492,8 @@ unitTest_LDADD = $(am__append_3) $(am__append_7) $(am__append_9) \
 	$(am__append_13) $(am__append_15) $(am__append_19) \
 	$(am__append_22) $(am__append_26) $(am__append_29) \
 	$(am__append_32) $(am__append_35) $(am__append_38) \
-	$(am__append_41) $(am__append_45) ../src/libOsi.la \
-	$(COINUTILSOBJDIR)/src/libCoinUtils.la
+	$(am__append_41) $(am__append_45) $(am__append_48) \
+	../src/libOsi.la $(COINUTILSOBJDIR)/src/libCoinUtils.la
 
 # List additional libraries
 #LIBS +=
@@ -495,7 +506,7 @@ AM_CPPFLAGS = $(MSKCXXFLAGS) -I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
 	$(am__append_10) $(am__append_12) $(am__append_18) \
 	$(am__append_21) $(am__append_25) $(am__append_28) \
 	$(am__append_31) $(am__append_34) $(am__append_37) \
-	$(am__append_40) $(am__append_44)
+	$(am__append_40) $(am__append_44) $(am__append_47)
 
 # This line is necessary to allow VPATH compilation with MS compilers
 # on Cygwin
@@ -566,6 +577,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiDylpSolverInterfaceTest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiFmpSolverInterfaceTest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiGlpkSolverInterfaceTest.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiGrbSolverInterfaceTest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiMskSolverInterfaceTest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiOslSolverInterfaceTest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiRowCutDebuggerTest.Po@am__quote@

@@ -3262,7 +3262,10 @@ void testLoadAndAssignProblem (const OsiSolverInterface *emptySi,
   OsiGrb translates free rows into 'L' (lower-equal) rows with a -infty right-hand side.
   This makes some of the tests below fail.
 */
-  if( dynamic_cast<const OsiGrbSolverInterface*>(emptySi) == NULL ) {
+#ifdef COIN_HAS_GRB
+  if( dynamic_cast<const OsiGrbSolverInterface*>(emptySi) == NULL )
+#endif
+  {
     int i ;
 
     OsiSolverInterface * si1 = emptySi->clone();

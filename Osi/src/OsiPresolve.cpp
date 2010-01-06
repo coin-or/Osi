@@ -1300,13 +1300,13 @@ CoinPrePostsolveMatrix::CoinPrePostsolveMatrix(const OsiSolverInterface * si,
   // initialize and clean up bounds
   double infinity = si->getInfinity();
   if (infinity!=COIN_DBL_MAX) {
-    for (i=0;i<ncols_in;i++) {
+    for (i=0;i<ncols;i++) {
       if (clo_[i]==-infinity)
 	clo_[i]=-COIN_DBL_MAX;
       if (cup_[i]==infinity)
 	cup_[i]=COIN_DBL_MAX;
     }
-    for (i=0;i<nrows_in;i++) {
+    for (i=0;i<nrows;i++) {
       if (rlo_[i]==-infinity)
 	rlo_[i]=-COIN_DBL_MAX;
       if (rup_[i]==infinity)

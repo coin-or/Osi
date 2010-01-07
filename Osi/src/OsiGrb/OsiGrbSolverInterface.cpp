@@ -450,6 +450,22 @@ OsiGrbSolverInterface::setStrParam(OsiStrParam key, const std::string & value)
   }
 }
 
+// Set a hint parameter
+bool
+OsiGrbSolverInterface::setHintParam(OsiHintParam key, bool yesNo, OsiHintStrength strength, void* otherInfo)
+{
+  debugMessage("OsiGrbSolverInterface::setHintParam(%d, %d)\n", key, yesNo);
+
+  if( key == OsiDoScale )
+  {
+    GUROBI_CALL( "setHintParam", GRBsetintparam(GRBgetenv(getMutableLpPtr()), GRB_INT_PAR_SCALEFLAG, yesNo) );
+    OsiSolverInterface::setHintParam(key, yesNo, strength, otherInfo);
+    return true;
+  }
+
+  return OsiSolverInterface::setHintParam(key, yesNo, strength, otherInfo);
+}
+
 //-----------------------------------------------------------------------------
 
 bool
@@ -526,6 +542,60 @@ OsiGrbSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
   	default:
   		return false;
   }
+}
+
+// Get a hint parameter
+bool
+OsiGrbSolverInterface::getHintParam(OsiHintParam key, bool& yesNo, OsiHintStrength& strength, void*& otherInformation) const
+{
+  debugMessage("OsiGrbSolverInterface::getHintParam[1](%d)\n", key);
+  if( key == OsiDoScale )
+  {
+    OsiSolverInterface::getHintParam(key, yesNo, strength, otherInformation);
+    GUROBI_CALL( "getHintParam", GRBupdatemodel(getMutableLpPtr()) );
+    int value;
+    GUROBI_CALL( "getHintParam", GRBgetintparam(GRBgetenv(getMutableLpPtr()), GRB_INT_PAR_SCALEFLAG, &value) );
+    yesNo = value;
+    return true;
+  }
+
+  return OsiSolverInterface::getHintParam(key, yesNo, strength, otherInformation);
+}
+
+// Get a hint parameter
+bool
+OsiGrbSolverInterface::getHintParam(OsiHintParam key, bool& yesNo, OsiHintStrength& strength) const
+{
+  debugMessage("OsiGrbSolverInterface::getHintParam[2](%d)\n", key);
+  if( key == OsiDoScale )
+  {
+    OsiSolverInterface::getHintParam(key, yesNo, strength);
+    GUROBI_CALL( "getHintParam", GRBupdatemodel(getMutableLpPtr()) );
+    int value;
+    GUROBI_CALL( "getHintParam", GRBgetintparam(GRBgetenv(getMutableLpPtr()), GRB_INT_PAR_SCALEFLAG, &value) );
+    yesNo = value;
+    return true;
+  }
+
+  return OsiSolverInterface::getHintParam(key, yesNo, strength);
+}
+
+// Get a hint parameter
+bool
+OsiGrbSolverInterface::getHintParam(OsiHintParam key, bool& yesNo) const
+{
+  debugMessage("OsiGrbSolverInterface::getHintParam[3](%d)\n", key);
+  if( key == OsiDoScale )
+  {
+    OsiSolverInterface::getHintParam(key, yesNo);
+    GUROBI_CALL( "getHintParam", GRBupdatemodel(getMutableLpPtr()) );
+    int value;
+    GUROBI_CALL( "getHintParam", GRBgetintparam(GRBgetenv(getMutableLpPtr()), GRB_INT_PAR_SCALEFLAG, &value) );
+    yesNo = value;
+    return true;
+  }
+
+  return OsiSolverInterface::getHintParam(key, yesNo);
 }
 
 //#############################################################################
@@ -2646,30 +2716,35 @@ OsiGrbSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
 		CoinFillN(ob, nc, 0.0);
 	}
 
-	//TODO to investigate and report back
-	// even though the Gurobi docu suggests that gaps in the matrix are allowed,
-	// GUROBI may still give an "Index is out of range" error
-	// so we remove gaps
-
 	bool freeMatrixRequired = false;
 	CoinPackedMatrix * m = NULL;
-	if ( !matrix.isColOrdered() || matrix.hasGaps() )
+
+  if( !matrix.isColOrdered() )
+  {
+    m = new CoinPackedMatrix();
+    m->reverseOrderedCopyOf(matrix);
+    freeMatrixRequired = true;
+  }
+  else
+    m = const_cast<CoinPackedMatrix *>(&matrix);
+
+//  // up to GUROBI 2.0.1, GUROBI may give an "Index is out of range" error if the constraint matrix has uninitalized "gaps"
+//#if (GRB_VERSION_MAJOR < 2) || (GRB_VERSION_MAJOR == 2 && GRB_VERSION_MINOR == 0 && GRB_VERSION_TECHNICAL <= 1)
+	if ( m->hasGaps() )
 	{
-	  if( !matrix.isColOrdered() )
+	  if( freeMatrixRequired )
 	  {
-	    m = new CoinPackedMatrix();
-	    m->reverseOrderedCopyOf(matrix);
+	    m->removeGaps();
 	  }
 	  else
 	  {
-	    m = new CoinPackedMatrix(matrix);
+      m = new CoinPackedMatrix(matrix);
+      if( m->hasGaps() )
+        m->removeGaps();
+      freeMatrixRequired = true;
 	  }
-	  if( m->hasGaps() )
-	    m->removeGaps();
-		freeMatrixRequired = true;
 	}
-	else 
-		m = const_cast<CoinPackedMatrix *>(&matrix);
+//#endif
 
 	assert( nc == m->getNumCols() );
 	assert( nr == m->getNumRows() );
@@ -2681,17 +2756,6 @@ OsiGrbSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
 	GUROBI_CALL( "loadProblem", GRBgetintattr(getMutableLpPtr(), GRB_INT_ATTR_MODELSENSE, &modelsense) );
 
 	gutsOfDestructor(); // kill old LP, if any
-
-#if 0
-  printf("nc %d  nr %d\n", nc, nr);
-	for( int i = 0 ; i < nc; ++i )
-	{
-	  printf("col %d: from %d, length %d: ", i, m->getVectorStarts()[i], m->getVectorLengths()[i]);
-	  for( int j = 0; j < m->getVectorLengths()[i]; ++j )
-	    printf("%d ", m->getIndices()[m->getVectorStarts()[i]+j]);
-	  printf("\n");
-	}
-#endif
 
 	std::string pn;
 	getStrParam(OsiProbName, pn);
@@ -2709,6 +2773,11 @@ OsiGrbSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
 			const_cast<double *>(clb), 
 			const_cast<double *>(cub), 
 			NULL, NULL, NULL) );
+
+  // GUROBI up to version 2.0.1 may return a scaled LP after GRBoptimize when requesting it via GRBgetvars
+#if (GRB_VERSION_MAJOR < 2) || (GRB_VERSION_MAJOR == 2 && GRB_VERSION_MINOR == 0 && GRB_VERSION_TECHNICAL <= 1)
+  setHintParam(OsiDoScale, false);
+#endif
 
 	delete[] myrowsen;
 	delete[] myrowrhs;
@@ -2901,6 +2970,11 @@ OsiGrbSolverInterface::loadProblem(const int numcols, const int numrows,
 			const_cast<double *>(clb), 
 			const_cast<double *>(cub), 
 			NULL, NULL, NULL) );
+
+  // GUROBI up to version 2.0.1 may return a scaled LP after GRBoptimize when requesting it via GRBgetvars
+#if (GRB_VERSION_MAJOR < 2) || (GRB_VERSION_MAJOR == 2 && GRB_VERSION_MINOR == 0 && GRB_VERSION_TECHNICAL <= 1)
+  setHintParam(OsiDoScale, false);
+#endif
 
 	delete[] myrowsen;
 	delete[] myrowrhs;
@@ -3325,15 +3399,20 @@ unsigned int OsiGrbSolverInterface::numInstances_ = 0;
 //------------------------------------------------------------------- 
 GRBmodel* OsiGrbSolverInterface::getMutableLpPtr() const
 {
-	if ( lp_ == NULL )
-	{
-		assert(getEnvironmentPtr() != NULL);
-		
-		std::string pn;
-		getStrParam(OsiProbName, pn);
-		GUROBI_CALL( "getMutableLpPtr", GRBnewmodel(getEnvironmentPtr(), &lp_, const_cast<char*>(pn.c_str()), 0, NULL, NULL, NULL, NULL, NULL) );
-		assert( lp_ != NULL ); 
-	}
+  if ( lp_ == NULL )
+  {
+    assert(getEnvironmentPtr() != NULL);
+
+    std::string pn;
+    getStrParam(OsiProbName, pn);
+    GUROBI_CALL( "getMutableLpPtr", GRBnewmodel(getEnvironmentPtr(), &lp_, const_cast<char*>(pn.c_str()), 0, NULL, NULL, NULL, NULL, NULL) );
+    assert( lp_ != NULL );
+
+    // GUROBI up to version 2.0.1 may return a scaled LP after GRBoptimize when requesting it via GRBgetvars
+#if (GRB_VERSION_MAJOR < 2) || (GRB_VERSION_MAJOR == 2 && GRB_VERSION_MINOR == 0 && GRB_VERSION_TECHNICAL <= 1)
+    GUROBI_CALL( "getMutableLpPtr", GRBsetintparam(GRBgetenv(lp_), GRB_INT_PAR_SCALEFLAG, 0) );
+#endif
+  }
   return lp_;
 }
 
@@ -3364,11 +3443,7 @@ void OsiGrbSolverInterface::gutsOfCopy( const OsiGrbSolverInterface & source )
 
 //-------------------------------------------------------------------
 void OsiGrbSolverInterface::gutsOfConstructor()
-{
-  // if Gurobi scales the model, then also the one the user sees is scaled, which gives trouble (probably not only) in the unittest
-  // TODO do we have a better workaround then not scaling the model?
-  GUROBI_CALL( "gutsOfConstructor", GRBsetintparam(getEnvironmentPtr(), GRB_INT_PAR_SCALEFLAG, 0) );
-}
+{ }
 
 //-------------------------------------------------------------------
 void OsiGrbSolverInterface::gutsOfDestructor()

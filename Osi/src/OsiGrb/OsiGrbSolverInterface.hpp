@@ -66,12 +66,20 @@ public:
 	bool setDblParam(OsiDblParam key, double value);
 	// Set a string parameter
 	bool setStrParam(OsiStrParam key, const std::string & value);
+	// Set a hint parameter
+	bool setHintParam(OsiHintParam key, bool yesNo = true, OsiHintStrength strength = OsiHintTry, void* = NULL);
 	// Get an integer parameter
 	bool getIntParam(OsiIntParam key, int& value) const;
 	// Get an double parameter
 	bool getDblParam(OsiDblParam key, double& value) const;
 	// Get a string parameter
 	bool getStrParam(OsiStrParam key, std::string& value) const;
+	// Get a hint parameter
+	bool getHintParam(OsiHintParam key, bool& yesNo, OsiHintStrength& strength, void*& otherInformation) const;
+	// Get a hint parameter
+	bool getHintParam(OsiHintParam key, bool& yesNo, OsiHintStrength& strength) const;
+	// Get a hint parameter
+	bool getHintParam(OsiHintParam key, bool& yesNo) const;
 	//@}
 
 	//---------------------------------------------------------------------------

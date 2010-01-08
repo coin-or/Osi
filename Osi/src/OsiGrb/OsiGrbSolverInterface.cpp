@@ -2728,8 +2728,8 @@ OsiGrbSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
   else
     m = const_cast<CoinPackedMatrix *>(&matrix);
 
-//  // up to GUROBI 2.0.1, GUROBI may give an "Index is out of range" error if the constraint matrix has uninitalized "gaps"
-//#if (GRB_VERSION_MAJOR < 2) || (GRB_VERSION_MAJOR == 2 && GRB_VERSION_MINOR == 0 && GRB_VERSION_TECHNICAL <= 1)
+  // up to GUROBI 2.0.1, GUROBI may give an "Index is out of range" error if the constraint matrix has uninitalized "gaps"
+#if (GRB_VERSION_MAJOR < 2) || (GRB_VERSION_MAJOR == 2 && GRB_VERSION_MINOR == 0 && GRB_VERSION_TECHNICAL <= 1)
 	if ( m->hasGaps() )
 	{
 	  if( freeMatrixRequired )
@@ -2744,7 +2744,7 @@ OsiGrbSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
       freeMatrixRequired = true;
 	  }
 	}
-//#endif
+#endif
 
 	assert( nc == m->getNumCols() );
 	assert( nr == m->getNumRows() );

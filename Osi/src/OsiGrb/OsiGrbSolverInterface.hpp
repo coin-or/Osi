@@ -364,6 +364,16 @@ public:
 	virtual void setInteger(const int* indices, int len);
 	//@}
 
+  //-------------------------------------------------------------------------
+  /**@name Naming methods */
+  //@{
+  /*! \brief Set a row name */
+  virtual void setRowName(int ndx, std::string name) ;
+
+  /*! \brief Set a column name */
+  virtual void setColName(int ndx, std::string name) ;
+  //@}
+
 	//-------------------------------------------------------------------------
 	/// Set objective function sense (1 for min (default), -1 for max,)
 	virtual void setObjSense(double s);
@@ -795,6 +805,9 @@ private:
 	int *hotStartRStat_;
 	int hotStartRStatSize_;
 	int hotStartMaxIteration_;
+
+  /// OSI name discipline
+  int nameDisc_;
 
 	/**@name Cached information derived from the Gurobi model */
 	//@{

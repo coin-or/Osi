@@ -553,6 +553,9 @@ public:
 	//@{
 	/// Method to access Gurobi environment pointer
 	GRBenv* getEnvironmentPtr() const;
+
+  /// Return whether the current Gurobi environment runs in demo mode.
+  bool isDemoLicense() const;
 	//@}  
 
 	/// return a vector of variable types (continous, binary, integer)
@@ -840,7 +843,7 @@ private:
 
 	/**@name Additional information needed for storing MIP problems and handling ranged rows */
 	//@{
-  /// Stores whether Gurobi' prob type is currently set to MIP
+  /// Stores whether we currently see the problem as a MIP
   mutable bool probtypemip_;
 
 	/// Size of allocated memory for coltype_, colmap_O2G, and (with offset auxcolspace) colmap_G2O.

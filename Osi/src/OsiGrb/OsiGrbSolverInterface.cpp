@@ -394,18 +394,11 @@ OsiGrbSolverInterface::setDblParam(OsiDblParam key, double value)
 
   switch (key)
   {
-//TODO
+// Gurobi does not have primal or dual objective limits
 //  	case OsiDualObjectiveLimit:
 //  		break;
-  	case OsiPrimalObjectiveLimit:
-  	  if( GRBsetdblparam(GRBgetenv(getMutableLpPtr()), GRB_DBL_PAR_CUTOFF, value) != 0 )
-  	  {
-        *messageHandler() << "Warning: Setting GUROBI primal objective limit to" << value << "failed." << CoinMessageEol;
-        if (OsiGrbSolverInterface::globalenv_)
-          *messageHandler() << "\t GUROBI error message: " << GRBgeterrormsg(OsiGrbSolverInterface::globalenv_) << CoinMessageEol;
-  	    return false;
-  	  }
-      return true;
+//  	case OsiPrimalObjectiveLimit:
+//  	  break;
   	case OsiDualTolerance:
   	  if( GRBsetdblparam(GRBgetenv(getMutableLpPtr()), GRB_DBL_PAR_OPTIMALITYTOL, value) != 0 )
       {
@@ -503,12 +496,11 @@ OsiGrbSolverInterface::getDblParam(OsiDblParam key, double& value) const
 
   switch (key) 
   {
-//TODO
-//    	case OsiDualObjectiveLimit:
-//    		break;
-   	case OsiPrimalObjectiveLimit:
-   	  GUROBI_CALL( "getDblParam", GRBgetdblparam(GRBgetenv(getMutableLpPtr()), GRB_DBL_PAR_CUTOFF, &value) );
-   	  return true;
+// Gurobi does not have primal or dual objective limits
+//    case OsiDualObjectiveLimit:
+//      break;
+//   	case OsiPrimalObjectiveLimit:
+//   	  break;
   	case OsiDualTolerance:
   	  GUROBI_CALL( "getDblParam", GRBgetdblparam(GRBgetenv(getMutableLpPtr()), GRB_DBL_PAR_OPTIMALITYTOL, &value) );
   		return true;
@@ -658,12 +650,7 @@ bool OsiGrbSolverInterface::isPrimalObjectiveLimitReached() const
 {
   debugMessage("OsiGrbSolverInterface::isPrimalObjectiveLimitReached()\n");
 
-  GUROBI_CALL( "isPrimalObjectiveLimitReached", GRBupdatemodel(getMutableLpPtr()) );
-
-  int stat;
-  GUROBI_CALL( "isPrimalObjectiveLimitReached", GRBgetintattr(getMutableLpPtr(), GRB_INT_ATTR_STATUS, &stat) );
-
-	return (stat == GRB_CUTOFF);
+  return false;
 }
 
 bool OsiGrbSolverInterface::isDualObjectiveLimitReached() const
@@ -1517,7 +1504,7 @@ const double * OsiGrbSolverInterface::getRowActivity() const
   	      GUROBI_CALL( "getRowActivity", GRBgetdblattrelement(getMutableLpPtr(), GRB_DBL_ATTR_X, auxcolind[r], &rowact_[r]) );
   		  }
   		  else
-  		    rowact_[r] += getRightHandSide()[r];
+  		    rowact_[r] = getRightHandSide()[r] - rowact_[r];
   		}
   	}
   }
@@ -3049,6 +3036,32 @@ GRBmodel* OsiGrbSolverInterface::getLpPtr( int keepCached )
 {
   freeCachedData( keepCached );
   return getMutableLpPtr();
+}
+
+/// Return whether the current Gurobi environment runs in demo mode.
+bool OsiGrbSolverInterface::isDemoLicense() const
+{
+  debugMessage("OsiGrbSolverInterface::isDemoLicense()\n");
+
+  GRBenv* env = getEnvironmentPtr();
+
+  GRBmodel* testlp;
+
+  // a Gurobi demo license allows to solve only models with up to 500 variables
+  // thus, let's try to create and solve a model with 1000 variables
+  GUROBI_CALL( "isDemoLicense", GRBnewmodel(env, &testlp, "licensetest", 1000, NULL, NULL, NULL, NULL, NULL) );
+//  GUROBI_CALL( "resolve", GRBsetintparam(GRBgetenv(testlp), GRB_INT_PAR_PRESOLVE, presolve) );
+
+  int rc = GRBoptimize(testlp);
+
+  if(rc == GRB_ERROR_SIZE_LIMIT_EXCEEDED)
+    return true;
+
+  GUROBI_CALL( "isDemoLicense", rc );
+
+  GRBfreemodel(testlp);
+
+  return false;
 }
 
 //-----------------------------------------------------------------------------

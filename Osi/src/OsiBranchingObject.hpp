@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+#include "CoinError.hpp"
+
 class OsiSolverInterface;
 class OsiSolverBranch;
 
@@ -113,7 +115,7 @@ public:
   */
   virtual OsiBranchingObject * createBranch(OsiSolverInterface * /*solver*/,
 					    const OsiBranchingInformation * /*info*/,
-					    int /*way*/) const {throw CoinError("Need code","createBranch","OsiBranchingObject");}
+					    int /*way*/) const {throw CoinError("Need code","createBranch","OsiBranchingObject"); return NULL; }
   
   /** \brief Return true if object can take part in normal heuristics
   */

@@ -7699,8 +7699,8 @@ OsiClpSolverInterface::branchAndBound() {
     delete [] relaxedLower;
     delete [] relaxedUpper;
   } else {
-    std::cout<<"The LP relaxation is infeasible"
-             <<std::endl;
+    if(messageHandler())
+      *messageHandler() <<"The LP relaxation is infeasible" <<CoinMessageEol;
     modelPtr_->setProblemStatus(1);
     //throw CoinError("The LP relaxation is infeasible or too expensive",
     //"branchAndBound", "OsiClpSolverInterface");

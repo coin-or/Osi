@@ -13,6 +13,7 @@ extern int osi_hot;
 #include "CoinModel.hpp"
 #include "CoinMpsIO.hpp"
 #include "CoinSort.hpp"
+#include "ClpMessage.hpp"
 #include "ClpDualRowSteepest.hpp"
 #include "ClpPrimalColumnSteepest.hpp"
 #include "ClpPackedMatrix.hpp"
@@ -7365,6 +7366,7 @@ OsiClpSolverInterface::branchAndBound() {
     int nRedundantUp2=0;
     int nRedundantDown2=0;
     OsiNodeSimple bestNode;
+    char generalPrint[300];
     ////// Start main while of branch and bound
     // while until nothing on stack
     while (branchingTree.size()) {
@@ -7666,18 +7668,22 @@ OsiClpSolverInterface::branchAndBound() {
         bestNode = node;
         // set cutoff (hard coded tolerance)
         setDblParam(OsiDualObjectiveLimit,(bestNode.objectiveValue_-1.0e-5)*direction);
-        std::cout<<"Integer solution of "
-                 <<bestNode.objectiveValue_
-                 <<" found after "<<numberIterations
-                 <<" iterations and "<<numberNodes<<" nodes"
-                 <<std::endl;
+	sprintf(generalPrint,"Integer solution of %g found after %d iterations and %d nodes",
+		bestNode.objectiveValue_,numberIterations,
+		numberNodes);
+	CoinMessages generalMessages = modelPtr_->messages();
+	modelPtr_->messageHandler()->message(CLP_GENERAL,generalMessages)
+	  << generalPrint
+	  <<CoinMessageEol;
       }
     }
     ////// End main while of branch and bound
-    std::cout<<"Search took "
-             <<numberIterations
-             <<" iterations and "<<numberNodes<<" nodes"
-             <<std::endl;
+    sprintf(generalPrint,"Search took %d iterations and %d nodes",
+	    numberIterations,numberNodes);
+    CoinMessages generalMessages = modelPtr_->messages();
+    modelPtr_->messageHandler()->message(CLP_GENERAL,generalMessages)
+      << generalPrint
+      <<CoinMessageEol;
     if (bestNode.numberIntegers_) {
       // we have a solution restore
       // do bounds

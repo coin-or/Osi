@@ -90,13 +90,12 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/inc/config_osi.h
 CONFIG_CLEAN_FILES =
 PROGRAMS = $(noinst_PROGRAMS)
-am__unitTest_SOURCES_DIST = OsiColCutTest.cpp OsiCutsTest.cpp \
-	OsiRowCutDebuggerTest.cpp OsiRowCutTest.cpp \
-	OsiSolverInterfaceTest.cpp unitTest.cpp \
-	OsiCpxSolverInterfaceTest.cpp OsiFmpSolverInterfaceTest.cpp \
-	OsiGlpkSolverInterfaceTest.cpp OsiMskSolverInterfaceTest.cpp \
-	OsiOslSolverInterfaceTest.cpp OsiXprSolverInterfaceTest.cpp \
-	OsiGrbSolverInterfaceTest.cpp
+am__unitTest_SOURCES_DIST = unitTest.cpp OsiTestSolver.cpp \
+	OsiTestSolverInterface.cpp OsiTestSolverInterfaceIO.cpp \
+	OsiTestSolverInterfaceTest.cpp OsiCpxSolverInterfaceTest.cpp \
+	OsiFmpSolverInterfaceTest.cpp OsiGlpkSolverInterfaceTest.cpp \
+	OsiMskSolverInterfaceTest.cpp OsiOslSolverInterfaceTest.cpp \
+	OsiXprSolverInterfaceTest.cpp OsiGrbSolverInterfaceTest.cpp
 @COIN_HAS_CPX_TRUE@am__objects_1 =  \
 @COIN_HAS_CPX_TRUE@	OsiCpxSolverInterfaceTest.$(OBJEXT)
 @COIN_HAS_FMP_TRUE@am__objects_2 =  \
@@ -111,12 +110,12 @@ am__unitTest_SOURCES_DIST = OsiColCutTest.cpp OsiCutsTest.cpp \
 @COIN_HAS_XPR_TRUE@	OsiXprSolverInterfaceTest.$(OBJEXT)
 @COIN_HAS_GRB_TRUE@am__objects_7 =  \
 @COIN_HAS_GRB_TRUE@	OsiGrbSolverInterfaceTest.$(OBJEXT)
-am_unitTest_OBJECTS = OsiColCutTest.$(OBJEXT) OsiCutsTest.$(OBJEXT) \
-	OsiRowCutDebuggerTest.$(OBJEXT) OsiRowCutTest.$(OBJEXT) \
-	OsiSolverInterfaceTest.$(OBJEXT) unitTest.$(OBJEXT) \
-	$(am__objects_1) $(am__objects_2) $(am__objects_3) \
-	$(am__objects_4) $(am__objects_5) $(am__objects_6) \
-	$(am__objects_7)
+am_unitTest_OBJECTS = unitTest.$(OBJEXT) OsiTestSolver.$(OBJEXT) \
+	OsiTestSolverInterface.$(OBJEXT) \
+	OsiTestSolverInterfaceIO.$(OBJEXT) \
+	OsiTestSolverInterfaceTest.$(OBJEXT) $(am__objects_1) \
+	$(am__objects_2) $(am__objects_3) $(am__objects_4) \
+	$(am__objects_5) $(am__objects_6) $(am__objects_7)
 unitTest_OBJECTS = $(am_unitTest_OBJECTS)
 @COIN_HAS_CPX_TRUE@am__DEPENDENCIES_1 = ../src/OsiCpx/libOsiCpx.la
 @COIN_HAS_FMP_TRUE@am__DEPENDENCIES_2 = ../src/OsiFmp/libOsiFmp.la
@@ -125,7 +124,8 @@ unitTest_OBJECTS = $(am_unitTest_OBJECTS)
 @COIN_HAS_OSL_TRUE@am__DEPENDENCIES_5 = ../src/OsiOsl/libOsiOsl.la
 @COIN_HAS_XPR_TRUE@am__DEPENDENCIES_6 = ../src/OsiXpr/libOsiXpr.la
 @COIN_HAS_GRB_TRUE@am__DEPENDENCIES_7 = ../src/OsiGrb/libOsiGrb.la
-unitTest_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2) \
+unitTest_DEPENDENCIES = ../src/unittests/libOsiUnitTests.la \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2) \
 	$(am__DEPENDENCIES_3) $(am__DEPENDENCIES_4) \
 	$(am__DEPENDENCIES_5) $(am__DEPENDENCIES_6) \
 	$(am__DEPENDENCIES_7) ../src/libOsi.la \
@@ -321,19 +321,19 @@ sol_cc_compiler = @sol_cc_compiler@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 AUTOMAKE_OPTIONS = foreign
-unitTest_SOURCES = OsiColCutTest.cpp OsiCutsTest.cpp \
-	OsiRowCutDebuggerTest.cpp OsiRowCutTest.cpp \
-	OsiSolverInterfaceTest.cpp unitTest.cpp $(am__append_1) \
-	$(am__append_4) $(am__append_7) $(am__append_10) \
-	$(am__append_13) $(am__append_16) $(am__append_19)
+unitTest_SOURCES = unitTest.cpp OsiTestSolver.cpp \
+	OsiTestSolverInterface.cpp OsiTestSolverInterfaceIO.cpp \
+	OsiTestSolverInterfaceTest.cpp $(am__append_1) $(am__append_4) \
+	$(am__append_7) $(am__append_10) $(am__append_13) \
+	$(am__append_16) $(am__append_19)
 
 # List libraries of COIN projects
 
 # Finally the Coin library (many of the above need it)
-unitTest_LDADD = $(am__append_3) $(am__append_6) $(am__append_9) \
-	$(am__append_12) $(am__append_15) $(am__append_18) \
-	$(am__append_21) ../src/libOsi.la \
-	$(COINUTILSOBJDIR)/src/libCoinUtils.la
+unitTest_LDADD = ../src/unittests/libOsiUnitTests.la $(am__append_3) \
+	$(am__append_6) $(am__append_9) $(am__append_12) \
+	$(am__append_15) $(am__append_18) $(am__append_21) \
+	../src/libOsi.la $(COINUTILSOBJDIR)/src/libCoinUtils.la
 
 # List additional libraries
 #LIBS +=
@@ -342,9 +342,10 @@ unitTest_LDADD = $(am__append_3) $(am__append_6) $(am__append_9) \
 # "cygpath" stuff is necessary to compile with native compilers on Windows
 AM_CPPFLAGS = $(MSKCXXFLAGS) -I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(COINUTILSOBJDIR)/inc` -I`$(CYGPATH_W) \
-	$(srcdir)/../src` $(am__append_2) $(am__append_5) \
-	$(am__append_8) $(am__append_11) $(am__append_14) \
-	$(am__append_17) $(am__append_20)
+	$(srcdir)/../src` -I`$(CYGPATH_W) $(srcdir)/../src/unittests` \
+	$(am__append_2) $(am__append_5) $(am__append_8) \
+	$(am__append_11) $(am__append_14) $(am__append_17) \
+	$(am__append_20)
 
 # This line is necessary to allow VPATH compilation with MS compilers
 # on Cygwin
@@ -407,17 +408,16 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiColCutTest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiCpxSolverInterfaceTest.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiCutsTest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiFmpSolverInterfaceTest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiGlpkSolverInterfaceTest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiGrbSolverInterfaceTest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiMskSolverInterfaceTest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiOslSolverInterfaceTest.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiRowCutDebuggerTest.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiRowCutTest.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiSolverInterfaceTest.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiTestSolver.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiTestSolverInterface.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiTestSolverInterfaceIO.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiTestSolverInterfaceTest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiXprSolverInterfaceTest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unitTest.Po@am__quote@
 

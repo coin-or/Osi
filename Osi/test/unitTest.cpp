@@ -2,10 +2,7 @@
 // Corporation and others.  All Rights Reserved.
 // Test individual classes or groups of classes
 
-#if defined(_MSC_VER)
-// Turn off compiler warning about long names
-#  pragma warning(disable:4786)
-#endif
+#include "CoinPragma.hpp"
 
 #include "OsiConfig.h"
 
@@ -25,6 +22,8 @@
 #include "CoinError.hpp"
 #include "OsiSolverInterface.hpp"
 #include "OsiRowCutDebugger.hpp"
+#include "OsiUnitTests.hpp"
+#include "OsiTestSolverInterface.hpp"
 
 /*
   Some convenient undef's, to make it easy to isolate a particular solver.
@@ -36,15 +35,9 @@
 // #undef COIN_HAS_OSL
 // #undef COIN_HAS_XPR
 // #undef COIN_HAS_CPX
-// #undef COIN_HAS_SPX
-// #undef COIN_HAS_VOL
-// #undef COIN_HAS_DYLP
 // #undef COIN_HAS_GLPK
 // #undef COIN_HAS_FMP
-// #undef COIN_HAS_CLP
-// #undef COIN_HAS_SYMPHONY
 // #undef COIN_HAS_MSK
-// #undef COIN_HAS_CBC
 // #undef COIN_HAS_GRB
 
 #ifdef COIN_HAS_OSL
@@ -56,36 +49,19 @@
 #ifdef COIN_HAS_CPX
 #include "OsiCpxSolverInterface.hpp"
 #endif
-#ifdef COIN_HAS_SPX
-#include "OsiSpxSolverInterface.hpp"
-#endif
-#ifdef COIN_HAS_VOL
-#include "OsiVolSolverInterface.hpp"
-#endif
-#ifdef COIN_HAS_DYLP
-#include "OsiDylpSolverInterface.hpp"
-#endif
 #ifdef COIN_HAS_GLPK
 #include "OsiGlpkSolverInterface.hpp"
 #endif
 #ifdef COIN_HAS_FMP
 #include "OsiFmpSolverInterface.hpp"
 #endif
-#ifdef COIN_HAS_CLP
-#include "OsiClpSolverInterface.hpp"
-#endif
-#ifdef COIN_HAS_SYMPHONY
-#include "OsiSymSolverInterface.hpp"
-#endif
 #ifdef COIN_HAS_MSK
 #include "OsiMskSolverInterface.hpp"
-#endif
-#ifdef COIN_HAS_CBC
-#include "OsiCbcSolverInterface.hpp"
 #endif
 #ifdef COIN_HAS_GRB
 #include "OsiGrbSolverInterface.hpp"
 #endif
+#include "OsiTestSolverInterface.hpp"
 
 namespace {
 
@@ -350,55 +326,16 @@ try {
   }
 #endif
 
-#ifdef COIN_HAS_SPX
   {
-    OsiSpxSolverInterface spxSi;
-    testingMessage( "Testing OsiRowCut with OsiSpxSolverInterface\n" );
-    OsiRowCutUnitTest(&spxSi,mpsDir);
+    OsiTestSolverInterface testSi;
+    testingMessage( "Testing OsiRowCut with OsiTestSolverInterface\n" );
+    OsiRowCutUnitTest(&testSi,mpsDir);
   }
   {
-    OsiSpxSolverInterface spxSi;
-    testingMessage( "Testing OsiColCut with OsiSpxSolverInterface\n" );
-    OsiColCutUnitTest(&spxSi,mpsDir);
+    OsiTestSolverInterface testSi;
+    testingMessage( "Testing OsiColCut with OsiTestSolverInterface\n" );
+    OsiColCutUnitTest(&testSi,mpsDir);
   }
-  {
-    OsiSpxSolverInterface spxSi;
-    testingMessage( "Testing OsiRowCutDebugger with OsiSpxSolverInterface\n" );
-    OsiRowCutDebuggerUnitTest(&spxSi,mpsDir);
-  }
-#endif
-
-#ifdef COIN_HAS_VOL
-  {
-    OsiVolSolverInterface volSi;
-    testingMessage( "Testing OsiRowCut with OsiVolSolverInterface\n" );
-    OsiRowCutUnitTest(&volSi,mpsDir);
-  }
-  {
-    OsiVolSolverInterface volSi;
-    testingMessage( "Testing OsiColCut with OsiVolSolverInterface\n" );
-    OsiColCutUnitTest(&volSi,mpsDir);
-  }
-#endif
-
-#ifdef COIN_HAS_DYLP
-  {
-    OsiDylpSolverInterface dylpSi;
-    testingMessage( "Testing OsiRowCut with OsiDylpSolverInterface\n" );
-    OsiRowCutUnitTest(&dylpSi,mpsDir);
-  }
-  {
-    OsiDylpSolverInterface dylpSi;
-    testingMessage( "Testing OsiColCut with OsiDylpSolverInterface\n" );
-    OsiColCutUnitTest(&dylpSi,mpsDir);
-  }
-  {
-    OsiDylpSolverInterface dylpSi;
-    testingMessage( "Testing OsiRowCutDebugger with OsiDylpSolverInterface\n" );
-    OsiRowCutDebuggerUnitTest(&dylpSi,mpsDir);
-  }
-#endif
-  
 
 #ifdef COIN_HAS_FMP
   {
@@ -437,42 +374,6 @@ try {
   }
 #endif
 
-#ifdef COIN_HAS_CLP  
-  {
-    OsiClpSolverInterface clpSi;
-    testingMessage( "Testing OsiRowCut with OsiClpSolverInterface\n" );
-    OsiRowCutUnitTest(&clpSi,mpsDir);
-  }
-  {
-    OsiClpSolverInterface clpSi;
-    testingMessage( "Testing OsiColCut with OsiClpSolverInterface\n" );
-    OsiColCutUnitTest(&clpSi,mpsDir);
-  }
-  {
-    OsiClpSolverInterface clpSi;
-    testingMessage( "Testing OsiRowCutDebugger with OsiClpSolverInterface\n" );
-    OsiRowCutDebuggerUnitTest(&clpSi,mpsDir);
-  }
-#endif
-
-#ifdef COIN_HAS_SYMPHONY
-  {
-    OsiSymSolverInterface symSi;
-    testingMessage( "Testing OsiRowCut with OsiSymSolverInterface\n" );
-    OsiRowCutUnitTest(&symSi,mpsDir);
-  }
-  {
-    OsiSymSolverInterface symSi;
-    testingMessage( "Testing OsiColCut with OsiSymSolverInterface\n" );
-    OsiColCutUnitTest(&symSi,mpsDir);
-  }
-  {
-    OsiSymSolverInterface symSi;
-    testingMessage( "Testing OsiRowCutDebugger with OsiSymSolverInterface\n" );
-    OsiRowCutDebuggerUnitTest(&symSi,mpsDir);
-  }
-#endif
-
 #ifdef COIN_HAS_MSK  
   {
     OsiMskSolverInterface MskSi;
@@ -488,23 +389,6 @@ try {
     OsiMskSolverInterface MskSi;
     testingMessage( "Testing OsiRowCutDebugger with OsiMskSolverInterface\n" );
     OsiRowCutDebuggerUnitTest(&MskSi,mpsDir);
-  }
-#endif
-#ifdef COIN_HAS_CBC
-  {
-    OsiCbcSolverInterface cbcSi;
-    testingMessage( "Testing OsiRowCut with OsiCbcSolverInterface\n" );
-    OsiRowCutUnitTest(&cbcSi,mpsDir);
-  }
-  {
-    OsiCbcSolverInterface cbcSi;
-    testingMessage( "Testing OsiColCut with OsiCbcSolverInterface\n" );
-    OsiColCutUnitTest(&cbcSi,mpsDir);
-  }
-  {
-    OsiCbcSolverInterface cbcSi;
-    testingMessage( "Testing OsiRowCutDebugger with OsiCbcSolverInterface\n" );
-    OsiRowCutDebuggerUnitTest(&cbcSi,mpsDir);
   }
 #endif
 
@@ -558,25 +442,8 @@ try {
   OsiCpxSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
-#ifdef COIN_HAS_SPX
-  testingMessage( "Testing OsiSpxSolverInterface\n" );
-  OsiSpxSolverInterfaceUnitTest(mpsDir,netlibDir);
-#endif
-
-#ifdef COIN_HAS_VOL
-  testingMessage( "Testing OsiVolSolverInterface\n" );
-  totalErrCnt += OsiVolSolverInterfaceUnitTest(mpsDir,netlibDir);
-#endif
-
-#ifdef COIN_HAS_DYLP
-  testingMessage( "Testing OsiDylpSolverInterface\n" );
-  int errCnt = OsiDylpSolverInterfaceUnitTest(mpsDir,netlibDir);
-  if (errCnt)
-  { std::cerr
-      << "OsiDylpSolverInterface testing issue: "
-      << errCnt << " errors reported by OsiDylp unit test." << std::endl ;
-    totalErrCnt += errCnt ; }
-#endif
+  testingMessage( "Testing OsiTestSolverInterface\n" );
+  totalErrCnt += OsiTestSolverInterfaceUnitTest(mpsDir,netlibDir);
   
 #ifdef COIN_HAS_GLPK
   testingMessage( "Testing OsiGlpkSolverInterface\n" );
@@ -588,24 +455,9 @@ try {
   OsiFmpSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
   
-#ifdef COIN_HAS_CLP
-  testingMessage( "Testing OsiClpSolverInterface\n" );
-  totalErrCnt += OsiClpSolverInterfaceUnitTest(mpsDir,netlibDir);
-#endif
-
 #ifdef COIN_HAS_MSK
   testingMessage( "Testing OsiMskSolverInterface\n" );
   OsiMskSolverInterfaceUnitTest(mpsDir,netlibDir);
-#endif
-
-#ifdef COIN_HAS_CBC
-  testingMessage( "Testing OsiCbcSolverInterface\n" );
-  totalErrCnt += OsiCbcSolverInterfaceUnitTest(mpsDir,netlibDir);
-#endif
-
-#ifdef COIN_HAS_SYMPHONY
-  testingMessage( "Testing OsiSymSolverInterface\n" );
-  totalErrCnt += OsiSymSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
 #ifdef COIN_HAS_GRB
@@ -633,31 +485,6 @@ try {
     OsiSolverInterface * cpxSi = new OsiCpxSolverInterface;
     vecSi.push_back(cpxSi);
 #endif
-#   if COIN_HAS_SPX
-    OsiSolverInterface * spxSi = new OsiSpxSolverInterface;
-    vecSi.push_back(spxSi);
-#endif
-#   if COIN_HAS_CLP
-    OsiSolverInterface * clpSi = new OsiClpSolverInterface;
-    // Okay this is where John Forrest cheats by giving hints
-    clpSi->setHintParam(OsiDoPresolveInInitial,true,OsiHintTry);
-    clpSi->setHintParam(OsiDoReducePrint,true,OsiHintDo);
-    vecSi.push_back(clpSi);
-#endif
-#   if COIN_HAS_SYMPHONY
-    OsiSolverInterface * symSi = new OsiSymSolverInterface;
-    { OsiSymSolverInterface *reallySymSi =
-	  dynamic_cast<OsiSymSolverInterface *>(symSi) ;
-      reallySymSi->setSymParam(OsiSymVerbosity, -2) ; }
-    vecSi.push_back(symSi);
-#endif
-#   if COIN_HAS_DYLP
-    OsiSolverInterface * dylpSi = new OsiDylpSolverInterface;
-    // Heh, if it's good enough for John ...
-    dylpSi->setHintParam(OsiDoPresolveInInitial,true,OsiHintTry) ;
-    dylpSi->setHintParam(OsiDoReducePrint,true,OsiHintDo) ;
-    vecSi.push_back(dylpSi);
-#endif
 #   if COIN_HAS_GLPK
     OsiSolverInterface * glpkSi = new OsiGlpkSolverInterface;
     glpkSi->setHintParam(OsiDoPresolveInInitial,true,OsiHintTry) ;
@@ -672,17 +499,8 @@ try {
     OsiSolverInterface * MskSi = new OsiMskSolverInterface;
     vecSi.push_back(MskSi);
 #endif
-#   if COIN_HAS_CBC
-    OsiSolverInterface * cbcSi = new OsiCbcSolverInterface;
-    // Okay this is where John Forrest cheats by giving hints
-    cbcSi->setHintParam(OsiDoPresolveInInitial,true,OsiHintTry);
-    cbcSi->setHintParam(OsiDoReducePrint,true,OsiHintTry);
-    vecSi.push_back(cbcSi);
-#endif
-#   if COIN_HAS_VOL
-    OsiSolverInterface * volSi = new OsiVolSolverInterface;
-    vecSi.push_back(volSi);
-#endif
+    OsiSolverInterface * testSi = new OsiTestSolverInterface;
+    vecSi.push_back(testSi);
 #   if COIN_HAS_GRB
     OsiSolverInterface * grbSi = new OsiGrbSolverInterface;
     vecSi.push_back(grbSi);

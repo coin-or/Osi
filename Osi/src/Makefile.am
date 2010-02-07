@@ -51,7 +51,7 @@ DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/inc
 
 # Now we check into which directories to recurse, and which subdirectory
 # libraries to include
-SUBDIRS = .
+SUBDIRS = unittests
 if COIN_HAS_CPX
   SUBDIRS += OsiCpx
 endif

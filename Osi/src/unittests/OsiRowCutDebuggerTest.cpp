@@ -1,15 +1,15 @@
 // Copyright (C) 2000, International Business Machines
 // Corporation and others.  All Rights Reserved.
-#if defined(_MSC_VER)
-// Turn off compiler warning about long names
-#  pragma warning(disable:4786)
-#endif
 
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
 
 #include <cassert>
+
+#include "CoinPragma.hpp"
+
+#include "OsiUnitTests.hpp"
 
 #include "OsiRowCutDebugger.hpp"
 

@@ -63,7 +63,12 @@ Osi/src/OsiGrb/Makefile.am -text
 Osi/src/OsiGrb/Makefile.in -text
 Osi/src/OsiGrb/OsiGrbSolverInterface.cpp -text
 Osi/src/OsiGrb/OsiGrbSolverInterface.hpp -text
+Osi/src/unittests/Makefile.am -text
+Osi/src/unittests/Makefile.in -text
+Osi/src/unittests/OsiUnitTests.hpp -text
 Osi/test/OsiGrbSolverInterfaceTest.cpp -text
+Osi/test/OsiTestSolver.cpp -text
+Osi/test/OsiTestSolver.hpp -text
 /README -text
 /compile -text
 /config.guess -text

@@ -27,12 +27,9 @@ If you work on this code, please keep these conventions in mind:
   -- lh, 08.01.07 --
 */
 
+#include "CoinPragma.hpp"
 
-
-#if defined(_MSC_VER)
-// Turn off compiler warning about long names
-#  pragma warning(disable:4786)
-#endif
+#include "OsiUnitTests.hpp"
 
 #include "OsiConfig.h"
 
@@ -62,42 +59,6 @@ If you work on this code, please keep these conventions in mind:
 #endif
 
 #include "OsiSolverInterface.hpp"
-#ifdef COIN_HAS_VOL
-#include "OsiVolSolverInterface.hpp"
-#endif
-#ifdef COIN_HAS_DYLP
-#include "OsiDylpSolverInterface.hpp"
-#endif
-#ifdef COIN_HAS_GLPK
-#include "OsiGlpkSolverInterface.hpp"
-#endif
-#ifdef COIN_HAS_XPR
-#include "OsiXprSolverInterface.hpp"
-#endif
-#ifdef COIN_HAS_CPX
-#include "OsiCpxSolverInterface.hpp"
-#endif
-#ifdef COIN_HAS_GRB
-#include "OsiGrbSolverInterface.hpp"
-#endif
-#ifdef COIN_HAS_SPX
-#include "OsiSpxSolverInterface.hpp"
-#endif
-#ifdef COIN_HAS_OSL
-#include "OsiOslSolverInterface.hpp"
-#endif
-#ifdef COIN_HAS_CLP
-#include "OsiClpSolverInterface.hpp"
-#endif
-#ifdef COIN_HAS_SYMPHONY
-#include "OsiSymSolverInterface.hpp"
-#endif
-#ifdef COIN_HAS_FMP
-#include "OsiFmpSolverInterface.hpp"
-#endif
-#ifdef COIN_HAS_CBC
-#include "OsiCbcSolverInterface.hpp"
-#endif
 #include "CoinFloatEqual.hpp"
 #include "CoinPackedVector.hpp"
 #include "CoinPackedMatrix.hpp"
@@ -105,9 +66,6 @@ If you work on this code, please keep these conventions in mind:
 #include "OsiRowCut.hpp"
 #include "OsiCuts.hpp"
 #include "OsiPresolve.hpp"
-#ifdef COIN_OPBDP
-#include "OsiOpbdpSolve.hpp"
-#endif
 
 /*
   Define helper routines in the file-local namespace.
@@ -2734,7 +2692,7 @@ void testWriteMps (const OsiSolverInterface *emptySi, std::string fn)
      si1->initialSolve();
   }
   catch (CoinError e) {
-     if (e.className() != "OsiVolSolverInterface") {
+     if (e.className() != "OsiVolSolverInterface" && e.className() != "OsiTestSolverInterface") {
 	failureMessage(*si1,"Couldn't load and solve LP in testWriteMps!\n");
 	abort();
      }
@@ -2808,7 +2766,7 @@ void testWriteLp (const OsiSolverInterface *emptySi, std::string fn)
      si1->initialSolve();
   }
   catch (CoinError e) {
-    if (e.className() != "OsiVolSolverInterface") {
+    if (e.className() != "OsiVolSolverInterface" && e.className() != "OsiTestSolverInterface") {
       printf("Couldn't solve initial LP in testing WriteMps\n");
       abort();
     }
@@ -2860,6 +2818,9 @@ void testLoadAndAssignProblem (const OsiSolverInterface *emptySi,
 
 {
   CoinRelFltEq eq(1.0e-8) ;
+  std::string solverName;
+  if( !emptySi->getStrParam(OsiSolverName, solverName) )
+     solverName == "unknown";
 /*
   Test each variant of loadProblem and assignProblem. Clone a whack of solvers
   and use one for each variant. Then run initialSolve() on each solver. Then
@@ -3039,22 +3000,16 @@ void testLoadAndAssignProblem (const OsiSolverInterface *emptySi,
       si8->initialSolve();
     }
     catch (CoinError e) {
-#ifdef COIN_HAS_VOL
-      // Vol solver interface is expected to throw
-      // an error if the data has a ranged row.
-	
-      // Check that using Vol SI
-      OsiVolSolverInterface * vsi =
-	dynamic_cast<OsiVolSolverInterface *>(base);
-      assert( vsi != NULL );
-	
-      // Test that there is non-zero range
-      basePv.setFull(base->getNumRows(),base->getRowRange());
-      pv.setConstant( base->getNumRows(), indices, 0.0 );
-      assert(!basePv.isEquivalent(pv));
-#else
-      assert(0==1);
-#endif
+       if( solverName == "vol" ) {
+          // Vol solver interface is expected to throw
+          // an error if the data has a ranged row.
+          // Test that there is non-zero range
+          basePv.setFull(base->getNumRows(),base->getRowRange());
+          pv.setConstant( base->getNumRows(), indices, 0.0 );
+          assert(!basePv.isEquivalent(pv));
+       }
+       else
+          assert(0==1);
     }
 
     // Test collower
@@ -3262,9 +3217,8 @@ void testLoadAndAssignProblem (const OsiSolverInterface *emptySi,
   OsiGrb translates free rows into 'L' (lower-equal) rows with a -infty right-hand side.
   This makes some of the tests below fail.
 */
-#ifdef COIN_HAS_GRB
-  if( dynamic_cast<const OsiGrbSolverInterface*>(emptySi) == NULL )
-#endif
+
+  if( solverName != "gurobi" )
   {
     int i ;
 
@@ -3605,12 +3559,12 @@ int testOsiPresolve (const OsiSolverInterface *emptySi,
 
   sampleProbs.push_back(probPair("brandy",1.5185098965e+03)) ;
   sampleProbs.push_back(probPair("e226",(-18.751929066+7.113))) ;
-#ifdef COIN_HAS_GRB
-  // for the demo license of Gurobi, model "finnis" is too large, so we skip it in this case
-  if( dynamic_cast<const OsiGrbSolverInterface*>(emptySi) && dynamic_cast<const OsiGrbSolverInterface*>(emptySi)->isDemoLicense() )
-    std::cout << "Skip model finnis in test of OsiPresolve with Gurobi, since we seem to have only a demo license of Gurobi." << std::endl;
-  else
-#endif
+//#ifdef COIN_HAS_GRB
+//  // for the demo license of Gurobi, model "finnis" is too large, so we skip it in this case
+//  if( dynamic_cast<const OsiGrbSolverInterface*>(emptySi) && dynamic_cast<const OsiGrbSolverInterface*>(emptySi)->isDemoLicense() )
+//    std::cout << "Skip model finnis in test of OsiPresolve with Gurobi, since we seem to have only a demo license of Gurobi." << std::endl;
+//  else
+//#endif
     sampleProbs.push_back(probPair("finnis",1.7279106559e+05)) ;
   sampleProbs.push_back(probPair("p0201",6875)) ;
 
@@ -4208,13 +4162,13 @@ int OsiSolverInterfaceMpsUnitTest
     //a basic check, make sure the size of the constraint matrix is correct.
     for (i = vecSiP.size()-1 ; i >= 0 ; --i) {
       vecSiP[i] = vecEmptySiP[i]->clone() ;
-#     if COIN_HAS_SYMPHONY
-      // bludgeon symphony about the head so it will not print the solution
-      { OsiSymSolverInterface *reallySymSi =
-	    dynamic_cast<OsiSymSolverInterface *>(vecSiP[i]) ;
-	if (reallySymSi)
-	{ reallySymSi->setSymParam(OsiSymVerbosity, -2) ; } }
-#     endif
+//#     if COIN_HAS_SYMPHONY
+//      // bludgeon symphony about the head so it will not print the solution
+//      { OsiSymSolverInterface *reallySymSi =
+//	    dynamic_cast<OsiSymSolverInterface *>(vecSiP[i]) ;
+//	if (reallySymSi)
+//	{ reallySymSi->setSymParam(OsiSymVerbosity, -2) ; } }
+//#     endif
 
       vecSiP[i]->getStrParam(OsiSolverName,siName[i]);
 
@@ -4359,17 +4313,11 @@ int OsiSolverInterfaceMpsUnitTest
       //    another.
       for (i = 0 ; i < static_cast<int>(vecSiP.size()) ; ++i) {
         double startTime = CoinCpuTime();
-
-#     ifdef COIN_HAS_VOL
-        {
-          OsiVolSolverInterface * si =
-            dynamic_cast<OsiVolSolverInterface *>(vecSiP[i]) ;
-          if (si != NULL )  {
-            // VOL does not solve netlib cases so don't bother trying to solve
-            break ;
-          }
-        }
-#     endif
+        
+        // VOL does not solve netlib cases so don't bother trying to solve
+        std::string solverName;
+        if( vecSiP[i]->getStrParam(OsiSolverName, solverName) && solverName == "vol" )
+           break;
 
 	try
 	{ vecSiP[i]->initialSolve() ; }
@@ -4394,10 +4342,10 @@ int OsiSolverInterfaceMpsUnitTest
         } else {
 	   if (vecSiP[i]->isProvenPrimalInfeasible())
 	      std::cerr << "error; primal infeasible" ;
-#ifndef COIN_HAS_SYMPHONY
+//#ifndef COIN_HAS_SYMPHONY
 	   else if (vecSiP[i]->isProvenDualInfeasible())
 	      std::cerr << "error; dual infeasible" ;
-#endif
+//#endif
 	   else if (vecSiP[i]->isIterationLimitReached())
 	      std::cerr << "error; iteration limit" ;
 	   else if (vecSiP[i]->isAbandoned())
@@ -4479,75 +4427,22 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   { std::string temp = ": running common unit tests.\n" ;
     temp = solverName + temp ;
     testingMessage(temp.c_str()) ; }
+
 /*
   Set a variable so we can easily determine which solver interface we're
   testing. This is so that we can easily decide to omit a test when it's
   beyond the capability of a solver.
 */
-  bool volSolverInterface UNUSED = false;
-  {
-#ifdef COIN_HAS_VOL
-    const OsiVolSolverInterface * si =
-      dynamic_cast<const OsiVolSolverInterface *>(emptySi);
-    if ( si != NULL ) volSolverInterface = true;
-#endif
-  }
-  bool oslSolverInterface UNUSED = false;
-  {
-#ifdef COIN_HAS_OSL
-    const OsiOslSolverInterface * si =
-      dynamic_cast<const OsiOslSolverInterface *>(emptySi);
-    if ( si != NULL ) oslSolverInterface = true;
-#endif
-  }
-  bool dylpSolverInterface UNUSED = false;
-  {
-#ifdef COIN_HAS_DYLP
-    const OsiDylpSolverInterface * si =
-      dynamic_cast<const OsiDylpSolverInterface *>(emptySi);
-    if ( si != NULL ) dylpSolverInterface = true;
-#endif
-  }
-  bool glpkSolverInterface UNUSED = false;
-  {
-#ifdef COIN_HAS_GLPK
-    const OsiGlpkSolverInterface * si =
-      dynamic_cast<const OsiGlpkSolverInterface *>(emptySi);
-    if ( si != NULL ) glpkSolverInterface = true;
-#endif
-  }
-  bool fmpSolverInterface UNUSED = false;
-  {
-#ifdef COIN_HAS_FMP
-    const OsiFmpSolverInterface * si =
-      dynamic_cast<const OsiFmpSolverInterface *>(emptySi);
-    if ( si != NULL ) fmpSolverInterface = true;
-#endif
-  }
-  bool xprSolverInterface UNUSED = false;
-  {
-#ifdef COIN_HAS_XPR
-    const OsiXprSolverInterface * si =
-      dynamic_cast<const OsiXprSolverInterface *>(emptySi);
-    if ( si != NULL ) xprSolverInterface = true;
-#endif
-  }
-  bool symSolverInterface UNUSED = false;
-  {
-#ifdef COIN_HAS_SYMPHONY
-     const OsiSymSolverInterface * si =
-	dynamic_cast<const OsiSymSolverInterface *>(emptySi);
-     if ( si != NULL ) symSolverInterface = true;
-#endif
-  }
-  bool grbSolverInterface UNUSED = false;
-  {
-#ifdef COIN_HAS_GRB
-     const OsiGrbSolverInterface * si =
-  dynamic_cast<const OsiGrbSolverInterface *>(emptySi);
-     if ( si != NULL ) grbSolverInterface = true;
-#endif
-  }
+  bool volSolverInterface UNUSED = (solverName == "vol");
+  bool oslSolverInterface UNUSED = (solverName == "osl");
+  bool dylpSolverInterface UNUSED = (solverName == "dylp");
+  bool glpkSolverInterface UNUSED = (solverName == "glpk");
+  bool fmpSolverInterface UNUSED = (solverName == "FortMP");
+  bool xprSolverInterface UNUSED = (solverName == "xpress");
+  bool symSolverInterface UNUSED = (solverName == "sym");
+  bool grbSolverInterface UNUSED = (solverName == "gurobi");
+  bool cpxSolverInterface UNUSED = (solverName == "cplex");
+  
 /*
   Test values returned by an empty solver interface.
 */
@@ -5092,33 +4987,6 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   Test the simplex portion of the OSI interface.
 */
   testSimplex(emptySi,mpsDir) ;
-
-#ifdef COIN_OPBDP
-  // test Opbdp interface
-  {
-    OsiSolverInterface * si = emptySi->clone();
-    std::string solverName;
-    si->getStrParam(OsiSolverName,solverName);
-    std::string fn = mpsDir+"p0033";
-    si->readMps(fn.c_str(),"mps");
-    int numberFound = solveOpbdp(si);
-    assert (numberFound==1);
-    printf("Objective value %g\n",si->getObjValue());
-    unsigned int ** array = solveOpbdp(si,numberFound);
-    printf("%d solutions found\n",numberFound);
-    int numberColumns = si->getNumCols();
-    for (int i=0;i<numberFound;i++) {
-      unsigned int * thisArray = array[i];
-      for (int j=0;j<numberColumns;j++)
-        if (atOne(j,thisArray))
-          printf(" %d",j);
-      printf("\n");
-      delete [] thisArray;
-    }
-    delete [] array;
-    delete si;
-  }
-#endif
 
   // Add a Laci suggested test case
   // Load in a problem as column ordered matrix,

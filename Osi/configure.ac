@@ -12,7 +12,7 @@
 
 AC_PREREQ(2.59)
 
-AC_INIT([Osi],[trunk],[coin-osi@list.coin-or.org])
+AC_INIT([Osi],[split],[coin-osi@list.coin-or.org])
 
 AC_COPYRIGHT([
 Copyright 2006 International Business Machines and others.
@@ -131,6 +131,7 @@ AC_CONFIG_FILES([Makefile
                  src/OsiOsl/Makefile
                  src/OsiXpr/Makefile
                  src/OsiGrb/Makefile
+                 src/unittests/Makefile
                  test/Makefile
                  osi_addlibs.txt])
 

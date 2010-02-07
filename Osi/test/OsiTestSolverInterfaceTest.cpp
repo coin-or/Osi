@@ -7,19 +7,20 @@
 
 #include <cassert>
 
-#include "OsiVolSolverInterface.hpp"
+#include "OsiTestSolverInterface.hpp"
+#include "OsiUnitTests.hpp"
 
 //#############################################################################
 
 //--------------------------------------------------------------------------
 // test EKKsolution methods.
 int
-OsiVolSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir)
+OsiTestSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir)
 {
 
   // Do common solverInterface testing
   {
-    OsiVolSolverInterface m;
+    OsiTestSolverInterface m;
     return OsiSolverInterfaceCommonUnitTest(&m, mpsDir,netlibDir);
   }
 

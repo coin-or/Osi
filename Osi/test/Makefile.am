@@ -14,16 +14,14 @@ AUTOMAKE_OPTIONS = foreign
 
 noinst_PROGRAMS = unitTest
 
-unitTest_SOURCES = \
-	OsiColCutTest.cpp \
-	OsiCutsTest.cpp \
-	OsiRowCutDebuggerTest.cpp \
-	OsiRowCutTest.cpp \
-	OsiSolverInterfaceTest.cpp \
-	unitTest.cpp
+unitTest_SOURCES = unitTest.cpp \
+  OsiTestSolver.cpp \
+  OsiTestSolverInterface.cpp \
+  OsiTestSolverInterfaceIO.cpp \
+  OsiTestSolverInterfaceTest.cpp
 
 # List libraries of COIN projects
-unitTest_LDADD =
+unitTest_LDADD = ../src/unittests/libOsiUnitTests.la
 
 # List additional libraries
 #LIBS +=
@@ -33,7 +31,8 @@ unitTest_LDADD =
 AM_CPPFLAGS = $(MSKCXXFLAGS) \
 	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(COINUTILSOBJDIR)/inc` \
-	-I`$(CYGPATH_W) $(srcdir)/../src`
+	-I`$(CYGPATH_W) $(srcdir)/../src` \
+	-I`$(CYGPATH_W) $(srcdir)/../src/unittests`
 
 # This line is necessary to allow VPATH compilation with MS compilers
 # on Cygwin

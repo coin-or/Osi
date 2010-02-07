@@ -73,8 +73,8 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 libOsi_la_LIBADD =
 am_libOsi_la_OBJECTS = OsiAuxInfo.lo OsiBranchingObject.lo \
 	OsiChooseVariable.lo OsiColCut.lo OsiCut.lo OsiCuts.lo \
-	OsiNames.lo OsiOpbdpSolve.lo OsiPresolve.lo OsiRowCut.lo \
-	OsiRowCutDebugger.lo OsiSolverBranch.lo OsiSolverInterface.lo
+	OsiNames.lo OsiPresolve.lo OsiRowCut.lo OsiRowCutDebugger.lo \
+	OsiSolverBranch.lo OsiSolverInterface.lo
 libOsi_la_OBJECTS = $(am_libOsi_la_OBJECTS)
 depcomp = $(SHELL) $(top_srcdir)/../depcomp
 am__depfiles_maybe = depfiles
@@ -303,7 +303,6 @@ libOsi_la_SOURCES = \
 	OsiCut.cpp OsiCut.hpp \
 	OsiCuts.cpp OsiCuts.hpp \
 	OsiNames.cpp \
-	OsiOpbdpSolve.cpp OsiOpbdpSolve.hpp \
 	OsiPresolve.cpp OsiPresolve.hpp \
 	OsiRowCut.cpp OsiRowCut.hpp \
 	OsiRowCutDebugger.cpp OsiRowCutDebugger.hpp \
@@ -350,7 +349,6 @@ includecoin_HEADERS = \
 	OsiCollections.hpp \
 	OsiCut.hpp \
 	OsiCuts.hpp \
-	OsiOpbdpSolve.hpp \
 	OsiPresolve.hpp \
 	OsiSolverBranch.hpp \
 	OsiSolverInterface.hpp \
@@ -358,10 +356,6 @@ includecoin_HEADERS = \
 	OsiRowCut.hpp \
 	OsiRowCutDebugger.hpp
 
-
-#	OsiSolverBranch.hpp \
-#OsiAuxInfo.hpp
-#OsiOpbdpSolve.hpp
 
 #############################################################################
 # Create the Config.h file that always defines HAVE_CONFIG_H and install it #
@@ -445,7 +439,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiCut.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiCuts.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiNames.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiOpbdpSolve.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiPresolve.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiRowCut.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiRowCutDebugger.Plo@am__quote@

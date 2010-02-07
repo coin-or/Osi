@@ -27,7 +27,6 @@ libOsi_la_SOURCES = \
 	OsiCut.cpp OsiCut.hpp \
 	OsiCuts.cpp OsiCuts.hpp \
 	OsiNames.cpp \
-	OsiOpbdpSolve.cpp OsiOpbdpSolve.hpp \
 	OsiPresolve.cpp OsiPresolve.hpp \
 	OsiRowCut.cpp OsiRowCut.hpp \
 	OsiRowCutDebugger.cpp OsiRowCutDebugger.hpp \
@@ -91,17 +90,12 @@ includecoin_HEADERS = \
 	OsiCollections.hpp \
 	OsiCut.hpp \
 	OsiCuts.hpp \
-	OsiOpbdpSolve.hpp \
 	OsiPresolve.hpp \
 	OsiSolverBranch.hpp \
 	OsiSolverInterface.hpp \
 	OsiSolverParameters.hpp \
 	OsiRowCut.hpp \
 	OsiRowCutDebugger.hpp
-
-#	OsiSolverBranch.hpp \
-#OsiAuxInfo.hpp
-#OsiOpbdpSolve.hpp
 
 #############################################################################
 # Create the Config.h file that always defines HAVE_CONFIG_H and install it #

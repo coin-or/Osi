@@ -21,7 +21,7 @@
 #include "CoinPackedMatrix.hpp"
 #include  "CoinTime.hpp"
 
-#include "OsiOpbdpSolve.hpp"
+#include "odbdp_solve.hpp"
 #include "PBCS.h"
 // Not threadsafe
 static unsigned int ** opbdp_solution=NULL;

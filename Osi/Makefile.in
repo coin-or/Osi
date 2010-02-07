@@ -63,7 +63,7 @@ DIST_COMMON = README $(am__configure_deps) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/osi_addlibs.txt.in $(top_srcdir)/configure \
 	$(top_srcdir)/examples/Makefile.in \
-	$(top_srcdir)/inc/config_osi.h.in AUTHORS TODO
+	$(top_srcdir)/inc/config_osi.h.in AUTHORS
 @HAVE_EXTERNALS_TRUE@am__append_2 = Externals
 @HAVE_EXTERNALS_TRUE@am__append_3 = .Externals-stamp
 subdir = .
@@ -348,10 +348,10 @@ SUBDIRS = src $(am__append_1)
 ########################################################################
 
 # Here we need include all files that are not mentioned in other Makefiles
-EXTRA_DIST = TODO examples/basic2.cpp examples/basic.cpp \
-	examples/build.cpp examples/Makefile.in \
-	examples/parameters.cpp examples/query.cpp examples/README \
-	examples/specific.cpp $(am__append_2)
+EXTRA_DIST = examples/basic2.cpp examples/basic.cpp examples/build.cpp \
+	examples/Makefile.in examples/parameters.cpp \
+	examples/query.cpp examples/README examples/specific.cpp \
+	$(am__append_2)
 
 ########################################################################
 #                  Installation of the addlibs file                    #

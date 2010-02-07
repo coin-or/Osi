@@ -53,17 +53,8 @@ DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/inc
 # Now we check into which directories to recurse, and which subdirectory
 # libraries to include
 SUBDIRS = .
-if COIN_HAS_CBC
-  SUBDIRS += OsiCbc
-endif
-if COIN_HAS_CLP
-  SUBDIRS += OsiClp
-endif
 if COIN_HAS_CPX
   SUBDIRS += OsiCpx
-endif
-if COIN_HAS_DYLP
-  SUBDIRS += OsiDylp
 endif
 if COIN_HAS_FMP
   SUBDIRS += OsiFmp
@@ -76,15 +67,6 @@ if COIN_HAS_MSK
 endif
 if COIN_HAS_OSL
   SUBDIRS += OsiOsl
-endif
-if COIN_HAS_SPX
-  SUBDIRS += OsiSpx
-endif
-if COIN_HAS_SYMPHONY
-  SUBDIRS += OsiSym
-endif
-if COIN_HAS_VOL
-  SUBDIRS += OsiVol
 endif
 if COIN_HAS_XPR
   SUBDIRS += OsiXpr

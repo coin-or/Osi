@@ -53,14 +53,8 @@ AC_COIN_INIT_AUTO_TOOLS
 #                              COIN components                              #
 #############################################################################
 
-AC_COIN_HAS_PROJECT(Cbc)
-AC_COIN_HAS_PROJECT(Cgl)
-AC_COIN_HAS_PROJECT(Clp)
 AC_COIN_HAS_PROJECT(CoinUtils)
-AC_COIN_HAS_PROJECT(DyLP)
 AC_COIN_HAS_PROJECT(Osi)
-AC_COIN_HAS_PROJECT(SYMPHONY)
-AC_COIN_HAS_PROJECT(Vol)
 
 #############################################################################
 #                            Third party solvers                            #
@@ -75,7 +69,6 @@ AC_COIN_HAS_USER_LIBRARY([Cplex],[CPX],[cplex.h],[CPXgetstat])
 AC_COIN_HAS_USER_LIBRARY([FortMP],[FMP])  #ToDo! is Fortran?
 AC_COIN_HAS_USER_LIBRARY([Mosek],[MSK],[mosek.h],[MSK_makeenv])
 AC_COIN_HAS_USER_LIBRARY([Osl],[OSL],[ekk_c_api.h],[ekk_simplex])
-AC_COIN_HAS_USER_LIBRARY([Soplex],[SPX],[spxsolver.h]) # ToDo
 AC_COIN_HAS_USER_LIBRARY([Xpress],[XPR],[xprs.h],[XPRSinit])
 AC_COIN_HAS_USER_LIBRARY([Gurobi],[GRB],[gurobi_c.h],[GRBloadenv])
 
@@ -84,13 +77,8 @@ AC_COIN_HAS_USER_LIBRARY([Gurobi],[GRB],[gurobi_c.h],[GRBloadenv])
 
 AC_COIN_HAS_GLPK(Glpk)
 
-# We need Ampl in case we're using Cbc and it's build with Ampl.
-
-AC_COIN_HAS_ASL
-
-
 #############################################################################
-#		  Capability Tests					    #
+#		  Capability Tests					                                            #
 #############################################################################
 
 #############################################################################
@@ -99,11 +87,6 @@ AC_COIN_HAS_ASL
 
 # If any of the tests performed in this section actually require the presence
 # of the solver (file presence, link checks, etc.) be sure to guard the call.
-
-AC_OSICBC_CONFIG(clp)
-AC_ODSI_INFO(yes)
-AC_ODSI_STATISTICS(no)
-AC_ODSI_PARANOIA(1)
 
 # If glpk is available, choose the MIP solver. lpx_intopt is preferred;
 # lpx_integer will be used as a fallback. coin_has_glpk and glpk_libcheck
@@ -141,21 +124,15 @@ AC_SUBST(MSKCXXFLAGS)
 AC_CONFIG_FILES([Makefile
                  examples/Makefile
                  src/Makefile
-                 src/OsiCbc/Makefile
-                 src/OsiClp/Makefile
                  src/OsiCpx/Makefile
-                 src/OsiDylp/Makefile
                  src/OsiFmp/Makefile
                  src/OsiGlpk/Makefile
                  src/OsiMsk/Makefile
                  src/OsiOsl/Makefile
-                 src/OsiSpx/Makefile
-                 src/OsiSym/Makefile
-                 src/OsiVol/Makefile
                  src/OsiXpr/Makefile
                  src/OsiGrb/Makefile
                  test/Makefile
-		 osi_addlibs.txt])
+                 osi_addlibs.txt])
 
 # Here put the location and name of the configuration header file
 AC_CONFIG_HEADER([inc/config_osi.h])

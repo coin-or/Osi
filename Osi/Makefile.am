@@ -29,7 +29,6 @@ endif
 # Here we need include all files that are not mentioned in other Makefiles
 
 EXTRA_DIST = \
-	TODO \
 	examples/basic2.cpp \
 	examples/basic.cpp \
 	examples/build.cpp \

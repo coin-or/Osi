@@ -1,0 +1,10 @@
+prefix=@prefix@
+libdir=@ABSBUILDDIR@/src/OsiGrb
+includedir=@abs_source_dir@/src/OsiGrb
+
+Name: OsiGurobi
+Description: COIN-OR Open Solver Interface for Gurobi
+Version: @PACKAGE_VERSION@
+Libs: -L${libdir} -lOsiGrb @GRBLIB@
+Cflags: -I${includedir} -I@GRBINCDIR@
+Requires: osi

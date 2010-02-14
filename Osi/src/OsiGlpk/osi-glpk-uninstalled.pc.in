@@ -1,0 +1,10 @@
+prefix=@prefix@
+libdir=@ABSBUILDDIR@/src/OsiGlpk
+includedir=@abs_source_dir@/src/OsiGlpk
+
+Name: OsiGlpk
+Description: COIN-OR Open Solver Interface for GLPK
+Version: @PACKAGE_VERSION@
+Libs: -L${libdir} -lOsiGlpk @OSIGLPKPC_LIBS@
+Cflags: -I${includedir} @OSIGLPKPC_CFLAGS@
+Requires: osi @OSIGLPKPC_REQUIRES@

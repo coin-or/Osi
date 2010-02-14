@@ -1,0 +1,10 @@
+prefix=@prefix@
+libdir=@ABSBUILDDIR@/src
+includedir=@abs_source_dir@/src
+
+Name: Osi
+Description: COIN-OR Open Solver Interface
+Version: @PACKAGE_VERSION@
+Libs: -L${libdir} -lOsi
+Cflags: -I${includedir} -I@ABSBUILDDIR@/inc
+Requires: @REQUIREDPACKAGES@

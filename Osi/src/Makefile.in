@@ -54,8 +54,8 @@ subdir = src
 DIST_COMMON = $(includecoin_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/ac_osiglpk_options.m4 \
-	$(top_srcdir)/acinclude.m4 $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -67,9 +67,10 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includecoindir)"
-libLTLIBRARIES_INSTALL = $(INSTALL)
-LTLIBRARIES = $(lib_LTLIBRARIES)
+am__installdirs = "$(DESTDIR)$(libcoindir)" \
+	"$(DESTDIR)$(includecoindir)"
+libcoinLTLIBRARIES_INSTALL = $(INSTALL)
+LTLIBRARIES = $(libcoin_LTLIBRARIES)
 libOsi_la_LIBADD =
 am_libOsi_la_OBJECTS = OsiAuxInfo.lo OsiBranchingObject.lo \
 	OsiChooseVariable.lo OsiColCut.lo OsiCut.lo OsiCuts.lo \
@@ -109,6 +110,7 @@ CTAGS = ctags
 DIST_SUBDIRS = unittests OsiCpx OsiFmp OsiGlpk OsiMsk OsiOsl OsiXpr \
 	OsiGrb
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
+ABSBUILDDIR = @ABSBUILDDIR@
 ACLOCAL = @ACLOCAL@
 ADDLIBS = @ADDLIBS@
 ADD_CFLAGS = @ADD_CFLAGS@
@@ -129,11 +131,9 @@ CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CDEFS = @CDEFS@
 CFLAGS = @CFLAGS@
-COINUTILSDOCDIR = @COINUTILSDOCDIR@
-COINUTILSOBJDIR = @COINUTILSOBJDIR@
-COINUTILSSRCDIR = @COINUTILSSRCDIR@
-COIN_BUILD_GLPK_FALSE = @COIN_BUILD_GLPK_FALSE@
-COIN_BUILD_GLPK_TRUE = @COIN_BUILD_GLPK_TRUE@
+COINUTILS_CFLAGS = @COINUTILS_CFLAGS@
+COINUTILS_DATA = @COINUTILS_DATA@
+COINUTILS_LIBS = @COINUTILS_LIBS@
 COIN_HAS_COINUTILS_FALSE = @COIN_HAS_COINUTILS_FALSE@
 COIN_HAS_COINUTILS_TRUE = @COIN_HAS_COINUTILS_TRUE@
 COIN_HAS_CPX_FALSE = @COIN_HAS_CPX_FALSE@
@@ -146,10 +146,12 @@ COIN_HAS_GRB_FALSE = @COIN_HAS_GRB_FALSE@
 COIN_HAS_GRB_TRUE = @COIN_HAS_GRB_TRUE@
 COIN_HAS_MSK_FALSE = @COIN_HAS_MSK_FALSE@
 COIN_HAS_MSK_TRUE = @COIN_HAS_MSK_TRUE@
-COIN_HAS_OSI_FALSE = @COIN_HAS_OSI_FALSE@
-COIN_HAS_OSI_TRUE = @COIN_HAS_OSI_TRUE@
+COIN_HAS_NETLIB_FALSE = @COIN_HAS_NETLIB_FALSE@
+COIN_HAS_NETLIB_TRUE = @COIN_HAS_NETLIB_TRUE@
 COIN_HAS_OSL_FALSE = @COIN_HAS_OSL_FALSE@
 COIN_HAS_OSL_TRUE = @COIN_HAS_OSL_TRUE@
+COIN_HAS_SAMPLE_FALSE = @COIN_HAS_SAMPLE_FALSE@
+COIN_HAS_SAMPLE_TRUE = @COIN_HAS_SAMPLE_TRUE@
 COIN_HAS_XPR_FALSE = @COIN_HAS_XPR_FALSE@
 COIN_HAS_XPR_TRUE = @COIN_HAS_XPR_TRUE@
 CPP = @CPP@
@@ -177,9 +179,9 @@ FADDLIBS = @FADDLIBS@
 FFLAGS = @FFLAGS@
 FMPINCDIR = @FMPINCDIR@
 FMPLIB = @FMPLIB@
-GLPKINCDIR = @GLPKINCDIR@
-GLPKLIB = @GLPKLIB@
-GLPKOBJDIR = @GLPKOBJDIR@
+GLPK_CFLAGS = @GLPK_CFLAGS@
+GLPK_DATA = @GLPK_DATA@
+GLPK_LIBS = @GLPK_LIBS@
 GRBINCDIR = @GRBINCDIR@
 GRBLIB = @GRBLIB@
 HAVE_EXTERNALS_FALSE = @HAVE_EXTERNALS_FALSE@
@@ -206,12 +208,15 @@ MPICXX = @MPICXX@
 MSKCXXFLAGS = @MSKCXXFLAGS@
 MSKINCDIR = @MSKINCDIR@
 MSKLIB = @MSKLIB@
+NETLIB_CFLAGS = @NETLIB_CFLAGS@
+NETLIB_DATA = @NETLIB_DATA@
+NETLIB_LIBS = @NETLIB_LIBS@
 OBJEXT = @OBJEXT@
 OPT_CFLAGS = @OPT_CFLAGS@
 OPT_CXXFLAGS = @OPT_CXXFLAGS@
-OSIDOCDIR = @OSIDOCDIR@
-OSIOBJDIR = @OSIOBJDIR@
-OSISRCDIR = @OSISRCDIR@
+OSIGLPKPC_CFLAGS = @OSIGLPKPC_CFLAGS@
+OSIGLPKPC_LIBS = @OSIGLPKPC_LIBS@
+OSIGLPKPC_REQUIRES = @OSIGLPKPC_REQUIRES@
 OSLINCDIR = @OSLINCDIR@
 OSLLIB = @OSLLIB@
 PACKAGE = @PACKAGE@
@@ -221,8 +226,13 @@ PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
+REQUIREDPACKAGES = @REQUIREDPACKAGES@
 RPATH_FLAGS = @RPATH_FLAGS@
+SAMPLE_CFLAGS = @SAMPLE_CFLAGS@
+SAMPLE_DATA = @SAMPLE_DATA@
+SAMPLE_LIBS = @SAMPLE_LIBS@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -242,6 +252,7 @@ ac_ct_F77 = @ac_ct_F77@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
 ac_cxx_preproc_warn_flag = @ac_cxx_preproc_warn_flag@
+ac_pt_PKG_CONFIG = @ac_pt_PKG_CONFIG@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
 am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
@@ -291,7 +302,8 @@ AUTOMAKE_OPTIONS = foreign
 
 # Name of the library compiled in this directory.  We want it to be installed
 # in the 'lib' directory
-lib_LTLIBRARIES = libOsi.la
+libcoindir = $(libdir)/coin
+libcoin_LTLIBRARIES = libOsi.la
 
 # List all source files for this library, including headers
 libOsi_la_SOURCES = \
@@ -319,10 +331,7 @@ libOsi_la_LDFLAGS = $(LT_LDFLAGS)
 # "cygpath" stuff is necessary to compile with native compilers on Windows.
 # "top_srcdir" refers to the basic directory for the main package that is
 # being compiled.
-AM_CPPFLAGS = \
-	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
-	-I`$(CYGPATH_W) $(COINUTILSOBJDIR)/inc`
-
+AM_CPPFLAGS = $(COINUTILS_CFLAGS)
 
 # This line is necessary to allow VPATH compilation with MS compilers
 # on Cygwin
@@ -397,35 +406,35 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-install-libLTLIBRARIES: $(lib_LTLIBRARIES)
+install-libcoinLTLIBRARIES: $(libcoin_LTLIBRARIES)
 	@$(NORMAL_INSTALL)
-	test -z "$(libdir)" || $(mkdir_p) "$(DESTDIR)$(libdir)"
-	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
+	test -z "$(libcoindir)" || $(mkdir_p) "$(DESTDIR)$(libcoindir)"
+	@list='$(libcoin_LTLIBRARIES)'; for p in $$list; do \
 	  if test -f $$p; then \
 	    f=$(am__strip_dir) \
-	    echo " $(LIBTOOL) --mode=install $(libLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(libdir)/$$f'"; \
-	    $(LIBTOOL) --mode=install $(libLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(libdir)/$$f"; \
+	    echo " $(LIBTOOL) --mode=install $(libcoinLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(libcoindir)/$$f'"; \
+	    $(LIBTOOL) --mode=install $(libcoinLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(libcoindir)/$$f"; \
 	  else :; fi; \
 	done
 
-uninstall-libLTLIBRARIES:
+uninstall-libcoinLTLIBRARIES:
 	@$(NORMAL_UNINSTALL)
-	@set -x; list='$(lib_LTLIBRARIES)'; for p in $$list; do \
+	@set -x; list='$(libcoin_LTLIBRARIES)'; for p in $$list; do \
 	  p=$(am__strip_dir) \
-	  echo " $(LIBTOOL) --mode=uninstall rm -f '$(DESTDIR)$(libdir)/$$p'"; \
-	  $(LIBTOOL) --mode=uninstall rm -f "$(DESTDIR)$(libdir)/$$p"; \
+	  echo " $(LIBTOOL) --mode=uninstall rm -f '$(DESTDIR)$(libcoindir)/$$p'"; \
+	  $(LIBTOOL) --mode=uninstall rm -f "$(DESTDIR)$(libcoindir)/$$p"; \
 	done
 
-clean-libLTLIBRARIES:
-	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
-	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
+clean-libcoinLTLIBRARIES:
+	-test -z "$(libcoin_LTLIBRARIES)" || rm -f $(libcoin_LTLIBRARIES)
+	@list='$(libcoin_LTLIBRARIES)'; for p in $$list; do \
 	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
 	  test "$$dir" != "$$p" || dir=.; \
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
 libOsi.la: $(libOsi_la_OBJECTS) $(libOsi_la_DEPENDENCIES) 
-	$(CXXLINK) -rpath $(libdir) $(libOsi_la_LDFLAGS) $(libOsi_la_OBJECTS) $(libOsi_la_LIBADD) $(LIBS)
+	$(CXXLINK) -rpath $(libcoindir) $(libOsi_la_LDFLAGS) $(libOsi_la_OBJECTS) $(libOsi_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -674,7 +683,7 @@ check: check-recursive
 all-am: Makefile $(LTLIBRARIES) $(HEADERS)
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includecoindir)"; do \
+	for dir in "$(DESTDIR)$(libcoindir)" "$(DESTDIR)$(includecoindir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-recursive
@@ -703,7 +712,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-recursive
 
-clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
+clean-am: clean-generic clean-libcoinLTLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-recursive
@@ -722,9 +731,9 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-includecoinHEADERS
+install-data-am: install-includecoinHEADERS install-libcoinLTLIBRARIES
 
-install-exec-am: install-exec-local install-libLTLIBRARIES
+install-exec-am: install-exec-local
 
 install-info: install-info-recursive
 
@@ -751,26 +760,26 @@ ps: ps-recursive
 ps-am:
 
 uninstall-am: uninstall-includecoinHEADERS uninstall-info-am \
-	uninstall-libLTLIBRARIES uninstall-local
+	uninstall-libcoinLTLIBRARIES uninstall-local
 
 uninstall-info: uninstall-info-recursive
 
 .PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am check check-am \
-	clean clean-generic clean-libLTLIBRARIES clean-libtool \
+	clean clean-generic clean-libcoinLTLIBRARIES clean-libtool \
 	clean-recursive ctags ctags-recursive distclean \
 	distclean-compile distclean-generic distclean-libtool \
 	distclean-recursive distclean-tags distdir dvi dvi-am html \
 	html-am info info-am install install-am install-data \
 	install-data-am install-exec install-exec-am \
 	install-exec-local install-includecoinHEADERS install-info \
-	install-info-am install-libLTLIBRARIES install-man \
+	install-info-am install-libcoinLTLIBRARIES install-man \
 	install-strip installcheck installcheck-am installdirs \
 	installdirs-am maintainer-clean maintainer-clean-generic \
 	maintainer-clean-recursive mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool mostlyclean-recursive \
 	pdf pdf-am ps ps-am tags tags-recursive uninstall uninstall-am \
 	uninstall-includecoinHEADERS uninstall-info-am \
-	uninstall-libLTLIBRARIES uninstall-local
+	uninstall-libcoinLTLIBRARIES uninstall-local
 
 
 install-exec-local:

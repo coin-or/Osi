@@ -12,9 +12,10 @@ AUTOMAKE_OPTIONS = foreign
 #                       unitTest library for Osi                       #
 ########################################################################
 
-# Name of the library compiled in this directory.  We want it to be installed
-# in the 'lib' directory
-lib_LTLIBRARIES = libOsiUnitTests.la
+# Name of the library compiled in this directory.
+# We want it to be installed in the 'lib/coin' directory
+libcoindir = $(libdir)/coin
+libcoin_LTLIBRARIES = libOsiUnitTests.la
 
 libOsiUnitTests_la_SOURCES = OsiUnitTests.hpp \
 	OsiColCutTest.cpp \
@@ -28,9 +29,7 @@ includecoin_HEADERS = OsiUnitTests.hpp
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows
-AM_CPPFLAGS = \
-	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
-	-I`$(CYGPATH_W) $(COINUTILSOBJDIR)/inc` \
+AM_CPPFLAGS = $(COINUTILS_CFLAGS) \
 	-I`$(CYGPATH_W) $(srcdir)/..`
 
 # This line is necessary to allow VPATH compilation with MS compilers

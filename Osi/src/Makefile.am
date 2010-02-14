@@ -14,7 +14,8 @@ AUTOMAKE_OPTIONS = foreign
 
 # Name of the library compiled in this directory.  We want it to be installed
 # in the 'lib' directory
-lib_LTLIBRARIES = libOsi.la
+libcoindir = $(libdir)/coin
+libcoin_LTLIBRARIES = libOsi.la
 
 # List all source files for this library, including headers
 libOsi_la_SOURCES = \
@@ -41,9 +42,7 @@ libOsi_la_LDFLAGS = $(LT_LDFLAGS)
 # "cygpath" stuff is necessary to compile with native compilers on Windows.
 # "top_srcdir" refers to the basic directory for the main package that is
 # being compiled.
-AM_CPPFLAGS = \
-	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
-	-I`$(CYGPATH_W) $(COINUTILSOBJDIR)/inc`
+AM_CPPFLAGS = $(COINUTILS_CFLAGS)
 
 # This line is necessary to allow VPATH compilation with MS compilers
 # on Cygwin

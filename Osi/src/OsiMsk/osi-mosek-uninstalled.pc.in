@@ -1,0 +1,10 @@
+prefix=@prefix@
+libdir=@ABSBUILDDIR@/src/OsiMsk
+includedir=@abs_source_dir@/src/OsiMsk
+
+Name: OsiMosek
+Description: COIN-OR Open Solver Interface for Mosek
+Version: @PACKAGE_VERSION@
+Libs: -L${libdir} -lOsiMsk @MSKLIB@
+Cflags: -I${includedir} -I@MSKINCDIR@
+Requires: osi

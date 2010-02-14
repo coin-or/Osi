@@ -23,14 +23,9 @@ unitTest_SOURCES = unitTest.cpp \
 # List libraries of COIN projects
 unitTest_LDADD = ../src/unittests/libOsiUnitTests.la
 
-# List additional libraries
-#LIBS +=
-
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows
-AM_CPPFLAGS = $(MSKCXXFLAGS) \
-	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
-	-I`$(CYGPATH_W) $(COINUTILSOBJDIR)/inc` \
+AM_CPPFLAGS = $(COINUTILS_CFLAGS) \
 	-I`$(CYGPATH_W) $(srcdir)/../src` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/unittests`
 
@@ -56,9 +51,10 @@ endif
 
 if COIN_HAS_GLPK
   unitTest_SOURCES += OsiGlpkSolverInterfaceTest.cpp
-  AM_CPPFLAGS += -I`$(CYGPATH_W) $(GLPKINCDIR)` \
+  AM_CPPFLAGS += $(GLPK_CFLAGS) \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiGlpk`
   unitTest_LDADD += ../src/OsiGlpk/libOsiGlpk.la
+  LIBS += $(GLPK_LIBS)
 endif
 
 if COIN_HAS_MSK
@@ -89,16 +85,19 @@ if COIN_HAS_GRB
   unitTest_LDADD += ../src/OsiGrb/libOsiGrb.la
 endif
 
-# Finally the Coin library (many of the above need it)
-unitTest_LDADD += ../src/libOsi.la $(COINUTILSOBJDIR)/src/libCoinUtils.la
-LIBS += `cat $(OSIOBJDIR)/osi_addlibs.txt` \
-	`cat $(COINUTILSOBJDIR)/coinutils_addlibs.txt` $(ADDLIBS)
+unitTest_LDADD += ../src/libOsi.la
+LIBS += $(COINUTILS_LIBS) $(ADDLIBS)
+
+unittestflags =
+if COIN_HAS_SAMPLE
+  unittestflags += -mpsDir=`$(CYGPATH_W) $(SAMPLE_DATA)`
+endif
+if COIN_HAS_NETLIB
+  unittestflags += -netlibDir=`$(CYGPATH_W) $(NETLIB_DATA)` -testOsiSolverInterface
+endif
 
 test: unitTest$(EXEEXT)
-	@if test x"$(DIRNETLIB)" != x; then \
-		NETLIBARG="-netlibDir $(DIRNETLIB) -testOsiSolverInterface"; \
-	fi; \
-	./unitTest$(EXEEXT) $$NETLIBARG
+	./unitTest$(EXEEXT) $(unittestflags)
 
 .PHONY: test
 

@@ -1,0 +1,10 @@
+prefix=@prefix@
+libdir=@ABSBUILDDIR@/src/unittests
+includedir=@abs_source_dir@/src/unittests
+
+Name: OsiUnitTests
+Description: COIN-OR Open Solver Interface Unit Tests
+Version: @PACKAGE_VERSION@
+Libs: -L${libdir} -lOsiUnitTests
+Cflags: -I${includedir}
+Requires: osi

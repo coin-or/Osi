@@ -1528,8 +1528,13 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
     printf("NC: %6d\n", hincol[i]);
 #endif
 
+#if 1 /* for building against CoinUtils 2.6, this #if 1 need to be changed into an #if 0 */
+  presolve_make_memlists(mcstrt_, hincol_, clink_, ncols_);
+  presolve_make_memlists(mrstrt_, hinrow_, rlink_, nrows_);
+#else
   presolve_make_memlists(/*mcstrt_,*/ hincol_, clink_, ncols_);
   presolve_make_memlists(/*mrstrt_,*/ hinrow_, rlink_, nrows_);
+#endif
 
   // this allows last col/row to expand up to bufsize-1 (22);
   // this must come after the calls to presolve_prefix

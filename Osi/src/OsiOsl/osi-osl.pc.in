@@ -1,0 +1,11 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@/coin
+includedir=@includedir@/coin
+
+Name: OsiOSL
+Description: COIN-OR Open Solver Interface for OSL
+Version: @PACKAGE_VERSION@
+Libs: -L${libdir} -lOsiOsl @OSLLIB@
+Cflags: -I${includedir} -I@OSLINCDIR@
+Requires: osi

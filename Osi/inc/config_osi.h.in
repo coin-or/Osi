@@ -1,6 +1,6 @@
 /* inc/config_osi.h.in.  Generated from configure.ac by autoheader.  */
 
-/* Define to 1 if the CoinUtils package is used */
+/* Define to 1 if the CoinUtils module is available */
 #undef COIN_HAS_COINUTILS
 
 /* Define to 1 if the Cplex package is available */
@@ -9,7 +9,7 @@
 /* Define to 1 if the FortMP package is available */
 #undef COIN_HAS_FMP
 
-/* Define to 1 if Glpk package is available */
+/* Define to 1 if the Glpk module is available */
 #undef COIN_HAS_GLPK
 
 /* Define to 1 if the Gurobi package is available */
@@ -18,11 +18,14 @@
 /* Define to 1 if the Mosek package is available */
 #undef COIN_HAS_MSK
 
-/* Define to 1 if the Osi package is used */
-#undef COIN_HAS_OSI
+/* Define to 1 if the Netlib module is available */
+#undef COIN_HAS_NETLIB
 
 /* Define to 1 if the Osl package is available */
 #undef COIN_HAS_OSL
+
+/* Define to 1 if the Sample module is available */
+#undef COIN_HAS_SAMPLE
 
 /* Define to 1 if the Xpress package is available */
 #undef COIN_HAS_XPR

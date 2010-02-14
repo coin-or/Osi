@@ -12,7 +12,7 @@
 
 AC_PREREQ(2.59)
 
-AC_INIT([Osi],[split],[coin-osi@list.coin-or.org])
+AC_INIT([Osi],[split],[osi@list.coin-or.org])
 
 AC_COPYRIGHT([
 Copyright 2006 International Business Machines and others.
@@ -53,8 +53,10 @@ AC_COIN_INIT_AUTO_TOOLS
 #                              COIN components                              #
 #############################################################################
 
-AC_COIN_HAS_PROJECT(CoinUtils)
-AC_COIN_HAS_PROJECT(Osi)
+AC_COIN_HAS_MODULE(CoinUtils,  [coinutils = 2.5BSPsplit])
+AC_COIN_HAS_MODULE(Sample,     [coindatasample],   [required=0])
+AC_COIN_HAS_MODULE(Netlib,     [coindatanetlib],   [required=0])
+AC_COIN_HAS_MODULE(Glpk,       [coinglpk >= 4.39], [required=0])
 
 #############################################################################
 #                            Third party solvers                            #
@@ -72,11 +74,6 @@ AC_COIN_HAS_USER_LIBRARY([Osl],[OSL],[ekk_c_api.h],[ekk_simplex])
 AC_COIN_HAS_USER_LIBRARY([Xpress],[XPR],[xprs.h],[XPRSinit])
 AC_COIN_HAS_USER_LIBRARY([Gurobi],[GRB],[gurobi_c.h],[GRBloadenv])
 
-# Glpk can be supplied as a ThirdParty code, or as an external library in the
-# same was as the previous solvers.
-
-AC_COIN_HAS_GLPK(Glpk)
-
 #############################################################################
 #		  Capability Tests					                                            #
 #############################################################################
@@ -88,20 +85,26 @@ AC_COIN_HAS_GLPK(Glpk)
 # If any of the tests performed in this section actually require the presence
 # of the solver (file presence, link checks, etc.) be sure to guard the call.
 
-# If glpk is available, choose the MIP solver. lpx_intopt is preferred;
-# lpx_integer will be used as a fallback. coin_has_glpk and glpk_libcheck
-# are defined and set by COIN_HAS_GLPK. If we're building ThirdParty/Glpk,
-# we already know the answer. Make it look like we're checking.
+# we assume that GLPK is not too old
+AC_DEFINE(GLPK_HAS_INTOPT, [1], [Define to 1 if GLPK has the advanced B&B solver lpx_intopt])
 
-if test x"$use_thirdpartyglpk" = xbuild; then
-  AC_MSG_CHECKING([for glpk mip solver ])
-  AC_DEFINE(GLPK_HAS_INTOPT,[1],
-	    [Define to 1 if GLPK has the advanced B&B solver lpx_intopt])
-  AC_MSG_RESULT([lpx_intopt])
-else
-  if test "x$coin_has_glpk" = "xtrue" && test "x$glpk_libcheck" = "xyes" ; then
-    AC_OGSI_MIPSOLVER()
-  fi
+# For setting up osi-glpk.pc, it makes a difference whether Glpk is available because
+# --with-glpk-lib has been specified or because a coinglpk.pc file was found.
+# Normally, COIN_HAS_MODULE takes care of this, but since we set required=0 above,
+# we have to find out here in which situation we are.
+if test "$coin_has_glpk" = "yes" ; then
+  AC_ARG_WITH([glpk-lib],[],
+    [ OSIGLPKPC_LIBS=${GLPK_LIBS}
+      OSIGLPKPC_CFLAGS=${GLPK_CFLAGS}
+      OSIGLPKPC_REQUIRES=
+    ],
+    [ OSIGLPKPC_LIBS=
+      OSIGLPKPC_CFLAGS=
+      OSIGLPKPC_REQUIRES="coinglpk >= 4.39"
+    ])
+  AC_SUBST(OSIGLPKPC_LIBS)
+  AC_SUBST(OSIGLPKPC_CFLAGS)
+  AC_SUBST(OSIGLPKPC_REQUIRES)
 fi
 
 if test "$GXX" = "yes"; then
@@ -133,7 +136,44 @@ AC_CONFIG_FILES([Makefile
                  src/OsiGrb/Makefile
                  src/unittests/Makefile
                  test/Makefile
-                 osi_addlibs.txt])
+                 osi_addlibs.txt
+                 osi.pc osi-uninstalled.pc
+                 osi-unittests.pc osi-unittests-uninstalled.pc])
+
+if test $coin_has_cpx = true ; then
+  AC_CONFIG_FILES([src/OsiCpx/osi-cplex.pc
+                   osi-cplex-uninstalled.pc:src/OsiCpx/osi-cplex-uninstalled.pc.in])
+fi
+
+if test $coin_has_fmp = true ; then
+  AC_CONFIG_FILES([src/OsiFmp/osi-fortmp.pc
+                   osi-fortmp-uninstalled.pc:src/OsiFmp/osi-fortmp-uninstalled.pc.in])
+fi
+
+if test $coin_has_glpk = yes ; then
+  AC_CONFIG_FILES([src/OsiGlpk/osi-glpk.pc
+                   osi-glpk-uninstalled.pc:src/OsiGlpk/osi-glpk-uninstalled.pc.in])
+fi
+
+if test $coin_has_grb = true ; then
+  AC_CONFIG_FILES([src/OsiGrb/osi-gurobi.pc
+                   osi-gurobi-uninstalled.pc:src/OsiGrb/osi-gurobi-uninstalled.pc.in])
+fi
+
+if test $coin_has_msk = true ; then
+  AC_CONFIG_FILES([src/OsiMsk/osi-mosek.pc
+                   osi-mosek-uninstalled.pc:src/OsiMsk/osi-mosek-uninstalled.pc.in])
+fi
+
+if test $coin_has_osl = true ; then
+  AC_CONFIG_FILES([src/OsiOsl/osi-osl.pc
+                   osi-osl-uninstalled.pc:src/OsiOsl/osi-osl-uninstalled.pc.in])
+fi
+
+if test $coin_has_xpr = true ; then
+  AC_CONFIG_FILES([src/OsiXpr/osi-xpress.pc
+                   osi-xpress-uninstalled.pc:src/OsiXpr/osi-xpress-uninstalled.pc.in])
+fi
 
 # Here put the location and name of the configuration header file
 AC_CONFIG_HEADER([inc/config_osi.h])

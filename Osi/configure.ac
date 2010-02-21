@@ -53,7 +53,7 @@ AC_COIN_INIT_AUTO_TOOLS
 #                              COIN components                              #
 #############################################################################
 
-AC_COIN_HAS_MODULE(CoinUtils,  [coinutils = 2.5BSPsplit])
+AC_COIN_HAS_MODULE(CoinUtils,  [coinutils = split])
 AC_COIN_HAS_MODULE(Sample,     [coindatasample],   [required=0])
 AC_COIN_HAS_MODULE(Netlib,     [coindatanetlib],   [required=0])
 AC_COIN_HAS_MODULE(Glpk,       [coinglpk >= 4.39], [required=0])

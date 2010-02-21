@@ -1528,7 +1528,7 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
     printf("NC: %6d\n", hincol[i]);
 #endif
 
-#if 1 /* for building against CoinUtils 2.6, this #if 1 need to be changed into an #if 0 */
+#if 0 /* for building against CoinUtils 2.6, this #if 1 need to be changed into an #if 0 */
   presolve_make_memlists(mcstrt_, hincol_, clink_, ncols_);
   presolve_make_memlists(mrstrt_, hinrow_, rlink_, nrows_);
 #else

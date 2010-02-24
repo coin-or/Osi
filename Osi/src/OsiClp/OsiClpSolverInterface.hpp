@@ -1314,6 +1314,7 @@ protected:
       131072 Try and keep scaling factors around
       262144 Don't try and tighten bounds (funny global cuts)
       524288 Fake objective and 0-1
+      1048576 Don't recompute ray after crunch
   */
   mutable unsigned int specialOptions_;
   /// Copy of model when option 131072 set

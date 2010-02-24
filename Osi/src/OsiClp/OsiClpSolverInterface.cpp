@@ -6373,6 +6373,7 @@ OsiClpSolverInterface::crunch()
     (modelPtr_)->crunch(rhs,whichRow,whichColumn,
 			nBound,moreBounds,tightenBounds);
 #endif
+  bool inCbcOrOther = (modelPtr_->specialOptions()&0x03000000)!=0;
   if (small) {
     small->specialOptions_ |= 262144;
     if ((specialOptions_&131072)!=0) {
@@ -6406,7 +6407,6 @@ OsiClpSolverInterface::crunch()
       small->setColumnScale(columnScale2);
     }
     disasterHandler_->setOsiModel(this);
-    bool inCbcOrOther = (modelPtr_->specialOptions()&0x03000000)!=0;
     if (inCbcOrOther) {
       disasterHandler_->setSimplex(small);
       disasterHandler_->setWhereFrom(1); // crunch
@@ -6430,25 +6430,24 @@ OsiClpSolverInterface::crunch()
 #endif
     totalIterations += small->numberIterations();
     int problemStatus = small->problemStatus();
-    if (problemStatus==0||problemStatus==2) {
-      modelPtr_->setProblemStatus(0);
-      // Scaling may have changed - if so pass across
-      if (modelPtr_->scalingFlag()==4)
-	modelPtr_->scaling(small->scalingFlag());
-      static_cast<ClpSimplexOther *> (modelPtr_)->afterCrunch(*small,whichRow,whichColumn,nBound);
-      if (problemStatus==2)
-	modelPtr_->primal(1);
-#if 0
-      ClpSimplex save(*modelPtr_);
-      save.dual();
-      //assert(!modelPtr_->numberIterations());
-      if(save.numberIterations()) {
-	printf("Iterated!\n");
-	save = ClpSimplex(*modelPtr_);
-	save.setLogLevel(63);
-	save.dual();
+    if (problemStatus>=0&&problemStatus<=2) {
+      modelPtr_->setProblemStatus(problemStatus);
+      if (!inCbcOrOther||!problemStatus) {
+	// Scaling may have changed - if so pass across
+	if (modelPtr_->scalingFlag()==4)
+	  modelPtr_->scaling(small->scalingFlag());
+	static_cast<ClpSimplexOther *> (modelPtr_)->afterCrunch(*small,whichRow,whichColumn,nBound);
+	if ((specialOptions_&1048576)==0) {
+	  // get correct rays
+	  if (problemStatus==2)
+	    modelPtr_->primal(1);
+	  else if (problemStatus==1)
+	    modelPtr_->dual();
+	} else {
+	  delete [] modelPtr_->ray_;
+	  modelPtr_->ray_=NULL;
+	}
       }
-#endif
 #ifdef KEEP_SMALL
       //assert (!smallModel_);
       //smallModel_ = small;

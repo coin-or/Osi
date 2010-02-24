@@ -4823,9 +4823,15 @@ MSKtask_t OsiMskSolverInterface::getMutableLpPtr() const
     int err = MSK_makeemptytask(env_,&task_);
     checkMSKerror(err, "MSK_makeemptytask","getMutableLpPtr");
 
-    err = MSK_linkfunctotaskstream(task_, MSK_STREAM_LOG, NULL, printlog); 
+    err = MSK_linkfunctotaskstream(task_, MSK_STREAM_LOG, messageHandler(), OsiMskStreamFuncLog);
     checkMSKerror( err, "MSK_linkfunctotaskstream", "getMutableLpPtr" );
 
+    err = MSK_linkfunctotaskstream(task_, MSK_STREAM_WRN, messageHandler(), OsiMskStreamFuncWarning);
+    checkMSKerror( err, "MSK_linkfunctotaskstream", "getMutableLpPtr" );
+
+    err = MSK_linkfunctotaskstream(task_, MSK_STREAM_ERR, messageHandler(), OsiMskStreamFuncError);
+    checkMSKerror( err, "MSK_linkfunctotaskstream", "getMutableLpPtr" );
+    
     err = MSK_putintparam(task_, MSK_IPAR_WRITE_GENERIC_NAMES, MSK_ON);
     checkMSKerror(err,"MSK_putintparam","getMutableLpPtr()");  
 
@@ -4927,8 +4933,8 @@ void OsiMskSolverInterface::gutsOfConstructor()
   #endif
 
   MSK_linkfunctotaskstream(getMutableLpPtr(), MSK_STREAM_LOG, messageHandler(), OsiMskStreamFuncLog);
-  MSK_linkfunctotaskstream(getMutableLpPtr(), MSK_STREAM_ERR, messageHandler(), OsiMskStreamFuncWarning);
-  MSK_linkfunctotaskstream(getMutableLpPtr(), MSK_STREAM_WRN, messageHandler(), OsiMskStreamFuncError);
+  MSK_linkfunctotaskstream(getMutableLpPtr(), MSK_STREAM_WRN, messageHandler(), OsiMskStreamFuncWarning);
+  MSK_linkfunctotaskstream(getMutableLpPtr(), MSK_STREAM_ERR, messageHandler(), OsiMskStreamFuncError);
 
   #if MSK_OSI_DEBUG_LEVEL > 3
   debugMessage("End OsiMskSolverInterface::gutsOfConstructor()\n");

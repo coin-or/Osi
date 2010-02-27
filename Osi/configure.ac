@@ -68,9 +68,7 @@ AC_COIN_HAS_MODULE(Glpk,       [coinglpk >= 4.39], [required=0])
 # fixed detection of Mosek and Xpress -- stefan, 091003 (linux32, gcc) --
 
 AC_COIN_HAS_USER_LIBRARY([Cplex],[CPX],[cplex.h],[CPXgetstat])
-AC_COIN_HAS_USER_LIBRARY([FortMP],[FMP])  #ToDo! is Fortran?
 AC_COIN_HAS_USER_LIBRARY([Mosek],[MSK],[mosek.h],[MSK_makeenv])
-AC_COIN_HAS_USER_LIBRARY([Osl],[OSL],[ekk_c_api.h],[ekk_simplex])
 AC_COIN_HAS_USER_LIBRARY([Xpress],[XPR],[xprs.h],[XPRSinit])
 AC_COIN_HAS_USER_LIBRARY([Gurobi],[GRB],[gurobi_c.h],[GRBloadenv])
 
@@ -128,10 +126,8 @@ AC_CONFIG_FILES([Makefile
                  examples/Makefile
                  src/Makefile
                  src/OsiCpx/Makefile
-                 src/OsiFmp/Makefile
                  src/OsiGlpk/Makefile
                  src/OsiMsk/Makefile
-                 src/OsiOsl/Makefile
                  src/OsiXpr/Makefile
                  src/OsiGrb/Makefile
                  src/unittests/Makefile
@@ -143,11 +139,6 @@ AC_CONFIG_FILES([Makefile
 if test $coin_has_cpx = true ; then
   AC_CONFIG_FILES([src/OsiCpx/osi-cplex.pc
                    osi-cplex-uninstalled.pc:src/OsiCpx/osi-cplex-uninstalled.pc.in])
-fi
-
-if test $coin_has_fmp = true ; then
-  AC_CONFIG_FILES([src/OsiFmp/osi-fortmp.pc
-                   osi-fortmp-uninstalled.pc:src/OsiFmp/osi-fortmp-uninstalled.pc.in])
 fi
 
 if test $coin_has_glpk = yes ; then
@@ -163,11 +154,6 @@ fi
 if test $coin_has_msk = true ; then
   AC_CONFIG_FILES([src/OsiMsk/osi-mosek.pc
                    osi-mosek-uninstalled.pc:src/OsiMsk/osi-mosek-uninstalled.pc.in])
-fi
-
-if test $coin_has_osl = true ; then
-  AC_CONFIG_FILES([src/OsiOsl/osi-osl.pc
-                   osi-osl-uninstalled.pc:src/OsiOsl/osi-osl-uninstalled.pc.in])
 fi
 
 if test $coin_has_xpr = true ; then

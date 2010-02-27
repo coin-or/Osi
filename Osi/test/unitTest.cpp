@@ -32,17 +32,12 @@
   build.
 */
 
-// #undef COIN_HAS_OSL
 // #undef COIN_HAS_XPR
 // #undef COIN_HAS_CPX
 // #undef COIN_HAS_GLPK
-// #undef COIN_HAS_FMP
 // #undef COIN_HAS_MSK
 // #undef COIN_HAS_GRB
 
-#ifdef COIN_HAS_OSL
-#include "OsiOslSolverInterface.hpp"
-#endif
 #ifdef COIN_HAS_XPR
 #include "OsiXprSolverInterface.hpp"
 #endif
@@ -51,9 +46,6 @@
 #endif
 #ifdef COIN_HAS_GLPK
 #include "OsiGlpkSolverInterface.hpp"
-#endif
-#ifdef COIN_HAS_FMP
-#include "OsiFmpSolverInterface.hpp"
 #endif
 #ifdef COIN_HAS_MSK
 #include "OsiMskSolverInterface.hpp"
@@ -271,25 +263,6 @@ try {
 /*
   Test Osi{Row,Col}Cut routines.
 */
-#ifdef COIN_HAS_OSL  
-  {
-    OsiOslSolverInterface oslSi;
-    testingMessage( "Testing OsiRowCut with OsiOslSolverInterface\n" );
-    OsiRowCutUnitTest(&oslSi,mpsDir);
-  }
-  {
-    OsiOslSolverInterface oslSi;
-    testingMessage( "Testing OsiColCut with OsiOslSolverInterface\n" );
-    OsiColCutUnitTest(&oslSi,mpsDir);
-  }
-  {
-    OsiOslSolverInterface oslSi;
-    testingMessage( "Testing OsiRowCutDebugger with OsiOslSolverInterface\n" );
-    OsiRowCutDebuggerUnitTest(&oslSi,mpsDir);
-  }
-
-#endif
-
 #ifdef COIN_HAS_XPR  
   {
     OsiXprSolverInterface xprSi;
@@ -336,25 +309,6 @@ try {
     testingMessage( "Testing OsiColCut with OsiTestSolverInterface\n" );
     OsiColCutUnitTest(&testSi,mpsDir);
   }
-
-#ifdef COIN_HAS_FMP
-  {
-    OsiFmpSolverInterface fmpSi;
-    testingMessage( "Testing OsiRowCut with OsiFmpSolverInterface\n" );
-    OsiRowCutUnitTest(&fmpSi,mpsDir);
-  }
-  {
-    OsiFmpSolverInterface fmpSi;
-    testingMessage( "Testing OsiColCut with OsiFmpSolverInterface\n" );
-    OsiColCutUnitTest(&fmpSi,mpsDir);
-  }
-  // FortMP does not presently pass this test
-  {
-    OsiFmpSolverInterface fmpSi;
-    testingMessage( "Testing OsiRowCutDebugger with OsiFmpSolverInterface\n" );
-    OsiRowCutDebuggerUnitTest(&fmpSi,mpsDir);
-  }
-#endif
 
 #ifdef COIN_HAS_GLPK
   {
@@ -427,11 +381,6 @@ try {
   to decide whether or not to run OsiSolverInterfaceCommonUnitTest. Arguably
   this should be required.
 */
-#ifdef COIN_HAS_OSL
-  testingMessage( "Testing OsiOslSolverInterface\n" );
-  OsiOslSolverInterfaceUnitTest(mpsDir,netlibDir);
-#endif
-
 #ifdef COIN_HAS_XPR
   testingMessage( "Testing OsiXprSolverInterface\n" );
   OsiXprSolverInterfaceUnitTest(mpsDir,netlibDir);
@@ -448,11 +397,6 @@ try {
 #ifdef COIN_HAS_GLPK
   testingMessage( "Testing OsiGlpkSolverInterface\n" );
   totalErrCnt += OsiGlpkSolverInterfaceUnitTest(mpsDir,netlibDir);
-#endif
-  
-#ifdef COIN_HAS_FMP
-  testingMessage( "Testing OsiFmpSolverInterface\n" );
-  OsiFmpSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
   
 #ifdef COIN_HAS_MSK
@@ -473,10 +417,6 @@ try {
   {
     // Create vector of solver interfaces
     std::vector<OsiSolverInterface*> vecSi;
-#   if COIN_HAS_OSL
-    OsiSolverInterface * oslSi = new OsiOslSolverInterface;
-    vecSi.push_back(oslSi);
-#endif
 #   if COIN_HAS_XPR
     OsiSolverInterface * xprSi = new OsiXprSolverInterface;
     vecSi.push_back(xprSi);
@@ -490,10 +430,6 @@ try {
     glpkSi->setHintParam(OsiDoPresolveInInitial,true,OsiHintTry) ;
     glpkSi->setHintParam(OsiDoReducePrint,true,OsiHintDo) ;
     vecSi.push_back(glpkSi);
-#endif
-#   if COIN_HAS_FMP
-    OsiSolverInterface * fmpSi = new OsiFmpSolverInterface;
-    vecSi.push_back(fmpSi);
 #endif
 #   if COIN_HAS_MSK
     OsiSolverInterface * MskSi = new OsiMskSolverInterface;

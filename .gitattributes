@@ -61,8 +61,6 @@ Osi/osi.pc.in -text
 Osi/osi_addlibs.txt.in -text
 Osi/src/OsiCpx/osi-cplex-uninstalled.pc.in -text
 Osi/src/OsiCpx/osi-cplex.pc.in -text
-Osi/src/OsiFmp/osi-fortmp-uninstalled.pc.in -text
-Osi/src/OsiFmp/osi-fortmp.pc.in -text
 Osi/src/OsiGlpk/osi-glpk-uninstalled.pc.in -text
 Osi/src/OsiGlpk/osi-glpk.pc.in -text
 Osi/src/OsiGrb/Makefile.am -text
@@ -73,8 +71,6 @@ Osi/src/OsiGrb/osi-gurobi-uninstalled.pc.in -text
 Osi/src/OsiGrb/osi-gurobi.pc.in -text
 Osi/src/OsiMsk/osi-mosek-uninstalled.pc.in -text
 Osi/src/OsiMsk/osi-mosek.pc.in -text
-Osi/src/OsiOsl/osi-osl-uninstalled.pc.in -text
-Osi/src/OsiOsl/osi-osl.pc.in -text
 Osi/src/OsiXpr/osi-xpress-uninstalled.pc.in -text
 Osi/src/OsiXpr/osi-xpress.pc.in -text
 Osi/src/unittests/Makefile.am -text

@@ -44,12 +44,10 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 @COIN_HAS_CPX_TRUE@am__append_1 = OsiCpx
-@COIN_HAS_FMP_TRUE@am__append_2 = OsiFmp
-@COIN_HAS_GLPK_TRUE@am__append_3 = OsiGlpk
-@COIN_HAS_MSK_TRUE@am__append_4 = OsiMsk
-@COIN_HAS_OSL_TRUE@am__append_5 = OsiOsl
-@COIN_HAS_XPR_TRUE@am__append_6 = OsiXpr
-@COIN_HAS_GRB_TRUE@am__append_7 = OsiGrb
+@COIN_HAS_GLPK_TRUE@am__append_2 = OsiGlpk
+@COIN_HAS_MSK_TRUE@am__append_3 = OsiMsk
+@COIN_HAS_XPR_TRUE@am__append_4 = OsiXpr
+@COIN_HAS_GRB_TRUE@am__append_5 = OsiGrb
 subdir = src
 DIST_COMMON = $(includecoin_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
@@ -107,8 +105,7 @@ includecoinHEADERS_INSTALL = $(INSTALL_HEADER)
 HEADERS = $(includecoin_HEADERS)
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = unittests OsiCpx OsiFmp OsiGlpk OsiMsk OsiOsl OsiXpr \
-	OsiGrb
+DIST_SUBDIRS = unittests OsiCpx OsiGlpk OsiMsk OsiXpr OsiGrb
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ABSBUILDDIR = @ABSBUILDDIR@
 ACLOCAL = @ACLOCAL@
@@ -138,8 +135,6 @@ COIN_HAS_COINUTILS_FALSE = @COIN_HAS_COINUTILS_FALSE@
 COIN_HAS_COINUTILS_TRUE = @COIN_HAS_COINUTILS_TRUE@
 COIN_HAS_CPX_FALSE = @COIN_HAS_CPX_FALSE@
 COIN_HAS_CPX_TRUE = @COIN_HAS_CPX_TRUE@
-COIN_HAS_FMP_FALSE = @COIN_HAS_FMP_FALSE@
-COIN_HAS_FMP_TRUE = @COIN_HAS_FMP_TRUE@
 COIN_HAS_GLPK_FALSE = @COIN_HAS_GLPK_FALSE@
 COIN_HAS_GLPK_TRUE = @COIN_HAS_GLPK_TRUE@
 COIN_HAS_GRB_FALSE = @COIN_HAS_GRB_FALSE@
@@ -148,8 +143,6 @@ COIN_HAS_MSK_FALSE = @COIN_HAS_MSK_FALSE@
 COIN_HAS_MSK_TRUE = @COIN_HAS_MSK_TRUE@
 COIN_HAS_NETLIB_FALSE = @COIN_HAS_NETLIB_FALSE@
 COIN_HAS_NETLIB_TRUE = @COIN_HAS_NETLIB_TRUE@
-COIN_HAS_OSL_FALSE = @COIN_HAS_OSL_FALSE@
-COIN_HAS_OSL_TRUE = @COIN_HAS_OSL_TRUE@
 COIN_HAS_SAMPLE_FALSE = @COIN_HAS_SAMPLE_FALSE@
 COIN_HAS_SAMPLE_TRUE = @COIN_HAS_SAMPLE_TRUE@
 COIN_HAS_XPR_FALSE = @COIN_HAS_XPR_FALSE@
@@ -177,8 +170,6 @@ EXEEXT = @EXEEXT@
 F77 = @F77@
 FADDLIBS = @FADDLIBS@
 FFLAGS = @FFLAGS@
-FMPINCDIR = @FMPINCDIR@
-FMPLIB = @FMPLIB@
 GLPK_CFLAGS = @GLPK_CFLAGS@
 GLPK_DATA = @GLPK_DATA@
 GLPK_LIBS = @GLPK_LIBS@
@@ -217,8 +208,6 @@ OPT_CXXFLAGS = @OPT_CXXFLAGS@
 OSIGLPKPC_CFLAGS = @OSIGLPKPC_CFLAGS@
 OSIGLPKPC_LIBS = @OSIGLPKPC_LIBS@
 OSIGLPKPC_REQUIRES = @OSIGLPKPC_REQUIRES@
-OSLINCDIR = @OSLINCDIR@
-OSLLIB = @OSLLIB@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -340,8 +329,7 @@ DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/inc
 # Now we check into which directories to recurse, and which subdirectory
 # libraries to include
 SUBDIRS = unittests $(am__append_1) $(am__append_2) $(am__append_3) \
-	$(am__append_4) $(am__append_5) $(am__append_6) \
-	$(am__append_7)
+	$(am__append_4) $(am__append_5)
 
 ########################################################################
 #                Headers that need to be installed                     #

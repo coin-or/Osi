@@ -43,12 +43,6 @@ if COIN_HAS_CPX
   unitTest_LDADD += ../src/OsiCpx/libOsiCpx.la
 endif
 
-if COIN_HAS_FMP
-  unitTest_SOURCES += OsiFmpSolverInterfaceTest.cpp
-  AM_CPPFLAGS += -I`$(CYGPATH_W) $(srcdir)/../src/OsiFmp`
-  unitTest_LDADD += ../src/OsiFmp/libOsiFmp.la
-endif
-
 if COIN_HAS_GLPK
   unitTest_SOURCES += OsiGlpkSolverInterfaceTest.cpp
   AM_CPPFLAGS += $(GLPK_CFLAGS) \
@@ -62,13 +56,6 @@ if COIN_HAS_MSK
   AM_CPPFLAGS += -I`$(CYGPATH_W) $(MSKINCDIR)` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiMsk`
   unitTest_LDADD += ../src/OsiMsk/libOsiMsk.la
-endif
-
-if COIN_HAS_OSL
-  unitTest_SOURCES += OsiOslSolverInterfaceTest.cpp
-  AM_CPPFLAGS += -I`$(CYGPATH_W) $(OSLINCDIR)` \
-	-I`$(CYGPATH_W) $(srcdir)/../src/OsiOsl`
-  unitTest_LDADD += ../src/OsiOsl/libOsiOsl.la
 endif
 
 if COIN_HAS_XPR

@@ -69,11 +69,9 @@ DIST_COMMON = README $(am__configure_deps) \
 	$(top_srcdir)/examples/Makefile.in \
 	$(top_srcdir)/inc/config_osi.h.in \
 	$(top_srcdir)/src/OsiCpx/osi-cplex-uninstalled.pc.in \
-	$(top_srcdir)/src/OsiFmp/osi-fortmp-uninstalled.pc.in \
 	$(top_srcdir)/src/OsiGlpk/osi-glpk-uninstalled.pc.in \
 	$(top_srcdir)/src/OsiGrb/osi-gurobi-uninstalled.pc.in \
 	$(top_srcdir)/src/OsiMsk/osi-mosek-uninstalled.pc.in \
-	$(top_srcdir)/src/OsiOsl/osi-osl-uninstalled.pc.in \
 	$(top_srcdir)/src/OsiXpr/osi-xpress-uninstalled.pc.in AUTHORS
 @HAVE_EXTERNALS_TRUE@am__append_2 = Externals
 @HAVE_EXTERNALS_TRUE@am__append_3 = .Externals-stamp
@@ -90,9 +88,8 @@ CONFIG_HEADER = $(top_builddir)/inc/config_osi.h
 CONFIG_CLEAN_FILES = examples/Makefile osi_addlibs.txt osi.pc \
 	osi-uninstalled.pc osi-unittests.pc \
 	osi-unittests-uninstalled.pc osi-cplex-uninstalled.pc \
-	osi-fortmp-uninstalled.pc osi-glpk-uninstalled.pc \
-	osi-gurobi-uninstalled.pc osi-mosek-uninstalled.pc \
-	osi-osl-uninstalled.pc osi-xpress-uninstalled.pc
+	osi-glpk-uninstalled.pc osi-gurobi-uninstalled.pc \
+	osi-mosek-uninstalled.pc osi-xpress-uninstalled.pc
 SOURCES =
 DIST_SOURCES =
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
@@ -154,8 +151,6 @@ COIN_HAS_COINUTILS_FALSE = @COIN_HAS_COINUTILS_FALSE@
 COIN_HAS_COINUTILS_TRUE = @COIN_HAS_COINUTILS_TRUE@
 COIN_HAS_CPX_FALSE = @COIN_HAS_CPX_FALSE@
 COIN_HAS_CPX_TRUE = @COIN_HAS_CPX_TRUE@
-COIN_HAS_FMP_FALSE = @COIN_HAS_FMP_FALSE@
-COIN_HAS_FMP_TRUE = @COIN_HAS_FMP_TRUE@
 COIN_HAS_GLPK_FALSE = @COIN_HAS_GLPK_FALSE@
 COIN_HAS_GLPK_TRUE = @COIN_HAS_GLPK_TRUE@
 COIN_HAS_GRB_FALSE = @COIN_HAS_GRB_FALSE@
@@ -164,8 +159,6 @@ COIN_HAS_MSK_FALSE = @COIN_HAS_MSK_FALSE@
 COIN_HAS_MSK_TRUE = @COIN_HAS_MSK_TRUE@
 COIN_HAS_NETLIB_FALSE = @COIN_HAS_NETLIB_FALSE@
 COIN_HAS_NETLIB_TRUE = @COIN_HAS_NETLIB_TRUE@
-COIN_HAS_OSL_FALSE = @COIN_HAS_OSL_FALSE@
-COIN_HAS_OSL_TRUE = @COIN_HAS_OSL_TRUE@
 COIN_HAS_SAMPLE_FALSE = @COIN_HAS_SAMPLE_FALSE@
 COIN_HAS_SAMPLE_TRUE = @COIN_HAS_SAMPLE_TRUE@
 COIN_HAS_XPR_FALSE = @COIN_HAS_XPR_FALSE@
@@ -193,8 +186,6 @@ EXEEXT = @EXEEXT@
 F77 = @F77@
 FADDLIBS = @FADDLIBS@
 FFLAGS = @FFLAGS@
-FMPINCDIR = @FMPINCDIR@
-FMPLIB = @FMPLIB@
 GLPK_CFLAGS = @GLPK_CFLAGS@
 GLPK_DATA = @GLPK_DATA@
 GLPK_LIBS = @GLPK_LIBS@
@@ -233,8 +224,6 @@ OPT_CXXFLAGS = @OPT_CXXFLAGS@
 OSIGLPKPC_CFLAGS = @OSIGLPKPC_CFLAGS@
 OSIGLPKPC_LIBS = @OSIGLPKPC_LIBS@
 OSIGLPKPC_REQUIRES = @OSIGLPKPC_REQUIRES@
-OSLINCDIR = @OSLINCDIR@
-OSLLIB = @OSLLIB@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -410,15 +399,11 @@ osi-unittests-uninstalled.pc: $(top_builddir)/config.status $(srcdir)/osi-unitte
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 osi-cplex-uninstalled.pc: $(top_builddir)/config.status $(top_srcdir)/src/OsiCpx/osi-cplex-uninstalled.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
-osi-fortmp-uninstalled.pc: $(top_builddir)/config.status $(top_srcdir)/src/OsiFmp/osi-fortmp-uninstalled.pc.in
-	cd $(top_builddir) && $(SHELL) ./config.status $@
 osi-glpk-uninstalled.pc: $(top_builddir)/config.status $(top_srcdir)/src/OsiGlpk/osi-glpk-uninstalled.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 osi-gurobi-uninstalled.pc: $(top_builddir)/config.status $(top_srcdir)/src/OsiGrb/osi-gurobi-uninstalled.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 osi-mosek-uninstalled.pc: $(top_builddir)/config.status $(top_srcdir)/src/OsiMsk/osi-mosek-uninstalled.pc.in
-	cd $(top_builddir) && $(SHELL) ./config.status $@
-osi-osl-uninstalled.pc: $(top_builddir)/config.status $(top_srcdir)/src/OsiOsl/osi-osl-uninstalled.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 osi-xpress-uninstalled.pc: $(top_builddir)/config.status $(top_srcdir)/src/OsiXpr/osi-xpress-uninstalled.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
@@ -602,7 +587,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkdir_p) $(distdir)/. $(distdir)/.. $(distdir)/../BuildTools $(distdir)/examples $(distdir)/inc $(distdir)/src/OsiCpx $(distdir)/src/OsiFmp $(distdir)/src/OsiGlpk $(distdir)/src/OsiGrb $(distdir)/src/OsiMsk $(distdir)/src/OsiOsl $(distdir)/src/OsiXpr
+	$(mkdir_p) $(distdir)/. $(distdir)/.. $(distdir)/../BuildTools $(distdir)/examples $(distdir)/inc $(distdir)/src/OsiCpx $(distdir)/src/OsiGlpk $(distdir)/src/OsiGrb $(distdir)/src/OsiMsk $(distdir)/src/OsiXpr
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \

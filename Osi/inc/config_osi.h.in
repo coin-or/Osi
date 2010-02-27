@@ -6,9 +6,6 @@
 /* Define to 1 if the Cplex package is available */
 #undef COIN_HAS_CPX
 
-/* Define to 1 if the FortMP package is available */
-#undef COIN_HAS_FMP
-
 /* Define to 1 if the Glpk module is available */
 #undef COIN_HAS_GLPK
 
@@ -20,9 +17,6 @@
 
 /* Define to 1 if the Netlib module is available */
 #undef COIN_HAS_NETLIB
-
-/* Define to 1 if the Osl package is available */
-#undef COIN_HAS_OSL
 
 /* Define to 1 if the Sample module is available */
 #undef COIN_HAS_SAMPLE

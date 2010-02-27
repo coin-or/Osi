@@ -54,17 +54,11 @@ SUBDIRS = unittests
 if COIN_HAS_CPX
   SUBDIRS += OsiCpx
 endif
-if COIN_HAS_FMP
-  SUBDIRS += OsiFmp
-endif
 if COIN_HAS_GLPK
   SUBDIRS += OsiGlpk
 endif
 if COIN_HAS_MSK
   SUBDIRS += OsiMsk
-endif
-if COIN_HAS_OSL
-  SUBDIRS += OsiOsl
 endif
 if COIN_HAS_XPR
   SUBDIRS += OsiXpr

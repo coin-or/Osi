@@ -1,6 +1,6 @@
 /* inc/config_osi.h.in.  Generated from configure.ac by autoheader.  */
 
-/* Define to 1 if the CoinUtils module is available */
+/* Define to 1 if the CoinUtils package is used */
 #undef COIN_HAS_COINUTILS
 
 /* Define to 1 if the Cplex package is available */

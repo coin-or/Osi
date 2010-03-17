@@ -1135,7 +1135,7 @@ void OsiClpSolverInterface::resolve()
           printf("%d fixed basic - %d iterations\n",nBad,modelPtr_->numberIterations());
         }
       }
-      assert (modelPtr_->objectiveValue()<1.0e100);
+      assert (modelPtr_->objectiveValue()<1.0e100||modelPtr_->problemStatus_>0);
       modelPtr_->setPerturbation(savePerturbation);
       lastAlgorithm_=2; // dual
       // check if clp thought it was in a loop
@@ -1177,7 +1177,7 @@ void OsiClpSolverInterface::resolve()
 	  }
 	}
       }
-      assert (modelPtr_->objectiveValue()<1.0e100);
+      assert (modelPtr_->objectiveValue()<1.0e100||modelPtr_->problemStatus_>0);
     } else {
 #ifdef KEEP_SMALL
       if (smallModel_) {
@@ -5312,6 +5312,9 @@ OsiClpSolverInterface::enableSimplexInterface(bool doingPrimal)
   int returnCode=modelPtr_->startup(0);
   assert (!returnCode||returnCode==2);
 #endif
+  // Reset objective if primal as may be a bit infeasible
+  if (modelPtr_->algorithm_>0&&modelPtr_->nonLinearCost_)
+    modelPtr_->objectiveValue_=modelPtr_->nonLinearCost_->feasibleCost();
   modelPtr_->specialOptions_=saveOptions;
   modelPtr_->numberIterations_=saveIts;
 }

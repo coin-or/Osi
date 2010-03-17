@@ -5313,6 +5313,9 @@ OsiClpSolverInterface::enableSimplexInterface(bool doingPrimal)
   int returnCode=modelPtr_->startup(0);
   assert (!returnCode||returnCode==2);
 #endif
+  // Reset objective if primal as may be a bit infeasible
+  if (modelPtr_->algorithm_>0&&modelPtr_->nonLinearCost_)
+    modelPtr_->objectiveValue_=modelPtr_->nonLinearCost_->feasibleCost();
   modelPtr_->specialOptions_=saveOptions;
   modelPtr_->numberIterations_=saveIts;
 }

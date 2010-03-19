@@ -3394,7 +3394,7 @@ void OsiMskSolverInterface::setColSolution(const double * cs)
       {
         tskc[i] = MSK_SK_UPR;
       }        
-      else if( tbkx[i] == MSK_BK_FR  && txc[i] == 0.0   )
+      else if( tbkc[i] == MSK_BK_FR  && txc[i] == 0.0   )
       {
         tskc[i] = MSK_SK_SUPBAS;
       }        

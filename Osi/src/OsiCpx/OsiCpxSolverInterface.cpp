@@ -1371,7 +1371,7 @@ const double * OsiCpxSolverInterface::getRowActivity() const
              {
                 checkCPXerror( err, "CPXgetmipslack", "getRowActivity" );
                 for( int r = 0; r < nrows; ++r )
-                   rowact_[r] = getRightHandSide()[r] + rowslack[r];
+                   rowact_[r] = getRightHandSide()[r] - rowslack[r];
              }
              delete [] rowslack;
           }

@@ -319,9 +319,9 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
       memcpy(originalRow_,prob.originalRow_,nrowsNow*sizeof(int));
       delete [] prob.originalRow_;
       prob.originalRow_=NULL;
-
-      // now clean up integer variables.  This can modify original
-      {
+      /* now clean up integer variables.  This can modify original
+	 Don't do if dupcol added columns together */
+      if ((prob.presolveOptions_&0x80000000)==0) {
 	int numberChanges=0;
 	const double * lower0 = originalModel_->getColLower();
 	const double * upper0 = originalModel_->getColUpper();
@@ -331,10 +331,13 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
 	  if (!presolvedModel_->isInteger(i))
 	    continue;
 	  int iOriginal = originalColumn_[i];
-	  double lowerValue0 = lower0[iOriginal];
-	  double upperValue0 = upper0[iOriginal];
 	  double lowerValue = ceil(lower[i]-1.0e-5);
 	  double upperValue = floor(upper[i]+1.0e-5);
+	  if (lowerValue==lower[i]&&
+	      upperValue==upper[i])
+	    continue; // no point going round again
+	  double lowerValue0 = lower0[iOriginal];
+	  double upperValue0 = upper0[iOriginal];
 	  presolvedModel_->setColBounds(i,lowerValue,upperValue);
 	  if (lowerValue>upperValue) {
 	    numberChanges++;

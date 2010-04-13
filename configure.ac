@@ -43,6 +43,8 @@ AC_COIN_CREATE_LIBTOOL
 #############################################################################
 
 AC_COIN_MAIN_PACKAGEDIR(Glpk,ThirdParty,[glpk/src/glplpx01.c],[coinglpk])
+AC_COIN_MAIN_PACKAGEDIR(Blas,ThirdParty,[daxpy.f],[coinblas])
+AC_COIN_MAIN_PACKAGEDIR(Lapack,ThirdParty,[LAPACK/SRC/dlarf.f],[coinlapack])
 AC_COIN_MAIN_PACKAGEDIR(Sample,Data,,coindatasample)
 AC_COIN_MAIN_PACKAGEDIR(Netlib,Data,,coindatanetlib)
 AC_COIN_MAIN_PACKAGEDIR(CoinUtils)

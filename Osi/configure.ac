@@ -50,50 +50,33 @@ AC_COIN_PROG_CXX
 AC_COIN_INIT_AUTO_TOOLS
 
 #############################################################################
-#                              COIN components                              #
+#                              COIN-OR components                           #
 #############################################################################
 
-AC_COIN_HAS_MODULE(CoinUtils,  [coinutils = split])
-AC_COIN_HAS_MODULE(Sample,     [coindatasample],   [required=0])
-AC_COIN_HAS_MODULE(Netlib,     [coindatanetlib],   [required=0])
-AC_COIN_HAS_MODULE(Glpk,       [coinglpk >= 4.39], [required=0])
-
-# fallback if no pkg-config is available
-if test "$coin_has_coinutils" != yes ; then
-  AC_COIN_HAS_PROJECT(CoinUtils)
-  if test $coin_has_coinutils != notGiven && test $coin_has_coinutils != skipping ; then
-    COINUTILS_CFLAGS="-I`${CYGPATH_W} ${COINUTILSSRCDIR}/src` -I`${CYGPATH_W} ${COINUTILSOBJDIR}/inc`"
-    COINUTILS_LIBS="${COINUTILSOBJDIR}/src/libCoinUtils.la `cat ${COINUTILSOBJDIR}/coinutils_addlibs.txt`"
-  else
-    AC_MSG_ERROR("Required package CoinUtils unavailable.")
-  fi
+AC_COIN_HAS_MODULE(CoinUtils,          [coinutils = split])
+if test $coin_has_coinutils != yes ; then
+  #if we have to use the fallback routines, then obviously it will not find CoinUtils dependencies
+  #thus, we check whether ThirdParty/Blas and ThirdParty/Lapack have been setup and
+  #assume that if present then they are dependencies of CoinUtils
+  AC_COIN_HAS_MODULE_FALLBACK(Blas,   [coinblas],   [../ThirdParty/Blas],   [required=0 dodefine=0 doconditional=0])
+  AC_COIN_HAS_MODULE_FALLBACK(Lapack, [coinlapack], [../ThirdParty/Lapack], [required=0 dodefine=0 doconditional=0])
 fi
-
-# fallback for Glpk if no pkg-config available
-if test "$coin_has_glpk" != yes ; then
-  coin_glpkobjdir=../ThirdParty/Glpk
-  
-  # if ThirdParty/Glpk is available and configured, then a coinglpk-uninstalled.pc file should have been created
-  if test -r $coin_glpkobjdir/coinglpk-uninstalled.pc ; then
-    # read Glpk CFLAGS and LIBS from coinglpk-uninstalled.pc file
-    # add CYGPATH_W cludge into include flags
-    # replace -L${libdir} by absolute path to GLPK build directory in linker flags
-    [GLPK_CFLAGS=`sed -n -e 's/Cflags://' -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/gp' $coin_glpkobjdir/coinglpk-uninstalled.pc`]
-    GLPK_LIBS=`sed -n -e 's/Libs://' -e 's/-L\${libdir}//p' $coin_glpkobjdir/coinglpk-uninstalled.pc`
-    GLPK_LIBS="-L`cd $coin_glpkobjdir; pwd` $GLPK_LIBS"
-
-    ADDLIBS="$ADDLIBS $GLPK_LIBS"
-    REQUIREDPACKAGES="$REQUIREDPACKAGES coinglpk"
-
-    coin_has_glpk=yes
-    AC_DEFINE([COIN_HAS_GLPK],[1],[Define to 1 if the Glpk module is available])
-  fi
-
-  AM_CONDITIONAL([COIN_HAS_GLPK],[test $coin_has_glpk = yes])
-  
-  AC_MSG_CHECKING([whether ThirdParty/Glpk is available and configured])
-  AC_MSG_RESULT([$coin_has_glpk])
+AC_COIN_HAS_MODULE_FALLBACK(CoinUtils, [coinutils], [../CoinUtils])
+if test $coin_has_coinutils != yes ; then
+  AC_MSG_ERROR([Required package CoinUtils not available.])
 fi
+#so if we had to do find Blas and Lapack separately, then add their linker flags to the CoinUtils flags
+#actually the libs may already be included in libCoinUtils, but we may still need the fortran library flags
+COINUTILS_LIBS="$COINUTILS_LIBS $BLAS_LIBS $LAPACK_LIBS"
+
+AC_COIN_HAS_MODULE(Sample,          [coindatasample],                   [required=0])
+AC_COIN_HAS_MODULE_FALLBACK(Sample, [coindatasample], [../Data/Sample], [required=0])
+
+AC_COIN_HAS_MODULE(Netlib,          [coindatanetlib],                   [required=0])
+AC_COIN_HAS_MODULE_FALLBACK(Netlib, [coindatanetlib], [../Data/Netlib], [required=0])
+
+AC_COIN_HAS_MODULE(Glpk,          [coinglpk >= 4.39],                       [required=0])
+AC_COIN_HAS_MODULE_FALLBACK(Glpk, [coinglpk],         [../ThirdParty/Glpk], [required=0])
 
 #############################################################################
 #                            Third party solvers                            #

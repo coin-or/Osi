@@ -69,7 +69,8 @@ endif
 if COIN_HAS_SYMPHONY
   unitTest_SOURCES += OsiSymSolverInterfaceTest.cpp
   AM_CPPFLAGS += -I`$(CYGPATH_W) $(SYMPHONYSRCDIR)/include` \
-	-I`$(CYGPATH_W) $(srcdir)/../src/OsiSym`
+	-I`$(CYGPATH_W) $(srcdir)/../src/OsiSym` \
+	-I`$(CYGPATH_W) $(SYMPHONYOBJDIR)/include`
   unitTest_LDADD += ../src/OsiSym/libOsiSym.la \
 	$(SYMPHONYOBJDIR)/src/libSym.la
   LIBS += `cat $(SYMPHONYOBJDIR)/sym_addlibs.txt`

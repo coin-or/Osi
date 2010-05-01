@@ -78,6 +78,8 @@ pkgconfiglib_DATA = osi.pc osi-unittests.pc
 #                         Maintainer Stuff                             #
 ########################################################################
 
+CLEANFILES = osi_addlibs.txt
+
 # Files that are generated and should be cleaned with make distclean
 DISTCLEANFILES =
 

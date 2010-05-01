@@ -63,6 +63,12 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
+/* SVN revision number of project */
+#undef OSI_SVN_REV
+
+/* Version number of project */
+#undef OSI_VERSION
+
 /* Name of package */
 #undef PACKAGE
 

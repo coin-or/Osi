@@ -38,7 +38,7 @@ AC_PREFIX_DEFAULT([`pwd`])
 AC_CANONICAL_BUILD
 
 # A bit of initial setup (ADDLIBS, FADDLIBS)
-AC_COIN_PROJECTDIR_INIT
+AC_COIN_PROJECTDIR_INIT(Osi)
 
 # Check if user wants to produce debugging code
 AC_COIN_DEBUG_COMPILE(Osi)

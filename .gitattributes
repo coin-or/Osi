@@ -58,7 +58,6 @@ Osi/osi-uninstalled.pc.in -text
 Osi/osi-unittests-uninstalled.pc.in -text
 Osi/osi-unittests.pc.in -text
 Osi/osi.pc.in -text
-Osi/osi_addlibs.txt.in -text
 Osi/src/OsiCpx/osi-cplex-uninstalled.pc.in -text
 Osi/src/OsiCpx/osi-cplex.pc.in -text
 Osi/src/OsiGlpk/osi-glpk-uninstalled.pc.in -text

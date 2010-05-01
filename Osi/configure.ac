@@ -53,7 +53,7 @@ AC_COIN_INIT_AUTO_TOOLS
 #                              COIN-OR components                           #
 #############################################################################
 
-AC_COIN_HAS_MODULE(CoinUtils,          [coinutils = split])
+AC_COIN_HAS_MODULE(CoinUtils, [coinutils = split])
 if test $coin_has_coinutils != yes ; then
   #if we have to use the fallback routines, then obviously it will not find CoinUtils dependencies
   #thus, we check whether ThirdParty/Blas and ThirdParty/Lapack have been setup and
@@ -69,14 +69,9 @@ fi
 #actually the libs may already be included in libCoinUtils, but we may still need the fortran library flags
 COINUTILS_LIBS="$COINUTILS_LIBS $BLAS_LIBS $LAPACK_LIBS"
 
-AC_COIN_HAS_MODULE(Sample,          [coindatasample],                   [required=0])
-AC_COIN_HAS_MODULE_FALLBACK(Sample, [coindatasample], [../Data/Sample], [required=0])
-
-AC_COIN_HAS_MODULE(Netlib,          [coindatanetlib],                   [required=0])
-AC_COIN_HAS_MODULE_FALLBACK(Netlib, [coindatanetlib], [../Data/Netlib], [required=0])
-
-AC_COIN_HAS_MODULE(Glpk,          [coinglpk >= 4.39],                       [required=0])
-AC_COIN_HAS_MODULE_FALLBACK(Glpk, [coinglpk],         [../ThirdParty/Glpk], [required=0])
+AC_COIN_HAS_MODULE(Sample, [coindatasample],   [required=0], [../Data/Sample])
+AC_COIN_HAS_MODULE(Netlib, [coindatanetlib],   [required=0], [../Data/Netlib])
+AC_COIN_HAS_MODULE(Glpk,   [coinglpk >= 4.39], [required=0], [../ThirdParty/Glpk])
 
 #############################################################################
 #                            Third party solvers                            #
@@ -152,7 +147,6 @@ AC_CONFIG_FILES([Makefile
                  src/OsiGrb/Makefile
                  src/unittests/Makefile
                  test/Makefile
-                 osi_addlibs.txt
                  osi.pc osi-uninstalled.pc
                  osi-unittests.pc osi-unittests-uninstalled.pc])
 

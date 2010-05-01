@@ -65,8 +65,7 @@ DIST_COMMON = README $(am__configure_deps) \
 	$(srcdir)/osi-uninstalled.pc.in \
 	$(srcdir)/osi-unittests-uninstalled.pc.in \
 	$(srcdir)/osi-unittests.pc.in $(srcdir)/osi.pc.in \
-	$(srcdir)/osi_addlibs.txt.in $(top_srcdir)/configure \
-	$(top_srcdir)/examples/Makefile.in \
+	$(top_srcdir)/configure $(top_srcdir)/examples/Makefile.in \
 	$(top_srcdir)/inc/config_osi.h.in \
 	$(top_srcdir)/src/OsiCpx/osi-cplex-uninstalled.pc.in \
 	$(top_srcdir)/src/OsiGlpk/osi-glpk-uninstalled.pc.in \
@@ -85,11 +84,11 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno configure.status.lineno
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/inc/config_osi.h
-CONFIG_CLEAN_FILES = examples/Makefile osi_addlibs.txt osi.pc \
-	osi-uninstalled.pc osi-unittests.pc \
-	osi-unittests-uninstalled.pc osi-cplex-uninstalled.pc \
-	osi-glpk-uninstalled.pc osi-gurobi-uninstalled.pc \
-	osi-mosek-uninstalled.pc osi-xpress-uninstalled.pc
+CONFIG_CLEAN_FILES = examples/Makefile osi.pc osi-uninstalled.pc \
+	osi-unittests.pc osi-unittests-uninstalled.pc \
+	osi-cplex-uninstalled.pc osi-glpk-uninstalled.pc \
+	osi-gurobi-uninstalled.pc osi-mosek-uninstalled.pc \
+	osi-xpress-uninstalled.pc
 SOURCES =
 DIST_SOURCES =
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
@@ -159,10 +158,13 @@ COIN_HAS_MSK_FALSE = @COIN_HAS_MSK_FALSE@
 COIN_HAS_MSK_TRUE = @COIN_HAS_MSK_TRUE@
 COIN_HAS_NETLIB_FALSE = @COIN_HAS_NETLIB_FALSE@
 COIN_HAS_NETLIB_TRUE = @COIN_HAS_NETLIB_TRUE@
+COIN_HAS_PKGCONFIG_FALSE = @COIN_HAS_PKGCONFIG_FALSE@
+COIN_HAS_PKGCONFIG_TRUE = @COIN_HAS_PKGCONFIG_TRUE@
 COIN_HAS_SAMPLE_FALSE = @COIN_HAS_SAMPLE_FALSE@
 COIN_HAS_SAMPLE_TRUE = @COIN_HAS_SAMPLE_TRUE@
 COIN_HAS_XPR_FALSE = @COIN_HAS_XPR_FALSE@
 COIN_HAS_XPR_TRUE = @COIN_HAS_XPR_TRUE@
+COIN_PKG_CONFIG_PATH = @COIN_PKG_CONFIG_PATH@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CPXINCDIR = @CPXINCDIR@
@@ -319,8 +321,8 @@ EXTRA_DIST = examples/basic2.cpp examples/basic.cpp examples/build.cpp \
 ########################################################################
 #                  Installation of the addlibs file                    #
 ########################################################################
-addlibsdir = $(datadir)/coin/doc/Osi
-addlibs_DATA = osi_addlibs.txt
+@COIN_HAS_PKGCONFIG_TRUE@addlibsdir = $(datadir)/coin/doc/Osi
+@COIN_HAS_PKGCONFIG_TRUE@addlibs_DATA = osi_addlibs.txt
 pkgconfiglibdir = $(libdir)/pkgconfig
 pkgconfiglib_DATA = osi.pc osi-unittests.pc
 
@@ -386,8 +388,6 @@ $(top_srcdir)/inc/config_osi.h.in: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 distclean-hdr:
 	-rm -f inc/config_osi.h inc/stamp-h1
 examples/Makefile: $(top_builddir)/config.status $(top_srcdir)/examples/Makefile.in
-	cd $(top_builddir) && $(SHELL) ./config.status $@
-osi_addlibs.txt: $(top_builddir)/config.status $(srcdir)/osi_addlibs.txt.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 osi.pc: $(top_builddir)/config.status $(srcdir)/osi.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
@@ -851,6 +851,9 @@ install-exec-local: install-doc
 uninstall-local: uninstall-doc
 
 .PHONY: test unitTest
+
+@COIN_HAS_PKGCONFIG_TRUE@osi_addlibs.txt : osi.pc
+@COIN_HAS_PKGCONFIG_TRUE@	PKG_CONFIG_PATH=.:@COIN_PKG_CONFIG_PATH@ $(PKG_CONFIG) --libs osi > osi_addlibs.txt
 
 install-doc: $(DocFiles)
 	test -z "$(DocInstallDir)" || $(mkdir_p) "$(DESTDIR)$(DocInstallDir)"

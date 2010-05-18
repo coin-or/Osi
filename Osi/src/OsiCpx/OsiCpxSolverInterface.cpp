@@ -750,7 +750,8 @@ CoinWarmStart* OsiCpxSolverInterface::getWarmStart() const
   int *rstat = new int[numrows];
   int restat, i;
 
-  assert(!probtypemip_);
+  if( probtypemip_ )
+     return getEmptyWarmStart();
 
   restat = CPXgetbase( env_, getMutableLpPtr(), cstat, rstat );
   if( restat == 0 )

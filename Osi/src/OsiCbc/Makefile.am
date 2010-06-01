@@ -27,13 +27,16 @@ libOsiCbc_la_LDFLAGS = $(LT_LDFLAGS)
 # "top_srcdir" refers to the basic directory for the main package that is
 # being compiled.
 
-# Needed by any OsiCbc configuration.
+# Needed by any OsiCbc configuration. Clp is inextricably wired into Cbc,
+# hence OsiCbc always needs the Clp include directories. -- lh, 100601 --
 
 AM_CPPFLAGS = \
 	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(COINUTILSOBJDIR)/inc` \
 	-I`$(CYGPATH_W) $(CBCSRCDIR)/src` \
 	-I`$(CYGPATH_W) $(CBCOBJDIR)/inc` \
+	-I`$(CYGPATH_W) $(CLPSRCDIR)/src` \
+	-I`$(CYGPATH_W) $(CLPOBJDIR)/inc` \
 	-I`$(CYGPATH_W) $(srcdir)/..`
 
 # Plus the appropriate include directories for the default solver. The

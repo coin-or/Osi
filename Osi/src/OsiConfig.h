@@ -144,7 +144,7 @@
 */
 /* #define OSICBC_DFLT_SOLVER_HPP "OsiClpSolverInterface.hpp" */
 
-#define OSI_VERSION "0.103"
+#define OSI_VERSION "trunk"
 
 #endif /* HAVE_CONFIG_H */
 

@@ -1533,6 +1533,12 @@ OsiSolverInterface::newLanguage(CoinMessages::Language language)
 void 
 OsiSolverInterface::copyParameters(OsiSolverInterface & rhs)
 {
+  /*
+    We should think about this block of code. appData, rowCutDebugger,
+    and handler_ are not part of the standard parameter data. Arguably copy
+    actions for them belong in the base Osi.clone() or as separate methods.
+    -lh, 091021-
+  */
   delete appDataEtc_;
   appDataEtc_ = rhs.appDataEtc_->clone();
   delete rowCutDebugger_;
@@ -1543,13 +1549,17 @@ OsiSolverInterface::copyParameters(OsiSolverInterface & rhs)
   if (defaultHandler_) {
     delete handler_;
   }
+  /*
+    Is this correct? Shouldn't we clone a non-default handler instead of
+    simply assigning the pointer?  -lh, 091021-
+  */
   defaultHandler_ = rhs.defaultHandler_;
   if (defaultHandler_) {
     handler_ = new CoinMessageHandler(*rhs.handler_);
   } else {
     handler_ = rhs.handler_;
   }
-   CoinDisjointCopyN(rhs.intParam_, OsiLastIntParam, intParam_);
+  CoinDisjointCopyN(rhs.intParam_, OsiLastIntParam, intParam_);
   CoinDisjointCopyN(rhs.dblParam_, OsiLastDblParam, dblParam_);
   CoinDisjointCopyN(rhs.strParam_, OsiLastStrParam, strParam_);
   CoinDisjointCopyN(rhs.hintParam_, OsiLastHintParam, hintParam_);

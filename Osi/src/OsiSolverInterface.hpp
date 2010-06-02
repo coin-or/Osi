@@ -157,13 +157,21 @@ public:
     /// Solve initial LP relaxation 
     virtual void initialSolve() = 0; 
 
-    /// Resolve an LP relaxation after problem modification
+    /*! \brief Resolve an LP relaxation after problem modification
+
+      Note the `re-' in `resolve'. initialSolve() should be used to solve the
+      problem for the first time.
+    */
     virtual void resolve() = 0;
 
     /// Invoke solver's built-in enumeration algorithm
     virtual void branchAndBound() = 0;
 
 #ifdef CBC_NEXT_VERSION
+    /*
+      Would it make sense to collect all of these routines in a `MIP Helper'
+      section? It'd make it easier for users and implementors to find them.
+    */
     /**
        Solve 2**N (N==depth) problems and return solutions and bases.
        There are N branches each of which changes bounds on both sides
@@ -213,13 +221,12 @@ public:
      proper interface to and accurately reflect the capabilities of a
      specific solver.
 
-     The format for hints is slightly different in that the value is 
-     boolean and there is an enum to show strength of hint.
-     There is also an optional void pointer to allow for any eventuality.
+     The format for hints is slightly different in that a boolean specifies
+     the sense of the hint and an enum specifies the strength of the hint.
      Hints should be initialised when a solver is instantiated.
      (See OsiSolverParameters.hpp for defined hint parameters and strength.)
-     A value of true means to work with the hint, false to work against it.
-     For example,
+     When specifying the sense of the hint, a value of true means to work with
+     the hint, false to work against it.  For example,
      <ul>
        <li> \code setHintParam(OsiDoScale,true,OsiHintTry) \endcode
 	    is a mild suggestion to the solver to scale the constraint
@@ -239,35 +246,46 @@ public:
 
      \note
      As with the other set/get methods, there is a default implementation
-     which maintains arrays in the base class for hint value and strength.
-     The default implementation does not store the void pointer, and always
-     throws an exception for strength \c OsiForceDo. Implementors of a solver
-     interface should overload these functions to provide the proper interface
-     to and accurately reflect the capabilities of a specific solver.
+     which maintains arrays in the base class for hint sense and strength.
+     The default implementation does not store the \c otherInformation
+     pointer, and always throws an exception for strength \c OsiForceDo.
+     Implementors of a solver interface should override these functions to
+     provide the proper interface to and accurately reflect the capabilities
+     of a specific solver.
   */
   //@{
-    // Set an integer parameter
+    //! Set an integer parameter
     virtual bool setIntParam(OsiIntParam key, int value) {
       if (key == OsiLastIntParam) return (false) ;
       intParam_[key] = value;
       return true;
     }
-    // Set an double parameter
+    //! Set a double parameter
     virtual bool setDblParam(OsiDblParam key, double value) {
       if (key == OsiLastDblParam) return (false) ;
       dblParam_[key] = value;
       return true;
     }
-    // Set an string parameter
+    //! Set a string parameter
     virtual bool setStrParam(OsiStrParam key, const std::string & value) {
       if (key == OsiLastStrParam) return (false) ;
       strParam_[key] = value;
       return true;
     }
-    // Set a hint parameter
+    /*! \brief Set a hint parameter
+
+      The \c otherInformation parameter can be used to pass in an arbitrary
+      block of information which is interpreted by the OSI and the underlying
+      solver.  Users are cautioned that this hook is solver-specific.
+
+      Implementors:
+      The default implementation completely ignores \c otherInformation and
+      always throws an exception for OsiForceDo. This is almost certainly not
+      the behaviour you want; you really should override this method.
+    */
     virtual bool setHintParam(OsiHintParam key, bool yesNo=true,
 			      OsiHintStrength strength=OsiHintTry,
-			      void * =NULL) {
+			      void *otherInformation = NULL) {
       if (key==OsiLastHintParam)
 	return false; 
       hintParam_[key] = yesNo;
@@ -277,30 +295,33 @@ public:
 			"setHintParam", "OsiSolverInterface");
       return true;
     }
-    // Get an integer parameter
+    //! Get an integer parameter
     virtual bool getIntParam(OsiIntParam key, int& value) const {
       if (key == OsiLastIntParam) return (false) ;
       value = intParam_[key];
       return true;
     }
-    // Get an double parameter
+    //! Get a double parameter
     virtual bool getDblParam(OsiDblParam key, double& value) const {
       if (key == OsiLastDblParam) return (false) ;
       value = dblParam_[key];
       return true;
     }
-    /** We should be able to get an integer tolerance.
-        Until that time just use primal tolerance
-    */
-    inline double getIntegerTolerance() const
-    { return dblParam_[OsiPrimalTolerance];}
-    // Get a string parameter
+    //! Get a string parameter
     virtual bool getStrParam(OsiStrParam key, std::string& value) const {
       if (key == OsiLastStrParam) return (false) ;
       value = strParam_[key];
       return true;
     }
-    // get a hint parameter
+    /*! \brief Get a hint parameter (all information)
+
+	Return all available information for the hint: sense, strength,
+	and any extra information associated with the hint.
+
+	Implementors: The default implementation will always set
+	\c otherInformation to NULL. This is almost certainly not the
+	behaviour you want; you really should override this method.
+    */
     virtual bool getHintParam(OsiHintParam key, bool& yesNo,
 			      OsiHintStrength& strength,
 			      void *& otherInformation) const {
@@ -311,7 +332,10 @@ public:
       otherInformation=NULL;
       return true;
     }
-    // get a hint parameter (less information)
+    /*! \brief Get a hint parameter (sense and strength only)
+
+	Return only the sense and strength of the hint.
+    */
     virtual bool getHintParam(OsiHintParam key, bool& yesNo,
 			      OsiHintStrength& strength) const {
       if (key==OsiLastHintParam)
@@ -320,15 +344,39 @@ public:
       strength = hintStrength_[key];
       return true;
     }
-    // get a hint parameter (even less information)
+    /*! \brief Get a hint parameter (sense only)
+
+	Return only the sense (true/false) of the hint.
+    */
     virtual bool getHintParam(OsiHintParam key, bool& yesNo) const {
       if (key==OsiLastHintParam)
 	return false; 
       yesNo = hintParam_[key];
       return true;
     }
-    // copy all parameters in this section from one solver to another
+    /*! \brief Copy all parameters in this section from one solver to another
+
+      Note that the current implementation also copies the appData block,
+      message handler, and rowCutDebugger. Arguably these should have
+      independent copy methods.
+    */
     void copyParameters(OsiSolverInterface & rhs);
+
+    /** \brief Return the integrality tolerance of the underlying solver.
+    
+	We should be able to get an integrality tolerance, but
+        until that time just use the primal tolerance
+
+	\todo
+	This method should be replaced; it's architecturally wrong.  This
+	should be an honest dblParam with a keyword. Underlying solvers
+	that do not support integer variables should return false for set and
+	get on this parameter.  Underlying solvers that support integrality
+	should add this to the parameters they support, using whatever
+	tolerance is appropriate.  -lh, 091021-
+    */
+    inline double getIntegerTolerance() const
+    { return dblParam_[OsiPrimalTolerance];}
   //@}
 
   //---------------------------------------------------------------------------

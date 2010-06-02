@@ -113,6 +113,9 @@
    e.g., "OsiClpSolverInterface.hpp" (include quotes) */
 #undef OSICBC_DFLT_SOLVER_HPP
 
+/* "Version of OSI" */
+#undef OSI_VERSION
+
 /* Name of package */
 #undef PACKAGE
 

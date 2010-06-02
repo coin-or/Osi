@@ -1,4 +1,5 @@
 * text=auto !eol
+/Dependencies -text
 /LICENSE -text
 Osi/LICENSE -text
 Osi/MSVisualStudio/v6/libOsi/libOsi.dsp -text

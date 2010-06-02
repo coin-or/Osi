@@ -22499,8 +22499,14 @@ fi
 
 
 #############################################################################
-#		  Capability Tests					    #
+#		  OSI version number                                        #
 #############################################################################
+
+
+cat >>confdefs.h <<_ACEOF
+#define OSI_VERSION "$PACKAGE_VERSION"
+_ACEOF
+
 
 #############################################################################
 #                 Configuration options for individual OSIs                 #

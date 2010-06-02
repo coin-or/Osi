@@ -48,10 +48,16 @@
 /* Define to 1 if the Cgl package is used */
 /* #define COIN_HAS_CGL */
 
-/* Define to 1 if the Clp package is used */
+/*
+  Define to 1 if the Clp package is used. Don't undef this unless you really
+  know what you're doing.
+*/
 #define COIN_HAS_CLP 1
 
-/* Define to 1 if the CoinUtils package is used */
+/*
+  Define to 1 if the CoinUtils package is used. Don't undef this unless you
+  really know what you're doing.
+*/
 #define COIN_HAS_COINUTILS 1
 
 /* Define to 1 if the Cplex package is used */
@@ -69,7 +75,10 @@
 /* Define to 1 if the Mosek package is used */
 /* #define COIN_HAS_MSK 1 */
 
-/* Define to 1 if the Osi package is used */
+/*
+  Define to 1 if the Osi package is used. Not a good idea to undef this, for
+  obvious reasons.
+*/
 #define COIN_HAS_OSI 1
 
 /* Define to 1 if the Osl package is used */
@@ -81,7 +90,10 @@
 /* Define to 1 if the Sym package is used */
 /* #define COIN_HAS_SYM */
 
-/* Define to 1 if the Vol package is used */
+/*
+  Define to 1 if the Vol package is used. Defined by default and useful to
+  clp, but not directly essential to Osi.
+*/
 #define COIN_HAS_VOL 1
 
 /* Define to 1 if the Xpress package is used */
@@ -93,34 +105,47 @@
 /* Define to the debug verbosity level (0 is no output) */
 #define COIN_OSI_VERBOSITY 0
 
-/* Define this variable to enable OsiDylp's informational printing features.
-   */
+/*
+  Define this variable to enable OsiDylp's informational printing features.
+*/
 /* #define ODSI_INFOMSGS 1 */
 
-/* Control OsiDylp's paranoid checks. Legal values: 0 - off; 1 - normal; 2 -
-   consistency (expensive) */
+/*
+  Control OsiDylp's paranoid checks.
+  Legal values: 0 - off; 1 - normal; 2 - consistency (expensive)
+*/
 /* #define ODSI_PARANOIA 1 */
 
-/* Define this variable to enable support for dylp's statistics collection
-   features. */
+/*
+  Define this variable to enable support for dylp's statistics collection
+  features.
+*/
 /* #define ODSI_STATISTICS */
 
 /*
   For additional information about how to set OSICBC_DFLT_SOLVER,
   OSICBC_DFLT_SOLVER_CLP, and OSICBC_DFLT_SOLVER_HPP, please see comments at
-  the beginning of OsiCbcSolverInterface.cpp.
+  the beginning of OsiCbcSolverInterface.cpp. Unless you know what you're
+  doing, you should use clp with OsiCbc. Just uncomment the next three
+  defines.
 */
-/* define to the name of the default solver interface class, e.g.,
-   OsiClpSolverInterface */
+/*
+  Define to the name of the default solver interface class, e.g.,
+  OsiClpSolverInterface.
+*/
 /* #define OSICBC_DFLT_SOLVER OsiClpSolverInterface */
 
-/* define this symbol if clp is the default solver */
+/* Define this symbol if clp is the default solver. */
 /* #define OSICBC_DFLT_SOLVER_CLP 1 */
 
-/* define to the name of the .hpp file for the default solver interface class,
-   e.g., "OsiClpSolverInterface.hpp" (include quotes) */
+/*
+  Define to the name of the .hpp file for the default solver interface class,
+  e.g., "OsiClpSolverInterface.hpp" (include quotes)
+*/
 /* #define OSICBC_DFLT_SOLVER_HPP "OsiClpSolverInterface.hpp" */
+
+#define OSI_VERSION "trunk"
 
 #endif /* HAVE_CONFIG_H */
 
-#endif /*__HAVE_COINUTILS_CONFIG_H__*/
+#endif /*__OSICONFIG_H__*/

@@ -88,6 +88,36 @@ AC_COIN_HAS_USER_LIBRARY([Xpress],[XPR],[xprs.h],[XPRSinit])
 AC_COIN_HAS_USER_LIBRARY([Gurobi],[GRB],[gurobi_c.h],[GRBloadenv])
 
 #############################################################################
+#                            Examples solver                                #
+#############################################################################
+
+# choose a solver interface that can be used in the examples
+if test $coin_has_glpk = yes ; then
+  OSI_EXAMPLES_SOLVER_NAME=OsiGlpkSolverInterface
+  OSI_EXAMPLES_SOLVER_CFLAGS="$GLPK_CFLAGS"
+  OSI_EXAMPLES_SOLVER_LIBS="-lOsiGlpk $GLPK_LIBS"
+elif test $coin_has_cpx = true ; then
+  OSI_EXAMPLES_SOLVER_NAME=OsiCpxSolverInterface
+  OSI_EXAMPLES_SOLVER_CFLAGS="-I$CPXINCDIR"
+  OSI_EXAMPLES_SOLVER_LIBS="-lOsiCpx $CPXLIB"
+elif test $coin_has_grb = true ; then
+  OSI_EXAMPLES_SOLVER_NAME=OsiGrbSolverInterface
+  OSI_EXAMPLES_SOLVER_CFLAGS="-I$GRBINCDIR"
+  OSI_EXAMPLES_SOLVER_LIBS="-lOsiGrb $GRBLIB"
+elif test $coin_has_msk = true ; then
+  OSI_EXAMPLES_SOLVER_NAME=OsiMskSolverInterface
+  OSI_EXAMPLES_SOLVER_CFLAGS="-I$MSKINCDIR"
+  OSI_EXAMPLES_SOLVER_LIBS="-lOsiMsk $MSKLIB"
+elif test $coin_has_xpr = true ; then
+  OSI_EXAMPLES_SOLVER_NAME=OsiXprSolverInterface
+  OSI_EXAMPLES_SOLVER_CFLAGS="-I$XPRINCDIR"
+  OSI_EXAMPLES_SOLVER_LIBS="-lOsiXpr $XPRLIB"
+fi
+AC_SUBST(OSI_EXAMPLES_SOLVER_NAME)
+AC_SUBST(OSI_EXAMPLES_SOLVER_CFLAGS)
+AC_SUBST(OSI_EXAMPLES_SOLVER_LIBS)
+
+#############################################################################
 #		  OSI version number                                        #
 #############################################################################
 

@@ -20,13 +20,14 @@
 
 # Author:  Andreas Waechter           IBM    2006-04-13
 
+
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkglibdir = $(libdir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
-top_builddir = ..
+top_builddir = ../..
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
 INSTALL = @INSTALL@
 install_sh_DATA = $(install_sh) -c -m 644
@@ -42,40 +43,9 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-noinst_PROGRAMS = unitTest$(EXEEXT)
-
-# Depending of what solvers are available, we add the corresponding files,
-# libraries and include dirs
-@COIN_HAS_CPX_TRUE@am__append_1 = OsiCpxSolverInterfaceTest.cpp
-@COIN_HAS_CPX_TRUE@am__append_2 = -I`$(CYGPATH_W) $(CPXINCDIR)` \
-@COIN_HAS_CPX_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiCpx`
-
-@COIN_HAS_CPX_TRUE@am__append_3 = ../src/OsiCpx/libOsiCpx.la
-@COIN_HAS_GLPK_TRUE@am__append_4 = OsiGlpkSolverInterfaceTest.cpp
-@COIN_HAS_GLPK_TRUE@am__append_5 = $(GLPK_CFLAGS) \
-@COIN_HAS_GLPK_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiGlpk`
-
-@COIN_HAS_GLPK_TRUE@am__append_6 = ../src/OsiGlpk/libOsiGlpk.la
-@COIN_HAS_GLPK_TRUE@am__append_7 = $(GLPK_LIBS)
-@COIN_HAS_MSK_TRUE@am__append_8 = OsiMskSolverInterfaceTest.cpp
-@COIN_HAS_MSK_TRUE@am__append_9 = -I`$(CYGPATH_W) $(MSKINCDIR)` \
-@COIN_HAS_MSK_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiMsk`
-
-@COIN_HAS_MSK_TRUE@am__append_10 = ../src/OsiMsk/libOsiMsk.la
-@COIN_HAS_XPR_TRUE@am__append_11 = OsiXprSolverInterfaceTest.cpp
-@COIN_HAS_XPR_TRUE@am__append_12 = -I`$(CYGPATH_W) $(XPRINCDIR)` \
-@COIN_HAS_XPR_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiXpr`
-
-@COIN_HAS_XPR_TRUE@am__append_13 = ../src/OsiXpr/libOsiXpr.la
-@COIN_HAS_GRB_TRUE@am__append_14 = OsiGrbSolverInterfaceTest.cpp
-@COIN_HAS_GRB_TRUE@am__append_15 = -I`$(CYGPATH_W) $(GRBINCDIR)` \
-@COIN_HAS_GRB_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiGrb`
-
-@COIN_HAS_GRB_TRUE@am__append_16 = ../src/OsiGrb/libOsiGrb.la
-@COIN_HAS_SAMPLE_TRUE@am__append_17 = -mpsDir=`$(CYGPATH_W) $(SAMPLE_DATA)`
-@COIN_HAS_NETLIB_TRUE@am__append_18 = -netlibDir=`$(CYGPATH_W) $(NETLIB_DATA)` -testOsiSolverInterface
-subdir = test
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
+subdir = src/unittests
+DIST_COMMON = $(includecoin_HEADERS) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
 	$(top_srcdir)/configure.ac
@@ -84,38 +54,21 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/inc/config_osi.h
 CONFIG_CLEAN_FILES =
-PROGRAMS = $(noinst_PROGRAMS)
-am__unitTest_SOURCES_DIST = unitTest.cpp OsiTestSolver.cpp \
-	OsiTestSolverInterface.cpp OsiTestSolverInterfaceIO.cpp \
-	OsiTestSolverInterfaceTest.cpp OsiCpxSolverInterfaceTest.cpp \
-	OsiGlpkSolverInterfaceTest.cpp OsiMskSolverInterfaceTest.cpp \
-	OsiXprSolverInterfaceTest.cpp OsiGrbSolverInterfaceTest.cpp
-@COIN_HAS_CPX_TRUE@am__objects_1 =  \
-@COIN_HAS_CPX_TRUE@	OsiCpxSolverInterfaceTest.$(OBJEXT)
-@COIN_HAS_GLPK_TRUE@am__objects_2 =  \
-@COIN_HAS_GLPK_TRUE@	OsiGlpkSolverInterfaceTest.$(OBJEXT)
-@COIN_HAS_MSK_TRUE@am__objects_3 =  \
-@COIN_HAS_MSK_TRUE@	OsiMskSolverInterfaceTest.$(OBJEXT)
-@COIN_HAS_XPR_TRUE@am__objects_4 =  \
-@COIN_HAS_XPR_TRUE@	OsiXprSolverInterfaceTest.$(OBJEXT)
-@COIN_HAS_GRB_TRUE@am__objects_5 =  \
-@COIN_HAS_GRB_TRUE@	OsiGrbSolverInterfaceTest.$(OBJEXT)
-am_unitTest_OBJECTS = unitTest.$(OBJEXT) OsiTestSolver.$(OBJEXT) \
-	OsiTestSolverInterface.$(OBJEXT) \
-	OsiTestSolverInterfaceIO.$(OBJEXT) \
-	OsiTestSolverInterfaceTest.$(OBJEXT) $(am__objects_1) \
-	$(am__objects_2) $(am__objects_3) $(am__objects_4) \
-	$(am__objects_5)
-unitTest_OBJECTS = $(am_unitTest_OBJECTS)
-@COIN_HAS_CPX_TRUE@am__DEPENDENCIES_1 = ../src/OsiCpx/libOsiCpx.la
-@COIN_HAS_GLPK_TRUE@am__DEPENDENCIES_2 = ../src/OsiGlpk/libOsiGlpk.la
-@COIN_HAS_MSK_TRUE@am__DEPENDENCIES_3 = ../src/OsiMsk/libOsiMsk.la
-@COIN_HAS_XPR_TRUE@am__DEPENDENCIES_4 = ../src/OsiXpr/libOsiXpr.la
-@COIN_HAS_GRB_TRUE@am__DEPENDENCIES_5 = ../src/OsiGrb/libOsiGrb.la
-unitTest_DEPENDENCIES = ../src/unittests/libOsiUnitTests.la \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2) \
-	$(am__DEPENDENCIES_3) $(am__DEPENDENCIES_4) \
-	$(am__DEPENDENCIES_5) ../src/libOsi.la
+am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
+am__vpath_adj = case $$p in \
+    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
+    *) f=$$p;; \
+  esac;
+am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
+am__installdirs = "$(DESTDIR)$(libcoindir)" \
+	"$(DESTDIR)$(includecoindir)"
+libcoinLTLIBRARIES_INSTALL = $(INSTALL)
+LTLIBRARIES = $(libcoin_LTLIBRARIES)
+libOsiUnitTests_la_LIBADD =
+am_libOsiUnitTests_la_OBJECTS = OsiColCutTest.lo OsiCutsTest.lo \
+	OsiRowCutDebuggerTest.lo OsiRowCutTest.lo \
+	OsiSolverInterfaceTest.lo
+libOsiUnitTests_la_OBJECTS = $(am_libOsiUnitTests_la_OBJECTS)
 depcomp = $(SHELL) $(top_srcdir)/../depcomp
 am__depfiles_maybe = depfiles
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
@@ -126,8 +79,18 @@ LTCXXCOMPILE = $(LIBTOOL) --tag=CXX --mode=compile $(CXX) $(DEFS) \
 CXXLD = $(CXX)
 CXXLINK = $(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(unitTest_SOURCES)
-DIST_SOURCES = $(am__unitTest_SOURCES_DIST)
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
+	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
+	$(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+SOURCES = $(libOsiUnitTests_la_SOURCES)
+DIST_SOURCES = $(libOsiUnitTests_la_SOURCES)
+includecoinHEADERS_INSTALL = $(INSTALL_HEADER)
+HEADERS = $(includecoin_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -211,7 +174,7 @@ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LDFLAGS = @LDFLAGS@
 LIBEXT = @LIBEXT@
 LIBOBJS = @LIBOBJS@
-LIBS = @LIBS@ $(am__append_7) $(COINUTILS_LIBS) $(ADDLIBS)
+LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LIBTOOLM4 = @LIBTOOLM4@
 LN_S = @LN_S@
@@ -313,35 +276,34 @@ sol_cc_compiler = @sol_cc_compiler@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 AUTOMAKE_OPTIONS = foreign
-unitTest_SOURCES = unitTest.cpp OsiTestSolver.cpp \
-	OsiTestSolverInterface.cpp OsiTestSolverInterfaceIO.cpp \
-	OsiTestSolverInterfaceTest.cpp $(am__append_1) $(am__append_4) \
-	$(am__append_8) $(am__append_11) $(am__append_14)
 
-# List libraries of COIN projects
-unitTest_LDADD = ../src/unittests/libOsiUnitTests.la $(am__append_3) \
-	$(am__append_6) $(am__append_10) $(am__append_13) \
-	$(am__append_16) ../src/libOsi.la
+########################################################################
+#                       unitTest library for Osi                       #
+########################################################################
+
+# Name of the library compiled in this directory.
+# We want it to be installed in the 'lib/coin' directory
+libcoindir = $(libdir)/coin
+libcoin_LTLIBRARIES = libOsiUnitTests.la
+libOsiUnitTests_la_SOURCES = OsiUnitTests.hpp \
+	OsiColCutTest.cpp \
+	OsiCutsTest.cpp \
+	OsiRowCutDebuggerTest.cpp \
+	OsiRowCutTest.cpp \
+	OsiSolverInterfaceTest.cpp
+
+includecoindir = $(includedir)/coin
+includecoin_HEADERS = OsiUnitTests.hpp
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows
-AM_CPPFLAGS = $(COINUTILS_CFLAGS) -I`$(CYGPATH_W) $(srcdir)/../src` \
-	-I`$(CYGPATH_W) $(srcdir)/../src/unittests` $(am__append_2) \
-	$(am__append_5) $(am__append_9) $(am__append_12) \
-	$(am__append_15)
+AM_CPPFLAGS = $(COINUTILS_CFLAGS) \
+	-I`$(CYGPATH_W) $(srcdir)/..`
+
 
 # This line is necessary to allow VPATH compilation with MS compilers
 # on Cygwin
 DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/inc
-unittestflags = $(am__append_17) $(am__append_18)
-
-########################################################################
-#                          Cleaning stuff                              #
-########################################################################
-
-# Here we list everything that is not generated by the compiler, e.g.,
-# output files of a program
-DISTCLEANFILES = *.mps *.mps.gz *.lp test2out *.out.gz *.out
 all: all-am
 
 .SUFFIXES:
@@ -355,9 +317,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  test/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  src/unittests/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  test/Makefile
+	  $(AUTOMAKE) --foreign  src/unittests/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -375,16 +337,35 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-
-clean-noinstPROGRAMS:
-	@list='$(noinst_PROGRAMS)'; for p in $$list; do \
-	  f=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
-	  echo " rm -f $$p $$f"; \
-	  rm -f $$p $$f ; \
+install-libcoinLTLIBRARIES: $(libcoin_LTLIBRARIES)
+	@$(NORMAL_INSTALL)
+	test -z "$(libcoindir)" || $(mkdir_p) "$(DESTDIR)$(libcoindir)"
+	@list='$(libcoin_LTLIBRARIES)'; for p in $$list; do \
+	  if test -f $$p; then \
+	    f=$(am__strip_dir) \
+	    echo " $(LIBTOOL) --mode=install $(libcoinLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(libcoindir)/$$f'"; \
+	    $(LIBTOOL) --mode=install $(libcoinLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(libcoindir)/$$f"; \
+	  else :; fi; \
 	done
-unitTest$(EXEEXT): $(unitTest_OBJECTS) $(unitTest_DEPENDENCIES) 
-	@rm -f unitTest$(EXEEXT)
-	$(CXXLINK) $(unitTest_LDFLAGS) $(unitTest_OBJECTS) $(unitTest_LDADD) $(LIBS)
+
+uninstall-libcoinLTLIBRARIES:
+	@$(NORMAL_UNINSTALL)
+	@set -x; list='$(libcoin_LTLIBRARIES)'; for p in $$list; do \
+	  p=$(am__strip_dir) \
+	  echo " $(LIBTOOL) --mode=uninstall rm -f '$(DESTDIR)$(libcoindir)/$$p'"; \
+	  $(LIBTOOL) --mode=uninstall rm -f "$(DESTDIR)$(libcoindir)/$$p"; \
+	done
+
+clean-libcoinLTLIBRARIES:
+	-test -z "$(libcoin_LTLIBRARIES)" || rm -f $(libcoin_LTLIBRARIES)
+	@list='$(libcoin_LTLIBRARIES)'; for p in $$list; do \
+	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
+	  test "$$dir" != "$$p" || dir=.; \
+	  echo "rm -f \"$${dir}/so_locations\""; \
+	  rm -f "$${dir}/so_locations"; \
+	done
+libOsiUnitTests.la: $(libOsiUnitTests_la_OBJECTS) $(libOsiUnitTests_la_DEPENDENCIES) 
+	$(CXXLINK) -rpath $(libcoindir) $(libOsiUnitTests_la_LDFLAGS) $(libOsiUnitTests_la_OBJECTS) $(libOsiUnitTests_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -392,16 +373,11 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiCpxSolverInterfaceTest.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiGlpkSolverInterfaceTest.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiGrbSolverInterfaceTest.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiMskSolverInterfaceTest.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiTestSolver.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiTestSolverInterface.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiTestSolverInterfaceIO.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiTestSolverInterfaceTest.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiXprSolverInterfaceTest.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unitTest.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiColCutTest.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiCutsTest.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiRowCutDebuggerTest.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiRowCutTest.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiSolverInterfaceTest.Plo@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -433,6 +409,23 @@ clean-libtool:
 distclean-libtool:
 	-rm -f libtool
 uninstall-info-am:
+install-includecoinHEADERS: $(includecoin_HEADERS)
+	@$(NORMAL_INSTALL)
+	test -z "$(includecoindir)" || $(mkdir_p) "$(DESTDIR)$(includecoindir)"
+	@list='$(includecoin_HEADERS)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(includecoinHEADERS_INSTALL) '$$d$$p' '$(DESTDIR)$(includecoindir)/$$f'"; \
+	  $(includecoinHEADERS_INSTALL) "$$d$$p" "$(DESTDIR)$(includecoindir)/$$f"; \
+	done
+
+uninstall-includecoinHEADERS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(includecoin_HEADERS)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(includecoindir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(includecoindir)/$$f"; \
+	done
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -511,8 +504,11 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(PROGRAMS)
+all-am: Makefile $(LTLIBRARIES) $(HEADERS)
 installdirs:
+	for dir in "$(DESTDIR)$(libcoindir)" "$(DESTDIR)$(includecoindir)"; do \
+	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
+	done
 install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
@@ -533,14 +529,13 @@ clean-generic:
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
-	-test -z "$(DISTCLEANFILES)" || rm -f $(DISTCLEANFILES)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-libtool clean-noinstPROGRAMS \
+clean-am: clean-generic clean-libcoinLTLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-am
@@ -559,7 +554,7 @@ info: info-am
 
 info-am:
 
-install-data-am:
+install-data-am: install-includecoinHEADERS install-libcoinLTLIBRARIES
 
 install-exec-am:
 
@@ -587,25 +582,23 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-info-am
+uninstall-am: uninstall-includecoinHEADERS uninstall-info-am \
+	uninstall-libcoinLTLIBRARIES
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
-	clean-libtool clean-noinstPROGRAMS ctags distclean \
+	clean-libcoinLTLIBRARIES clean-libtool ctags distclean \
 	distclean-compile distclean-generic distclean-libtool \
 	distclean-tags distdir dvi dvi-am html html-am info info-am \
 	install install-am install-data install-data-am install-exec \
-	install-exec-am install-info install-info-am install-man \
+	install-exec-am install-includecoinHEADERS install-info \
+	install-info-am install-libcoinLTLIBRARIES install-man \
 	install-strip installcheck installcheck-am installdirs \
 	maintainer-clean maintainer-clean-generic mostlyclean \
 	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
 	pdf pdf-am ps ps-am tags uninstall uninstall-am \
-	uninstall-info-am
+	uninstall-includecoinHEADERS uninstall-info-am \
+	uninstall-libcoinLTLIBRARIES
 
-
-test: unitTest$(EXEEXT)
-	./unitTest$(EXEEXT) $(unittestflags)
-
-.PHONY: test
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

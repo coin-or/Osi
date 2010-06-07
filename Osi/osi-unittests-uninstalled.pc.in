@@ -1,0 +1,8 @@
+prefix=@prefix@
+
+Name: OsiUnitTests
+Description: COIN-OR Open Solver Interface Unit Tests
+Version: @PACKAGE_VERSION@
+Libs: -L@ABSBUILDDIR@/src/unittests -lOsiUnitTests
+Cflags: -I@abs_source_dir@/src/unittests
+Requires: osi

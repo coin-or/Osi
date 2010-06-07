@@ -1,0 +1,8 @@
+prefix=@prefix@
+
+Name: OsiCplex
+Description: COIN-OR Open Solver Interface for CPLEX
+Version: @PACKAGE_VERSION@
+Libs: -L@ABSBUILDDIR@/src/OsiCpx -lOsiCpx @CPXLIB@
+Cflags: -I@abs_source_dir@/src/OsiCpx -I@CPXINCDIR@
+Requires: osi

@@ -13,7 +13,8 @@ AUTOMAKE_OPTIONS = foreign
 ########################################################################
 
 # Name of the library compiled in this directory.
-lib_LTLIBRARIES = libOsiXpr.la
+libcoindir = $(libdir)/coin
+libcoin_LTLIBRARIES = libOsiXpr.la
 
 # List all source files for this library, including headers
 libOsiXpr_la_SOURCES = \
@@ -26,9 +27,7 @@ libOsiXpr_la_LDFLAGS = $(LT_LDFLAGS)
 # "cygpath" stuff is necessary to compile with native compilers on Windows.
 # "top_srcdir" refers to the basic directory for the main package that is
 # being compiled.
-AM_CPPFLAGS = \
-	-I`$(CYGPATH_W) $(COINUTILSSRCDIR)/src` \
-	-I`$(CYGPATH_W) $(COINUTILSOBJDIR)/inc` \
+AM_CPPFLAGS = $(COINUTILS_CFLAGS) \
 	-I`$(CYGPATH_W) $(XPRINCDIR)` \
 	-I`$(CYGPATH_W) $(srcdir)/..`
 
@@ -41,7 +40,9 @@ DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/inc
 ########################################################################
 
 # Here list all the header files that are required by a user of the library,
-# and that therefore should be installed in 'install/coin'
+# and that therefore should be installed in 'include/coin'
 includecoindir = $(includedir)/coin
-includecoin_HEADERS = \
-	OsiXprSolverInterface.hpp
+includecoin_HEADERS = OsiXprSolverInterface.hpp
+
+pkgconfiglibdir = $(libdir)/pkgconfig
+pkgconfiglib_DATA = osi-xpress.pc

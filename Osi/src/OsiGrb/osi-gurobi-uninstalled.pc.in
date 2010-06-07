@@ -1,0 +1,8 @@
+prefix=@prefix@
+
+Name: OsiGurobi
+Description: COIN-OR Open Solver Interface for Gurobi
+Version: @PACKAGE_VERSION@
+Libs: -L@ABSBUILDDIR@/src/OsiGrb -lOsiGrb @GRBLIB@
+Cflags: -I@abs_source_dir@/src/OsiGrb -I@GRBINCDIR@
+Requires: osi

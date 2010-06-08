@@ -71,6 +71,8 @@ Osi/src/OsiGrb/osi-gurobi-uninstalled.pc.in -text
 Osi/src/OsiGrb/osi-gurobi.pc.in -text
 Osi/src/OsiMsk/osi-mosek-uninstalled.pc.in -text
 Osi/src/OsiMsk/osi-mosek.pc.in -text
+Osi/src/OsiSpx/OsiSpxSolverInterface.cpp -text
+Osi/src/OsiSpx/OsiSpxSolverInterface.hpp -text
 Osi/src/OsiXpr/osi-xpress-uninstalled.pc.in -text
 Osi/src/OsiXpr/osi-xpress.pc.in -text
 Osi/src/unittests/Makefile.am -text

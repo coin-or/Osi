@@ -74,11 +74,34 @@ inline void throwSPXerror( std::string error, std::string osimethod )
 
 void OsiSpxSolverInterface::initialSolve()
 {
-  if( soplex_.type() != soplex::SPxSolver::LEAVE )
-    soplex_.setType( soplex::SPxSolver::LEAVE );   // switch to dual simplex
+  // by default we use dual simplex
+  bool dual = true;
+
+  // unless we get the hint to use primal simplex
+  bool takeHint, gotHint;
+  OsiHintStrength strength;
+  gotHint = (getHintParam(OsiDoDualInInitial,takeHint,strength));
+  assert (gotHint);
+  if (strength!=OsiHintIgnore)
+     dual = takeHint;
+
+  // always use column representation
   if( soplex_.rep() != soplex::SPxSolver::COLUMN )
     soplex_.setRep( soplex::SPxSolver::COLUMN );
 
+  // set algorithm type
+  if( dual )
+  {
+    if( soplex_.type() != soplex::SPxSolver::LEAVE )
+      soplex_.setType( soplex::SPxSolver::LEAVE );
+  }
+  else
+  {
+    if( soplex_.type() != soplex::SPxSolver::ENTER )
+      soplex_.setType( soplex::SPxSolver::ENTER );
+  }
+
+  // solve
   try 
   {
     soplex_.solve();
@@ -89,16 +112,39 @@ void OsiSpxSolverInterface::initialSolve()
 //-----------------------------------------------------------------------------
 void OsiSpxSolverInterface::resolve()
 {
-  if( soplex_.type() != soplex::SPxSolver::LEAVE )
-    soplex_.setType( soplex::SPxSolver::LEAVE );   // switch to dual simplex
+  // by default we use dual simplex
+  bool dual = true;
+
+  // unless we get the hint to use primal simplex
+  bool takeHint, gotHint;
+  OsiHintStrength strength;
+  gotHint = (getHintParam(OsiDoDualInResolve,takeHint,strength));
+  assert (gotHint);
+  if (strength!=OsiHintIgnore)
+     dual = takeHint;
+
+  // always use column representation
   if( soplex_.rep() != soplex::SPxSolver::COLUMN )
     soplex_.setRep( soplex::SPxSolver::COLUMN );
 
+  // set algorithm type
+  if( dual )
+  {
+    if( soplex_.type() != soplex::SPxSolver::LEAVE )
+      soplex_.setType( soplex::SPxSolver::LEAVE );
+  }
+  else
+  {
+    if( soplex_.type() != soplex::SPxSolver::ENTER )
+      soplex_.setType( soplex::SPxSolver::ENTER );
+  }
+
+  // solve
   try 
   {
     soplex_.solve();
   } catch (soplex::SPxException e) {
-  	std::cerr << "SoPlex initial solve failed with exception " << e.what() << std::endl;
+  	std::cerr << "SoPlex resolve failed with exception " << e.what() << std::endl;
   }
 }
 //-----------------------------------------------------------------------------
@@ -318,6 +364,8 @@ CoinWarmStart* OsiSpxSolverInterface::getWarmStart() const
   if( soplex_.status() <= soplex::SPxSolver::NO_PROBLEM )
     return ws;
 
+  // The OSI standard assumes the artificial slack variables to have positive coefficients.  SoPlex uses the convention
+  // Ax - s = 0, lhs <= s <= rhs, so we have to invert the ON_LOWER and ON_UPPER statuses.
   for( i = 0; i < numrows; ++i )
   {
     switch( soplex_.getBasisRowStatus( i ) )
@@ -327,10 +375,10 @@ CoinWarmStart* OsiSpxSolverInterface::getWarmStart() const
       break;	  
     case soplex::SPxSolver::FIXED:
     case soplex::SPxSolver::ON_LOWER:
-      ws->setArtifStatus( i, CoinWarmStartBasis::atLowerBound );
+      ws->setArtifStatus( i, CoinWarmStartBasis::atUpperBound );
       break;
     case soplex::SPxSolver::ON_UPPER:
-      ws->setArtifStatus( i, CoinWarmStartBasis::atUpperBound );
+      ws->setArtifStatus( i, CoinWarmStartBasis::atLowerBound );
       break;
     case soplex::SPxSolver::ZERO:
       ws->setArtifStatus( i, CoinWarmStartBasis::isFree );
@@ -1334,19 +1382,27 @@ OsiSpxSolverInterface::loadProblem(const int numcols, const int numrows,
 int OsiSpxSolverInterface::readMps( const char * filename,
 				    const char * extension )
 {
-  #if 0  // here can not understand
+  #if 0
   std::string f(filename);
   std::string e(extension);
   std::string fullname = f + "." + e;
+  std::ifstream file(fullname.c_str());
+  if (!file.good()) 
+  {
+    std::cerr << "Error opening file " << fullname << " for reading!" << std::endl;
+    return 1;
+  }
 
   soplex_.clear();
-  spxintvars_.clear();
-  if( !soplex_.readFile( fullname.c_str(), NULL, NULL, &spxintvars_ ) )
+  if( !soplex_.readMPS(file, NULL, NULL, NULL) )
     throwSPXerror( "error reading file <" + fullname + ">", "readMps" );
   #endif
 
-
-  return OsiSolverInterface::readMps(filename,extension);
+  // we preserve the objective sense independent of the problem which is read
+  soplex::SPxLP::SPxSense objsen = soplex_.spxSense();
+  int retval = OsiSolverInterface::readMps(filename,extension);
+  soplex_.changeSense(objsen);
+  return retval;
 }
 
 //-----------------------------------------------------------------------------
@@ -1404,6 +1460,9 @@ OsiSpxSolverInterface::OsiSpxSolverInterface ()
 #else
   soplex::Param::setVerbose( 2 );
 #endif
+
+  // SoPlex default objective sense is maximization, thus we explicitly set it to minimization
+  soplex_.changeSense( soplex::SPxLP::MINIMIZE );
 }
 
 

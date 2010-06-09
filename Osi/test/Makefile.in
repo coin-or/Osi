@@ -342,10 +342,10 @@ unitTest_LDADD = ../src/unittests/libOsiUnitTests.la $(am__append_3) \
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows
-AM_CPPFLAGS = $(COINUTILS_CFLAGS) -I`$(CYGPATH_W) $(srcdir)/../src` \
-	-I`$(CYGPATH_W) $(srcdir)/../src/unittests` $(am__append_2) \
-	$(am__append_5) $(am__append_9) $(am__append_12) \
-	$(am__append_15) $(am__append_18)
+AM_CPPFLAGS = -I`$(CYGPATH_W) $(srcdir)/../src` -I`$(CYGPATH_W) \
+	$(srcdir)/../src/unittests` $(COINUTILS_CFLAGS) \
+	$(am__append_2) $(am__append_5) $(am__append_9) \
+	$(am__append_12) $(am__append_15) $(am__append_18)
 
 # This line is necessary to allow VPATH compilation with MS compilers
 # on Cygwin

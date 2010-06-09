@@ -30,6 +30,8 @@
   Uncomment to disable a solver that's included in the build. Leave them
   commented if you're happy with running the unitTest for all solvers in the
   build.
+  Commenting USETESTSOLVER disables the use of the OsiTestSolver for testing
+  in case none of the other solver interfaces is available.
 */
 
 // #undef COIN_HAS_XPR
@@ -37,23 +39,55 @@
 // #undef COIN_HAS_GLPK
 // #undef COIN_HAS_MSK
 // #undef COIN_HAS_GRB
+// #undef COIN_HAS_SPX
+#define USETESTSOLVER
 
 #ifdef COIN_HAS_XPR
 #include "OsiXprSolverInterface.hpp"
+#ifdef USETESTSOLVER
+#undef USETESTSOLVER
 #endif
+#endif
+
 #ifdef COIN_HAS_CPX
 #include "OsiCpxSolverInterface.hpp"
+#undef USETESTSOLVER
+#ifdef USETESTSOLVER
+#undef USETESTSOLVER
 #endif
+#endif
+
 #ifdef COIN_HAS_GLPK
 #include "OsiGlpkSolverInterface.hpp"
+#ifdef USETESTSOLVER
+#undef USETESTSOLVER
 #endif
+#endif
+
 #ifdef COIN_HAS_MSK
 #include "OsiMskSolverInterface.hpp"
+#ifdef USETESTSOLVER
+#undef USETESTSOLVER
 #endif
+#endif
+
 #ifdef COIN_HAS_GRB
 #include "OsiGrbSolverInterface.hpp"
+#ifdef USETESTSOLVER
+#undef USETESTSOLVER
 #endif
+#endif
+
+#ifdef COIN_HAS_SPX
+#include "OsiSpxSolverInterface.hpp"
+#ifdef USETESTSOLVER
+#undef USETESTSOLVER
+#endif
+#endif
+
+#ifdef USETESTSOLVER
 #include "OsiTestSolverInterface.hpp"
+#endif
 
 namespace {
 
@@ -299,6 +333,7 @@ try {
   }
 #endif
 
+#ifdef USETESTSOLVER
   {
     OsiTestSolverInterface testSi;
     testingMessage( "Testing OsiRowCut with OsiTestSolverInterface\n" );
@@ -309,6 +344,7 @@ try {
     testingMessage( "Testing OsiColCut with OsiTestSolverInterface\n" );
     OsiColCutUnitTest(&testSi,mpsDir);
   }
+#endif
 
 #ifdef COIN_HAS_GLPK
   {
@@ -364,6 +400,24 @@ try {
   }
 #endif
 
+#ifdef COIN_HAS_SPX
+  {
+    OsiSpxSolverInterface spxSi;
+    testingMessage( "Testing OsiRowCut with OsiSpxSolverInterface\n" );
+    OsiRowCutUnitTest(&spxSi,mpsDir);
+  }
+  {
+    OsiSpxSolverInterface spxSi;
+    testingMessage( "Testing OsiColCut with OsiSpxSolverInterface\n" );
+    OsiColCutUnitTest(&spxSi,mpsDir);
+  }
+  {
+    OsiSpxSolverInterface spxSi;
+    testingMessage( "Testing OsiRowCutDebugger with OsiSpxSolverInterface\n" );
+    OsiRowCutDebuggerUnitTest(&spxSi,mpsDir);
+  }
+#endif
+
   testingMessage( "Testing OsiCuts\n" );
   OsiCutsUnitTest();
 
@@ -391,8 +445,10 @@ try {
   OsiCpxSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
+#ifdef USETESTSOLVER
   testingMessage( "Testing OsiTestSolverInterface\n" );
   totalErrCnt += OsiTestSolverInterfaceUnitTest(mpsDir,netlibDir);
+#endif
   
 #ifdef COIN_HAS_GLPK
   testingMessage( "Testing OsiGlpkSolverInterface\n" );
@@ -407,6 +463,11 @@ try {
 #ifdef COIN_HAS_GRB
   testingMessage( "Testing OsiGrbSolverInterface\n" );
   OsiGrbSolverInterfaceUnitTest(mpsDir,netlibDir);
+#endif
+
+#ifdef COIN_HAS_SPX
+  testingMessage( "Testing OsiSpxSolverInterface\n" );
+  OsiSpxSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
 /*
@@ -435,11 +496,17 @@ try {
     OsiSolverInterface * MskSi = new OsiMskSolverInterface;
     vecSi.push_back(MskSi);
 #endif
+#ifdef USETESTSOLVER
     OsiSolverInterface * testSi = new OsiTestSolverInterface;
     vecSi.push_back(testSi);
+#endif
 #   if COIN_HAS_GRB
     OsiSolverInterface * grbSi = new OsiGrbSolverInterface;
     vecSi.push_back(grbSi);
+#endif
+#   if COIN_HAS_SPX
+    OsiSolverInterface * spxSi = new OsiSpxSolverInterface;
+    vecSi.push_back(spxSi);
 #endif
 
     testingMessage( "Testing OsiSolverInterface on Netlib problems.\n" );

@@ -66,6 +66,9 @@ endif
 if COIN_HAS_GRB
   SUBDIRS += OsiGrb
 endif
+if COIN_HAS_SPX
+  SUBDIRS += OsiSpx
+endif
 
 ########################################################################
 #                Headers that need to be installed                     #

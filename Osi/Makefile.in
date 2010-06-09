@@ -71,6 +71,7 @@ DIST_COMMON = README $(am__configure_deps) \
 	$(top_srcdir)/src/OsiGlpk/osi-glpk-uninstalled.pc.in \
 	$(top_srcdir)/src/OsiGrb/osi-gurobi-uninstalled.pc.in \
 	$(top_srcdir)/src/OsiMsk/osi-mosek-uninstalled.pc.in \
+	$(top_srcdir)/src/OsiSpx/osi-soplex-uninstalled.pc.in \
 	$(top_srcdir)/src/OsiXpr/osi-xpress-uninstalled.pc.in AUTHORS
 @HAVE_EXTERNALS_TRUE@am__append_2 = Externals
 @HAVE_EXTERNALS_TRUE@am__append_3 = .Externals-stamp
@@ -88,7 +89,7 @@ CONFIG_CLEAN_FILES = examples/Makefile osi.pc osi-uninstalled.pc \
 	osi-unittests.pc osi-unittests-uninstalled.pc \
 	osi-cplex-uninstalled.pc osi-glpk-uninstalled.pc \
 	osi-gurobi-uninstalled.pc osi-mosek-uninstalled.pc \
-	osi-xpress-uninstalled.pc
+	osi-xpress-uninstalled.pc osi-soplex-uninstalled.pc
 SOURCES =
 DIST_SOURCES =
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
@@ -162,6 +163,8 @@ COIN_HAS_PKGCONFIG_FALSE = @COIN_HAS_PKGCONFIG_FALSE@
 COIN_HAS_PKGCONFIG_TRUE = @COIN_HAS_PKGCONFIG_TRUE@
 COIN_HAS_SAMPLE_FALSE = @COIN_HAS_SAMPLE_FALSE@
 COIN_HAS_SAMPLE_TRUE = @COIN_HAS_SAMPLE_TRUE@
+COIN_HAS_SPX_FALSE = @COIN_HAS_SPX_FALSE@
+COIN_HAS_SPX_TRUE = @COIN_HAS_SPX_TRUE@
 COIN_HAS_XPR_FALSE = @COIN_HAS_XPR_FALSE@
 COIN_HAS_XPR_TRUE = @COIN_HAS_XPR_TRUE@
 COIN_PKG_CONFIG_PATH = @COIN_PKG_CONFIG_PATH@
@@ -246,6 +249,8 @@ SAMPLE_DATA = @SAMPLE_DATA@
 SAMPLE_LIBS = @SAMPLE_LIBS@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
+SPXINCDIR = @SPXINCDIR@
+SPXLIB = @SPXLIB@
 STRIP = @STRIP@
 VERSION = @VERSION@
 VPATH_DISTCLEANFILES = @VPATH_DISTCLEANFILES@
@@ -412,6 +417,8 @@ osi-gurobi-uninstalled.pc: $(top_builddir)/config.status $(top_srcdir)/src/OsiGr
 osi-mosek-uninstalled.pc: $(top_builddir)/config.status $(top_srcdir)/src/OsiMsk/osi-mosek-uninstalled.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 osi-xpress-uninstalled.pc: $(top_builddir)/config.status $(top_srcdir)/src/OsiXpr/osi-xpress-uninstalled.pc.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+osi-soplex-uninstalled.pc: $(top_builddir)/config.status $(top_srcdir)/src/OsiSpx/osi-soplex-uninstalled.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 
 mostlyclean-libtool:
@@ -593,7 +600,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkdir_p) $(distdir)/. $(distdir)/.. $(distdir)/../BuildTools $(distdir)/examples $(distdir)/inc $(distdir)/src/OsiCpx $(distdir)/src/OsiGlpk $(distdir)/src/OsiGrb $(distdir)/src/OsiMsk $(distdir)/src/OsiXpr
+	$(mkdir_p) $(distdir)/. $(distdir)/.. $(distdir)/../BuildTools $(distdir)/examples $(distdir)/inc $(distdir)/src/OsiCpx $(distdir)/src/OsiGlpk $(distdir)/src/OsiGrb $(distdir)/src/OsiMsk $(distdir)/src/OsiSpx $(distdir)/src/OsiXpr
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \

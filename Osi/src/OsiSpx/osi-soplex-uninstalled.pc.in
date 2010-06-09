@@ -1,0 +1,8 @@
+prefix=@prefix@
+
+Name: OsiSoplex
+Description: COIN-OR Open Solver Interface for SoPlex
+Version: @PACKAGE_VERSION@
+Libs: -L@ABSBUILDDIR@/src/OsiSpx -lOsiSpx @SPXLIB@
+Cflags: -I@abs_source_dir@/src/OsiSpx -I@SPXINCDIR@
+Requires: osi

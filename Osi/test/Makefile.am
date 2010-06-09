@@ -25,9 +25,10 @@ unitTest_LDADD = ../src/unittests/libOsiUnitTests.la
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows
-AM_CPPFLAGS = $(COINUTILS_CFLAGS) \
+AM_CPPFLAGS = \
 	-I`$(CYGPATH_W) $(srcdir)/../src` \
-	-I`$(CYGPATH_W) $(srcdir)/../src/unittests`
+	-I`$(CYGPATH_W) $(srcdir)/../src/unittests` \
+	$(COINUTILS_CFLAGS)
 
 # This line is necessary to allow VPATH compilation with MS compilers
 # on Cygwin
@@ -70,6 +71,13 @@ if COIN_HAS_GRB
   AM_CPPFLAGS += -I`$(CYGPATH_W) $(GRBINCDIR)` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiGrb`
   unitTest_LDADD += ../src/OsiGrb/libOsiGrb.la
+endif
+
+if COIN_HAS_SPX
+  unitTest_SOURCES += OsiSpxSolverInterfaceTest.cpp
+  AM_CPPFLAGS += -I`$(CYGPATH_W) $(SPXINCDIR)` \
+	-I`$(CYGPATH_W) $(srcdir)/../src/OsiSpx`
+  unitTest_LDADD += ../src/OsiSpx/libOsiSpx.la
 endif
 
 unitTest_LDADD += ../src/libOsi.la

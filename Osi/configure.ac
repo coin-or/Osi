@@ -86,6 +86,7 @@ AC_COIN_HAS_USER_LIBRARY([Cplex],[CPX],[cplex.h],[CPXgetstat])
 AC_COIN_HAS_USER_LIBRARY([Mosek],[MSK],[mosek.h],[MSK_makeenv])
 AC_COIN_HAS_USER_LIBRARY([Xpress],[XPR],[xprs.h],[XPRSinit])
 AC_COIN_HAS_USER_LIBRARY([Gurobi],[GRB],[gurobi_c.h],[GRBloadenv])
+AC_COIN_HAS_USER_LIBRARY([Soplex],[SPX],[soplex.h])
 
 #############################################################################
 #                            Examples solver                                #
@@ -112,6 +113,10 @@ elif test $coin_has_xpr = true ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiXprSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="-I$XPRINCDIR"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiXpr $XPRLIB"
+elif test $coin_has_spx = true ; then
+  OSI_EXAMPLES_SOLVER_NAME=OsiSpxSolverInterface
+  OSI_EXAMPLES_SOLVER_CFLAGS="-I$SPXINCDIR"
+  OSI_EXAMPLES_SOLVER_LIBS="-lOsiSpx $SPXLIB"
 fi
 AC_SUBST(OSI_EXAMPLES_SOLVER_NAME)
 AC_SUBST(OSI_EXAMPLES_SOLVER_CFLAGS)
@@ -177,6 +182,7 @@ AC_CONFIG_FILES([Makefile
                  src/OsiMsk/Makefile
                  src/OsiXpr/Makefile
                  src/OsiGrb/Makefile
+                 src/OsiSpx/Makefile
                  src/unittests/Makefile
                  test/Makefile
                  osi.pc osi-uninstalled.pc
@@ -205,6 +211,11 @@ fi
 if test $coin_has_xpr = true ; then
   AC_CONFIG_FILES([src/OsiXpr/osi-xpress.pc
                    osi-xpress-uninstalled.pc:src/OsiXpr/osi-xpress-uninstalled.pc.in])
+fi
+
+if test $coin_has_spx = true ; then
+  AC_CONFIG_FILES([src/OsiSpx/osi-soplex.pc
+                   osi-soplex-uninstalled.pc:src/OsiSpx/osi-soplex-uninstalled.pc.in])
 fi
 
 # Here put the location and name of the configuration header file

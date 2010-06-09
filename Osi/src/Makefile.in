@@ -48,6 +48,7 @@ host_triplet = @host@
 @COIN_HAS_MSK_TRUE@am__append_3 = OsiMsk
 @COIN_HAS_XPR_TRUE@am__append_4 = OsiXpr
 @COIN_HAS_GRB_TRUE@am__append_5 = OsiGrb
+@COIN_HAS_SPX_TRUE@am__append_6 = OsiSpx
 subdir = src
 DIST_COMMON = $(includecoin_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
@@ -105,7 +106,7 @@ includecoinHEADERS_INSTALL = $(INSTALL_HEADER)
 HEADERS = $(includecoin_HEADERS)
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = unittests OsiCpx OsiGlpk OsiMsk OsiXpr OsiGrb
+DIST_SUBDIRS = unittests OsiCpx OsiGlpk OsiMsk OsiXpr OsiGrb OsiSpx
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ABSBUILDDIR = @ABSBUILDDIR@
 ACLOCAL = @ACLOCAL@
@@ -147,6 +148,8 @@ COIN_HAS_PKGCONFIG_FALSE = @COIN_HAS_PKGCONFIG_FALSE@
 COIN_HAS_PKGCONFIG_TRUE = @COIN_HAS_PKGCONFIG_TRUE@
 COIN_HAS_SAMPLE_FALSE = @COIN_HAS_SAMPLE_FALSE@
 COIN_HAS_SAMPLE_TRUE = @COIN_HAS_SAMPLE_TRUE@
+COIN_HAS_SPX_FALSE = @COIN_HAS_SPX_FALSE@
+COIN_HAS_SPX_TRUE = @COIN_HAS_SPX_TRUE@
 COIN_HAS_XPR_FALSE = @COIN_HAS_XPR_FALSE@
 COIN_HAS_XPR_TRUE = @COIN_HAS_XPR_TRUE@
 COIN_PKG_CONFIG_PATH = @COIN_PKG_CONFIG_PATH@
@@ -231,6 +234,8 @@ SAMPLE_DATA = @SAMPLE_DATA@
 SAMPLE_LIBS = @SAMPLE_LIBS@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
+SPXINCDIR = @SPXINCDIR@
+SPXLIB = @SPXLIB@
 STRIP = @STRIP@
 VERSION = @VERSION@
 VPATH_DISTCLEANFILES = @VPATH_DISTCLEANFILES@
@@ -337,7 +342,7 @@ DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/inc
 # Now we check into which directories to recurse, and which subdirectory
 # libraries to include
 SUBDIRS = unittests $(am__append_1) $(am__append_2) $(am__append_3) \
-	$(am__append_4) $(am__append_5)
+	$(am__append_4) $(am__append_5) $(am__append_6)
 
 ########################################################################
 #                Headers that need to be installed                     #

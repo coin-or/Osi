@@ -44,8 +44,11 @@ Osi/MSVisualStudio/v9/libOsiClp/libOsiClp.vcproj -text
 Osi/MSVisualStudio/v9/libOsiSym/libOsiSym.vcproj -text
 Osi/MSVisualStudio/v9/libOsiVol/libOsiVol.vcproj -text
 Osi/README -text
+Osi/config.guess -text
+Osi/config.sub -text
 Osi/configure -text
 Osi/configure.ac -text
+Osi/depcomp -text
 Osi/examples/Makefile.in -text
 Osi/examples/README -text
 Osi/examples/basic.cpp -text
@@ -55,6 +58,9 @@ Osi/examples/parameters.cpp -text
 Osi/examples/query.cpp -text
 Osi/examples/specific.cpp -text
 Osi/inc/config_osi.h.in -text
+Osi/install-sh -text
+Osi/ltmain.sh -text
+Osi/missing -text
 Osi/osi-uninstalled.pc.in -text
 Osi/osi-unittests-uninstalled.pc.in -text
 Osi/osi-unittests.pc.in -text

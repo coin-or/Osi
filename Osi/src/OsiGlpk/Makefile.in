@@ -68,7 +68,7 @@ LTLIBRARIES = $(libcoin_LTLIBRARIES)
 libOsiGlpk_la_LIBADD =
 am_libOsiGlpk_la_OBJECTS = OsiGlpkSolverInterface.lo
 libOsiGlpk_la_OBJECTS = $(am_libOsiGlpk_la_OBJECTS)
-depcomp = $(SHELL) $(top_srcdir)/../depcomp
+depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)

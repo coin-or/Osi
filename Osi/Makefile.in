@@ -58,11 +58,8 @@ host_triplet = @host@
 # included in the tarball
 @ALWAYS_FALSE@am__append_1 = test
 DIST_COMMON = README $(am__configure_deps) \
-	$(srcdir)/../BuildTools/Makemain.inc $(srcdir)/../config.guess \
-	$(srcdir)/../config.sub $(srcdir)/../install-sh \
-	$(srcdir)/../ltmain.sh $(srcdir)/../missing \
-	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(srcdir)/osi-uninstalled.pc.in \
+	$(srcdir)/BuildTools/Makemain.inc $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in $(srcdir)/osi-uninstalled.pc.in \
 	$(srcdir)/osi-unittests-uninstalled.pc.in \
 	$(srcdir)/osi-unittests.pc.in $(srcdir)/osi.pc.in \
 	$(top_srcdir)/configure $(top_srcdir)/examples/Makefile.in \
@@ -72,7 +69,8 @@ DIST_COMMON = README $(am__configure_deps) \
 	$(top_srcdir)/src/OsiGrb/osi-gurobi-uninstalled.pc.in \
 	$(top_srcdir)/src/OsiMsk/osi-mosek-uninstalled.pc.in \
 	$(top_srcdir)/src/OsiSpx/osi-soplex-uninstalled.pc.in \
-	$(top_srcdir)/src/OsiXpr/osi-xpress-uninstalled.pc.in AUTHORS
+	$(top_srcdir)/src/OsiXpr/osi-xpress-uninstalled.pc.in AUTHORS \
+	config.guess config.sub depcomp install-sh ltmain.sh missing
 @HAVE_EXTERNALS_TRUE@am__append_2 = Externals
 @HAVE_EXTERNALS_TRUE@am__append_3 = .Externals-stamp
 subdir = .
@@ -350,7 +348,7 @@ all: all-recursive
 .SUFFIXES:
 am--refresh:
 	@:
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/../BuildTools/Makemain.inc $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/BuildTools/Makemain.inc $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -600,7 +598,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkdir_p) $(distdir)/. $(distdir)/.. $(distdir)/../BuildTools $(distdir)/examples $(distdir)/inc $(distdir)/src/OsiCpx $(distdir)/src/OsiGlpk $(distdir)/src/OsiGrb $(distdir)/src/OsiMsk $(distdir)/src/OsiSpx $(distdir)/src/OsiXpr
+	$(mkdir_p) $(distdir)/. $(distdir)/BuildTools $(distdir)/examples $(distdir)/inc $(distdir)/src/OsiCpx $(distdir)/src/OsiGlpk $(distdir)/src/OsiGrb $(distdir)/src/OsiMsk $(distdir)/src/OsiSpx $(distdir)/src/OsiXpr
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \

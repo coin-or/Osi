@@ -56,11 +56,11 @@ COININCDIR = @abs_include_dir@/coin
 COINLIBDIR = @abs_lib_dir@/coin
 
 # Libraries that may be necessary to link with Osi
-LIBS = @COINUTILS_LIBS@ -L$(COINLIBDIR) -lOsi @ADDLIBS@ @OSI_EXAMPLES_SOLVER_LIBS@
+LIBS = @COINUTILS_LIBS@ -L$(COINLIBDIR) -L$(COINLIBDIR)/ThirdParty -lOsi @ADDLIBS@  @OSI_EXAMPLES_SOLVER_LIBS@
 
 # Necessary Include dirs (we use the CYGPATH_W variables to allow
 # compilation with Windows compilers)
-INCL = @COINUTILS_CFLAGS@ -I`$(CYGPATH_W) $(COININCDIR)` $(ADDINCFLAGS)
+INCL = -I`$(CYGPATH_W) $(COININCDIR)` @COINUTILS_CFLAGS@ $(ADDINCFLAGS)
 
 # The following is necessary under cygwin, if native compilers are used
 CYGPATH_W = @CYGPATH_W@

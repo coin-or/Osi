@@ -1,7 +1,8 @@
-//  LAST EDIT: Fri Aug 31 13:54:15 2001 by Tobias Pfender (opt14!bzfpfend) 
 //-----------------------------------------------------------------------------
-// name:     OSI Interface for SOPLEX
-// author:   Tobias Pfender
+// name:     OSI Interface for SoPlex >= 1.4.2c
+// authors:  Tobias Pfender
+//           Ambros Gleixner
+//           Wei Huang
 //           Konrad-Zuse-Zentrum Berlin (Germany)
 //           email: pfender@zib.de
 // date:     01/16/2002
@@ -9,21 +10,22 @@
 //-----------------------------------------------------------------------------
 // Copyright (C) 2002, Tobias Pfender, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// Last edit: $Id$
 
 #ifndef OsiSpxSolverInterface_H
 #define OsiSpxSolverInterface_H
 
 #include <string>
-#include "spxsolver.h"
+#include "soplex.h"
 #include "OsiSolverInterface.hpp"
 #include "CoinWarmStartBasis.hpp"
 
-/** SOPLEX Solver Interface
+/** SoPlex Solver Interface
 
-    Instantiation of OsiSpxSolverInterface for SOPLEX
+    Instantiation of OsiSpxSolverInterface for SoPlex
 */
 
-class OsiSpxSolverInterface : virtual public OsiSolverInterface {
+class OsiSpxSolverInterface : virtual public OsiSolverInterface, public soplex::SoPlex {
   friend void OsiSpxSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
   
 public:
@@ -606,8 +608,8 @@ protected:
 
   /**@name Protected member data */
   //@{
-  /// SOPLEX solver object
-  soplex::SPxSolver spxsolver_;
+  /// SoPlex solver object
+  soplex::SoPlex soplex_;
   //@}
 
   
@@ -670,13 +672,13 @@ private:
   soplex::DIdxSet   spxintvars_;
 
   /// Hotstart information
-  soplex::SoPlex::VarStatus *hotStartCStat_;
+  soplex::SPxSolver::VarStatus *hotStartCStat_;
   int                       hotStartCStatSize_;
-  soplex::SoPlex::VarStatus *hotStartRStat_;
+  soplex::SPxSolver::VarStatus *hotStartRStat_;
   int                       hotStartRStatSize_;
   int                       hotStartMaxIteration_;
 
-  /**@name Cached information derived from the SOPLEX model */
+  /**@name Cached information derived from the SoPlex model */
   //@{
   /// Pointer to objective Vector
   mutable soplex::DVector *obj_;

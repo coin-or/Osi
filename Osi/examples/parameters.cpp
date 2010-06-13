@@ -15,7 +15,7 @@ main(void)
   si = new OSIXXX;
 
    // Read in an mps file.  This one's from the MIPLIB library.
-#if defined(COIN_HAS_SAMPLE) && defined(SAMPLEDIR)
+#if defined(SAMPLEDIR)
    si->readMps(SAMPLEDIR "/p0033");
 #else
    fprintf(stderr, "Do not know where to find sample MPS files.\n");

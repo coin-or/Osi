@@ -22,7 +22,12 @@ main(void)
    // Could tell Clp many other things
 
    // Read in an mps file.  This one's from the MIPLIB library.
-   si->readMps("../../Data/Sample/p0033");
+#if defined(SAMPLEDIR)
+   si->readMps(SAMPLEDIR "/p0033");
+#else
+   fprintf(stderr, "Do not know where to find sample MPS files.\n");
+   exit(1);
+#endif
 
    // Solve the (relaxation of the) problem
    si->initialSolve();

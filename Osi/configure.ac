@@ -123,12 +123,6 @@ AC_SUBST(OSI_EXAMPLES_SOLVER_CFLAGS)
 AC_SUBST(OSI_EXAMPLES_SOLVER_LIBS)
 
 #############################################################################
-#		  OSI version number                                        #
-#############################################################################
-
-AC_DEFINE_UNQUOTED(OSI_VERSION, "$PACKAGE_VERSION", "Version of OSI")
-
-#############################################################################
 #                 Configuration options for individual OSIs                 #
 #############################################################################
 

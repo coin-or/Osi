@@ -69,6 +69,7 @@
 /* Define to the debug verbosity level (0 is no output) */
 #define COIN_OSI_VERBOSITY 0
 
+/* Osi version */
 #define OSI_VERSION "trunk"
 
 #endif /* HAVE_CONFIG_H */

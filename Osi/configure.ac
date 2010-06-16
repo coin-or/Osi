@@ -38,7 +38,7 @@ AC_PREFIX_DEFAULT([`pwd`])
 AC_CANONICAL_BUILD
 
 # A bit of initial setup (ADDLIBS, FADDLIBS)
-AC_COIN_PROJECTDIR_INIT
+AC_COIN_PROJECTDIR_INIT(Osi)
 
 # Check if user wants to produce debugging code
 AC_COIN_DEBUG_COMPILE(Osi)
@@ -87,13 +87,6 @@ AC_COIN_HAS_GLPK(Glpk)
 # We need Ampl in case we're using Cbc and it's build with Ampl.
 
 AC_COIN_HAS_ASL
-
-
-#############################################################################
-#		  OSI version number                                        #
-#############################################################################
-
-AC_DEFINE_UNQUOTED(OSI_VERSION, "$PACKAGE_VERSION", "Version of OSI")
 
 #############################################################################
 #                 Configuration options for individual OSIs                 #

@@ -69,7 +69,7 @@
 /* SVN revision number of project */
 #undef OSI_SVN_REV
 
-/* "Version of OSI" */
+/* Version number of project */
 #undef OSI_VERSION
 
 /* Name of package */

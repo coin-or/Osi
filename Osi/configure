@@ -20724,7 +20724,7 @@ if test "${with_coinutils_lib+set}" = set; then
   withval="$with_coinutils_lib"
   coin_has_coinutils=yes
        COINUTILS_LIBS="$withval"
-       ADDLIBS="$ADDLIBS $withval"
+       ADDLIBS="$withval $ADDLIBS"
 
 fi;
 
@@ -21015,7 +21015,7 @@ if test $coin_has_coinutils != "skipping" ; then
     fi
     COINUTILS_DATA=`sed -n -e 's/datadir=//gp' ../CoinUtils/coinutils-uninstalled.pc`
 
-    ADDLIBS="$ADDLIBS $COINUTILS_LIBS"
+    ADDLIBS="$COINUTILS_LIBS $ADDLIBS"
        REQUIREDPACKAGES="coinutils $REQUIREDPACKAGES"
 
 

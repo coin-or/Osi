@@ -4,6 +4,6 @@ libdir=@ABSBUILDDIR@/src
 Name: Osi
 Description: COIN-OR Open Solver Interface
 Version: @PACKAGE_VERSION@
-Libs: -L${libdir} -lOsi
+Libs: -L${libdir} -lOsi @PCADDLIBS@
 Cflags: -I@abs_source_dir@/src -I@ABSBUILDDIR@/inc
 Requires: @REQUIREDPACKAGES@

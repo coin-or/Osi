@@ -54,24 +54,9 @@ AC_COIN_INIT_AUTO_TOOLS
 #############################################################################
 
 AC_COIN_HAS_MODULE(CoinUtils, [coinutils = trunk])
-if test $coin_has_coinutils != yes ; then
-  #if we have to use the fallback routines, then obviously it will not find CoinUtils dependencies
-  #thus, we check whether ThirdParty/Blas and ThirdParty/Lapack have been setup and
-  #assume that if present then they are dependencies of CoinUtils
-  AC_COIN_HAS_MODULE_FALLBACK(Blas,   [coinblas],   [../ThirdParty/Blas],   [required=0 dodefine=0 doconditional=0])
-  AC_COIN_HAS_MODULE_FALLBACK(Lapack, [coinlapack], [../ThirdParty/Lapack], [required=0 dodefine=0 doconditional=0])
-fi
-AC_COIN_HAS_MODULE_FALLBACK(CoinUtils, [coinutils], [../CoinUtils])
-if test $coin_has_coinutils != yes ; then
-  AC_MSG_ERROR([Required package CoinUtils not available.])
-fi
-#so if we had to do find Blas and Lapack separately, then add their linker flags to the CoinUtils flags
-#actually the libs may already be included in libCoinUtils, but we may still need the fortran library flags
-COINUTILS_LIBS="$COINUTILS_LIBS $BLAS_LIBS $LAPACK_LIBS"
-
-AC_COIN_HAS_MODULE(Sample, [coindatasample],   [required=0], [../Data/Sample])
-AC_COIN_HAS_MODULE(Netlib, [coindatanetlib],   [required=0], [../Data/Netlib])
-AC_COIN_HAS_MODULE(Glpk,   [coinglpk >= 4.39], [required=0], [../ThirdParty/Glpk])
+AC_COIN_HAS_MODULE(Sample,    [coindatasample],   [required=0])
+AC_COIN_HAS_MODULE(Netlib,    [coindatanetlib],   [required=0])
+AC_COIN_HAS_MODULE(Glpk,      [coinglpk >= 4.39], [required=0])
 
 #############################################################################
 #                            Third party solvers                            #

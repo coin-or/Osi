@@ -147,6 +147,12 @@ if test "$GXX" = "yes"; then
 fi
 AC_SUBST(MSKCXXFLAGS)
 
+#############################################################################
+#                  Check for doxygen                                        #
+#############################################################################
+
+AC_COIN_DOXYGEN(CoinUtils)
+
 ##############################################################################
 #                   Finishing up by writing all the output                   #
 ##############################################################################
@@ -196,6 +202,8 @@ if test $coin_has_spx = true ; then
   AC_CONFIG_FILES([src/OsiSpx/osi-soplex.pc
                    osi-soplex-uninstalled.pc:src/OsiSpx/osi-soplex-uninstalled.pc.in])
 fi
+
+AC_CONFIG_FILES([doxydoc/doxygen.conf])
 
 # Here put the location and name of the configuration header file
 AC_CONFIG_HEADER([inc/config_osi.h])

@@ -62,7 +62,8 @@ DIST_COMMON = README $(am__configure_deps) \
 	$(srcdir)/Makefile.in $(srcdir)/osi-uninstalled.pc.in \
 	$(srcdir)/osi-unittests-uninstalled.pc.in \
 	$(srcdir)/osi-unittests.pc.in $(srcdir)/osi.pc.in \
-	$(top_srcdir)/configure $(top_srcdir)/examples/Makefile.in \
+	$(top_srcdir)/configure $(top_srcdir)/doxydoc/doxygen.conf.in \
+	$(top_srcdir)/examples/Makefile.in \
 	$(top_srcdir)/inc/config_osi.h.in \
 	$(top_srcdir)/src/OsiCpx/osi-cplex-uninstalled.pc.in \
 	$(top_srcdir)/src/OsiGlpk/osi-glpk-uninstalled.pc.in \
@@ -87,7 +88,8 @@ CONFIG_CLEAN_FILES = examples/Makefile osi.pc osi-uninstalled.pc \
 	osi-unittests.pc osi-unittests-uninstalled.pc \
 	osi-cplex-uninstalled.pc osi-glpk-uninstalled.pc \
 	osi-gurobi-uninstalled.pc osi-mosek-uninstalled.pc \
-	osi-xpress-uninstalled.pc osi-soplex-uninstalled.pc
+	osi-xpress-uninstalled.pc osi-soplex-uninstalled.pc \
+	doxydoc/doxygen.conf
 SOURCES =
 DIST_SOURCES =
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
@@ -282,6 +284,12 @@ build_alias = @build_alias@
 build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
+coin_doxy_excludes = @coin_doxy_excludes@
+coin_doxy_logname = @coin_doxy_logname@
+coin_doxy_tagfiles = @coin_doxy_tagfiles@
+coin_doxy_tagname = @coin_doxy_tagname@
+coin_doxy_usedot = @coin_doxy_usedot@
+coin_have_doxygen = @coin_have_doxygen@
 datadir = @datadir@
 exec_prefix = @exec_prefix@
 have_autoconf = @have_autoconf@
@@ -416,6 +424,8 @@ osi-mosek-uninstalled.pc: $(top_builddir)/config.status $(top_srcdir)/src/OsiMsk
 osi-xpress-uninstalled.pc: $(top_builddir)/config.status $(top_srcdir)/src/OsiXpr/osi-xpress-uninstalled.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 osi-soplex-uninstalled.pc: $(top_builddir)/config.status $(top_srcdir)/src/OsiSpx/osi-soplex-uninstalled.pc.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+doxydoc/doxygen.conf: $(top_builddir)/config.status $(top_srcdir)/doxydoc/doxygen.conf.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 
 mostlyclean-libtool:
@@ -580,7 +590,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkdir_p) $(distdir)/. $(distdir)/BuildTools $(distdir)/examples $(distdir)/inc $(distdir)/src/OsiCpx $(distdir)/src/OsiGlpk $(distdir)/src/OsiGrb $(distdir)/src/OsiMsk $(distdir)/src/OsiSpx $(distdir)/src/OsiXpr
+	$(mkdir_p) $(distdir)/. $(distdir)/BuildTools $(distdir)/doxydoc $(distdir)/examples $(distdir)/inc $(distdir)/src/OsiCpx $(distdir)/src/OsiGlpk $(distdir)/src/OsiGrb $(distdir)/src/OsiMsk $(distdir)/src/OsiSpx $(distdir)/src/OsiXpr
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -840,7 +850,15 @@ test: all
 
 unitTest: test
 
-clean-local:
+# Doxygen documentation
+
+doxydoc:
+	doxygen doxydoc/doxygen.conf
+
+clean-doxydoc:
+	( cd doxydoc ; rm -rf html *.log *.tag )
+
+clean-local: clean-doxydoc
 	if test -r test/Makefile; then cd test; $(MAKE) clean; fi
 
 distclean-local:
@@ -850,7 +868,7 @@ install-exec-local: install-doc
 
 uninstall-local: uninstall-doc
 
-.PHONY: test unitTest
+.PHONY: test unitTest doxydoc
 
 @COIN_HAS_PKGCONFIG_TRUE@install-data-hook:
 @COIN_HAS_PKGCONFIG_TRUE@	@$(mkdir_p) "$(addlibsdir)"

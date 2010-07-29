@@ -29,7 +29,7 @@ libOsiXpr_la_LDFLAGS = $(LT_LDFLAGS)
 # being compiled.
 AM_CPPFLAGS = $(COINUTILS_CFLAGS) \
 	-I`$(CYGPATH_W) $(XPRINCDIR)` \
-	-I`$(CYGPATH_W) $(srcdir)/..`
+	-I`$(CYGPATH_W) $(srcdir)/../Osi`
 
 # This line is necessary to allow VPATH compilation with MS compilers
 # on Cygwin

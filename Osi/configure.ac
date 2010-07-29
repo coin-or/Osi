@@ -22,7 +22,7 @@ under the Common Public License.])
 
 # List one file in the package so that the configure script can test
 # whether the package is actually there
-AC_CONFIG_SRCDIR(src/OsiAuxInfo.cpp)
+AC_CONFIG_SRCDIR(src/Osi/OsiAuxInfo.cpp)
 
 # Where should everything be installed by default?  Here, we want it
 # to be installed directly in 'bin', 'lib', 'include' subdirectories
@@ -78,6 +78,7 @@ AC_COIN_HAS_USER_LIBRARY([Soplex],[SPX],[soplex.h])
 #############################################################################
 
 # choose a solver interface that can be used in the examples
+
 if test $coin_has_glpk = yes ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiGlpkSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="$GLPK_CFLAGS"
@@ -114,13 +115,19 @@ AC_SUBST(OSI_EXAMPLES_SOLVER_LIBS)
 # If any of the tests performed in this section actually require the presence
 # of the solver (file presence, link checks, etc.) be sure to guard the call.
 
-# we assume that GLPK is not too old
-AC_DEFINE(GLPK_HAS_INTOPT, [1], [Define to 1 if GLPK has the advanced B&B solver lpx_intopt])
+# We assume that GLPK is not too old
 
-# For setting up osi-glpk.pc, it makes a difference whether Glpk is available because
-# --with-glpk-lib has been specified or because a coinglpk.pc file was found.
-# Normally, COIN_HAS_MODULE takes care of this, but since we set required=0 above,
-# we have to find out here in which situation we are.
+AC_DEFINE(GLPK_HAS_INTOPT, [1],
+	  [Define to 1 if GLPK has the advanced B&B solver lpx_intopt])
+
+# For setting up osi-glpk.pc, it makes a difference whether Glpk is available
+# because --with-glpk-lib has been specified or because a coinglpk.pc file was
+# found.  Normally, COIN_HAS_MODULE takes care of this, but since we set
+# required=0 above, we have determine the configuration here. Short
+# explanation: in the first case, we drop the user's LIBS and CFLAGS into
+# osi-glpk.pc.in; in the second, we let pkg-config sort it out by checking
+# coinglpk.pc.
+
 if test "$coin_has_glpk" = "yes" ; then
   AC_ARG_WITH([glpk-lib],[],
     [ OSIGLPKPC_LIBS=${GLPK_LIBS}
@@ -161,14 +168,14 @@ AC_COIN_DOXYGEN(CoinUtils)
 # configuration header file)
 AC_CONFIG_FILES([Makefile
                  examples/Makefile
-                 src/Makefile
+                 src/Osi/Makefile
                  src/OsiCpx/Makefile
                  src/OsiGlpk/Makefile
                  src/OsiMsk/Makefile
                  src/OsiXpr/Makefile
                  src/OsiGrb/Makefile
                  src/OsiSpx/Makefile
-                 src/unittests/Makefile
+                 src/OsiCommonTest/Makefile
                  test/Makefile
                  osi.pc osi-uninstalled.pc
                  osi-unittests.pc osi-unittests-uninstalled.pc])

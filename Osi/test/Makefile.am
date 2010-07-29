@@ -21,13 +21,13 @@ unitTest_SOURCES = unitTest.cpp \
   OsiTestSolverInterfaceTest.cpp
 
 # List libraries of COIN projects
-unitTest_LDADD = ../src/unittests/libOsiUnitTests.la
+unitTest_LDADD = ../src/OsiCommonTest/libOsiCommonTests.la
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows
 AM_CPPFLAGS = \
 	-I`$(CYGPATH_W) $(srcdir)/../src` \
-	-I`$(CYGPATH_W) $(srcdir)/../src/unittests` \
+	-I`$(CYGPATH_W) $(srcdir)/../src/OsiCommonTest` \
 	$(COINUTILS_CFLAGS)
 
 # This line is necessary to allow VPATH compilation with MS compilers
@@ -80,7 +80,7 @@ if COIN_HAS_SPX
   unitTest_LDADD += ../src/OsiSpx/libOsiSpx.la
 endif
 
-unitTest_LDADD += ../src/libOsi.la
+unitTest_LDADD += ../src/Osi/libOsi.la
 LIBS += $(COINUTILS_LIBS) $(ADDLIBS)
 
 unittestflags =

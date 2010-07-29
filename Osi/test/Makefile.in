@@ -121,10 +121,11 @@ unitTest_OBJECTS = $(am_unitTest_OBJECTS)
 @COIN_HAS_XPR_TRUE@am__DEPENDENCIES_4 = ../src/OsiXpr/libOsiXpr.la
 @COIN_HAS_GRB_TRUE@am__DEPENDENCIES_5 = ../src/OsiGrb/libOsiGrb.la
 @COIN_HAS_SPX_TRUE@am__DEPENDENCIES_6 = ../src/OsiSpx/libOsiSpx.la
-unitTest_DEPENDENCIES = ../src/unittests/libOsiUnitTests.la \
+unitTest_DEPENDENCIES = ../src/OsiCommonTest/libOsiCommonTests.la \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2) \
 	$(am__DEPENDENCIES_3) $(am__DEPENDENCIES_4) \
-	$(am__DEPENDENCIES_5) $(am__DEPENDENCIES_6) ../src/libOsi.la
+	$(am__DEPENDENCIES_5) $(am__DEPENDENCIES_6) \
+	../src/Osi/libOsi.la
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
@@ -344,14 +345,15 @@ unitTest_SOURCES = unitTest.cpp OsiTestSolver.cpp \
 	$(am__append_17)
 
 # List libraries of COIN projects
-unitTest_LDADD = ../src/unittests/libOsiUnitTests.la $(am__append_3) \
-	$(am__append_6) $(am__append_10) $(am__append_13) \
-	$(am__append_16) $(am__append_19) ../src/libOsi.la
+unitTest_LDADD = ../src/OsiCommonTest/libOsiCommonTests.la \
+	$(am__append_3) $(am__append_6) $(am__append_10) \
+	$(am__append_13) $(am__append_16) $(am__append_19) \
+	../src/Osi/libOsi.la
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows
 AM_CPPFLAGS = -I`$(CYGPATH_W) $(srcdir)/../src` -I`$(CYGPATH_W) \
-	$(srcdir)/../src/unittests` $(COINUTILS_CFLAGS) \
+	$(srcdir)/../src/OsiCommonTest` $(COINUTILS_CFLAGS) \
 	$(am__append_2) $(am__append_5) $(am__append_9) \
 	$(am__append_12) $(am__append_15) $(am__append_18)
 

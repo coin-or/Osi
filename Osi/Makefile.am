@@ -12,7 +12,25 @@ AUTOMAKE_OPTIONS = foreign
 #                          Subdirectories                              #
 ########################################################################
 
-SUBDIRS = src
+SUBDIRS = src/Osi src/OsiCommonTest
+if COIN_HAS_CPX
+  SUBDIRS += src/OsiCpx
+endif
+if COIN_HAS_GLPK
+  SUBDIRS += src/OsiGlpk
+endif
+if COIN_HAS_MSK
+  SUBDIRS += src/OsiMsk
+endif
+if COIN_HAS_XPR
+  SUBDIRS += src/OsiXpr
+endif
+if COIN_HAS_GRB
+  SUBDIRS += src/OsiGrb
+endif
+if COIN_HAS_SPX
+  SUBDIRS += src/OsiSpx
+endif
 
 # We don't want to compile the test subdirectory, unless the test target is
 # specified.  But we need to list it as subdirectory to make sure that it is

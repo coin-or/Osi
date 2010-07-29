@@ -65,6 +65,9 @@ Osi/osi-uninstalled.pc.in -text
 Osi/osi-unittests-uninstalled.pc.in -text
 Osi/osi-unittests.pc.in -text
 Osi/osi.pc.in -text
+Osi/src/OsiCommonTest/Makefile.am -text
+Osi/src/OsiCommonTest/Makefile.in -text
+Osi/src/OsiCommonTest/OsiUnitTests.hpp -text
 Osi/src/OsiCpx/osi-cplex-uninstalled.pc.in -text
 Osi/src/OsiCpx/osi-cplex.pc.in -text
 Osi/src/OsiGlpk/osi-glpk-uninstalled.pc.in -text
@@ -85,9 +88,6 @@ Osi/src/OsiSpx/osi-soplex-uninstalled.pc.in -text
 Osi/src/OsiSpx/osi-soplex.pc.in -text
 Osi/src/OsiXpr/osi-xpress-uninstalled.pc.in -text
 Osi/src/OsiXpr/osi-xpress.pc.in -text
-Osi/src/unittests/Makefile.am -text
-Osi/src/unittests/Makefile.in -text
-Osi/src/unittests/OsiUnitTests.hpp -text
 Osi/test/OsiGrbSolverInterfaceTest.cpp -text
 Osi/test/OsiSpxSolverInterfaceTest.cpp -text
 Osi/test/OsiTestSolver.cpp -text

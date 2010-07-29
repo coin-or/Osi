@@ -4,8 +4,8 @@ libdir=@libdir@/coin
 includedir=@includedir@/coin
 
 Name: OsiUnitTests
-Description: COIN-OR Open Solver Interface Unit Tests
+Description: COIN-OR Open Solver Interface Common Unit Tests
 Version: @PACKAGE_VERSION@
-Libs: -L${libdir} -lOsiUnitTests
+Libs: -L${libdir} -lOsiCommonTests
 Cflags: -I${includedir}
 Requires: osi

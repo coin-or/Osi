@@ -52,11 +52,17 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+@COIN_HAS_CPX_TRUE@am__append_1 = src/OsiCpx
+@COIN_HAS_GLPK_TRUE@am__append_2 = src/OsiGlpk
+@COIN_HAS_MSK_TRUE@am__append_3 = src/OsiMsk
+@COIN_HAS_XPR_TRUE@am__append_4 = src/OsiXpr
+@COIN_HAS_GRB_TRUE@am__append_5 = src/OsiGrb
+@COIN_HAS_SPX_TRUE@am__append_6 = src/OsiSpx
 
 # We don't want to compile the test subdirectory, unless the test target is
 # specified.  But we need to list it as subdirectory to make sure that it is
 # included in the tarball
-@ALWAYS_FALSE@am__append_1 = test
+@ALWAYS_FALSE@am__append_7 = test
 DIST_COMMON = README $(am__configure_deps) \
 	$(srcdir)/BuildTools/Makemain.inc $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/osi-uninstalled.pc.in \
@@ -72,8 +78,8 @@ DIST_COMMON = README $(am__configure_deps) \
 	$(top_srcdir)/src/OsiSpx/osi-soplex-uninstalled.pc.in \
 	$(top_srcdir)/src/OsiXpr/osi-xpress-uninstalled.pc.in AUTHORS \
 	config.guess config.sub depcomp install-sh ltmain.sh missing
-@HAVE_EXTERNALS_TRUE@am__append_2 = Externals
-@HAVE_EXTERNALS_TRUE@am__append_3 = .Externals-stamp
+@HAVE_EXTERNALS_TRUE@am__append_8 = Externals
+@HAVE_EXTERNALS_TRUE@am__append_9 = .Externals-stamp
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
@@ -109,7 +115,8 @@ pkgconfiglibDATA_INSTALL = $(INSTALL_DATA)
 DATA = $(pkgconfiglib_DATA)
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = src test
+DIST_SUBDIRS = src/Osi src/OsiCommonTest src/OsiCpx src/OsiGlpk \
+	src/OsiMsk src/OsiXpr src/OsiGrb src/OsiSpx test
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -322,7 +329,9 @@ AUTOMAKE_OPTIONS = foreign
 ########################################################################
 #                          Subdirectories                              #
 ########################################################################
-SUBDIRS = src $(am__append_1)
+SUBDIRS = src/Osi src/OsiCommonTest $(am__append_1) $(am__append_2) \
+	$(am__append_3) $(am__append_4) $(am__append_5) \
+	$(am__append_6) $(am__append_7)
 
 ########################################################################
 #             Additional files to be included in tarball               #
@@ -332,7 +341,7 @@ SUBDIRS = src $(am__append_1)
 EXTRA_DIST = examples/basic2.cpp examples/basic.cpp examples/build.cpp \
 	examples/Makefile.in examples/parameters.cpp \
 	examples/query.cpp examples/README examples/specific.cpp \
-	$(am__append_2)
+	$(am__append_8)
 
 ########################################################################
 #                  Installation of the addlibs file                    #
@@ -347,7 +356,7 @@ pkgconfiglib_DATA = osi.pc osi-unittests.pc
 CLEANFILES = 
 
 # Files that are generated and should be cleaned with make distclean
-DISTCLEANFILES = $(am__append_3) $(VPATH_DISTCLEANFILES)
+DISTCLEANFILES = $(am__append_9) $(VPATH_DISTCLEANFILES)
 DocFiles = README AUTHORS LICENSE
 DocInstallDir = $(datadir)/coin/doc/$(PACKAGE_NAME)
 all: all-recursive

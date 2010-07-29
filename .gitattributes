@@ -65,6 +65,8 @@ Osi/osi-uninstalled.pc.in -text
 Osi/osi-unittests-uninstalled.pc.in -text
 Osi/osi-unittests.pc.in -text
 Osi/osi.pc.in -text
+Osi/src/Osi/Makefile.am -text
+Osi/src/Osi/Makefile.in -text
 Osi/src/OsiCommonTest/Makefile.am -text
 Osi/src/OsiCommonTest/Makefile.in -text
 Osi/src/OsiCommonTest/OsiUnitTests.hpp -text

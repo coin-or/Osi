@@ -57,7 +57,6 @@ Osi/examples/basic2.cpp -text
 Osi/examples/build.cpp -text
 Osi/examples/parameters.cpp -text
 Osi/examples/query.cpp -text
-Osi/examples/specific.cpp -text
 Osi/inc/config_osi.h.in -text
 Osi/install-sh -text
 Osi/ltmain.sh -text

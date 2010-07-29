@@ -6,28 +6,48 @@
 
 ##########################################################################
 #    You can modify this example makefile to fit for your own program.   #
-#    Usually, you only need to change the five CHANGEME entries below.   #
+#    Usually, you only need to change CHANGEME entries below.            #
 ##########################################################################
 
-# To compile other examples, either changed the following line, or
-# add the argument DRIVER=filename_without_extension to make
+# CHANGEME
+# To compile other examples, either change the following line, or add the
+# argument DRIVER=filename_without_extension to make, e.g.,
+# `make DRIVER=parameters'
+
 DRIVER = basic
 
-# CHANGEME: This should be the name of your executable
+# CHANGME
+# This should be the name of your executable; change if you want a name
+# that's different from the file name.
+
 EXE = $(DRIVER)@EXEEXT@
 
-# CHANGEME: Here is the name of all object files corresponding to the source
-#           code that you wrote in order to define the problem statement
+# CHANGEME
+# OBJS should include all object files necessary to build your program. For
+# the examples, only one file is needed for each example. You will probably
+# have more as your code grows.
+
 OBJS =  $(DRIVER).@OBJEXT@
 
-# CHANGEME: Additional libraries
+# CHANGEME
+# Additional libraries. The examples require only the COIN libraries specified
+# as LIBS below. You may need more.
+
 ADDLIBS =
 
-# CHANGEME: Additional flags for compilation (e.g., include flags)
+# CHANGEME
+# Additional flags for compilation (e.g., include flags). As for libraries,
+# the examples require only COIN include files, specified as part of CXXFLAGS
+# below.
+
 ADDINCFLAGS =
 
-# CHANGEME: Directory to the sources for the (example) problem definition
-# files
+# CHANGEME
+# Directory to the sources for the (example) problem definition files. VPATH
+# is used if you are building in a different directory than the source. This
+# can be handy for various reasons; if none occur to you, don't worry about
+# it.
+
 SRCDIR = @srcdir@
 VPATH = @srcdir@
 
@@ -56,7 +76,11 @@ COININCDIR = @abs_include_dir@/coin
 COINLIBDIR = @abs_lib_dir@/coin
 
 # Libraries that may be necessary to link with Osi
-LIBS = @COINUTILS_LIBS@ -L$(COINLIBDIR) -L$(COINLIBDIR)/ThirdParty -lOsi @ADDLIBS@  @OSI_EXAMPLES_SOLVER_LIBS@
+LIBS = -L$(COINLIBDIR) \
+       -L$(COINLIBDIR)/ThirdParty \
+       @OSI_EXAMPLES_SOLVER_LIBS@ -lOsi \
+       @COINUTILS_LIBS@ \
+       @ADDLIBS@
 
 # Necessary Include dirs (we use the CYGPATH_W variables to allow
 # compilation with Windows compilers)

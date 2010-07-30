@@ -2650,11 +2650,18 @@ int OsiMskSolverInterface::getIterationCount() const
 //-----------------------------------------------------------------------------
 // Returns one dual ray
 
-std::vector<double*> OsiMskSolverInterface::getDualRays(int maxNumRays) const
+std::vector<double*> OsiMskSolverInterface::getDualRays(int maxNumRays,
+							bool fullRay) const
 {
   #if MSK_OSI_DEBUG_LEVEL > 3
-  debugMessage("Begin OsiMskSolverInterface::getDualRays(%d)\n", maxNumRays);
+  debugMessage("Begin OsiMskSolverInterface::getDualRays(%d,%s)\n", maxNumRays,
+	       fullRay?"true":"false");
   #endif
+
+  if (fullRay == true) {
+    throw CoinError("Full dual rays not yet implemented.","getDualRays",
+		    "OsiMskSolverInterface");
+  }
 
   OsiMskSolverInterface solver(*this);
 

@@ -1571,9 +1571,16 @@ int OsiGrbSolverInterface::getIterationCount() const
 }
 
 //------------------------------------------------------------------
-std::vector<double*> OsiGrbSolverInterface::getDualRays(int maxNumRays) const
+std::vector<double*> OsiGrbSolverInterface::getDualRays(int maxNumRays,
+							bool fullRay) const
 {
-  debugMessage("OsiGrbSolverInterface::getDualRays(%d)\n", maxNumRays);
+  debugMessage("OsiGrbSolverInterface::getDualRays(%d,%s)\n", maxNumRays,
+	       fullRay?"true":"false");
+  
+  if (fullRay == true) {
+    throw CoinError("Full dual rays not yet implemented.","getDualRays",
+		    "OsiGrbSolverInterface");
+  }
 
   OsiGrbSolverInterface solver(*this);
 

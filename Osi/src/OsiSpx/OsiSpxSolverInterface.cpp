@@ -893,8 +893,14 @@ int OsiSpxSolverInterface::getIterationCount() const
   return soplex_.iteration();
 }
 //------------------------------------------------------------------
-std::vector<double*> OsiSpxSolverInterface::getDualRays(int maxNumRays) const
+std::vector<double*> OsiSpxSolverInterface::getDualRays(int maxNumRays,
+							bool fullRay) const
 {
+  if (fullRay == true) {
+    throw CoinError("Full dual rays not yet implemented.","getDualRays",
+		    "OsiSpxSolverInterface");
+  }
+
   std::vector<double*> ret = std::vector<double*>();
 
   if (soplex_.status() == soplex::SPxSolver::INFEASIBLE && maxNumRays > 0)

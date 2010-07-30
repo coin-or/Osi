@@ -1428,9 +1428,16 @@ int OsiCpxSolverInterface::getIterationCount() const
   return CPXgetitcnt( env_, getMutableLpPtr() );
 }
 //------------------------------------------------------------------
-std::vector<double*> OsiCpxSolverInterface::getDualRays(int maxNumRays) const
+std::vector<double*> OsiCpxSolverInterface::getDualRays(int maxNumRays,
+							bool fullRay) const
 {
-  debugMessage("OsiCpxSolverInterface::getDualRays(%d)\n", maxNumRays);
+  debugMessage("OsiCpxSolverInterface::getDualRays(%d,%s)\n", maxNumRays,
+	       fullRay?"true":"false");
+  
+  if (fullRay == true) {
+    throw CoinError("Full dual rays not yet implemented.","getDualRays",
+		    "OsiCpxSolverInterface");
+  }
 
    OsiCpxSolverInterface solver(*this);
 

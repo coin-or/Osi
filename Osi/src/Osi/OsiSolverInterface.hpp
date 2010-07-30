@@ -386,9 +386,9 @@ public:
     virtual bool isAbandoned() const = 0;
     /// Is optimality proven?
     virtual bool isProvenOptimal() const = 0;
-    /// Is primal infeasiblity proven?
+    /// Is primal infeasibility proven?
     virtual bool isProvenPrimalInfeasible() const = 0;
-    /// Is dual infeasiblity proven?
+    /// Is dual infeasibility proven?
     virtual bool isProvenDualInfeasible() const = 0;
     /// Is the given primal objective limit reached?
     virtual bool isPrimalObjectiveLimitReached() const = 0;
@@ -601,55 +601,74 @@ public:
     
   /**@name Solution query methods */
   //@{
-    /// Get pointer to array[getNumCols()] of primal variable values
+    /// Get a pointer to an array[getNumCols()] of primal variable values
     virtual const double * getColSolution() const = 0;
 
-    /** Get pointer to an array[getNumCols()] of primal variable values
-     that are guaranteed to be between the column lower and upper
-     bounds. */
-    const double * getStrictColSolution();
+    /** Get a pointer to an array[getNumCols()] of primal variable values
+	guaranteed to be between the column lower and upper bounds.
+    */
+    virtual const double * getStrictColSolution();
 
     /// Get pointer to array[getNumRows()] of dual variable values
     virtual const double * getRowPrice() const = 0;
 
-    /// Get a pointer to array[getNumCols()] of reduced costs
+    /// Get a pointer to an array[getNumCols()] of reduced costs
     virtual const double * getReducedCost() const = 0;
 
-    /** Get pointer to array[getNumRows()] of row activity levels (constraint
-      matrix times the solution vector). */
+    /** Get a pointer to array[getNumRows()] of row activity levels.
+    
+      The row activity for a row is the left-hand side evaluated at the
+      current solution.
+    */
     virtual const double * getRowActivity() const = 0;
 
-    /// Get objective function value
+    /// Get the objective function value.
     virtual double getObjValue() const = 0;
 
     /** Get the number of iterations it took to solve the problem (whatever
-	``iteration'' means to the solver). */
+	`iteration' means to the solver).
+    */
     virtual int getIterationCount() const = 0;
 
     /** Get as many dual rays as the solver can provide. In case of proven
-	primal infeasibility there should be at least one.
-   
+	primal infeasibility there should (with high probability) be at least
+	one.
+
+	The first getNumRows() ray components will always be associated with
+	the row duals (as returned by getRowPrice()). If \c fullRay is true,
+	the final getNumCols() entries will correspond to the ray components
+	associated with the nonbasic variables. If the full ray is requested
+	and the method cannot provide it, it will throw an exception.
+
 	\note
-	Implementors of solver interfaces note that
-	the double pointers in the vector should point to arrays of length
-	getNumRows() and they should be allocated via new[].
-   
+	Implementors of solver interfaces note that the double pointers in
+	the vector should point to arrays of length getNumRows() (fullRay =
+	false) or (getNumRows()+getNumCols()) (fullRay = true) and they should
+	be allocated with new[].
+
 	\note
-	Clients of solver interfaces note that
-	it is the client's responsibility to free the double pointers in the
-	vector using delete[].
+	Clients of solver interfaces note that it is the client's
+	responsibility to free the double pointers in the vector using
+	delete[]. Clients are reminded that a problem can be dual and primal
+	infeasible.
     */
-    virtual std::vector<double*> getDualRays(int maxNumRays) const = 0;
-    /** Get as many primal rays as the solver can provide. (In case of proven
-	dual infeasibility there should be at least one.)
+    virtual std::vector<double*> getDualRays(int maxNumRays,
+					     bool fullRay = false) const = 0;
+
+    /** Get as many primal rays as the solver can provide. In case of proven
+	dual infeasibility there should (with high probability) be at least
+	one.
    
-	<strong>NOTE for implementers of solver interfaces:</strong> <br>
-	The double pointers in the vector should point to arrays of length
-	getNumCols() and they should be allocated via new[]. <br>
-   
-	<strong>NOTE for users of solver interfaces:</strong> <br>
-	It is the user's responsibility to free the double pointers in the
-	vector using delete[].
+	\note
+	Implementers of solver interfaces note that the double pointers in
+	the vector should point to arrays of length getNumCols() and they
+	should be allocated with new[].
+
+	\note
+	Clients of solver interfaces note that it is the client's
+	responsibility to free the double pointers in the vector using
+	delete[]. Clients are reminded that a problem can be dual and primal
+	infeasible.
     */
     virtual std::vector<double*> getPrimalRays(int maxNumRays) const = 0;
 

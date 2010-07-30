@@ -1733,7 +1733,7 @@ int OGSI::getIterationCount() const
 
 //-----------------------------------------------------------------------------
 
-std::vector<double*> OGSI::getDualRays(int /*maxNumRays*/) const
+std::vector<double*> OGSI::getDualRays(int /*maxNumRays*/, bool /*fullRay*/) const
 {
 	// ??? not yet implemented.
 	throw CoinError("method is not yet implemented", "getDualRays", "OsiGlpkSolverInterface");

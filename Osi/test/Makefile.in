@@ -352,7 +352,7 @@ unitTest_LDADD = ../src/OsiCommonTest/libOsiCommonTests.la \
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows
-AM_CPPFLAGS = -I`$(CYGPATH_W) $(srcdir)/../src` -I`$(CYGPATH_W) \
+AM_CPPFLAGS = -I`$(CYGPATH_W) $(srcdir)/../src/Osi` -I`$(CYGPATH_W) \
 	$(srcdir)/../src/OsiCommonTest` $(COINUTILS_CFLAGS) \
 	$(am__append_2) $(am__append_5) $(am__append_9) \
 	$(am__append_12) $(am__append_15) $(am__append_18)

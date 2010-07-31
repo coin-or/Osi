@@ -26,21 +26,35 @@
 #include "OsiTestSolverInterface.hpp"
 
 /*
+  Currently the Osi unit test is configured to exercise only the external
+  solvers. The Osi interfaces for Coin solvers have been moved out to the
+  project's repository and each has its own private Osi unit test.
+
+  This unit test will include as many external solvers as are available. If
+  none of them are available, the OsiTestSolver (currently a clone of Vol)
+  will be used. If any other solver is available, its presence will disable
+  use of the test solver. You can disable it manually by undefining
+  USETESTSOLVER.
+
+  You may want to use the Osi unit test to compare two or more Coin solvers.
+  In particular, OsiSolverInterfaceMpsUnitTest, which runs the Netlib problem
+  set, is set up for exactly this sort of comparison.  To take advantage of
+  it, you'll need to edit this file and Makefile in order to get it to work.
+*/
+#define USETESTSOLVER
+
+/*
   Some convenient undef's, to make it easy to isolate a particular solver.
   Uncomment to disable a solver that's included in the build. Leave them
-  commented if you're happy with running the unitTest for all solvers in the
-  build.
-  Commenting USETESTSOLVER disables the use of the OsiTestSolver for testing
-  in case none of the other solver interfaces is available.
+  commented if you're happy with running the unitTest for all solvers in
+  the build.
 */
-
 // #undef COIN_HAS_XPR
 // #undef COIN_HAS_CPX
 // #undef COIN_HAS_GLPK
 // #undef COIN_HAS_MSK
 // #undef COIN_HAS_GRB
 // #undef COIN_HAS_SPX
-#define USETESTSOLVER
 
 #ifdef COIN_HAS_XPR
 #include "OsiXprSolverInterface.hpp"
@@ -481,36 +495,48 @@ try {
 #   if COIN_HAS_XPR
     OsiSolverInterface * xprSi = new OsiXprSolverInterface;
     vecSi.push_back(xprSi);
-#endif
+#   endif
 #   if COIN_HAS_CPX
     OsiSolverInterface * cpxSi = new OsiCpxSolverInterface;
     vecSi.push_back(cpxSi);
-#endif
+#   endif
 #   if COIN_HAS_GLPK
     OsiSolverInterface * glpkSi = new OsiGlpkSolverInterface;
     glpkSi->setHintParam(OsiDoPresolveInInitial,true,OsiHintTry) ;
     glpkSi->setHintParam(OsiDoReducePrint,true,OsiHintDo) ;
     vecSi.push_back(glpkSi);
-#endif
+#   endif
 #   if COIN_HAS_MSK
     OsiSolverInterface * MskSi = new OsiMskSolverInterface;
     vecSi.push_back(MskSi);
-#endif
-#ifdef USETESTSOLVER
-    OsiSolverInterface * testSi = new OsiTestSolverInterface;
-    vecSi.push_back(testSi);
-#endif
+#   endif
 #   if COIN_HAS_GRB
     OsiSolverInterface * grbSi = new OsiGrbSolverInterface;
     vecSi.push_back(grbSi);
-#endif
+#   endif
 #   if COIN_HAS_SPX
     OsiSolverInterface * spxSi = new OsiSpxSolverInterface;
     vecSi.push_back(spxSi);
-#endif
+#   endif
+#   ifdef USETESTSOLVER
+/*
+  The test solver is normally Vol, which can't do any of the netlib problems.
+  So let's not try.
+*/
+    {
+      std::string solverName ;
+      OsiSolverInterface * testSi = new OsiTestSolverInterface;
+      testSi->getStrParam(OsiSolverName,solverName) ;
+      if (solverName != "vol")
+      { vecSi.push_back(testSi); }
+      else
+      { testingMessage("Test solver vol cannot do Netlib. Skipping.\n") ; }
+    }
+#   endif
 
-    testingMessage( "Testing OsiSolverInterface on Netlib problems.\n" );
-    OsiSolverInterfaceMpsUnitTest(vecSi,netlibDir);
+    if (vecSi.size() > 0)
+    { testingMessage( "Testing OsiSolverInterface on Netlib problems.\n" );
+      totalErrCnt += OsiSolverInterfaceMpsUnitTest(vecSi,netlibDir); }
 
     unsigned int i;
     for (i=0; i<vecSi.size(); i++)
@@ -525,7 +551,12 @@ try {
   std::cerr << "Caught CoinError exception: ";
   error.print(true);
   totalErrCnt += 1;
+} catch (...) {
+  std::cout.flush() ;
+  std::cerr << "Caught unknown exception." ;
+  totalErrCnt += 1 ;
 }
+
 /*
   We're done. Report on the results.
 */

@@ -103,9 +103,7 @@ void failureMessage( const OsiSolverInterface & si,
 void testingMessage( const char * const msg )
 {
   std::cout.flush() ;
-  std::cerr <<msg;
-  //cout <<endl <<"*****************************************"
-  //     <<endl <<msg <<endl;
+  std::cerr << msg;
 }
 
 //#############################################################################
@@ -124,18 +122,12 @@ bool equivalentVectors (const OsiSolverInterface * si1,
   CoinRelFltEq eq(tol);
   int i;
   for ( i=0; i<size; i++ ) {
-
-    // If both are equal to infinity then iterate
-    if ( fabs(v1[i])==si1->getInfinity() && fabs(v2[i])==si2->getInfinity() )
-       continue;
-
-    // Test to see if equal
     if ( !eq(v1[i],v2[i]) ) {
+      std::cout.flush() ;
       std::cerr <<"eq " <<i <<" " <<v1[i] <<" " <<v2[i] <<std::endl;
       retVal = false;
       break;
     }
-
   }
   return retVal;
 }
@@ -1585,7 +1577,7 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
       errCnt++ ; }
 
     rowNames = si->getRowNames() ;
-    rowNameCnt = rowNames.size() ;
+    rowNameCnt = static_cast<int>(rowNames.size()) ;
     if (rowNameCnt != static_cast<int>(exmip1RowNames.size()))
     { std::cout
 	<< "Read " << rowNameCnt << " names from " << fn.c_str()
@@ -1605,7 +1597,7 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
     { failureMessage(solverName,"Error in row names read from exmip1.mps.") ; }
 
     colNames = si->getColNames() ;
-    colNameCnt = colNames.size() ;
+    colNameCnt = static_cast<int>(colNames.size()) ;
     if (colNameCnt != static_cast<int>(exmip1ColNames.size()))
     { std::cout
 	<< "Read " << colNameCnt << " names from " << fn.c_str()
@@ -1704,7 +1696,7 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
     delete si ;
     return (errCnt) ; }
   rowNames = si->getRowNames() ;
-  rowNameCnt = rowNames.size() ;
+  rowNameCnt = static_cast<int>(rowNames.size()) ;
   if (rowNameCnt != static_cast<int>(exmip1RowNames.size()))
   { std::cout
       << rowNameCnt << " names available, expected "
@@ -1726,7 +1718,7 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
   	"lazy row names, discipline switch 0 -> 1.") ; }
 
   colNames = si->getColNames() ;
-  colNameCnt = colNames.size() ;
+  colNameCnt = static_cast<int>(colNames.size()) ;
   if (colNameCnt != static_cast<int>(exmip1ColNames.size()))
   { std::cout
       << colNameCnt << " names available, expected "
@@ -1761,7 +1753,7 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
     delete si ;
     return (errCnt) ; }
   rowNames = si->getRowNames() ;
-  rowNameCnt = rowNames.size() ;
+  rowNameCnt = static_cast<int>(rowNames.size()) ;
   if (rowNameCnt != m)
   { failureMessage(solverName,"incorrect length row name vector") ;
     errCnt++ ; }
@@ -1794,7 +1786,7 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
   // std::cout << "Testing row deletion." << std::endl ;
   si->deleteRows(1,indices) ;
   rowNames = si->getRowNames() ;
-  rowNameCnt = rowNames.size() ;
+  rowNameCnt = static_cast<int>(rowNames.size()) ;
   if (rowNameCnt != m)
   { std::cout
       << rowNameCnt << " names available, expected " << m << "." << std::endl ;
@@ -1836,7 +1828,7 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
     delete si ;
     return (errCnt) ; }
   colNames = si->getColNames() ;
-  colNameCnt = colNames.size() ;
+  colNameCnt = static_cast<int>(colNames.size()) ;
   if (colNameCnt != n)
   { failureMessage(solverName,"incorrect length column name vector") ;
     errCnt++ ; }
@@ -1860,7 +1852,7 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
   // std::cout << "Testing column deletion." << std::endl ;
   si->deleteCols(1,indices) ;
   colNames = si->getColNames() ;
-  colNameCnt = colNames.size() ;
+  colNameCnt = static_cast<int>(colNames.size()) ;
   if (colNameCnt != n)
   { std::cout
       << colNameCnt << " names available, expected " << n << "." << std::endl ;
@@ -1890,7 +1882,7 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
   // std::cout << "Testing bulk replacement of names." << std::endl ;
   si->setRowNames(exmip1ColNames,0,3,2) ;
   rowNames = si->getRowNames() ;
-  rowNameCnt = rowNames.size() ;
+  rowNameCnt = static_cast<int>(rowNames.size()) ;
   if (rowNameCnt != m)
   { std::cout
       << rowNameCnt << " names available, expected "
@@ -1919,7 +1911,7 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
 
   si->setColNames(exmip1RowNames,3,2,0) ;
   colNames = si->getColNames() ;
-  colNameCnt = colNames.size() ;
+  colNameCnt = static_cast<int>(colNames.size()) ;
   if (colNameCnt != n)
   { std::cout
       << colNameCnt << " names available, expected "
@@ -1952,7 +1944,7 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
   // std::cout << "Testing name deletion." << std::endl ;
   si->deleteRowNames(0,2) ;
   rowNames = si->getRowNames() ;
-  rowNameCnt = rowNames.size() ;
+  rowNameCnt = static_cast<int>(rowNames.size()) ;
   if (rowNameCnt != m-2)
   { std::cout
       << rowNameCnt << " names available, expected "
@@ -1977,7 +1969,7 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
 
   si->deleteColNames(5,3) ;
   colNames = si->getColNames() ;
-  colNameCnt = colNames.size() ;
+  colNameCnt = static_cast<int>(colNames.size()) ;
   if (colNameCnt != n-3)
   { std::cout
       << colNameCnt << " names available, expected "
@@ -2015,7 +2007,7 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
     return (errCnt) ; }
   m = si->getNumRows() ;
   rowNames = si->getRowNames() ;
-  rowNameCnt = rowNames.size() ;
+  rowNameCnt = static_cast<int>(rowNames.size()) ;
   if (rowNameCnt != m+1)
   { std::cout
       << rowNameCnt << " names available, expected "
@@ -2047,7 +2039,7 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
 
   n = si->getNumCols() ;
   colNames = si->getColNames() ;
-  colNameCnt = colNames.size() ;
+  colNameCnt = static_cast<int>(colNames.size()) ;
   if (colNameCnt != n)
   { std::cout
       << colNameCnt << " names available, expected "
@@ -2689,14 +2681,15 @@ void testWriteMps (const OsiSolverInterface *emptySi, std::string fn)
 
   bool solved = true;
   try {
-     si1->initialSolve();
+    si1->initialSolve();
   }
   catch (CoinError e) {
-     if (e.className() != "OsiVolSolverInterface" && e.className() != "OsiTestSolverInterface") {
-	failureMessage(*si1,"Couldn't load and solve LP in testWriteMps!\n");
-	abort();
-     }
-     solved = false;
+    if (e.className() != "OsiVolSolverInterface" &&
+        e.className() != "OsiTestSolverInterface") {
+      failureMessage(*si1,"Couldn't load and solve LP in testWriteMps!\n");
+      abort();
+    }
+    solved = false;
   }
   double soln = si1->getObjValue();
 /*
@@ -2716,7 +2709,7 @@ void testWriteMps (const OsiSolverInterface *emptySi, std::string fn)
       failureMessage(*si2,
 	 "Couldn't load and solve mps file written by writeMpsNative!\n");
       abort();
-      }
+    }
     assert(eq(soln,si2->getObjValue()));
   }
 /*
@@ -2732,7 +2725,7 @@ void testWriteMps (const OsiSolverInterface *emptySi, std::string fn)
       failureMessage(*si3,
 	 "Couldn't load and solve mps file written by writeMps!\n");
       abort();
-      }
+    }
     assert(eq(soln,si3->getObjValue()));
   }
 /*
@@ -3827,13 +3820,10 @@ int testEmptySi (const OsiSolverInterface *emptySi)
 
   t14,t58 <= 30    tt24, t57 <= 20    t25, t35, t46 <= 10    t47 <= 2
   
-  It is dual unbounded and has two dual rays (transpose):
-
-  r0 = [ 0 0 0 0 0 0 1 1 ]
-  r1 = [ 0 0 1 0 0 0 1 1 ]
-
-  The routine doesn't actually test for these dual rays; rather, it tests for
-  rA >= 0, on the assumption that the dual constraint system is yA >= c.
+  The routine doesn't actually test for specific dual rays; rather, it tests for
+  rA >= 0 and rb < 0, on the assumption that the dual constraint system matches
+  the canonical form min yb  yA >= c. (More accurately, on the assumption that
+  the sign convention of the ray is correct for the canonical form.)
 */
 
 int testDualRays (const OsiSolverInterface *emptySi,
@@ -3896,17 +3886,18 @@ int testDualRays (const OsiSolverInterface *emptySi,
       << std::endl ;
     errCnt++ ; }
 /*
-  We have rays. Check to see if the solver found both. It's not really an
-  error to return only one --- the definition of getDualRays is ambiguous on
-  this point. It's definitely an error to claim none.
+  We have rays. Check to see how many. It's not really an error to return
+  only one --- there's no exhaustive inventory of rays at every vertex ---
+  but it's definitely an error to claim none, or to return more than the
+  maximum.
 */
   if (catchSomeRays == true)
-  { rayCnt = rays.size() ;
-    if (rayCnt < 2)
+  { rayCnt = static_cast<unsigned int>(rays.size()) ;
+    if (rayCnt < 1 || rayCnt > 5)
     { std::cout
-	<< "  " << solverName << " returned only "
-	<< rayCnt << " rays; two are available." << std::endl ;
-      if (rayCnt == 0) errCnt++ ; }
+	<< "  " << solverName << " returned "
+	<< rayCnt << " rays; expected between 1 and 5." << std::endl ;
+       errCnt++ ; }
 
     unsigned int m,n,i,j ;
     m = si->getNumRows() ;
@@ -3973,6 +3964,160 @@ int testDualRays (const OsiSolverInterface *emptySi,
 
   return (errCnt) ; }
 
+/*
+  Method to compare the problem representation held by a pair of solver
+  interfaces.
+*/
+bool compareProblems (OsiSolverInterface *osi1, OsiSolverInterface *osi2) {
+
+  bool areEquiv = true ;
+  std::string si1Name, si2Name ;
+  osi1->getStrParam(OsiSolverName,si1Name) ;
+  osi2->getStrParam(OsiSolverName,si2Name) ;
+
+  // Compare row and column counts
+  int colCnt = 0 ;
+  if (osi1->getNumCols() != osi2->getNumCols())
+  { std::cerr
+      << "  Unequal column count, "
+      << si1Name << " vs. " << si2Name << std::endl ;
+    return (false) ; }
+  else
+  { colCnt = osi1->getNumCols() ; }
+
+  int rowCnt = 0 ;
+  if (osi1->getNumRows() != osi2->getNumRows())
+  { std::cerr
+      << "  Unequal row count, "
+      << si1Name << " vs. " << si2Name << std::endl ;
+    return (false) ; }
+  else
+  { rowCnt = osi1->getNumRows() ; }
+
+  // Compare column bounds
+  areEquiv = equivalentVectors(osi1,osi2,1.e-10,
+  		osi1->getColLower(),osi2->getColLower(),colCnt) ;
+  if (areEquiv == false)
+  { std::cerr
+      << "  Unequal column lower bounds, "
+      << si1Name << " vs. " << si2Name << std::endl ;
+    return (false) ; }
+  areEquiv = equivalentVectors(osi1,osi2,1.e-10,
+  		osi1->getColUpper(),osi2->getColUpper(),colCnt) ;
+  if (areEquiv == false)
+  { std::cerr
+      << "  Unequal column upper bounds, "
+      << si1Name << " vs. " << si2Name << std::endl ;
+    return (false) ; }
+
+  // Compare row bounds
+  areEquiv = equivalentVectors(osi1,osi2,1.e-10,
+		osi1->getRowLower(),osi2->getRowLower(),rowCnt) ;
+  if (areEquiv == false)
+  { std::cerr
+      << "  Unequal row lower bounds, "
+      << si1Name << " vs. " << si2Name << std::endl ;
+    return (false) ; }
+  areEquiv = equivalentVectors(osi1,osi2,1.e-10,
+		osi1->getRowUpper(),osi2->getRowUpper(),rowCnt) ;
+  if (areEquiv == false)
+  { std::cerr
+      << "  Unequal row lower bounds, "
+      << si1Name << " vs. " << si2Name << std::endl ;
+    return (false) ; }
+
+  // Compare row sense
+  { const char *rowSense1 = osi1->getRowSense() ;
+    const char *rowSense2 = osi2->getRowSense() ;
+    areEquiv = true ;
+    for (int r = 0 ; r < rowCnt && areEquiv == true ; r++)
+    { if (rowSense1[r] != rowSense2[r])
+      { areEquiv = false ; } }
+    if (areEquiv == false)
+    { std::cerr
+	<< "  Unequal row sense, "
+	<< si1Name << " vs. " << si2Name << std::endl ;
+      return (false) ; } }
+
+  // Compare row rhs
+  areEquiv = equivalentVectors(osi1,osi2,1.e-10,
+  		osi1->getRightHandSide(),osi2->getRightHandSide(),rowCnt) ;
+  if (areEquiv == false)
+  { std::cerr
+      << "  Unequal right-hand-side, "
+      << si1Name << " vs. " << si2Name << std::endl ;
+    return (false) ; }
+
+  // Compare range
+  areEquiv = equivalentVectors(osi1,osi2,1.e-10,
+  		osi1->getRowRange(),osi2->getRowRange(),rowCnt) ;
+  if (areEquiv == false)
+  { std::cerr
+      << "  Unequal row range, "
+      << si1Name << " vs. " << si2Name << std::endl ;
+    return (false) ; }
+
+  // Compare objective sense
+  if (osi1->getObjSense() != osi2->getObjSense())
+  { std::cerr
+      << "  Unequal objective sense, "
+      << si1Name << " vs. " << si2Name << std::endl ;
+    return (false) ; }
+
+  // Compare objective coefficients
+  areEquiv = equivalentVectors(osi1,osi2,1.e-10,
+  		osi1->getObjCoefficients(),osi2->getObjCoefficients(),colCnt) ;
+  if (areEquiv == false)
+  { std::cerr
+      << "  Unequal objective coefficients, "
+      << si1Name << " vs. " << si2Name << std::endl ;
+    return (false) ; }
+
+  // Compare number of elements
+  if (osi1->getNumElements() != osi2->getNumElements())
+  { std::cerr
+      << "  Unequal number of constraint matrix coefficients, "
+      << si1Name << " vs. " << si2Name << std::endl ;
+    return (false) ; }
+
+  // Compare constraint matrix, for both row-major and column-major orderings
+  { const CoinPackedMatrix *rmm1=osi1->getMatrixByRow() ;
+    const CoinPackedMatrix *rm  =osi2->getMatrixByRow() ;
+    if (!rmm1->isEquivalent(*rm))
+    { std::cerr
+	<< "  Unequal constraint matrix, row-major ordering, "
+	<< si1Name << " vs. " << si2Name << std::endl ;
+      return (false) ; }
+    const CoinPackedMatrix *cmm1=osi1->getMatrixByCol() ;
+    const CoinPackedMatrix *cm  =osi2->getMatrixByCol() ;
+    if (!cmm1->isEquivalent(*cm))
+    { std::cerr
+	<< "  Unequal constraint matrix, column-major ordering, "
+	<< si1Name << " vs. " << si2Name << std::endl ;
+      return (false) ; }
+  }
+  // Check column types
+  { areEquiv = true ;
+    for (int j = 0 ; j < colCnt && areEquiv == true ; j++)
+    { if (osi1->isContinuous(j) != osi2->isContinuous(j))
+        areEquiv = false ;
+      if (osi1->isBinary(j) != osi2->isBinary(j))
+	areEquiv = false ;
+      if (osi1->isIntegerNonBinary(j) != osi2->isIntegerNonBinary(j))
+	areEquiv = false ;
+      if (osi1->isFreeBinary(j) != osi2->isFreeBinary(j))
+	areEquiv = false ;
+      if (osi1->isInteger(j) != osi2->isInteger(j))
+	areEquiv = false ; }
+    if (areEquiv == false)
+    { std::cerr
+	<< "  Unequal variable type, "
+	<< si1Name << " vs. " << si2Name << std::endl ;
+      return (false) ; }
+  }
+  return (true) ;
+}
+
 }	// end file-local namespace
 
 
@@ -4007,7 +4152,7 @@ int OsiSolverInterfaceMpsUnitTest
   (objValueTol).
 */
   std::vector<std::string> mpsName ;
-  std::vector<bool> min ;
+  std::vector<bool> minObj ;
   std::vector<int> nRows ;
   std::vector<int> nCols ;
   std::vector<double> objValue ;
@@ -4015,10 +4160,10 @@ int OsiSolverInterfaceMpsUnitTest
 /*
   And a macro to make the vector creation marginally readable.
 */
-#define PUSH_MPS(zz_mpsName_zz,zz_min_zz,\
+#define PUSH_MPS(zz_mpsName_zz,zz_minObj_zz,\
 		 zz_nRows_zz,zz_nCols_zz,zz_objValue_zz,zz_objValueTol_zz) \
   mpsName.push_back(zz_mpsName_zz) ; \
-  min.push_back(zz_min_zz) ; \
+  minObj.push_back(zz_minObj_zz) ; \
   nRows.push_back(zz_nRows_zz) ; \
   nCols.push_back(zz_nCols_zz) ; \
   objValueTol.push_back(zz_objValueTol_zz) ; \
@@ -4127,257 +4272,156 @@ int OsiSolverInterfaceMpsUnitTest
 
 #undef PUSH_MPS
 
+  const unsigned int numProblems = static_cast<unsigned int>(mpsName.size()) ;
+
 /*
-  Create a vector of solver interfaces that we can use to run the test
-  problems. The strategy is to create a fresh clone of the `empty' solvers
-  from vecEmptySiP for each problem, then proceed in stages: read the MPS
-  file, solve the problem, check the solution. If there are multiple
-  solvers in vecSiP, the results of each solver are compared with its
-  neighbors in the vector.
+  Create vectors to hold solver interfaces, the name of each solver interface,
+  the current state of processing, and statistics about the number of problems
+  solved and the time taken.
 */
-  std::vector<OsiSolverInterface*> vecSiP(vecEmptySiP.size()) ;
-
-  // Create vector to store a name for each solver interface
-  // and a count on the number of problems the solver intface solved.
-  std::vector<std::string> siName;
-  std::vector<int> numProbSolved;
-  std::vector<double> timeTaken;
-  const int vecsize = vecSiP.size();
-  for ( i=0; i<vecsize; i++ ) {
-    siName.push_back("unknown");
-    numProbSolved.push_back(0);
-    timeTaken.push_back(0.0);
-  }
-
-
-  //Open the main loop to step through the MPS problems.
-  for (m = 0 ; m < mpsName.size() ; m++) {
-    std::cerr << "  processing mps file: " << mpsName[m]
-      << " (" << m+1 << " out of " << mpsName.size() << ")" << std::endl ;
-    bool allSolversReadMpsFile = true;
-
-
-    //Stage 1: Read the MPS file into each solver interface.
-    //Fill vecSiP with fresh clones of the solvers and read in the MPS file. As
-    //a basic check, make sure the size of the constraint matrix is correct.
-    for (i = vecSiP.size()-1 ; i >= 0 ; --i) {
+  const int numSolvers = static_cast<int>(vecEmptySiP.size()) ;
+  std::vector<OsiSolverInterface*> vecSiP(numSolvers) ;
+  std::vector<std::string> siName(numSolvers) ;
+  std::vector<int> siStage(numSolvers) ;
+  std::vector<int> numProbSolved(numSolvers) ;
+  std::vector<double> timeTaken(numSolvers) ;
+  for (i = 0 ; i < numSolvers ; i++)
+  { siName[i] = "unknown" ;
+    numProbSolved[i] = 0 ;
+    timeTaken[i] = 0.0 ; }
+/*
+  For each problem, create a fresh clone of the `empty' solvers
+  from vecEmptySiP, then proceed in stages: read the MPS file, solve the
+  problem, check the solution. If there are multiple solvers in vecSiP,
+  the results of each solver are compared with its neighbors in the vector.
+*/
+  for (m = 0 ; m < numProblems ; m++) {
+    std::cout << "  processing mps file: " << mpsName[m]
+      << " (" << m+1 << " out of " << numProblems << ")" << std::endl ;
+/*
+  Stage 0: Create fresh solver clones.
+*/
+    int solversReadMpsFile = 0 ;
+    for (i = numSolvers-1 ; i >= 0 ; --i) {
       vecSiP[i] = vecEmptySiP[i]->clone() ;
-//#     if COIN_HAS_SYMPHONY
-//      // bludgeon symphony about the head so it will not print the solution
-//      { OsiSymSolverInterface *reallySymSi =
-//	    dynamic_cast<OsiSymSolverInterface *>(vecSiP[i]) ;
-//	if (reallySymSi)
-//	{ reallySymSi->setSymParam(OsiSymVerbosity, -2) ; } }
-//#     endif
-
-      vecSiP[i]->getStrParam(OsiSolverName,siName[i]);
-
+      vecSiP[i]->getStrParam(OsiSolverName,siName[i]) ;
+      siStage[i] = 0 ;
+    }
+/*
+  Stage 1: Read the MPS file into each solver interface.  As a basic check,
+  make sure the size of the constraint matrix is correct.
+*/
+    for (i = 0 ; i < numSolvers ; i++) {
       std::string fn = mpsDir+mpsName[m] ;
       vecSiP[i]->readMps(fn.c_str(),"mps") ;
-
-      if (min[m])
+      if (minObj[m])
         vecSiP[i]->setObjSense(1.0) ;
       else
         vecSiP[i]->setObjSense(-1.0) ;
-
       int nr = vecSiP[i]->getNumRows() ;
       int nc = vecSiP[i]->getNumCols() ;
-      assert(nr == nRows[m]-1) ;
-      assert(nc == nCols[m]) ;
+      if (nr == nRows[m]-1 && nc == nCols[m])
+      { siStage[i] = 1 ;
+        solversReadMpsFile++ ; }
     }
-
-    //If we have multiple solvers, compare the representations.
-    if ( allSolversReadMpsFile )
-      for (i = vecSiP.size()-1 ; i > 0 ; --i) {
-        CoinPackedVector vim1,vi ;
-
-        // Compare col lowerbounds
-        assert(
-          equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
-          vecSiP[i-1]->getColLower(),vecSiP[i  ]->getColLower(),
-          vecSiP[i  ]->getNumCols() )
-          ) ;
-
-        // Compare col upperbounds
-        assert(
-          equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
-          vecSiP[i-1]->getColUpper(),vecSiP[i  ]->getColUpper(),
-          vecSiP[i  ]->getNumCols() )
-          ) ;
-
-        // Compare row lowerbounds
-        assert(
-          equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
-          vecSiP[i-1]->getRowLower(),vecSiP[i  ]->getRowLower(),
-          vecSiP[i  ]->getNumRows() )
-          ) ;
-
-        // Compare row upperbounds
-        assert(
-          equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
-          vecSiP[i-1]->getRowUpper(),vecSiP[i  ]->getRowUpper(),
-          vecSiP[i  ]->getNumRows() )
-          ) ;
-
-        // Compare row sense
-        {
-          const char * rsm1 = vecSiP[i-1]->getRowSense() ;
-          const char * rs   = vecSiP[i  ]->getRowSense() ;
-          int nr = vecSiP[i]->getNumRows() ;
-          int r ;
-          for (r = 0 ; r < nr ; r++) assert (rsm1[r] == rs[r]) ;
-        }
-
-        // Compare rhs
-        assert(
-          equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
-          vecSiP[i-1]->getRightHandSide(),vecSiP[i  ]->getRightHandSide(),
-          vecSiP[i  ]->getNumRows() )
-          ) ;
-
-        // Compare range
-        assert(
-          equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
-          vecSiP[i-1]->getRowRange(),vecSiP[i  ]->getRowRange(),
-          vecSiP[i  ]->getNumRows() )
-          ) ;
-
-        // Compare objective sense
-        assert( vecSiP[i-1]->getObjSense() == vecSiP[i  ]->getObjSense() ) ;
-
-        // Compare objective coefficients
-        assert(
-          equivalentVectors(vecSiP[i-1],vecSiP[i], 1.e-10,
-          vecSiP[i-1]->getObjCoefficients(),vecSiP[i  ]->getObjCoefficients(),
-          vecSiP[i  ]->getNumCols() )
-          ) ;
-
-        // Compare number of elements
-        assert( vecSiP[i-1]->getNumElements() == vecSiP[i]->getNumElements() ) ;
-
-        // Compare constraint matrix
-        {
-          const CoinPackedMatrix * rmm1=vecSiP[i-1]->getMatrixByRow() ;
-          const CoinPackedMatrix * rm  =vecSiP[i  ]->getMatrixByRow() ;
-          assert( rmm1->isEquivalent(*rm) ) ;
-
-          const CoinPackedMatrix * cmm1=vecSiP[i-1]->getMatrixByCol() ;
-          const CoinPackedMatrix * cm  =vecSiP[i  ]->getMatrixByCol() ;
-          assert( cmm1->isEquivalent(*cm) ) ;
-        }
+/*
+  If more than one solver succeeded, compare representations.
+*/
+    if (solversReadMpsFile > 0) {
+      // Find an initial pair to compare
+      int s1 ;
+      for (s1 = 0 ; s1 < numSolvers-1 && siStage[s1] < 1 ; s1++) ;
+      int s2 ;
+      for (s2 = s1+1 ; s2 < numSolvers && siStage[s2] < 1 ; s2++) ;
+      while (s2 < numSolvers) {
+        std::cout
+	  << "  comparing problem representation for "
+	  << siName[s1] << " and " << siName[s2] << " ..." ;
+        if (compareProblems(vecSiP[s1],vecSiP[s2]))
+	  std::cout << " ok." << std::endl  ;
+	s1 = s2 ;
+	for (s2++ ; s2 < numSolvers && siStage[s2] < 1 ; s2++) ;
       }
+    }
+/*
+  Stage 2: Ask each solver that successfully read the problem to solve it,
+  then check the return code and objective.
+*/
+    for (i = 0 ; i < numSolvers ; ++i)
+    { if (siStage[i] < 1) continue ;
 
-      //If we have multiple solvers, compare the variable type information
-      if ( allSolversReadMpsFile )
-        for (i = vecSiP.size()-1 ; i > 0 ; --i){
-          CoinPackedVector vim1,vi ;
-          int c ;
+      double startTime = CoinCpuTime() ;
+      bool throwError = false ;
+      try
+      { vecSiP[i]->initialSolve() ; }
+      catch (CoinError &thrownErr)
+      { std::cout.flush() ;
+        std::cerr
+          << thrownErr.className() << "::" << thrownErr.methodName()
+	  << ": " << thrownErr.message() << std::endl ;
+	throwError = true ; }
+      catch (...)
+      { std::cout.flush() ;
+        std::cerr << siName[i] << " threw unknown exception." << std::endl ;
+        throwError = true ; }
+      if (throwError) continue ;
 
-          {
-            OsiVectorInt sm1 = vecSiP[i-1]->getFractionalIndices() ;
-            OsiVectorInt s   = vecSiP[i  ]->getFractionalIndices() ;
-            assert( sm1.size() == s.size() ) ;
-            for (c = s.size()-1 ; c >= 0 ; --c) assert( sm1[c] == s[c] ) ;
-          }
-
-          {
-            int nc = vecSiP[i]->getNumCols() ;
-            for (c = 0 ; c < nc ; c++){
-              assert(
-                vecSiP[i-1]->isContinuous(c) == vecSiP[i]->isContinuous(c)
-                ) ;
-              assert(
-                vecSiP[i-1]->isBinary(c) == vecSiP[i]->isBinary(c)
-                ) ;
-              assert(
-                vecSiP[i-1]->isIntegerNonBinary(c) ==
-                vecSiP[i  ]->isIntegerNonBinary(c)
-                ) ;
-              assert(
-                vecSiP[i-1]->isFreeBinary(c) == vecSiP[i]->isFreeBinary(c)
-                ) ;
-              assert(
-                vecSiP[i-1]->isInteger(c) == vecSiP[i]->isInteger(c)
-                ) ;
-            }
-          }
-        }
-
-      //Stage 2: Call each solver to solve the problem.
-      //
-      // We call each solver, then check the return code and objective.
-      //
-      //    Note that the volume solver can't handle the Netlib cases. The strategy is
-      //    to require that it be the last solver in vecSiP and then break out of the
-      //    loop. This ensures that all previous solvers are run and compared to one
-      //    another.
-      for (i = 0 ; i < static_cast<int>(vecSiP.size()) ; ++i) {
-        double startTime = CoinCpuTime();
-        
-        // VOL does not solve netlib cases so don't bother trying to solve
-        std::string solverName;
-        if( vecSiP[i]->getStrParam(OsiSolverName, solverName) && solverName == "vol" )
-           break;
-
-	try
-	{ vecSiP[i]->initialSolve() ; }
-	catch (CoinError &thrownErr)
-	{ std::cerr << thrownErr.className() << "::" << thrownErr.methodName()
-		    << ": " << thrownErr.message() << std::endl ; }
-        double timeOfSolution = CoinCpuTime()-startTime;
-        if (vecSiP[i]->isProvenOptimal()) {
-          double soln = vecSiP[i]->getObjValue();
-          CoinRelFltEq eq(objValueTol[m]) ;
-          if (eq(soln,objValue[m])) {
-            std::cerr
-              <<siName[i]<<"SolverInterface "
-              << soln << " = " << objValue[m] <<", "
-	      << vecSiP[i]->getIterationCount() << " iters"
-	      << "; okay";
-            numProbSolved[i]++;
-          } else  {
-            std::cerr <<siName[i] <<" " <<soln << " != " <<objValue[m] << "; error=" ;
-            std::cerr <<fabs(objValue[m] - soln);
-          }
-        } else {
-	   if (vecSiP[i]->isProvenPrimalInfeasible())
-	      std::cerr << "error; primal infeasible" ;
-//#ifndef COIN_HAS_SYMPHONY
-	   else if (vecSiP[i]->isProvenDualInfeasible())
-	      std::cerr << "error; dual infeasible" ;
-//#endif
-	   else if (vecSiP[i]->isIterationLimitReached())
-	      std::cerr << "error; iteration limit" ;
-	   else if (vecSiP[i]->isAbandoned())
-	      std::cerr << "error; abandoned" ;
-	   else
-	      std::cerr << "error; unknown" ;
-        }
-        std::cerr<<" - took " <<timeOfSolution<<" seconds."<<std::endl;
-        timeTaken[i] += timeOfSolution;
+      double timeOfSolution = CoinCpuTime()-startTime;
+      if (vecSiP[i]->isProvenOptimal())
+      { double soln = vecSiP[i]->getObjValue();
+	CoinRelFltEq eq(objValueTol[m]) ;
+	if (eq(soln,objValue[m])) {
+	  std::cout
+	    << "  " << siName[i] << " "
+	    << soln << " = " << objValue[m] << ", "
+	    << vecSiP[i]->getIterationCount() << " iters"
+	    << "; okay" ;
+	  numProbSolved[i]++ ; }
+	else
+	{ std::cout.flush() ;
+	  std::cerr
+	    << "  " << siName[i]
+	    << soln << " != " << objValue[m] << "; error = "
+	    << fabs(objValue[m]-soln) ;
+	}
+	std::cout
+	  << " - took " << timeOfSolution << " seconds." << std::endl;
+	timeTaken[i] += timeOfSolution;
       }
-      /*
-      Delete the used solver interfaces so we can reload fresh clones for the
-      next problem.
-      */
-      for (i = vecSiP.size()-1 ; i >= 0 ; --i) delete vecSiP[i] ;
+      else
+      { std::cout.flush() ;
+        std::cerr << "  " << siName[i] << "; error " ;
+        if (vecSiP[i]->isProvenPrimalInfeasible())
+	  std::cerr << "primal infeasible" ;
+        else if (vecSiP[i]->isIterationLimitReached())
+	  std::cerr << "iteration limit" ;
+        else if (vecSiP[i]->isAbandoned())
+	  std::cerr << "abandoned" ;
+        else
+	  std::cerr << "unknown" ; } }
+/*
+  Delete the used solver interfaces so we can reload fresh clones for the
+  next problem.
+*/
+    for (i = 0 ; i < numSolvers ; i++) delete vecSiP[i] ; }
+/*
+  Print a summary for each solver.
+*/
+  for (i = 0 ; i < numSolvers ; i++) {
+    std::cout
+      << siName[i] << " solved "
+      << numProbSolved[i] << " out of "
+      << numProblems << " and took " << timeTaken[i] << " seconds."
+      << std::endl ;
   }
-
-  const int siName_size = siName.size();
-  for ( i=0; i<siName_size; i++ ) {
-    std::cerr
-      <<siName[i]
-      <<" solved "
-      <<numProbSolved[i]
-      <<" out of "
-      <<objValue.size()
-      <<" and took "
-      <<timeTaken[i]
-      <<" seconds."
-      <<std::endl;
-  }
-
-  return (0) ;
+/*
+  If we're testing just one solver, return the number of failed problems.
+  If we're doing multiple solvers, always claim success.
+*/
+  if (numSolvers == 1)
+    return (numProblems-numProbSolved[0]) ;
+  else
+    return (0) ;
 }
 
 
@@ -5160,6 +5204,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 	assert(!exists ^ testHintParam(si,i,true,OsiForceDo,&throws)) ;
 	assert(!exists ^ testHintParam(si,i,false,OsiForceDo,&throws)) ; }
 
+      std::cout.flush() ;
       std::cerr << "Checked " << OsiLastHintParam <<
 		   " hints x (true, false) at strength OsiForceDo; " <<
 		   throws << " throws." << std::endl ;

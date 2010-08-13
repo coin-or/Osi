@@ -98,8 +98,10 @@ void failureMessage( const OsiSolverInterface & si,
   failureMessage(solverName,message);
 }
 
-// Display message on stdout and stderr. Flush cout buffer before printing the
-// message, so that output comes out in order in spite of buffered cout.
+/*
+  Display message on stderr. Flush cout buffer before printing the message,
+  so that output comes out in order in spite of buffered cout.
+*/
 void testingMessage( const char * const msg )
 {
   std::cout.flush() ;
@@ -3805,6 +3807,7 @@ int testEmptySi (const OsiSolverInterface *emptySi)
   
   return (errCnt) ; }
 
+
 /*
   This routine uses the problem galenet (included in Data/Sample) to check
   getDualRays. Galenet is a primal infeasible flow problem:
@@ -3819,150 +3822,303 @@ int testEmptySi (const OsiSolverInterface *emptySi)
   d8: t58 >= 30
 
   t14,t58 <= 30    tt24, t57 <= 20    t25, t35, t46 <= 10    t47 <= 2
-  
-  The routine doesn't actually test for specific dual rays; rather, it tests for
-  rA >= 0 and rb < 0, on the assumption that the dual constraint system matches
-  the canonical form min yb  yA >= c. (More accurately, on the assumption that
-  the sign convention of the ray is correct for the canonical form.)
+
+  Galenet is the original form, with mixed explicit constraints and implicit
+  bound constraints. Galenetbnds is the same problem, but with implicit
+  bounds converted to explicit constraints and all constraints converted to
+  inequalities so that the algebraic test still works.
+
+  The routine doesn't actually test for specific dual rays; rather, it tests
+  for rA >= 0 and rb < 0, on the assumption that the dual constraint system
+  matches the canonical form min yb  yA >= c. (More accurately, on the
+  assumption that the sign convention of the ray is correct for the canonical
+  form.)
+
+  The strategy is to check first for the ability to return a ray with row and
+  column components, then a ray with row components only. If both of these
+  result in a throw, conclude that the solver does not implement getDualRays.
 */
 
 int testDualRays (const OsiSolverInterface *emptySi,
 		  const std::string &sampleDir)
 
 { int errCnt = 0 ;
-  unsigned int v,rayCnt ;
-  std::string solverName;
-  OsiSolverInterface *si = emptySi->clone() ;
+  unsigned int rayNdx,raysReturned ;
+  bool hasGetDualRays = false ;
 
-  si->getStrParam(OsiSolverName,solverName) ;
-  int nameDiscipline = 1 ;
-  si->setIntParam(OsiNameDiscipline,nameDiscipline) ;
+  std::string solverName ;
+  OsiSolverInterface *si = 0 ;
 
-  const std::string mpsName = "galenetbnds" ;
-  std::cout << "Testing getDualRays on " << mpsName << "." << std::endl ;
+  std::vector<double *> rays ;
+  bool catchSomeRays ;
+  const int raysRequested = 5 ;
+  const std::string mpsNames[] = { "galenet", "galenetbnds" } ;
+  const bool rayTypes[] = { true, false } ;
+
+  // Set to true if you want to see the ray coefficients
+  const bool verbose = false ;
+
+  std::cout << "Checking getDualRays ..." << std::endl ;
 /*
-  See if we can find galenet.mps to test getDualRays.
+  Figure out what we can test. getDualRays only makes sense after solving a
+  problem, so the strategy is to solve galenet and try for full rays. If that
+  fails, solve galenetbnds and try for row-component rays. If that fails,
+  conclude that the solver doesn't implement getDualRays.
 */
-  std::string fn = sampleDir+mpsName ;
-  int mpsErrs = si->readMps(fn.c_str(),"mps") ;
-  if (mpsErrs != 0)
-  { std::cout << "Could not read " << fn << "; skipping test." << std::endl ;
-    errCnt++ ;
-    delete si ;
-    return (errCnt) ; }
-  si->setObjSense(-1.0) ;
+  for (int iter = 0 ; iter <= 1 ; iter++)
+  { const bool fullRay = rayTypes[iter] ;
+    const std::string mpsName = mpsNames[iter] ;
+    const std::string fn = sampleDir+mpsName ;
+    
+    si = emptySi->clone() ;
+    si->getStrParam(OsiSolverName,solverName) ;
+    std::cout
+      << "  checking if " << solverName << " implements getDualRays(maxRays"
+      << ((fullRay == true)?",true":"") << ") ... " ;
+
+    int nameDiscipline = 1 ;
+    si->setIntParam(OsiNameDiscipline,nameDiscipline) ;
+
+    int mpsErrs = si->readMps(fn.c_str(),"mps") ;
+    if (mpsErrs != 0)
+    { std::cout << "  " << solverName << " could not read "
+	<< fn << "; aborting test." << std::endl ;
+      errCnt++ ;
+      delete si ;
+      return (errCnt) ; }
 /*
   Solve and report the result. We should be primal infeasible, and not optimal.
+  Specify maximisation just for kicks.
 */
-  si->setHintParam(OsiDoPresolveInInitial,false,OsiHintDo) ;
-  si->initialSolve() ;
-  if (si->isProvenOptimal())
-  { std::cout
-      << "  " << solverName
-      << " claims optimal result for infeasible problem "
-      << mpsName  << "." << std::endl ;
-    errCnt++ ; }
-  if (!si->isProvenPrimalInfeasible())
-  { std::cout
-      << "  " << solverName
-      << " fails to prove " << mpsName << " is infeasible." << std::endl ;
-    errCnt++ ; }
+    si->setObjSense(-1.0) ;
+    si->setHintParam(OsiDoPresolveInInitial,false,OsiHintDo) ;
+    si->setHintParam(OsiDoReducePrint,true,OsiHintDo) ;
+    si->initialSolve() ;
+    if (si->isProvenOptimal())
+    { std::cout
+	<< "  " << solverName
+	<< " claims optimal result for infeasible problem "
+	<< mpsName  << "." << std::endl ;
+      errCnt++ ; }
+    if (!si->isProvenPrimalInfeasible())
+    { std::cout
+	<< "  " << solverName
+	<< " fails to prove " << mpsName << " is infeasible." << std::endl ;
+      errCnt++ ; }
 /*
-  Check for rays. This is a pure virtual function in the Osi base class, and
-  not all solvers support it, so be prepared for a throw here. If the call is
-  successful, check that r != 0 and that rA >= 0 for all purported rays.
+  Try a call to getDualRays. If the call throws, abort this iteration and
+  try again.
 */
-  std::vector<double *> rays ;
-  bool catchSomeRays = false ;
-
-  try
-  { rays = si->getDualRays(5) ;
-    catchSomeRays = true ; }
-  catch (CoinError err)
-  { std::cout
-      << "  " << solverName << " threw on call to getDualRays. Message is:"
-      << std::endl
-      << err.className() << "::" << err.methodName() << ": " << err.message()
-      << std::endl ;
-    errCnt++ ; }
+    catchSomeRays = false ;
+    try
+    { rays = si->getDualRays(raysRequested,fullRay) ;
+      catchSomeRays = true ;
+      hasGetDualRays = true ;
+      std::cout << "yes." << std::endl ; }
+    catch (CoinError err)
+    { std::cout << "no." << std::endl ;
+      delete si ;
+      si = 0 ;
+      continue ; }
 /*
-  We have rays. Check to see how many. It's not really an error to return
-  only one --- there's no exhaustive inventory of rays at every vertex ---
-  but it's definitely an error to claim none, or to return more than the
-  maximum.
+  We have rays. Check to see how many. There should be at least one, and no
+  more than the number requested. If there are none, bail out now.
 */
-  if (catchSomeRays == true)
-  { rayCnt = static_cast<unsigned int>(rays.size()) ;
-    if (rayCnt < 1 || rayCnt > 5)
+    raysReturned = static_cast<unsigned int>(rays.size()) ;
+    if (raysReturned < 1 || raysReturned > 5)
     { std::cout
 	<< "  " << solverName << " returned "
-	<< rayCnt << " rays; expected between 1 and 5." << std::endl ;
-       errCnt++ ; }
+	<< raysReturned << " rays; expected between 1 and " << raysRequested
+	<< "." << std::endl ;
+       errCnt++ ;
+       if (raysReturned < 1) break ; }
+/*
+  Do a bit of setup before checking each ray. If we're dealing with a full
+  ray, we'll need variable bounds, solution value, and status. Acquire the
+  bounds arrays, and acquire a warm start object so we can ask for column
+  status. Failure to retrieve a warm start aborts the test.
+*/
 
     unsigned int m,n,i,j ;
     m = si->getNumRows() ;
     n = si->getNumCols() ;
+    unsigned int rayLen = m ;
+    CoinWarmStartBasis *wsb = 0 ;
+    const double *vlbs= 0 ;
+    const double *vubs = 0 ;
+    const double *xvals = 0 ;
+    if (fullRay == true)
+    { rayLen += n ;
+      wsb = dynamic_cast<CoinWarmStartBasis *>(si->getWarmStart()) ;
+      if (wsb == 0)
+      { std::cout
+	  << "  " << solverName << " could not obtain CoinWarmStartBasis."
+	  << std::endl ;
+	errCnt++ ;
+	break ; }
+       vlbs = si->getColLower() ;
+       vubs = si->getColUpper() ;
+       xvals = si->getColSolution() ; }
 
     double tol ;
     si->getDblParam(OsiDualTolerance,tol) ;
 
-    double *rA = new double[m] ;
+    double *rA = new double[rayLen] ;
 /*
-  For each ray, check that it's nonzero, and that it satisfies rA >= 0.
+  Open a loop to check each ray for validity.
 */
-    for (v = 0 ; v < rayCnt ; v++)
-    { double *ray = rays[v] ;
+    for (rayNdx = 0 ; rayNdx < raysReturned ; rayNdx++)
+    { double *ray = rays[rayNdx] ;
 
-      std::cout << "  Ray[" << v << "]: " << std::endl ;
-      for (i = 0 ; i < m ; i++)
-      { if (fabs(ray[i]) > tol)
-	{ std::cout
-	    << "    " << si->getRowName(i) << " [" << i << "]: "
-	    << ray[i] << std::endl ; } }
-
-      for (i = 0 ; i < m ; i++)
+      if (verbose)
+      { std::cout << "  Ray[" << rayNdx << "]: " << std::endl ;
+	for (i = 0 ; i < m ; i++)
+	{ if (fabs(ray[i]) > tol)
+	  { std::cout
+	      << "    " << si->getRowName(i) << " [" << i << "]: "
+	      << ray[i] << std::endl ; } }
+	if (fullRay == true)
+	{ for (j = 0 ; j < n ; j++)
+	  { if (fabs(ray[m+j]) > tol)
+	    { std::cout
+		<< "    " << si->getColName(j) << " [" << j << "]: "
+		<< ray[m+j] << std::endl ; } } } }
+/*
+  Check that the ray is not identically zero.
+*/
+      for (i = 0 ; i < rayLen ; i++)
       { if (fabs(ray[i]) > tol) break ; }
-      if (i == m)
+      if (i == rayLen)
       { std::cout
-	  << "  " << solverName << ": ray[" << v << "] has no nonzeros."
+	  << "  " << solverName << ": ray[" << rayNdx << "] has no nonzeros."
 	  << std::endl ;
 	errCnt++ ;
 	continue ; }
-      
+/*
+  Check that dot(r,b) < 0. For the first m components this is a
+  straightforward dot product. If we're dealing with column components, we
+  need to synthesize the coefficient on-the-fly. There can be at most one
+  nonzero associated with an out-of-bound basic primal, which corresponds to
+  the nonbasic dual that's driving the ray.
+*/
+      double rdotb = 0.0 ;
+      int nzoobCnt = 0 ;
+      const double *rhs = si->getRightHandSide() ;
+      for (int i = 0 ; i < m ; i++)
+      { rdotb += rhs[i]*ray[i] ; }
+      if (fullRay == true)
+      { CoinWarmStartBasis::Status statj ;
+	for (int j = 0 ; j < n ; j++)
+	{ statj = wsb->getStructStatus(j) ;
+	  switch (statj)
+	  { case CoinWarmStartBasis::atUpperBound:
+	    { rdotb += vubs[j]*ray[m+j] ;
+	      break ; }
+	    case CoinWarmStartBasis::atLowerBound:
+	    { rdotb += (-vlbs[j])*ray[m+j] ;
+	      break ; }
+	    case CoinWarmStartBasis::basic:
+	    { if (ray[m+j] != 0)
+	      { nzoobCnt++ ;
+		if (xvals[j] > vubs[j])
+		{ rdotb += vubs[j]*ray[m+j] ; }
+		else
+		if (xvals[j] < vlbs[j])
+		{ rdotb += (-vlbs[j])*ray[m+j] ; }
+		else
+		{ std::cout
+		    << "  " << solverName << ": ray component for column "
+		    << j << " is nonzero but x[" << j << "] is within bounds."
+		    << std::endl ;
+		  errCnt++ ; } }
+	      break ; }
+	    default:
+	    { if (fabs(ray[i]) > tol)
+	      { std::cout
+		  << "  " << solverName << ": ray component for column "
+		  << j << " is nonzero but status is " << statj
+		  << "." << std::endl ;
+		errCnt++ ; }
+	      break ; } } }
+	  if (nzoobCnt > 1)
+	  { std::cout
+	      << "  " << solverName << ": ray has "
+	      << nzoobCnt << " nonzeros matching basic "
+	      << "variables; should be at most one nonzero." << std::endl ;
+	    errCnt++ ; } }
+      if (rdotb >= 0)
+      { std::cout
+	  << "  " << solverName << ": dot(r,b) = " << rdotb << " >= 0; "
+	  << "should be strictly less than zero." << std::endl ;
+	errCnt++ ; }
+/*
+  On to rA >= 0. As with dot(r,b), it's trivially easy to do the calculation
+  for explicit constraints, but we have to synthesize the coefficients
+  corresponding to bounded variables on-the-fly. Upper bounds look like
+  x<j> <= u<j>, lower bounds -x<j> <= -l<j>. No need to repeat the ray
+  coefficient tests.
+*/
       CoinFillN(rA,m,0.0) ;
       si->getMatrixByCol()->transposeTimes(ray,rA) ;
+      if (fullRay == true)
+      { CoinWarmStartBasis::Status statj ;
+	for (j = 0 ; j < n ; j++)
+	{ statj = wsb->getStructStatus(j) ;
+	  switch (statj)
+	  { case CoinWarmStartBasis::atUpperBound:
+	    { rA[j] += ray[m+j] ;
+	      break ; }
+	    case CoinWarmStartBasis::atLowerBound:
+	    { rA[j] += -ray[m+j] ;
+	      break ; }
+	    case CoinWarmStartBasis::basic:
+	    { if (ray[m+j] != 0)
+	      { if (xvals[j] > vubs[j])
+		{ rA[j] += ray[m+j] ; }
+		else
+		if (xvals[j] < vlbs[j])
+		{ rA[j] += -ray[m+j] ; } }
+	      break ; }
+	    default:
+	    { break ; } } } }
+
       bool badVal = false ;
       for (j = 0 ; j < n ; j++)
       { if (rA[j] < -tol)
 	{ std::cout
-	    << "  " << solverName << ": ray[" << v
+	    << "  " << solverName << ": ray[" << rayNdx
 	    << "] fails rA >= 0 for column " << j
 	    << " with value " << rA[j] << "."
 	    << std::endl ;
 	  badVal = true ;
 	  errCnt++ ; } }
-      if (badVal == true)
-      { std::cout << "  Ray[" << v << "]: " << std::endl ;
+      if (badVal == true && verbose == true)
+      { std::cout << "  Ray[" << rayNdx << "]: " << std::endl ;
 	for (i = 0 ; i < m ; i++)
 	{ if (fabs(ray[i]) > tol)
-	  { std::cout << "    [" << i << "]: " << ray[i] << std::endl ; } } } }
-
-    delete [] rA ;
-    for (v = 0 ; v < rayCnt ; v++)
-    { delete [] rays[v] ; } }
+	  { std::cout
+	      << "    [" << i << "]: " << ray[i] << std::endl ; } } } }
 /*
   Clean up.
 */
-  delete si ;
+    delete [] rA ;
+    for (rayNdx = 0 ; rayNdx < raysReturned ; rayNdx++)
+    { delete [] rays[rayNdx] ; }
+    delete si ; }
 /*
   Report the result and we're done.
 */
-  if (errCnt == 0)
-  { testingMessage(" ok.\n") ; }
+  if (hasGetDualRays == false)
+  { testingMessage("  *** WARNING *** getDualRays is unimplemented.\n") ; }
   else
-  { failureMessage(solverName,"get dual/primal rays.") ; }
+  if (errCnt == 0)
+  { testingMessage("  ... passed.\n") ; }
+  else
+  { failureMessage(solverName,"get dual rays.") ; }
 
   return (errCnt) ; }
+
+
 
 /*
   Method to compare the problem representation held by a pair of solver
@@ -5272,21 +5428,12 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       delete s;
     }
   }
-#if 0
 /*
-  Turn this off for a while longer. The routine applies the mathematical test
-  for a ray, rA >= 0. However, the Osi getDualRays routine does not return the
-  values of nonzero duals associated with finite but nonzero implicit bounds.
-  Hence the test fails, in general, for the vast majority of LPs which are
-  primal infeasible (dual unbounded).
-*/
-/*
-  Test for dual rays. Vol doesn't react well to dual unboundedness.
+  Test dual rays. Vol doesn't react well to dual unboundedness.
 */
   if (!volSolverInterface) {
     errCnt += testDualRays(emptySi,mpsDir) ;
   }
-#endif
 
   return (errCnt) ; }
 

@@ -54,7 +54,7 @@ AC_COIN_MAIN_PACKAGEDIR(Osi)
 #                  Check for doxygen                                        #
 #############################################################################
 
-AC_COIN_DOXYGEN(CoinUtils)
+AC_COIN_DOXYGEN(CoinUtils Cgl Clp DyLP Vol SYMPHONY)
 
 ##############################################################################
 #                   Finishing up by writing all the output                   #

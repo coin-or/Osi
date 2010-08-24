@@ -33,9 +33,7 @@ class OsiObject;
 
 //#############################################################################
 
-/** Solver Interface Abstract Base Class
-
-  Abstract Base Class for describing an interface to a solver.
+/*! \brief Abstract Base Class for describing an interface to a solver.
 
   Many OsiSolverInterface query methods return a const pointer to the
   requested read-only data. If the model data is changed or the solver
@@ -1671,22 +1669,151 @@ public:
     const OsiRowCutDebugger * getRowCutDebuggerAlways() const;
 
   //@} 
-  /// All OsiSimplex methods now moved here
   
-  /** Simplex Interface Abstract Base Class
+  /*! \name OsiSimplexInterface
+      \brief Simplex Interface
 
-  Abstract Base Class for describing an advanced interface to a simplex solver.
-  When switched on allows great control of simplex iterations.  Also allows
-  access to tableau.
+    Methods for an advanced interface to a simplex solver. The interface
+    comprises two groups of methods. Group 1 contains methods for tableau
+    access. Group 2 contains methods for dictating individual simplex pivots.
   */
-  
-public:
-  ///@name OsiSimplexInterface methods 
   //@{
-  /** Returns 1 if can just do getBInv etc
-      2 if has all OsiSimplex methods
-      and 0 if it has none */
-  virtual int canDoSimplexInterface() const;
+
+  /*! \brief Return the simplex implementation level.
+  
+      The return codes are:
+      - 0: the simplex interface is not implemented.
+      - 1: the Group 1 (tableau access) methods are implemented.
+      - 2: the Group 2 (pivoting) methods are implemented
+
+      The codes are cumulative - a solver which implements Group 2 also
+      implements Group 1.
+  */
+  virtual int canDoSimplexInterface() const ;
+  //@}
+
+  /*! \name OsiSimplex Group 1
+      \brief Tableau access methods.
+
+      This group of methods provides access to rows and columns of the basis
+      inverse and to rows and columns of the tableau.
+  */
+  //@{
+
+  /*! \brief Prepare the solver for the use of tableau access methods.
+  
+    Prepares the solver for the use of the tableau access methods, if
+    any such preparation is required.
+
+    The \c const attribute is required due to the places this method
+    may be called (e.g., within CglCutGenerator::generateCuts()).
+  */
+  virtual void enableFactorization() const ;
+
+  /*! \brief Undo the effects of #enableFactorization. */
+  virtual void disableFactorization() const ;
+
+  /*! \brief Check if an optimal basis is available.
+  
+    Returns true if the problem has been solved to optimality and a
+    basis is available. This should be used to see if the tableau access
+    operations are possible and meaningful.
+    
+    \note
+    Implementors please note that this method may be called
+    before #enableFactorization.
+  */
+  virtual bool basisIsAvailable() const ;
+
+  /// Synonym for #basisIsAvailable
+  inline bool optimalBasisIsAvailable() const { return basisIsAvailable() ; }
+
+  /*! \brief Retrieve status information for column and row variables.
+ 
+    This method returns status as integer codes:
+    <ul>
+      <li> 0: free
+      <li> 1: basic
+      <li> 2: nonbasic at upper bound
+      <li> 3: nonbasic at lower bound
+    </ul>
+
+    The #getWarmStart method provides essentially the same functionality
+    for a simplex-oriented solver, but the implementation details are very
+    different.
+
+    \note
+    Logical variables associated with rows are all assumed to have +1
+    coefficients, so for a <= constraint the logical will be at lower
+    bound if the constraint is tight.
+
+    \note
+    Implementors may choose to implement this method as a wrapper which
+    converts a CoinWarmStartBasis to the requested representation.
+  */
+  virtual void getBasisStatus(int* cstat, int* rstat) const ;
+
+  /*! \brief Set the status of column and row variables and update
+             the basis factorization and solution.
+
+    Status information should be coded as documented for #getBasisStatus.
+    Returns 0 if all goes well, 1 if something goes wrong.
+
+    This method differs from #setWarmStart in the format of the input
+    and in its immediate effect. Think of it as #setWarmStart immediately
+    followed by #resolve.
+
+    \note
+    Implementors may choose to implement this method as a wrapper that calls
+    #setWarmStart and #resolve.
+  */
+  virtual int setBasisStatus(const int* cstat, const int* rstat) ;
+
+  /*! \brief Calculate duals and reduced costs for the given objective
+	     coefficients.
+
+    The solver's objective coefficient vector is not changed
+    (cf. #setObjectiveAndRefresh)
+  */
+  virtual void getReducedGradient(double* columnReducedCosts, 
+				  double * duals,
+				  const double * c) ;
+
+  /*! Calculate duals and reduced costs for the given objective coefficients.
+
+    The given objective coefficients are set in the solver and the duals and
+    reduced costs are updated (cf. #getReducedGradient).
+  */
+  virtual void setObjectiveAndRefresh(const double* c) ;
+
+  ///Get a row of the tableau (slack part in slack if not NULL)
+  virtual void getBInvARow(int row, double* z, double * slack=NULL) const ;
+
+  ///Get a row of the basis inverse
+  virtual void getBInvRow(int row, double* z) const ;
+
+  ///Get a column of the tableau
+  virtual void getBInvACol(int col, double* vec) const ;
+
+  ///Get a column of the basis inverse
+  virtual void getBInvCol(int col, double* vec) const ;
+
+  /** Get basic indices (order of indices corresponds to the
+      order of elements in a vector retured by getBInvACol() and
+      getBInvCol()).
+  */
+  virtual void getBasics(int* index) const ;
+
+  //@}
+
+  /*! \name OsiSimplex Group 2
+      \brief Pivoting methods
+
+      This group of methods provides for control of individual pivots by a
+      simplex solver.
+  */
+  //@{
+
   /**Enables normal operation of subsequent functions.
      This method is supposed to ensure that all typical things (like
      reduced costs, etc.) are updated when individual pivots are executed
@@ -1697,48 +1824,6 @@ public:
 
   ///Undo whatever setting changes the above method had to make
   virtual void disableSimplexInterface() ;
-
-  /** Tells solver that calls to getBInv etc are about to take place.
-      Underlying code may need mutable as this may be called from 
-      CglCut:;generateCuts which is const.  If that is too horrific then
-      each solver e.g. BCP or CBC will have to do something outside
-      main loop.
-  */
-  virtual void enableFactorization() const;
-  /// and stop
-  virtual void disableFactorization() const;
-
-  /** Returns true if a basis is available
-      AND problem is optimal.  This should be used to see if
-      the BInvARow type operations are possible and meaningful. 
-  */
-  virtual bool basisIsAvailable() const ;
-  /// Synonym for basisIsAvailable!
-  inline bool optimalBasisIsAvailable() const
-  { return basisIsAvailable();}
-
-  /** The following two methods may be replaced by the
-     methods of OsiSolverInterface using OsiWarmStartBasis if:
-     1. OsiWarmStartBasis resize operation is implemented
-     more efficiently and
-     2. It is ensured that effects on the solver are the same
-
-     Returns a basis status of the structural/artificial variables 
-     At present as warm start i.e 0 free, 1 basic, 2 upper, 3 lower
-
-     NOTE  artificials are treated as +1 elements so for <= rhs
-     artificial will be at lower bound if constraint is tight
-  */
-  virtual void getBasisStatus(int* cstat, int* rstat) const ;
-
-  /** Set the status of structural/artificial variables and
-      factorize, update solution etc 
-
-     NOTE  artificials are treated as +1 elements so for <= rhs
-     artificial will be at lower bound if constraint is tight
-  */
-  virtual int setBasisStatus(const int* cstat, const int* rstat) ;
-
   /** Perform a pivot by substituting a colIn for colOut in the basis. 
      The status of the leaving variable is given in outStatus. Where
      1 is to upper bound, -1 to lower bound
@@ -1772,33 +1857,6 @@ public:
   virtual int dualPivotResult(int& colIn, int& sign, 
 			      int colOut, int outStatus, 
 			      double& t, CoinPackedVector* dx) ;
-
-  ///Get the reduced gradient for the cost vector c 
-  virtual void getReducedGradient(double* columnReducedCosts, 
-				  double * duals,
-				  const double * c) ;
-
-  /** Set a new objective and apply the old basis so that the
-      reduced costs are properly updated */
-  virtual void setObjectiveAndRefresh(double* c) ;
-
-  ///Get a row of the tableau (slack part in slack if not NULL)
-  virtual void getBInvARow(int row, double* z, double * slack=NULL) const ;
-
-  ///Get a row of the basis inverse
-  virtual void getBInvRow(int row, double* z) const ;
-
-  ///Get a column of the tableau
-  virtual void getBInvACol(int col, double* vec) const ;
-
-  ///Get a column of the basis inverse
-  virtual void getBInvCol(int col, double* vec) const ;
-
-  /** Get basic indices (order of indices corresponds to the
-      order of elements in a vector retured by getBInvACol() and
-      getBInvCol()).
-  */
-  virtual void getBasics(int* index) const ;
   //@}
    
   //---------------------------------------------------------------------------

@@ -95,8 +95,8 @@ std::string invRowColName (char rcd, int ndx)
 void reallocRowColNames (OsiSolverInterface::OsiNameVec &rowNames, int m,
 			 OsiSolverInterface::OsiNameVec &colNames, int n)
 
-{ int rowCap = rowNames.capacity() ;
-  int colCap = colNames.capacity() ;
+{ int rowCap = static_cast<int>(rowNames.capacity()) ;
+  int colCap = static_cast<int>(colNames.capacity()) ;
 
   if (rowCap-m > 1000)
   { rowNames.resize(m) ;
@@ -456,7 +456,7 @@ void OsiSolverInterface::setRowNames (OsiNameVec &srcNames,
   { return ; }
   if (srcStart < 0)
   { return ; }
-  int srcLen = srcNames.size() ;
+  int srcLen = static_cast<int>(srcNames.size()) ;
 /*
   Load 'em up.
 */
@@ -493,7 +493,7 @@ void OsiSolverInterface::deleteRowNames (int tgtStart, int len)
   Trim the range to names that exist in the name vector. If we're doing lazy
   names, it's quite likely that we don't need to do any work.
 */
-  int lastNdx = rowNames_.size() ;
+  int lastNdx = static_cast<int>(rowNames_.size()) ;
   if (tgtStart < 0 || tgtStart >= lastNdx)
   { return ; }
   if (tgtStart+len > lastNdx)
@@ -586,7 +586,7 @@ void OsiSolverInterface::setColNames (OsiNameVec &srcNames,
   { return ; }
   if (srcStart < 0)
   { return ; }
-  int srcLen = srcNames.size() ;
+  int srcLen = static_cast<int>(srcNames.size()) ;
 /*
   Load 'em up.
 */
@@ -624,7 +624,7 @@ void OsiSolverInterface::deleteColNames (int tgtStart, int len)
   Trim the range to names that exist in the name vector. If we're doing lazy
   names, it's quite likely that we don't need to do any work.
 */
-  int lastNdx = colNames_.size() ;
+  int lastNdx = static_cast<int>(colNames_.size()) ;
   if (tgtStart < 0 || tgtStart >= lastNdx)
   { return ; }
   if (tgtStart+len > lastNdx)

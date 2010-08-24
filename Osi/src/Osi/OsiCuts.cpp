@@ -75,14 +75,14 @@ void OsiCuts::gutsOfDestructor()
 {
   int i;
   
-  int ne = rowCutPtrs_.size();
+  int ne = static_cast<int>(rowCutPtrs_.size());
   for (i=0; i<ne; i++) {
     if (rowCutPtrs_[i]->globallyValidAsInteger()!=2)
       delete rowCutPtrs_[i];
   }
   rowCutPtrs_.clear();
   
-  ne = colCutPtrs_.size();
+  ne = static_cast<int>(colCutPtrs_.size());
   for (i=0; i<ne; i++) {
     if (colCutPtrs_[i]->globallyValidAsInteger()!=2)
       delete colCutPtrs_[i];

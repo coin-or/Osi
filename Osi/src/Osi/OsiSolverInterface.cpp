@@ -219,17 +219,26 @@ OsiSolverInterface::getColType(bool refresh) const
   return columnType_;
 }
 
-//#############################################################################
-// Built-in (i.e., slow) methods for problem modification
-//#############################################################################
+/*
+###############################################################################
+
+  Built-in methods for problem modification
+
+  Some of these can surely be reimplemented more efficiently given knowledge of
+  the derived OsiXXX data structures, but we can't make assumptions here. For
+  others, it's less clear. Given standard vector data structures in the
+  underlying OsiXXX, likely the only possible gain is avoiding a method call.
+
+###############################################################################
+*/
 
 void
 OsiSolverInterface::setObjCoeffSet(const int* indexFirst,
 				  const int* indexLast,
 				  const double* coeffList)
 {
-   const int cnt = indexLast - indexFirst;
-   for (int i = 0; i < cnt; ++i) {
+   const ptrdiff_t cnt = indexLast - indexFirst;
+   for (ptrdiff_t i = 0; i < cnt; ++i) {
       setObjCoeff(indexFirst[i], coeffList[i]);
    }
 }
@@ -285,6 +294,7 @@ OsiSolverInterface::setInteger(const int* indices, int len)
     setInteger(indices[i]);
   }
 }
+//-----------------------------------------------------------------------------
 /* Set the objective coefficients for all columns
     array [getNumCols()] is an array of values for the objective.
     This defaults to a series of set operations and is here for speed.
@@ -295,6 +305,7 @@ void OsiSolverInterface::setObjective(const double * array)
   for (int i=0;i<n;i++)
     setObjCoeff(i,array[i]);
 }
+//-----------------------------------------------------------------------------
 /* Set the lower bounds for all columns
     array [getNumCols()] is an array of values for the objective.
     This defaults to a series of set operations and is here for speed.
@@ -305,6 +316,7 @@ void OsiSolverInterface::setColLower(const double * array)
   for (int i=0;i<n;i++)
     setColLower(i,array[i]);
 }
+//-----------------------------------------------------------------------------
 /* Set the upper bounds for all columns
     array [getNumCols()] is an array of values for the objective.
     This defaults to a series of set operations and is here for speed.
@@ -353,7 +365,7 @@ OsiSolverInterface::addCol(int numberElements,
 //-----------------------------------------------------------------------------
 /* Add a set of columns (primal variables) to the problem.
    
-  Default implementations simply make repeated calls to addCol().
+  Default implementation simply makes repeated calls to addCol().
 */
 void
 OsiSolverInterface::addCols(const int numcols,
@@ -1621,22 +1633,21 @@ bool
 OsiSolverInterface::basisIsAvailable() const 
 {
   return false;
-  /* // Throw an exception
-  throw CoinError("Needs coding for this interface", "basisIsAvailable",
-  "OsiSolverInterface"); */
 }
 
-/* The following two methods may be replaced by the
+/* (JJF ?date?) The following two methods may be replaced by the
    methods of OsiSolverInterface using OsiWarmStartBasis if:
    1. OsiWarmStartBasis resize operation is implemented
    more efficiently and
    2. It is ensured that effects on the solver are the same
-   
-   Returns a basis status of the structural/artificial variables 
-   At present as warm start i.e 0 free, 1 basic, 2 upper, 3 lower
-   
-   NOTE  artificials are treated as +1 elements so for <= rhs
-   artificial will be at lower bound if constraint is tight
+ 
+   (lh 100818)
+   1. CoinWarmStartBasis is the relevant resize, and John's right, it needs
+      to be reworked. The problem is that when new columns or rows are added,
+      the new space is initialised two bits at a time. It needs to be done
+      in bulk. There are other problems with CoinWarmStartBasis that should
+      be addressed at the same time.
+   2. setWarmStart followed by resolve should do it.
 */
 void 
 OsiSolverInterface::getBasisStatus(int* , int* ) const 
@@ -1723,7 +1734,7 @@ OsiSolverInterface::getReducedGradient(double* ,
 /* Set a new objective and apply the old basis so that the
    reduced costs are properly updated */
 void 
-OsiSolverInterface::setObjectiveAndRefresh(double* ) 
+OsiSolverInterface::setObjectiveAndRefresh(const double* ) 
 {
   // Throw an exception
   throw CoinError("Needs coding for this interface", "setObjectiveAndRefresh",

@@ -4004,11 +4004,11 @@ int testDualRays (const OsiSolverInterface *emptySi,
       double rdotb = 0.0 ;
       int nzoobCnt = 0 ;
       const double *rhs = si->getRightHandSide() ;
-      for (int i = 0 ; i < m ; i++)
+      for (i = 0 ; i < m ; i++)
       { rdotb += rhs[i]*ray[i] ; }
       if (fullRay == true)
       { CoinWarmStartBasis::Status statj ;
-	for (int j = 0 ; j < n ; j++)
+	for (j = 0 ; j < n ; j++)
 	{ statj = wsb->getStructStatus(j) ;
 	  switch (statj)
 	  { case CoinWarmStartBasis::atUpperBound:

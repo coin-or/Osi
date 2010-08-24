@@ -1063,7 +1063,8 @@ OsiTestSolverInterface::deleteCols(const int num, const int * columnIndices)
     int * delPos = new int[num];
     CoinDisjointCopyN(columnIndices, num, delPos);
     std::sort(delPos, delPos + num);
-    const int delNum = std::unique(delPos, delPos + num) - delPos;
+    const int delNum =
+      static_cast<int>(std::unique(delPos, delPos + num) - delPos);
 
     const int colnum = getNumCols();
     CoinDeleteEntriesFromArray(collower_, collower_ + colnum,
@@ -1189,7 +1190,8 @@ OsiTestSolverInterface::deleteRows(const int num, const int * rowIndices)
     int * delPos = new int[num];
     CoinDisjointCopyN(rowIndices, num, delPos);
     std::sort(delPos, delPos + num);
-    const int delNum = std::unique(delPos, delPos + num) - delPos;
+    const int delNum = 
+        static_cast<int>(std::unique(delPos, delPos + num) - delPos);
 
     const int rownum = getNumRows();
     CoinDeleteEntriesFromArray(rowlower_, rowlower_ + rownum,

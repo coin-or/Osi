@@ -202,99 +202,97 @@ VOL_problem::read_params(const char* filename)
       abort();
    }
    while (fgets(s, 100, infile)) {
-      const int len = strlen(s) - 1;
+      const size_t len = strlen(s) - 1;
       if (s[len] == '\n')
 	 s[len] = 0;
       std::string ss(s);
 
       if (ss.find("temp_dualfile") == 0) {
-	 int i = ss.find("=");  
-	 int i1 = ss.length()-i-1;
+	 size_t i = ss.find("=");  
+	 size_t i1 = ss.length()-i-1;
 	 std::string sss = ss.substr(i+1,i1);
 	 parm.temp_dualfile = new char[sss.length() + 1];
 	 memcpy(parm.temp_dualfile, sss.c_str(), sss.length());
 	 parm.temp_dualfile[sss.length()] = 0;
       } else if (ss.find("ubinit") == 0) {
-	 int i = ss.find("=");  
+	 size_t i = ss.find("=");  
 	 parm.ubinit = atof(&s[i+1]);
 
       } else if (ss.find("printflag") == 0) {
-	 int i = ss.find("=");  
+	 size_t i = ss.find("=");  
 	 parm.printflag = atoi(&s[i+1]);
 	 
       } else if (ss.find("printinvl") == 0) {
-	 int i = ss.find("=");  
+	 size_t i = ss.find("=");  
 	 parm.printinvl = atoi(&s[i+1]);
 
       } else if (ss.find("maxsgriters") == 0) {
-	 int i = ss.find("=");  
+	 size_t i = ss.find("=");  
 	 parm.maxsgriters = atoi(&s[i+1]);
 	 
       } else if (ss.find("heurinvl") == 0) {
-	 int i = ss.find("=");  
+	 size_t i = ss.find("=");  
 	 parm.heurinvl = atoi(&s[i+1]);
 	 
       } else if (ss.find("greentestinvl") == 0) {
-	 int i = ss.find("=");  
+	 size_t i = ss.find("=");  
 	 parm.greentestinvl = atoi(&s[i+1]);
 	 
       } else if (ss.find("yellowtestinvl") == 0) {
-	 int i = ss.find("=");  
+	 size_t i = ss.find("=");  
 	 parm.yellowtestinvl = atoi(&s[i+1]);
 	 
       } else if (ss.find("redtestinvl") == 0) {
-	 int i = ss.find("=");  
+	 size_t i = ss.find("=");  
 	 parm.redtestinvl = atoi(&s[i+1]);
 	 
       } else if (ss.find("lambdainit") == 0) {
-	 int i = ss.find("=");  
+	 size_t i = ss.find("=");  
 	 parm.lambdainit = atof(&s[i+1]);
 	 
       } else if (ss.find("alphainit") == 0) {
-	 int i = ss.find("=");  
+	 size_t i = ss.find("=");  
 	 parm.alphainit = atof(&s[i+1]);
 	 
       } else if (ss.find("alphamin") == 0) {
-	 int i = ss.find("=");  
+	 size_t i = ss.find("=");  
 	 parm.alphamin = atof(&s[i+1]);
 	 
       } else if (ss.find("alphafactor") == 0) {
-	 int i = ss.find("=");  
+	 size_t i = ss.find("=");  
 	 parm.alphafactor = atof(&s[i+1]);
 	 
       } else if (ss.find("alphaint") == 0) {
-	 int i = ss.find("=");  
+	 size_t i = ss.find("=");  
 	 parm.alphaint = atoi(&s[i+1]);
 
       } else if (ss.find("primal_abs_precision") == 0) {
-	 int i = ss.find("=");  
+	 size_t i = ss.find("=");  
 	 parm.primal_abs_precision = atof(&s[i+1]);
 
 	 //      } else if (ss.find("primal_rel_precision") == 0) {
-	 //	 int i = ss.find("=");  
+	 //	 size_t i = ss.find("=");  
 	 //	 parm.primal_rel_precision = atof(&s[i+1]);
 
       } else if (ss.find("gap_abs_precision") == 0) {
-	 int i = ss.find("=");  
+	 size_t i = ss.find("=");  
 	 parm.gap_abs_precision = atof(&s[i+1]);
 
       } else if (ss.find("gap_rel_precision") == 0) {
-	 int i = ss.find("=");  
+	 size_t i = ss.find("=");  
 	 parm.gap_rel_precision = atof(&s[i+1]);
 
 
       } else if (ss.find("ascent_check_invl") == 0) {
-	  int i = ss.find("=");  
+	  size_t i = ss.find("=");  
 	  parm.ascent_check_invl = atoi(&s[i+1]);
 
       } else if (ss.find("minimum_rel_ascent") == 0) {
-	  int i = ss.find("=");  
+	  size_t i = ss.find("=");  
 	  parm.minimum_rel_ascent = atoi(&s[i+1]);
 
-
-
       } else if (ss.find("granularity") == 0) {
-	 int i = ss.find("=");  
+	 size_t i = ss.find("=");  
 	 parm.granularity = atof(&s[i+1]);
       }
    }

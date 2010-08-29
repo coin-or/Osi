@@ -1776,31 +1776,30 @@ public:
     (cf. #setObjectiveAndRefresh)
   */
   virtual void getReducedGradient(double* columnReducedCosts, 
-				  double * duals,
-				  const double * c) ;
+				  double* duals, const double* c) const ;
 
-  /*! Calculate duals and reduced costs for the given objective coefficients.
-
-    The given objective coefficients are set in the solver and the duals and
-    reduced costs are updated (cf. #getReducedGradient).
+  /*! \brief Get a row of the tableau
+  
+    If \p slack is not null, it will be loaded with the coefficients for
+    the artificial (logical) variables (i.e., the row of the basis inverse).
   */
-  virtual void setObjectiveAndRefresh(const double* c) ;
+  virtual void getBInvARow(int row, double* z, double* slack = NULL) const ;
 
-  ///Get a row of the tableau (slack part in slack if not NULL)
-  virtual void getBInvARow(int row, double* z, double * slack=NULL) const ;
-
-  ///Get a row of the basis inverse
+  /*! \brief Get a row of the basis inverse */
   virtual void getBInvRow(int row, double* z) const ;
 
-  ///Get a column of the tableau
+  /*! \brief Get a column of the tableau */
   virtual void getBInvACol(int col, double* vec) const ;
 
-  ///Get a column of the basis inverse
+  /*! \brief Get a column of the basis inverse */
   virtual void getBInvCol(int col, double* vec) const ;
 
-  /** Get basic indices (order of indices corresponds to the
-      order of elements in a vector retured by getBInvACol() and
-      getBInvCol()).
+  /*! \brief Get indices of basic variables
+  
+    If the logical (artificial) for row i is basic, the index should be coded
+    as (#getNumCols + i).
+    The order of indices must match the order of elements in the vectors
+    returned by #getBInvACol and #getBInvCol.
   */
   virtual void getBasics(int* index) const ;
 

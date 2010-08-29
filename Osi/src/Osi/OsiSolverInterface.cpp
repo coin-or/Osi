@@ -1724,20 +1724,10 @@ OsiSolverInterface::dualPivotResult(int& , int& ,
 void 
 OsiSolverInterface::getReducedGradient(double* , 
                                        double * ,
-                                       const double * ) 
+                                       const double * ) const
 {
   // Throw an exception
   throw CoinError("Needs coding for this interface", "getReducedGradient",
-		  "OsiSolverInterface");
-}
-
-/* Set a new objective and apply the old basis so that the
-   reduced costs are properly updated */
-void 
-OsiSolverInterface::setObjectiveAndRefresh(const double* ) 
-{
-  // Throw an exception
-  throw CoinError("Needs coding for this interface", "setObjectiveAndRefresh",
 		  "OsiSolverInterface");
 }
 

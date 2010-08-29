@@ -23,6 +23,9 @@ libOsiCommonTests_la_SOURCES = OsiCommonTests.hpp \
 	OsiCutsTest.cpp \
 	OsiRowCutDebuggerTest.cpp \
 	OsiRowCutTest.cpp \
+	OsiSimplexAPITest.cpp \
+	OsiNetlibTest.cpp \
+	OsiUnitTestUtils.cpp \
 	OsiSolverInterfaceTest.cpp
 
 includecoindir = $(includedir)/coin

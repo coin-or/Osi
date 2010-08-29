@@ -66,8 +66,8 @@ libcoinLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(libcoin_LTLIBRARIES)
 libOsiCommonTests_la_LIBADD =
 am_libOsiCommonTests_la_OBJECTS = OsiColCutTest.lo OsiCutsTest.lo \
-	OsiRowCutDebuggerTest.lo OsiRowCutTest.lo \
-	OsiSolverInterfaceTest.lo
+	OsiRowCutDebuggerTest.lo OsiRowCutTest.lo OsiSimplexAPITest.lo \
+	OsiNetlibTest.lo OsiUnitTestUtils.lo OsiSolverInterfaceTest.lo
 libOsiCommonTests_la_OBJECTS = $(am_libOsiCommonTests_la_OBJECTS)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -305,6 +305,9 @@ libOsiCommonTests_la_SOURCES = OsiCommonTests.hpp \
 	OsiCutsTest.cpp \
 	OsiRowCutDebuggerTest.cpp \
 	OsiRowCutTest.cpp \
+	OsiSimplexAPITest.cpp \
+	OsiNetlibTest.cpp \
+	OsiUnitTestUtils.cpp \
 	OsiSolverInterfaceTest.cpp
 
 includecoindir = $(includedir)/coin
@@ -390,9 +393,12 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiColCutTest.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiCutsTest.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiNetlibTest.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiRowCutDebuggerTest.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiRowCutTest.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiSimplexAPITest.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiSolverInterfaceTest.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiUnitTestUtils.Plo@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \

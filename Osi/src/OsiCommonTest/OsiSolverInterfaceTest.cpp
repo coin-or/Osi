@@ -4,13 +4,19 @@
 /*
 		!!  MAINTAINERS  PLEASE  READ  !!
 
-The OSI unit test is gradually undergoing a conversion.
+The OSI unit test is gradually undergoing a conversion. Over time, the goal is
+to factor the original monolith into separate files and routines. Individual
+routines should return a count of failures, and these will be accumulated into
+a total failure count. Eventually, it'd be nice to have a class that records
+more detailed information. Ideally, the implementor of an OsiXXX could
+indicated expected failures, to avoid the current practice of modifying the
+unit test to avoid attempting the test for a particular OsiXXX.
 
-The current approach is to use asserts in tests; the net effect is that the
-unit test chokes and dies as soon as something goes wrong. The new approach is
-to soldier on until it becomes pointless (i.e., something has gone wrong which
-makes further testing pointless). The general idea is to return the maximum
-amount of useful information with each run.
+The original approach was to use asserts in tests; the net effect is that the
+unit test chokes and dies as soon as something goes wrong. The current
+approach is to soldier on until something has gone wrong which makes further
+testing pointless. The general idea is to return the maximum amount of useful
+information with each run.
 
 If you work on this code, please keep these conventions in mind:
 
@@ -18,13 +24,26 @@ If you work on this code, please keep these conventions in mind:
     something out of the main routine --- it'd be nice to get it down under
     500 lines.
 
-  * All test routines should be defined in the file-local namespace.
+  * All local helper routines should be defined in the file-local namespace.
 
   * Test routines should return 0 if there are no issues, a positive count if
     the test uncovered nonfatal problems, and a negative count if the test
     uncovered fatal problems (in the sense that further testing is pointless).
 
-  -- lh, 08.01.07 --
+  * This unit test is meant as a certification that OsiXXX correctly implements
+    the OSI API specification. Don't step around it!
+  
+    If OsiXXX is not capable of meeting a particular requirement and you edit
+    the unit test code to avoid the test, don't just sweep it under the rug!
+    Print a failure message saying the test has been skipped, or something
+    else informative.
+    
+    OsiVol is the worst offender for this (the underlying algorithm is not
+    simplex and imposes serious limitations on the type of lp that vol can
+    handle). Any simplex-oriented solver should *NOT* be exempted from any
+    test. If it's pointless to even try, print a failure message.
+
+  -- lh, 08.01.07, 10.08.26 --
 */
 
 #include "CoinPragma.hpp"
@@ -71,68 +90,10 @@ If you work on this code, please keep these conventions in mind:
   Define helper routines in the file-local namespace.
 */
 
+using namespace OsiUnitTest ;
+
 namespace {
 
-//#############################################################################
-// Helper routines for messages.
-//#############################################################################
-
-// A helper function to write out a message about a test failure
-void failureMessage( const std::string & solverName,
-		     const std::string & message )
-{
-  std::string messageText;
-  messageText = "*** ";
-  messageText += solverName + "SolverInterface testing issue: ";
-  messageText += message;
-  // flush stdout so that error messages are properly interleaved.
-  std::cout.flush() ;
-  std::cerr << messageText.c_str() << std::endl;
-}
-
-void failureMessage( const OsiSolverInterface & si,
-		     const std::string & message )
-{
-  std::string solverName;
-  si.getStrParam(OsiSolverName,solverName);
-  failureMessage(solverName,message);
-}
-
-/*
-  Display message on stderr. Flush cout buffer before printing the message,
-  so that output comes out in order in spite of buffered cout.
-*/
-void testingMessage( const char * const msg )
-{
-  std::cout.flush() ;
-  std::cerr << msg;
-}
-
-//#############################################################################
-// Vector comparison utility.
-//#############################################################################
-
-// A helper function to compare the equivalence of two vectors
-bool equivalentVectors (const OsiSolverInterface * si1,
-			const OsiSolverInterface * si2,
-			double tol,
-			const double * v1,
-			const double * v2,
-			int size)
-{
-  bool retVal = true;
-  CoinRelFltEq eq(tol);
-  int i;
-  for ( i=0; i<size; i++ ) {
-    if ( !eq(v1[i],v2[i]) ) {
-      std::cout.flush() ;
-      std::cerr <<"eq " <<i <<" " <<v1[i] <<" " <<v2[i] <<std::endl;
-      retVal = false;
-      break;
-    }
-  }
-  return retVal;
-}
 
 //#############################################################################
 // A routine to build a CoinPackedMatrix matching the exmip1 example.
@@ -3205,15 +3166,22 @@ void testLoadAndAssignProblem (const OsiSolverInterface *emptySi,
   }
 /*
   The OSI interface spec says any of the parameters to loadProblem can default
-  to null. Let's see if that works. Test the rowub, rowlb and sense, rhs, range
-  variants. Arguably we should check all variants again, but let's hope that
-  OSI implementors carry things over from one variant to another.
-  For Gurobi, this does not work. Since Gurobi does not know about free rows (rowtype 'N'),
-  OsiGrb translates free rows into 'L' (lower-equal) rows with a -infty right-hand side.
-  This makes some of the tests below fail.
+  to null. Let's see if that works. Test the rowub, rowlb and sense, rhs,
+  range variants. Arguably we should check all variants again, but let's
+  hope that OSI implementors carry things over from one variant to another.
+
+  For Gurobi, this does not work. Since Gurobi does not know about free rows
+  (rowtype 'N'), OsiGrb translates free rows into 'L' (lower-equal) rows
+  with a -infty right-hand side.  This makes some of the tests below fail.
+
+  Ok, gurobi has quirks. As do other solvers. But those quirks should be
+  hidden from users of OsiGrb -- i.e., the translation should be done within
+  OsiGrb, and should not be visible to the user (or this test). That's the
+  point of OSI.  It's an implementation failure and should not be swept
+  under the rug here.  -- lh, 100826 --
 */
 
-  if( solverName != "gurobi" )
+  if (solverName != "gurobi")
   {
     int i ;
 
@@ -3269,6 +3237,11 @@ void testLoadAndAssignProblem (const OsiSolverInterface *emptySi,
       
     delete si1;
     delete si2;
+  }
+  else
+  {
+    failureMessage(solverName,
+      "OsiGrb exposes inability to handle 'N' constraints (expected).") ;
   }
 /*
   Load problem with row rhs, sense and range, but leave column bounds and
@@ -3531,14 +3504,19 @@ void testAddToEmptySystem (const OsiSolverInterface *emptySi,
   Test OsiPresolve by checking the objective that we get by optimising the
   presolved problem. Then postsolve to get back to the original problem
   statement and check that we have the same objective without further
-  iterations. The problems are a selection of problems from
-  Data/Sample. In particular, e226 is in the list by virtue of having a
-  constant offset (7.113) defined for the objective, and p0201 is in the list
-  because presolve (as of 071015) finds no reductions.
+  iterations. This is much more a check on OsiPresolve than on the OsiXXX
+  under test. OsiPresolve simply calls the underlying OsiXXX when it needs to
+  solve a model. All the work involved with presolve and postsolve transforms
+  is handled in OsiPresolve.
+  
+  The problems are a selection of problems from Data/Sample. In particular,
+  e226 is in the list by virtue of having a constant offset (7.113) defined
+  for the objective, and p0201 is in the list because presolve (as of 071015)
+  finds no reductions.
 
   The objective for finnis (1.7279106559e+05) is not the same as the
-  objective used by Netlib (1.7279096547e+05), but solvers clp, dylp,
-  glpk, and cplex agree that it's correct.
+  objective used by Netlib (1.7279096547e+05), but solvers clp, dylp, glpk,
+  and cplex agree that it's correct.
 
   This test could be made stronger, but more brittle, by checking for the
   expected size of the constraint system after presolve. It would also be good
@@ -3560,7 +3538,7 @@ int testOsiPresolve (const OsiSolverInterface *emptySi,
 //    std::cout << "Skip model finnis in test of OsiPresolve with Gurobi, since we seem to have only a demo license of Gurobi." << std::endl;
 //  else
 //#endif
-    sampleProbs.push_back(probPair("finnis",1.7279106559e+05)) ;
+  sampleProbs.push_back(probPair("finnis",1.7279106559e+05)) ;
   sampleProbs.push_back(probPair("p0201",6875)) ;
 
   CoinRelFltEq eq(1.0e-8) ;
@@ -3627,7 +3605,7 @@ int testOsiPresolve (const OsiSolverInterface *emptySi,
 /*
   Postsolve to return to the original formulation. The presolvedModel should
   no longer be needed once we've executed postsolve. Check that we get the
-  correct objective wihout iterations. As before, turn off any native
+  correct objective without iterations. As before, turn off any native
   presolve.
 */
     pinfo.postsolve(true) ;
@@ -3656,102 +3634,6 @@ int testOsiPresolve (const OsiSolverInterface *emptySi,
   { failureMessage(solverName,"errors during OsiPresolve test.") ; }
 
   return (errs) ; }
-
-/*
-  Test the simplex portion of the OSI interface.
-*/
-void testSimplex (const OsiSolverInterface *emptySi, std::string mpsDir)
-
-{
-  OsiSolverInterface * si = emptySi->clone();
-  std::string solverName;
-  si->getStrParam(OsiSolverName,solverName);
-/*
-  Do the test only if the solver has this capability.
-*/
-  if (si->canDoSimplexInterface()==2) {
-    // solve an lp by hand
-    
-    std::string fn = mpsDir+"p0033";
-    si->readMps(fn.c_str(),"mps");
-    si->setObjSense(-1.0);
-    si->initialSolve();
-    si->setObjSense(1.0);
-    // enable special mode
-    si->enableSimplexInterface(true);
-    // we happen to know that variables are 0-1 and rows are L
-    int numberIterations=0;
-    int numberColumns = si->getNumCols();
-    int numberRows = si->getNumRows();
-    double * fakeCost = new double[numberColumns];
-    double * duals = new double [numberRows];
-    double * djs = new double [numberColumns];
-    const double * solution = si->getColSolution();
-    memcpy(fakeCost,si->getObjCoefficients(),numberColumns*sizeof(double));
-    while (1) {
-      const double * dj;
-      const double * dual;
-      if ((numberIterations&1)==0) {
-	// use given ones
-	dj = si->getReducedCost();
-	dual = si->getRowPrice();
-      } else {
-	// create
-	dj = djs;
-	dual = duals;
-	si->getReducedGradient(djs,duals,fakeCost);
-      }
-      int i;
-      int colIn=9999;
-      int direction=1;
-      double best=1.0e-6;
-      // find most negative reduced cost
-      // Should check basic - but should be okay on this problem
-      for (i=0;i<numberRows;i++) {
-	double value=dual[i];
-	if (value>best) {
-	  direction=-1;
-	  best=value;
-	  colIn=-i-1;
-	}
-      }
-      for (i=0;i<numberColumns;i++) {
-	double value=dj[i];
-	if (value<-best&&solution[i]<1.0e-6) {
-	  direction=1;
-	  best=-value;
-	  colIn=i;
-	} else if (value>best&&solution[i]>1.0-1.0e-6) {
-	  direction=-1;
-	  best=value;
-	  colIn=i;
-	}
-      }
-      if (colIn==9999)
-	break; // should be optimal
-      int colOut;
-      int outStatus;
-      double theta;
-      assert(!si->primalPivotResult(colIn,direction,colOut,outStatus,theta,NULL));
-      printf("out %d, direction %d theta %g\n",
-	     colOut,outStatus,theta);
-      numberIterations++;
-    }
-    delete [] fakeCost;
-    delete [] duals;
-    delete [] djs;
-    // exit special mode
-    si->disableSimplexInterface();
-    si->resolve();
-    assert (!si->getIterationCount());
-    si->setObjSense(-1.0);
-    si->initialSolve();
-    std::cout<<solverName<<" passed OsiSimplexInterface test"<<std::endl;
-  } else {
-    std::cout<<solverName<<" has no OsiSimplexInterface"<<std::endl;
-  }
-  delete si;
-}
 
 /*
   Test the values returned by an empty solver interface.
@@ -4120,465 +4002,7 @@ int testDualRays (const OsiSolverInterface *emptySi,
 
 
 
-/*
-  Method to compare the problem representation held by a pair of solver
-  interfaces.
-*/
-bool compareProblems (OsiSolverInterface *osi1, OsiSolverInterface *osi2) {
-
-  bool areEquiv = true ;
-  std::string si1Name, si2Name ;
-  osi1->getStrParam(OsiSolverName,si1Name) ;
-  osi2->getStrParam(OsiSolverName,si2Name) ;
-
-  // Compare row and column counts
-  int colCnt = 0 ;
-  if (osi1->getNumCols() != osi2->getNumCols())
-  { std::cerr
-      << "  Unequal column count, "
-      << si1Name << " vs. " << si2Name << std::endl ;
-    return (false) ; }
-  else
-  { colCnt = osi1->getNumCols() ; }
-
-  int rowCnt = 0 ;
-  if (osi1->getNumRows() != osi2->getNumRows())
-  { std::cerr
-      << "  Unequal row count, "
-      << si1Name << " vs. " << si2Name << std::endl ;
-    return (false) ; }
-  else
-  { rowCnt = osi1->getNumRows() ; }
-
-  // Compare column bounds
-  areEquiv = equivalentVectors(osi1,osi2,1.e-10,
-  		osi1->getColLower(),osi2->getColLower(),colCnt) ;
-  if (areEquiv == false)
-  { std::cerr
-      << "  Unequal column lower bounds, "
-      << si1Name << " vs. " << si2Name << std::endl ;
-    return (false) ; }
-  areEquiv = equivalentVectors(osi1,osi2,1.e-10,
-  		osi1->getColUpper(),osi2->getColUpper(),colCnt) ;
-  if (areEquiv == false)
-  { std::cerr
-      << "  Unequal column upper bounds, "
-      << si1Name << " vs. " << si2Name << std::endl ;
-    return (false) ; }
-
-  // Compare row bounds
-  areEquiv = equivalentVectors(osi1,osi2,1.e-10,
-		osi1->getRowLower(),osi2->getRowLower(),rowCnt) ;
-  if (areEquiv == false)
-  { std::cerr
-      << "  Unequal row lower bounds, "
-      << si1Name << " vs. " << si2Name << std::endl ;
-    return (false) ; }
-  areEquiv = equivalentVectors(osi1,osi2,1.e-10,
-		osi1->getRowUpper(),osi2->getRowUpper(),rowCnt) ;
-  if (areEquiv == false)
-  { std::cerr
-      << "  Unequal row lower bounds, "
-      << si1Name << " vs. " << si2Name << std::endl ;
-    return (false) ; }
-
-  // Compare row sense
-  { const char *rowSense1 = osi1->getRowSense() ;
-    const char *rowSense2 = osi2->getRowSense() ;
-    areEquiv = true ;
-    for (int r = 0 ; r < rowCnt && areEquiv == true ; r++)
-    { if (rowSense1[r] != rowSense2[r])
-      { areEquiv = false ; } }
-    if (areEquiv == false)
-    { std::cerr
-	<< "  Unequal row sense, "
-	<< si1Name << " vs. " << si2Name << std::endl ;
-      return (false) ; } }
-
-  // Compare row rhs
-  areEquiv = equivalentVectors(osi1,osi2,1.e-10,
-  		osi1->getRightHandSide(),osi2->getRightHandSide(),rowCnt) ;
-  if (areEquiv == false)
-  { std::cerr
-      << "  Unequal right-hand-side, "
-      << si1Name << " vs. " << si2Name << std::endl ;
-    return (false) ; }
-
-  // Compare range
-  areEquiv = equivalentVectors(osi1,osi2,1.e-10,
-  		osi1->getRowRange(),osi2->getRowRange(),rowCnt) ;
-  if (areEquiv == false)
-  { std::cerr
-      << "  Unequal row range, "
-      << si1Name << " vs. " << si2Name << std::endl ;
-    return (false) ; }
-
-  // Compare objective sense
-  if (osi1->getObjSense() != osi2->getObjSense())
-  { std::cerr
-      << "  Unequal objective sense, "
-      << si1Name << " vs. " << si2Name << std::endl ;
-    return (false) ; }
-
-  // Compare objective coefficients
-  areEquiv = equivalentVectors(osi1,osi2,1.e-10,
-  		osi1->getObjCoefficients(),osi2->getObjCoefficients(),colCnt) ;
-  if (areEquiv == false)
-  { std::cerr
-      << "  Unequal objective coefficients, "
-      << si1Name << " vs. " << si2Name << std::endl ;
-    return (false) ; }
-
-  // Compare number of elements
-  if (osi1->getNumElements() != osi2->getNumElements())
-  { std::cerr
-      << "  Unequal number of constraint matrix coefficients, "
-      << si1Name << " vs. " << si2Name << std::endl ;
-    return (false) ; }
-
-  // Compare constraint matrix, for both row-major and column-major orderings
-  { const CoinPackedMatrix *rmm1=osi1->getMatrixByRow() ;
-    const CoinPackedMatrix *rm  =osi2->getMatrixByRow() ;
-    if (!rmm1->isEquivalent(*rm))
-    { std::cerr
-	<< "  Unequal constraint matrix, row-major ordering, "
-	<< si1Name << " vs. " << si2Name << std::endl ;
-      return (false) ; }
-    const CoinPackedMatrix *cmm1=osi1->getMatrixByCol() ;
-    const CoinPackedMatrix *cm  =osi2->getMatrixByCol() ;
-    if (!cmm1->isEquivalent(*cm))
-    { std::cerr
-	<< "  Unequal constraint matrix, column-major ordering, "
-	<< si1Name << " vs. " << si2Name << std::endl ;
-      return (false) ; }
-  }
-  // Check column types
-  { areEquiv = true ;
-    for (int j = 0 ; j < colCnt && areEquiv == true ; j++)
-    { if (osi1->isContinuous(j) != osi2->isContinuous(j))
-        areEquiv = false ;
-      if (osi1->isBinary(j) != osi2->isBinary(j))
-	areEquiv = false ;
-      if (osi1->isIntegerNonBinary(j) != osi2->isIntegerNonBinary(j))
-	areEquiv = false ;
-      if (osi1->isFreeBinary(j) != osi2->isFreeBinary(j))
-	areEquiv = false ;
-      if (osi1->isInteger(j) != osi2->isInteger(j))
-	areEquiv = false ; }
-    if (areEquiv == false)
-    { std::cerr
-	<< "  Unequal variable type, "
-	<< si1Name << " vs. " << si2Name << std::endl ;
-      return (false) ; }
-  }
-  return (true) ;
-}
-
 }	// end file-local namespace
-
-
-//#############################################################################
-// Routines called from outside of this file
-//#############################################################################
-
-/*! \brief Run solvers on NetLib problems.
-
-  The routine creates a vector of NetLib problems (problem name, objective,
-  various other characteristics), and a vector of solvers to be tested.
-
-  Each solver is run on each problem. The run is deemed successful if the
-  solver reports the correct problem size after loading and returns the
-  correct objective value after optimization.
-
-  If multiple solvers are available, the results are compared pairwise against
-  the results reported by adjacent solvers in the solver vector. Due to
-  limitations of the volume solver, it must be the last solver in vecEmptySiP.
-*/
-
-int OsiSolverInterfaceMpsUnitTest
-  (const std::vector<OsiSolverInterface*> & vecEmptySiP,
-   const std::string & mpsDir)
-
-{ int i ;
-  unsigned int m ;
-
-/*
-  Vectors to hold test problem names and characteristics. The objective value
-  after optimization (objValue) must agree to the specified tolerance
-  (objValueTol).
-*/
-  std::vector<std::string> mpsName ;
-  std::vector<bool> minObj ;
-  std::vector<int> nRows ;
-  std::vector<int> nCols ;
-  std::vector<double> objValue ;
-  std::vector<double> objValueTol ;
-/*
-  And a macro to make the vector creation marginally readable.
-*/
-#define PUSH_MPS(zz_mpsName_zz,zz_minObj_zz,\
-		 zz_nRows_zz,zz_nCols_zz,zz_objValue_zz,zz_objValueTol_zz) \
-  mpsName.push_back(zz_mpsName_zz) ; \
-  minObj.push_back(zz_minObj_zz) ; \
-  nRows.push_back(zz_nRows_zz) ; \
-  nCols.push_back(zz_nCols_zz) ; \
-  objValueTol.push_back(zz_objValueTol_zz) ; \
-  objValue.push_back(zz_objValue_zz) ;
-
-/*
-  Load up the problem vector. Note that the row counts here include the
-  objective function.
-*/
-  PUSH_MPS("25fv47",true,822,1571,5.5018458883E+03,1.0e-10)
-  PUSH_MPS("80bau3b",true,2263,9799,9.8722419241E+05,1.e-10)
-  PUSH_MPS("adlittle",true,57,97,2.2549496316e+05,1.e-10)
-  PUSH_MPS("afiro",true,28,32,-4.6475314286e+02,1.e-10)
-  PUSH_MPS("agg",true,489,163,-3.5991767287e+07,1.e-10)
-  PUSH_MPS("agg2",true,517,302,-2.0239252356e+07,1.e-10)
-  PUSH_MPS("agg3",true,517,302,1.0312115935e+07,1.e-10)
-  PUSH_MPS("bandm",true,306,472,-1.5862801845e+02,1.e-10)
-  PUSH_MPS("beaconfd",true,174,262,3.3592485807e+04,1.e-10)
-  PUSH_MPS("blend",true,75,83,-3.0812149846e+01,1.e-10)
-  PUSH_MPS("bnl1",true,644,1175,1.9776295615E+03,1.e-10)
-  PUSH_MPS("bnl2",true,2325,3489,1.8112365404e+03,1.e-10)
-  PUSH_MPS("boeing1",true,/*351*/352,384,-3.3521356751e+02,1.e-10)
-  PUSH_MPS("boeing2",true,167,143,-3.1501872802e+02,1.e-10)
-  PUSH_MPS("bore3d",true,234,315,1.3730803942e+03,1.e-10)
-  PUSH_MPS("brandy",true,221,249,1.5185098965e+03,1.e-10)
-  PUSH_MPS("capri",true,272,353,2.6900129138e+03,1.e-10)
-  PUSH_MPS("cycle",true,1904,2857,-5.2263930249e+00,1.e-9)
-  PUSH_MPS("czprob",true,930,3523,2.1851966989e+06,1.e-10)
-  PUSH_MPS("d2q06c",true,2172,5167,122784.21557456,1.e-7)
-  PUSH_MPS("d6cube",true,416,6184,3.1549166667e+02,1.e-8)
-  PUSH_MPS("degen2",true,445,534,-1.4351780000e+03,1.e-10)
-  PUSH_MPS("degen3",true,1504,1818,-9.8729400000e+02,1.e-10)
-  PUSH_MPS("dfl001",true,6072,12230,1.1266396047E+07,1.e-5)
-  PUSH_MPS("e226",true,224,282,(-18.751929066+7.113),1.e-10) // NOTE: Objective function has constant of 7.113
-  PUSH_MPS("etamacro",true,401,688,-7.5571521774e+02 ,1.e-6)
-  PUSH_MPS("fffff800",true,525,854,5.5567961165e+05,1.e-6)
-  PUSH_MPS("finnis",true,498,614,1.7279096547e+05,1.e-6)
-  PUSH_MPS("fit1d",true,25,1026,-9.1463780924e+03,1.e-10)
-  PUSH_MPS("fit1p",true,628,1677,9.1463780924e+03,1.e-10)
-  PUSH_MPS("fit2d",true,26,10500,-6.8464293294e+04,1.e-10)
-  PUSH_MPS("fit2p",true,3001,13525,6.8464293232e+04,1.e-9)
-  PUSH_MPS("forplan",true,162,421,-6.6421873953e+02,1.e-6)
-  PUSH_MPS("ganges",true,1310,1681,-1.0958636356e+05,1.e-5)
-  PUSH_MPS("gfrd-pnc",true,617,1092,6.9022359995e+06,1.e-10)
-  PUSH_MPS("greenbea",true,2393,5405,/*-7.2462405908e+07*/-72555248.129846,1.e-10)
-  PUSH_MPS("greenbeb",true,2393,5405,/*-4.3021476065e+06*/-4302260.2612066,1.e-10)
-  PUSH_MPS("grow15",true,301,645,-1.0687094129e+08,1.e-10)
-  PUSH_MPS("grow22",true,441,946,-1.6083433648e+08,1.e-10)
-  PUSH_MPS("grow7",true,141,301,-4.7787811815e+07,1.e-10)
-  PUSH_MPS("israel",true,175,142,-8.9664482186e+05,1.e-10)
-  PUSH_MPS("kb2",true,44,41,-1.7499001299e+03,1.e-10)
-  PUSH_MPS("lotfi",true,154,308,-2.5264706062e+01,1.e-10)
-  PUSH_MPS("maros",true,847,1443,-5.8063743701e+04,1.e-10)
-  PUSH_MPS("maros-r7",true,3137,9408,1.4971851665e+06,1.e-10)
-  PUSH_MPS("modszk1",true,688,1620,3.2061972906e+02,1.e-10)
-  PUSH_MPS("nesm",true,663,2923,1.4076073035e+07,1.e-5)
-  PUSH_MPS("perold",true,626,1376,-9.3807580773e+03,1.e-6)
-  PUSH_MPS("pilot",true,1442,3652,/*-5.5740430007e+02*/-557.48972927292,5.e-5)
-  PUSH_MPS("pilot4",true,411,1000,-2.5811392641e+03,1.e-6)
-  PUSH_MPS("pilot87",true,2031,4883,3.0171072827e+02,1.e-4)
-  PUSH_MPS("pilotnov",true,976,2172,-4.4972761882e+03,1.e-10)
-  // ?? PUSH_MPS("qap8",true,913,1632,2.0350000000e+02,1.e-10)
-  // ?? PUSH_MPS("qap12",true,3193,8856,5.2289435056e+02,1.e-10)
-  // ?? PUSH_MPS("qap15",true,6331,22275,1.0409940410e+03,1.e-10)
-  PUSH_MPS("recipe",true,92,180,-2.6661600000e+02,1.e-10)
-  PUSH_MPS("sc105",true,106,103,-5.2202061212e+01,1.e-10)
-  PUSH_MPS("sc205",true,206,203,-5.2202061212e+01,1.e-10)
-  PUSH_MPS("sc50a",true,51,48,-6.4575077059e+01,1.e-10)
-  PUSH_MPS("sc50b",true,51,48,-7.0000000000e+01,1.e-10)
-  PUSH_MPS("scagr25",true,472,500,-1.4753433061e+07,1.e-10)
-  PUSH_MPS("scagr7",true,130,140,-2.3313892548e+06,1.e-6)
-  PUSH_MPS("scfxm1",true,331,457,1.8416759028e+04,1.e-10)
-  PUSH_MPS("scfxm2",true,661,914,3.6660261565e+04,1.e-10)
-  PUSH_MPS("scfxm3",true,991,1371,5.4901254550e+04,1.e-10)
-  PUSH_MPS("scorpion",true,389,358,1.8781248227e+03,1.e-10)
-  PUSH_MPS("scrs8",true,491,1169,9.0429998619e+02,1.e-5)
-  PUSH_MPS("scsd1",true,78,760,8.6666666743e+00,1.e-10)
-  PUSH_MPS("scsd6",true,148,1350,5.0500000078e+01,1.e-10)
-  PUSH_MPS("scsd8",true,398,2750,9.0499999993e+02,1.e-8)
-  PUSH_MPS("sctap1",true,301,480,1.4122500000e+03,1.e-10)
-  PUSH_MPS("sctap2",true,1091,1880,1.7248071429e+03,1.e-10)
-  PUSH_MPS("sctap3",true,1481,2480,1.4240000000e+03,1.e-10)
-  PUSH_MPS("seba",true,516,1028,1.5711600000e+04,1.e-10)
-  PUSH_MPS("share1b",true,118,225,-7.6589318579e+04,1.e-10)
-  PUSH_MPS("share2b",true,97,79,-4.1573224074e+02,1.e-10)
-  PUSH_MPS("shell",true,537,1775,1.2088253460e+09,1.e-10)
-  PUSH_MPS("ship04l",true,403,2118,1.7933245380e+06,1.e-10)
-  PUSH_MPS("ship04s",true,403,1458,1.7987147004e+06,1.e-10)
-  PUSH_MPS("ship08l",true,779,4283,1.9090552114e+06,1.e-10)
-  PUSH_MPS("ship08s",true,779,2387,1.9200982105e+06,1.e-10)
-  PUSH_MPS("ship12l",true,1152,5427,1.4701879193e+06,1.e-10)
-  PUSH_MPS("ship12s",true,1152,2763,1.4892361344e+06,1.e-10)
-  PUSH_MPS("sierra",true,1228,2036,1.5394362184e+07,1.e-10)
-  PUSH_MPS("stair",true,357,467,-2.5126695119e+02,1.e-10)
-  PUSH_MPS("standata",true,360,1075,1.2576995000e+03,1.e-10)
-  // GUB PUSH_MPS("standgub",true,362,1184,1257.6995,1.e-10)
-  PUSH_MPS("standmps",true,468,1075,1.4060175000E+03,1.e-10)
-  PUSH_MPS("stocfor1",true,118,111,-4.1131976219E+04,1.e-10)
-  PUSH_MPS("stocfor2",true,2158,2031,-3.9024408538e+04,1.e-10)
-  // ?? PUSH_MPS("stocfor3",true,16676,15695,-3.9976661576e+04,1.e-10)
-  // ?? PUSH_MPS("truss",true,1001,8806,4.5881584719e+05,1.e-10)
-  PUSH_MPS("tuff",true,334,587,2.9214776509e-01,1.e-10)
-  PUSH_MPS("vtpbase",true,199,203,1.2983146246e+05,1.e-10)
-  PUSH_MPS("wood1p",true,245,2594,1.4429024116e+00,5.e-5)
-  PUSH_MPS("woodw",true,1099,8405,1.3044763331E+00,1.e-10)
-
-#undef PUSH_MPS
-
-  const unsigned int numProblems = static_cast<unsigned int>(mpsName.size()) ;
-
-/*
-  Create vectors to hold solver interfaces, the name of each solver interface,
-  the current state of processing, and statistics about the number of problems
-  solved and the time taken.
-*/
-  const int numSolvers = static_cast<int>(vecEmptySiP.size()) ;
-  std::vector<OsiSolverInterface*> vecSiP(numSolvers) ;
-  std::vector<std::string> siName(numSolvers) ;
-  std::vector<int> siStage(numSolvers) ;
-  std::vector<int> numProbSolved(numSolvers) ;
-  std::vector<double> timeTaken(numSolvers) ;
-  for (i = 0 ; i < numSolvers ; i++)
-  { siName[i] = "unknown" ;
-    numProbSolved[i] = 0 ;
-    timeTaken[i] = 0.0 ; }
-/*
-  For each problem, create a fresh clone of the `empty' solvers
-  from vecEmptySiP, then proceed in stages: read the MPS file, solve the
-  problem, check the solution. If there are multiple solvers in vecSiP,
-  the results of each solver are compared with its neighbors in the vector.
-*/
-  for (m = 0 ; m < numProblems ; m++) {
-    std::cout << "  processing mps file: " << mpsName[m]
-      << " (" << m+1 << " out of " << numProblems << ")" << std::endl ;
-/*
-  Stage 0: Create fresh solver clones.
-*/
-    int solversReadMpsFile = 0 ;
-    for (i = numSolvers-1 ; i >= 0 ; --i) {
-      vecSiP[i] = vecEmptySiP[i]->clone() ;
-      vecSiP[i]->getStrParam(OsiSolverName,siName[i]) ;
-      siStage[i] = 0 ;
-    }
-/*
-  Stage 1: Read the MPS file into each solver interface.  As a basic check,
-  make sure the size of the constraint matrix is correct.
-*/
-    for (i = 0 ; i < numSolvers ; i++) {
-      std::string fn = mpsDir+mpsName[m] ;
-      vecSiP[i]->readMps(fn.c_str(),"mps") ;
-      if (minObj[m])
-        vecSiP[i]->setObjSense(1.0) ;
-      else
-        vecSiP[i]->setObjSense(-1.0) ;
-      int nr = vecSiP[i]->getNumRows() ;
-      int nc = vecSiP[i]->getNumCols() ;
-      if (nr == nRows[m]-1 && nc == nCols[m])
-      { siStage[i] = 1 ;
-        solversReadMpsFile++ ; }
-    }
-/*
-  If more than one solver succeeded, compare representations.
-*/
-    if (solversReadMpsFile > 0) {
-      // Find an initial pair to compare
-      int s1 ;
-      for (s1 = 0 ; s1 < numSolvers-1 && siStage[s1] < 1 ; s1++) ;
-      int s2 ;
-      for (s2 = s1+1 ; s2 < numSolvers && siStage[s2] < 1 ; s2++) ;
-      while (s2 < numSolvers) {
-        std::cout
-	  << "  comparing problem representation for "
-	  << siName[s1] << " and " << siName[s2] << " ..." ;
-        if (compareProblems(vecSiP[s1],vecSiP[s2]))
-	  std::cout << " ok." << std::endl  ;
-	s1 = s2 ;
-	for (s2++ ; s2 < numSolvers && siStage[s2] < 1 ; s2++) ;
-      }
-    }
-/*
-  Stage 2: Ask each solver that successfully read the problem to solve it,
-  then check the return code and objective.
-*/
-    for (i = 0 ; i < numSolvers ; ++i)
-    { if (siStage[i] < 1) continue ;
-
-      double startTime = CoinCpuTime() ;
-      bool throwError = false ;
-      try
-      { vecSiP[i]->initialSolve() ; }
-      catch (CoinError &thrownErr)
-      { std::cout.flush() ;
-        std::cerr
-          << thrownErr.className() << "::" << thrownErr.methodName()
-	  << ": " << thrownErr.message() << std::endl ;
-	throwError = true ; }
-      catch (...)
-      { std::cout.flush() ;
-        std::cerr << siName[i] << " threw unknown exception." << std::endl ;
-        throwError = true ; }
-      if (throwError) continue ;
-
-      double timeOfSolution = CoinCpuTime()-startTime;
-      if (vecSiP[i]->isProvenOptimal())
-      { double soln = vecSiP[i]->getObjValue();
-	CoinRelFltEq eq(objValueTol[m]) ;
-	if (eq(soln,objValue[m])) {
-	  std::cout
-	    << "  " << siName[i] << " "
-	    << soln << " = " << objValue[m] << ", "
-	    << vecSiP[i]->getIterationCount() << " iters"
-	    << "; okay" ;
-	  numProbSolved[i]++ ; }
-	else
-	{ std::cout.flush() ;
-	  std::cerr
-	    << "  " << siName[i]
-	    << soln << " != " << objValue[m] << "; error = "
-	    << fabs(objValue[m]-soln) ;
-	}
-	std::cout
-	  << " - took " << timeOfSolution << " seconds." << std::endl;
-	timeTaken[i] += timeOfSolution;
-      }
-      else
-      { std::cout.flush() ;
-        std::cerr << "  " << siName[i] << "; error " ;
-        if (vecSiP[i]->isProvenPrimalInfeasible())
-	  std::cerr << "primal infeasible" ;
-        else if (vecSiP[i]->isIterationLimitReached())
-	  std::cerr << "iteration limit" ;
-        else if (vecSiP[i]->isAbandoned())
-	  std::cerr << "abandoned" ;
-        else
-	  std::cerr << "unknown" ; } }
-/*
-  Delete the used solver interfaces so we can reload fresh clones for the
-  next problem.
-*/
-    for (i = 0 ; i < numSolvers ; i++) delete vecSiP[i] ; }
-/*
-  Print a summary for each solver.
-*/
-  for (i = 0 ; i < numSolvers ; i++) {
-    std::cout
-      << siName[i] << " solved "
-      << numProbSolved[i] << " out of "
-      << numProblems << " and took " << timeTaken[i] << " seconds."
-      << std::endl ;
-  }
-/*
-  If we're testing just one solver, return the number of failed problems.
-  If we're doing multiple solvers, always claim success.
-*/
-  if (numSolvers == 1)
-    return (numProblems-numProbSolved[0]) ;
-  else
-    return (0) ;
-}
 
 
 //#############################################################################
@@ -4662,16 +4086,20 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   Test that the solver correctly handles row and column names.
 */
   testNames(emptySi,fn) ;
-  // Test constants in objective function, dual and primal objective limit
-  // functions, objective sense (max/min).
-  // Do not perform test if Vol solver, because it requires problems of a
-  // special form and can not solve netlib e226.
-
-  if ( !volSolverInterface )
-  { intResult = testObjFunctions(emptySi,mpsDir) ;
+/*
+  Test constants in objective function, dual and primal objective limit
+  functions, objective sense (max/min).
+  Do not perform test if Vol solver, because it requires problems of a
+  special form and can not solve netlib e226.
+*/
+  if ( !volSolverInterface ) {
+    intResult = testObjFunctions(emptySi,mpsDir) ;
     if (intResult < 0)
     { errCnt -= intResult ;
-      return (-errCnt) ; } }
+      return (-errCnt) ; }
+  } else {
+    failureMessage(solverName,"Skipped test of objective functionality.") ;
+  }
 
   // Test that problem was loaded correctly
 
@@ -4778,11 +4206,17 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     if( !eq(correctObjValue,siObjValue) ) {
        // FIXME: the test checks the primal value. vol fails this, because vol
        // considers the dual value to be the objective value
-       // gurobi fails this, because gurobi does not have a solution before a model is solved (which makes sense, I (SV) think)
-       failureMessage(solverName,"getObjValue before solve (OK for vol and gurobi)");
+       /*
+	 gurobi fails this, because gurobi does not have a solution before a
+	 model is solved (which makes sense, I (SV) think)
+
+	 Eh, well, you can argue the point, but the current OSI spec requires
+	 that there be a valid solution from the point that the problem is
+	 loaded. Nothing says it needs to be a good solution. -- lh, 100826 --
+       */
+       failureMessage(solverName,
+		      "getObjValue before solve (expected for vol, gurobi)");
     }
-
-
   }
 
   // Test matrixByCol method
@@ -5073,11 +4507,22 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   // end of apply cut method testing
 
 
-  // Test setting primal (column) and row (dual) solutions, and test that
-  // reduced cost and row activity match.
-  // GUROBI does not support setting solutions (only basis can be set), so we skip this test.
-  if( !grbSolverInterface )
-    testSettingSolutions(*exmip1Si) ;
+/*
+  Test setting primal (column) and row (dual) solutions, and test that reduced
+  cost and row activity match.
+
+  GUROBI does not support setting solutions (only basis can be set), so we
+  skip this test.
+
+  This is a failure of the implementation of OsiGrb. Most solvers do not
+  allow you to simply set a solution by giving primal values, it needs to be
+  handled in the OsiXXX. That's what OsiGrb should do.  See longer rant where
+  OsiGrb exposes Gurobi's inability to handle 'N' constraints. Here, run the
+  tests and see the error messages. Shouldn't cause failure because we're not
+  yet properly counting errors.
+  -- lh, 100826 --
+*/
+  testSettingSolutions(*exmip1Si) ;
 
   // Test column type methods
 
@@ -5186,7 +4631,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 /*
   Test the simplex portion of the OSI interface.
 */
-  testSimplex(emptySi,mpsDir) ;
+  errCnt += testSimplexAPI(emptySi,mpsDir) ;
 
   // Add a Laci suggested test case
   // Load in a problem as column ordered matrix,
@@ -5382,7 +4827,9 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   one's tested it since OsiFmp was originally developed.
 */
   if ( !volSolverInterface && !symSolverInterface )
-    testOsiPresolve(emptySi,mpsDir) ;
+  { testOsiPresolve(emptySi,mpsDir) ; }
+  else
+  { failureMessage(solverName, "Skipped OsiPresolve test.") ; }
 /*
   Do a check to see if the solver returns the correct status for artificial
   variables. See the routine for detailed comments. Vol has no basis, hence no
@@ -5428,12 +4875,16 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       delete s;
     }
   }
+  else
+  { failureMessage(solverName,"Skipped DeSmedt tests.") ; }
 /*
   Test dual rays. Vol doesn't react well to dual unboundedness.
 */
   if (!volSolverInterface) {
     errCnt += testDualRays(emptySi,mpsDir) ;
   }
+  else
+  { failureMessage(solverName,"Skipped dual ray tests.") ; }
 
   return (errCnt) ; }
 

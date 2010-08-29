@@ -69,6 +69,9 @@ Osi/src/Osi/Makefile.am -text
 Osi/src/Osi/Makefile.in -text
 Osi/src/OsiCommonTest/Makefile.am -text
 Osi/src/OsiCommonTest/Makefile.in -text
+Osi/src/OsiCommonTest/OsiNetlibTest.cpp -text
+Osi/src/OsiCommonTest/OsiSimplexAPITest.cpp -text
+Osi/src/OsiCommonTest/OsiUnitTestUtils.cpp -text
 Osi/src/OsiCommonTest/OsiUnitTests.hpp -text
 Osi/src/OsiCpx/osi-cplex-uninstalled.pc.in -text
 Osi/src/OsiCpx/osi-cplex.pc.in -text

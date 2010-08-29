@@ -8,6 +8,7 @@
 #include <vector>
 
 class OsiSolverInterface;
+class CoinPackedVectorBase;
 
 /** \brief Run solvers on NetLib problems.
 
@@ -38,5 +39,29 @@ void OsiColCutUnitTest(const OsiSolverInterface * baseSiP, const std::string & m
 void OsiRowCutUnitTest(const OsiSolverInterface * baseSiP, const std::string & mpsDir);
 
 void OsiRowCutDebuggerUnitTest(const OsiSolverInterface * baseSiP, const std::string & mpsDir);
+
+int testSimplexAPI(const OsiSolverInterface* emptySi,
+		   const std::string& mpsDir) ;
+
+namespace OsiUnitTest {
+
+void failureMessage(const std::string &solverName,
+		    const std::string &message) ;
+void failureMessage(const OsiSolverInterface &si,
+		    const std::string &message) ;
+void testingMessage(const char *const msg) ;
+
+bool equivalentVectors(const OsiSolverInterface * si1,
+		       const OsiSolverInterface * si2,
+		       double tol,
+		       const double * v1,
+		       const double * v2,
+		       int size) ;
+
+bool compareProblems(OsiSolverInterface *osi1, OsiSolverInterface *osi2) ;
+
+bool isEquivalent(const CoinPackedVectorBase &pv, int n, const double *fv) ;
+
+} // end namespace OsiUnitTest
 
 #endif /*OSISOLVERINTERFACETEST_HPP_*/

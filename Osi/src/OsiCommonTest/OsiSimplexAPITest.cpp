@@ -189,7 +189,7 @@ int testBInvCol (const OsiSolverInterface *si)
   if (errCnt != 0)
   { std::cout << errCnt << " errors." << std::endl ; }
   else
-  { std::cout << " ok." << std::endl ; }
+  { std::cout << "ok." << std::endl ; }
 
   return (errCnt) ; }
 
@@ -252,7 +252,7 @@ int testBInvRow (const OsiSolverInterface *si)
   if (errCnt != 0)
   { std::cout << errCnt << " errors." << std::endl ; }
   else
-  { std::cout << " ok." << std::endl ; }
+  { std::cout << "ok." << std::endl ; }
 
   return (errCnt) ; }
 
@@ -313,7 +313,7 @@ int testBInvACol (const OsiSolverInterface *si)
   if (errCnt != 0)
   { std::cout << errCnt << " errors." << std::endl ; }
   else
-  { std::cout << " ok." << std::endl ; }
+  { std::cout << "ok." << std::endl ; }
 
   return (errCnt) ; }
 
@@ -350,8 +350,9 @@ int testBInvARow (const OsiSolverInterface *si)
   can compare with the version build from tableau rows.
   
   Interesting quirk here: Turns out p0033's tableau has no nonzeros in rows
-  6 or 15. Because of that, when abarj is converted to row-major, it has only
-  14 rows, and that causes isEquivalent2 to fail. So force the full size.
+  with index 6 or 15. Because of that, when abarj is converted to row-major,
+  it has only 15 rows, and that causes isEquivalent2 to fail. So force the
+  full size.
 */
   CoinPackedMatrix abarjMtx ;
   double *abarj = new double[m] ;
@@ -433,19 +434,228 @@ int testBInvARow (const OsiSolverInterface *si)
   if (errCnt != 0)
   { std::cout << errCnt << " errors." << std::endl ; }
   else
-  { std::cout << " ok." << std::endl ; }
+  { std::cout << "ok." << std::endl ; }
 
   return (errCnt) ; }
+
+/*
+  Test the row and column duals returned by getReducedGradient.
+
+  ** This method requires that the solver have an optimal solution in hand. **
+
+  The method checks the values returned by getReducedGradient against the
+  values held in the solver (getRowPrice, getReducedCost) and tests that
+  the sign of the reduced costs matches the status of the architectural
+  variables. None of these are guaranteed unless the problem has been solved
+  to optimality. The validity of the test hinges on the assumption that an
+  implementor will just do the calculations for the given c rather than try
+  to determine if the answer held in the solver is valid for the given c.
+
+  * For row duals, test that y = c<B>inv(B), using getBInvCol (already
+    tested) to obtain the columns of the basis inverse. Also check that
+    we agree with getRowPrice.
+  * For column duals (aka reduced costs), test that cbar = c<N> - yN,
+    using the duals we've just checked. Also check that we agree with
+    getReducedCost. Cross-check the sign of the reduced costs against the
+    status vector returned by getBasisStatus.
+
+  It's assumed that the si passed as a parameter is ready for tableau
+  queries: a problem has been loaded and solved to optimality and
+  enableFactorization has been called.
+*/
+int testReducedGradient (const OsiSolverInterface *si)
+{ const bool verbose = false ;
+  std::string solverName ;
+  si->getStrParam(OsiSolverName,solverName) ;
+
+  int n = si->getNumCols() ;
+  int m = si->getNumRows() ;
+
+  int errCnt = 0 ;
+
+  double objSense = si->getObjSense() ;
+  std::cout
+    << "  Testing getReducedGradient ... " ;
+/*
+  Acquire the solver's notion of current duals and reduced costs before we do
+  anything else.
+*/
+  const double *yGold = si->getRowPrice() ;
+  const double *cbarGold = si->getReducedCost() ;
+/*
+  Acquire the basis and build c<B>, the vector of basic cost coefficients. For
+  logicals (basicIndices[k] >= n) assume a zero coefficient.
+*/
+  int *basicIndices = new int[m] ;
+  si->getBasics(basicIndices) ;
+  const double *c = si->getObjCoefficients() ;
+  double *cB = new double[m] ;
+  for (int k = 0 ; k < m ; k++)
+  { int j = basicIndices[k] ;
+    if (j < n)
+    { if (verbose)
+      { std::cout
+	  << "  Retrieving c<" << j << "> = " << c[j]
+	  << " for basis pos'n " << k << "." << std::endl ; }
+    cB[k] = c[j] ; }
+    else
+    { if (verbose)
+      { std::cout
+	  << "  Assuming c<n+" << n-j << "> = " << 0.0
+	  << " for basis pos'n " << k << "." << std::endl ; }
+      cB[k] = 0.0 ; } }
+  delete[] basicIndices ;
+/*
+  Call getReducedGradient to get duals and reduced costs.
+*/
+  double *cbar = new double[n] ;
+  double *y = new double[m] ;
+  try
+  { si->getReducedGradient(cbar,y,c) ; }
+  catch (CoinError e)
+  { std::cout
+      << "  getReducedGradient threw." << std::endl ;
+    std::cout
+      << "  CoinError: " << e.fileName() << ":" << e.methodName() << ": "
+      << e.message() << std::endl ;
+    errCnt++ ;
+    delete[] cbar ;
+    delete[] y ;
+    return (errCnt) ; }
+/*
+  Run through the columns of the basis. Retrieve beta<j>, calculate
+  dot(c<B>,beta<j>) and check that all three sources of y<k> agree.
+*/
+  double *betaj = new double[m] ;
+  CoinRelFltEq eq ;
+  for (int k = 0 ; k < m ; k++)
+  { double yk = 0.0 ;
+    si->getBInvCol(k,betaj) ;
+    for (int i = 0 ; i < m ; i++)
+    { yk += cB[i]*betaj[i] ; }
+    if (!(eq(y[k],yGold[k]) && eq(y[k],yk)))
+    { errCnt++ ;
+      if (!eq(y[k],yGold[k]) && verbose)
+      { std::cout
+	  << "  " << y[k] << " = y<" << k << "> != yGold<" << k << "> = "
+	  << yGold[k] << ", diff = "
+	  << y[k]-yGold[k] << "." << std::endl ; }
+      if (!eq(y[k],yk) && verbose)
+      { std::cout
+	  << "  " << y[k] << " = y<" << k << "> != c<B>beta<" << k << "> = "
+	  << yk << ", diff = "
+	  << y[k]-yk << "." << std::endl ; } } }
+  delete[] cB ;
+  delete[] betaj ;
+/*
+  Now that we're confident the duals are correct, use them to calculate cbar
+  as c-yN and check that all sources for cbar agree. Also check that the sign
+  is correct given the status of the variable. There's no need to
+  differentiate basic and nonbasic columns here.
+*/
+  int *archStatus = new int[n] ;
+  int *logStatus = new int[m] ;
+  si->getBasisStatus(archStatus,logStatus) ;
+  double dualTol ;
+  si->getDblParam(OsiDualTolerance,dualTol) ;
+
+  const int OsiSimplex_isFree = 0 ;
+  const int OsiSimplex_basic = 1 ;
+  const int OsiSimplex_nbub = 2 ;
+  const int OsiSimplex_nblb = 3 ;
+  std::string statNames[] = { "NBFR", "B", "NBUB", "NBLB" } ;
+
+  const CoinPackedMatrix *mtx = si->getMatrixByCol() ;
+  double *cbarCalc = new double[n] ;
+  mtx->transposeTimes(y,cbarCalc) ;
+  std::transform(c,c+n,cbarCalc,cbarCalc,std::minus<double>()) ;
+
+  for (int j = 1 ; j < n ; j++)
+  { double cbarj = cbar[j] ;
+    int statj = archStatus[j] ;
+    if (verbose)
+    { std::cout
+	<< "  x<" << j << "> " << statNames[statj]
+	<< ", cbar<" << j << "> = " << cbarj << "." << std::endl ; }
+    if (!(eq(cbarj,cbarGold[j]) && eq(cbarj,cbarCalc[j])))
+    { errCnt++ ;
+      if (!eq(cbarj,cbarGold[j]) && verbose)
+      { std::cout
+	  << "  " << cbarj << " = cbar<" << j << "> != cbarGold<"
+	  << j << "> = " << cbarGold[j] << ", diff = "
+	  << cbarj-cbarGold[j] << "." << std::endl ; }
+      if (!eq(cbarj,cbarCalc[j]) && verbose)
+      { std::cout
+	  << "  " << cbarj << " = cbar<" << j << "> != c<"
+	  << j << "> - ya<" << j << "> = "
+	  << cbarCalc[j] << ", diff = "
+	  << cbarj-cbarCalc[j] << "." << std::endl ; } }
+    double testcbarj = objSense*cbarj ;
+    switch (statj)
+    { case OsiSimplex_nbub:
+      { if (testcbarj > dualTol)
+	{ errCnt++ ;
+	  if (verbose)
+	  { std::cout
+	      << "  cbar<" << j << "> = " << cbarj
+	      << " has the wrong sign for a NBUB variable."
+	      << std::endl ; } }
+	break ; }
+      case OsiSimplex_nblb:
+      { if (testcbarj < -dualTol)
+	{ errCnt++ ;
+	  if (verbose)
+	  { std::cout
+	      << "  cbar<" << j << "> = " << cbarj
+	      << " has the wrong sign for a NBLB variable."
+	      << std::endl ; } }
+	break ; }
+      case OsiSimplex_isFree:
+      { if (CoinAbs(testcbarj) > dualTol)
+	{ errCnt++ ;
+	  if (verbose)
+	  { std::cout
+	      << "  cbar<" << j << "> = " << cbarj
+	      << " should be zero for a NBFR variable."
+	      << std::endl ; } }
+	break ; }
+      case OsiSimplex_basic:
+      { if (CoinAbs(testcbarj) > dualTol)
+	{ errCnt++ ;
+	  if (verbose)
+	  { std::cout
+	      << "  cbar<" << j << "> = " << cbarj
+	      << " should be zero for a basic variable."
+	      << std::endl ; } }
+	break ; }
+      default:
+      { break ; } } }
+
+  delete[] y ;
+  delete[] cbar ;
+  delete[] cbarCalc ;
+  delete[] archStatus ;
+  delete[] logStatus ;
+/*
+  Announce the result and we're done.
+*/
+  if (errCnt != 0)
+  { std::cout << errCnt << " errors." << std::endl ; }
+  else
+  { std::cout << "ok." << std::endl ; }
+
+  return (errCnt) ; }
+
 
 /*
   Test the mode 2 portion of the simplex API.
   Solve an lp by hand
 */
-int testSimplexMode2 (const OsiSolverInterface *emptySi, std::string mpsDir)
+int testSimplexMode2 (const OsiSolverInterface *emptySi, std::string sampleDir)
 { OsiSolverInterface * si = emptySi->clone();
   std::string solverName;
   si->getStrParam(OsiSolverName,solverName);
-  std::string fn = mpsDir+"p0033";
+  std::string fn = sampleDir+"p0033";
   si->readMps(fn.c_str(),"mps");
   si->setObjSense(-1.0);
   si->initialSolve();
@@ -527,24 +737,21 @@ int testSimplexMode2 (const OsiSolverInterface *emptySi, std::string mpsDir)
 /*
   Test Simplex API mode 1 (tableau access) methods.
 */
-int testSimplexMode1 (const OsiSolverInterface *emptySi, std::string mpsDir)
+int testSimplexMode1 (const OsiSolverInterface *emptySi, std::string sampleDir)
 { bool verbose = false ;
 
   OsiSolverInterface * si = emptySi->clone();
   std::string solverName;
   si->getStrParam(OsiSolverName,solverName);
-  si->setHintParam(OsiDoReducePrint,false,OsiHintDo) ;
+  si->setHintParam(OsiDoReducePrint,true,OsiHintDo) ;
 
   int errCnt = 0 ;
 /*
-  Read and solve p0033 (maximise) to provide a baseline.
+  Read p0033 and check that there's no optimal basis prior to solving.
 */
-  std::string fn = mpsDir+"p0033";
+  std::string fn = sampleDir+"p0033";
   si->readMps(fn.c_str(),"mps");
-  si->setObjSense(-1.0);
-/*
-  Check that there's no optimal basis available at this point.
-*/
+
   bool testVal = si->basisIsAvailable() ;
   if (testVal)
   { failureMessage(*si,"Optimal basis available before initial solve.") ;
@@ -554,38 +761,65 @@ int testSimplexMode1 (const OsiSolverInterface *emptySi, std::string mpsDir)
   { std::cout
       << "  " << solverName << " shows no optimal basis before initial solve."
       << std::endl ; }
+/*
+  Solve as minimisation problem.
+*/
+  si->setObjSense(1.0) ;
   si->initialSolve();
   if (!si->isProvenOptimal())
   { failureMessage(*si,"Failed to solve p0033 to optimality.") ;
     return (1) ; }
+  else
   if (verbose)
   { std::cout
       << "  " << solverName << " solved p0033 z = " << si->getObjValue()
       << "." << std::endl ; }
-  testVal = si->basisIsAvailable() ;
-  if (!testVal)
-  { failureMessage(*si,"No optimal basis available after initial solve.") ;
-    errCnt++ ; }
-  else
-  if (verbose)
-  { std::cout
-      << "  " << solverName << " shows optimal basis after initial solve."
-      << std::endl ; }
+/*
+  Now get tough. Resolve, first as maximisation, then minimisation. Enable the
+  tableau interface and check the methods.
+*/
+  double minmax[] = { -1.0,  1.0 } ;
+  for (int ndx = 0 ; ndx < 2 ; ndx++)
+  { si->setObjSense(minmax[ndx]) ;
+    std::cout
+      << "  " << ((minmax[ndx] < 0)?"maximisation ...":"minimisation")
+      << " ..." << std::endl ;
+    si->resolve() ;
+    if (!si->isProvenOptimal())
+    { failureMessage(*si,"Failed to solve p0033 to optimality.") ;
+      return (1) ; }
+    else
+    if (verbose)
+    { std::cout
+	<< "  " << solverName
+	<< ((si->getObjSense() < 0)?" maximised":" minimised")
+	<< " p0033 z = " << si->getObjValue()
+	<< "." << std::endl ; }
+    testVal = si->basisIsAvailable() ;
+    if (!testVal)
+    { failureMessage(*si,"No optimal basis available after resolve.") ;
+      errCnt++ ; }
+    else
+    if (verbose)
+    { std::cout
+	<< "  " << solverName << " shows optimal basis after resolve."
+	<< std::endl ; }
 /*
   Enable simplex mode 1.
 */
-  si->enableFactorization() ;
+    si->enableFactorization() ;
 /*
   Test the various methods.
 */
-  errCnt += testBInvCol(si) ;
-  errCnt += testBInvRow(si) ;
-  errCnt += testBInvACol(si) ;
-  errCnt += testBInvARow(si) ;
+    errCnt += testBInvCol(si) ;
+    errCnt += testBInvRow(si) ;
+    errCnt += testBInvACol(si) ;
+    errCnt += testBInvARow(si) ;
+    errCnt += testReducedGradient(si) ;
 /*
   Disable simplex mode 1.
 */
-  si->disableFactorization() ;
+    si->disableFactorization() ; }
 /*
   Trash this solver and we're finished.
 */
@@ -601,7 +835,7 @@ int testSimplexMode1 (const OsiSolverInterface *emptySi, std::string mpsDir)
 */
 
 int testSimplexAPI (const OsiSolverInterface *emptySi,
-		    const std::string &mpsDir)
+		    const std::string &sampleDir)
 { OsiSolverInterface *si = emptySi->clone() ;
   std::string solverName;
   si->getStrParam(OsiSolverName,solverName);
@@ -620,15 +854,14 @@ int testSimplexAPI (const OsiSolverInterface *emptySi,
   { std::cout
       << "Testing Simplex API mode 1 for " << solverName << " ... "
       << std::endl ;
-    int errCnt = testSimplexMode1(emptySi,mpsDir) ;
+    int errCnt = testSimplexMode1(emptySi,sampleDir) ;
     totalErrs += errCnt ;
     if (errCnt > 0)
     { std::cout
         << "  Simplex API mode 1 tests incurred " << errCnt << " errors."
 	<< std::endl ; }
     else
-    { std::cout << "  Simplex API mode 1 ok." << std::endl ; }
-  }
+    { std::cout << "  Simplex API mode 1 ok." << std::endl ; } }
 /*
   Test the mode 2 (pivot-by-pivot control) portion of the API.
 */
@@ -636,14 +869,17 @@ int testSimplexAPI (const OsiSolverInterface *emptySi,
   { std::cout
       << "Testing Simplex API mode 2 for " << solverName << " ... "
       << std::endl ;
-    int errCnt = testSimplexMode2(emptySi,mpsDir) ;
+    int errCnt = testSimplexMode2(emptySi,sampleDir) ;
     totalErrs += errCnt ;
     if (errCnt > 0)
     { std::cout
         << "  Simplex API mode 1 tests incurred " << errCnt << " errors."
 	<< std::endl ; }
     else
-    { std::cout << "  Simplex API mode 2 ok." << std::endl ; }
-  }
+    { std::cout << "  Simplex API mode 2 ok." << std::endl ; } }
+  else
+  { std::cout
+      << solverName << " does not implement Simplex API mode 2."
+      << std::endl ; }
 
   return (totalErrs) ; }

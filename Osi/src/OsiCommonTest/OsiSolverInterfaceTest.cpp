@@ -2619,6 +2619,160 @@ int testArtifStatus (const OsiSolverInterface *emptySi)
 
 
 /*
+  This method checks [cbar<B> cbar<N>] = [c<B>-yB c<N>-yN] = [0 (c<N> - yN)]
+  for the architectural variables. (But note there's no need to discriminate
+  between basic and nonbasic columns in the tests below.)  This provides a
+  moderately strong check on the correctness of y (getRowPrice) and cbar
+  (getReducedCosts). The method also checks that the sign of cbar<N> is
+  appropriate for the status of the variables.
+*/
+
+int testReducedCosts (const OsiSolverInterface *emptySi,
+		       const std::string &sampleDir)
+
+{ const bool verbose = false ;
+
+  OsiSolverInterface *si = emptySi->clone() ;
+  std::string solverName;
+  si->getStrParam(OsiSolverName,solverName);
+  si->setHintParam(OsiDoReducePrint,true,OsiHintDo) ;
+
+  int errCnt = 0 ;
+
+  std::cout << "Testing duals and reduced costs ... " ;
+/*
+  Read p0033 and solve to optimality (minimisation).
+*/
+  std::string fn = sampleDir+"p0033";
+  si->readMps(fn.c_str(),"mps");
+  si->setObjSense(1.0) ;
+  si->initialSolve();
+  if (!si->isProvenOptimal())
+  { failureMessage(*si,"Failed to solve p0033 to optimality.") ;
+    return (1) ; }
+  else
+  if (verbose)
+  { std::cout
+      << "  " << solverName << " solved p0033 z = " << si->getObjValue()
+      << "." << std::endl ; }
+/*
+  Get the unchanging components: size, matrix, objective.
+*/
+  int n = si->getNumCols() ;
+  const CoinPackedMatrix *mtx = si->getMatrixByCol() ;
+  const double *c = si->getObjCoefficients() ;
+  double *cbarCalc = new double[n] ;
+  double dualTol ;
+  si->getDblParam(OsiDualTolerance,dualTol) ;
+  CoinRelFltEq eq ;
+  std::string statNames[] = { "NBFR", "B", "NBUB", "NBLB" } ;
+/*
+  Resolve, first as maximisation, then minimisation, and do the tests.
+*/
+  double minmax[] = { -1.0,  1.0 } ;
+  for (int ndx = 0 ; ndx < 2 ; ndx++)
+  { si->setObjSense(minmax[ndx]) ;
+    si->resolve() ;
+    if (!si->isProvenOptimal())
+    { failureMessage(*si,"Failed to solve p0033 to optimality.") ;
+      return (1) ; }
+    else
+    if (verbose)
+    { std::cout
+	<< "  " << solverName
+	<< ((si->getObjSense() < 0)?" maximised":" minimised")
+	<< " p0033 z = " << si->getObjValue()
+	<< "." << std::endl ; }
+/*
+  Retrieve status, duals, and reduced costs. Calculate c - yA.
+*/
+    const CoinWarmStartBasis *wsb = 
+      dynamic_cast<CoinWarmStartBasis *>(si->getWarmStart()) ;
+    double dir = si->getObjSense() ;
+    const double *y = si->getRowPrice() ;
+    const double *cbar = si->getReducedCost() ;
+    mtx->transposeTimes(y,cbarCalc) ;
+    std::transform(c,c+n,cbarCalc,cbarCalc,std::minus<double>()) ;
+/*
+  Walk the architecturals and check that cbar<j> = c<j> - ya<j> and has the
+  correct sign given the status and objective sense (max/min).
+*/
+    for (int j = 0 ; j < n ; j++)
+    { CoinWarmStartBasis::Status statj = wsb->getStructStatus(j) ;
+      double cbarj = cbar[j] ;
+      double cbarCalcj = cbarCalc[j] ;
+    
+      if (verbose)
+      { std::cout
+	  << "  x<" << j << "> " << statNames[statj]
+	  << ", cbar<" << j << "> = " << cbarj << "." << std::endl ; }
+
+      if (!eq(cbarj,cbarCalcj))
+      { errCnt++ ;
+        if (verbose)
+	{ std::cout
+	    << "  " << cbarj << " = cbar<" << j << "> != c<"
+	    << j << "> - ya<" << j << "> = "
+	    << cbarCalcj << ", diff = "
+	    << cbarj-cbarCalcj << "." << std::endl ; } }
+
+      double testcbarj = dir*cbarj ;
+      switch (statj)
+      { case CoinWarmStartBasis::atUpperBound:
+        { if (testcbarj > dualTol)
+	  { errCnt++ ;
+	    if (verbose)
+	    { std::cout
+		<< "  cbar<" << j << "> = " << cbarj
+		<< " has the wrong sign for a NBUB variable."
+		<< std::endl ; } }
+	  break ; }
+        case CoinWarmStartBasis::atLowerBound:
+        { if (testcbarj < -dualTol)
+	  { errCnt++ ;
+	    if (verbose)
+	    { std::cout
+		<< "  cbar<" << j << "> = " << cbarj
+		<< " has the wrong sign for a NBLB variable."
+		<< std::endl ; } }
+	  break ; }
+        case CoinWarmStartBasis::isFree:
+        { if (CoinAbs(testcbarj) > dualTol)
+	  { errCnt++ ;
+	    if (verbose)
+	    { std::cout
+		<< "  cbar<" << j << "> = " << cbarj
+		<< " should be zero for a NBFR variable."
+		<< std::endl ; } }
+	  break ; }
+        case CoinWarmStartBasis::basic:
+        { if (CoinAbs(testcbarj) > dualTol)
+	  { errCnt++ ;
+	    if (verbose)
+	    { std::cout
+		<< "  cbar<" << j << "> = " << cbarj
+		<< " should be zero for a basic variable."
+		<< std::endl ; } }
+	  break ; }
+	default:
+	{ break ; } } }
+    delete wsb ; }
+
+  delete[] cbarCalc ;
+/*
+  Announce the result and we're done.
+*/
+  if (errCnt != 0)
+  { std::cout << errCnt << " errors." << std::endl ; }
+  else
+  { std::cout << "ok." << std::endl ; }
+
+  return (errCnt) ; }
+  
+
+
+
+/*
   Test the writeMps and writeMpsNative functions by loading a problem,
   writing it out to a file, reloading it, and solving.
   
@@ -3740,7 +3894,7 @@ int testDualRays (const OsiSolverInterface *emptySi,
   // Set to true if you want to see the ray coefficients
   const bool verbose = false ;
 
-  std::cout << "Checking getDualRays ..." << std::endl ;
+  std::cout << "Testing getDualRays ..." << std::endl ;
 /*
   Figure out what we can test. getDualRays only makes sense after solving a
   problem, so the strategy is to solve galenet and try for full rays. If that
@@ -4877,6 +5031,10 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   }
   else
   { failureMessage(solverName,"Skipped DeSmedt tests.") ; }
+/*
+  Test duals and reduced costs.
+*/
+  errCnt += testReducedCosts(emptySi,mpsDir) ;
 /*
   Test dual rays. Vol doesn't react well to dual unboundedness.
 */

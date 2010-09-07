@@ -658,7 +658,7 @@ public:
 	one.
    
 	\note
-	Implementers of solver interfaces note that the double pointers in
+	Implementors of solver interfaces note that the double pointers in
 	the vector should point to arrays of length getNumCols() and they
 	should be allocated with new[].
 
@@ -1186,11 +1186,38 @@ public:
     */
     virtual void deleteRows(const int num, const int * rowIndices) = 0;
 
-    /**  If solver wants it can save a copy of "base" (continuous) model here
-     */
+    /** \brief Replace the constraint matrix
+
+      I (JJF) am getting annoyed because I can't just replace a matrix.
+      The default behavior of this is do nothing so only use where that would
+      not matter, e.g. strengthening a matrix for MIP.
+    */
+    virtual void replaceMatrixOptional(const CoinPackedMatrix & ) {}
+
+    /** \brief Replace the constraint matrix
+    
+      And if it does matter (not used at present)
+    */
+    virtual void replaceMatrix(const CoinPackedMatrix & ) {abort();}
+
+    /** \brief Save a copy of the base model
+    
+      If solver wants it can save a copy of "base" (continuous) model here.
+    */
     virtual void saveBaseModel() {}
-    /**  Strip off rows to get to this number of rows.
-         If solver wants it can restore a copy of "base" (continuous) model here
+
+    /** \brief Reduce the constraint system to the specified number of
+    	       constraints.
+
+       If solver wants it can restore a copy of "base" (continuous) model
+       here.
+
+       \note
+       The name is somewhat misleading. Implementors should consider
+       the opportunity to optimise behaviour in the common case where
+       \p numberRows is exactly the number of original constraints. Do not,
+       however, neglect the possibility that \p numberRows does not equal
+       the number of original constraints.
      */
     virtual void restoreBaseModel(int numberRows);
     //-----------------------------------------------------------------------
@@ -1498,14 +1525,6 @@ public:
   /// See class CoinLpIO for description of this format.
   int readLp(FILE *fp, const double epsilon = 1e-5);
 
-  /**
-     I (JJF) am getting annoyed because I can't just replace a matrix.
-     The default behavior of this is do nothing so only use where that would not matter
-     e.g. strengthening a matrix for MIP
-  */
-  virtual void replaceMatrixOptional(const CoinPackedMatrix & ) {}
-  /// And if it does matter (not used at present)
-  virtual void replaceMatrix(const CoinPackedMatrix & ) {abort();}
   //@}
 
   //---------------------------------------------------------------------------
@@ -1761,19 +1780,18 @@ public:
 
     This method differs from #setWarmStart in the format of the input
     and in its immediate effect. Think of it as #setWarmStart immediately
-    followed by #resolve.
+    followed by #resolve, but no pivots are allowed.
 
     \note
     Implementors may choose to implement this method as a wrapper that calls
-    #setWarmStart and #resolve.
+    #setWarmStart and #resolve if the no pivot requirement can be satisfied.
   */
   virtual int setBasisStatus(const int* cstat, const int* rstat) ;
 
   /*! \brief Calculate duals and reduced costs for the given objective
 	     coefficients.
 
-    The solver's objective coefficient vector is not changed
-    (cf. #setObjectiveAndRefresh)
+    The solver's objective coefficient vector is not changed.
   */
   virtual void getReducedGradient(double* columnReducedCosts, 
 				  double* duals, const double* c) const ;

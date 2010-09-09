@@ -5032,17 +5032,16 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   else
   { failureMessage(solverName,"Skipped DeSmedt tests.") ; }
 /*
-  Test duals and reduced costs.
-*/
-  errCnt += testReducedCosts(emptySi,mpsDir) ;
-/*
-  Test dual rays. Vol doesn't react well to dual unboundedness.
+  Test duals and reduced costs, then dual rays. Vol doesn't react well to
+  either test.
 */
   if (!volSolverInterface) {
+    errCnt += testReducedCosts(emptySi,mpsDir) ;
     errCnt += testDualRays(emptySi,mpsDir) ;
   }
   else
-  { failureMessage(solverName,"Skipped dual ray tests.") ; }
+  { failureMessage(solverName,
+		 "Skipped tests for duals, reduced costs, and dual rays.") ; }
 
   return (errCnt) ; }
 

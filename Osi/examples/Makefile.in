@@ -79,8 +79,7 @@ COINLIBDIR = @abs_lib_dir@/coin
 LIBS = -L$(COINLIBDIR) \
        -L$(COINLIBDIR)/ThirdParty \
        @OSI_EXAMPLES_SOLVER_LIBS@ -lOsi \
-       @COINUTILS_LIBS@ \
-       @ADDLIBS@
+       @OSILIB_LIBS@
 
 # Necessary Include dirs (we use the CYGPATH_W variables to allow
 # compilation with Windows compilers)

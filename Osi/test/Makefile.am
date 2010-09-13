@@ -42,6 +42,7 @@ if COIN_HAS_CPX
   AM_CPPFLAGS += -I`$(CYGPATH_W) $(CPXINCDIR)` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiCpx`
   unitTest_LDADD += ../src/OsiCpx/libOsiCpx.la
+  LIBS += $(CPXLIB)
 endif
 
 if COIN_HAS_GLPK
@@ -57,6 +58,7 @@ if COIN_HAS_MSK
   AM_CPPFLAGS += -I`$(CYGPATH_W) $(MSKINCDIR)` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiMsk`
   unitTest_LDADD += ../src/OsiMsk/libOsiMsk.la
+  LIBS += $(MSKLIB)
 endif
 
 if COIN_HAS_XPR
@@ -64,6 +66,7 @@ if COIN_HAS_XPR
   AM_CPPFLAGS += -I`$(CYGPATH_W) $(XPRINCDIR)` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiXpr`
   unitTest_LDADD += ../src/OsiXpr/libOsiXpr.la
+  LIBS += $(XPRLIB)
 endif
 
 if COIN_HAS_GRB
@@ -71,6 +74,7 @@ if COIN_HAS_GRB
   AM_CPPFLAGS += -I`$(CYGPATH_W) $(GRBINCDIR)` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiGrb`
   unitTest_LDADD += ../src/OsiGrb/libOsiGrb.la
+  LIBS += $(GRBLIB)
 endif
 
 if COIN_HAS_SPX
@@ -78,10 +82,11 @@ if COIN_HAS_SPX
   AM_CPPFLAGS += -I`$(CYGPATH_W) $(SPXINCDIR)` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiSpx`
   unitTest_LDADD += ../src/OsiSpx/libOsiSpx.la
+  LIBS += $(SPXLIB)
 endif
 
 unitTest_LDADD += ../src/Osi/libOsi.la
-LIBS += $(COINUTILS_LIBS) $(ADDLIBS)
+LIBS += $(OSILIB_LIBS)
 
 unittestflags =
 if COIN_HAS_SAMPLE

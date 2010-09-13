@@ -53,10 +53,10 @@ AC_COIN_INIT_AUTO_TOOLS
 #                              COIN-OR components                           #
 #############################################################################
 
-AC_COIN_HAS_MODULE(CoinUtils, [coinutils = trunk])
-AC_COIN_HAS_MODULE(Sample,    [coindatasample],   [required=0])
-AC_COIN_HAS_MODULE(Netlib,    [coindatanetlib],   [required=0])
-AC_COIN_HAS_MODULE(Glpk,      [coinglpk >= 4.39], [required=0])
+AC_COIN_HAS_PACKAGE(CoinUtils, [coinutils = trunk], [OsiLib])
+AC_COIN_HAS_PACKAGE(Glpk,      [coinglpk >= 4.39],  [OsiGlpkLib])
+AC_COIN_HAS_PACKAGE(Sample,    [coindatasample])
+AC_COIN_HAS_PACKAGE(Netlib,    [coindatanetlib])
 
 #############################################################################
 #                            Third party solvers                            #
@@ -67,9 +67,9 @@ AC_COIN_HAS_MODULE(Glpk,      [coinglpk >= 4.39], [required=0])
 # the rest, it's anyone's guess.  -- lh, 080529 --
 # fixed detection of Mosek and Xpress -- stefan, 091003 (linux32, gcc) --
 
-AC_COIN_HAS_USER_LIBRARY([Cplex],[CPX],[cplex.h],[CPXgetstat])
-AC_COIN_HAS_USER_LIBRARY([Mosek],[MSK],[mosek.h],[MSK_makeenv])
-AC_COIN_HAS_USER_LIBRARY([Xpress],[XPR],[xprs.h],[XPRSinit])
+AC_COIN_HAS_USER_LIBRARY([Cplex], [CPX],[cplex.h],   [CPXgetstat])
+AC_COIN_HAS_USER_LIBRARY([Mosek], [MSK],[mosek.h],   [MSK_makeenv])
+AC_COIN_HAS_USER_LIBRARY([Xpress],[XPR],[xprs.h],    [XPRSinit])
 AC_COIN_HAS_USER_LIBRARY([Gurobi],[GRB],[gurobi_c.h],[GRBloadenv])
 AC_COIN_HAS_USER_LIBRARY([Soplex],[SPX],[soplex.h])
 
@@ -119,29 +119,6 @@ AC_SUBST(OSI_EXAMPLES_SOLVER_LIBS)
 
 AC_DEFINE(GLPK_HAS_INTOPT, [1],
 	  [Define to 1 if GLPK has the advanced B&B solver lpx_intopt])
-
-# For setting up osi-glpk.pc, it makes a difference whether Glpk is available
-# because --with-glpk-lib has been specified or because a coinglpk.pc file was
-# found.  Normally, COIN_HAS_MODULE takes care of this, but since we set
-# required=0 above, we have determine the configuration here. Short
-# explanation: in the first case, we drop the user's LIBS and CFLAGS into
-# osi-glpk.pc.in; in the second, we let pkg-config sort it out by checking
-# coinglpk.pc.
-
-if test "$coin_has_glpk" = "yes" ; then
-  AC_ARG_WITH([glpk-lib],[],
-    [ OSIGLPKPC_LIBS=${GLPK_LIBS}
-      OSIGLPKPC_CFLAGS=${GLPK_CFLAGS}
-      OSIGLPKPC_REQUIRES=
-    ],
-    [ OSIGLPKPC_LIBS=
-      OSIGLPKPC_CFLAGS=
-      OSIGLPKPC_REQUIRES="coinglpk >= 4.39"
-    ])
-  AC_SUBST(OSIGLPKPC_LIBS)
-  AC_SUBST(OSIGLPKPC_CFLAGS)
-  AC_SUBST(OSIGLPKPC_REQUIRES)
-fi
 
 if test "$GXX" = "yes"; then
   case "$CXX" in

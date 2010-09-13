@@ -6,6 +6,6 @@ includedir=@includedir@/coin
 Name: OsiGlpk
 Description: COIN-OR Open Solver Interface for GLPK
 Version: @PACKAGE_VERSION@
-Libs: -L${libdir} -lOsiGlpk @OSIGLPKPC_LIBS@
-Cflags: -I${includedir} @OSIGLPKPC_CFLAGS@
-Requires: osi @OSIGLPKPC_REQUIRES@
+Libs: -L${libdir} -lOsiGlpk @OSIGLPKLIB_PCLIBS@
+Cflags: -I${includedir}
+Requires: osi @OSIGLPKLIB_PCREQUIRES@

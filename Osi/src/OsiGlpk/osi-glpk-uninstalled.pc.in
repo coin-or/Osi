@@ -3,6 +3,6 @@ prefix=@prefix@
 Name: OsiGlpk
 Description: COIN-OR Open Solver Interface for GLPK
 Version: @PACKAGE_VERSION@
-Libs: -L@ABSBUILDDIR@/src/OsiGlpk -lOsiGlpk @OSIGLPKPC_LIBS@
-Cflags: -I@abs_source_dir@/src/OsiGlpk @OSIGLPKPC_CFLAGS@
-Requires: osi @OSIGLPKPC_REQUIRES@
+Libs: -L@ABSBUILDDIR@/src/OsiGlpk -lOsiGlpk  @OSIGLPKLIB_PCLIBS@
+Cflags: -I@abs_source_dir@/src/OsiGlpk
+Requires: osi  @OSIGLPKLIB_PCREQUIRES@

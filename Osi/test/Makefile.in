@@ -51,34 +51,39 @@ noinst_PROGRAMS = unitTest$(EXEEXT)
 @COIN_HAS_CPX_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiCpx`
 
 @COIN_HAS_CPX_TRUE@am__append_3 = ../src/OsiCpx/libOsiCpx.la
-@COIN_HAS_GLPK_TRUE@am__append_4 = OsiGlpkSolverInterfaceTest.cpp
-@COIN_HAS_GLPK_TRUE@am__append_5 = $(GLPK_CFLAGS) \
+@COIN_HAS_CPX_TRUE@am__append_4 = $(CPXLIB)
+@COIN_HAS_GLPK_TRUE@am__append_5 = OsiGlpkSolverInterfaceTest.cpp
+@COIN_HAS_GLPK_TRUE@am__append_6 = $(GLPK_CFLAGS) \
 @COIN_HAS_GLPK_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiGlpk`
 
-@COIN_HAS_GLPK_TRUE@am__append_6 = ../src/OsiGlpk/libOsiGlpk.la
-@COIN_HAS_GLPK_TRUE@am__append_7 = $(GLPK_LIBS)
-@COIN_HAS_MSK_TRUE@am__append_8 = OsiMskSolverInterfaceTest.cpp
-@COIN_HAS_MSK_TRUE@am__append_9 = -I`$(CYGPATH_W) $(MSKINCDIR)` \
+@COIN_HAS_GLPK_TRUE@am__append_7 = ../src/OsiGlpk/libOsiGlpk.la
+@COIN_HAS_GLPK_TRUE@am__append_8 = $(GLPK_LIBS)
+@COIN_HAS_MSK_TRUE@am__append_9 = OsiMskSolverInterfaceTest.cpp
+@COIN_HAS_MSK_TRUE@am__append_10 = -I`$(CYGPATH_W) $(MSKINCDIR)` \
 @COIN_HAS_MSK_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiMsk`
 
-@COIN_HAS_MSK_TRUE@am__append_10 = ../src/OsiMsk/libOsiMsk.la
-@COIN_HAS_XPR_TRUE@am__append_11 = OsiXprSolverInterfaceTest.cpp
-@COIN_HAS_XPR_TRUE@am__append_12 = -I`$(CYGPATH_W) $(XPRINCDIR)` \
+@COIN_HAS_MSK_TRUE@am__append_11 = ../src/OsiMsk/libOsiMsk.la
+@COIN_HAS_MSK_TRUE@am__append_12 = $(MSKLIB)
+@COIN_HAS_XPR_TRUE@am__append_13 = OsiXprSolverInterfaceTest.cpp
+@COIN_HAS_XPR_TRUE@am__append_14 = -I`$(CYGPATH_W) $(XPRINCDIR)` \
 @COIN_HAS_XPR_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiXpr`
 
-@COIN_HAS_XPR_TRUE@am__append_13 = ../src/OsiXpr/libOsiXpr.la
-@COIN_HAS_GRB_TRUE@am__append_14 = OsiGrbSolverInterfaceTest.cpp
-@COIN_HAS_GRB_TRUE@am__append_15 = -I`$(CYGPATH_W) $(GRBINCDIR)` \
+@COIN_HAS_XPR_TRUE@am__append_15 = ../src/OsiXpr/libOsiXpr.la
+@COIN_HAS_XPR_TRUE@am__append_16 = $(XPRLIB)
+@COIN_HAS_GRB_TRUE@am__append_17 = OsiGrbSolverInterfaceTest.cpp
+@COIN_HAS_GRB_TRUE@am__append_18 = -I`$(CYGPATH_W) $(GRBINCDIR)` \
 @COIN_HAS_GRB_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiGrb`
 
-@COIN_HAS_GRB_TRUE@am__append_16 = ../src/OsiGrb/libOsiGrb.la
-@COIN_HAS_SPX_TRUE@am__append_17 = OsiSpxSolverInterfaceTest.cpp
-@COIN_HAS_SPX_TRUE@am__append_18 = -I`$(CYGPATH_W) $(SPXINCDIR)` \
+@COIN_HAS_GRB_TRUE@am__append_19 = ../src/OsiGrb/libOsiGrb.la
+@COIN_HAS_GRB_TRUE@am__append_20 = $(GRBLIB)
+@COIN_HAS_SPX_TRUE@am__append_21 = OsiSpxSolverInterfaceTest.cpp
+@COIN_HAS_SPX_TRUE@am__append_22 = -I`$(CYGPATH_W) $(SPXINCDIR)` \
 @COIN_HAS_SPX_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiSpx`
 
-@COIN_HAS_SPX_TRUE@am__append_19 = ../src/OsiSpx/libOsiSpx.la
-@COIN_HAS_SAMPLE_TRUE@am__append_20 = -mpsDir=`$(CYGPATH_W) $(SAMPLE_DATA)`
-@COIN_HAS_NETLIB_TRUE@am__append_21 = -netlibDir=`$(CYGPATH_W) $(NETLIB_DATA)` -testOsiSolverInterface
+@COIN_HAS_SPX_TRUE@am__append_23 = ../src/OsiSpx/libOsiSpx.la
+@COIN_HAS_SPX_TRUE@am__append_24 = $(SPXLIB)
+@COIN_HAS_SAMPLE_TRUE@am__append_25 = -mpsDir=`$(CYGPATH_W) $(SAMPLE_DATA)`
+@COIN_HAS_NETLIB_TRUE@am__append_26 = -netlibDir=`$(CYGPATH_W) $(NETLIB_DATA)` -testOsiSolverInterface
 subdir = test
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -224,7 +229,9 @@ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LDFLAGS = @LDFLAGS@
 LIBEXT = @LIBEXT@
 LIBOBJS = @LIBOBJS@
-LIBS = @LIBS@ $(am__append_7) $(COINUTILS_LIBS) $(ADDLIBS)
+LIBS = @LIBS@ $(am__append_4) $(am__append_8) $(am__append_12) \
+	$(am__append_16) $(am__append_20) $(am__append_24) \
+	$(OSILIB_LIBS)
 LIBTOOL = @LIBTOOL@
 LIBTOOLM4 = @LIBTOOLM4@
 LN_S = @LN_S@
@@ -245,9 +252,12 @@ NETLIB_LIBS = @NETLIB_LIBS@
 OBJEXT = @OBJEXT@
 OPT_CFLAGS = @OPT_CFLAGS@
 OPT_CXXFLAGS = @OPT_CXXFLAGS@
-OSIGLPKPC_CFLAGS = @OSIGLPKPC_CFLAGS@
-OSIGLPKPC_LIBS = @OSIGLPKPC_LIBS@
-OSIGLPKPC_REQUIRES = @OSIGLPKPC_REQUIRES@
+OSIGLPKLIB_LIBS = @OSIGLPKLIB_LIBS@
+OSIGLPKLIB_PCLIBS = @OSIGLPKLIB_PCLIBS@
+OSIGLPKLIB_PCREQUIRES = @OSIGLPKLIB_PCREQUIRES@
+OSILIB_LIBS = @OSILIB_LIBS@
+OSILIB_PCLIBS = @OSILIB_PCLIBS@
+OSILIB_PCREQUIRES = @OSILIB_PCREQUIRES@
 OSI_EXAMPLES_SOLVER_CFLAGS = @OSI_EXAMPLES_SOLVER_CFLAGS@
 OSI_EXAMPLES_SOLVER_LIBS = @OSI_EXAMPLES_SOLVER_LIBS@
 OSI_EXAMPLES_SOLVER_NAME = @OSI_EXAMPLES_SOLVER_NAME@
@@ -262,7 +272,6 @@ PATH_SEPARATOR = @PATH_SEPARATOR@
 PCADDLIBS = @PCADDLIBS@
 PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
-REQUIREDPACKAGES = @REQUIREDPACKAGES@
 RPATH_FLAGS = @RPATH_FLAGS@
 SAMPLE_CFLAGS = @SAMPLE_CFLAGS@
 SAMPLE_DATA = @SAMPLE_DATA@
@@ -340,27 +349,27 @@ target_alias = @target_alias@
 AUTOMAKE_OPTIONS = foreign
 unitTest_SOURCES = unitTest.cpp OsiTestSolver.cpp \
 	OsiTestSolverInterface.cpp OsiTestSolverInterfaceIO.cpp \
-	OsiTestSolverInterfaceTest.cpp $(am__append_1) $(am__append_4) \
-	$(am__append_8) $(am__append_11) $(am__append_14) \
-	$(am__append_17)
+	OsiTestSolverInterfaceTest.cpp $(am__append_1) $(am__append_5) \
+	$(am__append_9) $(am__append_13) $(am__append_17) \
+	$(am__append_21)
 
 # List libraries of COIN projects
 unitTest_LDADD = ../src/OsiCommonTest/libOsiCommonTests.la \
-	$(am__append_3) $(am__append_6) $(am__append_10) \
-	$(am__append_13) $(am__append_16) $(am__append_19) \
+	$(am__append_3) $(am__append_7) $(am__append_11) \
+	$(am__append_15) $(am__append_19) $(am__append_23) \
 	../src/Osi/libOsi.la
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows
 AM_CPPFLAGS = -I`$(CYGPATH_W) $(srcdir)/../src/Osi` -I`$(CYGPATH_W) \
 	$(srcdir)/../src/OsiCommonTest` $(COINUTILS_CFLAGS) \
-	$(am__append_2) $(am__append_5) $(am__append_9) \
-	$(am__append_12) $(am__append_15) $(am__append_18)
+	$(am__append_2) $(am__append_6) $(am__append_10) \
+	$(am__append_14) $(am__append_18) $(am__append_22)
 
 # This line is necessary to allow VPATH compilation with MS compilers
 # on Cygwin
 DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/inc
-unittestflags = $(am__append_20) $(am__append_21)
+unittestflags = $(am__append_25) $(am__append_26)
 
 ########################################################################
 #                          Cleaning stuff                              #

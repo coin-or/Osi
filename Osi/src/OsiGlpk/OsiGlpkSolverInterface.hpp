@@ -10,9 +10,6 @@
 #define OsiGlpkSolverInterface_H
 
 #include <string>
-extern "C" {
-#include "glpk.h"
-}
 #include "OsiSolverInterface.hpp"
 #include "CoinPackedMatrix.hpp"
 #include "CoinWarmStartBasis.hpp"
@@ -21,6 +18,11 @@ extern "C" {
 
     Instantiation of OsiGlpkSolverInterface for GPLK
 */
+
+#ifndef LPX
+#define LPX glp_prob
+typedef struct { double _opaque_prob[100]; } glp_prob;
+#endif
 
 class OsiGlpkSolverInterface : virtual public OsiSolverInterface {
   friend int OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);

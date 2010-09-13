@@ -75,6 +75,10 @@
 #include <iostream>
 #include <stdio.h>
 
+extern "C" {
+#include "glpk.h"
+}
+
 #include "CoinError.hpp"
 
 #include "OsiConfig.h"

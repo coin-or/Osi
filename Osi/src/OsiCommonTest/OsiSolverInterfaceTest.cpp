@@ -2258,7 +2258,8 @@ bool testHintParam(OsiSolverInterface * si, int k, bool sense,
   return is defined as true if the hint is implemented, false if it is not.
   Information printing is suppressed; uncomment and recompile if you want it.
 */
-{ bool post_sense ;
+{ const bool verbose = false ;
+  bool post_sense ;
   OsiHintStrength post_strength ;
   bool ret ;
   OsiHintParam key = static_cast<OsiHintParam>(k) ;
@@ -2270,12 +2271,13 @@ bool testHintParam(OsiSolverInterface * si, int k, bool sense,
       { ret = (si->getHintParam(key,post_sense,post_strength) == true) &&
 	      (post_strength == strength) && (post_sense == sense) ; } }
     catch (CoinError &thrownErr)
-    { // std::ostringstream msg ;
-      // msg << "setHintParam throw for hint " << key << " sense " << sense <<
-      //      " strength " << strength ;
-      // failureMessage(*si,msg.str()) ;
-      // std::cerr << thrownErr.className() << "::" << thrownErr.methodName() <<
-      //	": " << thrownErr.message() << std::endl ;
+    { if (verbose)
+	  { std::ostringstream msg ;
+        msg << "setHintParam throw for hint " << key << " sense " << sense
+			<< " strength " << strength ;
+        failureMessage(*si,msg.str()) ;
+        std::cerr << thrownErr.className() << "::" << thrownErr.methodName()
+		    <<  ": " << thrownErr.message() << std::endl ; }
       (*throws)++ ;
       ret = (strength == OsiForceDo) ; } }
   else
@@ -2283,12 +2285,13 @@ bool testHintParam(OsiSolverInterface * si, int k, bool sense,
     try
     { ret = si->setHintParam(key,sense,strength) ; }
     catch (CoinError &thrownErr)
-    { // std::ostringstream msg ;
-      // msg << "setHintParam throw for hint " << key << " sense " << sense <<
-      //      " strength " << strength ;
-      // failureMessage(*si,msg.str()) ;
-      // std::cerr << thrownErr.className() << "::" << thrownErr.methodName() <<
-      //	": " << thrownErr.message() << std::endl ;
+    { if (verbose)
+	  { std::ostringstream msg ;
+        msg << "setHintParam throw for hint " << key << " sense " << sense
+			<< " strength " << strength ;
+        failureMessage(*si,msg.str()) ;
+        std::cerr << thrownErr.className() << "::" << thrownErr.methodName()
+			<< ": " << thrownErr.message() << std::endl ; }
       (*throws)++ ;
       ret = !(strength == OsiForceDo) ; } }
 

@@ -789,8 +789,8 @@ void OsiSolverInterface::setRowColNames (CoinLpIO &mod)
     rowNames_.resize(maxRowNdx+1) ;
     objName_ = mod.getObjName() ;
     names = mod.getColNames() ;
-    colNames_.resize(m) ;
-    for (int j = 0 ; j < m ; j++)
+    colNames_.resize(n) ;
+    for (int j = 0 ; j < n ; j++)
     { std::string nme = names[j] ;
       if (nme.length() == 0)
       { if (nameDiscipline == 2)

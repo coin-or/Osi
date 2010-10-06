@@ -529,7 +529,7 @@ OsiXprSolverInterface::getNumCols() const
   if ( !isDataLoaded() ) return 0;
 
   int	  ncols;
-  XPRS_CHECKED( XPRSgetintattrib, (prob_,XPRS_COLS, &ncols) );
+  XPRS_CHECKED( XPRSgetintattrib, (prob_,XPRS_ORIGINALCOLS, &ncols) );
 
   return ncols;
 }
@@ -541,7 +541,7 @@ OsiXprSolverInterface::getNumRows() const
 
    int	   nrows;
 
-   XPRS_CHECKED( XPRSgetintattrib, (prob_,XPRS_ROWS, &nrows) );
+   XPRS_CHECKED( XPRSgetintattrib, (prob_,XPRS_ORIGINALROWS, &nrows) );
 
    return nrows;
 }

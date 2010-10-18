@@ -94,17 +94,18 @@ using namespace OsiUnitTest ;
 
 namespace {
 
-
 //#############################################################################
 // A routine to build a CoinPackedMatrix matching the exmip1 example.
 //#############################################################################
 
-const CoinPackedMatrix &BuildExmip1Mtx ()
+const CoinPackedMatrix *BuildExmip1Mtx ()
 /*
   Simple function to build a packed matrix for the exmip1 example used in
   tests. The function exists solely to hide the intermediate variables.
   Probably could be written as an initialised declaration.
   See COIN/Mps/Sample/exmip1.mps for a human-readable presentation.
+
+  Don't forget to dispose of the matrix when you're done with it.
 
   Ordered triples seem easiest. They're listed in row-major order.
 */
@@ -125,10 +126,10 @@ const CoinPackedMatrix &BuildExmip1Mtx ()
 		      2.8, -1.2,
 		      5.6, 1.0, 1.9 } ;
 
-  static const CoinPackedMatrix exmip1mtx =
-    CoinPackedMatrix(true,&rowndxs[0],&colndxs[0],&coeffs[0],14) ;
+  CoinPackedMatrix *mtx =
+        new CoinPackedMatrix(true,&rowndxs[0],&colndxs[0],&coeffs[0],14) ;
 
-  return (exmip1mtx) ; }
+  return (mtx) ; }
 
 //#############################################################################
 // Short tests contributed by Vivian DeSmedt. Thanks!
@@ -4282,8 +4283,11 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     assert( eq(exmip1Sirr[3],5.0-1.8) );
     assert( eq(exmip1Sirr[4],15.0-3.0) );
 
+    const CoinPackedMatrix *goldByCol = BuildExmip1Mtx() ;
     CoinPackedMatrix goldmtx ;
-    goldmtx.reverseOrderedCopyOf(BuildExmip1Mtx()) ;
+    goldmtx.reverseOrderedCopyOf(*goldByCol) ;
+	delete goldByCol ;
+    
     CoinPackedMatrix pm;
     pm.setExtraGap(0.0);
     pm.setExtraMajor(0.0);
@@ -4378,11 +4382,12 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 
   // Test matrixByCol method
   {
-    const CoinPackedMatrix &goldmtx = BuildExmip1Mtx() ;
+    const CoinPackedMatrix *goldmtx = BuildExmip1Mtx() ;
     OsiSolverInterface & si = *exmip1Si->clone();
     CoinPackedMatrix sm = *si.getMatrixByCol();
     sm.removeGaps();
-    bool getByColOK = goldmtx.isEquivalent(sm) ;
+    bool getByColOK = goldmtx->isEquivalent(sm) ;
+	delete goldmtx ;
 
     if (!getByColOK)
       failureMessage(solverName,"getMatrixByCol()") ;
@@ -4437,13 +4442,15 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     assert( eq(exmip1Sirr[3],5.0-1.8) );
     assert( eq(exmip1Sirr[4],15.0-3.0) );
 
+    const CoinPackedMatrix *goldByCol = BuildExmip1Mtx() ;
     CoinPackedMatrix goldmtx ;
-    goldmtx.reverseOrderedCopyOf(BuildExmip1Mtx()) ;
+    goldmtx.reverseOrderedCopyOf(*goldByCol) ;
     CoinPackedMatrix pm;
     pm.setExtraGap(0.0);
     pm.setExtraMajor(0.0);
     pm = *si2->getMatrixByRow();
     assert(goldmtx.isEquivalent(pm)) ;
+	delete goldByCol ;
 
     int nc = si2->getNumCols();
     int nr = si2->getNumRows();

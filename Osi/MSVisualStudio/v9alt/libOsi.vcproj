@@ -272,6 +272,147 @@
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
+		<Configuration
+			Name="DebugDLL|Win32"
+			OutputDirectory="$(CoinBinDir)"
+			IntermediateDirectory="$(ProjectName)\$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="2"
+			InheritedPropertySheets="$(COIN_ROOT)\BuildTools\MSVisualStudio\v9alt\coin.vsprops;$(CoinRoot)\CoinUtils\CoinUtils\MSVisualStudio\v9alt\coinutils.vsprops"
+			CharacterSet="1"
+			ManagedExtensions="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories=""
+				PreprocessorDefinitions="WIN32;_DEBUG"
+				RuntimeLibrary="3"
+				WarningLevel="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+				Description="Generate .def file"
+				CommandLine="powershell -ExecutionPolicy RemoteSigned -File .\genDefForOsi.ps1 $(IntDir) Osi"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalLibraryDirectories=""
+				ModuleDefinitionFile="$(IntDir)\libOsi.def"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				Description="Copy import lib to $(CoinLibDir)"
+				CommandLine="if not exist $(CoinLibDir) mkdir $(CoinLibDir)&#x0D;&#x0A;move /y $(OutDir)\$(TargetName).lib $(CoinLibDir)&#x0D;&#x0A;"
+			/>
+		</Configuration>
+		<Configuration
+			Name="DebugDLL|x64"
+			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="2"
+			InheritedPropertySheets="$(COIN_ROOT)\BuildTools\MSVisualStudio\v9alt\coin.vsprops;$(CoinRoot)\CoinUtils\CoinUtils\MSVisualStudio\v9alt\coinutils.vsprops"
+			CharacterSet="1"
+			ManagedExtensions="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories=""
+				PreprocessorDefinitions="WIN32;_DEBUG"
+				RuntimeLibrary="3"
+				WarningLevel="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
 	</Configurations>
 	<References>
 		<AssemblyReference
@@ -413,6 +554,10 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 		</Filter>
+		<File
+			RelativePath=".\genDefForOsi.ps1"
+			>
+		</File>
 		<File
 			RelativePath=".\osi.vsprops"
 			>

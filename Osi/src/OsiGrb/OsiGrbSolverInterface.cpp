@@ -64,6 +64,12 @@ while( false )
 template <bool> struct CompileTimeAssert;
 template<> struct CompileTimeAssert<true> {};
 
+#if GRB_VERSION_MAJOR < 4
+#define GRB_METHOD_DUAL    GRB_LPMETHOD_DUAL
+#define GRB_METHOD_PRIMAL  GRB_LPMETHOD_PRIMAL
+#define GRB_INT_PAR_METHOD GRB_INT_PAR_LPMETHOD
+#endif
+
 //#############################################################################
 // A couple of helper functions
 //#############################################################################
@@ -258,13 +264,13 @@ void OsiGrbSolverInterface::initialSolve()
   GRBmodel* lp = getLpPtr( OsiGrbSolverInterface::FREECACHED_RESULTS );
 
   /* set whether dual or primal */
-  int algorithm = GRB_LPMETHOD_PRIMAL;
+  int algorithm = GRB_METHOD_PRIMAL;
   gotHint = getHintParam(OsiDoDualInInitial,takeHint,strength);
   assert (gotHint);
   if (strength!=OsiHintIgnore)
-  	algorithm = takeHint ? GRB_LPMETHOD_DUAL : GRB_LPMETHOD_PRIMAL;
+  	algorithm = takeHint ? GRB_METHOD_DUAL : GRB_METHOD_PRIMAL;
 
-	GUROBI_CALL( "initialSolve", GRBsetintparam(GRBgetenv(lp), GRB_INT_PAR_LPMETHOD, algorithm) );
+	GUROBI_CALL( "initialSolve", GRBsetintparam(GRBgetenv(lp), GRB_INT_PAR_METHOD, algorithm) );
 
 	/* set whether presolve or not */
   int presolve = GRB_PRESOLVE_AUTO;
@@ -304,13 +310,13 @@ void OsiGrbSolverInterface::resolve()
   GRBmodel* lp = getLpPtr( OsiGrbSolverInterface::FREECACHED_RESULTS );
 
   /* set whether primal or dual */
-  int algorithm = GRB_LPMETHOD_DUAL;
+  int algorithm = GRB_METHOD_DUAL;
   gotHint = getHintParam(OsiDoDualInResolve,takeHint,strength);
   assert (gotHint);
   if (strength != OsiHintIgnore)
-  	algorithm = takeHint ? GRB_LPMETHOD_DUAL : GRB_LPMETHOD_PRIMAL;
+  	algorithm = takeHint ? GRB_METHOD_DUAL : GRB_METHOD_PRIMAL;
 
-  GUROBI_CALL( "resolve", GRBsetintparam(GRBgetenv(lp), GRB_INT_PAR_LPMETHOD, algorithm) );
+  GUROBI_CALL( "resolve", GRBsetintparam(GRBgetenv(lp), GRB_INT_PAR_METHOD, algorithm) );
 
 	/* set whether presolve or not */
   int presolve = GRB_PRESOLVE_OFF;

@@ -125,11 +125,11 @@ if test "$GXX" = "yes"; then
     icpc* | */icpc* | icc )
       ;;
     *)
-      MSKCXXFLAGS="-Wno-long-long"
+      NOLONGLONGCXXFLAGS="-Wno-long-long"
       ;;
   esac
 fi
-AC_SUBST(MSKCXXFLAGS)
+AC_SUBST(NOLONGLONGCXXFLAGS)
 
 #############################################################################
 #                  Check for doxygen                                        #

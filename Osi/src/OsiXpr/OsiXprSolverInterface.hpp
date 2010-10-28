@@ -233,7 +233,7 @@ public:
   
       /** Get as many dual rays as the solver can provide. (In case of proven
           primal infeasibility there should be at least one.)
-
+     
 	  The first getNumRows() ray components will always be associated with
 	  the row duals (as returned by getRowPrice()). If \c fullRay is true,
 	  the final getNumCols() entries will correspond to the ray components
@@ -708,7 +708,7 @@ private:
   /**@name Private member data */
   //@{
 
-    /**@name Data to suupport for XPRESS-MP multiple matrix facility */
+    /**@name Data to support for XPRESS-MP multiple matrix facility */
     //@{
     
     mutable XPRSprob prob_;
@@ -788,6 +788,9 @@ private:
           (as above, or 'C' for continuous)
       */
       mutable char    *vartype_;
+
+      /** Indicates whether the last solve was for a MIP or an LP. */
+      mutable bool lastsolvewasmip;
     //@}
   //@}
 };

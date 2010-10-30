@@ -8,7 +8,7 @@
 
 AUTOMAKE_OPTIONS = foreign
 
-EXTRA_DIST = doxydoc/doxygen.conf
+EXTRA_DIST =
 
 ########################################################################
 #                          Subdirectories                              #

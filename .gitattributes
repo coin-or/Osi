@@ -45,7 +45,7 @@ Osi/MSVisualStudio/v9/libOsiSym/libOsiSym.vcproj -text
 Osi/MSVisualStudio/v9/libOsiVol/libOsiVol.vcproj -text
 Osi/MSVisualStudio/v9alt/Osi.sln -text
 Osi/MSVisualStudio/v9alt/OsiUnitTest.vcproj -text
-Osi/MSVisualStudio/v9alt/genDefForOsi.ps1 -text
+Osi/MSVisualStudio/v9alt/genDefForOsi.ps1 -text svneol=unset#application/octet-stream
 Osi/MSVisualStudio/v9alt/libOsi.vcproj -text
 Osi/MSVisualStudio/v9alt/libOsiCommonTest.vcproj -text
 Osi/MSVisualStudio/v9alt/osi.vsprops -text

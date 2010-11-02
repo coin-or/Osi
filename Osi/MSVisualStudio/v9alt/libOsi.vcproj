@@ -347,8 +347,8 @@
 		</Configuration>
 		<Configuration
 			Name="DebugDLL|x64"
-			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			OutputDirectory="$(CoinBinDir)"
+			IntermediateDirectory="$(ProjectName)\$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="2"
 			InheritedPropertySheets="$(COIN_ROOT)\BuildTools\MSVisualStudio\v9alt\coin.vsprops;$(CoinRoot)\CoinUtils\CoinUtils\MSVisualStudio\v9alt\coinutils.vsprops"
 			CharacterSet="1"
@@ -387,9 +387,12 @@
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
+				Description="Generate .def file"
+				CommandLine="powershell -ExecutionPolicy RemoteSigned -File .\genDefForOsi.ps1 $(IntDir) Osi"
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				ModuleDefinitionFile="$(IntDir)\libOsi.def"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -411,6 +414,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				Description="Copy import lib to $(CoinLibDir)"
+				CommandLine="if not exist $(CoinLibDir) mkdir $(CoinLibDir)&#x0D;&#x0A;move /y $(OutDir)\$(TargetName).lib $(CoinLibDir)&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>

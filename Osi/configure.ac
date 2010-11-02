@@ -53,10 +53,10 @@ AC_COIN_INIT_AUTO_TOOLS
 #                              COIN-OR components                           #
 #############################################################################
 
-AC_COIN_HAS_PACKAGE(CoinUtils, [coinutils = trunk], [OsiLib])
-AC_COIN_HAS_PACKAGE(Glpk,      [coinglpk >= 4.39],  [OsiGlpkLib])
-AC_COIN_HAS_PACKAGE(Sample,    [coindatasample])
-AC_COIN_HAS_PACKAGE(Netlib,    [coindatanetlib])
+AC_COIN_CHECK_PACKAGE(CoinUtils, [coinutils = trunk], [OsiLib])
+AC_COIN_CHECK_PACKAGE(Glpk,      [coinglpk >= 4.39],  [OsiGlpkLib])
+AC_COIN_CHECK_PACKAGE(Sample,    [coindatasample])
+AC_COIN_CHECK_PACKAGE(Netlib,    [coindatanetlib])
 
 #############################################################################
 #                            Third party solvers                            #
@@ -67,11 +67,11 @@ AC_COIN_HAS_PACKAGE(Netlib,    [coindatanetlib])
 # the rest, it's anyone's guess.  -- lh, 080529 --
 # fixed detection of Mosek and Xpress -- stefan, 091003 (linux32, gcc) --
 
-AC_COIN_HAS_USER_LIBRARY([Cplex], [CPX],[cplex.h],   [CPXgetstat])
-AC_COIN_HAS_USER_LIBRARY([Mosek], [MSK],[mosek.h],   [MSK_makeenv])
-AC_COIN_HAS_USER_LIBRARY([Xpress],[XPR],[xprs.h],    [XPRSinit])
-AC_COIN_HAS_USER_LIBRARY([Gurobi],[GRB],[gurobi_c.h],[GRBloadenv])
-AC_COIN_HAS_USER_LIBRARY([Soplex],[SPX],[soplex.h])
+AC_COIN_CHECK_USER_LIBRARY([Cplex], [CPX],[cplex.h],   [CPXgetstat])
+AC_COIN_CHECK_USER_LIBRARY([Mosek], [MSK],[mosek.h],   [MSK_makeenv])
+AC_COIN_CHECK_USER_LIBRARY([Xpress],[XPR],[xprs.h],    [XPRSinit])
+AC_COIN_CHECK_USER_LIBRARY([Gurobi],[GRB],[gurobi_c.h],[GRBloadenv])
+AC_COIN_CHECK_USER_LIBRARY([Soplex],[SPX],[soplex.h])
 
 #############################################################################
 #                            Examples solver                                #

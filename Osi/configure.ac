@@ -53,7 +53,7 @@ AC_COIN_INIT_AUTO_TOOLS
 #                              COIN-OR components                           #
 #############################################################################
 
-AC_COIN_CHECK_PACKAGE(CoinUtils, [coinutils = trunk], [OsiLib])
+AC_COIN_CHECK_PACKAGE(CoinUtils, [coinutils], [OsiLib])
 AC_COIN_CHECK_PACKAGE(Glpk,      [coinglpk >= 4.39],  [OsiGlpkLib])
 AC_COIN_CHECK_PACKAGE(Sample,    [coindatasample])
 AC_COIN_CHECK_PACKAGE(Netlib,    [coindatanetlib])

@@ -54,6 +54,9 @@ AC_COIN_INIT_AUTO_TOOLS
 #############################################################################
 
 AC_COIN_CHECK_PACKAGE(CoinUtils, [coinutils], [OsiLib])
+if test $coin_has_coinutils != yes ; then
+  AC_MSG_ERROR([Required package CoinUtils not available.])
+fi
 AC_COIN_CHECK_PACKAGE(Glpk,      [coinglpk >= 4.39],  [OsiGlpkLib])
 AC_COIN_CHECK_PACKAGE(Sample,    [coindatasample])
 AC_COIN_CHECK_PACKAGE(Netlib,    [coindatanetlib])

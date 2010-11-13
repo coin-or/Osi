@@ -2628,7 +2628,7 @@ OsiGrbSolverInterface::deleteRows(const int num, const int * rowIndices)
     for( int i = 0; i < num; ++i )
     {
       if( auxcolind[rowIndices[i]] >= 0 )
-        convertToNormalRow(rowIndices[i], 0.0, 0.0);
+        convertToNormalRow(rowIndices[i], 'E', 0.0);
     }
   }
 

@@ -105,7 +105,8 @@ void CPXPUBLIC OsiCpxMessageCallbackPrint(CoinMessageHandler* handler, const cha
 			return;
 	}
 	
-	int len = strlen(msg);
+	size_t len = strlen(msg);
+	assert(len > 0);
 	
 	if( msg[len-1] == '\n') {
 		(const_cast<char*>(msg))[len-1] = '\0';

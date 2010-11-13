@@ -77,8 +77,9 @@ checkCPXerror( int err, std::string cpxfuncname, std::string osimethod )
     {
       char s[100];
       sprintf( s, "%s returned error %d", cpxfuncname.c_str(), err );
-      std::cout << "ERROR: " << s << " (" << osimethod << 
-	" in OsiCpxSolverInterface)" << std::endl;
+#ifdef DEBUG
+      std::cerr << "ERROR: " << s << " (" << osimethod << " in OsiCpxSolverInterface)" << std::endl;
+#endif
       throw CoinError( s, osimethod.c_str(), "OsiCpxSolverInterface" );
     }
 }
@@ -295,6 +296,11 @@ void OsiCpxSolverInterface::initialSolve()
   else
      term = CPXdualopt( env_, lp );
 
+  if(term >= CPXERR_LICENSE_MIN && term <= CPXERR_LICENSE_MAX)
+  {
+    throw CoinError("Error: CPLEX license failure", "initialSolve", "OsiCpxSolverInterface");
+  }
+
   /* If the problem is found infeasible during presolve, resolve it to get a 
      proper term code */
 #if CPX_VERSION >= 800
@@ -364,6 +370,11 @@ void OsiCpxSolverInterface::resolve()
   else
      term = CPXdualopt( env_, lp );
 
+  if(term >= CPXERR_LICENSE_MIN && term <= CPXERR_LICENSE_MAX)
+  {
+    throw CoinError("Error: CPLEX license failure", "resolve", "OsiCpxSolverInterface");
+  }
+
   /* If the problem is found infeasible during presolve, resolve it to get a 
      proper term code */
 #if CPX_VERSION >= 800
@@ -408,7 +419,13 @@ void OsiCpxSolverInterface::branchAndBound()
   else if (messageHandler()->logLevel() > 1)
      CPXsetintparam( env_, CPX_PARAM_SIMDISPLAY, 2 );
 
-  CPXmipopt( env_, lp );
+  int term = CPXmipopt( env_, lp );
+
+  if(term >= CPXERR_LICENSE_MIN && term <= CPXERR_LICENSE_MAX)
+  {
+    throw CoinError("Error: CPLEX license failure", "branchAndBound", "OsiCpxSolverInterface");
+  }
+
 }
 
 //#############################################################################

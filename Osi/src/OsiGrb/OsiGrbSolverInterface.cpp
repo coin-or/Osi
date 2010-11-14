@@ -258,25 +258,25 @@ void OsiGrbSolverInterface::initialSolve()
   debugMessage("OsiGrbSolverInterface::initialSolve()\n");
   bool takeHint, gotHint;
   OsiHintStrength strength;
+  int prevalgorithm = -1;
 
   switchToLP();
   
   GRBmodel* lp = getLpPtr( OsiGrbSolverInterface::FREECACHED_RESULTS );
 
-  /* set whether dual or primal */
-  int algorithm = GRB_METHOD_PRIMAL;
+  /* set whether dual or primal, if hint has been given */
   gotHint = getHintParam(OsiDoDualInInitial,takeHint,strength);
-  assert (gotHint);
-  if (strength!=OsiHintIgnore)
-  	algorithm = takeHint ? GRB_METHOD_DUAL : GRB_METHOD_PRIMAL;
-
-	GUROBI_CALL( "initialSolve", GRBsetintparam(GRBgetenv(lp), GRB_INT_PAR_METHOD, algorithm) );
+  assert(gotHint);
+  if (strength != OsiHintIgnore) {
+  	GUROBI_CALL( "initialSolve", GRBgetintparam(GRBgetenv(lp), GRB_INT_PAR_METHOD, &prevalgorithm) );
+  	GUROBI_CALL( "initialSolve", GRBsetintparam(GRBgetenv(lp), GRB_INT_PAR_METHOD, takeHint ? GRB_METHOD_DUAL : GRB_METHOD_PRIMAL) );
+  }
 
 	/* set whether presolve or not */
   int presolve = GRB_PRESOLVE_AUTO;
-  gotHint = (getHintParam(OsiDoPresolveInInitial,takeHint,strength));
+  gotHint = getHintParam(OsiDoPresolveInInitial,takeHint,strength);
   assert (gotHint);
-  if (strength!=OsiHintIgnore)
+  if (strength != OsiHintIgnore)
   	presolve = takeHint ? GRB_PRESOLVE_AUTO : GRB_PRESOLVE_OFF;
 
   GUROBI_CALL( "initialSolve", GRBsetintparam(GRBgetenv(lp), GRB_INT_PAR_PRESOLVE, presolve) );
@@ -296,6 +296,10 @@ void OsiGrbSolverInterface::initialSolve()
     GUROBI_CALL( "initialSolve", GRBoptimize(lp) );
     GUROBI_CALL( "initialSolve", GRBsetintparam(GRBgetenv(lp), GRB_INT_PAR_PRESOLVE, presolve) );
   }
+
+  /* reset method parameter, if changed */
+  if( prevalgorithm != -1 )
+  	GUROBI_CALL( "initialSolve", GRBsetintparam(GRBgetenv(lp), GRB_INT_PAR_METHOD, prevalgorithm) );
 }
 
 //-----------------------------------------------------------------------------
@@ -304,19 +308,19 @@ void OsiGrbSolverInterface::resolve()
   debugMessage("OsiGrbSolverInterface::resolve()\n");
   bool takeHint, gotHint;
   OsiHintStrength strength;
+  int prevalgorithm = -1;
 
   switchToLP();
   
   GRBmodel* lp = getLpPtr( OsiGrbSolverInterface::FREECACHED_RESULTS );
 
   /* set whether primal or dual */
-  int algorithm = GRB_METHOD_DUAL;
   gotHint = getHintParam(OsiDoDualInResolve,takeHint,strength);
   assert (gotHint);
-  if (strength != OsiHintIgnore)
-  	algorithm = takeHint ? GRB_METHOD_DUAL : GRB_METHOD_PRIMAL;
-
-  GUROBI_CALL( "resolve", GRBsetintparam(GRBgetenv(lp), GRB_INT_PAR_METHOD, algorithm) );
+  if (strength != OsiHintIgnore) {
+  	GUROBI_CALL( "resolve", GRBgetintparam(GRBgetenv(lp), GRB_INT_PAR_METHOD, &prevalgorithm) );
+  	GUROBI_CALL( "resolve", GRBsetintparam(GRBgetenv(lp), GRB_INT_PAR_METHOD, takeHint ? GRB_METHOD_DUAL : GRB_METHOD_PRIMAL) );
+  }
 
 	/* set whether presolve or not */
   int presolve = GRB_PRESOLVE_OFF;
@@ -342,6 +346,10 @@ void OsiGrbSolverInterface::resolve()
     GUROBI_CALL( "resolve", GRBoptimize(lp) );
     GUROBI_CALL( "resolve", GRBsetintparam(GRBgetenv(lp), GRB_INT_PAR_PRESOLVE, presolve) );
   }
+
+  /* reset method parameter, if changed */
+  if( prevalgorithm != -1 )
+  	GUROBI_CALL( "initialSolve", GRBsetintparam(GRBgetenv(lp), GRB_INT_PAR_METHOD, prevalgorithm) );
 }
 
 //-----------------------------------------------------------------------------

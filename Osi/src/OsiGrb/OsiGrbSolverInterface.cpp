@@ -1471,7 +1471,17 @@ const double * OsiGrbSolverInterface::getRowPrice() const
   		
   		GUROBI_CALL( "getRowPrice", GRBupdatemodel(getMutableLpPtr()) );
   	  
-  		GUROBI_CALL( "getRowPrice", GRBgetdblattrarray(getMutableLpPtr(), GRB_DBL_ATTR_PI, 0, nrows, rowsol_) );
+      if ( GRBgetdblattrelement(getMutableLpPtr(), GRB_DBL_ATTR_PI, 0, rowsol_) == 0 )
+      {
+    		GUROBI_CALL( "getRowPrice", GRBgetdblattrarray(getMutableLpPtr(), GRB_DBL_ATTR_PI, 0, nrows, rowsol_) );
+      }
+      else
+      {
+        *messageHandler() << "Warning: OsiGrbSolverInterface::getRowPrice() called, but no solution available! Returning 0.0. Be aware!" << CoinMessageEol;
+        if (OsiGrbSolverInterface::globalenv_)
+          *messageHandler() << "\t GUROBI error message: " << GRBgeterrormsg(OsiGrbSolverInterface::globalenv_) << CoinMessageEol;
+        CoinZeroN(rowsol_, nrows);
+      }
 
   		//??? what is the dual value for a ranged row?
   	}
@@ -1491,13 +1501,23 @@ const double * OsiGrbSolverInterface::getReducedCost() const
   	if( ncols > 0 )
   	{
   		redcost_ = new double[ncols];
-  		
+
   		GUROBI_CALL( "getReducedCost", GRBupdatemodel(getMutableLpPtr()) );
 
-  		if( nauxcols )
-  		  GUROBI_CALL( "getReducedCost", GRBgetdblattrlist(getMutableLpPtr(), GRB_DBL_ATTR_RC, ncols, colmap_O2G, redcost_) );
-  		else
-        GUROBI_CALL( "getReducedCost", GRBgetdblattrarray(getMutableLpPtr(), GRB_DBL_ATTR_RC, 0, ncols, redcost_) );
+      if ( GRBgetdblattrelement(getMutableLpPtr(), GRB_DBL_ATTR_RC, 0, redcost_) == 0 )
+      { // if reduced costs are available, get them
+    		if( nauxcols )
+    		  GUROBI_CALL( "getReducedCost", GRBgetdblattrlist(getMutableLpPtr(), GRB_DBL_ATTR_RC, ncols, colmap_O2G, redcost_) );
+    		else
+          GUROBI_CALL( "getReducedCost", GRBgetdblattrarray(getMutableLpPtr(), GRB_DBL_ATTR_RC, 0, ncols, redcost_) );
+      }
+      else
+      {
+        *messageHandler() << "Warning: OsiGrbSolverInterface::getReducedCost() called, but no solution available! Returning 0.0. Be aware!" << CoinMessageEol;
+        if (OsiGrbSolverInterface::globalenv_)
+          *messageHandler() << "\t GUROBI error message: " << GRBgeterrormsg(OsiGrbSolverInterface::globalenv_) << CoinMessageEol;
+        CoinZeroN(redcost_, ncols);
+      }
   	}
   }
   

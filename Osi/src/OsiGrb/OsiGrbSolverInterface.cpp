@@ -1535,13 +1535,23 @@ const double * OsiGrbSolverInterface::getRowActivity() const
   	if( nrows > 0 )
   	{
   		rowact_ = new double[nrows];
-  		
+
   		GUROBI_CALL( "getRowActivity", GRBupdatemodel(getMutableLpPtr()) );
 
-      if ( GRBgetdblattrelement(getMutableLpPtr(), GRB_DBL_ATTR_SLACK, 0, rowact_) == 0 )
-      {
-        GUROBI_CALL( "getRowActivity", GRBgetdblattrarray(getMutableLpPtr(), GRB_DBL_ATTR_SLACK, 0, nrows, rowact_) );
-      }
+  		if ( GRBgetdblattrelement(getMutableLpPtr(), GRB_DBL_ATTR_SLACK, 0, rowact_) == 0 )
+  		{
+  			GUROBI_CALL( "getRowActivity", GRBgetdblattrarray(getMutableLpPtr(), GRB_DBL_ATTR_SLACK, 0, nrows, rowact_) );
+
+  			for( int r = 0; r < nrows; ++r )
+  			{
+  				if( nauxcols && auxcolind[r] >= 0 )
+  				{
+  					GUROBI_CALL( "getRowActivity", GRBgetdblattrelement(getMutableLpPtr(), GRB_DBL_ATTR_X, auxcolind[r], &rowact_[r]) );
+  				}
+  				else
+  					rowact_[r] = getRightHandSide()[r] - rowact_[r];
+  			}
+  		}
       else
       {
         *messageHandler() << "Warning: OsiGrbSolverInterface::getRowActivity() called, but no solution available! Returning 0.0. Be aware!" << CoinMessageEol;
@@ -1549,16 +1559,6 @@ const double * OsiGrbSolverInterface::getRowActivity() const
           *messageHandler() << "\t GUROBI error message: " << GRBgeterrormsg(OsiGrbSolverInterface::globalenv_) << CoinMessageEol;
         CoinZeroN(rowact_, nrows);
       }
-	  	
-  		for( int r = 0; r < nrows; ++r )
-  		{
-  		  if( nauxcols && auxcolind[r] >= 0 )
-  		  {
-  	      GUROBI_CALL( "getRowActivity", GRBgetdblattrelement(getMutableLpPtr(), GRB_DBL_ATTR_X, auxcolind[r], &rowact_[r]) );
-  		  }
-  		  else
-  		    rowact_[r] = getRightHandSide()[r] - rowact_[r];
-  		}
   	}
   }
   return rowact_;

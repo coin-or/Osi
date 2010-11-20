@@ -12,7 +12,7 @@
 
 AC_PREREQ(2.59)
 
-AC_INIT([Osi],[0.104],[osi@list.coin-or.org])
+AC_INIT([Osi],[0.104.1],[osi@list.coin-or.org])
 
 AC_COPYRIGHT([
 Copyright 2006 International Business Machines and others.
@@ -38,7 +38,7 @@ AC_PREFIX_DEFAULT([`pwd`])
 AC_CANONICAL_BUILD
 
 # A bit of initial setup (ADDLIBS, FADDLIBS)
-AC_COIN_PROJECTDIR_INIT(Osi)
+AC_COIN_PROJECTDIR_INIT(Osi,10:1:9)
 
 # Check if user wants to produce debugging code
 AC_COIN_DEBUG_COMPILE(Osi)

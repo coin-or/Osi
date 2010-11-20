@@ -77,8 +77,9 @@ checkCPXerror( int err, std::string cpxfuncname, std::string osimethod )
     {
       char s[100];
       sprintf( s, "%s returned error %d", cpxfuncname.c_str(), err );
-      std::cout << "ERROR: " << s << " (" << osimethod << 
-	" in OsiCpxSolverInterface)" << std::endl;
+#ifdef DEBUG
+      std::cerr << "ERROR: " << s << " (" << osimethod << " in OsiCpxSolverInterface)" << std::endl;
+#endif
       throw CoinError( s, osimethod.c_str(), "OsiCpxSolverInterface" );
     }
 }
@@ -104,7 +105,8 @@ void CPXPUBLIC OsiCpxMessageCallbackPrint(CoinMessageHandler* handler, const cha
 			return;
 	}
 	
-	int len = strlen(msg);
+	size_t len = strlen(msg);
+	assert(len > 0);
 	
 	if( msg[len-1] == '\n') {
 		(const_cast<char*>(msg))[len-1] = '\0';
@@ -256,7 +258,7 @@ void OsiCpxSolverInterface::initialSolve()
   
   switchToLP();
 
-  int algorithm = 1;
+  int algorithm = 0;
   bool takeHint, gotHint;
   OsiHintStrength strength;
   gotHint = (getHintParam(OsiDoDualInInitial,takeHint,strength));
@@ -290,30 +292,66 @@ void OsiCpxSolverInterface::initialSolve()
      CPXsetintparam( env_, CPX_PARAM_SIMDISPLAY, 2 );
 
   int term;
-  if (algorithm==1)
-     term = CPXprimopt( env_, lp );
-  else
-     term = CPXdualopt( env_, lp );
+  switch( algorithm ) {
+     default:
+     case 0:
+        term = CPXlpopt(env_, lp);
+#if CPX_VERSION >= 800
+        checkCPXerror( term, "CPXlpopt", "initialSolve" );
+#endif
+        break;
+     case 1:
+        term = CPXprimopt( env_, lp );
+#if CPX_VERSION >= 800
+        checkCPXerror( term, "CPXprimopt", "initialSolve" );
+#endif
+        break;
+     case -1:
+        term = CPXdualopt( env_, lp );
+#if CPX_VERSION >= 800
+        checkCPXerror( term, "CPXdualopt", "initialSolve" );
+#endif
+        break;
+  }
 
   /* If the problem is found infeasible during presolve, resolve it to get a 
      proper term code */
 #if CPX_VERSION >= 800
   int stat = CPXgetstat( env_, getMutableLpPtr() );
-  if (stat == CPX_STAT_INForUNBD && presolve){
+  if (stat == CPX_STAT_INForUNBD && presolve) {
      CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_OFF );
-     if (algorithm==1)
-        term = CPXprimopt( env_, lp );
-     else
-        term = CPXdualopt( env_, lp );
+     switch( algorithm ) {
+        default:
+        case 0:
+           term = CPXlpopt(env_, lp);
+           checkCPXerror( term, "CPXlpopt", "initialSolve" );
+           break;
+        case 1:
+           term = CPXprimopt( env_, lp );
+           checkCPXerror( term, "CPXprimopt", "initialSolve" );
+           break;
+        case -1:
+           term = CPXdualopt( env_, lp );
+           checkCPXerror( term, "CPXdualopt", "initialSolve" );
+           break;
+     }
      CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_ON );
   }
 #else
-  if (term == CPXERR_PRESLV_INForUNBD && presolve){
+  if (term == CPXERR_PRESLV_INForUNBD && presolve) {
      CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_OFF );
-     if (algorithm==1)
-        term = CPXprimopt( env_, lp );
-     else
-        term = CPXdualopt( env_, lp );
+     switch( algorithm ) {
+        default:
+        case 0:
+           term = CPXlpopt(env_, lp);
+           break;
+        case 1:
+           term = CPXprimopt( env_, lp );
+           break;
+        case -1:
+           term = CPXdualopt( env_, lp );
+           break;
+     }
      CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_ON );
   }
 #endif
@@ -325,7 +363,7 @@ void OsiCpxSolverInterface::resolve()
 
   switchToLP();
 
-  int algorithm = -1;
+  int algorithm = 0;
   bool takeHint, gotHint;
   OsiHintStrength strength;
   gotHint = (getHintParam(OsiDoDualInResolve,takeHint,strength));
@@ -359,10 +397,27 @@ void OsiCpxSolverInterface::resolve()
      CPXsetintparam( env_, CPX_PARAM_SIMDISPLAY, 2 );
 
   int term;
-  if (algorithm==1)
-     term = CPXprimopt( env_, lp );
-  else
-     term = CPXdualopt( env_, lp );
+  switch( algorithm ) {
+     default:
+     case 0:
+        term = CPXlpopt(env_, lp);
+#if CPX_VERSION >= 800
+        checkCPXerror( term, "CPXlpopt", "resolve" );
+#endif
+        break;
+     case 1:
+        term = CPXprimopt( env_, lp );
+#if CPX_VERSION >= 800
+        checkCPXerror( term, "CPXprimopt", "resolve" );
+#endif
+        break;
+     case -1:
+        term = CPXdualopt( env_, lp );
+#if CPX_VERSION >= 800
+        checkCPXerror( term, "CPXdualopt", "resolve" );
+#endif
+        break;
+  }
 
   /* If the problem is found infeasible during presolve, resolve it to get a 
      proper term code */
@@ -370,19 +425,41 @@ void OsiCpxSolverInterface::resolve()
   int stat = CPXgetstat( env_, getMutableLpPtr() );
   if (stat == CPX_STAT_INForUNBD && presolve){
     CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_OFF );
-    if (algorithm==1)
-       term = CPXprimopt( env_, lp );
-    else
-       term = CPXdualopt( env_, lp );
+    switch( algorithm ) {
+       default:
+       case 0:
+          term = CPXlpopt(env_, lp);
+          checkCPXerror( term, "CPXlpopt", "resolve" );
+          break;
+       case 1:
+          term = CPXprimopt( env_, lp );
+          checkCPXerror( term, "CPXprimopt", "resolve" );
+          break;
+       case -1:
+          term = CPXdualopt( env_, lp );
+          checkCPXerror( term, "CPXdualopt", "resolve" );
+          break;
+    }
     CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_ON );
   }
 #else
   if (term == CPXERR_PRESLV_INForUNBD && presolve){
     CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_OFF );
-    if (algorithm==1)
-       term = CPXprimopt( env_, lp );
-    else
-       term = CPXdualopt( env_, lp );
+    switch( algorithm ) {
+       default:
+       case 0:
+          term = CPXlpopt(env_, lp);
+          checkCPXerror( term, "CPXlpopt", "resolve" );
+          break;
+       case 1:
+          term = CPXprimopt( env_, lp );
+          checkCPXerror( term, "CPXprimopt", "resolve" );
+          break;
+       case -1:
+          term = CPXdualopt( env_, lp );
+          checkCPXerror( term, "CPXdualopt", "resolve" );
+          break;
+    }
     CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_ON );
   }
 #endif
@@ -408,7 +485,8 @@ void OsiCpxSolverInterface::branchAndBound()
   else if (messageHandler()->logLevel() > 1)
      CPXsetintparam( env_, CPX_PARAM_SIMDISPLAY, 2 );
 
-  CPXmipopt( env_, lp );
+  int term = CPXmipopt( env_, lp );
+  checkCPXerror( term, "CPXmipopt", "branchAndBound" );
 }
 
 //#############################################################################

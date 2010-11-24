@@ -149,13 +149,15 @@ bool processParameters (int argc, const char **argv,
 */
   const char dirsep =  CoinFindDirSeparator() ;
   std::string pathTmp ;
-
   pathTmp = ".." ;
   pathTmp += dirsep ;
   pathTmp += ".." ;
   pathTmp += dirsep ;
   pathTmp += "Data" ;
   pathTmp += dirsep ;
+  if (dirsep == '\\') {
+    pathTmp = "..\\..\\" + pathTmp ;
+  }
 
   parms["-mpsDir"] = pathTmp + "Sample"  ;
   parms["-netlibDir"] = pathTmp + "Netlib" ;

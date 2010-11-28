@@ -161,32 +161,32 @@ AC_CONFIG_FILES([Makefile
                  osi-unittests.pc osi-unittests-uninstalled.pc])
 
 if test $coin_has_cpx = true ; then
-  AC_CONFIG_FILES([src/OsiCpx/osi-cplex.pc
+  AC_CONFIG_FILES([osi-cplex.pc:src/OsiCpx/osi-cplex.pc.in
                    osi-cplex-uninstalled.pc:src/OsiCpx/osi-cplex-uninstalled.pc.in])
 fi
 
 if test $coin_has_glpk = yes ; then
-  AC_CONFIG_FILES([src/OsiGlpk/osi-glpk.pc
+  AC_CONFIG_FILES([osi-glpk.pc:src/OsiGlpk/osi-glpk.pc.in
                    osi-glpk-uninstalled.pc:src/OsiGlpk/osi-glpk-uninstalled.pc.in])
 fi
 
 if test $coin_has_grb = true ; then
-  AC_CONFIG_FILES([src/OsiGrb/osi-gurobi.pc
+  AC_CONFIG_FILES([osi-gurobi.pc:src/OsiGrb/osi-gurobi.pc.in
                    osi-gurobi-uninstalled.pc:src/OsiGrb/osi-gurobi-uninstalled.pc.in])
 fi
 
 if test $coin_has_msk = true ; then
-  AC_CONFIG_FILES([src/OsiMsk/osi-mosek.pc
+  AC_CONFIG_FILES([osi-mosek.pc:src/OsiMsk/osi-mosek.pc.in
                    osi-mosek-uninstalled.pc:src/OsiMsk/osi-mosek-uninstalled.pc.in])
 fi
 
 if test $coin_has_xpr = true ; then
-  AC_CONFIG_FILES([src/OsiXpr/osi-xpress.pc
+  AC_CONFIG_FILES([osi-xpress.pc:src/OsiXpr/osi-xpress.pc.in
                    osi-xpress-uninstalled.pc:src/OsiXpr/osi-xpress-uninstalled.pc.in])
 fi
 
 if test $coin_has_spx = true ; then
-  AC_CONFIG_FILES([src/OsiSpx/osi-soplex.pc
+  AC_CONFIG_FILES([osi-soplex.pc:src/OsiSpx/osi-soplex.pc.in
                    osi-soplex-uninstalled.pc:src/OsiSpx/osi-soplex-uninstalled.pc.in])
 fi
 

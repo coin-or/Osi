@@ -63,27 +63,22 @@ CXX = @CXX@
 # C++ Compiler options
 CXXFLAGS = @CXXFLAGS@ @OSI_EXAMPLES_SOLVER_CFLAGS@ \
   -DOSIXXXhpp=\"@OSI_EXAMPLES_SOLVER_NAME@.hpp\" -DOSIXXX=@OSI_EXAMPLES_SOLVER_NAME@
-@COIN_HAS_SAMPLE_TRUE@CXXFLAGS += -DSAMPLEDIR=\"@SAMPLE_DATA@\"
-@COIN_HAS_NETLIB_TRUE@CXXFLAGS += -DNETLIBDIR=\"@NETLIB_DATA@\"
+@COIN_HAS_SAMPLE_TRUE@@COIN_HAS_PKGCONFIG_TRUE@CXXFLAGS += -DSAMPLEDIR=\"`PKG_CONFIG_PATH=@COIN_PKG_CONFIG_PATH@ @PKG_CONFIG@ --variable=datadir coindatasample`\"
+@COIN_HAS_SAMPLE_TRUE@@COIN_HAS_PKGCONFIG_FALSE@CXXFLAGS += -DSAMPLEDIR=\"@SAMPLE_DATA_INSTALLED@\"
+@COIN_HAS_NETLIB_TRUE@@COIN_HAS_PKGCONFIG_TRUE@CXXFLAGS += -DNETLIBDIR=\"`PKG_CONFIG_PATH=@COIN_PKG_CONFIG_PATH@ @PKG_CONFIG@ --variable=datadir coindatanetlib`\"
+@COIN_HAS_NETLIB_TRUE@@COIN_HAS_PKGCONFIG_FALSE@CXXFLAGS += -DNETLIBDIR=\"@NETLIB_DATA_INSTALLED@\"
 
 # additional C++ Compiler options for linking
 CXXLINKFLAGS = @RPATH_FLAGS@
 
-# Directory with COIN header files
-COININCDIR = @abs_include_dir@/coin
+# Compiler flags (we use the CYGPATH_W variables to allow compilation with Windows compilers)
+@COIN_HAS_PKGCONFIG_TRUE@INCL = `PKG_CONFIG_PATH=@COIN_PKG_CONFIG_PATH@ @PKG_CONFIG@ --cflags @OSI_EXAMPLES_SOLVER_PCNAME@ osi` $(ADDINCFLAGS)
+@COIN_HAS_PKGCONFIG_FALSE@INCL = @OSILIB_CFLAGS_INSTALLED@ $(ADDINCFLAGS)
 
-# Directory with COIN libraries
-COINLIBDIR = @abs_lib_dir@/coin
-
-# Libraries that may be necessary to link with Osi
-LIBS = -L$(COINLIBDIR) \
-       -L$(COINLIBDIR)/ThirdParty \
-       @OSI_EXAMPLES_SOLVER_LIBS@ -lOsi \
-       @OSILIB_LIBS@
-
-# Necessary Include dirs (we use the CYGPATH_W variables to allow
-# compilation with Windows compilers)
-INCL = -I`$(CYGPATH_W) $(COININCDIR)` @COINUTILS_CFLAGS@ $(ADDINCFLAGS)
+# Linker flags
+@COIN_HAS_PKGCONFIG_TRUE@@COIN_CXX_IS_CL_FALSE@LIBS = `PKG_CONFIG_PATH=@COIN_PKG_CONFIG_PATH@ @PKG_CONFIG@ --libs @OSI_EXAMPLES_SOLVER_PCNAME@ osi`
+@COIN_HAS_PKGCONFIG_TRUE@@COIN_CXX_IS_CL_TRUE@LIBS = /link: `PKG_CONFIG_PATH=@COIN_PKG_CONFIG_PATH@ @PKG_CONFIG@ --msvc-syntax --libs @OSI_EXAMPLES_SOLVER_PCNAME@ osi`
+@COIN_HAS_PKGCONFIG_FALSE@LIBS = -L@abs_lib_dir@ -lOsi @OSI_EXAMPLES_SOLVER_LIBS@ @OSILIB_LIBS_INSTALLED@
 
 # The following is necessary under cygwin, if native compilers are used
 CYGPATH_W = @CYGPATH_W@
@@ -95,7 +90,7 @@ all: $(EXE)
 $(EXE): $(OBJS)
 	bla=;\
 	for file in $(OBJS); do bla="$$bla `$(CYGPATH_W) $$file`"; done; \
-	$(CXX) $(CXXLINKFLAGS) $(CXXFLAGS) -o $@ $$bla $(ADDLIBS) $(LIBS)
+	$(CXX) $(CXXLINKFLAGS) $(CXXFLAGS) -o $@ $$bla $(LIBS) $(ADDLIBS)
 
 clean:
 	rm -rf $(EXE) $(OBJS)

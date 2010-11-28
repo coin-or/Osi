@@ -99,17 +99,19 @@ uninstall-local: uninstall-doc
 #                  Installation of the addlibs file                    #
 ########################################################################
 
-if COIN_HAS_PKGCONFIG
 addlibsdir = $(DESTDIR)$(datadir)/coin/doc/Osi
 	
 install-data-hook:
 	@$(mkdir_p) "$(addlibsdir)"
+if COIN_HAS_PKGCONFIG
 	PKG_CONFIG_PATH=@COIN_PKG_CONFIG_PATH@ \
 	$(PKG_CONFIG) --libs osi > $(addlibsdir)/osi_addlibs.txt
+else
+	echo -L@abs_lib_dir@ -lOsi @OSILIB_LIBS_INSTALLED@ > $(addlibsdir)/osi_addlibs.txt
+endif
 
 uninstall-hook:
 	rm -f $(addlibsdir)/osi_addlibs.txt
-endif
 
 ########################################################################
 #                         Maintainer Stuff                             #

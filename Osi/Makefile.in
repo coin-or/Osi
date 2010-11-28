@@ -164,7 +164,12 @@ CDEFS = @CDEFS@
 CFLAGS = @CFLAGS@
 COINUTILS_CFLAGS = @COINUTILS_CFLAGS@
 COINUTILS_DATA = @COINUTILS_DATA@
+COINUTILS_DATA_INSTALLED = @COINUTILS_DATA_INSTALLED@
 COINUTILS_LIBS = @COINUTILS_LIBS@
+COIN_CC_IS_CL_FALSE = @COIN_CC_IS_CL_FALSE@
+COIN_CC_IS_CL_TRUE = @COIN_CC_IS_CL_TRUE@
+COIN_CXX_IS_CL_FALSE = @COIN_CXX_IS_CL_FALSE@
+COIN_CXX_IS_CL_TRUE = @COIN_CXX_IS_CL_TRUE@
 COIN_HAS_COINUTILS_FALSE = @COIN_HAS_COINUTILS_FALSE@
 COIN_HAS_COINUTILS_TRUE = @COIN_HAS_COINUTILS_TRUE@
 COIN_HAS_CPX_FALSE = @COIN_HAS_CPX_FALSE@
@@ -212,6 +217,7 @@ FADDLIBS = @FADDLIBS@
 FFLAGS = @FFLAGS@
 GLPK_CFLAGS = @GLPK_CFLAGS@
 GLPK_DATA = @GLPK_DATA@
+GLPK_DATA_INSTALLED = @GLPK_DATA_INSTALLED@
 GLPK_LIBS = @GLPK_LIBS@
 GRBINCDIR = @GRBINCDIR@
 GRBLIB = @GRBLIB@
@@ -240,22 +246,28 @@ MSKINCDIR = @MSKINCDIR@
 MSKLIB = @MSKLIB@
 NETLIB_CFLAGS = @NETLIB_CFLAGS@
 NETLIB_DATA = @NETLIB_DATA@
+NETLIB_DATA_INSTALLED = @NETLIB_DATA_INSTALLED@
 NETLIB_LIBS = @NETLIB_LIBS@
 NOLONGLONGCXXFLAGS = @NOLONGLONGCXXFLAGS@
 OBJEXT = @OBJEXT@
 OPT_CFLAGS = @OPT_CFLAGS@
 OPT_CXXFLAGS = @OPT_CXXFLAGS@
 OSIGLPKLIB_CFLAGS = @OSIGLPKLIB_CFLAGS@
+OSIGLPKLIB_CFLAGS_INSTALLED = @OSIGLPKLIB_CFLAGS_INSTALLED@
 OSIGLPKLIB_LIBS = @OSIGLPKLIB_LIBS@
+OSIGLPKLIB_LIBS_INSTALLED = @OSIGLPKLIB_LIBS_INSTALLED@
 OSIGLPKLIB_PCLIBS = @OSIGLPKLIB_PCLIBS@
 OSIGLPKLIB_PCREQUIRES = @OSIGLPKLIB_PCREQUIRES@
 OSILIB_CFLAGS = @OSILIB_CFLAGS@
+OSILIB_CFLAGS_INSTALLED = @OSILIB_CFLAGS_INSTALLED@
 OSILIB_LIBS = @OSILIB_LIBS@
+OSILIB_LIBS_INSTALLED = @OSILIB_LIBS_INSTALLED@
 OSILIB_PCLIBS = @OSILIB_PCLIBS@
 OSILIB_PCREQUIRES = @OSILIB_PCREQUIRES@
 OSI_EXAMPLES_SOLVER_CFLAGS = @OSI_EXAMPLES_SOLVER_CFLAGS@
 OSI_EXAMPLES_SOLVER_LIBS = @OSI_EXAMPLES_SOLVER_LIBS@
 OSI_EXAMPLES_SOLVER_NAME = @OSI_EXAMPLES_SOLVER_NAME@
+OSI_EXAMPLES_SOLVER_PCNAME = @OSI_EXAMPLES_SOLVER_PCNAME@
 OSI_SVN_REV = @OSI_SVN_REV@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -270,6 +282,7 @@ RANLIB = @RANLIB@
 RPATH_FLAGS = @RPATH_FLAGS@
 SAMPLE_CFLAGS = @SAMPLE_CFLAGS@
 SAMPLE_DATA = @SAMPLE_DATA@
+SAMPLE_DATA_INSTALLED = @SAMPLE_DATA_INSTALLED@
 SAMPLE_LIBS = @SAMPLE_LIBS@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -367,7 +380,7 @@ EXTRA_DIST = examples/basic2.cpp examples/basic.cpp examples/build.cpp \
 ########################################################################
 #                  Installation of the addlibs file                    #
 ########################################################################
-@COIN_HAS_PKGCONFIG_TRUE@addlibsdir = $(DESTDIR)$(datadir)/coin/doc/Osi
+addlibsdir = $(DESTDIR)$(datadir)/coin/doc/Osi
 
 ########################################################################
 #                         Maintainer Stuff                             #
@@ -803,8 +816,6 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-@COIN_HAS_PKGCONFIG_FALSE@install-data-hook:
-@COIN_HAS_PKGCONFIG_FALSE@uninstall-hook:
 clean: clean-recursive
 
 clean-am: clean-generic clean-libtool clean-local mostlyclean-am
@@ -910,13 +921,14 @@ uninstall-local: uninstall-doc
 
 .PHONY: test unitTest doxydoc
 
-@COIN_HAS_PKGCONFIG_TRUE@install-data-hook:
-@COIN_HAS_PKGCONFIG_TRUE@	@$(mkdir_p) "$(addlibsdir)"
+install-data-hook:
+	@$(mkdir_p) "$(addlibsdir)"
 @COIN_HAS_PKGCONFIG_TRUE@	PKG_CONFIG_PATH=@COIN_PKG_CONFIG_PATH@ \
 @COIN_HAS_PKGCONFIG_TRUE@	$(PKG_CONFIG) --libs osi > $(addlibsdir)/osi_addlibs.txt
+@COIN_HAS_PKGCONFIG_FALSE@	echo -L@abs_lib_dir@ -lOsi @OSILIB_LIBS_INSTALLED@ > $(addlibsdir)/osi_addlibs.txt
 
-@COIN_HAS_PKGCONFIG_TRUE@uninstall-hook:
-@COIN_HAS_PKGCONFIG_TRUE@	rm -f $(addlibsdir)/osi_addlibs.txt
+uninstall-hook:
+	rm -f $(addlibsdir)/osi_addlibs.txt
 
 install-doc: $(DocFiles)
 	test -z "$(DocInstallDir)" || $(mkdir_p) "$(DESTDIR)$(DocInstallDir)"

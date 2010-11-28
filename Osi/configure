@@ -472,7 +472,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os ADDLIBS PCADDLIBS FADDLIBS ALWAYS_FALSE_TRUE ALWAYS_FALSE_FALSE have_svnversion OSI_SVN_REV CDEFS ADD_CFLAGS DBG_CFLAGS OPT_CFLAGS sol_cc_compiler CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT MPICC CXXDEFS ADD_CXXFLAGS DBG_CXXFLAGS OPT_CXXFLAGS CXX CXXFLAGS ac_ct_CXX MPICXX EGREP INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT LIBTOOLM4 have_autoconf have_automake have_svn BUILDTOOLSDIR AUX_DIR abs_source_dir abs_lib_dir abs_include_dir abs_bin_dir HAVE_EXTERNALS_TRUE HAVE_EXTERNALS_FALSE host host_cpu host_vendor host_os LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CPP CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL ac_c_preproc_warn_flag ac_cxx_preproc_warn_flag RPATH_FLAGS LT_LDFLAGS PKG_CONFIG ac_pt_PKG_CONFIG COIN_HAS_PKGCONFIG_TRUE COIN_HAS_PKGCONFIG_FALSE COIN_PKG_CONFIG_PATH COIN_PKG_CONFIG_PATH_UNINSTALLED COINUTILS_LIBS COINUTILS_CFLAGS COINUTILS_DATA OSILIB_CFLAGS OSILIB_LIBS OSILIB_PCLIBS OSILIB_PCREQUIRES COIN_HAS_COINUTILS_TRUE COIN_HAS_COINUTILS_FALSE GLPK_LIBS GLPK_CFLAGS GLPK_DATA OSIGLPKLIB_CFLAGS OSIGLPKLIB_LIBS OSIGLPKLIB_PCLIBS OSIGLPKLIB_PCREQUIRES COIN_HAS_GLPK_TRUE COIN_HAS_GLPK_FALSE SAMPLE_LIBS SAMPLE_CFLAGS SAMPLE_DATA COIN_HAS_SAMPLE_TRUE COIN_HAS_SAMPLE_FALSE NETLIB_LIBS NETLIB_CFLAGS NETLIB_DATA COIN_HAS_NETLIB_TRUE COIN_HAS_NETLIB_FALSE CPXINCDIR CPXLIB COIN_HAS_CPX_TRUE COIN_HAS_CPX_FALSE MSKINCDIR MSKLIB COIN_HAS_MSK_TRUE COIN_HAS_MSK_FALSE XPRINCDIR XPRLIB COIN_HAS_XPR_TRUE COIN_HAS_XPR_FALSE GRBINCDIR GRBLIB COIN_HAS_GRB_TRUE COIN_HAS_GRB_FALSE SPXINCDIR SPXLIB COIN_HAS_SPX_TRUE COIN_HAS_SPX_FALSE OSI_EXAMPLES_SOLVER_NAME OSI_EXAMPLES_SOLVER_CFLAGS OSI_EXAMPLES_SOLVER_LIBS NOLONGLONGCXXFLAGS coin_have_doxygen coin_doxy_usedot coin_doxy_tagname coin_doxy_logname coin_doxy_tagfiles coin_doxy_excludes LIBEXT VPATH_DISTCLEANFILES ABSBUILDDIR LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os ADDLIBS PCADDLIBS FADDLIBS ALWAYS_FALSE_TRUE ALWAYS_FALSE_FALSE have_svnversion OSI_SVN_REV COIN_CC_IS_CL_TRUE COIN_CC_IS_CL_FALSE CDEFS ADD_CFLAGS DBG_CFLAGS OPT_CFLAGS sol_cc_compiler CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT MPICC CXXDEFS ADD_CXXFLAGS DBG_CXXFLAGS OPT_CXXFLAGS CXX CXXFLAGS ac_ct_CXX COIN_CXX_IS_CL_TRUE COIN_CXX_IS_CL_FALSE MPICXX EGREP INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT LIBTOOLM4 have_autoconf have_automake have_svn BUILDTOOLSDIR AUX_DIR abs_source_dir abs_lib_dir abs_include_dir abs_bin_dir HAVE_EXTERNALS_TRUE HAVE_EXTERNALS_FALSE host host_cpu host_vendor host_os LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CPP CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL ac_c_preproc_warn_flag ac_cxx_preproc_warn_flag RPATH_FLAGS LT_LDFLAGS PKG_CONFIG ac_pt_PKG_CONFIG COIN_HAS_PKGCONFIG_TRUE COIN_HAS_PKGCONFIG_FALSE COIN_PKG_CONFIG_PATH COIN_PKG_CONFIG_PATH_UNINSTALLED COINUTILS_LIBS COINUTILS_CFLAGS COINUTILS_DATA OSILIB_CFLAGS OSILIB_LIBS OSILIB_PCLIBS OSILIB_PCREQUIRES OSILIB_CFLAGS_INSTALLED OSILIB_LIBS_INSTALLED COINUTILS_DATA_INSTALLED COIN_HAS_COINUTILS_TRUE COIN_HAS_COINUTILS_FALSE GLPK_LIBS GLPK_CFLAGS GLPK_DATA OSIGLPKLIB_CFLAGS OSIGLPKLIB_LIBS OSIGLPKLIB_PCLIBS OSIGLPKLIB_PCREQUIRES OSIGLPKLIB_CFLAGS_INSTALLED OSIGLPKLIB_LIBS_INSTALLED GLPK_DATA_INSTALLED COIN_HAS_GLPK_TRUE COIN_HAS_GLPK_FALSE SAMPLE_LIBS SAMPLE_CFLAGS SAMPLE_DATA SAMPLE_DATA_INSTALLED COIN_HAS_SAMPLE_TRUE COIN_HAS_SAMPLE_FALSE NETLIB_LIBS NETLIB_CFLAGS NETLIB_DATA NETLIB_DATA_INSTALLED COIN_HAS_NETLIB_TRUE COIN_HAS_NETLIB_FALSE CPXINCDIR CPXLIB COIN_HAS_CPX_TRUE COIN_HAS_CPX_FALSE MSKINCDIR MSKLIB COIN_HAS_MSK_TRUE COIN_HAS_MSK_FALSE XPRINCDIR XPRLIB COIN_HAS_XPR_TRUE COIN_HAS_XPR_FALSE GRBINCDIR GRBLIB COIN_HAS_GRB_TRUE COIN_HAS_GRB_FALSE SPXINCDIR SPXLIB COIN_HAS_SPX_TRUE COIN_HAS_SPX_FALSE OSI_EXAMPLES_SOLVER_NAME OSI_EXAMPLES_SOLVER_CFLAGS OSI_EXAMPLES_SOLVER_LIBS OSI_EXAMPLES_SOLVER_PCNAME NOLONGLONGCXXFLAGS coin_have_doxygen coin_doxy_usedot coin_doxy_tagname coin_doxy_logname coin_doxy_tagfiles coin_doxy_excludes LIBEXT VPATH_DISTCLEANFILES ABSBUILDDIR LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -1981,6 +1981,26 @@ echo "$as_me: WARNING: C++ compiler name provided as $CXX, but CC is unset. Sett
       ;;
   esac
 fi
+
+# add automake conditional so we can recognize cl compiler in makefile
+coin_cc_is_cl=false
+if test x"$CXX" != x; then
+  case "$CXX" in
+    cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
+      coin_cc_is_cl=true
+      ;;
+  esac
+fi
+
+
+if test $coin_cc_is_cl = true; then
+  COIN_CC_IS_CL_TRUE=
+  COIN_CC_IS_CL_FALSE='#'
+else
+  COIN_CC_IS_CL_TRUE='#'
+  COIN_CC_IS_CL_FALSE=
+fi
+
 
 
 
@@ -3690,13 +3710,27 @@ ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ex
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 
+coin_cxx_is_cl=false
 # It seems that we need to cleanup something here for the Windows
 case "$CXX" in
   cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
     sed -e 's/^void exit (int);//' confdefs.h >> confdefs.hh
     mv confdefs.hh confdefs.h
+    coin_cxx_is_cl=true
     ;;
 esac
+
+# add automake conditional so we can recognize cl compiler in makefile
+
+
+if test $coin_cxx_is_cl = true; then
+  COIN_CXX_IS_CL_TRUE=
+  COIN_CXX_IS_CL_FALSE='#'
+else
+  COIN_CXX_IS_CL_TRUE='#'
+  COIN_CXX_IS_CL_FALSE=
+fi
+
 
 # Autoconf incorrectly concludes that cl recognises -g. It doesn't.
 case "$CXX" in
@@ -5895,7 +5929,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 5898 "configure"' > conftest.$ac_ext
+  echo '#line 5932 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -7029,7 +7063,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:7032:" \
+echo "$as_me:7066:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -8096,11 +8130,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8099: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8133: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8103: \$? = $ac_status" >&5
+   echo "$as_me:8137: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8364,11 +8398,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8367: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8401: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8371: \$? = $ac_status" >&5
+   echo "$as_me:8405: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8468,11 +8502,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8471: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8505: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8475: \$? = $ac_status" >&5
+   echo "$as_me:8509: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -10813,7 +10847,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 10816 "configure"
+#line 10850 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -10913,7 +10947,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 10916 "configure"
+#line 10950 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -13257,11 +13291,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13260: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13294: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:13264: \$? = $ac_status" >&5
+   echo "$as_me:13298: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -13361,11 +13395,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13364: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13398: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:13368: \$? = $ac_status" >&5
+   echo "$as_me:13402: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -14931,11 +14965,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14934: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14968: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:14938: \$? = $ac_status" >&5
+   echo "$as_me:14972: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -15035,11 +15069,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15038: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15072: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:15042: \$? = $ac_status" >&5
+   echo "$as_me:15076: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -17242,11 +17276,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17245: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17279: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:17249: \$? = $ac_status" >&5
+   echo "$as_me:17283: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -17510,11 +17544,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17513: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17547: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:17517: \$? = $ac_status" >&5
+   echo "$as_me:17551: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -17614,11 +17648,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17617: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17651: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:17621: \$? = $ac_status" >&5
+   echo "$as_me:17655: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -20840,17 +20874,22 @@ echo $ECHO_N "checking for COIN-OR package CoinUtils (fallback)... $ECHO_C" >&6
 
 coin_has_coinutils=notGiven
 COINUTILS_LIBS=
+COINUTILS_LIBS_INSTALLED=
 COINUTILS_CFLAGS=
+COINUTILS_CFLAGS_INSTALLED=
 COINUTILS_DATA=
+COINUTILS_DATA_INSTALLED=
 
 # initial list of dependencies is "coinutils", but we need to filter out version number specifications (= x, <= x, >= x)
 projtoprocess="coinutils"
 
 # we first expand the list of projects to process by adding all dependencies just behind the project which depends on it
 # further, we collect the list of corresponding .pc files, but do this in reverse order, because we need this order afterwards
+# the latter we also do with .pc files corresponding to the installed projects, which will be needed to setup Makefiles for examples
 # also, we setup the DATA variable
 allproj=""
 allpcfiles=""
+allpcifiles=""
 while test "x$projtoprocess" != x ; do
 
   for proj in $projtoprocess ; do
@@ -20860,8 +20899,15 @@ while test "x$projtoprocess" != x ; do
     IFS=":"
     for dir in $COIN_PKG_CONFIG_PATH_UNINSTALLED ; do
       # the base directory configure should have setup coin_subdirs.txt in a way that it does not contain projects that should be skipped, so we do not need to test this here again
-      if test -r "$dir/$proj-uninstalled.pc" ; then
+      if test -r "$dir/${proj}-uninstalled.pc" ; then
         pcfile="$dir/$proj-uninstalled.pc"
+        if test -r "$dir/${proj}.pc" ; then
+          pcifile="$dir/${proj}.pc"
+        else
+          { echo "$as_me:$LINENO: WARNING: Found $pcfile, but $dir/${proj}.pc is not available. This may break Makefile's of examples." >&5
+echo "$as_me: WARNING: Found $pcfile, but $dir/${proj}.pc is not available. This may break Makefile's of examples." >&2;}
+          pcifile=
+        fi
         break
       fi
     done
@@ -20875,9 +20921,12 @@ while test "x$projtoprocess" != x ; do
       # at the same time, remove $proj from this list
       projtoprocess=${projtoprocess/$proj/$projrequires}
 
-      # read DATA from $pcfile, if this is the first .pc file we are processing (so assume that its the main one)
-      if test "x$allproj" = x ; then
-        COINUTILS_DATA=`sed -n -e 's/datadir=//gp' "$pcfile"`
+      # read DATA from $pcfile, if _DATA is still empty
+      if test "x$COINUTILS_DATA" = x ; then
+        projdatadir=
+        pcfilemod=`sed -e '/[a-zA-Z]:/d' -e 's/datadir=\(.*\)/echo projdatadir=\\\\"\1\\\\"/g' $pcfile`
+        eval `sh -c "$pcfilemod"`
+        COINUTILS_DATA="$projdatadir"
       fi
 
       allproj="$allproj $proj"
@@ -20888,6 +20937,19 @@ while test "x$projtoprocess" != x ; do
 echo "${ECHO_T}no, dependency $proj not available" >&6
       allproj=fail
       break 2
+    fi
+
+    if test "x$pcifile" != x ; then
+      allpcifiles="$pcifile:$allpcifiles"
+
+      # read DATA_INSTALLED from $pcifile, if _DATA_INSTALLED is still empty
+      if test "x$COINUTILS_DATA_INSTALLED" = x ; then
+        projdatadir=
+        pcifilemod=`sed -e '/[a-zA-Z]:/d' -e 's/datadir=\(.*\)/echo projdatadir=\\\\"\1\\\\"/g' $pcifile`
+        eval `sh -c "$pcifilemod"`
+        COINUTILS_DATA_INSTALLED="$projdatadir"
+      fi
+
     fi
 
     break
@@ -20918,26 +20980,20 @@ if test "$allproj" != fail ; then
       done
     fi
 
-    # reconstruct the directory where the .pc file is located
-    pcfiledir=`echo $pcfile | sed -e 's/\/[^\/]*$//'`
+    # modify .pc file to a shell script that prints shell commands for setting the compiler and library flags:
+    #   replace "Libs:" by "echo projlibs="
+    #   replace "Cflags:" by "echo projcflags="
+    #   remove every line starting with <some word>:
+    pcfilemod=`sed -e 's/Libs:\(.*\)$/echo projlibs=\\\\"\1\\\\"/g' -e 's/Cflags:\(.*\)/echo projcflags=\\\\"\1\\\\"/g' -e '/[a-zA-Z]:/d' $pcfile`
 
-    # read CFLAGS from $pcfile and add CYGPATH_W cludge into include flags
-    projcflags=`sed -n -e 's/Cflags://p' "$pcfile"`
+    # set projcflags and projlibs variables by running $pcfilemod
+    eval `sh -c "$pcfilemod"`
+
+    # add CYGPATH_W cludge into include flags and set CFLAGS variable
     projcflags=`echo "$projcflags" | sed -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/g'`
     COINUTILS_CFLAGS="$projcflags $COINUTILS_CFLAGS"
 
-    # read LIBS from $pcfile and replace -L${libdir} by absolute path to build directory in linker flags
-    # we assume that the build directory is $pcfiledir/src if this directory exists, otherwise we assume that it is $pcfiledir
-    projlibs=`sed -n -e 's/Libs://' -e 's/-L\${libdir}//p' "$pcfile"`
-    if test "x$projlibs" != x ; then
-      if test -d "${pcfiledir}/src" ; then
-        projlibs="-L`cd "${pcfiledir}/src"; pwd` $projlibs"
-      else
-        projlibs="-L`cd "$pcfiledir"; pwd` $projlibs"
-      fi
-    else
-      projlibs=`sed -n -e 's/Libs://p' "$pcfile"`
-    fi
+    # set LIBS variable
     COINUTILS_LIBS="$projlibs $COINUTILS_LIBS"
 
     # remember that we have processed $pcfile
@@ -20945,6 +21001,48 @@ if test "$allproj" != fail ; then
 
   done
   IFS="$save_IFS"
+
+
+  # now go through the list of .pc files for installed projects and assemble compiler and linker flags
+  # important is here again to obey the reverse order that has been setup before,
+  # since then libraries that are required by several others should be after these other libraries
+  pcfilesprocessed=""
+
+  save_IFS="$IFS"
+  IFS=":"
+  for pcfile in $allpcifiles ; do
+
+    # if $pcfile has been processed already, skip this round
+    if test "x$pcfilesprocessed" != x ; then
+      for pcfiledone in $pcfilesprocessed ; do
+        if test "$pcfiledone" = "$pcfile" ; then
+          continue 2
+        fi
+      done
+    fi
+
+    # modify .pc file to a shell script that prints shell commands for setting the compiler and library flags:
+    #   replace "Libs:" by "echo projlibs="
+    #   replace "Cflags:" by "echo projcflags="
+    #   remove every line starting with <some word>:
+    pcfilemod=`sed -e 's/Libs:\(.*\)$/echo projlibs=\\\\"\1\\\\"/g' -e 's/Cflags:\(.*\)/echo projcflags=\\\\"\1\\\\"/g' -e '/[a-zA-Z]:/d' $pcfile`
+
+    # set projcflags and projlibs variables by running $pcfilemod
+    eval `sh -c "$pcfilemod"`
+
+    # add CYGPATH_W cludge into include flags and set CFLAGS variable
+    projcflags=`echo "$projcflags" | sed -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/g'`
+    COINUTILS_CFLAGS_INSTALLED="$projcflags $COINUTILS_CFLAGS_INSTALLED"
+
+    # set LIBS variable
+    COINUTILS_LIBS_INSTALLED="$projlibs $COINUTILS_LIBS_INSTALLED"
+
+    # remember that we have processed $pcfile
+    pcfilesprocessed="$pcfilesprocessed:$pcfile"
+
+  done
+  IFS="$save_IFS"
+
 
   # finish up
   coin_has_coinutils=yes
@@ -20960,6 +21058,11 @@ _ACEOF
     OSILIB_PCREQUIRES="coinutils $OSILIB_PCREQUIRES"
     OSILIB_CFLAGS="$COINUTILS_CFLAGS $OSILIB_CFLAGS"
     OSILIB_LIBS="$COINUTILS_LIBS $OSILIB_LIBS"
+    OSILIB_CFLAGS_INSTALLED="$COINUTILS_CFLAGS_INSTALLED $OSILIB_CFLAGS_INSTALLED"
+    OSILIB_LIBS_INSTALLED="$COINUTILS_LIBS_INSTALLED $OSILIB_LIBS_INSTALLED"
+
+
+
 
 
   if test 1 = 0 ; then  #change this test to enable a bit of debugging output
@@ -20975,11 +21078,29 @@ echo "$as_me: CoinUtils LIBS   are $COINUTILS_LIBS" >&6;}
       { echo "$as_me:$LINENO: CoinUtils DATA   is  $COINUTILS_DATA" >&5
 echo "$as_me: CoinUtils DATA   is  $COINUTILS_DATA" >&6;}
     fi
+    if test -n "$COINUTILS_CFLAGS_INSTALLED" ; then
+      { echo "$as_me:$LINENO: CoinUtils CFLAGS_INSTALLED are $COINUTILS_CFLAGS_INSTALLED" >&5
+echo "$as_me: CoinUtils CFLAGS_INSTALLED are $COINUTILS_CFLAGS_INSTALLED" >&6;}
+    fi
+    if test -n "$COINUTILS_LIBS_INSTALLED" ; then
+      { echo "$as_me:$LINENO: CoinUtils LIBS_INSTALLED   are $COINUTILS_LIBS_INSTALLED" >&5
+echo "$as_me: CoinUtils LIBS_INSTALLED   are $COINUTILS_LIBS_INSTALLED" >&6;}
+    fi
+    if test -n "$COINUTILS_DATA_INSTALLED" ; then
+      { echo "$as_me:$LINENO: CoinUtils DATA_INSTALLED   is  $COINUTILS_DATA_INSTALLED" >&5
+echo "$as_me: CoinUtils DATA_INSTALLED   is  $COINUTILS_DATA_INSTALLED" >&6;}
+    fi
 
+      { echo "$as_me:$LINENO: " >&5
+echo "$as_me: " >&6;}
       { echo "$as_me:$LINENO: OsiLib CFLAGS are $OSILIB_CFLAGS" >&5
 echo "$as_me: OsiLib CFLAGS are $OSILIB_CFLAGS" >&6;}
       { echo "$as_me:$LINENO: OsiLib LIBS   are $OSILIB_LIBS" >&5
 echo "$as_me: OsiLib LIBS   are $OSILIB_LIBS" >&6;}
+      { echo "$as_me:$LINENO: OsiLib CFLAGS_INSTALLED are $OSILIB_CFLAGS_INSTALLED" >&5
+echo "$as_me: OsiLib CFLAGS_INSTALLED are $OSILIB_CFLAGS_INSTALLED" >&6;}
+      { echo "$as_me:$LINENO: OsiLib LIBS_INSTALLED   are $OSILIB_LIBS_INSTALLED" >&5
+echo "$as_me: OsiLib LIBS_INSTALLED   are $OSILIB_LIBS_INSTALLED" >&6;}
 
   fi
 
@@ -21189,17 +21310,22 @@ echo $ECHO_N "checking for COIN-OR package Glpk (fallback)... $ECHO_C" >&6
 
 coin_has_glpk=notGiven
 GLPK_LIBS=
+GLPK_LIBS_INSTALLED=
 GLPK_CFLAGS=
+GLPK_CFLAGS_INSTALLED=
 GLPK_DATA=
+GLPK_DATA_INSTALLED=
 
 # initial list of dependencies is "coinglpk >= 4.39", but we need to filter out version number specifications (= x, <= x, >= x)
 projtoprocess="coinglpk "
 
 # we first expand the list of projects to process by adding all dependencies just behind the project which depends on it
 # further, we collect the list of corresponding .pc files, but do this in reverse order, because we need this order afterwards
+# the latter we also do with .pc files corresponding to the installed projects, which will be needed to setup Makefiles for examples
 # also, we setup the DATA variable
 allproj=""
 allpcfiles=""
+allpcifiles=""
 while test "x$projtoprocess" != x ; do
 
   for proj in $projtoprocess ; do
@@ -21209,8 +21335,15 @@ while test "x$projtoprocess" != x ; do
     IFS=":"
     for dir in $COIN_PKG_CONFIG_PATH_UNINSTALLED ; do
       # the base directory configure should have setup coin_subdirs.txt in a way that it does not contain projects that should be skipped, so we do not need to test this here again
-      if test -r "$dir/$proj-uninstalled.pc" ; then
+      if test -r "$dir/${proj}-uninstalled.pc" ; then
         pcfile="$dir/$proj-uninstalled.pc"
+        if test -r "$dir/${proj}.pc" ; then
+          pcifile="$dir/${proj}.pc"
+        else
+          { echo "$as_me:$LINENO: WARNING: Found $pcfile, but $dir/${proj}.pc is not available. This may break Makefile's of examples." >&5
+echo "$as_me: WARNING: Found $pcfile, but $dir/${proj}.pc is not available. This may break Makefile's of examples." >&2;}
+          pcifile=
+        fi
         break
       fi
     done
@@ -21224,9 +21357,12 @@ while test "x$projtoprocess" != x ; do
       # at the same time, remove $proj from this list
       projtoprocess=${projtoprocess/$proj/$projrequires}
 
-      # read DATA from $pcfile, if this is the first .pc file we are processing (so assume that its the main one)
-      if test "x$allproj" = x ; then
-        GLPK_DATA=`sed -n -e 's/datadir=//gp' "$pcfile"`
+      # read DATA from $pcfile, if _DATA is still empty
+      if test "x$GLPK_DATA" = x ; then
+        projdatadir=
+        pcfilemod=`sed -e '/[a-zA-Z]:/d' -e 's/datadir=\(.*\)/echo projdatadir=\\\\"\1\\\\"/g' $pcfile`
+        eval `sh -c "$pcfilemod"`
+        GLPK_DATA="$projdatadir"
       fi
 
       allproj="$allproj $proj"
@@ -21237,6 +21373,19 @@ while test "x$projtoprocess" != x ; do
 echo "${ECHO_T}no, dependency $proj not available" >&6
       allproj=fail
       break 2
+    fi
+
+    if test "x$pcifile" != x ; then
+      allpcifiles="$pcifile:$allpcifiles"
+
+      # read DATA_INSTALLED from $pcifile, if _DATA_INSTALLED is still empty
+      if test "x$GLPK_DATA_INSTALLED" = x ; then
+        projdatadir=
+        pcifilemod=`sed -e '/[a-zA-Z]:/d' -e 's/datadir=\(.*\)/echo projdatadir=\\\\"\1\\\\"/g' $pcifile`
+        eval `sh -c "$pcifilemod"`
+        GLPK_DATA_INSTALLED="$projdatadir"
+      fi
+
     fi
 
     break
@@ -21267,26 +21416,20 @@ if test "$allproj" != fail ; then
       done
     fi
 
-    # reconstruct the directory where the .pc file is located
-    pcfiledir=`echo $pcfile | sed -e 's/\/[^\/]*$//'`
+    # modify .pc file to a shell script that prints shell commands for setting the compiler and library flags:
+    #   replace "Libs:" by "echo projlibs="
+    #   replace "Cflags:" by "echo projcflags="
+    #   remove every line starting with <some word>:
+    pcfilemod=`sed -e 's/Libs:\(.*\)$/echo projlibs=\\\\"\1\\\\"/g' -e 's/Cflags:\(.*\)/echo projcflags=\\\\"\1\\\\"/g' -e '/[a-zA-Z]:/d' $pcfile`
 
-    # read CFLAGS from $pcfile and add CYGPATH_W cludge into include flags
-    projcflags=`sed -n -e 's/Cflags://p' "$pcfile"`
+    # set projcflags and projlibs variables by running $pcfilemod
+    eval `sh -c "$pcfilemod"`
+
+    # add CYGPATH_W cludge into include flags and set CFLAGS variable
     projcflags=`echo "$projcflags" | sed -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/g'`
     GLPK_CFLAGS="$projcflags $GLPK_CFLAGS"
 
-    # read LIBS from $pcfile and replace -L${libdir} by absolute path to build directory in linker flags
-    # we assume that the build directory is $pcfiledir/src if this directory exists, otherwise we assume that it is $pcfiledir
-    projlibs=`sed -n -e 's/Libs://' -e 's/-L\${libdir}//p' "$pcfile"`
-    if test "x$projlibs" != x ; then
-      if test -d "${pcfiledir}/src" ; then
-        projlibs="-L`cd "${pcfiledir}/src"; pwd` $projlibs"
-      else
-        projlibs="-L`cd "$pcfiledir"; pwd` $projlibs"
-      fi
-    else
-      projlibs=`sed -n -e 's/Libs://p' "$pcfile"`
-    fi
+    # set LIBS variable
     GLPK_LIBS="$projlibs $GLPK_LIBS"
 
     # remember that we have processed $pcfile
@@ -21294,6 +21437,48 @@ if test "$allproj" != fail ; then
 
   done
   IFS="$save_IFS"
+
+
+  # now go through the list of .pc files for installed projects and assemble compiler and linker flags
+  # important is here again to obey the reverse order that has been setup before,
+  # since then libraries that are required by several others should be after these other libraries
+  pcfilesprocessed=""
+
+  save_IFS="$IFS"
+  IFS=":"
+  for pcfile in $allpcifiles ; do
+
+    # if $pcfile has been processed already, skip this round
+    if test "x$pcfilesprocessed" != x ; then
+      for pcfiledone in $pcfilesprocessed ; do
+        if test "$pcfiledone" = "$pcfile" ; then
+          continue 2
+        fi
+      done
+    fi
+
+    # modify .pc file to a shell script that prints shell commands for setting the compiler and library flags:
+    #   replace "Libs:" by "echo projlibs="
+    #   replace "Cflags:" by "echo projcflags="
+    #   remove every line starting with <some word>:
+    pcfilemod=`sed -e 's/Libs:\(.*\)$/echo projlibs=\\\\"\1\\\\"/g' -e 's/Cflags:\(.*\)/echo projcflags=\\\\"\1\\\\"/g' -e '/[a-zA-Z]:/d' $pcfile`
+
+    # set projcflags and projlibs variables by running $pcfilemod
+    eval `sh -c "$pcfilemod"`
+
+    # add CYGPATH_W cludge into include flags and set CFLAGS variable
+    projcflags=`echo "$projcflags" | sed -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/g'`
+    GLPK_CFLAGS_INSTALLED="$projcflags $GLPK_CFLAGS_INSTALLED"
+
+    # set LIBS variable
+    GLPK_LIBS_INSTALLED="$projlibs $GLPK_LIBS_INSTALLED"
+
+    # remember that we have processed $pcfile
+    pcfilesprocessed="$pcfilesprocessed:$pcfile"
+
+  done
+  IFS="$save_IFS"
+
 
   # finish up
   coin_has_glpk=yes
@@ -21309,6 +21494,11 @@ _ACEOF
     OSIGLPKLIB_PCREQUIRES="coinglpk >= 4.39 $OSIGLPKLIB_PCREQUIRES"
     OSIGLPKLIB_CFLAGS="$GLPK_CFLAGS $OSIGLPKLIB_CFLAGS"
     OSIGLPKLIB_LIBS="$GLPK_LIBS $OSIGLPKLIB_LIBS"
+    OSIGLPKLIB_CFLAGS_INSTALLED="$GLPK_CFLAGS_INSTALLED $OSIGLPKLIB_CFLAGS_INSTALLED"
+    OSIGLPKLIB_LIBS_INSTALLED="$GLPK_LIBS_INSTALLED $OSIGLPKLIB_LIBS_INSTALLED"
+
+
+
 
 
   if test 1 = 0 ; then  #change this test to enable a bit of debugging output
@@ -21324,11 +21514,29 @@ echo "$as_me: Glpk LIBS   are $GLPK_LIBS" >&6;}
       { echo "$as_me:$LINENO: Glpk DATA   is  $GLPK_DATA" >&5
 echo "$as_me: Glpk DATA   is  $GLPK_DATA" >&6;}
     fi
+    if test -n "$GLPK_CFLAGS_INSTALLED" ; then
+      { echo "$as_me:$LINENO: Glpk CFLAGS_INSTALLED are $GLPK_CFLAGS_INSTALLED" >&5
+echo "$as_me: Glpk CFLAGS_INSTALLED are $GLPK_CFLAGS_INSTALLED" >&6;}
+    fi
+    if test -n "$GLPK_LIBS_INSTALLED" ; then
+      { echo "$as_me:$LINENO: Glpk LIBS_INSTALLED   are $GLPK_LIBS_INSTALLED" >&5
+echo "$as_me: Glpk LIBS_INSTALLED   are $GLPK_LIBS_INSTALLED" >&6;}
+    fi
+    if test -n "$GLPK_DATA_INSTALLED" ; then
+      { echo "$as_me:$LINENO: Glpk DATA_INSTALLED   is  $GLPK_DATA_INSTALLED" >&5
+echo "$as_me: Glpk DATA_INSTALLED   is  $GLPK_DATA_INSTALLED" >&6;}
+    fi
 
+      { echo "$as_me:$LINENO: " >&5
+echo "$as_me: " >&6;}
       { echo "$as_me:$LINENO: OsiGlpkLib CFLAGS are $OSIGLPKLIB_CFLAGS" >&5
 echo "$as_me: OsiGlpkLib CFLAGS are $OSIGLPKLIB_CFLAGS" >&6;}
       { echo "$as_me:$LINENO: OsiGlpkLib LIBS   are $OSIGLPKLIB_LIBS" >&5
 echo "$as_me: OsiGlpkLib LIBS   are $OSIGLPKLIB_LIBS" >&6;}
+      { echo "$as_me:$LINENO: OsiGlpkLib CFLAGS_INSTALLED are $OSIGLPKLIB_CFLAGS_INSTALLED" >&5
+echo "$as_me: OsiGlpkLib CFLAGS_INSTALLED are $OSIGLPKLIB_CFLAGS_INSTALLED" >&6;}
+      { echo "$as_me:$LINENO: OsiGlpkLib LIBS_INSTALLED   are $OSIGLPKLIB_LIBS_INSTALLED" >&5
+echo "$as_me: OsiGlpkLib LIBS_INSTALLED   are $OSIGLPKLIB_LIBS_INSTALLED" >&6;}
 
   fi
 
@@ -21520,17 +21728,22 @@ echo $ECHO_N "checking for COIN-OR package Sample (fallback)... $ECHO_C" >&6
 
 coin_has_sample=notGiven
 SAMPLE_LIBS=
+SAMPLE_LIBS_INSTALLED=
 SAMPLE_CFLAGS=
+SAMPLE_CFLAGS_INSTALLED=
 SAMPLE_DATA=
+SAMPLE_DATA_INSTALLED=
 
 # initial list of dependencies is "coindatasample", but we need to filter out version number specifications (= x, <= x, >= x)
 projtoprocess="coindatasample"
 
 # we first expand the list of projects to process by adding all dependencies just behind the project which depends on it
 # further, we collect the list of corresponding .pc files, but do this in reverse order, because we need this order afterwards
+# the latter we also do with .pc files corresponding to the installed projects, which will be needed to setup Makefiles for examples
 # also, we setup the DATA variable
 allproj=""
 allpcfiles=""
+allpcifiles=""
 while test "x$projtoprocess" != x ; do
 
   for proj in $projtoprocess ; do
@@ -21540,8 +21753,15 @@ while test "x$projtoprocess" != x ; do
     IFS=":"
     for dir in $COIN_PKG_CONFIG_PATH_UNINSTALLED ; do
       # the base directory configure should have setup coin_subdirs.txt in a way that it does not contain projects that should be skipped, so we do not need to test this here again
-      if test -r "$dir/$proj-uninstalled.pc" ; then
+      if test -r "$dir/${proj}-uninstalled.pc" ; then
         pcfile="$dir/$proj-uninstalled.pc"
+        if test -r "$dir/${proj}.pc" ; then
+          pcifile="$dir/${proj}.pc"
+        else
+          { echo "$as_me:$LINENO: WARNING: Found $pcfile, but $dir/${proj}.pc is not available. This may break Makefile's of examples." >&5
+echo "$as_me: WARNING: Found $pcfile, but $dir/${proj}.pc is not available. This may break Makefile's of examples." >&2;}
+          pcifile=
+        fi
         break
       fi
     done
@@ -21555,9 +21775,12 @@ while test "x$projtoprocess" != x ; do
       # at the same time, remove $proj from this list
       projtoprocess=${projtoprocess/$proj/$projrequires}
 
-      # read DATA from $pcfile, if this is the first .pc file we are processing (so assume that its the main one)
-      if test "x$allproj" = x ; then
-        SAMPLE_DATA=`sed -n -e 's/datadir=//gp' "$pcfile"`
+      # read DATA from $pcfile, if _DATA is still empty
+      if test "x$SAMPLE_DATA" = x ; then
+        projdatadir=
+        pcfilemod=`sed -e '/[a-zA-Z]:/d' -e 's/datadir=\(.*\)/echo projdatadir=\\\\"\1\\\\"/g' $pcfile`
+        eval `sh -c "$pcfilemod"`
+        SAMPLE_DATA="$projdatadir"
       fi
 
       allproj="$allproj $proj"
@@ -21568,6 +21791,19 @@ while test "x$projtoprocess" != x ; do
 echo "${ECHO_T}no, dependency $proj not available" >&6
       allproj=fail
       break 2
+    fi
+
+    if test "x$pcifile" != x ; then
+      allpcifiles="$pcifile:$allpcifiles"
+
+      # read DATA_INSTALLED from $pcifile, if _DATA_INSTALLED is still empty
+      if test "x$SAMPLE_DATA_INSTALLED" = x ; then
+        projdatadir=
+        pcifilemod=`sed -e '/[a-zA-Z]:/d' -e 's/datadir=\(.*\)/echo projdatadir=\\\\"\1\\\\"/g' $pcifile`
+        eval `sh -c "$pcifilemod"`
+        SAMPLE_DATA_INSTALLED="$projdatadir"
+      fi
+
     fi
 
     break
@@ -21598,26 +21834,20 @@ if test "$allproj" != fail ; then
       done
     fi
 
-    # reconstruct the directory where the .pc file is located
-    pcfiledir=`echo $pcfile | sed -e 's/\/[^\/]*$//'`
+    # modify .pc file to a shell script that prints shell commands for setting the compiler and library flags:
+    #   replace "Libs:" by "echo projlibs="
+    #   replace "Cflags:" by "echo projcflags="
+    #   remove every line starting with <some word>:
+    pcfilemod=`sed -e 's/Libs:\(.*\)$/echo projlibs=\\\\"\1\\\\"/g' -e 's/Cflags:\(.*\)/echo projcflags=\\\\"\1\\\\"/g' -e '/[a-zA-Z]:/d' $pcfile`
 
-    # read CFLAGS from $pcfile and add CYGPATH_W cludge into include flags
-    projcflags=`sed -n -e 's/Cflags://p' "$pcfile"`
+    # set projcflags and projlibs variables by running $pcfilemod
+    eval `sh -c "$pcfilemod"`
+
+    # add CYGPATH_W cludge into include flags and set CFLAGS variable
     projcflags=`echo "$projcflags" | sed -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/g'`
     SAMPLE_CFLAGS="$projcflags $SAMPLE_CFLAGS"
 
-    # read LIBS from $pcfile and replace -L${libdir} by absolute path to build directory in linker flags
-    # we assume that the build directory is $pcfiledir/src if this directory exists, otherwise we assume that it is $pcfiledir
-    projlibs=`sed -n -e 's/Libs://' -e 's/-L\${libdir}//p' "$pcfile"`
-    if test "x$projlibs" != x ; then
-      if test -d "${pcfiledir}/src" ; then
-        projlibs="-L`cd "${pcfiledir}/src"; pwd` $projlibs"
-      else
-        projlibs="-L`cd "$pcfiledir"; pwd` $projlibs"
-      fi
-    else
-      projlibs=`sed -n -e 's/Libs://p' "$pcfile"`
-    fi
+    # set LIBS variable
     SAMPLE_LIBS="$projlibs $SAMPLE_LIBS"
 
     # remember that we have processed $pcfile
@@ -21625,6 +21855,48 @@ if test "$allproj" != fail ; then
 
   done
   IFS="$save_IFS"
+
+
+  # now go through the list of .pc files for installed projects and assemble compiler and linker flags
+  # important is here again to obey the reverse order that has been setup before,
+  # since then libraries that are required by several others should be after these other libraries
+  pcfilesprocessed=""
+
+  save_IFS="$IFS"
+  IFS=":"
+  for pcfile in $allpcifiles ; do
+
+    # if $pcfile has been processed already, skip this round
+    if test "x$pcfilesprocessed" != x ; then
+      for pcfiledone in $pcfilesprocessed ; do
+        if test "$pcfiledone" = "$pcfile" ; then
+          continue 2
+        fi
+      done
+    fi
+
+    # modify .pc file to a shell script that prints shell commands for setting the compiler and library flags:
+    #   replace "Libs:" by "echo projlibs="
+    #   replace "Cflags:" by "echo projcflags="
+    #   remove every line starting with <some word>:
+    pcfilemod=`sed -e 's/Libs:\(.*\)$/echo projlibs=\\\\"\1\\\\"/g' -e 's/Cflags:\(.*\)/echo projcflags=\\\\"\1\\\\"/g' -e '/[a-zA-Z]:/d' $pcfile`
+
+    # set projcflags and projlibs variables by running $pcfilemod
+    eval `sh -c "$pcfilemod"`
+
+    # add CYGPATH_W cludge into include flags and set CFLAGS variable
+    projcflags=`echo "$projcflags" | sed -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/g'`
+    SAMPLE_CFLAGS_INSTALLED="$projcflags $SAMPLE_CFLAGS_INSTALLED"
+
+    # set LIBS variable
+    SAMPLE_LIBS_INSTALLED="$projlibs $SAMPLE_LIBS_INSTALLED"
+
+    # remember that we have processed $pcfile
+    pcfilesprocessed="$pcfilesprocessed:$pcfile"
+
+  done
+  IFS="$save_IFS"
+
 
   # finish up
   coin_has_sample=yes
@@ -21634,6 +21906,7 @@ echo "${ECHO_T}yes" >&6
 cat >>confdefs.h <<\_ACEOF
 #define COIN_HAS_SAMPLE 1
 _ACEOF
+
 
 
 
@@ -21650,6 +21923,18 @@ echo "$as_me: Sample LIBS   are $SAMPLE_LIBS" >&6;}
     if test -n "$SAMPLE_DATA" ; then
       { echo "$as_me:$LINENO: Sample DATA   is  $SAMPLE_DATA" >&5
 echo "$as_me: Sample DATA   is  $SAMPLE_DATA" >&6;}
+    fi
+    if test -n "$SAMPLE_CFLAGS_INSTALLED" ; then
+      { echo "$as_me:$LINENO: Sample CFLAGS_INSTALLED are $SAMPLE_CFLAGS_INSTALLED" >&5
+echo "$as_me: Sample CFLAGS_INSTALLED are $SAMPLE_CFLAGS_INSTALLED" >&6;}
+    fi
+    if test -n "$SAMPLE_LIBS_INSTALLED" ; then
+      { echo "$as_me:$LINENO: Sample LIBS_INSTALLED   are $SAMPLE_LIBS_INSTALLED" >&5
+echo "$as_me: Sample LIBS_INSTALLED   are $SAMPLE_LIBS_INSTALLED" >&6;}
+    fi
+    if test -n "$SAMPLE_DATA_INSTALLED" ; then
+      { echo "$as_me:$LINENO: Sample DATA_INSTALLED   is  $SAMPLE_DATA_INSTALLED" >&5
+echo "$as_me: Sample DATA_INSTALLED   is  $SAMPLE_DATA_INSTALLED" >&6;}
     fi
 
   fi
@@ -21837,17 +22122,22 @@ echo $ECHO_N "checking for COIN-OR package Netlib (fallback)... $ECHO_C" >&6
 
 coin_has_netlib=notGiven
 NETLIB_LIBS=
+NETLIB_LIBS_INSTALLED=
 NETLIB_CFLAGS=
+NETLIB_CFLAGS_INSTALLED=
 NETLIB_DATA=
+NETLIB_DATA_INSTALLED=
 
 # initial list of dependencies is "coindatanetlib", but we need to filter out version number specifications (= x, <= x, >= x)
 projtoprocess="coindatanetlib"
 
 # we first expand the list of projects to process by adding all dependencies just behind the project which depends on it
 # further, we collect the list of corresponding .pc files, but do this in reverse order, because we need this order afterwards
+# the latter we also do with .pc files corresponding to the installed projects, which will be needed to setup Makefiles for examples
 # also, we setup the DATA variable
 allproj=""
 allpcfiles=""
+allpcifiles=""
 while test "x$projtoprocess" != x ; do
 
   for proj in $projtoprocess ; do
@@ -21857,8 +22147,15 @@ while test "x$projtoprocess" != x ; do
     IFS=":"
     for dir in $COIN_PKG_CONFIG_PATH_UNINSTALLED ; do
       # the base directory configure should have setup coin_subdirs.txt in a way that it does not contain projects that should be skipped, so we do not need to test this here again
-      if test -r "$dir/$proj-uninstalled.pc" ; then
+      if test -r "$dir/${proj}-uninstalled.pc" ; then
         pcfile="$dir/$proj-uninstalled.pc"
+        if test -r "$dir/${proj}.pc" ; then
+          pcifile="$dir/${proj}.pc"
+        else
+          { echo "$as_me:$LINENO: WARNING: Found $pcfile, but $dir/${proj}.pc is not available. This may break Makefile's of examples." >&5
+echo "$as_me: WARNING: Found $pcfile, but $dir/${proj}.pc is not available. This may break Makefile's of examples." >&2;}
+          pcifile=
+        fi
         break
       fi
     done
@@ -21872,9 +22169,12 @@ while test "x$projtoprocess" != x ; do
       # at the same time, remove $proj from this list
       projtoprocess=${projtoprocess/$proj/$projrequires}
 
-      # read DATA from $pcfile, if this is the first .pc file we are processing (so assume that its the main one)
-      if test "x$allproj" = x ; then
-        NETLIB_DATA=`sed -n -e 's/datadir=//gp' "$pcfile"`
+      # read DATA from $pcfile, if _DATA is still empty
+      if test "x$NETLIB_DATA" = x ; then
+        projdatadir=
+        pcfilemod=`sed -e '/[a-zA-Z]:/d' -e 's/datadir=\(.*\)/echo projdatadir=\\\\"\1\\\\"/g' $pcfile`
+        eval `sh -c "$pcfilemod"`
+        NETLIB_DATA="$projdatadir"
       fi
 
       allproj="$allproj $proj"
@@ -21885,6 +22185,19 @@ while test "x$projtoprocess" != x ; do
 echo "${ECHO_T}no, dependency $proj not available" >&6
       allproj=fail
       break 2
+    fi
+
+    if test "x$pcifile" != x ; then
+      allpcifiles="$pcifile:$allpcifiles"
+
+      # read DATA_INSTALLED from $pcifile, if _DATA_INSTALLED is still empty
+      if test "x$NETLIB_DATA_INSTALLED" = x ; then
+        projdatadir=
+        pcifilemod=`sed -e '/[a-zA-Z]:/d' -e 's/datadir=\(.*\)/echo projdatadir=\\\\"\1\\\\"/g' $pcifile`
+        eval `sh -c "$pcifilemod"`
+        NETLIB_DATA_INSTALLED="$projdatadir"
+      fi
+
     fi
 
     break
@@ -21915,26 +22228,20 @@ if test "$allproj" != fail ; then
       done
     fi
 
-    # reconstruct the directory where the .pc file is located
-    pcfiledir=`echo $pcfile | sed -e 's/\/[^\/]*$//'`
+    # modify .pc file to a shell script that prints shell commands for setting the compiler and library flags:
+    #   replace "Libs:" by "echo projlibs="
+    #   replace "Cflags:" by "echo projcflags="
+    #   remove every line starting with <some word>:
+    pcfilemod=`sed -e 's/Libs:\(.*\)$/echo projlibs=\\\\"\1\\\\"/g' -e 's/Cflags:\(.*\)/echo projcflags=\\\\"\1\\\\"/g' -e '/[a-zA-Z]:/d' $pcfile`
 
-    # read CFLAGS from $pcfile and add CYGPATH_W cludge into include flags
-    projcflags=`sed -n -e 's/Cflags://p' "$pcfile"`
+    # set projcflags and projlibs variables by running $pcfilemod
+    eval `sh -c "$pcfilemod"`
+
+    # add CYGPATH_W cludge into include flags and set CFLAGS variable
     projcflags=`echo "$projcflags" | sed -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/g'`
     NETLIB_CFLAGS="$projcflags $NETLIB_CFLAGS"
 
-    # read LIBS from $pcfile and replace -L${libdir} by absolute path to build directory in linker flags
-    # we assume that the build directory is $pcfiledir/src if this directory exists, otherwise we assume that it is $pcfiledir
-    projlibs=`sed -n -e 's/Libs://' -e 's/-L\${libdir}//p' "$pcfile"`
-    if test "x$projlibs" != x ; then
-      if test -d "${pcfiledir}/src" ; then
-        projlibs="-L`cd "${pcfiledir}/src"; pwd` $projlibs"
-      else
-        projlibs="-L`cd "$pcfiledir"; pwd` $projlibs"
-      fi
-    else
-      projlibs=`sed -n -e 's/Libs://p' "$pcfile"`
-    fi
+    # set LIBS variable
     NETLIB_LIBS="$projlibs $NETLIB_LIBS"
 
     # remember that we have processed $pcfile
@@ -21942,6 +22249,48 @@ if test "$allproj" != fail ; then
 
   done
   IFS="$save_IFS"
+
+
+  # now go through the list of .pc files for installed projects and assemble compiler and linker flags
+  # important is here again to obey the reverse order that has been setup before,
+  # since then libraries that are required by several others should be after these other libraries
+  pcfilesprocessed=""
+
+  save_IFS="$IFS"
+  IFS=":"
+  for pcfile in $allpcifiles ; do
+
+    # if $pcfile has been processed already, skip this round
+    if test "x$pcfilesprocessed" != x ; then
+      for pcfiledone in $pcfilesprocessed ; do
+        if test "$pcfiledone" = "$pcfile" ; then
+          continue 2
+        fi
+      done
+    fi
+
+    # modify .pc file to a shell script that prints shell commands for setting the compiler and library flags:
+    #   replace "Libs:" by "echo projlibs="
+    #   replace "Cflags:" by "echo projcflags="
+    #   remove every line starting with <some word>:
+    pcfilemod=`sed -e 's/Libs:\(.*\)$/echo projlibs=\\\\"\1\\\\"/g' -e 's/Cflags:\(.*\)/echo projcflags=\\\\"\1\\\\"/g' -e '/[a-zA-Z]:/d' $pcfile`
+
+    # set projcflags and projlibs variables by running $pcfilemod
+    eval `sh -c "$pcfilemod"`
+
+    # add CYGPATH_W cludge into include flags and set CFLAGS variable
+    projcflags=`echo "$projcflags" | sed -e 's/-I\([^ ]*\)/-I\`${CYGPATH_W} \1\`/g'`
+    NETLIB_CFLAGS_INSTALLED="$projcflags $NETLIB_CFLAGS_INSTALLED"
+
+    # set LIBS variable
+    NETLIB_LIBS_INSTALLED="$projlibs $NETLIB_LIBS_INSTALLED"
+
+    # remember that we have processed $pcfile
+    pcfilesprocessed="$pcfilesprocessed:$pcfile"
+
+  done
+  IFS="$save_IFS"
+
 
   # finish up
   coin_has_netlib=yes
@@ -21951,6 +22300,7 @@ echo "${ECHO_T}yes" >&6
 cat >>confdefs.h <<\_ACEOF
 #define COIN_HAS_NETLIB 1
 _ACEOF
+
 
 
 
@@ -21967,6 +22317,18 @@ echo "$as_me: Netlib LIBS   are $NETLIB_LIBS" >&6;}
     if test -n "$NETLIB_DATA" ; then
       { echo "$as_me:$LINENO: Netlib DATA   is  $NETLIB_DATA" >&5
 echo "$as_me: Netlib DATA   is  $NETLIB_DATA" >&6;}
+    fi
+    if test -n "$NETLIB_CFLAGS_INSTALLED" ; then
+      { echo "$as_me:$LINENO: Netlib CFLAGS_INSTALLED are $NETLIB_CFLAGS_INSTALLED" >&5
+echo "$as_me: Netlib CFLAGS_INSTALLED are $NETLIB_CFLAGS_INSTALLED" >&6;}
+    fi
+    if test -n "$NETLIB_LIBS_INSTALLED" ; then
+      { echo "$as_me:$LINENO: Netlib LIBS_INSTALLED   are $NETLIB_LIBS_INSTALLED" >&5
+echo "$as_me: Netlib LIBS_INSTALLED   are $NETLIB_LIBS_INSTALLED" >&6;}
+    fi
+    if test -n "$NETLIB_DATA_INSTALLED" ; then
+      { echo "$as_me:$LINENO: Netlib DATA_INSTALLED   is  $NETLIB_DATA_INSTALLED" >&5
+echo "$as_me: Netlib DATA_INSTALLED   is  $NETLIB_DATA_INSTALLED" >&6;}
     fi
 
   fi
@@ -22900,27 +23262,34 @@ if test $coin_has_glpk = yes ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiGlpkSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="$GLPK_CFLAGS"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiGlpk $GLPK_LIBS"
+  OSI_EXAMPLES_SOLVER_PCNAME=osi-glpk
 elif test $coin_has_cpx = true ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiCpxSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="-I$CPXINCDIR"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiCpx $CPXLIB"
+  OSI_EXAMPLES_SOLVER_PCNAME=osi-cplex
 elif test $coin_has_grb = true ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiGrbSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="-I$GRBINCDIR"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiGrb $GRBLIB"
+  OSI_EXAMPLES_SOLVER_PCNAME=osi-gurobi
 elif test $coin_has_msk = true ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiMskSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="-I$MSKINCDIR"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiMsk $MSKLIB"
+  OSI_EXAMPLES_SOLVER_PCNAME=osi-mosek
 elif test $coin_has_xpr = true ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiXprSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="-I$XPRINCDIR"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiXpr $XPRLIB"
+  OSI_EXAMPLES_SOLVER_PCNAME=osi-xpress
 elif test $coin_has_spx = true ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiSpxSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="-I$SPXINCDIR"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiSpx $SPXLIB"
+  OSI_EXAMPLES_SOLVER_PCNAME=osi-soplex
 fi
+
 
 
 
@@ -23332,6 +23701,20 @@ if test -z "${ALWAYS_FALSE_TRUE}" && test -z "${ALWAYS_FALSE_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"ALWAYS_FALSE\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"ALWAYS_FALSE\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${COIN_CC_IS_CL_TRUE}" && test -z "${COIN_CC_IS_CL_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"COIN_CC_IS_CL\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"COIN_CC_IS_CL\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${COIN_CXX_IS_CL_TRUE}" && test -z "${COIN_CXX_IS_CL_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"COIN_CXX_IS_CL\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"COIN_CXX_IS_CL\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -24038,6 +24421,8 @@ s,@ALWAYS_FALSE_TRUE@,$ALWAYS_FALSE_TRUE,;t t
 s,@ALWAYS_FALSE_FALSE@,$ALWAYS_FALSE_FALSE,;t t
 s,@have_svnversion@,$have_svnversion,;t t
 s,@OSI_SVN_REV@,$OSI_SVN_REV,;t t
+s,@COIN_CC_IS_CL_TRUE@,$COIN_CC_IS_CL_TRUE,;t t
+s,@COIN_CC_IS_CL_FALSE@,$COIN_CC_IS_CL_FALSE,;t t
 s,@CDEFS@,$CDEFS,;t t
 s,@ADD_CFLAGS@,$ADD_CFLAGS,;t t
 s,@DBG_CFLAGS@,$DBG_CFLAGS,;t t
@@ -24058,6 +24443,8 @@ s,@OPT_CXXFLAGS@,$OPT_CXXFLAGS,;t t
 s,@CXX@,$CXX,;t t
 s,@CXXFLAGS@,$CXXFLAGS,;t t
 s,@ac_ct_CXX@,$ac_ct_CXX,;t t
+s,@COIN_CXX_IS_CL_TRUE@,$COIN_CXX_IS_CL_TRUE,;t t
+s,@COIN_CXX_IS_CL_FALSE@,$COIN_CXX_IS_CL_FALSE,;t t
 s,@MPICXX@,$MPICXX,;t t
 s,@EGREP@,$EGREP,;t t
 s,@INSTALL_PROGRAM@,$INSTALL_PROGRAM,;t t
@@ -24142,6 +24529,9 @@ s,@OSILIB_CFLAGS@,$OSILIB_CFLAGS,;t t
 s,@OSILIB_LIBS@,$OSILIB_LIBS,;t t
 s,@OSILIB_PCLIBS@,$OSILIB_PCLIBS,;t t
 s,@OSILIB_PCREQUIRES@,$OSILIB_PCREQUIRES,;t t
+s,@OSILIB_CFLAGS_INSTALLED@,$OSILIB_CFLAGS_INSTALLED,;t t
+s,@OSILIB_LIBS_INSTALLED@,$OSILIB_LIBS_INSTALLED,;t t
+s,@COINUTILS_DATA_INSTALLED@,$COINUTILS_DATA_INSTALLED,;t t
 s,@COIN_HAS_COINUTILS_TRUE@,$COIN_HAS_COINUTILS_TRUE,;t t
 s,@COIN_HAS_COINUTILS_FALSE@,$COIN_HAS_COINUTILS_FALSE,;t t
 s,@GLPK_LIBS@,$GLPK_LIBS,;t t
@@ -24151,16 +24541,21 @@ s,@OSIGLPKLIB_CFLAGS@,$OSIGLPKLIB_CFLAGS,;t t
 s,@OSIGLPKLIB_LIBS@,$OSIGLPKLIB_LIBS,;t t
 s,@OSIGLPKLIB_PCLIBS@,$OSIGLPKLIB_PCLIBS,;t t
 s,@OSIGLPKLIB_PCREQUIRES@,$OSIGLPKLIB_PCREQUIRES,;t t
+s,@OSIGLPKLIB_CFLAGS_INSTALLED@,$OSIGLPKLIB_CFLAGS_INSTALLED,;t t
+s,@OSIGLPKLIB_LIBS_INSTALLED@,$OSIGLPKLIB_LIBS_INSTALLED,;t t
+s,@GLPK_DATA_INSTALLED@,$GLPK_DATA_INSTALLED,;t t
 s,@COIN_HAS_GLPK_TRUE@,$COIN_HAS_GLPK_TRUE,;t t
 s,@COIN_HAS_GLPK_FALSE@,$COIN_HAS_GLPK_FALSE,;t t
 s,@SAMPLE_LIBS@,$SAMPLE_LIBS,;t t
 s,@SAMPLE_CFLAGS@,$SAMPLE_CFLAGS,;t t
 s,@SAMPLE_DATA@,$SAMPLE_DATA,;t t
+s,@SAMPLE_DATA_INSTALLED@,$SAMPLE_DATA_INSTALLED,;t t
 s,@COIN_HAS_SAMPLE_TRUE@,$COIN_HAS_SAMPLE_TRUE,;t t
 s,@COIN_HAS_SAMPLE_FALSE@,$COIN_HAS_SAMPLE_FALSE,;t t
 s,@NETLIB_LIBS@,$NETLIB_LIBS,;t t
 s,@NETLIB_CFLAGS@,$NETLIB_CFLAGS,;t t
 s,@NETLIB_DATA@,$NETLIB_DATA,;t t
+s,@NETLIB_DATA_INSTALLED@,$NETLIB_DATA_INSTALLED,;t t
 s,@COIN_HAS_NETLIB_TRUE@,$COIN_HAS_NETLIB_TRUE,;t t
 s,@COIN_HAS_NETLIB_FALSE@,$COIN_HAS_NETLIB_FALSE,;t t
 s,@CPXINCDIR@,$CPXINCDIR,;t t
@@ -24186,6 +24581,7 @@ s,@COIN_HAS_SPX_FALSE@,$COIN_HAS_SPX_FALSE,;t t
 s,@OSI_EXAMPLES_SOLVER_NAME@,$OSI_EXAMPLES_SOLVER_NAME,;t t
 s,@OSI_EXAMPLES_SOLVER_CFLAGS@,$OSI_EXAMPLES_SOLVER_CFLAGS,;t t
 s,@OSI_EXAMPLES_SOLVER_LIBS@,$OSI_EXAMPLES_SOLVER_LIBS,;t t
+s,@OSI_EXAMPLES_SOLVER_PCNAME@,$OSI_EXAMPLES_SOLVER_PCNAME,;t t
 s,@NOLONGLONGCXXFLAGS@,$NOLONGLONGCXXFLAGS,;t t
 s,@coin_have_doxygen@,$coin_have_doxygen,;t t
 s,@coin_doxy_usedot@,$coin_doxy_usedot,;t t

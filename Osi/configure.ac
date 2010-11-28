@@ -86,30 +86,37 @@ if test $coin_has_glpk = yes ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiGlpkSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="$GLPK_CFLAGS"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiGlpk $GLPK_LIBS"
+  OSI_EXAMPLES_SOLVER_PCNAME=osi-glpk
 elif test $coin_has_cpx = true ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiCpxSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="-I$CPXINCDIR"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiCpx $CPXLIB"
+  OSI_EXAMPLES_SOLVER_PCNAME=osi-cplex
 elif test $coin_has_grb = true ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiGrbSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="-I$GRBINCDIR"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiGrb $GRBLIB"
+  OSI_EXAMPLES_SOLVER_PCNAME=osi-gurobi
 elif test $coin_has_msk = true ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiMskSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="-I$MSKINCDIR"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiMsk $MSKLIB"
+  OSI_EXAMPLES_SOLVER_PCNAME=osi-mosek
 elif test $coin_has_xpr = true ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiXprSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="-I$XPRINCDIR"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiXpr $XPRLIB"
+  OSI_EXAMPLES_SOLVER_PCNAME=osi-xpress
 elif test $coin_has_spx = true ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiSpxSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="-I$SPXINCDIR"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiSpx $SPXLIB"
+  OSI_EXAMPLES_SOLVER_PCNAME=osi-soplex
 fi
 AC_SUBST(OSI_EXAMPLES_SOLVER_NAME)
 AC_SUBST(OSI_EXAMPLES_SOLVER_CFLAGS)
 AC_SUBST(OSI_EXAMPLES_SOLVER_LIBS)
+AC_SUBST(OSI_EXAMPLES_SOLVER_PCNAME)
 
 #############################################################################
 #                 Configuration options for individual OSIs                 #

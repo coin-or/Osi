@@ -113,10 +113,18 @@ elif test $coin_has_spx = true ; then
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiSpx $SPXLIB"
   OSI_EXAMPLES_SOLVER_PCNAME=osi-soplex
 fi
+
+# adjust linker flags for (i)cl compiler
+if test x$coin_cxx_is_cl = xtrue || test x$coin_cc_is_cl = xtrue ;
+then
+  [OSI_EXAMPLES_SOLVER_LIBS=`echo " $OSI_EXAMPLES_SOLVER_LIBS" | sed -e 's/ -L\([^ ]*\)/ \/libpath:\`$(CYGPATH_W) \1\`/g' -e 's/ -l\([^ ]*\)/ lib\1.lib/g'`]
+fi
+
 AC_SUBST(OSI_EXAMPLES_SOLVER_NAME)
 AC_SUBST(OSI_EXAMPLES_SOLVER_CFLAGS)
 AC_SUBST(OSI_EXAMPLES_SOLVER_LIBS)
 AC_SUBST(OSI_EXAMPLES_SOLVER_PCNAME)
+
 
 #############################################################################
 #                 Configuration options for individual OSIs                 #

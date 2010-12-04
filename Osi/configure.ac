@@ -85,7 +85,7 @@ AC_COIN_CHECK_USER_LIBRARY([Soplex],[SPX],[soplex.h])
 if test $coin_has_glpk = yes ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiGlpkSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="$GLPK_CFLAGS"
-  OSI_EXAMPLES_SOLVER_LIBS="-lOsiGlpk $GLPK_LIBS"
+  OSI_EXAMPLES_SOLVER_LIBS="-lOsiGlpk $GLPK_LIBS_INSTALLED"
   OSI_EXAMPLES_SOLVER_PCNAME=osi-glpk
 elif test $coin_has_cpx = true ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiCpxSolverInterface

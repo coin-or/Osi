@@ -36,11 +36,10 @@ libOsi_la_SOURCES = \
 	OsiSolverInterface.cpp OsiSolverInterface.hpp \
 	OsiSolverParameters.hpp
 
-# This is for libtool (on Windows)
+# This is for libtool
 libOsi_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags.
-
 AM_CPPFLAGS = $(COINUTILS_CFLAGS)
 
 # This line is necessary to allow VPATH compilation with MS compilers on

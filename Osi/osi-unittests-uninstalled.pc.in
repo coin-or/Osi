@@ -1,8 +1,9 @@
 prefix=@prefix@
+libdir=@ABSBUILDDIR@/src/OsiCommonTest
 
 Name: OsiUnitTests
 Description: COIN-OR Open Solver Interface Common Unit Tests
 Version: @PACKAGE_VERSION@
-Libs: -L@ABSBUILDDIR@/src/OsiCommonTest -lOsiCommonTests
+Libs: ${libdir}/libOsiCommonTests.la
 Cflags: -I@abs_source_dir@/src/OsiCommonTest
 Requires: osi

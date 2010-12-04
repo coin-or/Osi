@@ -51,39 +51,45 @@ noinst_PROGRAMS = unitTest$(EXEEXT)
 @COIN_HAS_CPX_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiCpx`
 
 @COIN_HAS_CPX_TRUE@am__append_3 = ../src/OsiCpx/libOsiCpx.la
-@COIN_HAS_CPX_TRUE@am__append_4 = $(CPXLIB)
-@COIN_HAS_GLPK_TRUE@am__append_5 = OsiGlpkSolverInterfaceTest.cpp
-@COIN_HAS_GLPK_TRUE@am__append_6 = $(GLPK_CFLAGS) \
+@COIN_HAS_CPX_TRUE@am__append_4 = ../src/OsiCpx/libOsiCpx.la
+@COIN_HAS_CPX_TRUE@am__append_5 = $(CPXLIB)
+@COIN_HAS_GLPK_TRUE@am__append_6 = OsiGlpkSolverInterfaceTest.cpp
+@COIN_HAS_GLPK_TRUE@am__append_7 = $(GLPK_CFLAGS) \
 @COIN_HAS_GLPK_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiGlpk`
 
-@COIN_HAS_GLPK_TRUE@am__append_7 = ../src/OsiGlpk/libOsiGlpk.la
-@COIN_HAS_GLPK_TRUE@am__append_8 = $(GLPK_LIBS)
-@COIN_HAS_MSK_TRUE@am__append_9 = OsiMskSolverInterfaceTest.cpp
-@COIN_HAS_MSK_TRUE@am__append_10 = -I`$(CYGPATH_W) $(MSKINCDIR)` \
+@COIN_HAS_GLPK_TRUE@am__append_8 = ../src/OsiGlpk/libOsiGlpk.la
+@COIN_HAS_GLPK_TRUE@am__append_9 = ../src/OsiGlpk/libOsiGlpk.la
+@COIN_HAS_GLPK_TRUE@am__append_10 = $(GLPK_LIBS)
+@COIN_HAS_MSK_TRUE@am__append_11 = OsiMskSolverInterfaceTest.cpp
+@COIN_HAS_MSK_TRUE@am__append_12 = -I`$(CYGPATH_W) $(MSKINCDIR)` \
 @COIN_HAS_MSK_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiMsk`
 
-@COIN_HAS_MSK_TRUE@am__append_11 = ../src/OsiMsk/libOsiMsk.la
-@COIN_HAS_MSK_TRUE@am__append_12 = $(MSKLIB)
-@COIN_HAS_XPR_TRUE@am__append_13 = OsiXprSolverInterfaceTest.cpp
-@COIN_HAS_XPR_TRUE@am__append_14 = -I`$(CYGPATH_W) $(XPRINCDIR)` \
+@COIN_HAS_MSK_TRUE@am__append_13 = ../src/OsiMsk/libOsiMsk.la
+@COIN_HAS_MSK_TRUE@am__append_14 = ../src/OsiMsk/libOsiMsk.la
+@COIN_HAS_MSK_TRUE@am__append_15 = $(MSKLIB)
+@COIN_HAS_XPR_TRUE@am__append_16 = OsiXprSolverInterfaceTest.cpp
+@COIN_HAS_XPR_TRUE@am__append_17 = -I`$(CYGPATH_W) $(XPRINCDIR)` \
 @COIN_HAS_XPR_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiXpr`
 
-@COIN_HAS_XPR_TRUE@am__append_15 = ../src/OsiXpr/libOsiXpr.la
-@COIN_HAS_XPR_TRUE@am__append_16 = $(XPRLIB)
-@COIN_HAS_GRB_TRUE@am__append_17 = OsiGrbSolverInterfaceTest.cpp
-@COIN_HAS_GRB_TRUE@am__append_18 = -I`$(CYGPATH_W) $(GRBINCDIR)` \
+@COIN_HAS_XPR_TRUE@am__append_18 = ../src/OsiXpr/libOsiXpr.la
+@COIN_HAS_XPR_TRUE@am__append_19 = ../src/OsiXpr/libOsiXpr.la
+@COIN_HAS_XPR_TRUE@am__append_20 = $(XPRLIB)
+@COIN_HAS_GRB_TRUE@am__append_21 = OsiGrbSolverInterfaceTest.cpp
+@COIN_HAS_GRB_TRUE@am__append_22 = -I`$(CYGPATH_W) $(GRBINCDIR)` \
 @COIN_HAS_GRB_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiGrb`
 
-@COIN_HAS_GRB_TRUE@am__append_19 = ../src/OsiGrb/libOsiGrb.la
-@COIN_HAS_GRB_TRUE@am__append_20 = $(GRBLIB)
-@COIN_HAS_SPX_TRUE@am__append_21 = OsiSpxSolverInterfaceTest.cpp
-@COIN_HAS_SPX_TRUE@am__append_22 = -I`$(CYGPATH_W) $(SPXINCDIR)` \
+@COIN_HAS_GRB_TRUE@am__append_23 = ../src/OsiGrb/libOsiGrb.la
+@COIN_HAS_GRB_TRUE@am__append_24 = ../src/OsiGrb/libOsiGrb.la
+@COIN_HAS_GRB_TRUE@am__append_25 = $(GRBLIB)
+@COIN_HAS_SPX_TRUE@am__append_26 = OsiSpxSolverInterfaceTest.cpp
+@COIN_HAS_SPX_TRUE@am__append_27 = -I`$(CYGPATH_W) $(SPXINCDIR)` \
 @COIN_HAS_SPX_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiSpx`
 
-@COIN_HAS_SPX_TRUE@am__append_23 = ../src/OsiSpx/libOsiSpx.la
-@COIN_HAS_SPX_TRUE@am__append_24 = $(SPXLIB)
-@COIN_HAS_SAMPLE_TRUE@am__append_25 = -mpsDir=`$(CYGPATH_W) $(SAMPLE_DATA)`
-@COIN_HAS_NETLIB_TRUE@am__append_26 = -netlibDir=`$(CYGPATH_W) $(NETLIB_DATA)` -testOsiSolverInterface
+@COIN_HAS_SPX_TRUE@am__append_28 = ../src/OsiSpx/libOsiSpx.la
+@COIN_HAS_SPX_TRUE@am__append_29 = ../src/OsiSpx/libOsiSpx.la
+@COIN_HAS_SPX_TRUE@am__append_30 = $(SPXLIB)
+@COIN_HAS_SAMPLE_TRUE@am__append_31 = -mpsDir=`$(CYGPATH_W) $(SAMPLE_DATA)`
+@COIN_HAS_NETLIB_TRUE@am__append_32 = -netlibDir=`$(CYGPATH_W) $(NETLIB_DATA)` -testOsiSolverInterface
 subdir = test
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -126,11 +132,7 @@ unitTest_OBJECTS = $(am_unitTest_OBJECTS)
 @COIN_HAS_XPR_TRUE@am__DEPENDENCIES_4 = ../src/OsiXpr/libOsiXpr.la
 @COIN_HAS_GRB_TRUE@am__DEPENDENCIES_5 = ../src/OsiGrb/libOsiGrb.la
 @COIN_HAS_SPX_TRUE@am__DEPENDENCIES_6 = ../src/OsiSpx/libOsiSpx.la
-unitTest_DEPENDENCIES = ../src/OsiCommonTest/libOsiCommonTests.la \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2) \
-	$(am__DEPENDENCIES_3) $(am__DEPENDENCIES_4) \
-	$(am__DEPENDENCIES_5) $(am__DEPENDENCIES_6) \
-	../src/Osi/libOsi.la
+am__DEPENDENCIES_7 =
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
@@ -168,9 +170,12 @@ CCDEPMODE = @CCDEPMODE@
 CDEFS = @CDEFS@
 CFLAGS = @CFLAGS@
 COINUTILS_CFLAGS = @COINUTILS_CFLAGS@
+COINUTILS_CFLAGS_INSTALLED = @COINUTILS_CFLAGS_INSTALLED@
 COINUTILS_DATA = @COINUTILS_DATA@
 COINUTILS_DATA_INSTALLED = @COINUTILS_DATA_INSTALLED@
+COINUTILS_DEPENDENCIES = @COINUTILS_DEPENDENCIES@
 COINUTILS_LIBS = @COINUTILS_LIBS@
+COINUTILS_LIBS_INSTALLED = @COINUTILS_LIBS_INSTALLED@
 COIN_CC_IS_CL_FALSE = @COIN_CC_IS_CL_FALSE@
 COIN_CC_IS_CL_TRUE = @COIN_CC_IS_CL_TRUE@
 COIN_CXX_IS_CL_FALSE = @COIN_CXX_IS_CL_FALSE@
@@ -221,9 +226,12 @@ F77 = @F77@
 FADDLIBS = @FADDLIBS@
 FFLAGS = @FFLAGS@
 GLPK_CFLAGS = @GLPK_CFLAGS@
+GLPK_CFLAGS_INSTALLED = @GLPK_CFLAGS_INSTALLED@
 GLPK_DATA = @GLPK_DATA@
 GLPK_DATA_INSTALLED = @GLPK_DATA_INSTALLED@
+GLPK_DEPENDENCIES = @GLPK_DEPENDENCIES@
 GLPK_LIBS = @GLPK_LIBS@
+GLPK_LIBS_INSTALLED = @GLPK_LIBS_INSTALLED@
 GRBINCDIR = @GRBINCDIR@
 GRBLIB = @GRBLIB@
 HAVE_EXTERNALS_FALSE = @HAVE_EXTERNALS_FALSE@
@@ -235,9 +243,8 @@ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LDFLAGS = @LDFLAGS@
 LIBEXT = @LIBEXT@
 LIBOBJS = @LIBOBJS@
-LIBS = @LIBS@ $(am__append_4) $(am__append_8) $(am__append_12) \
-	$(am__append_16) $(am__append_20) $(am__append_24) \
-	$(OSILIB_LIBS)
+LIBS = @LIBS@ $(am__append_5) $(am__append_10) $(am__append_15) \
+	$(am__append_20) $(am__append_25) $(am__append_30)
 LIBTOOL = @LIBTOOL@
 LIBTOOLM4 = @LIBTOOLM4@
 LN_S = @LN_S@
@@ -252,21 +259,26 @@ MPICXX = @MPICXX@
 MSKINCDIR = @MSKINCDIR@
 MSKLIB = @MSKLIB@
 NETLIB_CFLAGS = @NETLIB_CFLAGS@
+NETLIB_CFLAGS_INSTALLED = @NETLIB_CFLAGS_INSTALLED@
 NETLIB_DATA = @NETLIB_DATA@
 NETLIB_DATA_INSTALLED = @NETLIB_DATA_INSTALLED@
+NETLIB_DEPENDENCIES = @NETLIB_DEPENDENCIES@
 NETLIB_LIBS = @NETLIB_LIBS@
+NETLIB_LIBS_INSTALLED = @NETLIB_LIBS_INSTALLED@
 NOLONGLONGCXXFLAGS = @NOLONGLONGCXXFLAGS@
 OBJEXT = @OBJEXT@
 OPT_CFLAGS = @OPT_CFLAGS@
 OPT_CXXFLAGS = @OPT_CXXFLAGS@
 OSIGLPKLIB_CFLAGS = @OSIGLPKLIB_CFLAGS@
 OSIGLPKLIB_CFLAGS_INSTALLED = @OSIGLPKLIB_CFLAGS_INSTALLED@
+OSIGLPKLIB_DEPENDENCIES = @OSIGLPKLIB_DEPENDENCIES@
 OSIGLPKLIB_LIBS = @OSIGLPKLIB_LIBS@
 OSIGLPKLIB_LIBS_INSTALLED = @OSIGLPKLIB_LIBS_INSTALLED@
 OSIGLPKLIB_PCLIBS = @OSIGLPKLIB_PCLIBS@
 OSIGLPKLIB_PCREQUIRES = @OSIGLPKLIB_PCREQUIRES@
 OSILIB_CFLAGS = @OSILIB_CFLAGS@
 OSILIB_CFLAGS_INSTALLED = @OSILIB_CFLAGS_INSTALLED@
+OSILIB_DEPENDENCIES = @OSILIB_DEPENDENCIES@
 OSILIB_LIBS = @OSILIB_LIBS@
 OSILIB_LIBS_INSTALLED = @OSILIB_LIBS_INSTALLED@
 OSILIB_PCLIBS = @OSILIB_PCLIBS@
@@ -288,9 +300,12 @@ PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
 RPATH_FLAGS = @RPATH_FLAGS@
 SAMPLE_CFLAGS = @SAMPLE_CFLAGS@
+SAMPLE_CFLAGS_INSTALLED = @SAMPLE_CFLAGS_INSTALLED@
 SAMPLE_DATA = @SAMPLE_DATA@
 SAMPLE_DATA_INSTALLED = @SAMPLE_DATA_INSTALLED@
+SAMPLE_DEPENDENCIES = @SAMPLE_DEPENDENCIES@
 SAMPLE_LIBS = @SAMPLE_LIBS@
+SAMPLE_LIBS_INSTALLED = @SAMPLE_LIBS_INSTALLED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 SPXINCDIR = @SPXINCDIR@
@@ -364,28 +379,32 @@ target_alias = @target_alias@
 AUTOMAKE_OPTIONS = foreign
 unitTest_SOURCES = unitTest.cpp OsiTestSolver.cpp \
 	OsiTestSolverInterface.cpp OsiTestSolverInterfaceIO.cpp \
-	OsiTestSolverInterfaceTest.cpp $(am__append_1) $(am__append_5) \
-	$(am__append_9) $(am__append_13) $(am__append_17) \
-	$(am__append_21)
+	OsiTestSolverInterfaceTest.cpp $(am__append_1) $(am__append_6) \
+	$(am__append_11) $(am__append_16) $(am__append_21) \
+	$(am__append_26)
 
 # List libraries of COIN projects
 unitTest_LDADD = ../src/OsiCommonTest/libOsiCommonTests.la \
-	$(am__append_3) $(am__append_7) $(am__append_11) \
-	$(am__append_15) $(am__append_19) $(am__append_23) \
-	../src/Osi/libOsi.la
+	$(am__append_3) $(am__append_8) $(am__append_13) \
+	$(am__append_18) $(am__append_23) $(am__append_28) \
+	../src/Osi/libOsi.la $(OSILIB_LIBS)
+unitTest_DEPENDENCIES = ../src/OsiCommonTest/libOsiCommonTests.la \
+	$(am__append_4) $(am__append_9) $(am__append_14) \
+	$(am__append_19) $(am__append_24) $(am__append_29) \
+	../src/Osi/libOsi.la $(OSILIB_LIBS)
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows
 AM_CPPFLAGS = $(NOLONGLONGCXXFLAGS) -I`$(CYGPATH_W) \
 	$(srcdir)/../src/Osi` -I`$(CYGPATH_W) \
 	$(srcdir)/../src/OsiCommonTest` $(COINUTILS_CFLAGS) \
-	$(am__append_2) $(am__append_6) $(am__append_10) \
-	$(am__append_14) $(am__append_18) $(am__append_22)
+	$(am__append_2) $(am__append_7) $(am__append_12) \
+	$(am__append_17) $(am__append_22) $(am__append_27)
 
 # This line is necessary to allow VPATH compilation with MS compilers
 # on Cygwin
 DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/inc
-unittestflags = $(am__append_25) $(am__append_26)
+unittestflags = $(am__append_31) $(am__append_32)
 
 ########################################################################
 #                          Cleaning stuff                              #

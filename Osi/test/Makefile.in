@@ -391,7 +391,7 @@ unitTest_LDADD = ../src/OsiCommonTest/libOsiCommonTests.la \
 unitTest_DEPENDENCIES = ../src/OsiCommonTest/libOsiCommonTests.la \
 	$(am__append_4) $(am__append_9) $(am__append_14) \
 	$(am__append_19) $(am__append_24) $(am__append_29) \
-	../src/Osi/libOsi.la $(OSILIB_LIBS)
+	../src/Osi/libOsi.la $(OSILIB_DEPENDENCIES)
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows

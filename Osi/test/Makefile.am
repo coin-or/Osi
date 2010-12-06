@@ -93,7 +93,7 @@ if COIN_HAS_SPX
 endif
 
 unitTest_LDADD        += ../src/Osi/libOsi.la $(OSILIB_LIBS)
-unitTest_DEPENDENCIES += ../src/Osi/libOsi.la $(OSILIB_LIBS)
+unitTest_DEPENDENCIES += ../src/Osi/libOsi.la $(OSILIB_DEPENDENCIES)
 
 unittestflags =
 if COIN_HAS_SAMPLE

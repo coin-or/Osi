@@ -312,51 +312,51 @@
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 			>
 			<File
-				RelativePath="..\..\..\src\Osi\OsiAuxInfo.cpp"
+				RelativePath="..\..\..\..\Osi\src\Osi\OsiAuxInfo.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\Osi\OsiBranchingObject.cpp"
+				RelativePath="..\..\..\..\Osi\src\Osi\OsiBranchingObject.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\Osi\OsiChooseVariable.cpp"
+				RelativePath="..\..\..\..\Osi\src\Osi\OsiChooseVariable.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\Osi\OsiColCut.cpp"
+				RelativePath="..\..\..\..\Osi\src\Osi\OsiColCut.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\Osi\OsiCut.cpp"
+				RelativePath="..\..\..\..\Osi\src\Osi\OsiCut.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\Osi\OsiCuts.cpp"
+				RelativePath="..\..\..\..\Osi\src\Osi\OsiCuts.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\Osi\OsiNames.cpp"
+				RelativePath="..\..\..\..\Osi\src\Osi\OsiNames.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\Osi\OsiPresolve.cpp"
+				RelativePath="..\..\..\..\Osi\src\Osi\OsiPresolve.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\Osi\OsiRowCut.cpp"
+				RelativePath="..\..\..\..\Osi\src\Osi\OsiRowCut.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\Osi\OsiRowCutDebugger.cpp"
+				RelativePath="..\..\..\..\Osi\src\Osi\OsiRowCutDebugger.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\Osi\OsiSolverBranch.cpp"
+				RelativePath="..\..\..\..\Osi\src\Osi\OsiSolverBranch.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\Osi\OsiSolverInterface.cpp"
+				RelativePath="..\..\..\..\Osi\src\Osi\OsiSolverInterface.cpp"
 				>
 			</File>
 		</Filter>

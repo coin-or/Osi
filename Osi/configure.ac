@@ -85,31 +85,46 @@ AC_COIN_CHECK_USER_LIBRARY([Soplex],[SPX],[soplex.h])
 if test $coin_has_glpk = yes ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiGlpkSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="$GLPK_CFLAGS"
-  OSI_EXAMPLES_SOLVER_LIBS="-lOsiGlpk $GLPK_LIBS"
+  OSI_EXAMPLES_SOLVER_LIBS="-lOsiGlpk $GLPK_LIBS_INSTALLED"
+  OSI_EXAMPLES_SOLVER_PCNAME=osi-glpk
 elif test $coin_has_cpx = true ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiCpxSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="-I$CPXINCDIR"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiCpx $CPXLIB"
+  OSI_EXAMPLES_SOLVER_PCNAME=osi-cplex
 elif test $coin_has_grb = true ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiGrbSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="-I$GRBINCDIR"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiGrb $GRBLIB"
+  OSI_EXAMPLES_SOLVER_PCNAME=osi-gurobi
 elif test $coin_has_msk = true ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiMskSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="-I$MSKINCDIR"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiMsk $MSKLIB"
+  OSI_EXAMPLES_SOLVER_PCNAME=osi-mosek
 elif test $coin_has_xpr = true ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiXprSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="-I$XPRINCDIR"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiXpr $XPRLIB"
+  OSI_EXAMPLES_SOLVER_PCNAME=osi-xpress
 elif test $coin_has_spx = true ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiSpxSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="-I$SPXINCDIR"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiSpx $SPXLIB"
+  OSI_EXAMPLES_SOLVER_PCNAME=osi-soplex
 fi
+
+# adjust linker flags for (i)cl compiler
+if test x$coin_cxx_is_cl = xtrue || test x$coin_cc_is_cl = xtrue ;
+then
+  [OSI_EXAMPLES_SOLVER_LIBS=`echo " $OSI_EXAMPLES_SOLVER_LIBS" | sed -e 's/ -L\([^ ]*\)/ \/libpath:\`$(CYGPATH_W) \1\`/g' -e 's/ -l\([^ ]*\)/ lib\1.lib/g'`]
+fi
+
 AC_SUBST(OSI_EXAMPLES_SOLVER_NAME)
 AC_SUBST(OSI_EXAMPLES_SOLVER_CFLAGS)
 AC_SUBST(OSI_EXAMPLES_SOLVER_LIBS)
+AC_SUBST(OSI_EXAMPLES_SOLVER_PCNAME)
+
 
 #############################################################################
 #                 Configuration options for individual OSIs                 #
@@ -161,32 +176,32 @@ AC_CONFIG_FILES([Makefile
                  osi-unittests.pc osi-unittests-uninstalled.pc])
 
 if test $coin_has_cpx = true ; then
-  AC_CONFIG_FILES([src/OsiCpx/osi-cplex.pc
+  AC_CONFIG_FILES([osi-cplex.pc:src/OsiCpx/osi-cplex.pc.in
                    osi-cplex-uninstalled.pc:src/OsiCpx/osi-cplex-uninstalled.pc.in])
 fi
 
 if test $coin_has_glpk = yes ; then
-  AC_CONFIG_FILES([src/OsiGlpk/osi-glpk.pc
+  AC_CONFIG_FILES([osi-glpk.pc:src/OsiGlpk/osi-glpk.pc.in
                    osi-glpk-uninstalled.pc:src/OsiGlpk/osi-glpk-uninstalled.pc.in])
 fi
 
 if test $coin_has_grb = true ; then
-  AC_CONFIG_FILES([src/OsiGrb/osi-gurobi.pc
+  AC_CONFIG_FILES([osi-gurobi.pc:src/OsiGrb/osi-gurobi.pc.in
                    osi-gurobi-uninstalled.pc:src/OsiGrb/osi-gurobi-uninstalled.pc.in])
 fi
 
 if test $coin_has_msk = true ; then
-  AC_CONFIG_FILES([src/OsiMsk/osi-mosek.pc
+  AC_CONFIG_FILES([osi-mosek.pc:src/OsiMsk/osi-mosek.pc.in
                    osi-mosek-uninstalled.pc:src/OsiMsk/osi-mosek-uninstalled.pc.in])
 fi
 
 if test $coin_has_xpr = true ; then
-  AC_CONFIG_FILES([src/OsiXpr/osi-xpress.pc
+  AC_CONFIG_FILES([osi-xpress.pc:src/OsiXpr/osi-xpress.pc.in
                    osi-xpress-uninstalled.pc:src/OsiXpr/osi-xpress-uninstalled.pc.in])
 fi
 
 if test $coin_has_spx = true ; then
-  AC_CONFIG_FILES([src/OsiSpx/osi-soplex.pc
+  AC_CONFIG_FILES([osi-soplex.pc:src/OsiSpx/osi-soplex.pc.in
                    osi-soplex-uninstalled.pc:src/OsiSpx/osi-soplex-uninstalled.pc.in])
 fi
 

@@ -9,27 +9,36 @@
 AUTOMAKE_OPTIONS = foreign
 
 ########################################################################
-#                          Subdirectories                              #
+#            Subdirectories and installation of .pc files              #
 ########################################################################
+
+pkgconfiglibdir = $(libdir)/pkgconfig
+pkgconfiglib_DATA = osi.pc osi-unittests.pc
 
 SUBDIRS = src/Osi src/OsiCommonTest
 if COIN_HAS_CPX
   SUBDIRS += src/OsiCpx
+  pkgconfiglib_DATA += osi-cplex.pc
 endif
 if COIN_HAS_GLPK
   SUBDIRS += src/OsiGlpk
+  pkgconfiglib_DATA += osi-glpk.pc
 endif
 if COIN_HAS_MSK
   SUBDIRS += src/OsiMsk
+  pkgconfiglib_DATA += osi-mosek.pc
 endif
 if COIN_HAS_XPR
   SUBDIRS += src/OsiXpr
+  pkgconfiglib_DATA += osi-xpress.pc
 endif
 if COIN_HAS_GRB
   SUBDIRS += src/OsiGrb
+  pkgconfiglib_DATA += osi-gurobi.pc
 endif
 if COIN_HAS_SPX
   SUBDIRS += src/OsiSpx
+  pkgconfiglib_DATA += osi-soplex.pc
 endif
 
 # We don't want to compile the test subdirectory, unless the test target is
@@ -90,20 +99,19 @@ uninstall-local: uninstall-doc
 #                  Installation of the addlibs file                    #
 ########################################################################
 
-pkgconfiglibdir = $(libdir)/pkgconfig
-pkgconfiglib_DATA = osi.pc osi-unittests.pc
-
-if COIN_HAS_PKGCONFIG
 addlibsdir = $(DESTDIR)$(datadir)/coin/doc/Osi
 	
 install-data-hook:
 	@$(mkdir_p) "$(addlibsdir)"
+if COIN_HAS_PKGCONFIG
 	PKG_CONFIG_PATH=@COIN_PKG_CONFIG_PATH@ \
 	$(PKG_CONFIG) --libs osi > $(addlibsdir)/osi_addlibs.txt
+else
+	echo -L@abs_lib_dir@ -lOsi @OSILIB_LIBS_INSTALLED@ > $(addlibsdir)/osi_addlibs.txt
+endif
 
 uninstall-hook:
 	rm -f $(addlibsdir)/osi_addlibs.txt
-endif
 
 ########################################################################
 #                         Maintainer Stuff                             #

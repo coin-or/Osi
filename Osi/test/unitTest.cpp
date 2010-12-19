@@ -149,13 +149,16 @@ bool processParameters (int argc, const char **argv,
 */
   const char dirsep =  CoinFindDirSeparator() ;
   std::string pathTmp ;
-
   pathTmp = ".." ;
   pathTmp += dirsep ;
   pathTmp += ".." ;
   pathTmp += dirsep ;
   pathTmp += "Data" ;
   pathTmp += dirsep ;
+# ifdef COIN_MSVS
+  // Visual Studio builds are deeper
+    pathTmp = "..\\..\\" + pathTmp ;
+# endif
 
   parms["-mpsDir"] = pathTmp + "Sample"  ;
   parms["-netlibDir"] = pathTmp + "Netlib" ;

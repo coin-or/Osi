@@ -57,33 +57,57 @@ VPATH = @srcdir@
 #  package.                                                              #
 ##########################################################################
 
+COIN_HAS_PKGCONFIG = @COIN_HAS_PKGCONFIG_TRUE@TRUE
+COIN_CXX_IS_CL = @COIN_CXX_IS_CL_TRUE@TRUE
+COIN_HAS_SAMPLE = @COIN_HAS_SAMPLE_TRUE@TRUE
+COIN_HAS_NETLIB = @COIN_HAS_NETLIB_TRUE@TRUE
+
 # C++ Compiler command
 CXX = @CXX@
 
 # C++ Compiler options
 CXXFLAGS = @CXXFLAGS@ @OSI_EXAMPLES_SOLVER_CFLAGS@ \
   -DOSIXXXhpp=\"@OSI_EXAMPLES_SOLVER_NAME@.hpp\" -DOSIXXX=@OSI_EXAMPLES_SOLVER_NAME@
-@COIN_HAS_SAMPLE_TRUE@CXXFLAGS += -DSAMPLEDIR=\"@SAMPLE_DATA@\"
-@COIN_HAS_NETLIB_TRUE@CXXFLAGS += -DNETLIBDIR=\"@NETLIB_DATA@\"
+
+# Sample data directory
+ifeq ($(COIN_HAS_SAMPLE), TRUE)
+  ifeq ($(COIN_HAS_PKGCONFIG), TRUE)
+    CXXFLAGS += -DSAMPLEDIR=\"`PKG_CONFIG_PATH=@COIN_PKG_CONFIG_PATH@ @PKG_CONFIG@ --variable=datadir coindatasample`\"
+  else
+    CXXFLAGS += -DSAMPLEDIR=\"@SAMPLE_DATA_INSTALLED@\"
+  endif
+endif
+
+# Netlib data directory
+ifeq ($(COIN_HAS_NETLIB), TRUE)
+  ifeq ($(COIN_HAS_PKGCONFIG), TRUE)
+    CXXFLAGS += -DNETLIBDIR=\"`PKG_CONFIG_PATH=@COIN_PKG_CONFIG_PATH@ @PKG_CONFIG@ --variable=datadir coindatanetlib`\"
+  else
+    CXXFLAGS += -DNETLIBDIR=\"@NETLIB_DATA_INSTALLED@\"
+  endif
+endif
 
 # additional C++ Compiler options for linking
 CXXLINKFLAGS = @RPATH_FLAGS@
 
-# Directory with COIN header files
-COININCDIR = @abs_include_dir@/coin
+# Include directories (we use the CYGPATH_W variables to allow compilation with Windows compilers)
+ifeq ($(COIN_HAS_PKGCONFIG), TRUE)
+  INCL = `PKG_CONFIG_PATH=@COIN_PKG_CONFIG_PATH@ @PKG_CONFIG@ --cflags @OSI_EXAMPLES_SOLVER_PCNAME@ osi`
+else
+  INCL = @OSILIB_CFLAGS_INSTALLED@
+endif
+INCL += $(ADDINCFLAGS)
 
-# Directory with COIN libraries
-COINLIBDIR = @abs_lib_dir@/coin
-
-# Libraries that may be necessary to link with Osi
-LIBS = -L$(COINLIBDIR) \
-       -L$(COINLIBDIR)/ThirdParty \
-       @OSI_EXAMPLES_SOLVER_LIBS@ -lOsi \
-       @OSILIB_LIBS@
-
-# Necessary Include dirs (we use the CYGPATH_W variables to allow
-# compilation with Windows compilers)
-INCL = -I`$(CYGPATH_W) $(COININCDIR)` @COINUTILS_CFLAGS@ $(ADDINCFLAGS)
+# Linker flags
+ifeq ($(COIN_HAS_PKGCONFIG), TRUE)
+  LIBS = `PKG_CONFIG_PATH=@COIN_PKG_CONFIG_PATH@ @PKG_CONFIG@ --libs @OSI_EXAMPLES_SOLVER_PCNAME@ osi`
+else
+  ifeq ($(COIN_CXX_IS_CL), TRUE)
+    LIBS = /link /libpath:`$(CYGPATH_W) @abs_lib_dir@` libOsi.lib @OSI_EXAMPLES_SOLVER_LIBS@ @OSILIB_LIBS_INSTALLED@
+  else
+    LIBS = -L@abs_lib_dir@ -lOsi @OSI_EXAMPLES_SOLVER_LIBS@ @OSILIB_LIBS_INSTALLED@
+  endif
+endif
 
 # The following is necessary under cygwin, if native compilers are used
 CYGPATH_W = @CYGPATH_W@
@@ -95,7 +119,7 @@ all: $(EXE)
 $(EXE): $(OBJS)
 	bla=;\
 	for file in $(OBJS); do bla="$$bla `$(CYGPATH_W) $$file`"; done; \
-	$(CXX) $(CXXLINKFLAGS) $(CXXFLAGS) -o $@ $$bla $(ADDLIBS) $(LIBS)
+	$(CXX) $(CXXLINKFLAGS) $(CXXFLAGS) -o $@ $$bla $(LIBS) $(ADDLIBS)
 
 clean:
 	rm -rf $(EXE) $(OBJS)

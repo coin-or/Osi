@@ -43,6 +43,3 @@ DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/inc
 # and that therefore should be installed in 'include/coin'
 includecoindir = $(includedir)/coin
 includecoin_HEADERS = OsiMskSolverInterface.hpp
-
-pkgconfiglibdir = $(libdir)/pkgconfig
-pkgconfiglib_DATA = osi-mosek.pc

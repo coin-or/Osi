@@ -21,7 +21,8 @@ unitTest_SOURCES = unitTest.cpp \
   OsiTestSolverInterfaceTest.cpp
 
 # List libraries of COIN projects
-unitTest_LDADD = ../src/OsiCommonTest/libOsiCommonTests.la
+unitTest_LDADD        = ../src/OsiCommonTest/libOsiCommonTests.la
+unitTest_DEPENDENCIES = ../src/OsiCommonTest/libOsiCommonTests.la
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows
@@ -42,6 +43,7 @@ if COIN_HAS_CPX
   AM_CPPFLAGS += -I`$(CYGPATH_W) $(CPXINCDIR)` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiCpx`
   unitTest_LDADD += ../src/OsiCpx/libOsiCpx.la
+  unitTest_DEPENDENCIES += ../src/OsiCpx/libOsiCpx.la
   LIBS += $(CPXLIB)
 endif
 
@@ -50,6 +52,7 @@ if COIN_HAS_GLPK
   AM_CPPFLAGS += $(GLPK_CFLAGS) \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiGlpk`
   unitTest_LDADD += ../src/OsiGlpk/libOsiGlpk.la
+  unitTest_DEPENDENCIES += ../src/OsiGlpk/libOsiGlpk.la
   LIBS += $(GLPK_LIBS)
 endif
 
@@ -58,6 +61,7 @@ if COIN_HAS_MSK
   AM_CPPFLAGS += -I`$(CYGPATH_W) $(MSKINCDIR)` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiMsk`
   unitTest_LDADD += ../src/OsiMsk/libOsiMsk.la
+  unitTest_DEPENDENCIES += ../src/OsiMsk/libOsiMsk.la
   LIBS += $(MSKLIB)
 endif
 
@@ -66,6 +70,7 @@ if COIN_HAS_XPR
   AM_CPPFLAGS += -I`$(CYGPATH_W) $(XPRINCDIR)` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiXpr`
   unitTest_LDADD += ../src/OsiXpr/libOsiXpr.la
+  unitTest_DEPENDENCIES += ../src/OsiXpr/libOsiXpr.la
   LIBS += $(XPRLIB)
 endif
 
@@ -74,6 +79,7 @@ if COIN_HAS_GRB
   AM_CPPFLAGS += -I`$(CYGPATH_W) $(GRBINCDIR)` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiGrb`
   unitTest_LDADD += ../src/OsiGrb/libOsiGrb.la
+  unitTest_DEPENDENCIES += ../src/OsiGrb/libOsiGrb.la
   LIBS += $(GRBLIB)
 endif
 
@@ -82,11 +88,12 @@ if COIN_HAS_SPX
   AM_CPPFLAGS += -I`$(CYGPATH_W) $(SPXINCDIR)` \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiSpx`
   unitTest_LDADD += ../src/OsiSpx/libOsiSpx.la
+  unitTest_DEPENDENCIES += ../src/OsiSpx/libOsiSpx.la
   LIBS += $(SPXLIB)
 endif
 
-unitTest_LDADD += ../src/Osi/libOsi.la
-LIBS += $(OSILIB_LIBS)
+unitTest_LDADD        += ../src/Osi/libOsi.la $(OSILIB_LIBS)
+unitTest_DEPENDENCIES += ../src/Osi/libOsi.la $(OSILIB_DEPENDENCIES)
 
 unittestflags =
 if COIN_HAS_SAMPLE

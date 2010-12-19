@@ -70,7 +70,7 @@
 #define COIN_OSI_VERBOSITY 0
 
 /* Osi version */
-#define OSI_VERSION "trunk"
+#define OSI_VERSION "0.104"
 
 #endif /* HAVE_CONFIG_H */
 

@@ -1544,6 +1544,13 @@ int OsiCpxSolverInterface::getIterationCount() const
 {
   debugMessage("OsiCpxSolverInterface::getIterationCount()\n");
 
+  int solntype;
+
+  // CPXgetitcnt prints an error if no solution exists, so check before
+  CPXsolninfo(env_, getMutableLpPtr(), NULL, &solntype, NULL, NULL);
+  if( solntype == CPX_NO_SOLN )
+     return 0;
+
   return CPXgetitcnt( env_, getMutableLpPtr() );
 }
 //------------------------------------------------------------------

@@ -5,6 +5,7 @@ includedir=@includedir@/coin
 
 Name: Osi
 Description: COIN-OR Open Solver Interface
+URL: https://projects.coin-or.org/Osi
 Version: @PACKAGE_VERSION@
 Libs: -L${libdir} -lOsi @OSILIB_PCLIBS@
 Cflags: -I${includedir}

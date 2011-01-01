@@ -5,6 +5,7 @@ includedir=@includedir@/coin
 
 Name: OsiGurobi
 Description: COIN-OR Open Solver Interface for Gurobi
+URL: https://projects.coin-or.org/Osi
 Version: @PACKAGE_VERSION@
 Libs: -L${libdir} -lOsiGrb @GRBLIB@
 Cflags: -I${includedir} -I@GRBINCDIR@

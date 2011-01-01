@@ -5,6 +5,7 @@ includedir=@includedir@/coin
 
 Name: OsiUnitTests
 Description: COIN-OR Open Solver Interface Common Unit Tests
+URL: https://projects.coin-or.org/Osi
 Version: @PACKAGE_VERSION@
 Libs: -L${libdir} -lOsiCommonTests
 Cflags: -I${includedir}

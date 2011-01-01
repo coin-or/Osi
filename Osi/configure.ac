@@ -37,7 +37,7 @@ AC_PREFIX_DEFAULT([`pwd`])
 # Get the system type
 AC_CANONICAL_BUILD
 
-# A bit of initial setup (ADDLIBS, FADDLIBS)
+# A bit of initial setup
 AC_COIN_PROJECTDIR_INIT(Osi)
 
 # Check if user wants to produce debugging code

@@ -13,8 +13,7 @@ AUTOMAKE_OPTIONS = foreign
 ########################################################################
 
 # Name of the library compiled in this directory.
-libcoindir = $(libdir)/coin
-libcoin_LTLIBRARIES = libOsiCpx.la
+lib_LTLIBRARIES = libOsiCpx.la
 
 # List all source files for this library, including headers
 libOsiCpx_la_SOURCES = \

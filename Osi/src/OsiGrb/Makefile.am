@@ -11,8 +11,7 @@ AUTOMAKE_OPTIONS = foreign
 ########################################################################
 
 # Name of the library compiled in this directory.
-libcoindir = $(libdir)/coin
-libcoin_LTLIBRARIES = libOsiGrb.la
+lib_LTLIBRARIES = libOsiGrb.la
 
 # List all source files for this library, including headers
 libOsiGrb_la_SOURCES = OsiGrbSolverInterface.cpp OsiGrbSolverInterface.hpp

@@ -11,8 +11,7 @@ AUTOMAKE_OPTIONS = foreign
 ########################################################################
 
 # Name of the library compiled in this directory.
-libcoindir = $(libdir)/coin
-libcoin_LTLIBRARIES = libOsiSpx.la
+lib_LTLIBRARIES = libOsiSpx.la
 
 # List all source files for this library, including headers
 libOsiSpx_la_SOURCES = OsiSpxSolverInterface.cpp OsiSpxSolverInterface.hpp

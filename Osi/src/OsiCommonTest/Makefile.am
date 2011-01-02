@@ -13,10 +13,8 @@ AUTOMAKE_OPTIONS = foreign
 ########################################################################
 
 # Name of the library compiled in this directory.  We want it to be installed
-# in the 'lib/coin' directory
-
-libcoindir = $(libdir)/coin
-libcoin_LTLIBRARIES = libOsiCommonTests.la
+# in $libdir
+lib_LTLIBRARIES = libOsiCommonTests.la
 
 # List all source files for this library, including headers
 

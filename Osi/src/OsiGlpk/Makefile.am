@@ -13,8 +13,7 @@ AUTOMAKE_OPTIONS = foreign
 ########################################################################
 
 # Name of the library compiled in this directory.
-libcoindir = $(libdir)/coin
-libcoin_LTLIBRARIES = libOsiGlpk.la
+lib_LTLIBRARIES = libOsiGlpk.la
 
 # List all source files for this library, including headers
 libOsiGlpk_la_SOURCES = \

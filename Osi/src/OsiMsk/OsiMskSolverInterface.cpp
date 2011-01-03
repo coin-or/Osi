@@ -5,6 +5,8 @@
   author:   Bo Jensen
   email:    support@MOSEK.com
  -----------------------------------------------------------------------------
+
+  This code is licensed under the terms of the Eclipse Public License (EPL).
 */
 
 #include <iostream>

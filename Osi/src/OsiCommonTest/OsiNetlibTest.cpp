@@ -1,6 +1,8 @@
 /*
   Copyright (C) 2000 -- 2010, Lou Hafer, International Business Machines,
   and others.  All Rights Reserved.
+
+  This code is licensed under the terms of the Eclipse Public License (EPL).
 */
 
 #include "CoinPragma.hpp"

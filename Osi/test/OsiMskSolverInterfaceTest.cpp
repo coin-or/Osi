@@ -1,3 +1,9 @@
+/*
+  Unit test for OsiMsk.
+
+  This file is licensed under the terms of Eclipse Public License (EPL).
+*/
+
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
 #  pragma warning(disable:4786)

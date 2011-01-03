@@ -1,5 +1,7 @@
 // Copyright (C) 2000, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This file is licensed under the terms of Eclipse Public License (EPL).
+
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>

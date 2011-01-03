@@ -1,5 +1,6 @@
 // Copyright (C) 2010
 // All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 #ifndef OSISOLVERINTERFACETEST_HPP_
 #define OSISOLVERINTERFACETEST_HPP_

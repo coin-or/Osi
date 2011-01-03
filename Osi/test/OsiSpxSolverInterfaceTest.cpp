@@ -4,6 +4,7 @@
 // author:   Tobias Pfender
 //           Konrad-Zuse-Zentrum Berlin (Germany)
 //           email: pfender@zib.de
+// license:  this file may be freely distributed under the terms of EPL
 // date:     01/17/2002
 //-----------------------------------------------------------------------------
 // Copyright (C) 2002, Tobias Pfender, International Business Machines

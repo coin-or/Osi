@@ -1,5 +1,6 @@
 // Copyright (C) 2001, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This file is licensed under the terms of Eclipse Public License (EPL).
 
 // this is a copy of OsiVolSolverInterface (trunk rev. 1466) renamed to OsiTestSolverInterface
 

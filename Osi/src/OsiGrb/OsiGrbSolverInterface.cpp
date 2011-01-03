@@ -3,6 +3,7 @@
 // template: OSI Cplex Interface written by T. Achterberg
 // author:   Stefan Vigerske
 //           Humboldt University Berlin
+// license:  this file may be freely distributed under the terms of EPL
 // comments: please scan this file for '???' and 'TODO' and read the comments
 //-----------------------------------------------------------------------------
 // Copyright (C) 2009 Humboldt University Berlin and others.

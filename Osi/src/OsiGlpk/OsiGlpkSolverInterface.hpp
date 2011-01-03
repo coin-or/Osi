@@ -5,6 +5,7 @@
 // Copyright (C) 2003  University of Pittsburgh
 //   University of Pittsburgh coding done by Brady Hunsaker
 // All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 
 #ifndef OsiGlpkSolverInterface_H
 #define OsiGlpkSolverInterface_H

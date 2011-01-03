@@ -6,7 +6,7 @@
 //           Konrad-Zuse-Zentrum Berlin (Germany)
 //           email: pfender@zib.de
 // date:     01/16/2002
-// license:  this file may be freely distributed under the terms of the CPL
+// license:  this file may be freely distributed under the terms of the EPL
 //-----------------------------------------------------------------------------
 // Copyright (C) 2002, Tobias Pfender, International Business Machines
 // Corporation and others.  All Rights Reserved.

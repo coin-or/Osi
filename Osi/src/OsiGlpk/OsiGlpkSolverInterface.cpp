@@ -8,6 +8,7 @@
 // Copyright (C) 2007 Lou Hafer
 //    University of Pittsburgh coding done by Brady Hunsaker
 // All Rights Reserved.
+// This code is licensed under the terms of the Eclipse Public License (EPL).
 //
 // Comments:
 //   

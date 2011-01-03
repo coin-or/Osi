@@ -1,5 +1,6 @@
 // Copyright (C) 2000, International Business Machines
 // Corporation and others.  All Rights Reserved.
+// This file is licensed under the terms of Eclipse Public License (EPL).
 
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names

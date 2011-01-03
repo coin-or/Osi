@@ -4,7 +4,7 @@
 // author:   Stefan Vigerske
 //           Humboldt University Berlin
 // date:     09/02/2009
-// license:  this file may be freely distributed under the terms of CPL
+// license:  this file may be freely distributed under the terms of EPL
 // comments: please scan this file for '???' and read the comments
 //-----------------------------------------------------------------------------
 // Copyright (C) 2009 Humboldt University Berlin and others.

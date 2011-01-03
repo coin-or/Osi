@@ -1,6 +1,7 @@
 // Copyright (C) 2000, International Business Machines
 // Corporation and others.  All Rights Reserved.
 // Test individual classes or groups of classes
+// This file is licensed under the terms of Eclipse Public License (EPL).
 
 #include "CoinPragma.hpp"
 

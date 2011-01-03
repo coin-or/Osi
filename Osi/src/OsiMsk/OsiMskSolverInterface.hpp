@@ -6,6 +6,8 @@
 // email:    support@MOSEK.com
 //-----------------------------------------------------------------------------
 
+// This code is licensed under the terms of the Eclipse Public License (EPL).
+
 #ifndef OsiMskSolverInterface_H
 #define OsiMskSolverInterface_H
 

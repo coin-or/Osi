@@ -2,6 +2,7 @@
 // Corporation and others.  All Rights Reserved.
 // Copyright (C) 2004  University of Pittsburgh
 //   University of Pittsburgh coding done by Brady Hunsaker
+// This file is licensed under the terms of Eclipse Public License (EPL).
 
 // OsiGlpkSolverInterfaceTest.cpp adapted from OsiClpSolverInterfaceTest.cpp 
 //  on 2004/10/16

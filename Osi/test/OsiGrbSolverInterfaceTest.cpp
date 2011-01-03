@@ -4,6 +4,7 @@
 // author:   Stefan Vigerske
 //           Humboldt University Berlin
 // date:     01/02/2010
+// license:  this file may be freely distributed under the terms of EPL
 // comments: please scan this file for '???' and 'TODO' and read the comments
 //-----------------------------------------------------------------------------
 // Copyright (C) 2009 Humboldt University Berlin and others.
@@ -641,7 +642,7 @@ void OsiGrbSolverInterfaceUnitTest( const std::string & mpsDir, const std::strin
         assert( siC1rhs == siC1.getRightHandSide() );
         assert( siC1rr  == siC1.getRowRange() );
 
-        // Change CPLEX Model by adding free row
+        // Change Gurobi Model by adding free row
         OsiRowCut rc;
         rc.setLb(-DBL_MAX);
         rc.setUb( DBL_MAX);

@@ -50,6 +50,16 @@ AC_COIN_MAIN_PACKAGEDIR(Netlib,Data,,coindatanetlib)
 AC_COIN_MAIN_PACKAGEDIR(CoinUtils)
 AC_COIN_MAIN_PACKAGEDIR(Osi)
 
+# The following are useful for testing in trunk. Check, in case the user
+# has pulled one in as an external.
+
+AC_COIN_MAIN_PACKAGEDIR(Clp)
+AC_COIN_MAIN_PACKAGEDIR(DyLP)
+AC_COIN_MAIN_PACKAGEDIR(Cgl)
+AC_COIN_MAIN_PACKAGEDIR(Cbc)
+AC_COIN_MAIN_PACKAGEDIR(SYMPHONY)
+AC_COIN_MAIN_PACKAGEDIR(Vol)
+
 #############################################################################
 #                  Check for doxygen                                        #
 #############################################################################

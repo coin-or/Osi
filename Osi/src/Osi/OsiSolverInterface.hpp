@@ -285,7 +285,7 @@ public:
     */
     virtual bool setHintParam(OsiHintParam key, bool yesNo=true,
 			      OsiHintStrength strength=OsiHintTry,
-			      void */*otherInformation*/ = NULL) {
+			      void * /*otherInformation*/ = NULL) {
       if (key==OsiLastHintParam)
 	return false; 
       hintParam_[key] = yesNo;

@@ -1416,6 +1416,11 @@ OsiRowCutDebugger::activate(const OsiSolverInterface & si, const double * soluti
   siCopy->initialSolve();
   if (siCopy->isProvenOptimal()) {
     // Save column solution
+  	/* NOTE / TODO:
+  	  The following works only well if the LP with fixed integer variables gives the optimal solution of the problem that is actually solved.
+  	  In the context of, e.g., Bonmin, this is not the case, and thus should be changed to
+      CoinCopyN(solution,numberColumns_,optimalSolution_);
+    */
     CoinCopyN(siCopy->getColSolution(),numberColumns_,optimalSolution_);
     optimalValue_ = siCopy->getObjValue();
   } else {
@@ -1474,14 +1479,19 @@ OsiRowCutDebugger::OsiRowCutDebugger (const OsiSolverInterface & si,
 // Copy constructor 
 //-------------------------------------------------------------------
 OsiRowCutDebugger::OsiRowCutDebugger (const OsiRowCutDebugger & source)
+: optimalValue_(COIN_DBL_MAX), numberColumns_(0), integerVariable_(NULL), optimalSolution_(NULL)
 {  
-  // copy 
-  optimalValue_ = source.optimalValue_;
-  numberColumns_=source.numberColumns_;
-  integerVariable_=new bool[numberColumns_];
-  optimalSolution_=new double[numberColumns_];
-  CoinCopyN(source.integerVariable_,  numberColumns_, integerVariable_ );
-  CoinCopyN(source.optimalSolution_, numberColumns_, optimalSolution_);
+  // copy
+	if (source.active()) {
+		assert(source.integerVariable_ != NULL);
+		assert(source.optimalSolution_ != NULL);
+		optimalValue_ = source.optimalValue_;
+		numberColumns_=source.numberColumns_;
+		integerVariable_=new bool[numberColumns_];
+		optimalSolution_=new double[numberColumns_];
+		CoinCopyN(source.integerVariable_,  numberColumns_, integerVariable_ );
+		CoinCopyN(source.optimalSolution_, numberColumns_, optimalSolution_);
+	}
 }
 
 //-------------------------------------------------------------------
@@ -1503,13 +1513,18 @@ OsiRowCutDebugger::operator=(const OsiRowCutDebugger& rhs)
   if (this != &rhs) {
     delete [] integerVariable_;
     delete [] optimalSolution_;
+    optimalValue_ = COIN_DBL_MAX;
     // copy 
-    optimalValue_ = rhs.optimalValue_;
-    numberColumns_=rhs.numberColumns_;
-    integerVariable_=new bool[numberColumns_];
-    optimalSolution_=new double[numberColumns_];
-    CoinCopyN(rhs.integerVariable_,  numberColumns_, integerVariable_ );
-    CoinCopyN(rhs.optimalSolution_, numberColumns_, optimalSolution_);
+  	if (rhs.active()) {
+  		assert(rhs.integerVariable_ != NULL);
+  		assert(rhs.optimalSolution_ != NULL);
+  		optimalValue_ = rhs.optimalValue_;
+  		numberColumns_=rhs.numberColumns_;
+  		integerVariable_=new bool[numberColumns_];
+  		optimalSolution_=new double[numberColumns_];
+  		CoinCopyN(rhs.integerVariable_,  numberColumns_, integerVariable_ );
+  		CoinCopyN(rhs.optimalSolution_, numberColumns_, optimalSolution_);
+  	}
   }
   return *this;
 }

@@ -514,6 +514,9 @@ OsiCpxSolverInterface::setIntParam(OsiIntParam key, int value)
       else
 	retval = false;
       break;
+    case OsiNameDiscipline:
+       retval = OsiSolverInterface::setIntParam(key,value);
+       break;
     case OsiLastIntParam:
       retval = false;
       break;
@@ -605,6 +608,9 @@ OsiCpxSolverInterface::getIntParam(OsiIntParam key, int& value) const
       value = hotStartMaxIteration_;
       retval = true;
       break;
+    case OsiNameDiscipline:
+       retval  = OsiSolverInterface::getIntParam(key,value);
+       break;
     case OsiLastIntParam:
       retval = false;
       break;
@@ -2233,7 +2239,37 @@ OsiCpxSolverInterface::deleteCols(const int num, const int * columnIndices)
   }
 
   delete[] delstat;
+
+  //---
+  //--- MVG: took from OsiClp for updating names
+  //---
+  int nameDiscipline;
+  getIntParam(OsiNameDiscipline,nameDiscipline) ;
+  if (num && nameDiscipline) {
+     // Very clumsy (and inefficient) - need to sort and then go backwards in ? chunks
+     int * indices = CoinCopyOfArray(columnIndices,num);
+     std::sort(indices,indices+num);
+     int num2 = num;
+     while (num2) {
+       int next = indices[num2-1];
+       int firstDelete = num2-1;
+       int i;
+       for (i = num2-2; i>=0; --i) {
+          if (indices[i]+1 == next) {
+             --next;
+             firstDelete = i;
+          } else {
+             break;
+          }
+       }
+       OsiSolverInterface::deleteColNames(indices[firstDelete],num2-firstDelete);
+       num2 = firstDelete;
+       assert (num2>=0);
+     }
+     delete [] indices;
+  }
 }
+
 //-----------------------------------------------------------------------------
 void 
 OsiCpxSolverInterface::addRow(const CoinPackedVectorBase& vec,

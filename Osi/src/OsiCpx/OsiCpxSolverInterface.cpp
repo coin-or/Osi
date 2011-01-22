@@ -2372,6 +2372,35 @@ OsiCpxSolverInterface::deleteRows(const int num, const int * rowIndices)
   err = CPXdelsetrows( env_, getLpPtr( OsiCpxSolverInterface::KEEPCACHED_COLUMN ), delstat );
   checkCPXerror( err, "CPXdelsetrows", "deleteRows" );
   delete[] delstat;
+
+  //---
+  //--- SV: took from OsiClp for updating names
+  //---
+  int nameDiscipline;
+  getIntParam(OsiNameDiscipline,nameDiscipline) ;
+  if (num && nameDiscipline) {
+    // Very clumsy (and inefficient) - need to sort and then go backwards in ? chunks
+    int * indices = CoinCopyOfArray(rowIndices,num);
+    std::sort(indices,indices+num);
+    int num2=num;
+    while (num2) {
+      int next = indices[num2-1];
+      int firstDelete = num2-1;
+      int i;
+      for (i = num2-2; i>=0; --i) {
+        if (indices[i]+1 == next) {
+        	--next;
+	        firstDelete = i;
+        } else {
+          break;
+        }
+      }
+      OsiSolverInterface::deleteRowNames(indices[firstDelete],num2-firstDelete);
+      num2 = firstDelete;
+      assert(num2 >= 0);
+    }
+    delete [] indices;
+  }
 }
 
 //#############################################################################

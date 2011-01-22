@@ -1370,10 +1370,36 @@ void OsiSolverInterface::writeLp(const char * filename,
     // no extension so no trailing period
     fullname = f;
   }
-  // Fall back on Osi version - without names
+
+	char** colnames;
+	char** rownames;
+  int nameDiscipline;
+  getIntParam(OsiNameDiscipline,nameDiscipline) ;
+	if (useRowNames && nameDiscipline==2) {
+		colnames = new char*[getNumCols()];
+		rownames = new char*[getNumRows()];
+		for (int i = 0; i < getNumCols(); ++i)
+			colnames[i] = strdup(getColName(i).c_str());
+		for (int i = 0; i < getNumRows(); ++i)
+			rownames[i] = strdup(getRowName(i).c_str());
+	} else {
+		colnames = NULL;
+		rownames = NULL;
+	}
+
+  // Fall back on Osi version
   OsiSolverInterface::writeLpNative(fullname.c_str(), 
-				    NULL, NULL, epsilon, numberAcross,
+				    rownames, colnames, epsilon, numberAcross,
 				    decimals, objSense, useRowNames);
+
+	if (useRowNames && nameDiscipline==2) {
+		for (int i = 0; i < getNumCols(); ++i)
+			free(colnames[i]);
+		for (int i = 0; i < getNumRows(); ++i)
+			free(rownames[i]);
+		delete[] colnames;
+		delete[] rownames;
+	}
 }
 
 /*************************************************************************/
@@ -1384,10 +1410,35 @@ void OsiSolverInterface::writeLp(FILE *fp,
 				  double objSense,
 				  bool useRowNames) const
 {
-  // Fall back on Osi version - without names
+	char** colnames;
+	char** rownames;
+  int nameDiscipline;
+  getIntParam(OsiNameDiscipline,nameDiscipline) ;
+	if (useRowNames && nameDiscipline==2) {
+		colnames = new char*[getNumCols()];
+		rownames = new char*[getNumRows()];
+		for (int i = 0; i < getNumCols(); ++i)
+			colnames[i] = strdup(getColName(i).c_str());
+		for (int i = 0; i < getNumRows(); ++i)
+			rownames[i] = strdup(getRowName(i).c_str());
+	} else {
+		colnames = NULL;
+		rownames = NULL;
+	}
+
+  // Fall back on Osi version
   OsiSolverInterface::writeLpNative(fp, 
-				    NULL, NULL, epsilon, numberAcross,
+				    rownames, colnames, epsilon, numberAcross,
 				    decimals, objSense, useRowNames);
+
+	if (useRowNames && nameDiscipline==2) {
+		for (int i = 0; i < getNumCols(); ++i)
+			free(colnames[i]);
+		for (int i = 0; i < getNumRows(); ++i)
+			free(rownames[i]);
+		delete[] colnames;
+		delete[] rownames;
+	}
 }
 
 /***********************************************************************/

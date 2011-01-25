@@ -951,11 +951,12 @@ void OsiSolverInterface::activateRowCutDebugger (const char * modelName)
    Only integer values need to be correct.
    Up to user to get it correct.
 */
-void OsiSolverInterface::activateRowCutDebugger (const double * solution)
+void OsiSolverInterface::activateRowCutDebugger (const double * solution,
+						 bool keepContinuous)
 {
   delete rowCutDebugger_;
   rowCutDebugger_=NULL; // so won't use in new
-  rowCutDebugger_ = new OsiRowCutDebugger(*this,solution);
+  rowCutDebugger_ = new OsiRowCutDebugger(*this,solution,keepContinuous);
 }
 //-------------------------------------------------------------------
 // Get Row Cut Debugger<br>
@@ -974,7 +975,7 @@ const OsiRowCutDebugger * OsiSolverInterface::getRowCutDebugger() const
   }
 }
 // If you want to get debugger object even if not on optimal path then use this
-const OsiRowCutDebugger * OsiSolverInterface::getRowCutDebuggerAlways() const
+OsiRowCutDebugger * OsiSolverInterface::getRowCutDebuggerAlways() const
 {
   if (rowCutDebugger_&&rowCutDebugger_->active()) {
     return rowCutDebugger_;

@@ -27,7 +27,7 @@ OsiRowCutDebuggerUnitTest(const OsiSolverInterface * baseSiP,
   {
     OsiRowCutDebugger r;
     assert( r.integerVariable_==NULL );
-    assert( r.optimalSolution_==NULL );
+    assert( r.knownSolution_==NULL );
     assert( r.numberColumns_==0);
   }
   
@@ -39,7 +39,12 @@ OsiRowCutDebuggerUnitTest(const OsiSolverInterface * baseSiP,
     //std::cerr <<imP->getNumRows() <<std::endl;
     assert( imP->getNumRows() == 5);
     
-    // activate debugger
+    /*
+      Activate the debugger. The garbled name here is deliberate; the
+      debugger should isolate the portion of the string between '/' and
+      '.' (in normal use, this would be the base file name, stripped of
+      the prefix and extension).
+    */
     imP->activateRowCutDebugger("ab cd /x/ /exmip1.asc");
     
     int i;
@@ -58,12 +63,12 @@ OsiRowCutDebuggerUnitTest(const OsiSolverInterface * baseSiP,
 #if 0
     for (i=0;i<8;i++) {
       assert(type[i]==debugger->integerVariable_[i]);
-      std::cerr <<i  <<" " <<values[i] <<" " <<debugger->optimalSolution_[i] <<std::endl;
+      std::cerr <<i  <<" " <<values[i] <<" " <<debugger->knownSolution_[i] <<std::endl;
     }
 #endif
     
     double objValue = objCoefs.dotProduct(values);
-    double debuggerObjValue = objCoefs.dotProduct(debugger->optimalSolution_);
+    double debuggerObjValue = objCoefs.dotProduct(debugger->knownSolution_);
     //std::cerr <<objValue <<" " <<debuggerObjValue <<std::endl;
     assert( eq(objValue,debuggerObjValue) );
     
@@ -75,21 +80,21 @@ OsiRowCutDebuggerUnitTest(const OsiSolverInterface * baseSiP,
       for (i=0;i<8;i++) {
         assert(type[i]==rC1.integerVariable_[i]);
       }
-      assert( eq(objValue,objCoefs.dotProduct(rC1.optimalSolution_)) );
+      assert( eq(objValue,objCoefs.dotProduct(rC1.knownSolution_)) );
       
       rhs=rC1;
       assert (rhs.numberColumns_==8);
       for (i=0;i<8;i++) {
         assert(type[i]==rhs.integerVariable_[i]);
       }
-      assert( eq(objValue,objCoefs.dotProduct(rhs.optimalSolution_)) );
+      assert( eq(objValue,objCoefs.dotProduct(rhs.knownSolution_)) );
     }
     // Test that rhs has correct values even though lhs has gone out of scope
     assert (rhs.numberColumns_==8);
     for (i=0;i<8;i++) {
       assert(type[i]==rhs.integerVariable_[i]);
     }
-    assert( eq(objValue,objCoefs.dotProduct(rhs.optimalSolution_)) );
+    assert( eq(objValue,objCoefs.dotProduct(rhs.knownSolution_)) );
     OsiRowCut cut[2];
     
     const int ne = 3;

@@ -1660,35 +1660,56 @@ public:
   //@}
   //---------------------------------------------------------------------------
 
-  /**@name Methods related to testing generated cuts */
+  /*! @name Methods related to testing generated cuts
+  
+    See the documentation for OsiRowCutDebugger for additional details.
+  */
   //@{
-    /** Activate the row cut debugger.
+    /*! \brief Activate the row cut debugger.
 
-        If the model name passed is on list of known models
-	then all cuts are checked to see that they do NOT cut
-	off the known optimal solution.  
+      If \p modelName is in the set of known models then all cuts are
+      checked to see that they do NOT cut off the optimal solution known
+      to the debugger.
     */
-    virtual void activateRowCutDebugger (const char * modelName);
+    virtual void activateRowCutDebugger (const char *modelName);
 
-    /** Activate debugger using full solution array.
-        Only integer values need to be correct.
-        Up to user to get it correct.
-        Sets up debugger if solution was valid.
+    /*! \brief Activate the row cut debugger using a full solution array.
+
+
+      Activate the debugger for a model not included in the debugger's
+      internal database.  Cuts will be checked to see that they do NOT
+      cut off the given solution.
+
+      \p solution must be a full solution vector, but only the integer
+      variables need to be correct. The debugger will fill in the continuous
+      variables by solving an lp relaxation with the integer variables
+      fixed as specified. If the given values for the continuous variables
+      should be preserved, set \p keepContinuous to true.
     */
-    virtual void activateRowCutDebugger( const double * solution);
-    /** Get the row cut debugger.
+    virtual void activateRowCutDebugger(const double *solution,
+    					bool enforceOptimality = true);
 
-	If there is a row cut debugger object associated with
-	model AND if the known optimal solution is within the
-	current feasible region then a pointer to the object is
-	returned which may be used to test validity of cuts.
+    /*! \brief Get the row cut debugger provided the solution known to the
+    	       debugger is within the feasible region held in the solver.
 
-	Otherwise NULL is returned
+      If there is a row cut debugger object associated with model AND if
+      the solution known to the debugger is within the solver's current
+      feasible region (i.e., the column bounds held in the solver are
+      compatible with the known solution) then a pointer to the debugger
+      is returned which may be used to test validity of cuts.
+
+      Otherwise NULL is returned
     */
-    const OsiRowCutDebugger * getRowCutDebugger() const;
-    /// If you want to get debugger object even if not on optimal path then use this
-    const OsiRowCutDebugger * getRowCutDebuggerAlways() const;
+    const OsiRowCutDebugger *getRowCutDebugger() const;
 
+    /*! \brief Get the row cut debugger object
+
+      Return the row cut debugger object if it exists. One common usage of
+      this method is to obtain a debugger object in order to execute
+      OsiRowCutDebugger::redoSolution (so that the stored solution is again
+      compatible with the problem held in the solver).
+    */
+    OsiRowCutDebugger * getRowCutDebuggerAlways() const;
   //@} 
   
   /*! \name OsiSimplexInterface
@@ -1949,8 +1970,12 @@ protected:
 
   ///@name Protected member data
   //@{
-    /// Pointer to row cut debugger object
-    OsiRowCutDebugger * rowCutDebugger_;
+    /*! \brief Pointer to row cut debugger object
+
+      Mutable so that we can update the solution held in the debugger while
+      maintaining const'ness for the Osi object.
+    */
+    mutable OsiRowCutDebugger * rowCutDebugger_;
    // Why not just make useful stuff protected?
    /// Message handler
   CoinMessageHandler * handler_;

@@ -21,15 +21,15 @@
 
 #include "OsiRowCutDebugger.hpp"
 
-/* If we are on the path to the optimal integer solution then
-   check if any generated cuts cut off the optimal solution!
+/*
+  Check if any cuts cut off the known solution.
    
    If so then print offending cuts and return non-zero code
 */
 
 
-int OsiRowCutDebugger::validateCuts(const OsiCuts & cs, 
-				  int first, int last) const
+int OsiRowCutDebugger::validateCuts (const OsiCuts & cs, 
+				     int first, int last) const
 {
   int nbad=0; 
   int i;
@@ -51,13 +51,13 @@ int OsiRowCutDebugger::validateCuts(const OsiCuts & cs,
     
     for (k=0; k<n; k++){
       int column=indices[k];
-      sum += optimalSolution_[column]*elements[k];
+      sum += knownSolution_[column]*elements[k];
     }
     // is it violated
     if (sum >ub + epsilon ||sum < lb - epsilon) {
       double violation=CoinMax(sum-ub,lb-sum);
       std::cout<<"Cut "<<i<<" with "<<n
-	  <<" coefficients, cuts off optimal solutions by "<<violation
+	  <<" coefficients, cuts off known solution by "<<violation
           <<", lo="<<lb<<", ub="<<ub<<std::endl;
       for (k=0; k<n; k++){
 	int column=indices[k];
@@ -70,8 +70,8 @@ int OsiRowCutDebugger::validateCuts(const OsiCuts & cs,
       int j=0;
       for (k=0; k<n; k++){
 	int column=indices[k];
-	if (fabs(optimalSolution_[column])>1.0e-9) {
-	  std::cout<<"( "<<column<<" , "<<optimalSolution_[column]<<" ) ";
+	if (fabs(knownSolution_[column])>1.0e-9) {
+	  std::cout<<"( "<<column<<" , "<<knownSolution_[column]<<" ) ";
 	  if ((j%4)==3)
 	    std::cout <<std::endl;
 	  j++;
@@ -85,8 +85,8 @@ int OsiRowCutDebugger::validateCuts(const OsiCuts & cs,
 }
 
 
-/* If we are on the path to the optimal integer solution then
-   check out if generated cut cuts off the optimal solution!
+/* If we are on the path to the known integer solution then
+   check out if generated cut cuts off the known solution!
    
    If so then print offending cut and return non-zero code
 */
@@ -108,13 +108,13 @@ bool OsiRowCutDebugger::invalidCut(const OsiRowCut & rcut) const
   
   for (k=0; k<n; k++){
     int column=indices[k];
-    sum += optimalSolution_[column]*elements[k];
+    sum += knownSolution_[column]*elements[k];
   }
   // is it violated
   if (sum >ub + epsilon ||sum < lb - epsilon) {
     double violation=CoinMax(sum-ub,lb-sum);
     std::cout<<"Cut with "<<n
-	<<" coefficients, cuts off optimal solutions by "<<violation
+	<<" coefficients, cuts off known solutions by "<<violation
         <<", lo="<<lb<<", ub="<<ub<<std::endl;
     for (k=0; k<n; k++){
       int column=indices[k];
@@ -127,8 +127,8 @@ bool OsiRowCutDebugger::invalidCut(const OsiRowCut & rcut) const
     int j=0;
     for (k=0; k<n; k++){
       int column=indices[k];
-      if (fabs(optimalSolution_[column])>1.0e-9) {
-	std::cout<<"( "<<column<<" , "<<optimalSolution_[column]<<" ) ";
+      if (fabs(knownSolution_[column])>1.0e-9) {
+	std::cout<<"( "<<column<<" , "<<knownSolution_[column]<<" ) ";
 	if ((j%4)==3)
 	  std::cout <<std::endl;
 	j++;
@@ -140,7 +140,12 @@ bool OsiRowCutDebugger::invalidCut(const OsiRowCut & rcut) const
   return bad;
 }
 
-// Returns true if still on optimal path, false otherwise
+/*
+  Returns true if the column bounds in the solver do not exclude the
+  solution held by the debugger, false otherwise
+
+  Inspects only the integer variables.
+*/
 bool OsiRowCutDebugger::onOptimalPath(const OsiSolverInterface & si) const
 {
   if (integerVariable_) {
@@ -158,7 +163,7 @@ bool OsiRowCutDebugger::onOptimalPath(const OsiSolverInterface & si) const
       }
       if (si.isInteger(i)) {
 	// value of integer variable in solution
-	double value=optimalSolution_[i]; 
+	double value=knownSolution_[i]; 
 	if (value>colupper[i]+1.0e-3 || value<collower[i]-1.0e-3) {
 	  onOptimalPath=false;
 	  break;
@@ -171,67 +176,88 @@ bool OsiRowCutDebugger::onOptimalPath(const OsiSolverInterface & si) const
     return false;
   }
 }
-// Returns true if debugger is active 
+/*
+  Returns true if the debugger is active (i.e., if the debugger holds a
+  known solution).
+*/
 bool OsiRowCutDebugger::active() const
 {
   return (integerVariable_!=NULL);
 }
 
-// Print optimal solution
+/*
+  Print known solution
+
+  Generally, prints the nonzero values of the known solution. Any incorrect
+  values are flagged with an `*'. Zeros are printed if they are incorrect.
+  As an aid to finding the output when there's something wrong, the first two
+  incorrect values are printed again, flagged with `BAD'.
+
+  Inspects only the integer variables.
+
+  Returns the number of incorrect variables, or -1 if no solution is
+  available. A mismatch in the number of columns between the debugger's
+  solution and the solver qualifies as `no solution'.
+*/
 int
 OsiRowCutDebugger::printOptimalSolution(const OsiSolverInterface & si) const
 {
-  if (integerVariable_) {
-    int nCols=si.getNumCols(); 
-    if (nCols!=numberColumns_)
-      return -1; // check user has not modified problem
-    int i;
-    const double * collower = si.getColLower();
-    const double * colupper = si.getColUpper();
-    int bad[2]={-1,-1};
-    int onOptimalPath=0;
-    for (i=0;i<numberColumns_;i++) {
-      if (integerVariable_[i]) {
-	// value of integer variable in solution
-	double value=optimalSolution_[i];
-	bool ok=true;
-	if (value>colupper[i]+1.0e-3 || value<collower[i]-1.0e-3) {
-	  onOptimalPath=0;
-	  if (bad[0]<0) {
-	    bad[0]=i;
+  int nCols = si.getNumCols() ; 
+  if (integerVariable_ && nCols == numberColumns_) {
+
+    const double *collower = si.getColLower() ;
+    const double *colupper = si.getColUpper() ;
+/*
+  Dump the nonzeros of the optimal solution. Print zeros if there's a problem.
+*/
+    int bad[2] = {-1,-1} ;
+    int badVars = 0 ;
+    for (int j = 0 ; j < numberColumns_ ; j++) {
+      if (integerVariable_[j]) {
+	double value = knownSolution_[j] ;
+	bool ok = true ;
+	if (value > colupper[j]+1.0e-3 || value < collower[j]-1.0e-3) {
+	  if (bad[0] < 0) {
+	    bad[0] = j ;
 	  } else {
-	    bad[1]=i;
+	    bad[1] = j ;
 	  }
-	  ok=false;
-	  printf("* ");
+	  ok = false ;
+	  std::cout << "* " ;
 	}
-	if (value||!ok)
-	  printf("%d %g\n",i,value);
+	if (value || !ok) std::cout << j << " " << value << std::endl ;
       }
     }
-    for (i=0;i<2;i++) {
-      if (bad[i]>=0) {
-	int iColumn=bad[i];
-	printf("BAD %d %g <= %g <= %g\n",
-	       iColumn,collower[iColumn],
-	       optimalSolution_[iColumn],colupper[iColumn]);
+    for (int i = 0 ; i < 2 ; i++) {
+      if (bad[i] >= 0) {
+	int j = bad[i] ;
+	std::cout
+	  << "BAD " << j << " " << collower[j] << " <= "
+	  << knownSolution_[j] << " <= " << colupper[j]  << std::endl ;
       }
     }
-    return onOptimalPath;
+    return (badVars) ;
   } else {
     // no information
     return -1;
   }
 }
-// Activate using name of model
-// returns whether debug activated
+/*
+  Activate a row cut debugger using the name of the model. A known optimal
+  solution will be used to validate cuts. See the source below for the set of
+  known problems. Most are miplib3.
+
+  Returns true if the debugger is successfully activated.
+*/
 bool OsiRowCutDebugger::activate( const OsiSolverInterface & si, 
 				   const char * model)
 {
+  // set to true to print an activation message
+  const bool printActivationNotice = false ;
   int i;
   //get rid of any arrays
   delete [] integerVariable_;
-  delete [] optimalSolution_;
+  delete [] knownSolution_;
   numberColumns_ = 0;
   int expectedNumberColumns = 0;
 
@@ -240,7 +266,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
 
 
   // Convert input parameter model to be lowercase and 
-  // only consider charcters between '/' and '.'
+  // only consider characters between '/' and '.'
   std::string modelL; //name in lowercase 
   int iput=0;
   for (i=0;i<static_cast<int> (strlen(model));i++) {
@@ -292,6 +318,8 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
   // p0033
   else if ( modelL == "p0033" ) {
     probType=pure0_1;
+    // Alternate solution -- 21,23 replace 22.
+    // int intIndicesAt1[]={ 0,6,7,9,13,17,18,21,23,24,25,26,27,28,29 };
     int intIndicesAt1[]={ 0,6,7,9,13,17,18,22,24,25,26,27,28,29 };
     int numIndices = sizeof(intIndicesAt1)/sizeof(int);
     intSoln.setConstant(numIndices,intIndicesAt1,1.0);
@@ -1238,7 +1266,7 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
   else if ( modelL == "seymour_1" ) {
     probType=continuousWith0_1;
     int intIndicesAt1[]=
-{0,2,3,4,6,7,8,11,12,15,18,22,23,25,27,31,32,34,35,36,37,39,40,41,42,44,45,46,49,51,54,55,56,58,61,62,63,65,67,68,69,70,71,75,79,81,82,84,85,86,87,88,89,91,93,94,95,97,98,99,101,102,103,104,106,108,110,111,112,116,118,119,120,122,123,125,126,128,129,130,131,135,140,141,142,143,144,148,149,151,152,153,156,158,160,162,163,164,165,167,169,170,173,177,178,179,181,182,186,188,189,192,193,200,201,202,203,204,211,214,218,226,227,228,231,233,234,235,238,242,244,246,249,251,252,254,257,259,260,263,266,268,270,271,276,278,284,286,288,289,291,292,299,305,307,308,311,313,315,316,317,319,321,325,328,332,334,335,337,338,340,343,346,347,354,355,357,358,365,369,372,373,374,375,376,379,381,383,386,392,396,399,402,403,412,416,423,424,425,427,430,431,432,436,437,438,440,441,443,449,450,451,452};
+  {0,2,3,4,6,7,8,11,12,15,18,22,23,25,27,31,32,34,35,36,37,39,40,41,42,44,45,46,49,51,54,55,56,58,61,62,63,65,67,68,69,70,71,75,79,81,82,84,85,86,87,88,89,91,93,94,95,97,98,99,101,102,103,104,106,108,110,111,112,116,118,119,120,122,123,125,126,128,129,130,131,135,140,141,142,143,144,148,149,151,152,153,156,158,160,162,163,164,165,167,169,170,173,177,178,179,181,182,186,188,189,192,193,200,201,202,203,204,211,214,218,226,227,228,231,233,234,235,238,242,244,246,249,251,252,254,257,259,260,263,266,268,270,271,276,278,284,286,288,289,291,292,299,305,307,308,311,313,315,316,317,319,321,325,328,332,334,335,337,338,340,343,346,347,354,355,357,358,365,369,372,373,374,375,376,379,381,383,386,392,396,399,402,403,412,416,423,424,425,427,430,431,432,436,437,438,440,441,443,449,450,451,452};
     int numIndices = sizeof(intIndicesAt1)/sizeof(int);
     intSoln.setConstant(numIndices,intIndicesAt1,1.0);
     probType=generalMip;
@@ -1254,22 +1282,22 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
     numberColumns_ = si.getNumCols();
 
     integerVariable_= new bool[numberColumns_];
-    optimalSolution_=new double[numberColumns_];
+    knownSolution_=new double[numberColumns_];
     //CoinFillN(integerVariable_, numberColumns_,0);
-    //CoinFillN(optimalSolution_,numberColumns_,0.0);
+    //CoinFillN(knownSolution_,numberColumns_,0.0);
 
     if ( probType == pure0_1 ) {
       
       // mark all variables as integer
       CoinFillN(integerVariable_,numberColumns_,true);
       // set solution to 0.0 for all not mentioned
-      CoinFillN(optimalSolution_,numberColumns_,0.0);
+      CoinFillN(knownSolution_,numberColumns_,0.0);
 
       // mark column solution that have value 1
       for ( i=0; i<intSoln.getNumElements(); i++ ) {
         int col = intSoln.getIndices()[i];
-        optimalSolution_[col] = intSoln.getElements()[i];
-        assert( optimalSolution_[col]==1. );
+        knownSolution_[col] = intSoln.getElements()[i];
+        assert( knownSolution_[col]==1. );
       }
 
     }
@@ -1350,17 +1378,30 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
       siCopy->initialSolve();
 #if 0
       for ( c=0; c<siCopy->getNumCols(); c++ ) {
-        std::cerr <<"colsol[" <<c <<"]=" <<optimalSolution_[c] <<" " <<(siCopy->colsol())[c] <<std::endl;
+        std::cerr <<"colsol[" <<c <<"]=" <<knownSolution_[c] <<" " <<(siCopy->colsol())[c] <<std::endl;
       }
       OsiRelFltEq eq;
       assert( eq(siCopy->getObjValue(),3.2368421052632));
 #endif
       assert (siCopy->isProvenOptimal());
-      optimalValue_ = siCopy->getObjValue();
+      knownValue_ = siCopy->getObjValue();
       // Save column solution
-      CoinCopyN(siCopy->getColSolution(),numberColumns_,optimalSolution_);
+      CoinCopyN(siCopy->getColSolution(),numberColumns_,knownSolution_);
 
       delete siCopy;
+    }
+  } else if (printActivationNotice) {
+    if (probType != undefined &&
+  	     si.getNumCols() != expectedNumberColumns) {
+      std::cout
+	<< std::endl
+	<< "  OsiRowCutDebugger::activate: expected " << expectedNumberColumns
+	<< " cols but see " << si.getNumCols() << "; cannot activate."
+	<< std::endl ;
+    } else {
+      std::cout
+	<< "  OsiRowCutDebugger::activate: unrecognised problem "
+	<< model << "; cannot activate." << std::endl ;
     }
   }
  
@@ -1368,73 +1409,96 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
 
   return (integerVariable_!=NULL);
 }
-/* Activate debugger using full solution array.
-   Up to user to get it correct.
-   Returns true if debugger activated (i.e. solution was valid).
+
+/*
+  Activate a row cut debugger using a full solution array. It's up to the user
+  to get it correct. Returns true if the debugger is activated.
+
+  The solution array must be getNumCols() in length, but only the entries for
+  integer variables need to be correct.
+
+  keepContinuous defaults to false, but in some uses (nonlinear solvers, for
+  example) it's useful to keep the given values, as they reflect constraints
+  that are not present in the linear relaxation.
 */
 bool 
-OsiRowCutDebugger::activate(const OsiSolverInterface & si, const double * solution)
+OsiRowCutDebugger::activate (const OsiSolverInterface &si,
+			     const double *solution,
+			     bool keepContinuous)
 {
-  int i;
+  // set true to get a debug message about activation
+  const bool printActivationNotice = false ;
+  int i ;
   //get rid of any arrays
-  delete [] integerVariable_;
-  delete [] optimalSolution_;
-  OsiSolverInterface * siCopy = si.clone();
-  numberColumns_ = siCopy->getNumCols();;
-  integerVariable_= new bool[numberColumns_];
-  optimalSolution_=new double[numberColumns_];
+  delete [] integerVariable_ ;
+  delete [] knownSolution_ ;
+  OsiSolverInterface *siCopy = si.clone() ;
+  numberColumns_ = siCopy->getNumCols() ;
+  integerVariable_ = new bool[numberColumns_] ;
+  knownSolution_ = new double[numberColumns_] ;
   
-  // Loop once for each column looking for integer variables
-  for (i=0;i<numberColumns_;i++) {
-    
-    // Is the this an integer variable?
-    if(siCopy->isInteger(i)) {
-      
-      // integer variable found
-      integerVariable_[i]=true;
-      
-      // Determine optimal solution value for integer i
-      // from values saved in intSoln and probType.
-      double soln=floor(solution[i]+0.5); // in case just from array
-      // Set bounds in copyied problem to fix variable to its solution     
-      siCopy->setColUpper(i,soln);
-      siCopy->setColLower(i,soln);
-      
+/*
+  Fix the integer variables from the supplied solution (making sure that the
+  values are integer).
+*/
+  for (i = 0 ; i < numberColumns_ ; i++) {
+    if (siCopy->isInteger(i)) {
+      integerVariable_[i] = true ;
+      double soln = floor(solution[i]+0.5) ;
+      siCopy->setColUpper(i,soln) ;
+      siCopy->setColLower(i,soln) ;
     } else {
-      // this is not an integer variable
-      integerVariable_[i]=false;
+      integerVariable_[i] = false ;
     }
   }
-  
-  // All integers have been fixed at optimal value.
-  // Now solve to get continuous values
-  // make sure all slack basis
-  //CoinWarmStartBasis allSlack;
-  //siCopy->setWarmStart(&allSlack);
+/*
+  Solve the lp relaxation, then cache the primal solution and objective. If
+  we're preserving the values of the given continuous variables, we can't
+  trust the solver's calculation of the objective; it may well be using
+  different values for the continuous variables.
+*/
   siCopy->setHintParam(OsiDoScale,false);
-  //siCopy->writeMps("bad.mps");
-  siCopy->initialSolve();
-  if (siCopy->isProvenOptimal()) {
-    // Save column solution
-  	/* NOTE / TODO:
-  	  The following works only well if the LP with fixed integer variables gives the optimal solution of the problem that is actually solved.
-  	  In the context of, e.g., Bonmin, this is not the case, and thus should be changed to
-      CoinCopyN(solution,numberColumns_,optimalSolution_);
-    */
-    CoinCopyN(siCopy->getColSolution(),numberColumns_,optimalSolution_);
-    optimalValue_ = siCopy->getObjValue();
+  //siCopy->writeMps("bad.mps") ;
+  siCopy->initialSolve() ;
+  if (keepContinuous == false) {
+    if (siCopy->isProvenOptimal()) {
+      CoinCopyN(siCopy->getColSolution(),numberColumns_,knownSolution_) ;
+      knownValue_ = siCopy->getObjValue() ;
+      if (printActivationNotice) {
+	std::cout
+	  << std::endl << "OsiRowCutDebugger::activate: activated (opt), z = "
+	  << knownValue_ << std::endl ;
+      }
+    } else {
+      if (printActivationNotice) {
+	std::cout
+	  << std::endl
+	  << "OsiRowCutDebugger::activate: solution was not optimal; "
+	  << "cannot activate." << std::endl ;
+      }
+      delete [] integerVariable_ ;
+      delete [] knownSolution_ ;
+      integerVariable_ = NULL ;
+      knownSolution_ = NULL ;
+      knownValue_ = COIN_DBL_MAX ;
+    }
   } else {
-    // bad solution
-    delete [] integerVariable_;
-    delete [] optimalSolution_;
-    integerVariable_=NULL;
-    optimalSolution_=NULL;
-    optimalValue_ = COIN_DBL_MAX;
+    CoinCopyN(solution,numberColumns_,knownSolution_) ;
+    const double *c = siCopy->getObjCoefficients() ;
+    knownValue_ = 0.0 ;
+    for (int j = 0 ; j < numberColumns_ ; j++) {
+      knownValue_ += c[j]*solution[j] ;
+    }
+    knownValue_ = knownValue_*siCopy->getObjSense() ;
+    if (printActivationNotice) {
+      std::cout
+	<< std::endl
+	<< "OsiRowCutDebugger::activate: activated, z = " << knownValue_
+	<< std::endl ;
+    }
   }
-  
   delete siCopy;
-
-  return (integerVariable_!=NULL);
+  return (integerVariable_ != NULL) ;
 }
 
 
@@ -1442,10 +1506,10 @@ OsiRowCutDebugger::activate(const OsiSolverInterface & si, const double * soluti
 // Default Constructor 
 //-------------------------------------------------------------------
 OsiRowCutDebugger::OsiRowCutDebugger ()
-  :optimalValue_(COIN_DBL_MAX),
+  :knownValue_(COIN_DBL_MAX),
   numberColumns_(0),
   integerVariable_(NULL),
-  optimalSolution_(NULL)
+  knownSolution_(NULL)
 {
   // nothing to do here
 }
@@ -1457,40 +1521,41 @@ OsiRowCutDebugger::OsiRowCutDebugger ()
 OsiRowCutDebugger::OsiRowCutDebugger ( 
         const OsiSolverInterface & si, 
         const char * model)
-  :optimalValue_(COIN_DBL_MAX),
+  :knownValue_(COIN_DBL_MAX),
    numberColumns_(0),
   integerVariable_(NULL),
-  optimalSolution_(NULL)
+  knownSolution_(NULL)
 {
   activate(si,model);
 }
 // Constructor with full solution (only integers need be correct)
-OsiRowCutDebugger::OsiRowCutDebugger (const OsiSolverInterface & si, 
-                                      const double * solution)
-  :optimalValue_(COIN_DBL_MAX),
+OsiRowCutDebugger::OsiRowCutDebugger (const OsiSolverInterface &si, 
+                                      const double *solution,
+				      bool enforceOptimality)
+  :knownValue_(COIN_DBL_MAX),
    numberColumns_(0),
   integerVariable_(NULL),
-  optimalSolution_(NULL)
+  knownSolution_(NULL)
 {
-  activate(si,solution);
+  activate(si,solution,enforceOptimality);
 }
 
 //-------------------------------------------------------------------
 // Copy constructor 
 //-------------------------------------------------------------------
 OsiRowCutDebugger::OsiRowCutDebugger (const OsiRowCutDebugger & source)
-: optimalValue_(COIN_DBL_MAX), numberColumns_(0), integerVariable_(NULL), optimalSolution_(NULL)
+: knownValue_(COIN_DBL_MAX), numberColumns_(0), integerVariable_(NULL), knownSolution_(NULL)
 {  
   // copy
 	if (source.active()) {
 		assert(source.integerVariable_ != NULL);
-		assert(source.optimalSolution_ != NULL);
-		optimalValue_ = source.optimalValue_;
+		assert(source.knownSolution_ != NULL);
+		knownValue_ = source.knownValue_;
 		numberColumns_=source.numberColumns_;
 		integerVariable_=new bool[numberColumns_];
-		optimalSolution_=new double[numberColumns_];
+		knownSolution_=new double[numberColumns_];
 		CoinCopyN(source.integerVariable_,  numberColumns_, integerVariable_ );
-		CoinCopyN(source.optimalSolution_, numberColumns_, optimalSolution_);
+		CoinCopyN(source.knownSolution_, numberColumns_, knownSolution_);
 	}
 }
 
@@ -1501,7 +1566,7 @@ OsiRowCutDebugger::~OsiRowCutDebugger ()
 {
   // free memory
   delete [] integerVariable_;
-  delete [] optimalSolution_;
+  delete [] knownSolution_;
 }
 
 //----------------------------------------------------------------
@@ -1512,26 +1577,35 @@ OsiRowCutDebugger::operator=(const OsiRowCutDebugger& rhs)
 {
   if (this != &rhs) {
     delete [] integerVariable_;
-    delete [] optimalSolution_;
-    optimalValue_ = COIN_DBL_MAX;
+    delete [] knownSolution_;
+    knownValue_ = COIN_DBL_MAX;
     // copy 
-  	if (rhs.active()) {
-  		assert(rhs.integerVariable_ != NULL);
-  		assert(rhs.optimalSolution_ != NULL);
-  		optimalValue_ = rhs.optimalValue_;
-  		numberColumns_=rhs.numberColumns_;
-  		integerVariable_=new bool[numberColumns_];
-  		optimalSolution_=new double[numberColumns_];
-  		CoinCopyN(rhs.integerVariable_,  numberColumns_, integerVariable_ );
-  		CoinCopyN(rhs.optimalSolution_, numberColumns_, optimalSolution_);
-  	}
+    if (rhs.active()) {
+      assert(rhs.integerVariable_ != NULL);
+      assert(rhs.knownSolution_ != NULL);
+      knownValue_ = rhs.knownValue_;
+      numberColumns_ = rhs.numberColumns_;
+      integerVariable_ = new bool[numberColumns_];
+      knownSolution_ = new double[numberColumns_];
+      CoinCopyN(rhs.integerVariable_,numberColumns_,integerVariable_ );
+      CoinCopyN(rhs.knownSolution_,numberColumns_,knownSolution_);
+    }
   }
   return *this;
 }
-// Redo solution after preprocessing
+
+/*
+  Edit a solution after column changes (typically column deletion and/or
+  transposition due to preprocessing).
+
+  Given an array which translates current column indices to original column
+  indices, shrink the solution to match. The transform is irreversible
+  (in the sense that the debugger doesn't keep a record of the changes).
+*/
 void 
 OsiRowCutDebugger::redoSolution(int numberColumns,const int * originalColumns)
 {
+  const bool printRecalcMessage = false ;
   assert (numberColumns<=numberColumns_);
   if (numberColumns<numberColumns_) {
     char * mark = new char[numberColumns_];
@@ -1543,20 +1617,21 @@ OsiRowCutDebugger::redoSolution(int numberColumns,const int * originalColumns)
     for (i=0;i<numberColumns_;i++) {
       if (mark[i]) {
         integerVariable_[numberColumns]=integerVariable_[i];
-        optimalSolution_[numberColumns++]=optimalSolution_[i];
+        knownSolution_[numberColumns++]=knownSolution_[i];
       }
     }
     delete [] mark;
     numberColumns_=numberColumns;
-#if 0
-    FILE * fp = fopen("xx.xx","wb");
-    assert (fp);
-    fwrite(&numberColumns,sizeof(int),1,fp);
-    fwrite(optimalSolution_,sizeof(double),numberColumns,fp);
-    fclose(fp);
-    exit(0);
-#else
-    printf("debug solution - recalculated\n");
-#endif
+    if (printRecalcMessage) {
+#     if 0
+      FILE * fp = fopen("xx.xx","wb");
+      assert (fp);
+      fwrite(&numberColumns,sizeof(int),1,fp);
+      fwrite(knownSolution_,sizeof(double),numberColumns,fp);
+      fclose(fp);
+      exit(0);
+#     endif
+      printf("debug solution - recalculated\n");
+    }
   }
 }

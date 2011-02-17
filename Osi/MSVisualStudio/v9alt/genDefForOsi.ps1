@@ -1,4 +1,4 @@
-# Usage: genDefForCoinUtils.ps <objDir> <component>
+# Usage: genDefForOsi.ps <objDir> <component>
 # <objDir> should be $(IntDir) in VS
 # <component> is one of Osi, OsiCommonTest
 
@@ -65,17 +65,22 @@ foreach ($file in $objFiles)
   $fileBase = $file.basename
   write-output $fileBase
   
-  # The following line works just fine when this script is invoked directly from
-  # powershell, and indirectly from a cmd window. But when it's invoked as the
-  # pre-link event in VS, VS does something to output redirection that causes all
-  # output to appear in the VS output window. Sending the dumpbin output to a file
-  # fixes the problem until I can figure out how to block VS's redirection of output.
+  # The following line works just fine when this script is invoked directly
+  # from powershell, and indirectly from a cmd window. But when it's invoked
+  # as the pre-link event in VS, VS does something to output redirection that
+  # causes all output to appear in the VS output window. Sending the dumpbin
+  # output to a file fixes the problem until I can figure out how to block VS's
+  # redirection of output.
   # $symbols = dumpbin /symbols $file
   $junk = dumpbin /OUT:$tmpfile /symbols $file
   $symbols = get-content $tmpfile
   
-  # Trim off the junk fore and aft. Some lines have no trailing information, hence the
-  # second pattern
+  # Eliminate Static symbols. Likewise labels.
+  $symbols = $symbols -notmatch '^.*Static[^|]*\|.*$'
+  $symbols = $symbols -notmatch '^.*Label[^|]*\|.*$'
+
+  # Trim off the junk fore and aft. Some lines have no trailing information,
+  # hence the second pattern
   $symbols = $symbols -replace '^.*\| ([^ ]+) .*$','$1'
   $symbols = $symbols -replace '^.*\| ([^ ]+)$','$1'
   
@@ -84,22 +89,25 @@ foreach ($file in $objFiles)
   $symLen = $filteredSymbols.length
   "Grabbed $symLen symbols"
   
-  # Anything with "...@@$$..." seems to be invalid. But on occasion (template classes) it seems that
-  # the required signature (@@$$F -> @@) is needed but isn't generated. So let's try
-  # synthesizing it on the fly here.
+  # Anything with "...@@$$..." seems to be invalid (either an artifact or a
+  # system routine). But on occasion (template classes) it seems that the
+  # required signature (@@$$F -> @@) is needed but isn't generated. So let's
+  # try synthesizing it on the fly here.
   $filteredSymbols = $filteredSymbols -replace '@@\$\$F','@@'
-  # Now get rid of any remaining instances.
   $filteredSymbols = $filteredSymbols -notlike '*@@$$*'
-  # And a subtle variant that doesn't work
+
+  # Lines with symbols that start with _ look to be compiler artifacts. Some
+  # are acceptable to the linker, some not. It doesn't seem necessary to
+  # export any of them. There's considerable, but not total, overlap between
+  # this class of symbols and the previous class.
+  $filteredSymbols = $filteredSymbols -notmatch '^_.*'
+
+  # These are not acceptable to the linker, no specific reason given. 
   $filteredSymbols = $filteredSymbols -notmatch '^\?\?.@\$\$.*'
-  # Lines with symbols that start with ??_ look to be compiler artifacts
-  # except for ??_0, which we seem to need.
-  $filteredSymbols = $filteredSymbols -notmatch '^\?\?_[^0].*'
-  # Lines with symbols that start with __ look to be compiler artifacts
-  $filteredSymbols = $filteredSymbols -notmatch '^__.*'
-  # Lines with symbols that start with _CT are a problem in 64-bit builds.
-  # They don't seem to occur in 32-bit builds.
-  $filteredSymbols = $filteredSymbols -notmatch '^_CT.*'
+  
+  # Lines with symbols that start with ??_[EG] are deleting destructors
+  # (whatever that is) and should not be exported.
+  $filteredSymbols = $filteredSymbols -notmatch '^\?\?_[EG].*'
   $symLen = $filteredSymbols.length
   "Initial filtering leaves $symLen"
   
@@ -117,6 +125,7 @@ foreach ($file in $objFiles)
   $symLen = $filteredSymbols.length
   "$symLen unique symbols"
   $totalSyms += $symLen
+
   add-content -path $defFile -value "`r`n; $fileBase"
   add-content -path $defFile -value $filteredSymbols
 }

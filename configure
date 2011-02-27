@@ -21162,16 +21162,16 @@ if test "$coin_has_glpk" = notGiven; then
     PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" ; export PKG_CONFIG_PATH
 
 if test -n "$PKG_CONFIG" ; then
-  if $PKG_CONFIG --exists "coinglpk"; then
-    COINGLPK_VERSION=`$PKG_CONFIG --modversion "coinglpk" 2>/dev/null`
-    coin_has_glpk="yes, found installed version $COINGLPK_VERSION"
+  if $PKG_CONFIG --exists "glpk"; then
+    GLPK_VERSION=`$PKG_CONFIG --modversion "glpk" 2>/dev/null`
+    coin_has_glpk="yes, found installed version $GLPK_VERSION"
   else
-    COINGLPK_PKG_ERRORS=`$PKG_CONFIG $pkg_short_errors --errors-to-stdout --print-errors "coinglpk"`
+    GLPK_PKG_ERRORS=`$PKG_CONFIG $pkg_short_errors --errors-to-stdout --print-errors "glpk"`
 
   fi
 else
-  { { echo "$as_me:$LINENO: error: \"Cannot check for existance of module coinglpk without pkg-config\"" >&5
-echo "$as_me: error: \"Cannot check for existance of module coinglpk without pkg-config\"" >&2;}
+  { { echo "$as_me:$LINENO: error: \"Cannot check for existance of module Glpk without pkg-config\"" >&5
+echo "$as_me: error: \"Cannot check for existance of module Glpk without pkg-config\"" >&2;}
    { (exit 1); exit 1; }; }
 fi
 
@@ -21300,16 +21300,16 @@ if test "$coin_has_blas" = notGiven; then
     PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" ; export PKG_CONFIG_PATH
 
 if test -n "$PKG_CONFIG" ; then
-  if $PKG_CONFIG --exists "coinblas"; then
-    COINBLAS_VERSION=`$PKG_CONFIG --modversion "coinblas" 2>/dev/null`
-    coin_has_blas="yes, found installed version $COINBLAS_VERSION"
+  if $PKG_CONFIG --exists "blas"; then
+    BLAS_VERSION=`$PKG_CONFIG --modversion "blas" 2>/dev/null`
+    coin_has_blas="yes, found installed version $BLAS_VERSION"
   else
-    COINBLAS_PKG_ERRORS=`$PKG_CONFIG $pkg_short_errors --errors-to-stdout --print-errors "coinblas"`
+    BLAS_PKG_ERRORS=`$PKG_CONFIG $pkg_short_errors --errors-to-stdout --print-errors "blas"`
 
   fi
 else
-  { { echo "$as_me:$LINENO: error: \"Cannot check for existance of module coinblas without pkg-config\"" >&5
-echo "$as_me: error: \"Cannot check for existance of module coinblas without pkg-config\"" >&2;}
+  { { echo "$as_me:$LINENO: error: \"Cannot check for existance of module Blas without pkg-config\"" >&5
+echo "$as_me: error: \"Cannot check for existance of module Blas without pkg-config\"" >&2;}
    { (exit 1); exit 1; }; }
 fi
 
@@ -21437,16 +21437,16 @@ if test "$coin_has_lapack" = notGiven; then
     PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" ; export PKG_CONFIG_PATH
 
 if test -n "$PKG_CONFIG" ; then
-  if $PKG_CONFIG --exists "coinlapack"; then
-    COINLAPACK_VERSION=`$PKG_CONFIG --modversion "coinlapack" 2>/dev/null`
-    coin_has_lapack="yes, found installed version $COINLAPACK_VERSION"
+  if $PKG_CONFIG --exists "lapack"; then
+    LAPACK_VERSION=`$PKG_CONFIG --modversion "lapack" 2>/dev/null`
+    coin_has_lapack="yes, found installed version $LAPACK_VERSION"
   else
-    COINLAPACK_PKG_ERRORS=`$PKG_CONFIG $pkg_short_errors --errors-to-stdout --print-errors "coinlapack"`
+    LAPACK_PKG_ERRORS=`$PKG_CONFIG $pkg_short_errors --errors-to-stdout --print-errors "lapack"`
 
   fi
 else
-  { { echo "$as_me:$LINENO: error: \"Cannot check for existance of module coinlapack without pkg-config\"" >&5
-echo "$as_me: error: \"Cannot check for existance of module coinlapack without pkg-config\"" >&2;}
+  { { echo "$as_me:$LINENO: error: \"Cannot check for existance of module Lapack without pkg-config\"" >&5
+echo "$as_me: error: \"Cannot check for existance of module Lapack without pkg-config\"" >&2;}
    { (exit 1); exit 1; }; }
 fi
 
@@ -21559,16 +21559,16 @@ if test "$coin_has_sample" = notGiven; then
     PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" ; export PKG_CONFIG_PATH
 
 if test -n "$PKG_CONFIG" ; then
-  if $PKG_CONFIG --exists "coindatasample"; then
-    COINDATASAMPLE_VERSION=`$PKG_CONFIG --modversion "coindatasample" 2>/dev/null`
-    coin_has_sample="yes, found installed version $COINDATASAMPLE_VERSION"
+  if $PKG_CONFIG --exists "sample"; then
+    SAMPLE_VERSION=`$PKG_CONFIG --modversion "sample" 2>/dev/null`
+    coin_has_sample="yes, found installed version $SAMPLE_VERSION"
   else
-    COINDATASAMPLE_PKG_ERRORS=`$PKG_CONFIG $pkg_short_errors --errors-to-stdout --print-errors "coindatasample"`
+    SAMPLE_PKG_ERRORS=`$PKG_CONFIG $pkg_short_errors --errors-to-stdout --print-errors "sample"`
 
   fi
 else
-  { { echo "$as_me:$LINENO: error: \"Cannot check for existance of module coindatasample without pkg-config\"" >&5
-echo "$as_me: error: \"Cannot check for existance of module coindatasample without pkg-config\"" >&2;}
+  { { echo "$as_me:$LINENO: error: \"Cannot check for existance of module Sample without pkg-config\"" >&5
+echo "$as_me: error: \"Cannot check for existance of module Sample without pkg-config\"" >&2;}
    { (exit 1); exit 1; }; }
 fi
 
@@ -21682,16 +21682,16 @@ if test "$coin_has_netlib" = notGiven; then
     PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" ; export PKG_CONFIG_PATH
 
 if test -n "$PKG_CONFIG" ; then
-  if $PKG_CONFIG --exists "coindatanetlib"; then
-    COINDATANETLIB_VERSION=`$PKG_CONFIG --modversion "coindatanetlib" 2>/dev/null`
-    coin_has_netlib="yes, found installed version $COINDATANETLIB_VERSION"
+  if $PKG_CONFIG --exists "netlib"; then
+    NETLIB_VERSION=`$PKG_CONFIG --modversion "netlib" 2>/dev/null`
+    coin_has_netlib="yes, found installed version $NETLIB_VERSION"
   else
-    COINDATANETLIB_PKG_ERRORS=`$PKG_CONFIG $pkg_short_errors --errors-to-stdout --print-errors "coindatanetlib"`
+    NETLIB_PKG_ERRORS=`$PKG_CONFIG $pkg_short_errors --errors-to-stdout --print-errors "netlib"`
 
   fi
 else
-  { { echo "$as_me:$LINENO: error: \"Cannot check for existance of module coindatanetlib without pkg-config\"" >&5
-echo "$as_me: error: \"Cannot check for existance of module coindatanetlib without pkg-config\"" >&2;}
+  { { echo "$as_me:$LINENO: error: \"Cannot check for existance of module Netlib without pkg-config\"" >&5
+echo "$as_me: error: \"Cannot check for existance of module Netlib without pkg-config\"" >&2;}
    { (exit 1); exit 1; }; }
 fi
 

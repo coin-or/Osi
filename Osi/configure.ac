@@ -138,17 +138,6 @@ AC_SUBST(OSI_EXAMPLES_SOLVER_PCNAME)
 AC_DEFINE(GLPK_HAS_INTOPT, [1],
 	  [Define to 1 if GLPK has the advanced B&B solver lpx_intopt])
 
-if test "$GXX" = "yes"; then
-  case "$CXX" in
-    icpc* | */icpc* | icc )
-      ;;
-    *)
-      NOLONGLONGCXXFLAGS="-Wno-long-long"
-      ;;
-  esac
-fi
-AC_SUBST(NOLONGLONGCXXFLAGS)
-
 #############################################################################
 #                  Check for doxygen                                        #
 #############################################################################

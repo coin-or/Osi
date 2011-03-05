@@ -205,7 +205,6 @@ NETLIB_DATA_INSTALLED = @NETLIB_DATA_INSTALLED@
 NETLIB_DEPENDENCIES = @NETLIB_DEPENDENCIES@
 NETLIB_LIBS = @NETLIB_LIBS@
 NETLIB_LIBS_INSTALLED = @NETLIB_LIBS_INSTALLED@
-NOLONGLONGCXXFLAGS = @NOLONGLONGCXXFLAGS@
 OBJEXT = @OBJEXT@
 OPT_CFLAGS = @OPT_CFLAGS@
 OPT_CXXFLAGS = @OPT_CXXFLAGS@
@@ -336,7 +335,7 @@ libOsiMsk_la_LDFLAGS = $(LT_LDFLAGS)
 # "cygpath" stuff is necessary to compile with native compilers on Windows.
 # "top_srcdir" refers to the basic directory for the main package that is
 # being compiled.
-AM_CPPFLAGS = $(COINUTILS_CFLAGS) $(NOLONGLONGCXXFLAGS) \
+AM_CPPFLAGS = $(COINUTILS_CFLAGS) \
 	-I`$(CYGPATH_W) $(MSKINCDIR)` \
 	-I`$(CYGPATH_W) $(srcdir)/../Osi`
 

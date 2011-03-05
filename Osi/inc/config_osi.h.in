@@ -72,6 +72,15 @@
 /* Version number of project */
 #undef OSI_VERSION
 
+/* Major Version number of project */
+#undef OSI_VERSION_MAJOR
+
+/* Minor Version number of project */
+#undef OSI_VERSION_MINOR
+
+/* Release Version number of project */
+#undef OSI_VERSION_RELEASE
+
 /* Name of package */
 #undef PACKAGE
 

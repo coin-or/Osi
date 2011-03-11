@@ -272,7 +272,8 @@ OsiRowCutUnitTest(const OsiSolverInterface * baseSiP,
     // Test consistent
     OsiSolverInterface * imP = baseSiP->clone();
     std::string fn = mpsDir+"exmip1";
-    imP->readMps(fn.c_str(),"mps");
+    int mpsReadErrs = imP->readMps(fn.c_str(),"mps") ;
+    assert(mpsReadErrs == 0) ;
 
     OsiRowCut c;      
     const int ne = 3;
@@ -314,7 +315,8 @@ OsiRowCutUnitTest(const OsiSolverInterface * baseSiP,
     // Test consistent(IntegerModel) method.
     OsiSolverInterface * imP = baseSiP->clone();
     std::string fn = mpsDir+"exmip1";
-    imP->readMps(fn.c_str(),"mps");
+    int mpsReadErrs = imP->readMps(fn.c_str(),"mps") ;
+    assert(mpsReadErrs == 0) ;
     
     OsiRowCut cut;    
     const int ne = 3;
@@ -337,7 +339,8 @@ OsiRowCutUnitTest(const OsiSolverInterface * baseSiP,
     //Test infeasible(im) method
     OsiSolverInterface * imP = baseSiP->clone();
     std::string fn = mpsDir+"exmip1";
-    imP->readMps(fn.c_str(),"mps");
+    int mpsReadErrs = imP->readMps(fn.c_str(),"mps") ;
+    assert(mpsReadErrs == 0) ;
     
     OsiRowCut cut;   
     const int ne = 3;

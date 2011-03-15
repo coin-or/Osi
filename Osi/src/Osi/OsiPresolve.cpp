@@ -596,17 +596,28 @@ void check_and_tell (const CoinPresolveMatrix *const prob,
 #endif
 //#define COIN_PRESOLVE_BUG
 #ifdef COIN_PRESOLVE_BUG
+double * debugSolution = NULL;
+int debugNumberColumns = -1;
 static int counter=1000000;
-static bool break2()
+static bool break2(CoinPresolveMatrix *prob)
 {
   counter--;
+  if (debugSolution&&prob->ncols_==debugNumberColumns) {
+    for (int i=0;i<prob->ncols_;i++) {
+      double value = debugSolution[i];
+      if (value<prob->clo_[i])
+	printf("%d inf %g %g %g\n",i,prob->clo_[i],value,prob->cup_[i]);
+      else if (value>prob->cup_[i])
+	printf("%d inf %g %g %g\n",i,prob->clo_[i],value,prob->cup_[i]);
+    }
+  }
   if (!counter) {
     printf("skipping next and all\n");
   }
   return (counter<=0);
 }
-#define possibleBreak if (break2()) break
-#define possibleSkip  if (!break2()) 
+#define possibleBreak if (break2(prob)) break
+#define possibleSkip  if (!break2(prob)) 
 #else
 #define possibleBreak
 #define possibleSkip
@@ -1095,7 +1106,6 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
     check_and_tell(prob,paction_,pactiond) ;
 #   endif
   }
-  
   // Messages
   CoinMessages messages = CoinMessage(prob->messages().language());
   if (prob->status_) {
@@ -1484,11 +1494,12 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
   delete m;
   {
     int i;
-    for (i=0;i<ncols_;i++)
-      if (si->isInteger(i))
+    for (i=0;i<ncols_;i++) {
+      if (si->isInteger(i))  
 	integerType_[i] = 1;
       else
 	integerType_[i] = 0;
+    }
   }
 
   // Set up prohibited bits if needed

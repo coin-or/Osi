@@ -2,12 +2,8 @@
 // Corporation and others.  All Rights Reserved.
 // This code is licensed under the terms of the Eclipse Public License (EPL).
 
-#ifdef NDEBUG
-#undef NDEBUG
-#endif
-
 //#include <cstdlib>
-#include <cassert>
+//#include <cassert>
 //#include <cmath>
 
 #include "CoinPragma.hpp"
@@ -18,19 +14,20 @@
 
 //--------------------------------------------------------------------------
 void
-OsiColCutUnitTest(const OsiSolverInterface * baseSiP, 
-		  const std::string & mpsDir)
+OsiColCutUnitTest(const OsiSolverInterface * baseSiP, const std::string & mpsDir)
 {
 
   // Test default constructor
   {
     OsiColCut r;
-    assert( r.lbs_.getIndices()==NULL );
-    assert( r.lbs_.getElements()==NULL );
-    assert( r.ubs_.getIndices()==NULL );
-    assert( r.ubs_.getElements()==NULL );
-    assert( r.lbs_.getNumElements()==0);
-    assert( r.ubs_.getNumElements()==0);
+    OSIUNITTEST_ASSERT_ERROR(r.lbs_.getIndices()     == NULL, {}, "osicolcut", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(r.lbs_.getElements()    == NULL, {}, "osicolcut", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(r.lbs_.getNumElements() == 0,    {}, "osicolcut", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(r.lbs().getNumElements() == 0,   {}, "osicolcut", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(r.ubs_.getIndices()     == NULL, {}, "osicolcut", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(r.ubs_.getElements()    == NULL, {}, "osicolcut", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(r.ubs_.getNumElements() == 0,    {}, "osicolcut", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(r.ubs().getNumElements() == 0,   {}, "osicolcut", "default constructor");
   }
 
   // Test set and get methods
@@ -42,25 +39,24 @@ OsiColCutUnitTest(const OsiSolverInterface * baseSiP,
   double * el3= NULL;
   {
     OsiColCut r;    
-    assert( r.lbs().getNumElements()==0 );
-    assert( r.ubs().getNumElements()==0 );
         
     // Test setting/getting bounds
     r.setLbs( ne, inx, el );
     r.setEffectiveness(222.);
-    assert( r.lbs().getNumElements()==ne );
+    OSIUNITTEST_ASSERT_ERROR(r.lbs().getNumElements() == ne, return, "osicolcut", "setting bounds");
+    bool bounds_ok = true;
     for ( int i=0; i<ne; i++ ) {
-      assert( r.lbs().getIndices()[i] == inx[i] );
-      assert( r.lbs().getElements()[i] == el[i] );
+    	bounds_ok &= r.lbs().getIndices()[i] == inx[i];
+    	bounds_ok &= r.lbs().getElements()[i] == el[i];
     }
-    assert( r.effectiveness()==222. );
+    OSIUNITTEST_ASSERT_ERROR(bounds_ok, {}, "osicolcut", "setting bounds");
+    OSIUNITTEST_ASSERT_ERROR(r.effectiveness() == 222.0, {}, "osicolcut", "setting bounds");
     
     r.setUbs( ne3, inx3, el3 );
-    assert( r.ubs().getNumElements()==0 );
-    assert( r.ubs().getIndices()==NULL );
-    assert( r.ubs().getElements()==NULL );
-    
-  } 
+    OSIUNITTEST_ASSERT_ERROR(r.ubs().getNumElements() == 0, {}, "osicolcut", "setting bounds");
+    OSIUNITTEST_ASSERT_ERROR(r.ubs().getIndices()  == NULL, {}, "osicolcut", "setting bounds");
+    OSIUNITTEST_ASSERT_ERROR(r.ubs().getElements() == NULL, {}, "osicolcut", "setting bounds");
+  }
   
   // Test copy constructor and assignment operator
   {
@@ -68,41 +64,45 @@ OsiColCutUnitTest(const OsiSolverInterface * baseSiP,
     {
       OsiColCut r;
       OsiColCut rC1(r);
-      assert( rC1.lbs().getNumElements()==r.lbs().getNumElements() );
-      assert( rC1.ubs().getNumElements()==r.ubs().getNumElements() );
+      OSIUNITTEST_ASSERT_ERROR(rC1.lbs().getNumElements() == r.lbs().getNumElements(), {}, "osicolcut", "copy constructor");
+      OSIUNITTEST_ASSERT_ERROR(rC1.ubs().getNumElements() == r.ubs().getNumElements(), {}, "osicolcut", "copy constructor");
   
       r.setLbs( ne, inx, el );
       r.setUbs( ne, inx, el );
       r.setEffectiveness(121.);
 
-      assert( rC1.lbs().getNumElements()!=r.lbs().getNumElements() );
-      assert( rC1.ubs().getNumElements()!=r.ubs().getNumElements() );
+      OSIUNITTEST_ASSERT_ERROR(rC1.lbs().getNumElements() != r.lbs().getNumElements(), {}, "osicolcut", "copy constructor");
+      OSIUNITTEST_ASSERT_ERROR(rC1.ubs().getNumElements() != r.lbs().getNumElements(), {}, "osicolcut", "copy constructor");
                 
       OsiColCut rC2(r);
-      assert( rC2.lbs().getNumElements()==r.lbs().getNumElements() );
-      assert( rC2.ubs().getNumElements()==r.ubs().getNumElements() );
-      assert( rC2.lbs().getNumElements()==ne );
-      assert( rC2.ubs().getNumElements()==ne );
+      OSIUNITTEST_ASSERT_ERROR(rC2.lbs().getNumElements() == r.lbs().getNumElements(), {}, "osicolcut", "copy constructor");
+      OSIUNITTEST_ASSERT_ERROR(rC2.ubs().getNumElements() == r.ubs().getNumElements(), {}, "osicolcut", "copy constructor");
+      OSIUNITTEST_ASSERT_ERROR(rC2.lbs().getNumElements() == ne, return, "osicolcut", "copy constructor");
+      OSIUNITTEST_ASSERT_ERROR(rC2.ubs().getNumElements() == ne, return, "osicolcut", "copy constructor");
+      bool bounds_ok = true;
       for ( int i=0; i<ne; i++ ) {
-        assert( rC2.lbs().getIndices()[i] == inx[i] );
-        assert( rC2.lbs().getElements()[i] == el[i] );
-        assert( rC2.ubs().getIndices()[i] == inx[i] );
-        assert( rC2.ubs().getElements()[i] == el[i] );
+        bounds_ok &= rC2.lbs().getIndices()[i] == inx[i];
+        bounds_ok &= rC2.lbs().getElements()[i] == el[i];
+        bounds_ok &= rC2.ubs().getIndices()[i] == inx[i];
+        bounds_ok &= rC2.ubs().getElements()[i] == el[i];
       }
-      assert( rC2.effectiveness()==121. );
+      OSIUNITTEST_ASSERT_ERROR(bounds_ok, {}, "osicolcut", "copy constructor");
+      OSIUNITTEST_ASSERT_ERROR(rC2.effectiveness() == 121.0, {}, "osicolcut", "copy constructor");
       
-      rhs=rC2;
+      rhs = rC2;
     }
     // Test that rhs has correct values even though lhs has gone out of scope
-    assert( rhs.lbs().getNumElements()==ne );
-    assert( rhs.ubs().getNumElements()==ne );
+    OSIUNITTEST_ASSERT_ERROR(rhs.lbs().getNumElements() == ne, return, "osicolcut", "assignment operator");
+    OSIUNITTEST_ASSERT_ERROR(rhs.ubs().getNumElements() == ne, return, "osicolcut", "assignment operator");
+    bool bounds_ok = true;
     for ( int i=0; i<ne; i++ ) {
-      assert( rhs.lbs().getIndices()[i] == inx[i] );
-      assert( rhs.lbs().getElements()[i] == el[i] );
-      assert( rhs.ubs().getIndices()[i] == inx[i] );
-      assert( rhs.ubs().getElements()[i] == el[i] );
+    	bounds_ok &= rhs.lbs().getIndices()[i] == inx[i];
+    	bounds_ok &= rhs.lbs().getElements()[i] == el[i];
+    	bounds_ok &= rhs.ubs().getIndices()[i] == inx[i];
+    	bounds_ok &= rhs.ubs().getElements()[i] == el[i];
     }  
-    assert( rhs.effectiveness()==121. );
+    OSIUNITTEST_ASSERT_ERROR(bounds_ok, {}, "osicolcut", "assignment operator");
+    OSIUNITTEST_ASSERT_ERROR(rhs.effectiveness() == 121.0, {}, "osicolcut", "assignment operator");
   }
 
   // Test setting bounds with packed vector and operator==
@@ -118,41 +118,41 @@ OsiColCutUnitTest(const OsiSolverInterface * baseSiP,
     v2.setVector(ne2,inx2,el2);
     
     OsiColCut c1,c2;
-    assert(   c1==c2  );
-    assert( !(c1!=c2) );
+    OSIUNITTEST_ASSERT_ERROR(  c1 == c2 , {}, "osicolcut", "setting bounds with packed vector and operator ==");
+    OSIUNITTEST_ASSERT_ERROR(!(c1 != c2), {}, "osicolcut", "setting bounds with packed vector and operator !=");
     
     c1.setLbs(v1);
-    assert(   c1 != c2  );
-    assert( !(c1 == c2) );
+    OSIUNITTEST_ASSERT_ERROR(  c1 != c2 , {}, "osicolcut", "setting bounds with packed vector and operator !=");
+    OSIUNITTEST_ASSERT_ERROR(!(c1 == c2), {}, "osicolcut", "setting bounds with packed vector and operator ==");
+    OSIUNITTEST_ASSERT_ERROR(c1.lbs() == v1, {}, "osicolcut", "setting bounds with packed vector and operator !=");
     
-    assert( c1.lbs()==v1 );
     c1.setUbs(v2);
-    assert( c1.ubs()==v2 );
+    OSIUNITTEST_ASSERT_ERROR(c1.ubs() == v2, {}, "osicolcut", "setting bounds with packed vector and operator !=");
     c1.setEffectiveness(3.);
-    assert( c1.effectiveness()==3. );
+    OSIUNITTEST_ASSERT_ERROR(c1.effectiveness() == 3.0, {}, "osicolcut", "setting bounds with packed vector and operator !=");
 
     {
       OsiColCut c3(c1);
-      assert(   c3==c1 );
-      assert( !(c3!=c1) );
+      OSIUNITTEST_ASSERT_ERROR(  c3 == c1 , {}, "osicolcut", "operator ==");
+      OSIUNITTEST_ASSERT_ERROR(!(c3 != c1), {}, "osicolcut", "operator !=");
     }
     {
       OsiColCut c3(c1);
       c3.setLbs(v2);
-      assert(   c3!=c1 );
-      assert( !(c3==c1) );
+      OSIUNITTEST_ASSERT_ERROR(  c3 != c1 , {}, "osicolcut", "operator !=");
+      OSIUNITTEST_ASSERT_ERROR(!(c3 == c1), {}, "osicolcut", "operator ==");
     }
     {
       OsiColCut c3(c1);
       c3.setUbs(v1);
-      assert(   c3!=c1 );
-      assert( !(c3==c1) );
+      OSIUNITTEST_ASSERT_ERROR(  c3 != c1 , {}, "osicolcut", "operator !=");
+      OSIUNITTEST_ASSERT_ERROR(!(c3 == c1), {}, "osicolcut", "operator ==");
     }
     {
       OsiColCut c3(c1);
       c3.setEffectiveness(5.);
-      assert(   c3!=c1 );
-      assert( !(c3==c1) );
+      OSIUNITTEST_ASSERT_ERROR(  c3 != c1 , {}, "osicolcut", "operator !=");
+      OSIUNITTEST_ASSERT_ERROR(!(c3 == c1), {}, "osicolcut", "operator ==");
     }
   }
 
@@ -163,7 +163,7 @@ OsiColCutUnitTest(const OsiSolverInterface * baseSiP,
     double el[ne] = { 1.2 };
     OsiColCut r; 
     r.setLbs( ne, inx, el );
-    assert( !r.consistent() );
+    OSIUNITTEST_ASSERT_ERROR(!r.consistent(), {}, "osicolcut", "consistent");
   }
   {
     const int ne = 1;
@@ -171,7 +171,7 @@ OsiColCutUnitTest(const OsiSolverInterface * baseSiP,
     double el[ne] = { 1.2 };
     OsiColCut r; 
     r.setUbs( ne, inx, el );
-    assert( !r.consistent() );
+    OSIUNITTEST_ASSERT_ERROR(!r.consistent(), {}, "osicolcut", "consistent");
   }
   {
     const int ne = 1;
@@ -183,12 +183,12 @@ OsiColCutUnitTest(const OsiSolverInterface * baseSiP,
     OsiColCut r; 
     r.setUbs( ne, inx, el );
     r.setLbs( ne1, inx1, el1 );
-    assert( r.consistent() );
+    OSIUNITTEST_ASSERT_ERROR(r.consistent(), {}, "osicolcut", "consistent");
 
     OsiSolverInterface * imP = baseSiP->clone();
     std::string fn = mpsDir+"exmip1";
     imP->readMps(fn.c_str(),"mps");
-    assert( !r.consistent(*imP) );
+    OSIUNITTEST_ASSERT_ERROR(!r.consistent(*imP), {}, "osicolcut", "consistent");
     delete imP;
   }
   {
@@ -201,7 +201,7 @@ OsiColCutUnitTest(const OsiSolverInterface * baseSiP,
     OsiColCut r; 
     r.setUbs( ne, inx, el );
     r.setLbs( ne1, inx1, el1 );
-    assert( r.consistent() );
+    OSIUNITTEST_ASSERT_ERROR(r.consistent(), {}, "osicolcut", "consistent");
   }
   {
     // Test consistent(IntegerModel) method.
@@ -214,31 +214,31 @@ OsiColCutUnitTest(const OsiSolverInterface * baseSiP,
     int inx[ne]={20};
     double el[ne]={0.25};
     cut.setLbs(ne,inx,el);
-    assert( !cut.consistent(*imP) );
+    OSIUNITTEST_ASSERT_ERROR(!cut.consistent(*imP), {}, "osicolcut", "consistent(IntegerModel)");
     
     cut.setLbs(0,NULL,NULL);
     cut.setUbs(ne,inx,el); 
-    assert( !cut.consistent(*imP) );
+    OSIUNITTEST_ASSERT_ERROR(!cut.consistent(*imP), {}, "osicolcut", "consistent(IntegerModel)");
     
     inx[0]=4;
     cut.setLbs(ne,inx,el);
     cut.setUbs(0,NULL,NULL); 
-    assert( cut.consistent(*imP) );
+    OSIUNITTEST_ASSERT_ERROR( cut.consistent(*imP), {}, "osicolcut", "consistent(IntegerModel)");
     
     el[0]=4.5;
     cut.setLbs(0,NULL,NULL);
     cut.setUbs(ne,inx,el); 
-    assert( cut.consistent(*imP) );
+    OSIUNITTEST_ASSERT_ERROR( cut.consistent(*imP), {}, "osicolcut", "consistent(IntegerModel)");
 
     cut.setLbs(ne,inx,el);
     cut.setUbs(0,NULL,NULL); 
-    assert( cut.consistent(*imP) );  // Vailid but infeasible
-    assert( cut.infeasible(*imP) );
+    OSIUNITTEST_ASSERT_ERROR( cut.consistent(*imP), {}, "osicolcut", "consistent(IntegerModel)");
+    OSIUNITTEST_ASSERT_ERROR( cut.infeasible(*imP), {}, "osicolcut", "infeasible(IntegerModel)");
     
     el[0]=3.0;
     cut.setLbs(ne,inx,el);
     cut.setUbs(ne,inx,el); 
-    assert( cut.consistent(*imP) ); 
+    OSIUNITTEST_ASSERT_ERROR( cut.consistent(*imP), {}, "osicolcut", "consistent(IntegerModel)");
     delete imP;
   }
   {
@@ -253,17 +253,17 @@ OsiColCutUnitTest(const OsiSolverInterface * baseSiP,
     int inx[ne]={4};
     double el[ne]={4.5};
     cut.setLbs(ne,inx,el);
-    assert( cut.infeasible(*imP) );
+    OSIUNITTEST_ASSERT_ERROR( cut.infeasible(*imP), {}, "osicolcut", "infeasible(IntegerModel)");
 
     el[0]=0.25;
     cut.setLbs(0,NULL,NULL);
     cut.setUbs(ne,inx,el);
-    assert( cut.infeasible(*imP) ); 
+    OSIUNITTEST_ASSERT_ERROR( cut.infeasible(*imP), {}, "osicolcut", "infeasible(IntegerModel)");
     
     el[0]=3.0;
     cut.setLbs(ne,inx,el);
     cut.setUbs(ne,inx,el); 
-    assert( !cut.infeasible(*imP) );
+    OSIUNITTEST_ASSERT_ERROR(!cut.infeasible(*imP), {}, "osicolcut", "infeasible(IntegerModel)");
 
     delete imP;
   }
@@ -276,17 +276,16 @@ OsiColCutUnitTest(const OsiSolverInterface * baseSiP,
     int inx[ne]={0};
     double el[ne]={4.5};
     cut.setLbs(ne,inx,el);
-    assert( cut.violated(solution) );
+    OSIUNITTEST_ASSERT_ERROR( cut.violated(solution), {}, "osicolcut", "violated");
 
     el[0]=0.25;
     cut.setLbs(0,NULL,NULL);
     cut.setUbs(ne,inx,el);
-    assert( cut.violated(solution) );
+    OSIUNITTEST_ASSERT_ERROR( cut.violated(solution), {}, "osicolcut", "violated");
     
     el[0]=1.0;
     cut.setLbs(ne,inx,el);
     cut.setUbs(ne,inx,el); 
-    assert( !cut.violated(solution) );
-
+    OSIUNITTEST_ASSERT_ERROR(!cut.violated(solution), {}, "osicolcut", "violated");
   }
 }

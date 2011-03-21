@@ -7,11 +7,6 @@
 
 #include "OsiConfig.h"
 
-#ifdef NDEBUG
-#undef NDEBUG
-#endif
-
-#include <cassert>
 #include <iostream>
 #include <cstdio>
 
@@ -145,6 +140,7 @@ bool processParameters (int argc, const char **argv,
   definedKeyWords.insert("-testOsiSolverInterface");
   definedKeyWords.insert("-nobuf");
   definedKeyWords.insert("-cutsOnly");
+  definedKeyWords.insert("-verbosity");
 /*
   Set default values for data directories.
 */
@@ -184,37 +180,20 @@ bool processParameters (int argc, const char **argv,
 */
     if (definedKeyWords.find(key) == definedKeyWords.end())
     { std::cerr << "Undefined parameter \"" << key << "\"." << std::endl ;
-      std::cerr
-	<< "Usage: "
-	<< "unitTest [-nobuf] [-mpsDir=V1] [-netlibDir=V2] "
-        << "[-testOsiSolverInterface] [-cutsOnly]" << std::endl ;
+      std::cerr << "Usage: unitTest [-nobuf] [-mpsDir=V1] [-netlibDir=V2] [-testOsiSolverInterface] [-cutsOnly] [-verbosity=num]" << std::endl ;
       std::cerr << "  where:" << std::endl ;
-      std::cerr
-	<< "    "
-	<< "-cerr2cout: redirect cerr to cout; sometimes useful." << std::endl
-	<< "\t" << "to synchronise cout & cerr." << std::endl ;
-      std::cerr
-	<< "    "
-	<< "-mpsDir: directory containing mps test files." << std::endl
-        << "\t" << "Default value V1=\"../../Data/Sample\"" << std::endl ;
-      std::cerr
-	<< "    "
-	<< "-netlibDir: directory containing netlib files." << std::endl
-        << "\t" << "Default value V2=\"../../Data/Netlib\"" << std::endl ;
-      std::cerr
-	<< "    "
-	<< "-testOsiSolverInterface: "
-        << "run each OSI on the netlib problem set." << std::endl
-	<< "\t"
-	<< "Default is to not run the netlib problem set." << std::endl ;
-      std::cerr
-	<< "    "
-	<< "-cutsOnly: If specified, only OsiCut tests are run." << std::endl ;
-      std::cerr
-	<< "    "
-        << "-nobuf: use unbuffered output." << std::endl
-	<< "\t" << "Default is buffered output." << std::endl ;
-      
+      std::cerr << '\t' << "-cerr2cout: redirect cerr to cout; sometimes useful to synchronise cout & cerr." << std::endl;
+      std::cerr << '\t' << "-mpsDir: directory containing mps test files." << std::endl
+                << '\t' << "   Default value V1=\"../../Data/Sample\"" << std::endl;
+      std::cerr << '\t' << "-netlibDir: directory containing netlib files." << std::endl
+                << '\t' << "   Default value V2=\"../../Data/Netlib\"" << std::endl;
+      std::cerr << '\t'	<< "-testOsiSolverInterface: run each OSI on the netlib problem set." << std::endl
+                << '\t' << "   Default is to not run the netlib problem set." << std::endl;
+      std::cerr << '\t' << "-cutsOnly: If specified, only OsiCut tests are run." << std::endl;
+      std::cerr << '\t' << "-nobuf: use unbuffered output." << std::endl
+      		      << '\t' << "  Default is buffered output." << std::endl;
+      std::cerr << '\t' << "-verbosity: verbosity level of tests output (0-2)." << std::endl
+		            << '\t' << "  Default is 0 (minimal output)." << std::endl;
       return (false) ; }
 /*
   Valid keyword; stash the value for later reference.
@@ -247,6 +226,23 @@ bool processParameters (int argc, const char **argv,
 */
   if (parms.find("-cerr2cout") != parms.end())
   { std::cerr.rdbuf(std::cout.rdbuf()) ; }
+/*
+ * Did the user set a verbosity level?
+ */
+  if (parms.find("-verbosity") != parms.end())
+  {
+  	char* endptr;
+  	std::string verbstring = parms["-verbosity"];
+  	unsigned long verblevel = strtoul(verbstring.c_str(), &endptr, 10);
+
+  	if( *endptr != '\0' || verblevel < 0)
+  	{
+  		std::cerr << "verbosity level must be a nonnegative number" << std::endl;
+  		return false;
+  	}
+
+  	OsiUnitTest::verbosity = verblevel;
+  }
 
   return (true) ; }
 
@@ -278,6 +274,7 @@ bool processParameters (int argc, const char **argv,
 int main (int argc, const char *argv[])
 
 { int totalErrCnt = 0;
+  OsiUnitTest::outcomes.clear();
 
 /*
   Start off with various bits of initialisation that don't really belong
@@ -564,12 +561,18 @@ try {
 /*
   We're done. Report on the results.
 */
+  OsiUnitTest::outcomes.print();
+
   if (totalErrCnt)
   { std::cout.flush() ;
     std::cerr
       << "Tests completed with " << totalErrCnt << " errors." << std::endl ; 
   } else
   { testingMessage("All tests completed successfully\n") ; }
-  return totalErrCnt;
-}
 
+  int nerrors;
+  int nerrors_expected;
+  OsiUnitTest::outcomes.getCountBySeverity(OsiUnitTest::TestOutcome::ERROR, nerrors, nerrors_expected);
+
+  return nerrors - nerrors_expected;
+}

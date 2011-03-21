@@ -11,9 +11,6 @@
 
 #include "OsiConfig.h"
 
-#ifdef NDEBUG
-#undef NDEBUG
-#endif
 /*
   #include "CoinTime.hpp"
   #include <cstdlib>
@@ -24,18 +21,6 @@
   #include <sstream>
   #include <cstdio>
 */
-/*
-  A utility definition which allows for easy suppression of unused variable
-  warnings from GCC. Handy in this environment, where we're constantly def'ing
-  things in and out.
-*/
-#ifndef UNUSED
-# if defined(__GNUC__)
-#   define UNUSED __attribute__((unused))
-# else
-#   define UNUSED
-# endif
-#endif
 
 #include "OsiSolverInterface.hpp"
 #include "CoinPackedMatrix.hpp"
@@ -50,6 +35,10 @@
 
 
 namespace OsiUnitTest {
+
+unsigned int verbosity = 0;
+
+TestOutcomes outcomes;
 
 //#############################################################################
 // Helper routines for messages.
@@ -74,6 +63,24 @@ void failureMessage( const OsiSolverInterface & si,
   std::string solverName;
   si.getStrParam(OsiSolverName,solverName);
   failureMessage(solverName,message);
+}
+
+void failureMessage( const std::string & solverName, const std::string &testname, const std::string &testcond)
+{
+  std::string messageText;
+  messageText = "*** ";
+  messageText += solverName + "SolverInterface testing issue: ";
+  messageText += testname + " failed: " + testcond;
+  // flush stdout so that error messages are properly interleaved.
+  std::cout.flush() ;
+  std::cerr << messageText.c_str() << std::endl;
+}
+
+void failureMessage( const OsiSolverInterface & si, const std::string &testname, const std::string &testcond)
+{
+  std::string solverName;
+  si.getStrParam(OsiSolverName,solverName);
+  failureMessage(solverName,testname,testcond);
 }
 
 /*
@@ -297,5 +304,76 @@ bool compareProblems (OsiSolverInterface *osi1, OsiSolverInterface *osi2) {
   return (true) ;
 }
 
+std::string TestOutcome::SeverityLevelName[LAST] =
+{
+		"NOTE", "PASSED", "WARNING", "ERROR"
+};
+
+void TestOutcome::print() const
+{
+	printf("%-10s", SeverityLevelName[severity].c_str());
+	printf("%-10s", component.c_str());
+	printf("%s", testname.c_str());
+	printf("\n");
+
+	if( expected )
+		printf(" (expected)         ");
+	else
+		printf("                    ");
+	printf("%s\n", testcond.c_str());
+
+	printf("                    ");
+	printf("%s:%d\n", filename.c_str(), linenumber);
+
+//	printf("\n");
+}
+
+void TestOutcomes::add(const OsiSolverInterface& si, std::string tst, const char* cond, TestOutcome::SeverityLevel sev, const char* file, int line, bool exp)
+{
+  std::string solverName;
+  si.getStrParam(OsiSolverName,solverName);
+	push_back(TestOutcome(solverName, tst, cond, sev, file, line, exp));
+}
+
+void TestOutcomes::print() const
+{
+	int count[TestOutcome::LAST];
+	int expected[TestOutcome::LAST];
+	for( int i = 0; i < TestOutcome::LAST; ++i )
+	{
+		count[i] = 0;
+		expected[i] = 0;
+	}
+
+	for( const_iterator it(begin()); it != end(); ++it )
+	{
+		++count[it->severity];
+		if( it->expected )
+			++expected[it->severity];
+		if( it->severity != TestOutcome::PASSED || OsiUnitTest::verbosity >= 2 )
+			it->print();
+	}
+
+	for( int i = 0; i < TestOutcome::LAST; ++i )
+		printf("Severity %-10s: %4d  thereof expected: %4d\n", TestOutcome::SeverityLevelName[i].c_str(), count[i], expected[i]);
+}
+
+void TestOutcomes::getCountBySeverity(TestOutcome::SeverityLevel sev, int& total, int& expected) const
+{
+	assert(sev >= 0);
+	assert(sev < TestOutcome::LAST);
+
+	total = 0;
+	expected = 0;
+
+	for( const_iterator it(begin()); it != end(); ++it )
+	{
+		if( it->severity != sev )
+			continue;
+		++total;
+		if( it->expected )
+			++expected;
+	}
+}
 
 } // end OsiUnitTest namespace

@@ -1,0 +1,9 @@
+21/03/2011 OsiCommonTest, unittest
+  - add classes TestOutcome{s} to collect outcome of unittests
+  - add macros to simplify asserts and exception catching and storing results as TestOutcome
+  - change general and OsiGlpk tests to use new macros
+  - return number of unexpected errors as return code of unittest
+  - add parameter -verbosity to unittest to specify amount of output of unittests
+  - a bit cleanup
+
+21/03/2011 started CHANGELOG

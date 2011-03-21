@@ -2,12 +2,6 @@
 // Corporation and others.  All Rights Reserved.
 // This code is licensed under the terms of the Eclipse Public License (EPL).
 
-#ifdef NDEBUG
-#undef NDEBUG
-#endif
-
-#include <cassert>
-
 #include "CoinPragma.hpp"
 
 #include "OsiUnitTests.hpp"
@@ -22,12 +16,12 @@ OsiCutsUnitTest()
   // Test default constructor
   {
     OsiCuts r;
-    assert( r.colCutPtrs_.empty() );
-    assert( r.rowCutPtrs_.empty() );
-    assert( r.sizeColCuts()==0 );
-    assert( r.sizeRowCuts()==0 );
-    assert( r.sizeCuts()==0 );
-    assert( r.mostEffectiveCutPtr()==NULL );
+    OSIUNITTEST_ASSERT_ERROR(r.colCutPtrs_.empty(), {}, "osicuts", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(r.rowCutPtrs_.empty(), {}, "osicuts", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(r.sizeColCuts() == 0, {}, "osicuts", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(r.sizeRowCuts() == 0, {}, "osicuts", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(r.sizeCuts()    == 0, {}, "osicuts", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(r.mostEffectiveCutPtr() == NULL, {}, "osicuts", "default constructor");
   }
   
   // Create some cuts
@@ -47,47 +41,44 @@ OsiCutsUnitTest()
     OsiCuts cs;
     
     // test inserting & accessing cut
-    for ( i=0; i<5; i++ ) {
-      assert( cs.sizeRowCuts()==i);
-      assert( cs.sizeCuts()==2*i);
+    for ( i = 0; i < 5; i++ ) {
+      OSIUNITTEST_ASSERT_ERROR(cs.sizeRowCuts() == i, {}, "osicuts", "inserting and accessing cuts");
+      OSIUNITTEST_ASSERT_ERROR(cs.sizeCuts() == 2*i, {}, "osicuts", "inserting and accessing cuts");
       cs.insert(rcv[i]);
-      assert( cs.sizeRowCuts()==i+1);      
-      assert( cs.sizeCuts()==2*i+1);
-      assert( cs.rowCut(i)==rcv[i] );
+      OSIUNITTEST_ASSERT_ERROR(cs.sizeRowCuts() == i+1, {}, "osicuts", "inserting and accessing cuts");
+      OSIUNITTEST_ASSERT_ERROR(cs.sizeCuts() == 2*i+1, {}, "osicuts", "inserting and accessing cuts");
+      OSIUNITTEST_ASSERT_ERROR(cs.rowCut(i) == rcv[i], {}, "osicuts", "inserting and accessing cuts");
 #if 0
       const OsiCut * cp = cs.cutPtr(2*i);
-      assert( cs.rowCut(i).effectiveness() == cp->effectiveness() );
+      OSIUNITTEST_ASSERT_ERROR(cs.rowCut(i).effectiveness() == cp->effectiveness(), {}, "osicuts", "inserting and accessing cuts");
       const OsiRowCut * rcP = dynamic_cast<const OsiRowCut*>( cp );
-      assert( rcP != NULL );
-      assert( *rcP == rcv[i] );
-      const OsiColCut * ccP = dynamic_cast<const OsiColCut*>( cs.cutPtr(2*i) );
-      assert( ccP == NULL );
+      OSIUNITTEST_ASSERT_ERROR(rcP != NULL, {}, "osicuts", "inserting and accessing cuts");
+      OSIUNITTEST_ASSERT_ERROR(*rcP == rcv[i], {}, "osicuts", "inserting and accessing cuts");
+      OSIUNITTEST_ASSERT_ERROR(dynamic_cast<const OsiColCut*>(cs.cutPtr(2*i)) == NULL, {}, "osicuts", "inserting and accessing cuts");
 #endif
       
-      assert( cs.sizeColCuts()==i);
-      assert( cs.sizeCuts()==2*i+1);
+      OSIUNITTEST_ASSERT_ERROR(cs.sizeColCuts() == i, {}, "osicuts", "inserting and accessing cuts");
+      OSIUNITTEST_ASSERT_ERROR(cs.sizeCuts() == 2*i+1, {}, "osicuts", "inserting and accessing cuts");
       cs.insert(ccv[i]);
-      assert( cs.sizeColCuts()==i+1);
-      assert( cs.sizeCuts()==2*i+2);
-      assert( cs.colCut(i)==ccv[i] );
+      OSIUNITTEST_ASSERT_ERROR(cs.sizeColCuts() == i+1, {}, "osicuts", "inserting and accessing cuts");
+      OSIUNITTEST_ASSERT_ERROR(cs.sizeCuts() == 2*i+2, {}, "osicuts", "inserting and accessing cuts");
+      OSIUNITTEST_ASSERT_ERROR(cs.colCut(i) == ccv[i], {}, "osicuts", "inserting and accessing cuts");
 #if 0
-      rcP = dynamic_cast<const OsiRowCut*>( cs.cutPtr(2*i+1) );
-      assert( rcP == NULL );
+      OSIUNITTEST_ASSERT_ERROR(dynamic_cast<const OsiRowCut*>(cs.cutPtr(2*i+1)) == NULL, {}, "osicuts", "inserting and accessing cuts");
       ccP = dynamic_cast<const OsiColCut*>( cs.cutPtr(2*i+1) );
-      assert( ccP != NULL );
-      assert( *ccP == ccv[i] );
+      OSIUNITTEST_ASSERT_ERROR(ccP != NULL, {}, "osicuts", "inserting and accessing cuts");
+      OSIUNITTEST_ASSERT_ERROR(*ccP == ccv[i], {}, "osicuts", "inserting and accessing cuts");
 #endif
-      assert( eq(cs.mostEffectiveCutPtr()->effectiveness(),200.0+i) );
-
+      OSIUNITTEST_ASSERT_ERROR(eq(cs.mostEffectiveCutPtr()->effectiveness(),200.0+i), {}, "osicuts", "inserting and accessing cuts");
     }  
     
     // Test inserting collection of OsiCuts
     {
       OsiCuts cs;
       cs.insert(cuts);
-      assert(cs.sizeColCuts()==5);
-      assert(cs.sizeRowCuts()==5);
-      assert(cs.sizeCuts()==10);
+      OSIUNITTEST_ASSERT_ERROR(cs.sizeColCuts() == 5, {}, "osicuts", "inserting collection of cuts");
+      OSIUNITTEST_ASSERT_ERROR(cs.sizeRowCuts() == 5, {}, "osicuts", "inserting collection of cuts");
+      OSIUNITTEST_ASSERT_ERROR(cs.sizeCuts() == 10, {}, "osicuts", "inserting collection of cuts");
     }
 /*
   Test handling of cut pointers. Create a vector of cut pointers, then add
@@ -102,106 +93,109 @@ OsiCutsUnitTest()
       OsiRowCut *rcPVec[5] ;
       OsiColCut *ccPVec[5] ;
       for (i = 0 ; i < 5 ; i++) {
-	rcPVec[i] = rcv[i].clone() ;
-	ccPVec[i] = ccv[i].clone() ;
+      	rcPVec[i] = rcv[i].clone() ;
+      	ccPVec[i] = ccv[i].clone() ;
       }
       // test inserting cut ptr & accessing cut
       for ( i=0; i<5; i++ ) {
-        assert( cs.sizeRowCuts()==i);
+        OSIUNITTEST_ASSERT_ERROR(cs.sizeRowCuts() == i, {}, "osicuts", "handling of cut pointers");
         OsiRowCut * rcP = rcPVec[i] ;
-        assert( rcP != NULL );
+        OSIUNITTEST_ASSERT_ERROR(rcP != NULL, {}, "osicuts", "handling of cut pointers");
         cs.insert(rcP);
-        assert( rcP == NULL );
-        assert( cs.sizeRowCuts()==i+1);
-        assert( cs.rowCut(i)==rcv[i] );
-        
+        OSIUNITTEST_ASSERT_ERROR(rcP == NULL, {}, "osicuts", "handling of cut pointers");
+        OSIUNITTEST_ASSERT_ERROR(cs.sizeRowCuts() == i+1, {}, "osicuts", "handling of cut pointers");
+        OSIUNITTEST_ASSERT_ERROR(cs.rowCut(i) == rcv[i], {}, "osicuts", "handling of cut pointers");
         
         OsiColCut * ccP = ccPVec[i] ;
-        assert( ccP != NULL );
-        assert( cs.sizeColCuts()==i);
+        OSIUNITTEST_ASSERT_ERROR(ccP != NULL, {}, "osicuts", "handling of cut pointers");
+        OSIUNITTEST_ASSERT_ERROR(cs.sizeColCuts() == i, {}, "osicuts", "handling of cut pointers");
         cs.insert(ccP);
-        assert( ccP == NULL );
-        assert( cs.sizeColCuts()==i+1);
-        assert( cs.colCut(i)==ccv[i] );
+        OSIUNITTEST_ASSERT_ERROR(ccP == NULL, {}, "osicuts", "handling of cut pointers");
+        OSIUNITTEST_ASSERT_ERROR(cs.sizeColCuts() == i+1, {}, "osicuts", "handling of cut pointers");
+        OSIUNITTEST_ASSERT_ERROR(cs.colCut(i) == ccv[i], {}, "osicuts", "handling of cut pointers");
 
-        assert( eq(cs.mostEffectiveCutPtr()->effectiveness(),200.0+i) );
+        OSIUNITTEST_ASSERT_ERROR(eq(cs.mostEffectiveCutPtr()->effectiveness(),200.0+i), {}, "osicuts", "handling of cut pointers");
       }
       cs.dumpCuts() ;		// row cuts only
       for ( i=0; i<5; i++ ) {
-        assert( cs.sizeRowCuts()==i);
+        OSIUNITTEST_ASSERT_ERROR(cs.sizeRowCuts() == i, {}, "osicuts", "handling of cut pointers");
         OsiRowCut * rcP = rcPVec[i] ;
-        assert( rcP != NULL );
+        OSIUNITTEST_ASSERT_ERROR(rcP != NULL, {}, "osicuts", "handling of cut pointers");
         cs.insert(rcP);
-        assert( rcP == NULL );
-        assert( cs.sizeRowCuts()==i+1);
-        assert( cs.rowCut(i)==rcv[i] );
+        OSIUNITTEST_ASSERT_ERROR(rcP == NULL, {}, "osicuts", "handling of cut pointers");
+        OSIUNITTEST_ASSERT_ERROR(cs.sizeRowCuts() == i+1, {}, "osicuts", "handling of cut pointers");
+        OSIUNITTEST_ASSERT_ERROR(cs.rowCut(i) == rcv[i], {}, "osicuts", "handling of cut pointers");
         
-        assert( cs.sizeColCuts()==5);
+        OSIUNITTEST_ASSERT_ERROR(cs.sizeColCuts() == 5, {}, "osicuts", "handling of cut pointers");
       }
     }
     
     // Test copy constructor
     OsiCuts csC(cs);
-    assert( csC.sizeRowCuts()==5 );
-    assert( csC.sizeColCuts()==5 );
+    OSIUNITTEST_ASSERT_ERROR(csC.sizeRowCuts() == 5, {}, "osicuts", "copy constructor");
+    OSIUNITTEST_ASSERT_ERROR(csC.sizeColCuts() == 5, {}, "osicuts", "copy constructor");
+    bool copy_ok = true;
     for ( i=0; i<5; i++ ) {
-      assert( csC.rowCut(i) == rcv[i] );
-      assert( csC.colCut(i) == ccv[i] );
-      assert( csC.rowCut(i) == cs.rowCut(i) );
-      assert( csC.colCut(i) == cs.colCut(i) );
+      copy_ok &= csC.rowCut(i) == rcv[i];
+      copy_ok &= csC.colCut(i) == ccv[i];
+      copy_ok &= csC.rowCut(i) == cs.rowCut(i);
+      copy_ok &= csC.colCut(i) == cs.colCut(i);;
     }
-    assert( eq(csC.mostEffectiveCutPtr()->effectiveness(),204.0) );
+    OSIUNITTEST_ASSERT_ERROR(copy_ok, {}, "osicuts", "copy constructor");
+    OSIUNITTEST_ASSERT_ERROR(eq(csC.mostEffectiveCutPtr()->effectiveness(),204.0), {}, "osicuts", "copy constructor");
     
-    rhs=cs;
+    rhs = cs;
   }
   
-  // Test results of assigmnet operation
+  // Test results of assignment operation
+  bool ok = true;
   for ( i=0; i<5; i++ ) {
-    assert( rhs.rowCut(i) == rcv[i] );
-    assert( rhs.colCut(i) == ccv[i] );
+    ok &= rhs.rowCut(i) == rcv[i];
+    ok &= rhs.colCut(i) == ccv[i];
   }
-  assert( eq(rhs.mostEffectiveCutPtr()->effectiveness(),204.0) );
+  OSIUNITTEST_ASSERT_ERROR(ok, {}, "osicuts", "assignment operator");
+  OSIUNITTEST_ASSERT_ERROR(eq(rhs.mostEffectiveCutPtr()->effectiveness(),204.0), {}, "osicuts", "assignment operator");
 
   // Test removing cuts
   {
     OsiCuts t(rhs);  
-    assert( t.sizeRowCuts()==5 );
-    assert( t.sizeColCuts()==5 );
-    assert( eq(rhs.mostEffectiveCutPtr()->effectiveness(),204.0) );
-    assert( eq(t.mostEffectiveCutPtr()->effectiveness(),204.0) );
+    OSIUNITTEST_ASSERT_ERROR(t.sizeRowCuts() == 5, {}, "osicuts", "removing cuts");
+    OSIUNITTEST_ASSERT_ERROR(t.sizeColCuts() == 5, {}, "osicuts", "removing cuts");
+    OSIUNITTEST_ASSERT_ERROR(eq(rhs.mostEffectiveCutPtr()->effectiveness(),204.0), {}, "osicuts", "removing cuts");
+    OSIUNITTEST_ASSERT_ERROR(eq(  t.mostEffectiveCutPtr()->effectiveness(),204.0), {}, "osicuts", "removing cuts");
 
     t.eraseRowCut(3);     
-    assert( t.sizeRowCuts()==4 );
-    assert( t.sizeColCuts()==5 );
-    for ( i=0; i<5; i++ ) {
-      assert( t.colCut(i) == ccv[i] );
-    }
-    assert( t.rowCut(0)==rcv[0] );
-    assert( t.rowCut(1)==rcv[1] );
-    assert( t.rowCut(2)==rcv[2] );
-    assert( t.rowCut(3)==rcv[4] );
-    assert( eq(t.mostEffectiveCutPtr()->effectiveness(),204.0) );
+    OSIUNITTEST_ASSERT_ERROR(t.sizeRowCuts() == 4, {}, "osicuts", "removing cuts");
+    OSIUNITTEST_ASSERT_ERROR(t.sizeColCuts() == 5, {}, "osicuts", "removing cuts");
+    bool ok = true;
+    for ( i=0; i<5; i++ )
+      ok &= t.colCut(i) == ccv[i];
+    OSIUNITTEST_ASSERT_ERROR(ok, {}, "osicuts", "removing cuts");
+    OSIUNITTEST_ASSERT_ERROR(t.rowCut(0) == rcv[0], {}, "osicuts", "removing cuts");
+    OSIUNITTEST_ASSERT_ERROR(t.rowCut(1) == rcv[1], {}, "osicuts", "removing cuts");
+    OSIUNITTEST_ASSERT_ERROR(t.rowCut(2) == rcv[2], {}, "osicuts", "removing cuts");
+    OSIUNITTEST_ASSERT_ERROR(t.rowCut(3) == rcv[4], {}, "osicuts", "removing cuts");
+    OSIUNITTEST_ASSERT_ERROR(eq(t.mostEffectiveCutPtr()->effectiveness(),204.0), {}, "osicuts", "removing cuts");
 
     t.eraseColCut(4);     
-    assert( t.sizeRowCuts()==4 );
-    assert( t.sizeColCuts()==4 );
-    for ( i=0; i<4; i++ ) {
-      assert( t.colCut(i) == ccv[i] );
-    }
-    assert( t.rowCut(0)==rcv[0] );
-    assert( t.rowCut(1)==rcv[1] );
-    assert( t.rowCut(2)==rcv[2] );
-    assert( t.rowCut(3)==rcv[4] );
-    assert( eq(t.mostEffectiveCutPtr()->effectiveness(),203.0) );
+    OSIUNITTEST_ASSERT_ERROR(t.sizeRowCuts() == 4, {}, "osicuts", "removing cuts");
+    OSIUNITTEST_ASSERT_ERROR(t.sizeColCuts() == 4, {}, "osicuts", "removing cuts");
+    ok = true;
+    for ( i=0; i<4; i++ )
+      ok &= t.colCut(i) == ccv[i];
+    OSIUNITTEST_ASSERT_ERROR(ok, {}, "osicuts", "removing cuts");
+    OSIUNITTEST_ASSERT_ERROR(t.rowCut(0) == rcv[0], {}, "osicuts", "removing cuts");
+    OSIUNITTEST_ASSERT_ERROR(t.rowCut(1) == rcv[1], {}, "osicuts", "removing cuts");
+    OSIUNITTEST_ASSERT_ERROR(t.rowCut(2) == rcv[2], {}, "osicuts", "removing cuts");
+    OSIUNITTEST_ASSERT_ERROR(t.rowCut(3) == rcv[4], {}, "osicuts", "removing cuts");
+    OSIUNITTEST_ASSERT_ERROR(eq(t.mostEffectiveCutPtr()->effectiveness(),203.0), {}, "osicuts", "removing cuts");
   }
-  
-
   
   // sorting cuts
   {
     OsiCuts t(rhs);
-    assert( t.sizeRowCuts()==5 );
-    assert( t.sizeColCuts()==5 );
+    OSIUNITTEST_ASSERT_ERROR(t.sizeRowCuts() == 5, {}, "osicuts", "sorting cuts");
+    OSIUNITTEST_ASSERT_ERROR(t.sizeColCuts() == 5, {}, "osicuts", "sorting cuts");
     t.rowCut(0).setEffectiveness(9.);
     t.rowCut(1).setEffectiveness(1.);
     t.rowCut(2).setEffectiveness(7.);
@@ -221,12 +215,16 @@ OsiCutsUnitTest()
         double eff=(*it)->effectiveness();
         sumEff+= eff;
       }
-      assert( sumEff == totEff );
+      OSIUNITTEST_ASSERT_ERROR(sumEff == totEff, {}, "osicuts", "sorting cuts");
     }
 
     t.sort();
-    for ( i=1; i<5; i++ ) assert( t.colCut(i-1)>t.colCut(i) );
-    for ( i=1; i<5; i++ ) assert( t.rowCut(i-1)>t.rowCut(i) );
+    bool colcutsort_ok = true;
+    for ( i=1; i<5; i++ ) colcutsort_ok &= t.colCut(i-1)>t.colCut(i);
+    OSIUNITTEST_ASSERT_ERROR(colcutsort_ok, {}, "osicuts", "sorting cuts");
+    bool rowcutsort_ok = true;
+    for ( i=1; i<5; i++ ) rowcutsort_ok &= t.rowCut(i-1)>t.rowCut(i);
+    OSIUNITTEST_ASSERT_ERROR(rowcutsort_ok, {}, "osicuts", "sorting cuts");
 
     {
       // Test iterator over all cuts
@@ -234,18 +232,20 @@ OsiCutsUnitTest()
       for ( OsiCuts::iterator it=t.begin(); it!=t.end(); ++it ) {
         sumEff+= (*it)->effectiveness();
       }
-      assert( sumEff == totEff );
+      OSIUNITTEST_ASSERT_ERROR(sumEff == totEff, {}, "osicuts", "sorting cuts");
     }
 
     {
       OsiCuts::iterator it=t.begin();
       OsiCut * cm1 = *it;
       ++it;
+      bool sort_ok = true;
       for( ; it!=t.end(); it++ ) {
         OsiCut * c = *it;
-        assert( (*cm1)>(*c) );
+        sort_ok &= (*cm1)>(*c);
         cm1 = c;
       }
+      OSIUNITTEST_ASSERT_ERROR(sort_ok, {}, "osicuts", "sorting cuts");
     }
   }
 }

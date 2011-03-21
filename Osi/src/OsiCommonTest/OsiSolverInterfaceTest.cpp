@@ -7,9 +7,10 @@
 
 The OSI unit test is gradually undergoing a conversion. Over time, the goal is
 to factor the original monolith into separate files and routines. Individual
-routines should return a count of failures, and these will be accumulated into
-a total failure count. Eventually, it'd be nice to have a class that records
-more detailed information. Ideally, the implementor of an OsiXXX could
+routines should collect test outcomes in the global OsiUnitTest::outcomes
+object using the OSIUNITTEST_* macros defined in OsiUnitTests.hpp.
+Further, they may return a count of failures, which will be accumulated into a
+total failure count. Ideally, the implementor of an OsiXXX could
 indicated expected failures, to avoid the current practice of modifying the
 unit test to avoid attempting the test for a particular OsiXXX.
 
@@ -17,7 +18,11 @@ The original approach was to use asserts in tests; the net effect is that the
 unit test chokes and dies as soon as something goes wrong. The current
 approach is to soldier on until something has gone wrong which makes further
 testing pointless. The general idea is to return the maximum amount of useful
-information with each run.
+information with each run. The OsiUnitTest::verbosity variable should be used
+to decide on the amount of information to be printed. At level 0, only minimal
+output should be printed, at level 1, more information about failed tests
+should be printed, while at level 2, also information on passed tests and other
+details should be printed.
 
 If you work on this code, please keep these conventions in mind:
 
@@ -53,12 +58,8 @@ If you work on this code, please keep these conventions in mind:
 
 #include "OsiConfig.h"
 
-#ifdef NDEBUG
-#undef NDEBUG
-#endif
 #include "CoinTime.hpp"
 #include <cstdlib>
-#include <cassert>
 #include <vector>
 #include <iostream>
 #include <iomanip>
@@ -90,6 +91,11 @@ If you work on this code, please keep these conventions in mind:
 /*
   Define helper routines in the file-local namespace.
 */
+
+namespace OsiUnitTest {
+extern
+int testSimplexAPI(const OsiSolverInterface* emptySi, const std::string& mpsDir);
+}
 
 using namespace OsiUnitTest ;
 
@@ -1177,12 +1183,8 @@ int changeObjAndResolve (const OsiSolverInterface *emptySi)
   s->initialSolve() ;
 
   const double *colSol = s->getColSolution() ;
-  if (colSol[0] < 4.5)
-  { failureMessage(*s,"changeObjAndResolve: colsol[0] bad value") ;
-    errCnt++ ; }
-  if (colSol[1] > 0.5)
-  { failureMessage(*s,"changeObjAndResolve: colsol[1] bad value") ;
-    errCnt++ ; }
+  OSIUNITTEST_ASSERT_ERROR(colSol[0] >= 4.5, errCnt++, *s, "changeObjAndResolve");
+  OSIUNITTEST_ASSERT_ERROR(colSol[1] <= 0.5, errCnt++, *s, "changeObjAndResolve");
 /*
   Set objective to x1 + x2 and reoptimise.
 */
@@ -1192,12 +1194,8 @@ int changeObjAndResolve (const OsiSolverInterface *emptySi)
   s->resolve() ;
 
   colSol = s->getColSolution() ;
-  if (colSol[0] < 2.3 || colSol[0] > 3.7)
-  { failureMessage(*s,"changeObjAndResolve: colsol[0] bad value") ;
-    errCnt++ ; }
-  if (colSol[1] < 3.5 || colSol[1] > 4.5)
-  { failureMessage(*s,"changeObjAndResolve: colsol[1] bad value") ;
-    errCnt++ ; }
+  OSIUNITTEST_ASSERT_ERROR(colSol[0] >= 2.3 && colSol[0] <= 3.7, errCnt++, *s, "changeObjAndResolve");
+  OSIUNITTEST_ASSERT_ERROR(colSol[1] >= 3.5 && colSol[1] <= 4.5, errCnt++, *s, "changeObjAndResolve");
 
   delete s ;
   return (errCnt) ; }
@@ -1246,37 +1244,31 @@ bool test16SebastianNowozin(OsiSolverInterface *si)
   solvers which use it for initialisation.  -- lh, 080903 --
 */
   si->initialSolve() ;
-  if (!si->isProvenOptimal())
-  { failureMessage(*si,"initialSolve does not solve problem") ;
-    return (false) ; }
-  if (!fltEq(si->getObjValue(),-0.3))
-  { std::cout
-      << "Initial objective " << si->getObjValue()
-      << "; expected -0.3." << std::endl ;
-    failureMessage(*si,"initialSolve gives wrong optimal value") ;
-    return (false) ; }
+  OSIUNITTEST_ASSERT_ERROR(si->isProvenOptimal(), return false, *si, "test16SebastianNowozin initial solve");
+  OSIUNITTEST_ASSERT_ERROR(fltEq(si->getObjValue(),-0.3), return false, *si, "test16SebastianNowozin initial solve");
 /*
   Expected: primal = [ 0 0 1 1 ]
 */
-  const double *primal = si->getColSolution() ;
-  if (!primal)
-  { failureMessage(*si, "No primal column solution at initial solve") ;
-    return (false) ; }
+  OSIUNITTEST_ASSERT_ERROR(si->getColSolution() != NULL, return false, *si, "test16SebastianNowozin initial solve");
 /*
   Simulate a constraint generation interval that will require the simplex
   interface.  Enable, then disable level 2 simplex interface (controllable
   pivoting), if the solver has it.
 */
   if (si->canDoSimplexInterface() >= 2)
-  { try
-    { si->enableFactorization() ;
-      si->enableSimplexInterface(true) ; }
-    catch (CoinError e)
-    { std::string errmsg ;
-      errmsg = "first enableFactorization or enableSimplexInterface" ;
-      errmsg = errmsg + " threw CoinError: " + e.message() ;
-      failureMessage(*si,errmsg) ;
-      return (false) ; }
+  { OSIUNITTEST_CATCH_ERROR(si->enableFactorization(),        return false, *si, "test16SebastianNowozin initial solve");
+  	OSIUNITTEST_CATCH_ERROR(si->enableSimplexInterface(true), return false, *si, "test16SebastianNowozin initial solve");
+//  	try
+//    { si->enableFactorization() ;
+//      si->enableSimplexInterface(true) ; }
+//    catch (CoinError e)
+//    { std::string errmsg ;
+//      errmsg = "first enableFactorization or enableSimplexInterface" ;
+//      errmsg = errmsg + " threw CoinError: " + e.message() ;
+//      OSIUNITTEST_ADD_OUTCOME(*si, "test16SebastianNowozin first enableFactorization or enableSimplexInterface", errmsg.c_str(), TestOutcome::ERROR, false);
+//      failureMessage(*si,errmsg) ;
+//      return (false) ; }
+//    OSIUNITTEST_ADD_OUTCOME(*si, "test16SebastianNowozin first enableFactorization or enableSimplexInterface", "no exception", TestOutcome::PASSED, false);
     // (...) constraint generation here
     si->disableFactorization() ; }
 
@@ -1296,37 +1288,31 @@ bool test16SebastianNowozin(OsiSolverInterface *si)
   si->addRow(row2,-si->getInfinity(),0.0) ;
 
   si->resolve() ;
-  if (!si->isProvenOptimal())
-  { failureMessage(*si, "first resolve does not solve problem") ;
-    return (false) ; }
-  if (!fltEq(si->getObjValue(),-0.1))
-  { std::cout
-      << "Second objective " << si->getObjValue()
-      << "; expected -0.1." << std::endl ;
-    failureMessage(*si,"first resolve gives wrong optimal value") ;
-    return (false) ; }
+  OSIUNITTEST_ASSERT_ERROR(si->isProvenOptimal(),         return false, *si, "test16SebastianNowozin first resolve");
+  OSIUNITTEST_ASSERT_ERROR(fltEq(si->getObjValue(),-0.1), return false, *si, "test16SebastianNowozin first resolve");
 /*
   Expected: primal = [ 1 0 0 1 ]
 */
-  primal = si->getColSolution() ;
-  if (!primal)
-  { failureMessage(*si, "no primal column solution at first resolve") ;
-    return (false) ; }
+  OSIUNITTEST_ASSERT_ERROR(si->getColSolution() != NULL, return false, *si, "test16SebastianNowozin first resolve");
 /*
   Simulate another constraint generation run.
 */
   if (si->canDoSimplexInterface() >= 2)
-  { try
-    { si->enableFactorization() ;
-      si->enableSimplexInterface(true) ; }
-    catch (CoinError e)
-    { std::string errmsg ;
-      errmsg = "second enableFactorization or enableSimplexInterface" ;
-      errmsg = errmsg + " threw CoinError: " + e.message() ;
-      failureMessage(*si,errmsg) ;
-      return (false) ; }
-      // (...) constraint generation here
-      si->disableFactorization() ; }
+  { OSIUNITTEST_CATCH_ERROR(si->enableFactorization(),        return false, *si, "test16SebastianNowozin first resolve");
+	  OSIUNITTEST_CATCH_ERROR(si->enableSimplexInterface(true), return false, *si, "test16SebastianNowozin first resolve");
+//	try
+//    { si->enableFactorization() ;
+//      si->enableSimplexInterface(true) ; }
+//    catch (CoinError e)
+//    { std::string errmsg ;
+//      errmsg = "second enableFactorization or enableSimplexInterface" ;
+//      errmsg = errmsg + " threw CoinError: " + e.message() ;
+//      failureMessage(*si,errmsg) ;
+//      OSIUNITTEST_ADD_OUTCOME(*si, "test16SebastianNowozin second enableFactorization or enableSimplexInterface", errmsg.c_str(), TestOutcome::ERROR, false);
+//      return (false) ; }
+//    OSIUNITTEST_ADD_OUTCOME(*si, "test16SebastianNowozin second enableFactorization or enableSimplexInterface", "no exception", TestOutcome::PASSED, false);
+    // (...) constraint generation here
+    si->disableFactorization() ; }
 /*
   Remove a constraint, add .15 to the objective coefficients, and resolve.
 */
@@ -1337,24 +1323,15 @@ bool test16SebastianNowozin(OsiSolverInterface *si)
 		 std::bind2nd(std::plus<double>(),0.15)) ;
   si->setObjective(objective) ;
   si->resolve() ;
-  if (!si->isProvenOptimal())
-  { failureMessage(*si, "second resolve does not solve problem") ;
-    return (false) ; }
-  if (!fltEq(si->getObjValue(),-0.05))
-  { std::cout
-      << "Third objective " << si->getObjValue()
-      << "; expected -0.05." << std::endl ;
-    failureMessage(*si,"second resolve gives wrong optimal value") ;
-    return (false) ; }
+  OSIUNITTEST_ASSERT_ERROR(si->isProvenOptimal(),          return false, *si, "test16SebastianNowozin second resolve");
+  OSIUNITTEST_ASSERT_ERROR(fltEq(si->getObjValue(),-0.05), return false, *si, "test16SebastianNowozin second resolve");
 /*
   Expected: obj = [ .25 .35 .05 -.05], primal = [ 0 0 0 1 ]
 */
-  primal = si->getColSolution() ;
-  if (!primal)
-  { failureMessage(*si, "no primal column solution at second resolve") ;
-    return (false) ; }
+  OSIUNITTEST_ASSERT_ERROR(si->getColSolution() != NULL, return false, *si, "test16SebastianNowozin second resolve");
 
-  return (true) ; }
+  return true;
+}
 
 
 /*
@@ -1390,32 +1367,18 @@ bool test17SebastianNowozin(OsiSolverInterface *si)
   si->addRow(row1,-si->getInfinity(),0.0) ;
 
   si->initialSolve() ;
+  OSIUNITTEST_ASSERT_ERROR(si->isProvenOptimal(), return false, *si, "test17SebastianNowozin");
   if (!si->isProvenOptimal())
-  { failureMessage(*si,"initialSolve does not solve problem") ;
-    return (false) ; }
+  	return false;
 /*
   Unlike test16, here we do not call si->enableFactorization() first.
 */
-  try
-  { si->enableSimplexInterface(true) ; }
-  catch (CoinError e)
-  { std::string errmsg ;
-    errmsg = "enableSimplexInterface threw CoinError: " ;
-    errmsg = errmsg + e.message() ;
-    failureMessage(*si,errmsg) ;
-    return (false) ; }
+ 	OSIUNITTEST_CATCH_ERROR(si->enableSimplexInterface(true), return false, *si, "test17SebastianNowozin");
 /*
   Now check that getReducedGradient works.
 */
-  try
-  { double dummy[4] = { 1., 1., 1., 1.} ;
-    si->getReducedGradient(dummy,dummy,dummy) ; }
-  catch (CoinError e)
-  { std::string errmsg ;
-    errmsg = "getReducedGradient threw exception: " ;
-    errmsg = errmsg + e.message() ;
-    failureMessage(*si,errmsg) ;
-    return (false) ; }
+ 	double dummy[4] = { 1., 1., 1., 1.} ;
+ 	OSIUNITTEST_CATCH_ERROR(si->getReducedGradient(dummy,dummy,dummy), return false, *si, "test17SebastianNowozin");
 
   return (true) ; }
 
@@ -1432,8 +1395,6 @@ bool test17SebastianNowozin(OsiSolverInterface *si)
 
 int testNames (const OsiSolverInterface *emptySi, std::string fn)
 { int nameDiscipline ;
-  bool boolResult ;
-  int intResult ;
   int errCnt = 0 ;
   bool recognisesOsiNames = true ;
   bool ok ;
@@ -1462,10 +1423,7 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
   Try to get the solver name, but don't immediately abort.
 */
   std::string solverName = "Unknown solver" ;
-  boolResult = si->getStrParam(OsiSolverName,solverName) ;
-  if (boolResult == false)
-  { failureMessage(solverName,"OsiSolverName parameter get.") ;
-    errCnt++ ; }
+  OSIUNITTEST_ASSERT_WARNING(si->getStrParam(OsiSolverName,solverName) == true, errCnt++, solverName, "testNames: getStrParam(OsiSolverName)");
 /*
   Checking default names. dfltRowColName is pretty liberal about indices, but
   they should never be negative. Since default row/column names are a letter
@@ -1474,49 +1432,24 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
 */
   std::string dfltName = si->dfltRowColName('o',0,5) ;
   std::string expName = "OBJECT" ;
-  if (dfltName != expName)
-  { std::cout
-      << "Default objective name is \"" << dfltName
-      << "\" expected \"" << expName << "\"." << std::endl ;
-    failureMessage(solverName,"Default objective name / name truncation.") ;
-    errCnt++ ; }
+  OSIUNITTEST_ASSERT_WARNING(dfltName == expName, errCnt++, solverName, "testNames: default objective name");
 
   dfltName = si->dfltRowColName('r',-1,5) ;
   expName = "!!invalid Row -1!!" ;
-  if (dfltName != expName)
-  { std::cout
-      << "Default name for invalid row index is " << dfltName
-      << "\" expected \"" << expName << "\"." << std::endl ;
-    failureMessage(solverName,"default name for invalid row index.") ;
-    errCnt++ ; }
+  OSIUNITTEST_ASSERT_WARNING(dfltName == expName, errCnt++, solverName, "testNames: default name for invalid row");
 
   dfltName = si->dfltRowColName('c',-1,5) ;
   expName = "!!invalid Col -1!!" ;
-  if (dfltName != expName)
-  { std::cout
-      << "Default name for invalid column index is " << dfltName
-      << "\" expected \"" << expName << "\"." << std::endl ;
-    failureMessage(solverName,"default name for invalid column index.") ;
-    errCnt++ ; }
+  OSIUNITTEST_ASSERT_WARNING(dfltName == expName, errCnt++, solverName, "testNames: default name for invalid col");
 /*
   Start by telling the SI to use lazy names and see if it comes up with
   the right names from the MPS file. There's no point in proceeding further
   if we can't read an MPS file.
 */
   // std::cout << "Testing lazy names from MPS input file." << std::endl ;
-  nameDiscipline = 1 ;
-  boolResult = si->setIntParam(OsiNameDiscipline,nameDiscipline) ;
-  if (boolResult == false)
-  { failureMessage(solverName,
-		   "Does not support OsiNameDiscipline.") ;
-    recognisesOsiNames = false ; }
+  OSIUNITTEST_ASSERT_WARNING(si->setIntParam(OsiNameDiscipline, 1) == true, recognisesOsiNames = false, solverName, "testNames: switch to lazy names");
 
-  intResult = si->readMps(fn.c_str(),"mps") ;
-  if (intResult != 0)
-  { failureMessage(solverName,"Read MPS input file.") ;
-    delete si ;
-    errCnt++ ;
-    return (errCnt) ; }
+  OSIUNITTEST_ASSERT_ERROR(si->readMps(fn.c_str(),"mps") == 0, delete si; return ++errCnt, solverName, "testNames: read MPS");
 
   OsiSolverInterface::OsiNameVec rowNames ;
   int rowNameCnt ;
@@ -1527,114 +1460,69 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
 
   if (recognisesOsiNames)
   { std::string objName = si->getObjName() ;
-    if (objName != exmip1ObjName)
-    { std::cout
-	<< "Objective name is \"" << objName
-	<< "\" expected \"OBJ\"." << std::endl ;
-      failureMessage(solverName,"objective name from mps file.") ;
-      errCnt++ ; }
-    if (objName != si->getRowName(m))
-    { std::cout
-        << "getObjName returns \"" << objName
-	<< "\" but getRowName(m) returns \"" << si->getRowName(m)
-	<< "\"; should be equal." << std::endl ;
-      failureMessage(solverName,"objective name disagreement, lazy names.") ;
-      errCnt++ ; }
+    OSIUNITTEST_ASSERT_WARNING(objName == exmip1ObjName, errCnt++, solverName, "testNames lazy names: objective name");
+    OSIUNITTEST_ASSERT_WARNING(si->getRowName(m) == exmip1ObjName, errCnt++, solverName, "testNames lazy names: name of one after last row is objective name");
 
     rowNames = si->getRowNames() ;
     rowNameCnt = static_cast<int>(rowNames.size()) ;
-    if (rowNameCnt != static_cast<int>(exmip1RowNames.size()))
-    { std::cout
-	<< "Read " << rowNameCnt << " names from " << fn.c_str()
-	<< ", expected " << exmip1RowNames.size() << "." << std::endl ;
-      failureMessage(solverName,"row name count from mps file.") ;
-      errCnt++ ; }
+    OSIUNITTEST_ASSERT_WARNING(rowNameCnt == static_cast<int>(exmip1RowNames.size()), errCnt++, solverName, "testNames lazy names: row names count");
     ok = true ;
     for (int i = 0 ; i < rowNameCnt ; i++)
     { if (rowNames[i] != exmip1RowNames[i])
       { ok = false ;
         std::cout << "ERROR! " ;
-	errCnt++ ;
-	std::cout
-	  << "Row " << i << " is \"" << rowNames[i]
-	  << "\" expected \"" << exmip1RowNames[i] << "\"." << std::endl ; } }
-    if (!ok)
-    { failureMessage(solverName,"Error in row names read from exmip1.mps.") ; }
+        std::cout << "Row " << i << " is \"" << rowNames[i] << "\" expected \"" << exmip1RowNames[i] << "\"." << std::endl; } }
+    OSIUNITTEST_ASSERT_WARNING(ok == true, errCnt++, solverName, "testNames lazy names: row names");
 
     colNames = si->getColNames() ;
     colNameCnt = static_cast<int>(colNames.size()) ;
-    if (colNameCnt != static_cast<int>(exmip1ColNames.size()))
-    { std::cout
-	<< "Read " << colNameCnt << " names from " << fn.c_str()
-	<< ", expected " << exmip1ColNames.size() << "." << std::endl ;
-      failureMessage(solverName,"column name count from mps file.") ;
-      errCnt++ ; }
+    OSIUNITTEST_ASSERT_WARNING(colNameCnt == static_cast<int>(exmip1ColNames.size()), errCnt++, solverName, "testNames lazy names: column names count");
     ok = true ;
     for (int j = 0 ; j < colNameCnt ; j++)
     { if (colNames[j] != exmip1ColNames[j])
       { ok = false ;
         std::cout << "ERROR! " ;
-	errCnt++ ;
-	std::cout
-	  << "Column " << j << " is " << colNames[j]
-	  << "\" expected \"" << exmip1ColNames[j] << "\"." << std::endl ; } }
-    if (!ok)
-    { failureMessage(solverName,
-		     "Error in column names read from exmip1.mps.") ; }
+        std::cout << "Column " << j << " is " << colNames[j] << "\" expected \"" << exmip1ColNames[j] << "\"." << std::endl ; } }
+    OSIUNITTEST_ASSERT_WARNING(ok == true, errCnt++, solverName, "testNames lazy names: column names");
 /*
   Switch back to name discipline 0. We should revert to default names. Failure
   to switch back to discipline 0 after successfully switching to discipline 1
   is some sort of internal confusion in the Osi; abort the test.
 */
     // std::cout << "Switching to no names (aka default names)." << std::endl ;
-    nameDiscipline = 0 ;
-    boolResult = si->setIntParam(OsiNameDiscipline,nameDiscipline) ;
-    if (boolResult == false)
-    { failureMessage(solverName,"OsiNameDiscipline = 0 parameter set") ;
-      errCnt++ ;
-      delete si ;
-      return (errCnt) ; } }
+    OSIUNITTEST_ASSERT_WARNING(si->setIntParam(OsiNameDiscipline, 0) == true, delete si; return ++errCnt, solverName, "testNames: switch to no names");
+  }
 /*
   This block of tests for default names should pass even if the underlying
   Osi doesn't recognise OsiNameDiscipline. When using default names, name
   vectors are not necessary, hence should have size zero.
 */
   rowNames = si->getRowNames() ;
-  if (rowNames.size() != 0)
-  { failureMessage(solverName,
-		   "Nonzero row name vector length, discipline = 0.") ;
-    errCnt++ ; }
+  OSIUNITTEST_ASSERT_WARNING(rowNames.size() == 0, errCnt++, solverName, "testNames no names: row names count");
   ok = true ;
   for (int i = 0 ; i < m ; i++)
   { if (si->getRowName(i) != si->dfltRowColName('r',i))
     { ok = false ;
       std::cout << "ERROR! " ;
-      errCnt++ ;
       std::cout
-	<< "Row " << i << " is \"" << si->getRowName(i)
-	<< "\" expected \"" << si->dfltRowColName('r',i)
-	<< "\"." << std::endl ; } }
-  if (!ok)
-  { failureMessage(solverName,"Error in default row names.") ; }
+      << "Row " << i << " is \"" << si->getRowName(i)
+      << "\" expected \"" << si->dfltRowColName('r',i)
+      << "\"." << std::endl ; } }
+  OSIUNITTEST_ASSERT_WARNING(ok == true, errCnt++, solverName, "testNames no names: row names");
 
   colNames = si->getColNames() ;
-  if (colNames.size() != 0)
-  { failureMessage(solverName,
-		   "Nonzero column name vector length, discipline = 0.") ;
-    errCnt++ ; }
+  OSIUNITTEST_ASSERT_WARNING(colNames.size() == 0, errCnt++, solverName, "testNames no names: column names count");
   int n = si->getNumCols() ;
   ok = true ;
   for (int j = 0 ; j < n ; j++)
   { if (si->getColName(j) != si->dfltRowColName('c',j))
     { ok = false ;
       std::cout << "ERROR! " ;
-      errCnt++ ;
       std::cout
-	<< "Column " << j << " is \"" << si->getColName(j)
-	<< "\" expected \"" << si->dfltRowColName('c',j)
-	<< "\"." << std::endl ; } }
-  if (!ok)
-  { failureMessage(solverName,"Error in default column names.") ; }
+      << "Column " << j << " is \"" << si->getColName(j)
+      << "\" expected \"" << si->dfltRowColName('c',j)
+      << "\"." << std::endl ; } }
+  OSIUNITTEST_ASSERT_WARNING(ok == true, errCnt++, solverName, "testNames no names: column names");
 /*
   This is as much as we can ask if the underlying solver doesn't recognise
   OsiNameDiscipline. Return if that's the case.
@@ -1645,64 +1533,37 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
     else
     { std::ostringstream msg ;
       msg << "name discipline management/naming"
-	  << "; " << errCnt << " naming errors." ;
-      failureMessage(solverName,msg.str()) ; }
+      		<< "; " << errCnt << " naming errors." ;
+      failureMessage(solverName,msg.str()) ;
+    }
     delete si ;
     return (errCnt) ; }
 /*
   Switch back to lazy names. The previous names should again be available.
 */
   // std::cout << "Switching back to lazy names." << std::endl ;
-  nameDiscipline = 1 ;
-  boolResult = si->setIntParam(OsiNameDiscipline,nameDiscipline) ;
-  if (boolResult == false)
-  { failureMessage(solverName,"OsiNameDiscipline = 1 parameter set.") ;
-    errCnt++ ;
-    delete si ;
-    return (errCnt) ; }
+  OSIUNITTEST_ASSERT_WARNING(si->setIntParam(OsiNameDiscipline,1) == true, delete si; return ++errCnt, solverName, "testNames: switch to lazy names");
   rowNames = si->getRowNames() ;
   rowNameCnt = static_cast<int>(rowNames.size()) ;
-  if (rowNameCnt != static_cast<int>(exmip1RowNames.size()))
-  { std::cout
-      << rowNameCnt << " names available, expected "
-      << exmip1RowNames.size() << "." << std::endl ;
-    failureMessage(solverName,
-		   "row name count, discipline switch 0 -> 1.") ;
-    errCnt++ ; }
+  OSIUNITTEST_ASSERT_WARNING(rowNameCnt == static_cast<int>(exmip1RowNames.size()), ++errCnt, solverName, "testNames lazy names: row names count");
   ok = true ;
   for (int i = 0 ; i < rowNameCnt ; i++)
   { if (rowNames[i] != exmip1RowNames[i])
     { ok = false ;
       std::cout << "ERROR! " ;
-      errCnt++ ;
-      std::cout
-	<< "Row " << i << " is \"" << rowNames[i]
-	<< "\" expected \"" << exmip1RowNames[i] << "\"." << std::endl ; } }
-  if (!ok)
-  { failureMessage(solverName,
-  	"lazy row names, discipline switch 0 -> 1.") ; }
+      std::cout << "Row " << i << " is \"" << rowNames[i] << "\" expected \"" << exmip1RowNames[i] << "\"." << std::endl ; } }
+  OSIUNITTEST_ASSERT_WARNING(ok == true, ++errCnt, solverName, "testNames lazy names: row names");
 
   colNames = si->getColNames() ;
   colNameCnt = static_cast<int>(colNames.size()) ;
-  if (colNameCnt != static_cast<int>(exmip1ColNames.size()))
-  { std::cout
-      << colNameCnt << " names available, expected "
-      << exmip1ColNames.size() << "." << std::endl ;
-    failureMessage(solverName,
-		   "column name count, discipline switch 0 -> 1.") ;
-    errCnt++ ; }
+  OSIUNITTEST_ASSERT_WARNING(colNameCnt == static_cast<int>(exmip1ColNames.size()), ++errCnt, solverName, "testNames lazy names: column names count");
   ok = true ;
   for (int j = 0 ; j < colNameCnt ; j++)
   { if (colNames[j] != exmip1ColNames[j])
     { ok = false ;
       std::cout << "ERROR! " ;
-      errCnt++ ;
-      std::cout
-	<< "Column " << j << " is " << colNames[j]
-	<< "\" expected \"" << exmip1ColNames[j] << "\"." << std::endl ; } }
-  if (!ok)
-  { failureMessage(solverName,
-  	"lazy column names, discipline switch 0 -> 1.") ; }
+      std::cout << "Column " << j << " is " << colNames[j] << "\" expected \"" << exmip1ColNames[j] << "\"." << std::endl ; } }
+  OSIUNITTEST_ASSERT_WARNING(ok == true, ++errCnt, solverName, "testNames lazy names: column names");
 /*
   Add a row. We should see no increase in the size of the row name vector,
   and asking for the name of the new row should return a default name.
@@ -1712,36 +1573,17 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
   double els[5] = { 1.0, 3.0, 4.0, 5.0, 42.0 } ;
   CoinPackedVector newRow(nels,indices,els) ;
   si->addRow(newRow,-4.2, .42) ;
-  if (si->getNumRows() != m+1)
-  { failureMessage(solverName,"add new row") ;
-    errCnt++ ;
-    delete si ;
-    return (errCnt) ; }
+  OSIUNITTEST_ASSERT_WARNING(si->getNumRows() == m+1, delete si; return ++errCnt, solverName, "testNames lazy names: added a row");
   rowNames = si->getRowNames() ;
   rowNameCnt = static_cast<int>(rowNames.size()) ;
-  if (rowNameCnt != m)
-  { failureMessage(solverName,"incorrect length row name vector") ;
-    errCnt++ ; }
-  if (si->getRowName(m) != si->dfltRowColName('r',m))
-  { std::cout
-      << "Added new row " << si->getNumRows()-1
-      << "; name is \"" << si->getRowName(m)
-      << "\", expected default \"" << si->dfltRowColName('r',m)
-      << "\"." << std::endl ;
-    failureMessage(solverName,"incorrect default row name.") ;
-    errCnt++ ; }
+  OSIUNITTEST_ASSERT_WARNING(rowNameCnt == m, ++errCnt, solverName, "testNames lazy names: row names count after row addition");
+  OSIUNITTEST_ASSERT_WARNING(si->getRowName(m) == si->dfltRowColName('r',m), ++errCnt, solverName, "testNames lazy names: default name for added row");
 /*
   Now set a name for the row.
 */
   std::string newRowName = "NewRow" ;
   si->setRowName(m,newRowName) ;
-  if (si->getRowName(m) != newRowName)
-  { std::cout
-      << "Setting row name to \"" << newRowName << "\"." << std::endl ;
-    std::cout
-      << "Recovering name as \"" << si->getRowName(m) << "\"." << std::endl ;
-    failureMessage(solverName,"set row name after addRow.") ;
-    errCnt++ ; }
+  OSIUNITTEST_ASSERT_WARNING(si->getRowName(m) == newRowName, ++errCnt, solverName, "testNames lazy names: setting new row name");
 /*
   Ok, who are we really talking with? Delete row 0 and see if the names
   change appropriately. Since deleteRows is pure virtual, the names will
@@ -1752,11 +1594,7 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
   si->deleteRows(1,indices) ;
   rowNames = si->getRowNames() ;
   rowNameCnt = static_cast<int>(rowNames.size()) ;
-  if (rowNameCnt != m)
-  { std::cout
-      << rowNameCnt << " names available, expected " << m << "." << std::endl ;
-    failureMessage(solverName,"row name count after deleteRows.") ;
-    errCnt++ ; }
+  OSIUNITTEST_ASSERT_WARNING(rowNameCnt == m, ++errCnt, solverName, "testNames lazy names: row names count after deleting row");
   ok = true ;
   for (int i = 0 ; i < rowNameCnt ; i++)
   { std::string expected ;
@@ -1767,13 +1605,8 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
     if (rowNames[i] != expected)
     { ok = false ;
       std::cout << "ERROR! " ;
-      errCnt++ ;
-      std::cout
-	<< "Row " << i << " is \"" << rowNames[i]
-	<< "\" expected \"" << expected << "\"." << std::endl ; } }
-  if (!ok)
-  { failureMessage(solverName,
-  	"row names do not adjust correctly after deletion of a row.") ; }
+      std::cout << "Row " << i << " is \"" << rowNames[i] << "\" expected \"" << expected << "\"." << std::endl ; } }
+  OSIUNITTEST_ASSERT_WARNING(ok == true, ++errCnt, solverName, "testNames lazy names: row names after deleting row");
 
 /*
   Add/delete a column and do the same tests. Expected results as above.
@@ -1787,43 +1620,19 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
   els[2] = 24.0 ;
   CoinPackedVector newCol(nels,indices,els) ;
   si->addCol(newCol,-4.2, .42, 42.0) ;
-  if (si->getNumCols() != n+1)
-  { failureMessage(solverName,"add new column") ;
-    errCnt++ ;
-    delete si ;
-    return (errCnt) ; }
+  OSIUNITTEST_ASSERT_ERROR(si->getNumCols() == n+1, delete si; return ++errCnt, solverName, "testNames lazy names: columns count after adding column");
   colNames = si->getColNames() ;
   colNameCnt = static_cast<int>(colNames.size()) ;
-  if (colNameCnt != n)
-  { failureMessage(solverName,"incorrect length column name vector") ;
-    errCnt++ ; }
-  if (si->getColName(n) != si->dfltRowColName('c',n))
-  { std::cout
-      << "Added new column " << si->getNumCols()-1
-      << "; name is \"" << si->getColName(n)
-      << "\", expected default \"" << si->dfltRowColName('c',n)
-      << "\"." << std::endl ;
-    failureMessage(solverName,"incorrect default column name.") ;
-    errCnt++ ; }
+  OSIUNITTEST_ASSERT_WARNING(colNameCnt == n, ++errCnt, solverName, "testNames lazy names: columns names count after adding column");
+  OSIUNITTEST_ASSERT_WARNING(si->getColName(n) == si->dfltRowColName('c',n), ++errCnt, solverName, "testNames lazy names default column name after adding column");
   std::string newColName = "NewCol" ;
   si->setColName(n,newColName) ;
-  if (si->getColName(n) != newColName)
-  { std::cout
-      << "Setting column name to \"" << newColName << "\"." << std::endl ;
-    std::cout
-      << "Recovering name as \"" << si->getColName(n) << "\"." << std::endl ;
-    failureMessage(solverName,"set column name after addCol.") ;
-    errCnt++ ; }
+  OSIUNITTEST_ASSERT_WARNING(si->getColName(n) == newColName, ++errCnt, solverName, "testNames lazy names: setting column name");
   // std::cout << "Testing column deletion." << std::endl ;
   si->deleteCols(1,indices) ;
   colNames = si->getColNames() ;
   colNameCnt = static_cast<int>(colNames.size()) ;
-  if (colNameCnt != n)
-  { std::cout
-      << colNameCnt << " names available, expected " << n << "." << std::endl ;
-    failureMessage(solverName,
-		   "column name count after deleteCols.") ;
-    errCnt++ ; }
+  OSIUNITTEST_ASSERT_WARNING(colNameCnt == n, ++errCnt, solverName, "testNames lazy names: column names count after deleting column");
   ok = true ;
   for (int j = 0 ; j < colNameCnt ; j++)
   { std::string expected ;
@@ -1834,13 +1643,8 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
     if (colNames[j] != expected)
     { ok = false ;
       std::cout << "ERROR! " ;
-      errCnt++ ;
-      std::cout
-	<< "Column " << j << " is \"" << colNames[j]
-	<< "\" expected \"" << expected << "\"." << std::endl ; } }
-  if (!ok)
-  { failureMessage(solverName,
-  	"column names do not adjust correctly after deletion of a column.") ; }
+      std::cout << "Column " << j << " is \"" << colNames[j] << "\" expected \"" << expected << "\"." << std::endl ; } }
+  OSIUNITTEST_ASSERT_WARNING(ok == true, ++errCnt, solverName, "testNames lazy names: column names after deleting column");
 /*
   Interchange row and column names.
 */
@@ -1848,12 +1652,7 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
   si->setRowNames(exmip1ColNames,0,3,2) ;
   rowNames = si->getRowNames() ;
   rowNameCnt = static_cast<int>(rowNames.size()) ;
-  if (rowNameCnt != m)
-  { std::cout
-      << rowNameCnt << " names available, expected "
-      << m << "." << std::endl ;
-    failureMessage(solverName,"row name count after bulk replace.") ;
-    errCnt++ ; }
+  OSIUNITTEST_ASSERT_WARNING(rowNameCnt == m, ++errCnt, solverName, "testNames lazy names: row names count after bulk replace");
   ok = true ;
   for (int i = 0 ; i < rowNameCnt ; i++)
   { std::string expected ;
@@ -1867,22 +1666,13 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
     if (rowNames[i] != expected)
     { ok = false ;
       std::cout << "ERROR! " ;
-      errCnt++ ;
-      std::cout
-	<< "Row " << i << " is \"" << rowNames[i]
-	<< "\" expected \"" << expected << "\"." << std::endl ; } }
-  if (!ok)
-  { failureMessage(solverName,"bulk set of row names failed.") ; }
+      std::cout << "Row " << i << " is \"" << rowNames[i]	<< "\" expected \"" << expected << "\"." << std::endl ; } }
+  OSIUNITTEST_ASSERT_WARNING(ok == true, ++errCnt, solverName, "testNames lazy names: row names after bulk replace");
 
   si->setColNames(exmip1RowNames,3,2,0) ;
   colNames = si->getColNames() ;
   colNameCnt = static_cast<int>(colNames.size()) ;
-  if (colNameCnt != n)
-  { std::cout
-      << colNameCnt << " names available, expected "
-      << n << "." << std::endl ;
-    failureMessage(solverName,"column name count after bulk replace") ;
-    errCnt++ ; }
+  OSIUNITTEST_ASSERT_WARNING(colNameCnt == n, ++errCnt, solverName, "testNames lazy names: column names count after bulk replace");
   ok = true ;
   for (int j = 0 ; j < colNameCnt ; j++)
   { std::string expected ;
@@ -1896,12 +1686,8 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
     if (colNames[j] != expected)
     { ok = false ;
       std::cout << "ERROR! " ;
-      errCnt++ ;
-      std::cout
-	<< "Column " << j << " is \"" << colNames[j]
-	<< "\" expected \"" << expected << "\"." << std::endl ; } }
-  if (!ok)
-  { failureMessage(solverName,"bulk set of column names failed.") ; }
+      std::cout << "Column " << j << " is \"" << colNames[j] << "\" expected \"" << expected << "\"." << std::endl ; } }
+  OSIUNITTEST_ASSERT_WARNING(ok == true, ++errCnt, solverName, "testNames lazy names: column names after bulk replace");
 /*
   Delete a few row and column names (directly, as opposed to deleting rows or
   columns). Names should shift downward.
@@ -1910,12 +1696,7 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
   si->deleteRowNames(0,2) ;
   rowNames = si->getRowNames() ;
   rowNameCnt = static_cast<int>(rowNames.size()) ;
-  if (rowNameCnt != m-2)
-  { std::cout
-      << rowNameCnt << " names available, expected "
-      << m-2 << "." << std::endl ;
-    failureMessage(solverName,"row name count after deleteRowNames.") ;
-    errCnt++ ; }
+  OSIUNITTEST_ASSERT_WARNING(rowNameCnt == m-2, ++errCnt, solverName, "testNames lazy names: row names count after deleting 2 rows");
   ok = true ;
   for (int i = 0 ; i < rowNameCnt ; i++)
   { std::string expected ;
@@ -1924,23 +1705,13 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
     if (rowNames[i] != expected)
     { ok = false ;
       std::cout << "ERROR! " ;
-      errCnt++ ;
-      std::cout
-	<< "Row " << i << " is \"" << rowNames[i]
-	<< "\" expected \"" << expected << "\"." << std::endl ; } }
-  if (!ok)
-  { failureMessage(solverName,
-  	"row names did not adjust correctly after deleteRowNames.") ; }
+      std::cout << "Row " << i << " is \"" << rowNames[i] << "\" expected \"" << expected << "\"." << std::endl ; } }
+  OSIUNITTEST_ASSERT_WARNING(ok == true, ++errCnt, solverName, "testNames lazy names: row names after deleting 2 rows");
 
   si->deleteColNames(5,3) ;
   colNames = si->getColNames() ;
   colNameCnt = static_cast<int>(colNames.size()) ;
-  if (colNameCnt != n-3)
-  { std::cout
-      << colNameCnt << " names available, expected "
-      << n-3 << "." << std::endl ;
-    failureMessage(solverName,"column name count after deleteColNames.") ;
-    errCnt++ ; }
+  OSIUNITTEST_ASSERT_WARNING(colNameCnt == n-3, ++errCnt, solverName, "testNames lazy names: column names count after deleting 3 columns");
   ok = true ;
   for (int j = 0 ; j < colNameCnt ; j++)
   { std::string expected ;
@@ -1952,39 +1723,20 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
     if (colNames[j] != expected)
     { ok = false ;
       std::cout << "ERROR! " ;
-      errCnt++ ;
-      std::cout
-	<< "Column " << j << " is \"" << colNames[j]
-	<< "\" expected \"" << expected << "\"." << std::endl ; } }
-  if (!ok)
-  { failureMessage(solverName,
-  	"column names did not adjust correctly after deleteColNames.") ; }
+      std::cout << "Column " << j << " is \"" << colNames[j] << "\" expected \"" << expected << "\"." << std::endl ; } }
+  OSIUNITTEST_ASSERT_WARNING(ok == true, ++errCnt, solverName, "testNames lazy names: column names after deleting 3 columns");
 /*
   Finally, switch to full names, and make sure we retrieve full length
   vectors.
 */
   // std::cout << "Switching to full names." << std::endl ;
   nameDiscipline = 2 ;
-  boolResult = si->setIntParam(OsiNameDiscipline,nameDiscipline) ;
-  if (boolResult == false)
-  { failureMessage(solverName,"OsiNameDiscipline = 2 parameter set") ;
-    delete si;
-    return (errCnt) ; }
+  OSIUNITTEST_ASSERT_WARNING(si->setIntParam(OsiNameDiscipline,2), delete si; return ++errCnt, solverName, "testNames lazy names: change name discipline");
   m = si->getNumRows() ;
   rowNames = si->getRowNames() ;
   rowNameCnt = static_cast<int>(rowNames.size()) ;
-  if (rowNameCnt != m+1)
-  { std::cout
-      << rowNameCnt << " names available, expected "
-      << m+1 << "." << std::endl ;
-    failureMessage(solverName,"row name count, full names.") ;
-    errCnt++ ; }
-  if (rowNames[m] != exmip1ObjName)
-  { std::cout
-      << "Objective name is \"" << rowNames[m]
-      << "\" expected \"" << exmip1ObjName << "\"." << std::endl ;
-    failureMessage(solverName,"objective name disagreement, full names.") ;
-    errCnt++ ; }
+  OSIUNITTEST_ASSERT_WARNING(rowNameCnt == m+1, ++errCnt, solverName, "testNames full names: row names count");
+  OSIUNITTEST_ASSERT_WARNING(rowNames[m] == exmip1ObjName, ++errCnt, solverName, "testNames full names: objective name");
   ok = true ;
   for (int i = 0 ; i < rowNameCnt-1 ; i++)
   { std::string expected ;
@@ -1995,22 +1747,13 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
     if (rowNames[i] != expected)
     { ok = false ;
       std::cout << "ERROR! " ;
-      errCnt++ ;
-      std::cout
-	<< "Row " << i << " is \"" << rowNames[i]
-	<< "\" expected \"" << expected << "\"." << std::endl ; } }
-  if (!ok)
-  { failureMessage(solverName,"incorrect row names, full names.") ; }
+      std::cout << "Row " << i << " is \"" << rowNames[i] << "\" expected \"" << expected << "\"." << std::endl ; } }
+  OSIUNITTEST_ASSERT_WARNING(ok == true, ++errCnt, solverName, "testNames full names: row names");
 
   n = si->getNumCols() ;
   colNames = si->getColNames() ;
   colNameCnt = static_cast<int>(colNames.size()) ;
-  if (colNameCnt != n)
-  { std::cout
-      << colNameCnt << " names available, expected "
-      << n << "." << std::endl ;
-    failureMessage(solverName,"column name count, full names.") ;
-    errCnt++ ; }
+  OSIUNITTEST_ASSERT_WARNING(colNameCnt == n, ++errCnt, solverName, "testNames full names: column names count");
   ok = true ;
   for (int j = 0 ; j < colNameCnt ; j++)
   { std::string expected ;
@@ -2024,24 +1767,19 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
     if (colNames[j] != expected)
     { ok = false ;
       std::cout << "ERROR! " ;
-      errCnt++ ;
-      std::cout
-	<< "Column " << j << " is " << colNames[j]
-	<< "\" expected \"" << expected << "\"." << std::endl ; } }
-  if (!ok)
-  { failureMessage(solverName,"incorrect column names, full names.") ; }
+      std::cout << "Column " << j << " is " << colNames[j] << "\" expected \"" << expected << "\"." << std::endl ; } }
+  OSIUNITTEST_ASSERT_WARNING(ok == true, ++errCnt, solverName, "testNames full names: column names");
 
   if (errCnt == 0)
   { testingMessage(" ok.\n") ; }
   else
   { std::ostringstream msg ;
-    msg << "name discipline management/naming"
-	<< "; " << errCnt << " naming errors." ;
-    failureMessage(solverName,msg.str()) ; }
+    msg << "name discipline management/naming" << "; " << errCnt << " naming errors." ;
+    failureMessage(solverName,msg.str()) ;
+  }
 
   delete si ;
   return (errCnt) ;
-
 }
 
 //--------------------------------------------------------------------------
@@ -2089,11 +1827,8 @@ void testSettingSolutions (OsiSolverInterface &proto)
   equality, as no arithmetic should be performed.
 */
   si->setColSolution(dummyColSol) ;
+  OSIUNITTEST_ASSERT_ERROR(dummyColSol != si->getColSolution(), allOK = false, *si, "setting solutions: solver should not return original pointer");
   rowVec = si->getColSolution() ;
-  if (dummyColSol == rowVec)
-  { failureMessage(*si,
-  	"Solver returned original pointer for column solution!") ;
-    allOK = false ; }
 
   bool ok = true ;
   for (i = 0 ; i < n ;  i++)
@@ -2104,20 +1839,13 @@ void testSettingSolutions (OsiSolverInterface &proto)
       std::cout
         << "x<" << i << "> = " << mval
         << ", expecting " << rval
-	<< ", |error| = " << (mval-rval)
+        << ", |error| = " << (mval-rval)
         << "." << std::endl ; } }
-  if (!ok)
-  { failureMessage(*si,
-	"Incorrect value returned for column (primal) solution set"
-	" with setColSolution.") ;
-    allOK = false ; }
+  OSIUNITTEST_ASSERT_ERROR(ok == true, allOK = false, *si, "setting solutions: solver stored column solution correctly");
 
   si->setRowPrice(dummyRowSol) ;
+  OSIUNITTEST_ASSERT_ERROR(dummyRowSol != si->getRowPrice(), allOK = false, *si, "setting solutions: solver should not return original pointer");
   colVec = si->getRowPrice() ;
-  if (dummyRowSol == colVec)
-  { failureMessage(*si,
-  	"Solver returned original pointer for row solution!") ;
-    allOK = false ; }
 
   ok = true ;
   for (i = 0 ; i < m ; i++)
@@ -2128,13 +1856,9 @@ void testSettingSolutions (OsiSolverInterface &proto)
       std::cout
         << "y<" << i << "> = " << mval
         << ", expecting " << cval
-	<< ", |error| = " << (mval-cval)
+        << ", |error| = " << (mval-cval)
         << "." << std::endl ; } }
-  if (!ok)
-  { failureMessage(*si,
-	"Incorrect value returned for row (dual) solution set"
-	" with setRowPrice.") ;
-    allOK = false ; }
+  OSIUNITTEST_ASSERT_ERROR(ok == true, allOK = false, *si, "setting solutions: solver stored row price correctly");
 /*
   Now let's get serious. Check that reduced costs and row activities match
   the values we just specified for row and column solutions. Absolute
@@ -2155,13 +1879,10 @@ void testSettingSolutions (OsiSolverInterface &proto)
       std::cout
         << "cbar<" << i << "> = " << mval
         << ", expecting " << rval
-	<< ", |error| = " << (mval-rval)
+        << ", |error| = " << (mval-rval)
         << "." << std::endl ; } }
+  OSIUNITTEST_ASSERT_ERROR(ok == true, allOK = false, *si, "setting solutions: reduced costs from solution set with setRowPrice");
 
-  if (!ok)
-  { failureMessage(*si,
-	"Incorrect reduced costs from solution set with setRowPrice.") ;
-    allOK = false ; }
 /*
   Row activity: Ax
 */
@@ -2176,13 +1897,9 @@ void testSettingSolutions (OsiSolverInterface &proto)
       std::cout
         << "lhs<" << i << "> = " << mval
         << ", expecting " << cval
-	<< ", |error| = " << (mval-cval)
-	<< "." << std::endl ; } }
-
-  if (!ok)
-  { failureMessage(*si,
-	"Incorrect row activity from solution set with setColSolution.") ;
-    allOK = false ; }
+        << ", |error| = " << (mval-cval)
+        << "." << std::endl ; } }
+  OSIUNITTEST_ASSERT_ERROR(ok == true, allOK = false, *si, "setting solutions: row activity from solution set with setColSolution");
 
   if (allOK)
   { testingMessage(" ok.\n") ; }
@@ -2260,42 +1977,30 @@ bool testHintParam(OsiSolverInterface * si, int k, bool sense,
   return is defined as true if the hint is implemented, false if it is not.
   Information printing is suppressed; uncomment and recompile if you want it.
 */
-{ const bool verbose = false ;
-  bool post_sense ;
+{ bool post_sense ;
   OsiHintStrength post_strength ;
   bool ret ;
   OsiHintParam key = static_cast<OsiHintParam>(k) ;
 
   if (si->getHintParam(key,post_sense,post_strength))
   { ret = false ;
-    try
-    { if (si->setHintParam(key,sense,strength))
-      { ret = (si->getHintParam(key,post_sense,post_strength) == true) &&
-	      (post_strength == strength) && (post_sense == sense) ; } }
-    catch (CoinError &thrownErr)
-    { if (verbose)
-	  { std::ostringstream msg ;
-        msg << "setHintParam throw for hint " << key << " sense " << sense
-			<< " strength " << strength ;
-        failureMessage(*si,msg.str()) ;
-        std::cerr << thrownErr.className() << "::" << thrownErr.methodName()
-		    <<  ": " << thrownErr.message() << std::endl ; }
-      (*throws)++ ;
-      ret = (strength == OsiForceDo) ; } }
+  	std::ostringstream tstname;
+    tstname << "testHintParam: hint " << key << " sense " << sense << " strength " << strength;
+    OSIUNITTEST_CATCH_WARNING(
+    	if (si->setHintParam(key,sense,strength)) {
+    		ret = (si->getHintParam(key,post_sense,post_strength) == true) && (post_strength == strength) && (post_sense == sense);
+    	},
+    	(*throws)++;
+    	ret = (strength == OsiForceDo),
+    	*si, tstname.str()
+    );
+  }
   else
   { ret = true ;
-    try
-    { ret = si->setHintParam(key,sense,strength) ; }
-    catch (CoinError &thrownErr)
-    { if (verbose)
-	  { std::ostringstream msg ;
-        msg << "setHintParam throw for hint " << key << " sense " << sense
-			<< " strength " << strength ;
-        failureMessage(*si,msg.str()) ;
-        std::cerr << thrownErr.className() << "::" << thrownErr.methodName()
-			<< ": " << thrownErr.message() << std::endl ; }
-      (*throws)++ ;
-      ret = !(strength == OsiForceDo) ; } }
+  	std::ostringstream tstname;
+  	tstname << "testHintParam: hint " << key << " sense " << sense << " strength " << strength;
+  	OSIUNITTEST_CATCH_WARNING(ret = si->setHintParam(key,sense,strength),	(*throws)++; ret = !(strength == OsiForceDo), *si, tstname.str());
+  }
 
   return ret ; }
 
@@ -2328,32 +2033,15 @@ int testObjFunctions (const OsiSolverInterface *emptySi,
 /*
   Check for default objective sense. This should be minimisation.
 */
-  double dfltSense = si->getObjSense() ;
-  if (dfltSense != 1.0)
-  { if (dfltSense == -1.0)
-    { std::cout
-	<< "Warning: solver's default objective sense is maximisation."
-	<< std::endl ; }
-    else
-    { std::cout
-	<< "Warning: solver's default objective sense is " << dfltSense
-	<< ", an indeterminate value." << std::endl ; }
-    failureMessage(solverName,
-      "Default objective sense is not minimisation.") ;
-    errCnt++ ; }
+  OSIUNITTEST_ASSERT_ERROR(si->getObjSense() == 1.0 || si->getObjSense() == -1.0, errCnt++, solverName, "testObjFunctions: default objective sense is determinant value");
+  OSIUNITTEST_ASSERT_WARNING(si->getObjSense() == 1.0, errCnt++, solverName, "testObjFunctions: default objective sense is minimization");
+
 /*
   Read in e226; chosen because it has an offset defined in the mps file.
   We can't continue if we can't read the test problem.
 */
   std::string fn = mpsDir+"e226" ;
-  int mpsRc = si->readMps(fn.c_str(),"mps") ;
-  if (mpsRc != 0)
-  { std::cout
-      << "testObjFunctions: failed to read test problem e226." << std::endl ;
-    failureMessage(solverName, "read test problem e226") ;
-    errCnt++ ;
-    delete si ;
-    return (errCnt) ; }
+  OSIUNITTEST_ASSERT_ERROR(si->readMps(fn.c_str(),"mps") == 0, delete si; return ++errCnt, solverName, "testObjFunctions: read MPS");
 /*
   Solve and test for the correct objective value.
 */
@@ -2361,28 +2049,13 @@ int testObjFunctions (const OsiSolverInterface *emptySi,
   double objValue = si->getObjValue() ;
   double objNoOffset = -18.751929066 ;
   double objOffset = +7.113 ;
-  if (!eq(objValue,(objNoOffset+objOffset)))
-  { std::cout
-      << "testObjFunctions: Solver returned obj = " << objValue
-      << ", expected " << objNoOffset << "+" << objOffset
-      << " = " << objNoOffset+objOffset << "." << std::endl ;
-    failureMessage(solverName,
-		   "getObjValue with constant in objective function") ;
-    errCnt++ ; }
+  OSIUNITTEST_ASSERT_ERROR(eq(objValue,(objNoOffset+objOffset)), ++errCnt, solverName, "testObjFunctions: getObjValue with constant in objective");
 /*
   Test objective limit methods. If no limit has been specified, they should
   return false.
 */
-  if (si->isPrimalObjectiveLimitReached())
-  { failureMessage(solverName,
-      "false positive, isPrimalObjectiveLimitReached, "
-      "default (no) limit") ;
-    errCnt++ ; }
-  if (si->isDualObjectiveLimitReached())
-  { failureMessage(solverName,
-      "false positive, isDualObjectiveLimitReached, "
-      "default (no) limit") ;
-    errCnt++ ; }
+  OSIUNITTEST_ASSERT_ERROR(!si->isPrimalObjectiveLimitReached(), ++errCnt, solverName, "testObjFunctions: isPrimalObjectiveLimitReached without limit");
+  OSIUNITTEST_ASSERT_ERROR(!si->isDualObjectiveLimitReached(), ++errCnt, solverName, "testObjFunctions: isDualObjectiveLimitReached without limit");
 /*
   Test objective limit methods. There's no attempt to see if the solver stops
   early when given a limit that's tighter than the optimal objective.  All
@@ -2401,38 +2074,17 @@ int testObjFunctions (const OsiSolverInterface *emptySi,
   double primalObjLim[2] = { 100.0, -5.0 } ;
   double dualObjLim[2] = { 120.0, -15.0 } ;
   double optSense[2] = { -1.0, 1.0 } ;
-  std::string maxmin[2] = { "max", "min" } ;
   for (i = 0 ; i <= 1 ; i++)
   { si->setObjSense(optSense[i]) ;
     si->initialSolve() ;
     objValue = si->getObjValue() ;
-    if (!eq(objValue,expectedObj[i]))
-    { std::cout
-	<< maxmin[i] << "(e226) = " << objValue
-	<< ", expected " << expectedObj[i]
-	<< ", err = " << objValue-expectedObj[i] << "." << std::endl ;
-      failureMessage(solverName,
-	"incorrect objective during max/min switch") ;
-      errCnt++ ; }
+    OSIUNITTEST_ASSERT_ERROR(eq(objValue,expectedObj[i]), ++errCnt, solverName, "testObjFunctions: optimal value during max/min switch");
 
     si->setDblParam(OsiPrimalObjectiveLimit,primalObjLim[i]) ;
     si->setDblParam(OsiDualObjectiveLimit,dualObjLim[i]) ;
-    if (!si->isPrimalObjectiveLimitReached())
-    { std::cout
-	<< maxmin[i] << "(e226) z* = " << objValue
-	<< ", primal limit " << primalObjLim[i]
-	<< "." << std::endl ;
-      failureMessage(solverName,
-	"false negative, isPrimalObjectiveLimitReached.") ;
-      errCnt++ ; }
-    if (!si->isDualObjectiveLimitReached())
-    { std::cout
-	<< maxmin[i] << "(e226) z* = " << objValue
-	<< ", dual limit " << dualObjLim[i]
-	<< "." << std::endl ;
-      failureMessage(solverName,
-	"false negative, isDualObjectiveLimitReached.") ;
-      errCnt++ ; } }
+    OSIUNITTEST_ASSERT_WARNING(si->isPrimalObjectiveLimitReached(), ++errCnt, solverName, "testObjFunctions: primal objective limit");
+    OSIUNITTEST_ASSERT_WARNING(si->isDualObjectiveLimitReached(), ++errCnt, solverName, "testObjFunctions: dual objective limit");
+  }
 
   delete si ;
   si = 0 ;
@@ -2444,44 +2096,22 @@ int testObjFunctions (const OsiSolverInterface *emptySi,
   e226.
 */
   si = emptySi->clone() ;
-  dfltSense = si->getObjSense() ;
+  double dfltSense = si->getObjSense() ;
   dfltSense = -dfltSense ;
   si->setObjSense(dfltSense) ;
   OsiSolverInterface *si2 = si->clone() ;
   delete si ;
-  si = 0 ;
-  if (si2->getObjSense() != dfltSense)
-  { std::cout
-      << "objective sense is not preserved by clone." << std::endl ;
-    failureMessage(solverName,"objective sense is not preserved by clone") ;
-    errCnt++ ; }
-  mpsRc = si2->readMps(fn.c_str(),"mps") ;
-  if (mpsRc != 0)
-  { std::cout
-      << "testObjFunctions: failed 2nd read test problem e226." << std::endl ;
-    failureMessage(solverName, "2nd read test problem e226") ;
-    errCnt++ ;
-    delete si2 ;
-    return (errCnt+1) ; }
-  if (si2->getObjSense() != dfltSense)
-  { std::cout
-      << "objective sense is not preserved by problem load." << std::endl ;
-    failureMessage(solverName,
-      "objective sense is not preserved by problem load") ;
-    errCnt++ ; }
+  si = NULL ;
+  OSIUNITTEST_ASSERT_ERROR(si2->getObjSense() == dfltSense, ++errCnt, solverName, "testObjFunctions: objective sense preserved by clone");
+  OSIUNITTEST_ASSERT_ERROR(si2->readMps(fn.c_str(),"mps") == 0, delete si; return ++errCnt, solverName, "testObjFunctions: 2nd read MPS");
+  OSIUNITTEST_ASSERT_ERROR(si2->getObjSense() == dfltSense, ++errCnt, solverName, "testObjFunctions: objective sense preserved by problem load");
   si2->initialSolve() ;
   if (dfltSense < 0)
   { i = 0 ; }
   else
   { i = 1 ; }
   objValue = si2->getObjValue() ;
-  if (!eq(objValue,expectedObj[i]))
-  { std::cout
-      << maxmin[i] << "(e226) = " << objValue
-      << ", expected " << expectedObj[i] << "." << std::endl ;
-    failureMessage(solverName,
-      "incorrect objective, load problem after set objective sense ") ;
-    errCnt++ ; }
+  OSIUNITTEST_ASSERT_ERROR(eq(objValue,expectedObj[i]), ++errCnt, solverName, "testObjFunctions: optimal value of load problem after set objective sense");
   
   delete si2 ;
 
@@ -2574,45 +2204,23 @@ int testArtifStatus (const OsiSolverInterface *emptySi)
   for (int iter = 0 ; iter <= 1 ; iter++)
   { si->setObjSense(objSense[iter]) ;
     si->initialSolve() ;
-    if (!si->isProvenOptimal())
-    { errCnt++ ;
-      std::cout
-	<< "Solver failed to find optimal solution ("
-	<< sense[iter] << ")." << std::endl ;
-      failureMessage(*si,"testArtifStatus: no optimal solution.") ;
-      continue ; }
-
-    double z = si->getObjValue() ;
-    if (!eq(z,zopt[iter]))
-    { errCnt++ ;
-      std::cout
-	<< "Incorrect objective " << z << " (" << sense[iter]
-	<< "); expected " << zopt[iter] << "." << std::endl ;
-      failureMessage(*si,"testArtifStatus: incorrect optimal objective.") ;
-      continue ; }
+    OSIUNITTEST_ASSERT_ERROR(si->isProvenOptimal(), ++errCnt; continue, *si, "testArtifStatus: initial solve");
+    OSIUNITTEST_ASSERT_ERROR(eq(si->getObjValue(),zopt[iter]), ++errCnt; continue, *si, "testArtifStatus: initial solve optimal value");
 
     CoinWarmStart *ws = si->getWarmStart() ;
     CoinWarmStartBasis *wsb = dynamic_cast<CoinWarmStartBasis *>(ws) ;
-
-    if (wsb == 0)
-    { errCnt++ ;
-      std::cout << "No basis! (" << sense[iter] << ")." << std::endl ;
-      failureMessage(*si,"testArtifStatus: no basis.") ;
-      continue ; }
+    OSIUNITTEST_ASSERT_ERROR(wsb != NULL, ++errCnt; continue, *si, "testArtifStatus: initial solve warm start basis");
 
     CoinWarmStartBasis::Status stati ;
 
+    bool ok = true;
     for (int i = 0 ; i < rowCnt ; i++)
     { stati = wsb->getArtifStatus(i) ;
-
       if (stati != goodStatus[iter*rowCnt+i])
-      { errCnt++ ;
-	std::cout
-	  << "Incorrect status " << statCode[stati] << " for " << contype[i]
-	  << " constraint c" << i << " (" << sense[iter] << "), expected "
-	  << statCode[goodStatus[iter*rowCnt+i]] << "." << std::endl ;
-	failureMessage(*si,
-	    "testArtifStatus: incorrect status for artificial.") ; } }
+      { ok = false;
+      	std::cout << "Incorrect status " << statCode[stati] << " for " << contype[i] << " constraint c" << i << " (" << sense[iter] << "), expected " << statCode[goodStatus[iter*rowCnt+i]] << "." << std::endl;
+      } }
+  	OSIUNITTEST_ASSERT_ERROR(ok == true, ++errCnt, *si, "testArtifStatus: artifical variable status");
     
     delete ws ; }
 /*
@@ -2635,8 +2243,7 @@ int testArtifStatus (const OsiSolverInterface *emptySi)
 int testReducedCosts (const OsiSolverInterface *emptySi,
 		       const std::string &sampleDir)
 
-{ const bool verbose = false ;
-
+{
   OsiSolverInterface *si = emptySi->clone() ;
   std::string solverName;
   si->getStrParam(OsiSolverName,solverName);
@@ -2652,11 +2259,8 @@ int testReducedCosts (const OsiSolverInterface *emptySi,
   si->readMps(fn.c_str(),"mps");
   si->setObjSense(1.0) ;
   si->initialSolve();
-  if (!si->isProvenOptimal())
-  { failureMessage(*si,"Failed to solve p0033 to optimality.") ;
-    return (1) ; }
-  else
-  if (verbose)
+	OSIUNITTEST_ASSERT_ERROR(si->isProvenOptimal(), return 1, solverName, "testReducedCosts: solving p0033");
+  if (OsiUnitTest::verbosity >= 1)
   { std::cout
       << "  " << solverName << " solved p0033 z = " << si->getObjValue()
       << "." << std::endl ; }
@@ -2678,11 +2282,8 @@ int testReducedCosts (const OsiSolverInterface *emptySi,
   for (int ndx = 0 ; ndx < 2 ; ndx++)
   { si->setObjSense(minmax[ndx]) ;
     si->resolve() ;
-    if (!si->isProvenOptimal())
-    { failureMessage(*si,"Failed to solve p0033 to optimality.") ;
-      return (1) ; }
-    else
-    if (verbose)
+  	OSIUNITTEST_ASSERT_ERROR(si->isProvenOptimal(), return 1, solverName, "testReducedCosts: solving p0033 after changing objective sense");
+    if (OsiUnitTest::verbosity >= 1)
     { std::cout
 	<< "  " << solverName
 	<< ((si->getObjSense() < 0)?" maximised":" minimised")
@@ -2702,65 +2303,68 @@ int testReducedCosts (const OsiSolverInterface *emptySi,
   Walk the architecturals and check that cbar<j> = c<j> - ya<j> and has the
   correct sign given the status and objective sense (max/min).
 */
+    bool cbarCalcj_ok = true;
+    bool testcbarj_ok = true;
     for (int j = 0 ; j < n ; j++)
     { CoinWarmStartBasis::Status statj = wsb->getStructStatus(j) ;
       double cbarj = cbar[j] ;
       double cbarCalcj = cbarCalc[j] ;
     
-      if (verbose)
-      { std::cout
-	  << "  x<" << j << "> " << statNames[statj]
-	  << ", cbar<" << j << "> = " << cbarj << "." << std::endl ; }
+      if (OsiUnitTest::verbosity >= 1)
+      { std::cout << "  x<" << j << "> " << statNames[statj] << ", cbar<" << j << "> = " << cbarj << "." << std::endl ; }
 
       if (!eq(cbarj,cbarCalcj))
-      { errCnt++ ;
-        if (verbose)
-	{ std::cout
-	    << "  " << cbarj << " = cbar<" << j << "> != c<"
-	    << j << "> - ya<" << j << "> = "
-	    << cbarCalcj << ", diff = "
-	    << cbarj-cbarCalcj << "." << std::endl ; } }
+      { cbarCalcj_ok = false;
+      	if (OsiUnitTest::verbosity >= 1)
+      	{ std::cout
+      		<< "  " << cbarj << " = cbar<" << j << "> != c<"
+      		<< j << "> - ya<" << j << "> = "
+      		<< cbarCalcj << ", diff = "
+      		<< cbarj-cbarCalcj << "." << std::endl ; } }
 
       double testcbarj = dir*cbarj ;
       switch (statj)
       { case CoinWarmStartBasis::atUpperBound:
-        { if (testcbarj > dualTol)
-	  { errCnt++ ;
-	    if (verbose)
-	    { std::cout
-		<< "  cbar<" << j << "> = " << cbarj
-		<< " has the wrong sign for a NBUB variable."
-		<< std::endl ; } }
-	  break ; }
-        case CoinWarmStartBasis::atLowerBound:
-        { if (testcbarj < -dualTol)
-	  { errCnt++ ;
-	    if (verbose)
-	    { std::cout
-		<< "  cbar<" << j << "> = " << cbarj
-		<< " has the wrong sign for a NBLB variable."
-		<< std::endl ; } }
-	  break ; }
-        case CoinWarmStartBasis::isFree:
-        { if (CoinAbs(testcbarj) > dualTol)
-	  { errCnt++ ;
-	    if (verbose)
-	    { std::cout
-		<< "  cbar<" << j << "> = " << cbarj
-		<< " should be zero for a NBFR variable."
-		<< std::endl ; } }
-	  break ; }
-        case CoinWarmStartBasis::basic:
-        { if (CoinAbs(testcbarj) > dualTol)
-	  { errCnt++ ;
-	    if (verbose)
-	    { std::cout
-		<< "  cbar<" << j << "> = " << cbarj
-		<< " should be zero for a basic variable."
-		<< std::endl ; } }
-	  break ; }
-	default:
-	{ break ; } } }
+      	{ if (testcbarj > dualTol)
+      		{ testcbarj_ok = false;
+      			if (OsiUnitTest::verbosity >= 1)
+      			{ std::cout
+      				<< "  cbar<" << j << "> = " << cbarj
+      				<< " has the wrong sign for a NBUB variable."
+      				<< std::endl ; } }
+      		break ; }
+      	case CoinWarmStartBasis::atLowerBound:
+      	{ if (testcbarj < -dualTol)
+      		{ testcbarj_ok = false;
+      			if (OsiUnitTest::verbosity >= 1)
+      			{ std::cout
+      				<< "  cbar<" << j << "> = " << cbarj
+      				<< " has the wrong sign for a NBLB variable."
+      				<< std::endl ; } }
+      		break ; }
+      	case CoinWarmStartBasis::isFree:
+      	{ if (CoinAbs(testcbarj) > dualTol)
+      		{ testcbarj_ok = false;
+      			if (OsiUnitTest::verbosity >= 1)
+      			{ std::cout
+      				<< "  cbar<" << j << "> = " << cbarj
+      				<< " should be zero for a NBFR variable."
+      				<< std::endl ; } }
+      		break ; }
+      	case CoinWarmStartBasis::basic:
+      	{ if (CoinAbs(testcbarj) > dualTol)
+      		{ testcbarj_ok = false;
+      			if (OsiUnitTest::verbosity >= 1)
+      			{ std::cout
+      				<< "  cbar<" << j << "> = " << cbarj
+      				<< " should be zero for a basic variable."
+      				<< std::endl ; } }
+      		break ; }
+      	default:
+      	{ break ; } } }
+  	OSIUNITTEST_ASSERT_ERROR(cbarCalcj_ok == true, ++errCnt, solverName, "testReducedCosts: reduced costs");
+  	OSIUNITTEST_ASSERT_ERROR(testcbarj_ok == true, ++errCnt, solverName, "testReducedCosts: basis status of structural variable");
+
     delete wsb ; }
 
   delete[] cbarCalc ;
@@ -2768,7 +2372,7 @@ int testReducedCosts (const OsiSolverInterface *emptySi,
   Announce the result and we're done.
 */
   if (errCnt != 0)
-  { std::cout << errCnt << " errors." << std::endl ; }
+  { std::cout << "errors." << std::endl ; }
   else
   { std::cout << "ok." << std::endl ; }
 
@@ -2799,20 +2403,11 @@ void testWriteMps (const OsiSolverInterface *emptySi, std::string fn)
 /*
   Sanity test. Read in exmip1 and do an initialSolve.
 */
-  si1->readMps(fn.c_str(),"mps");
+  OSIUNITTEST_ASSERT_ERROR(si1->readMps(fn.c_str(),"mps") == 0, return, *si1, "testWriteMps: read MPS");
 
   bool solved = true;
-  try {
-    si1->initialSolve();
-  }
-  catch (CoinError e) {
-    if (e.className() != "OsiVolSolverInterface" &&
-        e.className() != "OsiTestSolverInterface") {
-      failureMessage(*si1,"Couldn't load and solve LP in testWriteMps!\n");
-      abort();
-    }
-    solved = false;
-  }
+  OSIUNITTEST_CATCH_SEVERITY_EXPECTED(si1->initialSolve(), solved = false, *si1, "testWriteMps: solving LP",
+  		TestOutcome::ERROR, e.className() == "OsiVolSolverInterface" || e.className() == "OsiTestSolverInterface");
   double soln = si1->getObjValue();
 /*
   Write a test output file with writeMpsNative, then read and solve. See if
@@ -2822,33 +2417,19 @@ void testWriteMps (const OsiSolverInterface *emptySi, std::string fn)
   that (lh, 070726).
 */
   si1->writeMpsNative("test.out",NULL,NULL);
-  si2->readMps("test.out","");
+  OSIUNITTEST_ASSERT_ERROR(si2->readMps("test.out","") == 0, return, *si1, "testWriteMps: read LP written by writeMpsNative");
   if (solved) {
-    try {
-      si2->initialSolve();
-    }
-    catch (CoinError e) {
-      failureMessage(*si2,
-	 "Couldn't load and solve mps file written by writeMpsNative!\n");
-      abort();
-    }
-    assert(eq(soln,si2->getObjValue()));
+    OSIUNITTEST_CATCH_ERROR(si2->initialSolve(), return, *si1, "testWriteMps: solving LP written by writeMpsNative");
+    OSIUNITTEST_ASSERT_ERROR(eq(soln,si2->getObjValue()), return, *si1, "testWriteMps: solving LP written by writeMpsNative");
   }
 /*
   Repeat with writeMps.
 */
   si1->writeMps("test2","out");
-  si3->readMps("test2.out","");
+  OSIUNITTEST_ASSERT_ERROR(si3->readMps("test2.out","") == 0, return, *si1, "testWriteMps: read LP written by writeMps");
   if (solved) {
-    try {
-      si3->initialSolve();
-    }
-    catch (CoinError e) {
-      failureMessage(*si3,
-	 "Couldn't load and solve mps file written by writeMps!\n");
-      abort();
-    }
-    assert(eq(soln,si3->getObjValue()));
+    OSIUNITTEST_CATCH_ERROR(si3->initialSolve(), return, *si1, "testWriteMps: solving LP written by writeMps");
+    OSIUNITTEST_ASSERT_ERROR(eq(soln,si3->getObjValue()), return, *si1, "testWriteMps: solving LP written by writeMps");
   }
 /*
   Clean up.
@@ -2875,46 +2456,25 @@ void testWriteLp (const OsiSolverInterface *emptySi, std::string fn)
   OsiSolverInterface * si2 = emptySi->clone();
   OsiSolverInterface * si3 = emptySi->clone();
 
-  si1->readMps(fn.c_str(),"mps");
+  OSIUNITTEST_ASSERT_ERROR(si1->readMps(fn.c_str(),"mps") == 0, return, *si1, "testWriteLp: read MPS");
   bool solved = true;
-  try {
-     si1->initialSolve();
-  }
-  catch (CoinError e) {
-    if (e.className() != "OsiVolSolverInterface" && e.className() != "OsiTestSolverInterface") {
-      printf("Couldn't solve initial LP in testing WriteMps\n");
-      abort();
-    }
-    solved = false;
-  }
+  OSIUNITTEST_CATCH_SEVERITY_EXPECTED(si1->initialSolve(), solved = false, *si1, "testWriteLp: solving LP",
+  		TestOutcome::ERROR, e.className() == "OsiVolSolverInterface" || e.className() == "OsiTestSolverInterface");
   double soln = si1->getObjValue();
 
   si1->writeLpNative("test.lp",NULL,NULL,1.0e-9,10,8);
-  si2->readLp("test.lp");
+
+  OSIUNITTEST_ASSERT_ERROR(si2->readLp("test.lp") == 0, return, *si1, "testWriteLp: read LP written by writeLpNative");
   if (solved) {
-    try {
-      si2->initialSolve();
-    }
-    catch (CoinError e) {
-      failureMessage(*si2,
-	 "Couldn't load and solve Lp file written by writeLpNative!\n");
-      abort();
-      }
-    assert(eq(soln,si2->getObjValue()));
+    OSIUNITTEST_CATCH_ERROR(si2->initialSolve(), return, *si1, "testWriteLp: solving LP written by writeLpNative");
+    OSIUNITTEST_ASSERT_ERROR(eq(soln,si2->getObjValue()), return, *si1, "testWriteLp: solving LP written by writeLpNative");
   }
 
   si1->writeLp("test2");
-  si3->readLp("test2.lp");
+  OSIUNITTEST_ASSERT_ERROR(si3->readLp("test2.lp") == 0, return, *si1, "testWriteLp: read LP written by writeLp");
   if (solved) {
-    try {
-      si3->initialSolve();
-    }
-    catch (CoinError e) {
-      failureMessage(*si3,
-	 "Couldn't load and solve Lp file written by writeLp!\n");
-      abort();
-      }
-    assert(eq(soln,si3->getObjValue()));
+    OSIUNITTEST_CATCH_ERROR(si3->initialSolve(), return, *si1, "testWriteLp: solving LP written by writeLp");
+    OSIUNITTEST_ASSERT_ERROR(eq(soln,si3->getObjValue()), return, *si1, "testWriteLp: solving LP written by writeLp");
   }
 
   delete si1;
@@ -3007,12 +2567,12 @@ void testLoadAndAssignProblem (const OsiSolverInterface *emptySi,
     std::copy(base->getRowUpper(),
 	      base->getRowUpper()+base->getNumRows(),rub);
     si5->assignProblem(pm,clb,cub,objc,rlb,rub);
-    assert(pm==NULL);
-    assert(clb==NULL);
-    assert(cub==NULL);
-    assert(objc==NULL);
-    assert(rlb==NULL);
-    assert(rub==NULL);
+    OSIUNITTEST_ASSERT_ERROR(pm   == NULL, return, solverName, "testLoadAndAssignProblem: si5 assignProblem should set parameters to NULL");
+    OSIUNITTEST_ASSERT_ERROR(clb  == NULL, return, solverName, "testLoadAndAssignProblem: si5 assignProblem should set parameters to NULL");
+    OSIUNITTEST_ASSERT_ERROR(cub  == NULL, return, solverName, "testLoadAndAssignProblem: si5 assignProblem should set parameters to NULL");
+    OSIUNITTEST_ASSERT_ERROR(objc == NULL, return, solverName, "testLoadAndAssignProblem: si5 assignProblem should set parameters to NULL");
+    OSIUNITTEST_ASSERT_ERROR(rlb  == NULL, return, solverName, "testLoadAndAssignProblem: si5 assignProblem should set parameters to NULL");
+    OSIUNITTEST_ASSERT_ERROR(rub  == NULL, return, solverName, "testLoadAndAssignProblem: si5 assignProblem should set parameters to NULL");
 
     pm = new CoinPackedMatrix(*base->getMatrixByRow());
     clb = new double[base->getNumCols()];
@@ -3031,12 +2591,12 @@ void testLoadAndAssignProblem (const OsiSolverInterface *emptySi,
     std::copy(base->getRowUpper(),
 	      base->getRowUpper()+base->getNumRows(),rub);
     si6->assignProblem(pm,clb,cub,objc,rlb,rub);
-    assert(pm==NULL);
-    assert(clb==NULL);
-    assert(cub==NULL);
-    assert(objc==NULL);
-    assert(rlb==NULL);
-    assert(rub==NULL);
+    OSIUNITTEST_ASSERT_ERROR(pm   == NULL, return, solverName, "testLoadAndAssignProblem: si6 assignProblem should set parameters to NULL");
+    OSIUNITTEST_ASSERT_ERROR(clb  == NULL, return, solverName, "testLoadAndAssignProblem: si6 assignProblem should set parameters to NULL");
+    OSIUNITTEST_ASSERT_ERROR(cub  == NULL, return, solverName, "testLoadAndAssignProblem: si6 assignProblem should set parameters to NULL");
+    OSIUNITTEST_ASSERT_ERROR(objc == NULL, return, solverName, "testLoadAndAssignProblem: si6 assignProblem should set parameters to NULL");
+    OSIUNITTEST_ASSERT_ERROR(rlb  == NULL, return, solverName, "testLoadAndAssignProblem: si6 assignProblem should set parameters to NULL");
+    OSIUNITTEST_ASSERT_ERROR(rub  == NULL, return, solverName, "testLoadAndAssignProblem: si6 assignProblem should set parameters to NULL");
 
     pm = new CoinPackedMatrix(*base->getMatrixByCol());
     clb = new double[base->getNumCols()];
@@ -3058,13 +2618,13 @@ void testLoadAndAssignProblem (const OsiSolverInterface *emptySi,
     std::copy(base->getRowRange(),
 	      base->getRowRange()+base->getNumRows(),rng);
     si7->assignProblem(pm,clb,cub,objc,rsen,rhs,rng);
-    assert(pm==NULL);
-    assert(clb==NULL);
-    assert(cub==NULL);
-    assert(objc==NULL);
-    assert(rsen==NULL);
-    assert(rhs==NULL);
-    assert(rng==NULL);
+    OSIUNITTEST_ASSERT_ERROR(pm   == NULL, return, solverName, "testLoadAndAssignProblem: si7 assignProblem should set parameters to NULL");
+    OSIUNITTEST_ASSERT_ERROR(clb  == NULL, return, solverName, "testLoadAndAssignProblem: si7 assignProblem should set parameters to NULL");
+    OSIUNITTEST_ASSERT_ERROR(cub  == NULL, return, solverName, "testLoadAndAssignProblem: si7 assignProblem should set parameters to NULL");
+    OSIUNITTEST_ASSERT_ERROR(objc == NULL, return, solverName, "testLoadAndAssignProblem: si7 assignProblem should set parameters to NULL");
+    OSIUNITTEST_ASSERT_ERROR(rsen == NULL, return, solverName, "testLoadAndAssignProblem: si7 assignProblem should set parameters to NULL");
+    OSIUNITTEST_ASSERT_ERROR(rhs  == NULL, return, solverName, "testLoadAndAssignProblem: si7 assignProblem should set parameters to NULL");
+    OSIUNITTEST_ASSERT_ERROR(rng  == NULL, return, solverName, "testLoadAndAssignProblem: si7 assignProblem should set parameters to NULL");
 
     pm = new CoinPackedMatrix(*base->getMatrixByCol());
     clb = new double[base->getNumCols()];
@@ -3086,141 +2646,142 @@ void testLoadAndAssignProblem (const OsiSolverInterface *emptySi,
     std::copy(base->getRowRange(),
 	      base->getRowRange()+base->getNumRows(),rng);
     si8->assignProblem(pm,clb,cub,objc,rsen,rhs,rng);
-    assert(pm==NULL);
-    assert(clb==NULL);
-    assert(cub==NULL);
-    assert(objc==NULL);
-    assert(rsen==NULL);
-    assert(rhs==NULL);
-    assert(rng==NULL);
+    OSIUNITTEST_ASSERT_ERROR(pm   == NULL, return, solverName, "testLoadAndAssignProblem: si8 assignProblem should set parameters to NULL");
+    OSIUNITTEST_ASSERT_ERROR(clb  == NULL, return, solverName, "testLoadAndAssignProblem: si8 assignProblem should set parameters to NULL");
+    OSIUNITTEST_ASSERT_ERROR(cub  == NULL, return, solverName, "testLoadAndAssignProblem: si8 assignProblem should set parameters to NULL");
+    OSIUNITTEST_ASSERT_ERROR(objc == NULL, return, solverName, "testLoadAndAssignProblem: si8 assignProblem should set parameters to NULL");
+    OSIUNITTEST_ASSERT_ERROR(rsen == NULL, return, solverName, "testLoadAndAssignProblem: si8 assignProblem should set parameters to NULL");
+    OSIUNITTEST_ASSERT_ERROR(rhs  == NULL, return, solverName, "testLoadAndAssignProblem: si8 assignProblem should set parameters to NULL");
+    OSIUNITTEST_ASSERT_ERROR(rng  == NULL, return, solverName, "testLoadAndAssignProblem: si8 assignProblem should set parameters to NULL");
 
     // Create an indices vector
     CoinPackedVector basePv,pv;
-    assert(base->getNumCols()<10);
-    assert(base->getNumRows()<10);
+    OSIUNITTEST_ASSERT_ERROR(base->getNumCols()<10, return, solverName, "testLoadAndAssignProblem");
+    OSIUNITTEST_ASSERT_ERROR(base->getNumRows()<10, return, solverName, "testLoadAndAssignProblem");
     int indices[10];
     int i;
     for (i=0; i<10; i++) indices[i]=i;
 
     // Test solve methods.
-    try {
-      base->initialSolve();
-      si1->initialSolve();
-      si2->initialSolve();
-      si3->initialSolve();
-      si4->initialSolve();
-      si5->initialSolve();
-      si6->initialSolve();
-      si7->initialSolve();
-      si8->initialSolve();
-    }
-    catch (CoinError e) {
-       if( solverName == "vol" ) {
-          // Vol solver interface is expected to throw
-          // an error if the data has a ranged row.
-          // Test that there is non-zero range
-          basePv.setFull(base->getNumRows(),base->getRowRange());
-          pv.setConstant( base->getNumRows(), indices, 0.0 );
-          assert(!basePv.isEquivalent(pv));
-       }
-       else
-          assert(0==1);
-    }
+    // Vol solver interface is expected to throw
+    // an error if the data has a ranged row.
+    // Prepare test that there is non-zero range
+    basePv.setFull(base->getNumRows(),base->getRowRange());
+    pv.setConstant( base->getNumRows(), indices, 0.0 );
+
+    OSIUNITTEST_CATCH_SEVERITY_EXPECTED(base->initialSolve(), return, *base, "testLoadAndAssignProblem: base initialSolve",
+    		TestOutcome::ERROR, solverName == "vol" && !basePv.isEquivalent(pv));
+    OSIUNITTEST_CATCH_SEVERITY_EXPECTED(si1->initialSolve(), return, *base, "testLoadAndAssignProblem: si1 initialSolve",
+    		TestOutcome::ERROR, solverName == "vol" && !basePv.isEquivalent(pv));
+    OSIUNITTEST_CATCH_SEVERITY_EXPECTED(si2->initialSolve(), return, *base, "testLoadAndAssignProblem: si2 initialSolve",
+    		TestOutcome::ERROR, solverName == "vol" && !basePv.isEquivalent(pv));
+    OSIUNITTEST_CATCH_SEVERITY_EXPECTED(si3->initialSolve(), return, *base, "testLoadAndAssignProblem: si3 initialSolve",
+    		TestOutcome::ERROR, solverName == "vol" && !basePv.isEquivalent(pv));
+    OSIUNITTEST_CATCH_SEVERITY_EXPECTED(si4->initialSolve(), return, *base, "testLoadAndAssignProblem: si4 initialSolve",
+    		TestOutcome::ERROR, solverName == "vol" && !basePv.isEquivalent(pv));
+    OSIUNITTEST_CATCH_SEVERITY_EXPECTED(si5->initialSolve(), return, *base, "testLoadAndAssignProblem: si5 initialSolve",
+    		TestOutcome::ERROR, solverName == "vol" && !basePv.isEquivalent(pv));
+    OSIUNITTEST_CATCH_SEVERITY_EXPECTED(si6->initialSolve(), return, *base, "testLoadAndAssignProblem: si6 initialSolve",
+    		TestOutcome::ERROR, solverName == "vol" && !basePv.isEquivalent(pv));
+    OSIUNITTEST_CATCH_SEVERITY_EXPECTED(si7->initialSolve(), return, *base, "testLoadAndAssignProblem: si7 initialSolve",
+    		TestOutcome::ERROR, solverName == "vol" && !basePv.isEquivalent(pv));
+    OSIUNITTEST_CATCH_SEVERITY_EXPECTED(si8->initialSolve(), return, *base, "testLoadAndAssignProblem: si8 initialSolve",
+    		TestOutcome::ERROR, solverName == "vol" && !basePv.isEquivalent(pv));
 
     // Test collower
     basePv.setVector(base->getNumCols(),indices,base->getColLower());
     pv.setVector( si1->getNumCols(),indices, si1->getColLower());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si1 column lower bounds");
     pv.setVector( si2->getNumCols(),indices, si2->getColLower());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si2 column lower bounds");
     pv.setVector( si3->getNumCols(),indices, si3->getColLower());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si3 column lower bounds");
     pv.setVector( si4->getNumCols(),indices, si4->getColLower());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si4 column lower bounds");
     pv.setVector( si5->getNumCols(),indices, si5->getColLower());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si5 column lower bounds");
     pv.setVector( si6->getNumCols(),indices, si6->getColLower());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si6 column lower bounds");
     pv.setVector( si7->getNumCols(),indices, si7->getColLower());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si7 column lower bounds");
     pv.setVector( si8->getNumCols(),indices, si8->getColLower());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si8 column lower bounds");
 
     // Test colupper
     basePv.setVector(base->getNumCols(),indices,base->getColUpper());
     pv.setVector( si1->getNumCols(),indices, si1->getColUpper());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si1 column upper bounds");
     pv.setVector( si2->getNumCols(),indices, si2->getColUpper());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si2 column upper bounds");
     pv.setVector( si3->getNumCols(),indices, si3->getColUpper());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si3 column upper bounds");
     pv.setVector( si4->getNumCols(),indices, si4->getColUpper());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si4 column upper bounds");
     pv.setVector( si5->getNumCols(),indices, si5->getColUpper());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si5 column upper bounds");
     pv.setVector( si6->getNumCols(),indices, si6->getColUpper());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si6 column upper bounds");
     pv.setVector( si7->getNumCols(),indices, si7->getColUpper());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si7 column upper bounds");
     pv.setVector( si8->getNumCols(),indices, si8->getColUpper());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si8 column upper bounds");
 
     // Test getObjCoefficients
     basePv.setVector(base->getNumCols(),indices,base->getObjCoefficients());
     pv.setVector( si1->getNumCols(),indices, si1->getObjCoefficients());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si1 objective coefficients");
     pv.setVector( si2->getNumCols(),indices, si2->getObjCoefficients());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si2 objective coefficients");
     pv.setVector( si3->getNumCols(),indices, si3->getObjCoefficients());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si3 objective coefficients");
     pv.setVector( si4->getNumCols(),indices, si4->getObjCoefficients());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si4 objective coefficients");
     pv.setVector( si5->getNumCols(),indices, si5->getObjCoefficients());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si5 objective coefficients");
     pv.setVector( si6->getNumCols(),indices, si6->getObjCoefficients());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si6 objective coefficients");
     pv.setVector( si7->getNumCols(),indices, si7->getObjCoefficients());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si7 objective coefficients");
     pv.setVector( si8->getNumCols(),indices, si8->getObjCoefficients());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si8 objective coefficients");
 	
     // Test rowrhs
     basePv.setFull(base->getNumRows(),base->getRightHandSide());
     pv.setFull( si1->getNumRows(), si1->getRightHandSide());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si1 right hand side");
     pv.setFull( si2->getNumRows(), si2->getRightHandSide());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si2 right hand side");
     pv.setFull( si3->getNumRows(), si3->getRightHandSide());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si3 right hand side");
     pv.setFull( si4->getNumRows(), si4->getRightHandSide());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si4 right hand side");
     pv.setFull( si5->getNumRows(), si5->getRightHandSide());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si5 right hand side");
     pv.setFull( si6->getNumRows(), si6->getRightHandSide());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si6 right hand side");
     pv.setFull( si7->getNumRows(), si7->getRightHandSide());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si7 right hand side");
     pv.setFull( si8->getNumRows(), si8->getRightHandSide());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si8 right hand side");
 
     // Test rowrange
     basePv.setFull(base->getNumRows(),base->getRowRange());
     pv.setFull( si1->getNumRows(), si1->getRowRange());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si1 row range");
     pv.setFull( si2->getNumRows(), si2->getRowRange());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si2 row range");
     pv.setFull( si3->getNumRows(), si3->getRowRange());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si3 row range");
     pv.setFull( si4->getNumRows(), si4->getRowRange());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si4 row range");
     pv.setFull( si5->getNumRows(), si5->getRowRange());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si5 row range");
     pv.setFull( si6->getNumRows(), si6->getRowRange());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si6 row range");
     pv.setFull( si7->getNumRows(), si7->getRowRange());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si7 row range");
     pv.setFull( si8->getNumRows(), si8->getRowRange());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si8 row range");
 
     // Test row sense
     {
@@ -3234,83 +2795,99 @@ void testLoadAndAssignProblem (const OsiSolverInterface *emptySi,
       const char * c7 = si7->getRowSense();
       const char * c8 = si8->getRowSense();
       int nr = base->getNumRows();
+      bool rowsense_ok1 = true;
+      bool rowsense_ok2 = true;
+      bool rowsense_ok3 = true;
+      bool rowsense_ok4 = true;
+      bool rowsense_ok5 = true;
+      bool rowsense_ok6 = true;
+      bool rowsense_ok7 = true;
+      bool rowsense_ok8 = true;
       for ( i=0; i<nr; i++ ) {
-	assert( cb[i]==c1[i] );
-	assert( cb[i]==c2[i] );
-	assert( cb[i]==c3[i] );
-	assert( cb[i]==c4[i] );
-	assert( cb[i]==c5[i] );
-	assert( cb[i]==c6[i] );
-	assert( cb[i]==c7[i] );
-	assert( cb[i]==c8[i] );
+      	rowsense_ok1 &= cb[i]==c1[i];
+      	rowsense_ok2 &= cb[i]==c2[i];
+      	rowsense_ok3 &= cb[i]==c3[i];
+      	rowsense_ok4 &= cb[i]==c4[i];
+      	rowsense_ok5 &= cb[i]==c5[i];
+      	rowsense_ok6 &= cb[i]==c6[i];
+      	rowsense_ok7 &= cb[i]==c7[i];
+      	rowsense_ok8 &= cb[i]==c8[i];
       }
+      OSIUNITTEST_ASSERT_ERROR(rowsense_ok1, return, solverName, "testLoadAndAssignProblem: si1 row sense");
+      OSIUNITTEST_ASSERT_ERROR(rowsense_ok2, return, solverName, "testLoadAndAssignProblem: si2 row sense");
+      OSIUNITTEST_ASSERT_ERROR(rowsense_ok3, return, solverName, "testLoadAndAssignProblem: si3 row sense");
+      OSIUNITTEST_ASSERT_ERROR(rowsense_ok4, return, solverName, "testLoadAndAssignProblem: si4 row sense");
+      OSIUNITTEST_ASSERT_ERROR(rowsense_ok5, return, solverName, "testLoadAndAssignProblem: si5 row sense");
+      OSIUNITTEST_ASSERT_ERROR(rowsense_ok6, return, solverName, "testLoadAndAssignProblem: si6 row sense");
+      OSIUNITTEST_ASSERT_ERROR(rowsense_ok7, return, solverName, "testLoadAndAssignProblem: si7 row sense");
+      OSIUNITTEST_ASSERT_ERROR(rowsense_ok8, return, solverName, "testLoadAndAssignProblem: si8 row sense");
     }
 
     // Test rowlower
     basePv.setVector(base->getNumRows(),indices,base->getRowLower());
     pv.setVector( si1->getNumRows(),indices, si1->getRowLower());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si1 row lower bounds");
     pv.setVector( si2->getNumRows(),indices, si2->getRowLower());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si2 row lower bounds");
     pv.setVector( si3->getNumRows(),indices, si3->getRowLower());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si3 row lower bounds");
     pv.setVector( si4->getNumRows(),indices, si4->getRowLower());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si4 row lower bounds");
     pv.setVector( si5->getNumRows(),indices, si5->getRowLower());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si5 row lower bounds");
     pv.setVector( si6->getNumRows(),indices, si6->getRowLower());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si6 row lower bounds");
     pv.setVector( si7->getNumRows(),indices, si7->getRowLower());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si7 row lower bounds");
     pv.setVector( si8->getNumRows(),indices, si8->getRowLower());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si8 row lower bounds");
 
     // Test rowupper
     basePv.setVector(base->getNumRows(),indices,base->getRowUpper());
     pv.setVector( si1->getNumRows(),indices, si1->getRowUpper());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si1 row upper bounds");
     pv.setVector( si2->getNumRows(),indices, si2->getRowUpper());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si2 row upper bounds");
     pv.setVector( si3->getNumRows(),indices, si3->getRowUpper());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si3 row upper bounds");
     pv.setVector( si4->getNumRows(),indices, si4->getRowUpper());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si4 row upper bounds");
     pv.setVector( si5->getNumRows(),indices, si5->getRowUpper());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si5 row upper bounds");
     pv.setVector( si6->getNumRows(),indices, si6->getRowUpper());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si6 row upper bounds");
     pv.setVector( si7->getNumRows(),indices, si7->getRowUpper());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si7 row upper bounds");
     pv.setVector( si8->getNumRows(),indices, si8->getRowUpper());
-    assert(basePv.isEquivalent(pv));
+    OSIUNITTEST_ASSERT_ERROR(basePv.isEquivalent(pv), return, solverName, "testLoadAndAssignProblem: si8 row upper bounds");
 
     // Test Constraint Matrix
-    assert( base->getMatrixByCol()->isEquivalent(*si1->getMatrixByCol()) );
-    assert( base->getMatrixByRow()->isEquivalent(*si1->getMatrixByRow()) );
-    assert( base->getMatrixByCol()->isEquivalent(*si2->getMatrixByCol()) );
-    assert( base->getMatrixByRow()->isEquivalent(*si2->getMatrixByRow()) );
-    assert( base->getMatrixByCol()->isEquivalent(*si3->getMatrixByCol()) );
-    assert( base->getMatrixByRow()->isEquivalent(*si3->getMatrixByRow()) );
-    assert( base->getMatrixByCol()->isEquivalent(*si4->getMatrixByCol()) );
-    assert( base->getMatrixByRow()->isEquivalent(*si4->getMatrixByRow()) );
-    assert( base->getMatrixByCol()->isEquivalent(*si5->getMatrixByCol()) );
-    assert( base->getMatrixByRow()->isEquivalent(*si5->getMatrixByRow()) );
-    assert( base->getMatrixByCol()->isEquivalent(*si6->getMatrixByCol()) );
-    assert( base->getMatrixByRow()->isEquivalent(*si6->getMatrixByRow()) );
-    assert( base->getMatrixByCol()->isEquivalent(*si7->getMatrixByCol()) );
-    assert( base->getMatrixByRow()->isEquivalent(*si7->getMatrixByRow()) );
-    assert( base->getMatrixByCol()->isEquivalent(*si8->getMatrixByCol()) );
-    assert( base->getMatrixByRow()->isEquivalent(*si8->getMatrixByRow()) );
+    OSIUNITTEST_ASSERT_ERROR(base->getMatrixByCol()->isEquivalent(*si1->getMatrixByCol()), return, solverName, "testLoadAndAssignProblem: si1 constraint matrix");
+    OSIUNITTEST_ASSERT_ERROR(base->getMatrixByRow()->isEquivalent(*si1->getMatrixByRow()), return, solverName, "testLoadAndAssignProblem: si1 constraint matrix");
+    OSIUNITTEST_ASSERT_ERROR(base->getMatrixByCol()->isEquivalent(*si2->getMatrixByCol()), return, solverName, "testLoadAndAssignProblem: si2 constraint matrix");
+    OSIUNITTEST_ASSERT_ERROR(base->getMatrixByRow()->isEquivalent(*si2->getMatrixByRow()), return, solverName, "testLoadAndAssignProblem: si2 constraint matrix");
+    OSIUNITTEST_ASSERT_ERROR(base->getMatrixByCol()->isEquivalent(*si3->getMatrixByCol()), return, solverName, "testLoadAndAssignProblem: si3 constraint matrix");
+    OSIUNITTEST_ASSERT_ERROR(base->getMatrixByRow()->isEquivalent(*si3->getMatrixByRow()), return, solverName, "testLoadAndAssignProblem: si3 constraint matrix");
+    OSIUNITTEST_ASSERT_ERROR(base->getMatrixByCol()->isEquivalent(*si4->getMatrixByCol()), return, solverName, "testLoadAndAssignProblem: si4 constraint matrix");
+    OSIUNITTEST_ASSERT_ERROR(base->getMatrixByRow()->isEquivalent(*si4->getMatrixByRow()), return, solverName, "testLoadAndAssignProblem: si4 constraint matrix");
+    OSIUNITTEST_ASSERT_ERROR(base->getMatrixByCol()->isEquivalent(*si5->getMatrixByCol()), return, solverName, "testLoadAndAssignProblem: si5 constraint matrix");
+    OSIUNITTEST_ASSERT_ERROR(base->getMatrixByRow()->isEquivalent(*si5->getMatrixByRow()), return, solverName, "testLoadAndAssignProblem: si5 constraint matrix");
+    OSIUNITTEST_ASSERT_ERROR(base->getMatrixByCol()->isEquivalent(*si6->getMatrixByCol()), return, solverName, "testLoadAndAssignProblem: si6 constraint matrix");
+    OSIUNITTEST_ASSERT_ERROR(base->getMatrixByRow()->isEquivalent(*si6->getMatrixByRow()), return, solverName, "testLoadAndAssignProblem: si6 constraint matrix");
+    OSIUNITTEST_ASSERT_ERROR(base->getMatrixByCol()->isEquivalent(*si7->getMatrixByCol()), return, solverName, "testLoadAndAssignProblem: si7 constraint matrix");
+    OSIUNITTEST_ASSERT_ERROR(base->getMatrixByRow()->isEquivalent(*si7->getMatrixByRow()), return, solverName, "testLoadAndAssignProblem: si7 constraint matrix");
+    OSIUNITTEST_ASSERT_ERROR(base->getMatrixByCol()->isEquivalent(*si8->getMatrixByCol()), return, solverName, "testLoadAndAssignProblem: si8 constraint matrix");
+    OSIUNITTEST_ASSERT_ERROR(base->getMatrixByRow()->isEquivalent(*si8->getMatrixByRow()), return, solverName, "testLoadAndAssignProblem: si8 constraint matrix");
 
     // Test Objective Value
-    assert( eq(base->getObjValue(),si1->getObjValue()) );
-    assert( eq(base->getObjValue(),si2->getObjValue()) );
-    assert( eq(base->getObjValue(),si3->getObjValue()) );
-    assert( eq(base->getObjValue(),si4->getObjValue()) );
-    assert( eq(base->getObjValue(),si5->getObjValue()) );
-    assert( eq(base->getObjValue(),si6->getObjValue()) );
-    assert( eq(base->getObjValue(),si7->getObjValue()) );
-    assert( eq(base->getObjValue(),si8->getObjValue()) );
+    OSIUNITTEST_ASSERT_ERROR(eq(base->getObjValue(),si1->getObjValue()), return, solverName, "testLoadAndAssignProblem: si1 objective value");
+    OSIUNITTEST_ASSERT_ERROR(eq(base->getObjValue(),si2->getObjValue()), return, solverName, "testLoadAndAssignProblem: si2 objective value");
+    OSIUNITTEST_ASSERT_ERROR(eq(base->getObjValue(),si3->getObjValue()), return, solverName, "testLoadAndAssignProblem: si3 objective value");
+    OSIUNITTEST_ASSERT_ERROR(eq(base->getObjValue(),si4->getObjValue()), return, solverName, "testLoadAndAssignProblem: si4 objective value");
+    OSIUNITTEST_ASSERT_ERROR(eq(base->getObjValue(),si5->getObjValue()), return, solverName, "testLoadAndAssignProblem: si5 objective value");
+    OSIUNITTEST_ASSERT_ERROR(eq(base->getObjValue(),si6->getObjValue()), return, solverName, "testLoadAndAssignProblem: si6 objective value");
+    OSIUNITTEST_ASSERT_ERROR(eq(base->getObjValue(),si7->getObjValue()), return, solverName, "testLoadAndAssignProblem: si7 objective value");
+    OSIUNITTEST_ASSERT_ERROR(eq(base->getObjValue(),si8->getObjValue()), return, solverName, "testLoadAndAssignProblem: si8 objective value");
 
     // Clean-up
     delete si8;
@@ -3338,6 +2915,10 @@ void testLoadAndAssignProblem (const OsiSolverInterface *emptySi,
   OsiGrb, and should not be visible to the user (or this test). That's the
   point of OSI.  It's an implementation failure and should not be swept
   under the rug here.  -- lh, 100826 --
+
+  OsiGrb does quite some attempts to hide this translation from the user,
+  need to check further what could be done. -- sv, 110306 --
+  ps: it's just coincidence that I actually see your messages here...
 */
 
   if (solverName != "gurobi")
@@ -3351,56 +2932,89 @@ void testLoadAndAssignProblem (const OsiSolverInterface *emptySi,
     si2->loadProblem(*exmip1Si->getMatrixByCol(),NULL,NULL,NULL,NULL,NULL,NULL);
       
     // Test column settings
-    assert(si1->getNumCols()==exmip1Si->getNumCols() );
+    OSIUNITTEST_ASSERT_ERROR(si1->getNumCols() == exmip1Si->getNumCols(), return, solverName, "testLoadAndAssignProblem: si1 loadProblem with matrix only");
+    bool collower_ok = true;
+    bool colupper_ok = true;
+    bool colobjcoef_ok = true;
     for ( i=0; i<si1->getNumCols(); i++ ) {
-      assert( eq(si1->getColLower()[i],0.0) );
-      assert( eq(si1->getColUpper()[i],si1->getInfinity()) );
-      assert( eq(si1->getObjCoefficients()[i],0.0) );
+      collower_ok &= eq(si1->getColLower()[i],0.0);
+      colupper_ok &= eq(si1->getColUpper()[i],si1->getInfinity());
+      colobjcoef_ok &= eq(si1->getObjCoefficients()[i],0.0);
     }
+    OSIUNITTEST_ASSERT_ERROR(collower_ok   == true, return, solverName, "testLoadAndAssignProblem: si1 loadProblem with matrix only");
+    OSIUNITTEST_ASSERT_ERROR(colupper_ok   == true, return, solverName, "testLoadAndAssignProblem: si1 loadProblem with matrix only");
+    OSIUNITTEST_ASSERT_ERROR(colobjcoef_ok == true, return, solverName, "testLoadAndAssignProblem: si1 loadProblem with matrix only");
+
     // Test row settings
-    assert(si1->getNumRows()==exmip1Si->getNumRows() );
+    OSIUNITTEST_ASSERT_ERROR(si1->getNumRows() == exmip1Si->getNumRows(), return, solverName, "testLoadAndAssignProblem: si1 loadProblem with matrix only");
     const double * rh = si1->getRightHandSide();
     const double * rr = si1->getRowRange();
     const char * rs = si1->getRowSense();
     const double * rl = si1->getRowLower();
     const double * ru = si1->getRowUpper();
+    bool rowrhs_ok = true;
+    bool rowrange_ok = true;
+    bool rowsense_ok = true;
+    bool rowlower_ok = true;
+    bool rowupper_ok = true;
     for ( i=0; i<si1->getNumRows(); i++ ) {
-      assert( eq(rh[i],0.0) );
-      assert( eq(rr[i],0.0) );
-      assert( 'N'==rs[i] );
-      assert( eq(rl[i],-si1->getInfinity()) );
-      assert( eq(ru[i], si1->getInfinity()) );
+      rowrhs_ok &= eq(rh[i],0.0);
+      rowrange_ok &= eq(rr[i],0.0);
+      rowsense_ok &= 'N'==rs[i];
+      rowlower_ok &= eq(rl[i],-si1->getInfinity());
+      rowupper_ok &= eq(ru[i], si1->getInfinity());
     }
+    OSIUNITTEST_ASSERT_ERROR(rowrhs_ok   == true, return, solverName, "testLoadAndAssignProblem: si1 loadProblem with matrix only");
+    OSIUNITTEST_ASSERT_ERROR(rowrange_ok == true, return, solverName, "testLoadAndAssignProblem: si1 loadProblem with matrix only");
+    OSIUNITTEST_ASSERT_ERROR(rowsense_ok == true, return, solverName, "testLoadAndAssignProblem: si1 loadProblem with matrix only");
+    OSIUNITTEST_ASSERT_ERROR(rowlower_ok == true, return, solverName, "testLoadAndAssignProblem: si1 loadProblem with matrix only");
+    OSIUNITTEST_ASSERT_ERROR(rowupper_ok == true, return, solverName, "testLoadAndAssignProblem: si1 loadProblem with matrix only");
 
     // And repeat for si2
-    assert(si2->getNumCols()==exmip1Si->getNumCols() );
+    OSIUNITTEST_ASSERT_ERROR(si2->getNumCols() == exmip1Si->getNumCols(), return, solverName, "testLoadAndAssignProblem: si2 loadProblem with matrix only");
+    collower_ok = true;
+    colupper_ok = true;
+    colobjcoef_ok = true;
     for ( i=0; i<si2->getNumCols(); i++ ) {
-      assert( eq(si2->getColLower()[i],0.0) );
-      assert( eq(si2->getColUpper()[i],si2->getInfinity()) );
-      assert( eq(si2->getObjCoefficients()[i],0.0) );
+      collower_ok &= eq(si2->getColLower()[i],0.0);
+      colupper_ok &= eq(si2->getColUpper()[i],si2->getInfinity());
+      colobjcoef_ok &= eq(si2->getObjCoefficients()[i],0.0);
     }
+    OSIUNITTEST_ASSERT_ERROR(collower_ok   == true, return, solverName, "testLoadAndAssignProblem: si2 loadProblem with matrix only");
+    OSIUNITTEST_ASSERT_ERROR(colupper_ok   == true, return, solverName, "testLoadAndAssignProblem: si2 loadProblem with matrix only");
+    OSIUNITTEST_ASSERT_ERROR(colobjcoef_ok == true, return, solverName, "testLoadAndAssignProblem: si2 loadProblem with matrix only");
     //
-    assert(si2->getNumRows()==exmip1Si->getNumRows() );
+    OSIUNITTEST_ASSERT_ERROR(si2->getNumRows() == exmip1Si->getNumRows(), return, solverName, "testLoadAndAssignProblem: si2 loadProblem with matrix only");
     rh = si2->getRightHandSide();
     rr = si2->getRowRange();
     rs = si2->getRowSense();
     rl = si2->getRowLower();
     ru = si2->getRowUpper();
+    rowrhs_ok = true;
+    rowrange_ok = true;
+    rowsense_ok = true;
+    rowlower_ok = true;
+    rowupper_ok = true;
     for ( i=0; i<si2->getNumRows(); i++ ) {
-      assert( eq(rh[i],0.0) );
-      assert( eq(rr[i],0.0) );
-      assert( 'G'==rs[i] );
-      assert( eq(rl[i],0.0) );
-      assert( eq(ru[i], si2->getInfinity()) );
+      rowrhs_ok   &= eq(rh[i],0.0);
+      rowrange_ok &= eq(rr[i],0.0);
+      rowsense_ok &= 'G'==rs[i];
+      rowlower_ok &= eq(rl[i],0.0);
+      rowupper_ok &= eq(ru[i],si2->getInfinity());
     }
+    OSIUNITTEST_ASSERT_ERROR(rowrhs_ok   == true, return, solverName, "testLoadAndAssignProblem: si2 loadProblem with matrix only");
+    OSIUNITTEST_ASSERT_ERROR(rowrange_ok == true, return, solverName, "testLoadAndAssignProblem: si2 loadProblem with matrix only");
+    OSIUNITTEST_ASSERT_ERROR(rowsense_ok == true, return, solverName, "testLoadAndAssignProblem: si2 loadProblem with matrix only");
+    OSIUNITTEST_ASSERT_ERROR(rowlower_ok == true, return, solverName, "testLoadAndAssignProblem: si2 loadProblem with matrix only");
+    OSIUNITTEST_ASSERT_ERROR(rowupper_ok == true, return, solverName, "testLoadAndAssignProblem: si2 loadProblem with matrix only");
       
     delete si1;
     delete si2;
   }
   else
   {
-    failureMessage(solverName,
-      "OsiGrb exposes inability to handle 'N' constraints (expected).") ;
+    failureMessage(solverName, "OsiGrb exposes inability to handle 'N' constraints (expected).") ;
+    OSIUNITTEST_ADD_OUTCOME(solverName, "testLoadAndAssignProblem", "ability to hande 'N' constraints", TestOutcome::ERROR, true);
   }
 /*
   Load problem with row rhs, sense and range, but leave column bounds and
@@ -3418,52 +3032,57 @@ void testLoadAndAssignProblem (const OsiSolverInterface *emptySi,
 		    exmip1Si->getRightHandSide(),
 		    exmip1Si->getRowRange());
     // Test column settings
-    assert(si->getNumCols()==exmip1Si->getNumCols() );
+    OSIUNITTEST_ASSERT_ERROR(si->getNumCols()==exmip1Si->getNumCols(), return, solverName, "testLoadAndAssignProblem: loadProblem with matrix and row bounds only");
+    bool collower_ok = true;
+    bool colupper_ok = true;
+    bool colobjcoef_ok = true;
     for ( i=0; i<si->getNumCols(); i++ ) {
-      assert( eq(si->getColLower()[i],0.0) );
-      assert( eq(si->getColUpper()[i],si->getInfinity()) );
-      assert( eq(si->getObjCoefficients()[i],0.0) );
+      collower_ok &= eq(si->getColLower()[i],0.0);
+      colupper_ok &= eq(si->getColUpper()[i],si->getInfinity());
+      colobjcoef_ok &= eq(si->getObjCoefficients()[i],0.0);
     }
+    OSIUNITTEST_ASSERT_ERROR(collower_ok == true, return, solverName, "testLoadAndAssignProblem: loadProblem with matrix and row bounds only");
+    OSIUNITTEST_ASSERT_ERROR(colupper_ok == true, return, solverName, "testLoadAndAssignProblem: loadProblem with matrix and row bounds only");
+    OSIUNITTEST_ASSERT_ERROR(colobjcoef_ok == true, return, solverName, "testLoadAndAssignProblem: loadProblem with matrix and row bounds only");
     // Test row settings
-    assert(si->getNumRows()==exmip1Si->getNumRows() );
+    OSIUNITTEST_ASSERT_ERROR(si->getNumRows()==exmip1Si->getNumRows(), return, solverName, "testLoadAndAssignProblem: loadProblem with matrix and row bounds only");
+    bool rowrhs_ok = true;
+    bool rowrange_ok = true;
+    bool rowsense_ok = true;
+    bool rowlower_ok = true;
+    bool rowupper_ok = true;
     for ( i=0; i<si->getNumRows(); i++ ) {
-      char s = si->getRowSense()[i];
-      assert( eq(si->getRightHandSide()[i],
-		 exmip1Si->getRightHandSide()[i]) );
-      assert( eq(si->getRowRange()[i],
-		 exmip1Si->getRowRange()[i]) );
-      assert( s==exmip1Si->getRowSense()[i] );
-      
-      if ( s=='G' ) {
-	assert( eq(si->getRowLower()[i],
-		   exmip1Si->getRightHandSide()[i]) );
-	assert( eq(si->getRowUpper()[i],
-		   si->getInfinity()) );
-      }
-      else if ( s=='L' ) {
-	assert( eq(si->getRowLower()[i],
-		   -si->getInfinity()) );
-	assert( eq(si->getRowUpper()[i],
-		   exmip1Si->getRightHandSide()[i]) );
-      }
-      else if ( s=='E' ) {
-	assert( eq(si->getRowLower()[i],
-		   si->getRowUpper()[i]) );
-	assert( eq(si->getRowUpper()[i],
-		   exmip1Si->getRightHandSide()[i]) );
-      }
-      else if ( s=='N' ) {
-	assert( eq(si->getRowLower()[i], -si->getInfinity()) );
-	assert( eq(si->getRowUpper()[i],  si->getInfinity()) );
-      }
-      else if ( s=='R' ) {
-	assert( eq(si->getRowLower()[i],
-		   exmip1Si->getRightHandSide()[i] -
-		   exmip1Si->getRowRange()[i]) );
-	assert( eq(si->getRowUpper()[i],
-		   exmip1Si->getRightHandSide()[i]) );
-      }
+    	rowrhs_ok &= eq(si->getRightHandSide()[i], exmip1Si->getRightHandSide()[i]);
+    	rowrange_ok &= eq(si->getRowRange()[i], exmip1Si->getRowRange()[i]);
+    	rowsense_ok &= si->getRowSense()[i]==exmip1Si->getRowSense()[i];
+
+    	char s = si->getRowSense()[i];
+    	if ( s=='G' ) {
+    		rowlower_ok &= eq(si->getRowLower()[i], exmip1Si->getRightHandSide()[i]);
+    		rowupper_ok &= eq(si->getRowUpper()[i], si->getInfinity());
+    	}
+    	else if ( s=='L' ) {
+    		rowlower_ok &= eq(si->getRowLower()[i], -si->getInfinity());
+    		rowupper_ok &= eq(si->getRowUpper()[i], exmip1Si->getRightHandSide()[i]);
+    	}
+    	else if ( s=='E' ) {
+    		rowlower_ok &= eq(si->getRowLower()[i], si->getRowUpper()[i]);
+    		rowupper_ok &= eq(si->getRowUpper()[i],	exmip1Si->getRightHandSide()[i]);
+    	}
+    	else if ( s=='N' ) {
+    		rowlower_ok &= eq(si->getRowLower()[i], -si->getInfinity());
+    		rowupper_ok &= eq(si->getRowUpper()[i],  si->getInfinity());
+    	}
+    	else if ( s=='R' ) {
+    		rowlower_ok &= eq(si->getRowLower()[i], exmip1Si->getRightHandSide()[i] - exmip1Si->getRowRange()[i]);
+    		rowupper_ok &= eq(si->getRowUpper()[i], exmip1Si->getRightHandSide()[i]);
+    	}
     }
+    OSIUNITTEST_ASSERT_ERROR(rowrhs_ok   == true, return, solverName, "testLoadAndAssignProblem: loadProblem with matrix and row bounds only");
+    OSIUNITTEST_ASSERT_ERROR(rowrange_ok == true, return, solverName, "testLoadAndAssignProblem: loadProblem with matrix and row bounds only");
+    OSIUNITTEST_ASSERT_ERROR(rowsense_ok == true, return, solverName, "testLoadAndAssignProblem: loadProblem with matrix and row bounds only");
+    OSIUNITTEST_ASSERT_ERROR(rowlower_ok == true, return, solverName, "testLoadAndAssignProblem: loadProblem with matrix and row bounds only");
+    OSIUNITTEST_ASSERT_ERROR(rowupper_ok == true, return, solverName, "testLoadAndAssignProblem: loadProblem with matrix and row bounds only");
       
     delete si;
   }
@@ -3503,7 +3122,7 @@ void testAddToEmptySystem (const OsiSolverInterface *emptySi,
       // Add empty columns
       for (i=0;i<3;i++)
       { const CoinPackedVector reqdBySunCC ;
-	si->addCol(reqdBySunCC,0.0,10.0,objective[i]) ; }
+      	si->addCol(reqdBySunCC,0.0,10.0,objective[i]) ; }
 
       // Add rows
       si->addRow(row1,2.0,100.0);
@@ -3511,13 +3130,9 @@ void testAddToEmptySystem (const OsiSolverInterface *emptySi,
 
       // Vol can not solve problem of this form
       if ( !volSolverInterface ) {
-	// solve
-	si->initialSolve();
-
-	double objValue = si->getObjValue();
-	if ( !eq(objValue,2.0) )
-	  failureMessage(solverName,
-		    "getObjValue after adding empty cols and then rows.") ;
+      	// solve
+      	si->initialSolve();
+        OSIUNITTEST_ASSERT_ERROR(eq(si->getObjValue(),2.0), {}, solverName, "testAddToEmptySystem: getObjValue after adding empty columns");
       }
     }
 
@@ -3542,7 +3157,7 @@ void testAddToEmptySystem (const OsiSolverInterface *emptySi,
       // Add empty columns
       for (i=0;i<3;i++)
       { const CoinPackedVector reqdBySunCC ;
-	si->addCol(reqdBySunCC,0.0,10.0,objective[i]) ; }
+      	si->addCol(reqdBySunCC,0.0,10.0,objective[i]) ; }
       
       // Add rows
       si->addRows(2,starts,column,row12E,NULL,ub);
@@ -3552,13 +3167,9 @@ void testAddToEmptySystem (const OsiSolverInterface *emptySi,
       
       // Vol can not solve problem of this form
       if ( !volSolverInterface ) {
-	// solve
-	si->initialSolve();
-      
-	double objValue = si->getObjValue();
-	if ( !eq(objValue,2.0) )
-	  failureMessage(solverName,
-	      "getObjValue after adding empty cols and then rows (alt fmt).") ;
+      	// solve
+      	si->initialSolve();
+        OSIUNITTEST_ASSERT_ERROR(eq(si->getObjValue(),2.0), {}, solverName, "testAddToEmptySystem: getObjValue after adding empty columns and then rows");
       }
     }
 
@@ -3586,28 +3197,24 @@ void testAddToEmptySystem (const OsiSolverInterface *emptySi,
       // Add empty rows
       for (i=0;i<2;i++)
       { const CoinPackedVector reqdBySunCC ;
-	si->addRow(reqdBySunCC,2.0,100.0) ; }
+      	si->addRow(reqdBySunCC,2.0,100.0) ; }
 
       // Add columns
       if ( volSolverInterface ) {
-	// FIXME: this test could be done w/ the volume, but the rows must
-	// not be ranged.
-	failureMessage(solverName,"addCol add columns to null");
+      	// FIXME: this test could be done w/ the volume, but the rows must not be ranged.
+      	OSIUNITTEST_ADD_OUTCOME(solverName, "testAddToEmptySystem", "addCol adds columns to NULL", TestOutcome::WARNING, true);
+      	failureMessage(solverName,"addCol add columns to null");
       }
       else {
-	si->addCol(col1,0.0,10.0,objective[0]);
-	si->addCol(col2,0.0,10.0,objective[1]);
-	si->addCol(col3,0.0,10.0,objective[2]);
+      	si->addCol(col1,0.0,10.0,objective[0]);
+      	si->addCol(col2,0.0,10.0,objective[1]);
+      	si->addCol(col3,0.0,10.0,objective[2]);
 
-	// solve
-	si->initialSolve();
+      	// solve
+      	si->initialSolve();
 
-	CoinRelFltEq eq(1.0e-7) ;
-	double objValue = si->getObjValue();
-	if ( !eq(objValue,2.0) )
-	   failureMessage(solverName,
-		    "getObjValue after adding empty rows and then cols.");
-
+      	CoinRelFltEq eq(1.0e-7) ;
+        OSIUNITTEST_ASSERT_ERROR(eq(si->getObjValue(),2.0), {}, solverName, "testAddToEmptySystem: getObjValue after adding empty rows and then columns");
       }
     }
     delete si;
@@ -3630,26 +3237,20 @@ void testAddToEmptySystem (const OsiSolverInterface *emptySi,
       // Add empty rows
       for (i=0;i<2;i++)
       { const CoinPackedVector reqdBySunCC ;
-	si->addRow(reqdBySunCC,2.0,100.0) ; }
+      	si->addRow(reqdBySunCC,2.0,100.0) ; }
       
       // Add columns
       if ( volSolverInterface ) {
-	// FIXME: this test could be done w/ the volume, but the rows must not
-	// be ranged.
-	failureMessage(solverName,"addCol add columns to null");
+      	// FIXME: this test could be done w/ the volume, but the rows must not be ranged.
+      	OSIUNITTEST_ADD_OUTCOME(solverName, "testAddToEmptySystem", "addCol adds columns to NULL", TestOutcome::WARNING, true);
       }
       else {
-	si->addCols(2,start23E,row23E,col23E,NULL,ub23E,objective+1);
-	si->addCol(2,row,col1E,0.0,10.0,objective[0]);
-      
-	// solve
-	si->initialSolve();
-      
-	double objValue = si->getObjValue();
-	if ( !eq(objValue,2.0) )
-	  failureMessage(solverName,
-	      "getObjValue after adding empty rows and then cols (alt fmt).");
-      
+      	si->addCols(2,start23E,row23E,col23E,NULL,ub23E,objective+1);
+      	si->addCol(2,row,col1E,0.0,10.0,objective[0]);
+
+      	// solve
+      	si->initialSolve();
+        OSIUNITTEST_ASSERT_ERROR(eq(si->getObjValue(),2.0), {}, solverName, "testAddToEmptySystem: getObjValue after adding empty rows and then columns (alternative format)");
       }
     }
     delete si;
@@ -3706,10 +3307,7 @@ int testOsiPresolve (const OsiSolverInterface *emptySi,
   int warnings = 0;
 
   std::string solverName = "Unknown solver" ;
-  bool boolResult = emptySi->getStrParam(OsiSolverName,solverName) ;
-  if (boolResult == false)
-  { failureMessage(solverName,"OsiSolverName parameter get.") ;
-    errs++ ; }
+  OSIUNITTEST_ASSERT_ERROR(emptySi->getStrParam(OsiSolverName,solverName) == true, ++errs, solverName, "testOsiPresolve: getStrParam(OsiSolverName)");
 
   std::cout << "Testing OsiPresolve ... " << std::endl ;
 
@@ -3722,12 +3320,7 @@ int testOsiPresolve (const OsiSolverInterface *emptySi,
     std::cout << "  testing presolve on " << mpsName << "." << std::endl ;
 
     std::string fn = sampleDir+mpsName ;
-    int mpsErrs = si->readMps(fn.c_str(),"mps") ;
-    if (mpsErrs != 0)
-    { std::cout << "Could not read " << fn << "; skipping." << std::endl ;
-      delete si ;
-      errs++ ;
-      continue ; }
+    OSIUNITTEST_ASSERT_ERROR(si->readMps(fn.c_str(),"mps") == 0, delete si; ++errs; continue, solverName, "testOsiPresolve: read MPS");
 /*
   Set up for presolve. Allow very slight (1.0e-8) bound relaxation to retain
   feasibility. Discard integrality information (false) and limit the number of
@@ -3736,31 +3329,14 @@ int testOsiPresolve (const OsiSolverInterface *emptySi,
     OsiSolverInterface *presolvedModel ;
     OsiPresolve pinfo ;
     presolvedModel = pinfo.presolvedModel(*si,1.0e-8,false,5) ;
-    if (presolvedModel == 0)
-    { std::cout
-	<< "No presolved model produced for " << mpsName
-	<< "; skipping." << std::endl ;
-      delete si ;
-      errs++ ;
-      continue ; }
+    OSIUNITTEST_ASSERT_ERROR(presolvedModel != NULL, delete si; ++errs; continue, solverName, "testOsiPresolve");
 /*
   Optimise the presolved model and check the objective.  We need to turn off
   any native presolve, which may or may not affect the objective.
 */
     presolvedModel->setHintParam(OsiDoPresolveInInitial,false) ;
     presolvedModel->initialSolve() ;
-    double objValue = presolvedModel->getObjValue() ;
-    int iters = presolvedModel->getIterationCount() ;
-    if (!eq(correctObj,objValue))
-    { std::streamsize oldprec = std::cout.precision(12) ;
-      std::cout
-	<< "Incorrect presolve objective " << objValue << " for " << mpsName
-	<< " in " << iters << " iterations; expected " << correctObj
-	<< ", |error| = " << CoinAbs(correctObj-objValue) << "." << std::endl ;
-      std::cout.precision(oldprec) ;
-      delete si ;
-      errs++ ;
-      continue ; }
+    OSIUNITTEST_ASSERT_ERROR(eq(correctObj,presolvedModel->getObjValue()), delete si; ++errs; continue, solverName, "testOsiPresolve");
 /*
   Postsolve to return to the original formulation. The presolvedModel should
   no longer be needed once we've executed postsolve. Check that we get the
@@ -3771,19 +3347,8 @@ int testOsiPresolve (const OsiSolverInterface *emptySi,
     delete presolvedModel ;
     si->setHintParam(OsiDoPresolveInResolve,false) ;
     si->resolve() ;
-    objValue = si->getObjValue() ;
-    iters = si->getIterationCount() ;
-    if (!eq(correctObj,objValue))
-    { std::cout
-	<< "Incorrect postsolve objective " << objValue << " for " << mpsName
-	<< " in " << iters << " iterations; expected " << correctObj
-	<< ", |error| = " << CoinAbs(correctObj-objValue) << "." << std::endl ;
-      errs++ ; }
-    if (iters != 0)
-    { std::cout
-	<< "Postsolve for " << mpsName << " required "
-	<< iters << " iterations; expected 0. Possible problem." << std::endl ;
-      warnings++ ; }
+    OSIUNITTEST_ASSERT_ERROR(eq(correctObj,si->getObjValue()), ++errs, solverName, "testOsiPresolve: postsolve objective value");
+    OSIUNITTEST_ASSERT_WARNING(si->getIterationCount() == 0, ++warnings, solverName, "testOsiPresolve: postsolve number of iterations");
 
     delete si ; }
 
@@ -3807,42 +3372,18 @@ int testEmptySi (const OsiSolverInterface *emptySi)
 
   si->getStrParam(OsiSolverName,solverName) ;
 
-  if (si->getNumRows() != 0)
-  { failureMessage(solverName,"getNumRows with empty solverInterface") ;
-    errCnt++ ; }
-  if (si->getNumCols() != 0)
-  { failureMessage(solverName,"getNumCols with empty solverInterface") ;
-    errCnt++ ; }
-  if (si->getNumElements() != 0)
-  { failureMessage(solverName,"getNumElements with empty solverInterface") ;
-    errCnt++ ; }
-  if (si->getColLower() != NULL)
-  { failureMessage(solverName,"getColLower with empty solverInterface") ;
-    errCnt++ ; }
-  if (si->getColUpper() != NULL)
-  { failureMessage(solverName,"getColUpper with empty solverInterface") ;
-    errCnt++ ; }
-  if (si->getColSolution() != NULL)
-  { failureMessage(solverName,"getColSolution with empty solverInterface") ;
-    errCnt++ ; }
-  if (si->getObjCoefficients() != NULL)
-  { failureMessage(solverName,"getObjCoefficients with empty solverInterface") ;
-    errCnt++ ; }
-  if (si->getRowRange() != NULL)
-  { failureMessage(solverName,"getRowRange with empty solverInterface") ;
-    errCnt++ ; }
-  if (si->getRightHandSide() != NULL)
-  { failureMessage(solverName,"getRightHandSide with empty solverInterface") ;
-    errCnt++ ; }
-  if (si->getRowSense() != NULL)
-  { failureMessage(solverName,"getRowSense with empty solverInterface") ;
-    errCnt++ ; }
-  if (si->getRowLower() != NULL)
-  { failureMessage(solverName,"getRowLower with empty solverInterface") ;
-    errCnt++ ; }
-  if (si->getRowUpper() != NULL)
-  { failureMessage(solverName,"getRowUpper with empty solverInterface") ;
-    errCnt++ ; }
+  OSIUNITTEST_ASSERT_ERROR(si->getNumRows()         == 0,    ++errCnt, solverName, "testEmptySi");
+  OSIUNITTEST_ASSERT_ERROR(si->getNumCols()         == 0,    ++errCnt, solverName, "testEmptySi");
+  OSIUNITTEST_ASSERT_ERROR(si->getNumElements()     == 0,    ++errCnt, solverName, "testEmptySi");
+  OSIUNITTEST_ASSERT_ERROR(si->getColLower()        == NULL, ++errCnt, solverName, "testEmptySi");
+  OSIUNITTEST_ASSERT_ERROR(si->getColUpper()        == NULL, ++errCnt, solverName, "testEmptySi");
+  OSIUNITTEST_ASSERT_ERROR(si->getColSolution()     == NULL, ++errCnt, solverName, "testEmptySi");
+  OSIUNITTEST_ASSERT_ERROR(si->getObjCoefficients() == NULL, ++errCnt, solverName, "testEmptySi");
+  OSIUNITTEST_ASSERT_ERROR(si->getRowRange()        == NULL, ++errCnt, solverName, "testEmptySi");
+  OSIUNITTEST_ASSERT_ERROR(si->getRightHandSide()   == NULL, ++errCnt, solverName, "testEmptySi");
+  OSIUNITTEST_ASSERT_ERROR(si->getRowSense()        == NULL, ++errCnt, solverName, "testEmptySi");
+  OSIUNITTEST_ASSERT_ERROR(si->getRowLower()        == NULL, ++errCnt, solverName, "testEmptySi");
+  OSIUNITTEST_ASSERT_ERROR(si->getRowUpper()        == NULL, ++errCnt, solverName, "testEmptySi");
 
   delete si ;
   
@@ -3896,9 +3437,6 @@ int testDualRays (const OsiSolverInterface *emptySi,
   const std::string mpsNames[] = { "galenet", "galenetbnds" } ;
   const bool rayTypes[] = { true, false } ;
 
-  // Set to true if you want to see the ray coefficients
-  const bool verbose = false ;
-
   std::cout << "Testing getDualRays ..." << std::endl ;
 /*
   Figure out what we can test. getDualRays only makes sense after solving a
@@ -3920,13 +3458,7 @@ int testDualRays (const OsiSolverInterface *emptySi,
     int nameDiscipline = 1 ;
     si->setIntParam(OsiNameDiscipline,nameDiscipline) ;
 
-    int mpsErrs = si->readMps(fn.c_str(),"mps") ;
-    if (mpsErrs != 0)
-    { std::cout << "  " << solverName << " could not read "
-	<< fn << "; aborting test." << std::endl ;
-      errCnt++ ;
-      delete si ;
-      return (errCnt) ; }
+    OSIUNITTEST_ASSERT_ERROR(si->readMps(fn.c_str(),"mps") == 0, delete si; return ++errCnt, solverName, "testDualRays: read MPS");
 /*
   Solve and report the result. We should be primal infeasible, and not optimal.
   Specify maximisation just for kicks.
@@ -3935,17 +3467,8 @@ int testDualRays (const OsiSolverInterface *emptySi,
     si->setHintParam(OsiDoPresolveInInitial,false,OsiHintDo) ;
     si->setHintParam(OsiDoReducePrint,true,OsiHintDo) ;
     si->initialSolve() ;
-    if (si->isProvenOptimal())
-    { std::cout
-	<< "  " << solverName
-	<< " claims optimal result for infeasible problem "
-	<< mpsName  << "." << std::endl ;
-      errCnt++ ; }
-    if (!si->isProvenPrimalInfeasible())
-    { std::cout
-	<< "  " << solverName
-	<< " fails to prove " << mpsName << " is infeasible." << std::endl ;
-      errCnt++ ; }
+    OSIUNITTEST_ASSERT_ERROR(!si->isProvenOptimal(), ++errCnt, solverName, "testDualRays: infeasible instance not proven optimal");
+    OSIUNITTEST_ASSERT_ERROR( si->isProvenPrimalInfeasible(), ++errCnt, solverName, "testDualRays: recognize infeasiblity of instance");
 /*
   Try a call to getDualRays. If the call throws, abort this iteration and
   try again.
@@ -3966,13 +3489,8 @@ int testDualRays (const OsiSolverInterface *emptySi,
   more than the number requested. If there are none, bail out now.
 */
     raysReturned = static_cast<unsigned int>(rays.size()) ;
-    if (raysReturned < 1 || raysReturned > 5)
-    { std::cout
-	<< "  " << solverName << " returned "
-	<< raysReturned << " rays; expected between 1 and " << raysRequested
-	<< "." << std::endl ;
-       errCnt++ ;
-       if (raysReturned < 1) break ; }
+    OSIUNITTEST_ASSERT_ERROR(raysReturned >= 1, ++errCnt; break, solverName, "testDualRays: number of returned rays");
+    OSIUNITTEST_ASSERT_WARNING((int)raysReturned <= raysRequested, ++errCnt, solverName, "testDualRays: number of returned rays");
 /*
   Do a bit of setup before checking each ray. If we're dealing with a full
   ray, we'll need variable bounds, solution value, and status. Acquire the
@@ -3991,12 +3509,7 @@ int testDualRays (const OsiSolverInterface *emptySi,
     if (fullRay == true)
     { rayLen += n ;
       wsb = dynamic_cast<CoinWarmStartBasis *>(si->getWarmStart()) ;
-      if (wsb == 0)
-      { std::cout
-	  << "  " << solverName << " could not obtain CoinWarmStartBasis."
-	  << std::endl ;
-	errCnt++ ;
-	break ; }
+      OSIUNITTEST_ASSERT_ERROR(wsb != NULL, ++errCnt; break, solverName, "testDualRays: get warmstart basis");
        vlbs = si->getColLower() ;
        vubs = si->getColUpper() ;
        xvals = si->getColSolution() ; }
@@ -4011,30 +3524,21 @@ int testDualRays (const OsiSolverInterface *emptySi,
     for (rayNdx = 0 ; rayNdx < raysReturned ; rayNdx++)
     { double *ray = rays[rayNdx] ;
 
-      if (verbose)
+      if (OsiUnitTest::verbosity >= 2)
       { std::cout << "  Ray[" << rayNdx << "]: " << std::endl ;
-	for (i = 0 ; i < m ; i++)
-	{ if (fabs(ray[i]) > tol)
-	  { std::cout
-	      << "    " << si->getRowName(i) << " [" << i << "]: "
-	      << ray[i] << std::endl ; } }
-	if (fullRay == true)
-	{ for (j = 0 ; j < n ; j++)
-	  { if (fabs(ray[m+j]) > tol)
-	    { std::cout
-		<< "    " << si->getColName(j) << " [" << j << "]: "
-		<< ray[m+j] << std::endl ; } } } }
+        for (i = 0 ; i < m ; i++)
+        { if (fabs(ray[i]) > tol)
+          { std::cout << "    " << si->getRowName(i) << " [" << i << "]: " << ray[i] << std::endl ; } }
+        if (fullRay == true)
+        { for (j = 0 ; j < n ; j++)
+          { if (fabs(ray[m+j]) > tol)
+            { std::cout << "    " << si->getColName(j) << " [" << j << "]: " << ray[m+j] << std::endl ; } } } }
 /*
   Check that the ray is not identically zero.
 */
       for (i = 0 ; i < rayLen ; i++)
       { if (fabs(ray[i]) > tol) break ; }
-      if (i == rayLen)
-      { std::cout
-	  << "  " << solverName << ": ray[" << rayNdx << "] has no nonzeros."
-	  << std::endl ;
-	errCnt++ ;
-	continue ; }
+      OSIUNITTEST_ASSERT_ERROR(i < rayLen, ++errCnt; continue, solverName, "testDualRays: ray should not be zero");
 /*
   Check that dot(r,b) < 0. For the first m components this is a
   straightforward dot product. If we're dealing with column components, we
@@ -4049,49 +3553,32 @@ int testDualRays (const OsiSolverInterface *emptySi,
       { rdotb += rhs[i]*ray[i] ; }
       if (fullRay == true)
       { CoinWarmStartBasis::Status statj ;
-	for (j = 0 ; j < n ; j++)
-	{ statj = wsb->getStructStatus(j) ;
-	  switch (statj)
-	  { case CoinWarmStartBasis::atUpperBound:
-	    { rdotb += vubs[j]*ray[m+j] ;
-	      break ; }
-	    case CoinWarmStartBasis::atLowerBound:
-	    { rdotb += (-vlbs[j])*ray[m+j] ;
-	      break ; }
-	    case CoinWarmStartBasis::basic:
-	    { if (ray[m+j] != 0)
-	      { nzoobCnt++ ;
-		if (xvals[j] > vubs[j])
-		{ rdotb += vubs[j]*ray[m+j] ; }
-		else
-		if (xvals[j] < vlbs[j])
-		{ rdotb += (-vlbs[j])*ray[m+j] ; }
-		else
-		{ std::cout
-		    << "  " << solverName << ": ray component for column "
-		    << j << " is nonzero but x[" << j << "] is within bounds."
-		    << std::endl ;
-		  errCnt++ ; } }
-	      break ; }
-	    default:
-	    { if (fabs(ray[i]) > tol)
-	      { std::cout
-		  << "  " << solverName << ": ray component for column "
-		  << j << " is nonzero but status is " << statj
-		  << "." << std::endl ;
-		errCnt++ ; }
-	      break ; } } }
-	  if (nzoobCnt > 1)
-	  { std::cout
-	      << "  " << solverName << ": ray has "
-	      << nzoobCnt << " nonzeros matching basic "
-	      << "variables; should be at most one nonzero." << std::endl ;
-	    errCnt++ ; } }
-      if (rdotb >= 0)
-      { std::cout
-	  << "  " << solverName << ": dot(r,b) = " << rdotb << " >= 0; "
-	  << "should be strictly less than zero." << std::endl ;
-	errCnt++ ; }
+	      for (j = 0 ; j < n ; j++)
+	      { statj = wsb->getStructStatus(j) ;
+	        switch (statj)
+	        { case CoinWarmStartBasis::atUpperBound:
+	          { rdotb += vubs[j]*ray[m+j] ;
+	            break ; }
+	          case CoinWarmStartBasis::atLowerBound:
+	          { rdotb += (-vlbs[j])*ray[m+j] ;
+	            break ; }
+	          case CoinWarmStartBasis::basic:
+	          { if (ray[m+j] != 0)
+	            { nzoobCnt++ ;
+  	            OSIUNITTEST_ASSERT_ERROR(xvals[j] > vubs[j] || xvals[j] < vlbs[j], ++errCnt; break, solverName, "testDualRays: xval outside bounds for nonzero ray entry");
+		            if (xvals[j] > vubs[j])
+		            { rdotb += vubs[j]*ray[m+j] ; }
+                else if (xvals[j] < vlbs[j])
+		            { rdotb += (-vlbs[j])*ray[m+j] ; }
+	            }
+	            break ; }
+	          default:
+	          {
+	            OSIUNITTEST_ASSERT_ERROR(fabs(ray[i]) <= tol, ++errCnt, solverName, "testDualRays: zero ray entry for basic variables");
+	            break ; } } }
+          OSIUNITTEST_ASSERT_ERROR(nzoobCnt <= 1, ++errCnt, solverName, "testDualRays: at most one nonzero ray entry for basic variables");
+      }
+      OSIUNITTEST_ASSERT_ERROR(rdotb < 0, ++errCnt, solverName, "testDualRays: ray points into right direction");
 /*
   On to rA >= 0. As with dot(r,b), it's trivially easy to do the calculation
   for explicit constraints, but we have to synthesize the coefficients
@@ -4103,42 +3590,36 @@ int testDualRays (const OsiSolverInterface *emptySi,
       si->getMatrixByCol()->transposeTimes(ray,rA) ;
       if (fullRay == true)
       { CoinWarmStartBasis::Status statj ;
-	for (j = 0 ; j < n ; j++)
-	{ statj = wsb->getStructStatus(j) ;
-	  switch (statj)
-	  { case CoinWarmStartBasis::atUpperBound:
-	    { rA[j] += ray[m+j] ;
-	      break ; }
-	    case CoinWarmStartBasis::atLowerBound:
-	    { rA[j] += -ray[m+j] ;
-	      break ; }
-	    case CoinWarmStartBasis::basic:
-	    { if (ray[m+j] != 0)
-	      { if (xvals[j] > vubs[j])
-		{ rA[j] += ray[m+j] ; }
-		else
-		if (xvals[j] < vlbs[j])
-		{ rA[j] += -ray[m+j] ; } }
-	      break ; }
-	    default:
-	    { break ; } } } }
+        for (j = 0 ; j < n ; j++)
+        { statj = wsb->getStructStatus(j) ;
+          switch (statj)
+          { case CoinWarmStartBasis::atUpperBound:
+            { rA[j] += ray[m+j] ;
+              break ; }
+            case CoinWarmStartBasis::atLowerBound:
+            { rA[j] += -ray[m+j] ;
+              break ; }
+            case CoinWarmStartBasis::basic:
+            { if (ray[m+j] != 0)
+              { if (xvals[j] > vubs[j])
+                  rA[j] += ray[m+j] ;
+                else if (xvals[j] < vlbs[j])
+      	          rA[j] += -ray[m+j] ; }
+              break ; }
+            default:
+            { break ; } } } }
 
       bool badVal = false ;
       for (j = 0 ; j < n ; j++)
       { if (rA[j] < -tol)
-	{ std::cout
-	    << "  " << solverName << ": ray[" << rayNdx
-	    << "] fails rA >= 0 for column " << j
-	    << " with value " << rA[j] << "."
-	    << std::endl ;
-	  badVal = true ;
-	  errCnt++ ; } }
-      if (badVal == true && verbose == true)
+	      { std::cout << "  " << solverName << ": ray[" << rayNdx << "] fails rA >= 0 for column " << j << " with value " << rA[j] << "." << std::endl;
+	        badVal = true ; } }
+      OSIUNITTEST_ASSERT_ERROR(badVal == false, ++errCnt, solverName, "testDualRays: rA >= 0");
+      if (badVal == true && OsiUnitTest::verbosity >= 2)
       { std::cout << "  Ray[" << rayNdx << "]: " << std::endl ;
-	for (i = 0 ; i < m ; i++)
-	{ if (fabs(ray[i]) > tol)
-	  { std::cout
-	      << "    [" << i << "]: " << ray[i] << std::endl ; } } } }
+	      for (i = 0 ; i < m ; i++)
+	      { if (fabs(ray[i]) > tol)
+	        { std::cout << "    [" << i << "]: " << ray[i] << std::endl ; } } } }
 /*
   Clean up.
 */
@@ -4149,6 +3630,7 @@ int testDualRays (const OsiSolverInterface *emptySi,
 /*
   Report the result and we're done.
 */
+	OSIUNITTEST_ASSERT_SEVERITY_EXPECTED(hasGetDualRays, {}, solverName, "testDualRays: getDualRays is implemented", TestOutcome::NOTE, false);
   if (hasGetDualRays == false)
   { testingMessage("  *** WARNING *** getDualRays is unimplemented.\n") ; }
   else
@@ -4158,7 +3640,6 @@ int testDualRays (const OsiSolverInterface *emptySi,
   { failureMessage(solverName,"get dual rays.") ; }
 
   return (errCnt) ; }
-
 
 
 }	// end file-local namespace
@@ -4196,15 +3677,9 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   std::string solverName ;
   {
     OsiSolverInterface *si = emptySi->clone() ;
-    bool supportsSolverName = si->getStrParam(OsiSolverName,solverName) ;
-    if (!supportsSolverName)
-    { solverName = "Unknown Solver" ;
-      failureMessage(solverName,"getStrParam(OsiSolverName)") ;
-      errCnt++ ; }
-    else
-    if (solverName == "Unknown Solver")
-    { failureMessage(solverName,"solver does not know its own name") ;
-      errCnt++ ; }
+    solverName = "Unknown Solver" ;
+    OSIUNITTEST_ASSERT_ERROR(si->getStrParam(OsiSolverName,solverName), ++errCnt, solverName, "getStrParam(OsiSolverName) supported");
+    OSIUNITTEST_ASSERT_ERROR(solverName != "Unknown Solver", ++errCnt, solverName, "solver knows its name");
     delete si ;
   }
   { std::string temp = ": running common unit tests.\n" ;
@@ -4217,14 +3692,13 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   beyond the capability of a solver.
 */
   bool volSolverInterface UNUSED = (solverName == "vol");
-  bool oslSolverInterface UNUSED = (solverName == "osl");
   bool dylpSolverInterface UNUSED = (solverName == "dylp");
   bool glpkSolverInterface UNUSED = (solverName == "glpk");
-  bool fmpSolverInterface UNUSED = (solverName == "FortMP");
   bool xprSolverInterface UNUSED = (solverName == "xpress");
   bool symSolverInterface UNUSED = (solverName == "sym");
   bool grbSolverInterface UNUSED = (solverName == "gurobi");
   bool cpxSolverInterface UNUSED = (solverName == "cplex");
+  bool spxSolverInterface UNUSED = (solverName == "soplex");
   
 /*
   Test values returned by an empty solver interface.
@@ -4236,11 +3710,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 */
   std::string fn = mpsDir+"exmip1" ;
   OsiSolverInterface *exmip1Si = emptySi->clone() ;
-  intResult = exmip1Si->readMps(fn.c_str(),"mps") ;
-  if (intResult != 0)
-  { failureMessage(*exmip1Si,"readMps failed to read exmip1 example") ;
-    errCnt += intResult ;
-    return (errCnt) ; }
+  OSIUNITTEST_ASSERT_ERROR(exmip1Si->readMps(fn.c_str(),"mps") == 0, return ++errCnt, *exmip1Si, "read MPS file");
 /*
   Test that the solver correctly handles row and column names.
 */
@@ -4257,80 +3727,93 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     { errCnt -= intResult ;
       return (-errCnt) ; }
   } else {
-    failureMessage(solverName,"Skipped test of objective functionality.") ;
+    OSIUNITTEST_ADD_OUTCOME(solverName, "testObjFunctions", "skipped test for OsiVol", OsiUnitTest::TestOutcome::NOTE, true);
   }
 
   // Test that problem was loaded correctly
 
-  { const char   * exmip1Sirs  = exmip1Si->getRowSense();
+  {
+    int nc = exmip1Si->getNumCols();
+    int nr = exmip1Si->getNumRows();
+    OSIUNITTEST_ASSERT_ERROR(nc == 8, return ++errCnt, *exmip1Si, "problem read correctly: number of columns");
+    OSIUNITTEST_ASSERT_ERROR(nr == 5, return ++errCnt, *exmip1Si, "problem read correctly: number of rows");
 
-    assert( exmip1Sirs[0]=='G' );
-    assert( exmip1Sirs[1]=='L' );
-    assert( exmip1Sirs[2]=='E' );
-    assert( exmip1Sirs[3]=='R' );
-    assert( exmip1Sirs[4]=='R' );
+  	const char   * exmip1Sirs  = exmip1Si->getRowSense();
+    OSIUNITTEST_ASSERT_ERROR(exmip1Sirs[0]=='G', ++errCnt, *exmip1Si, "problem read correctly: row sense");
+    OSIUNITTEST_ASSERT_ERROR(exmip1Sirs[1]=='L', ++errCnt, *exmip1Si, "problem read correctly: row sense");
+    OSIUNITTEST_ASSERT_ERROR(exmip1Sirs[2]=='E', ++errCnt, *exmip1Si, "problem read correctly: row sense");
+    OSIUNITTEST_ASSERT_ERROR(exmip1Sirs[3]=='R', ++errCnt, *exmip1Si, "problem read correctly: row sense");
+    OSIUNITTEST_ASSERT_ERROR(exmip1Sirs[4]=='R', ++errCnt, *exmip1Si, "problem read correctly: row sense");
 
     const double * exmip1Sirhs = exmip1Si->getRightHandSide();
-    assert( eq(exmip1Sirhs[0],2.5) );
-    assert( eq(exmip1Sirhs[1],2.1) );
-    assert( eq(exmip1Sirhs[2],4.0) );
-    assert( eq(exmip1Sirhs[3],5.0) );
-    assert( eq(exmip1Sirhs[4],15.) );
+    OSIUNITTEST_ASSERT_ERROR(eq(exmip1Sirhs[0],2.5), ++errCnt, *exmip1Si, "problem read correctly: row rhs");
+    OSIUNITTEST_ASSERT_ERROR(eq(exmip1Sirhs[1],2.1), ++errCnt, *exmip1Si, "problem read correctly: row rhs");
+    OSIUNITTEST_ASSERT_ERROR(eq(exmip1Sirhs[2],4.0), ++errCnt, *exmip1Si, "problem read correctly: row rhs");
+    OSIUNITTEST_ASSERT_ERROR(eq(exmip1Sirhs[3],5.0), ++errCnt, *exmip1Si, "problem read correctly: row rhs");
+    OSIUNITTEST_ASSERT_ERROR(eq(exmip1Sirhs[4],15.), ++errCnt, *exmip1Si, "problem read correctly: row rhs");
 
     const double * exmip1Sirr  = exmip1Si->getRowRange();
-    assert( eq(exmip1Sirr[0],0.0) );
-    assert( eq(exmip1Sirr[1],0.0) );
-    assert( eq(exmip1Sirr[2],0.0) );
-    assert( eq(exmip1Sirr[3],5.0-1.8) );
-    assert( eq(exmip1Sirr[4],15.0-3.0) );
+    OSIUNITTEST_ASSERT_ERROR(eq(exmip1Sirr[0],0.0), ++errCnt, *exmip1Si, "problem read correctly: row range");
+    OSIUNITTEST_ASSERT_ERROR(eq(exmip1Sirr[1],0.0), ++errCnt, *exmip1Si, "problem read correctly: row range");
+    OSIUNITTEST_ASSERT_ERROR(eq(exmip1Sirr[2],0.0), ++errCnt, *exmip1Si, "problem read correctly: row range");
+    OSIUNITTEST_ASSERT_ERROR(eq(exmip1Sirr[3],5.0-1.8), ++errCnt, *exmip1Si, "problem read correctly: row range");
+    OSIUNITTEST_ASSERT_ERROR(eq(exmip1Sirr[4],15.0-3.0), ++errCnt, *exmip1Si, "problem read correctly: row range");
 
     const CoinPackedMatrix *goldByCol = BuildExmip1Mtx() ;
     CoinPackedMatrix goldmtx ;
     goldmtx.reverseOrderedCopyOf(*goldByCol) ;
-	delete goldByCol ;
+    delete goldByCol ;
     
     CoinPackedMatrix pm;
     pm.setExtraGap(0.0);
     pm.setExtraMajor(0.0);
     pm = *exmip1Si->getMatrixByRow();
     pm.removeGaps();
-    assert(goldmtx.isEquivalent(pm)) ;
+    OSIUNITTEST_ASSERT_ERROR(goldmtx.isEquivalent(pm), ++errCnt, *exmip1Si, "problem read correctly: matrix by row");
 
-    int nc = exmip1Si->getNumCols();
-    int nr = exmip1Si->getNumRows();
     const double * cl = exmip1Si->getColLower();
-    const double * cu = exmip1Si->getColUpper();
-    const double * rl = exmip1Si->getRowLower();
-    const double * ru = exmip1Si->getRowUpper();
-    assert( nc == 8 );
-    assert( nr == 5 );
-    assert( eq(cl[0],2.5) );
-    assert( eq(cl[1],0.0) );
-    assert( eq(cl[2],0.0) );
-    assert( eq(cl[3],0.0) );
-    assert( eq(cl[4],0.5) );
-    assert( eq(cl[5],0.0) );
-    assert( eq(cl[6],0.0) );
-    assert( eq(cl[7],0.0) );
-    assert( eq(cu[0],exmip1Si->getInfinity()) );
-    assert( eq(cu[1],4.1) );
-    assert( eq(cu[2],1.0) );
-    assert( eq(cu[3],1.0) );
-    assert( eq(cu[4],4.0) );
-    assert( eq(cu[5],exmip1Si->getInfinity()) );
-    assert( eq(cu[6],exmip1Si->getInfinity()) );
-    assert( eq(cu[7],4.3) );
+    OSIUNITTEST_ASSERT_ERROR(eq(cl[0],2.5), ++errCnt, *exmip1Si, "problem read correctly: columns lower bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(cl[1],0.0), ++errCnt, *exmip1Si, "problem read correctly: columns lower bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(cl[2],0.0), ++errCnt, *exmip1Si, "problem read correctly: columns lower bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(cl[3],0.0), ++errCnt, *exmip1Si, "problem read correctly: columns lower bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(cl[4],0.5), ++errCnt, *exmip1Si, "problem read correctly: columns lower bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(cl[5],0.0), ++errCnt, *exmip1Si, "problem read correctly: columns lower bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(cl[6],0.0), ++errCnt, *exmip1Si, "problem read correctly: columns lower bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(cl[7],0.0), ++errCnt, *exmip1Si, "problem read correctly: columns lower bounds");
 
-    assert( eq(rl[0],2.5) );
-    assert( eq(rl[1],-exmip1Si->getInfinity()) );
-    assert( eq(rl[2],4.0) );
-    assert( eq(rl[3],1.8) );
-    assert( eq(rl[4],3.0) );
-    assert( eq(ru[0],exmip1Si->getInfinity()) );
-    assert( eq(ru[1],2.1) );
-    assert( eq(ru[2],4.0) );
-    assert( eq(ru[3],5.0) );
-    assert( eq(ru[4],15.0) );
+    const double * cu = exmip1Si->getColUpper();
+    OSIUNITTEST_ASSERT_ERROR(eq(cu[0],exmip1Si->getInfinity()), ++errCnt, *exmip1Si, "problem read correctly: columns upper bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(cu[1],4.1), ++errCnt, *exmip1Si, "problem read correctly: columns upper bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(cu[2],1.0), ++errCnt, *exmip1Si, "problem read correctly: columns upper bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(cu[3],1.0), ++errCnt, *exmip1Si, "problem read correctly: columns upper bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(cu[4],4.0), ++errCnt, *exmip1Si, "problem read correctly: columns upper bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(cu[5],exmip1Si->getInfinity()), ++errCnt, *exmip1Si, "problem read correctly: columns upper bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(cu[6],exmip1Si->getInfinity()), ++errCnt, *exmip1Si, "problem read correctly: columns upper bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(cu[7],4.3), ++errCnt, *exmip1Si, "problem read correctly: columns upper bounds");
+
+    const double * rl = exmip1Si->getRowLower();
+    OSIUNITTEST_ASSERT_ERROR(eq(rl[0],2.5), ++errCnt, *exmip1Si, "problem read correctly: rows lower bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(rl[1],-exmip1Si->getInfinity()), ++errCnt, *exmip1Si, "problem read correctly: rows lower bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(rl[2],4.0), ++errCnt, *exmip1Si, "problem read correctly: rows lower bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(rl[3],1.8), ++errCnt, *exmip1Si, "problem read correctly: rows lower bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(rl[4],3.0), ++errCnt, *exmip1Si, "problem read correctly: rows lower bounds");
+
+    const double * ru = exmip1Si->getRowUpper();
+    OSIUNITTEST_ASSERT_ERROR(eq(ru[0],exmip1Si->getInfinity()), ++errCnt, *exmip1Si, "problem read correctly: rows upper bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(ru[1],2.1), ++errCnt, *exmip1Si, "problem read correctly: rows upper bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(ru[2],4.0), ++errCnt, *exmip1Si, "problem read correctly: rows upper bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(ru[3],5.0), ++errCnt, *exmip1Si, "problem read correctly: rows upper bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(ru[4],15.), ++errCnt, *exmip1Si, "problem read correctly: rows upper bounds");
+
+    const double * objCoef = exmip1Si->getObjCoefficients();
+    OSIUNITTEST_ASSERT_ERROR(eq(objCoef[0], 1.0), ++errCnt, *exmip1Si, "problem read correctly: objective coefficients");
+    OSIUNITTEST_ASSERT_ERROR(eq(objCoef[1], 0.0), ++errCnt, *exmip1Si, "problem read correctly: objective coefficients");
+    OSIUNITTEST_ASSERT_ERROR(eq(objCoef[2], 0.0), ++errCnt, *exmip1Si, "problem read correctly: objective coefficients");
+    OSIUNITTEST_ASSERT_ERROR(eq(objCoef[3], 0.0), ++errCnt, *exmip1Si, "problem read correctly: objective coefficients");
+    OSIUNITTEST_ASSERT_ERROR(eq(objCoef[4], 2.0), ++errCnt, *exmip1Si, "problem read correctly: objective coefficients");
+    OSIUNITTEST_ASSERT_ERROR(eq(objCoef[5], 0.0), ++errCnt, *exmip1Si, "problem read correctly: objective coefficients");
+    OSIUNITTEST_ASSERT_ERROR(eq(objCoef[6], 0.0), ++errCnt, *exmip1Si, "problem read correctly: objective coefficients");
+    OSIUNITTEST_ASSERT_ERROR(eq(objCoef[7],-1.0), ++errCnt, *exmip1Si, "problem read correctly: objective coefficients");
 
     // make sure col solution is something reasonable,
     // that is between upper and lower bounds
@@ -4348,37 +3831,22 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       //	semantics of this test. -- lh, 03.04.29 --
       // if ( (cl[c]<inf || cu[c]<inf) && cs[c]>=inf ) okColSol=false;
     }
-    if( !okColSol )
-      failureMessage(solverName,"getColSolution before solve");
-
-    // Test value of objective function coefficients
-    const double * objCoef = exmip1Si->getObjCoefficients();
-    assert( eq( objCoef[0],  1.0) );
-    assert( eq( objCoef[1],  0.0) );
-    assert( eq( objCoef[2],  0.0) );
-    assert( eq( objCoef[3],  0.0) );
-    assert( eq( objCoef[4],  2.0) );
-    assert( eq( objCoef[5],  0.0) );
-    assert( eq( objCoef[6],  0.0) );
-    assert( eq( objCoef[7], -1.0) );
+    OSIUNITTEST_ASSERT_WARNING(okColSol, ++errCnt, *exmip1Si, "column solution before solve");
 
     // Test that objective value is correct
+    // FIXME: the test checks the primal value. vol fails this, because vol
+    // considers the dual value to be the objective value
+    /*
+       gurobi fails this, because gurobi does not have a solution before a
+       model is solved (which makes sense, I (SV) think)
+
+       Eh, well, you can argue the point, but the current OSI spec requires
+       that there be a valid solution from the point that the problem is
+       loaded. Nothing says it needs to be a good solution. -- lh, 100826 --
+    */
     double correctObjValue = CoinPackedVector(nc,objCoef).dotProduct(cs);
     double siObjValue = exmip1Si->getObjValue();
-    if( !eq(correctObjValue,siObjValue) ) {
-       // FIXME: the test checks the primal value. vol fails this, because vol
-       // considers the dual value to be the objective value
-       /*
-	 gurobi fails this, because gurobi does not have a solution before a
-	 model is solved (which makes sense, I (SV) think)
-
-	 Eh, well, you can argue the point, but the current OSI spec requires
-	 that there be a valid solution from the point that the problem is
-	 loaded. Nothing says it needs to be a good solution. -- lh, 100826 --
-       */
-       failureMessage(solverName,
-		      "getObjValue before solve (expected for vol, gurobi)");
-    }
+    OSIUNITTEST_ASSERT_SEVERITY_EXPECTED(eq(correctObjValue,siObjValue), ++errCnt, *exmip1Si, "solution value before solve", TestOutcome::WARNING, solverName == "Vol");
   }
 
   // Test matrixByCol method
@@ -4387,21 +3855,16 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     OsiSolverInterface & si = *exmip1Si->clone();
     CoinPackedMatrix sm = *si.getMatrixByCol();
     sm.removeGaps();
-    bool getByColOK = goldmtx->isEquivalent(sm) ;
-	delete goldmtx ;
-
-    if (!getByColOK)
-      failureMessage(solverName,"getMatrixByCol()") ;
+    OSIUNITTEST_ASSERT_ERROR(goldmtx->isEquivalent(sm), ++errCnt, solverName, "getMatrixByCol");
+    delete goldmtx ;
 
     // Test getting and setting of objective offset
     double objOffset;
-    bool supportOsiObjOffset = si.getDblParam(OsiObjOffset,objOffset);
-    assert( supportOsiObjOffset );
-    assert( eq( objOffset, 0.0 ) );
-    supportOsiObjOffset = si.setDblParam(OsiObjOffset, 3.21);
-    assert( supportOsiObjOffset );
+    OSIUNITTEST_ASSERT_ERROR(si.getDblParam(OsiObjOffset,objOffset), ++errCnt, solverName, "getDblParam(OsiObjOffset)");
+    OSIUNITTEST_ASSERT_ERROR(eq(objOffset, 0.0), ++errCnt, solverName, "objective offset 0 for exmip1");
+    OSIUNITTEST_ASSERT_ERROR(si.setDblParam(OsiObjOffset,3.21), ++errCnt, solverName, "setDblParam(OsiObjOffset)");
     si.getDblParam(OsiObjOffset,objOffset);
-    assert( eq( objOffset, 3.21 ) );
+    OSIUNITTEST_ASSERT_ERROR(eq(objOffset, 3.21), ++errCnt, solverName, "storing objective offset");
 
     delete &si;
   }
@@ -4414,34 +3877,37 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       OsiSolverInterface * si1 = exmip1Si->clone();
       int ad = 13579;
       si1->setApplicationData(&ad);
-      assert( *((int *)(si1->getApplicationData())) == ad );
+      OSIUNITTEST_ASSERT_ERROR(*((int *)(si1->getApplicationData())) == ad, ++errCnt, solverName, "storing application data");
       si2 = si1->clone();
       delete si1;
     }
+    OSIUNITTEST_ASSERT_ERROR(*((int *)(si2->getApplicationData())) == ad, ++errCnt, solverName, "cloning of application data");
 
-    if( *((int *)(si2->getApplicationData())) != ad )
-      failureMessage(solverName,"getApplicationData on cloned solverInterface");
+    int nc = si2->getNumCols();
+    int nr = si2->getNumRows();
+    OSIUNITTEST_ASSERT_ERROR(nc == 8, return ++errCnt, *exmip1Si, "problem cloned: number of columns");
+    OSIUNITTEST_ASSERT_ERROR(nr == 5, return ++errCnt, *exmip1Si, "problem cloned: number of rows");
 
     const char   * exmip1Sirs  = si2->getRowSense();
-    assert( exmip1Sirs[0]=='G' );
-    assert( exmip1Sirs[1]=='L' );
-    assert( exmip1Sirs[2]=='E' );
-    assert( exmip1Sirs[3]=='R' );
-    assert( exmip1Sirs[4]=='R' );
+    OSIUNITTEST_ASSERT_ERROR(exmip1Sirs[0]=='G', ++errCnt, solverName, "problem cloned: row sense");
+    OSIUNITTEST_ASSERT_ERROR(exmip1Sirs[1]=='L', ++errCnt, solverName, "problem cloned: row sense");
+    OSIUNITTEST_ASSERT_ERROR(exmip1Sirs[2]=='E', ++errCnt, solverName, "problem cloned: row sense");
+    OSIUNITTEST_ASSERT_ERROR(exmip1Sirs[3]=='R', ++errCnt, solverName, "problem cloned: row sense");
+    OSIUNITTEST_ASSERT_ERROR(exmip1Sirs[4]=='R', ++errCnt, solverName, "problem cloned: row sense");
 
     const double * exmip1Sirhs = si2->getRightHandSide();
-    assert( eq(exmip1Sirhs[0],2.5) );
-    assert( eq(exmip1Sirhs[1],2.1) );
-    assert( eq(exmip1Sirhs[2],4.0) );
-    assert( eq(exmip1Sirhs[3],5.0) );
-    assert( eq(exmip1Sirhs[4],15.) );
+    OSIUNITTEST_ASSERT_ERROR(eq(exmip1Sirhs[0],2.5), ++errCnt, solverName, "problem cloned: row rhs");
+    OSIUNITTEST_ASSERT_ERROR(eq(exmip1Sirhs[1],2.1), ++errCnt, solverName, "problem cloned: row rhs");
+    OSIUNITTEST_ASSERT_ERROR(eq(exmip1Sirhs[2],4.0), ++errCnt, solverName, "problem cloned: row rhs");
+    OSIUNITTEST_ASSERT_ERROR(eq(exmip1Sirhs[3],5.0), ++errCnt, solverName, "problem cloned: row rhs");
+    OSIUNITTEST_ASSERT_ERROR(eq(exmip1Sirhs[4],15.), ++errCnt, solverName, "problem cloned: row rhs");
 
     const double * exmip1Sirr  = si2->getRowRange();
-    assert( eq(exmip1Sirr[0],0.0) );
-    assert( eq(exmip1Sirr[1],0.0) );
-    assert( eq(exmip1Sirr[2],0.0) );
-    assert( eq(exmip1Sirr[3],5.0-1.8) );
-    assert( eq(exmip1Sirr[4],15.0-3.0) );
+    OSIUNITTEST_ASSERT_ERROR(eq(exmip1Sirr[0],0.0), ++errCnt, solverName, "problem cloned: row range");
+    OSIUNITTEST_ASSERT_ERROR(eq(exmip1Sirr[1],0.0), ++errCnt, solverName, "problem cloned: row range");
+    OSIUNITTEST_ASSERT_ERROR(eq(exmip1Sirr[2],0.0), ++errCnt, solverName, "problem cloned: row range");
+    OSIUNITTEST_ASSERT_ERROR(eq(exmip1Sirr[3],5.0-1.8), ++errCnt, solverName, "problem cloned: row range");
+    OSIUNITTEST_ASSERT_ERROR(eq(exmip1Sirr[4],15.0-3.0), ++errCnt, solverName, "problem cloned: row range");
 
     const CoinPackedMatrix *goldByCol = BuildExmip1Mtx() ;
     CoinPackedMatrix goldmtx ;
@@ -4450,44 +3916,52 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     pm.setExtraGap(0.0);
     pm.setExtraMajor(0.0);
     pm = *si2->getMatrixByRow();
-    assert(goldmtx.isEquivalent(pm)) ;
-	delete goldByCol ;
+    OSIUNITTEST_ASSERT_ERROR(goldmtx.isEquivalent(pm), ++errCnt, solverName, "problem cloned: matrix by row");
+	  delete goldByCol ;
 
-    int nc = si2->getNumCols();
-    int nr = si2->getNumRows();
     const double * cl = si2->getColLower();
-    const double * cu = si2->getColUpper();
-    const double * rl = si2->getRowLower();
-    const double * ru = si2->getRowUpper();
-    assert( nc == 8 );
-    assert( nr == 5 );
-    assert( eq(cl[0],2.5) );
-    assert( eq(cl[1],0.0) );
-    assert( eq(cl[2],0.0) );
-    assert( eq(cl[3],0.0) );
-    assert( eq(cl[4],0.5) );
-    assert( eq(cl[5],0.0) );
-    assert( eq(cl[6],0.0) );
-    assert( eq(cl[7],0.0) );
-    assert( eq(cu[0],si2->getInfinity()) );
-    assert( eq(cu[1],4.1) );
-    assert( eq(cu[2],1.0) );
-    assert( eq(cu[3],1.0) );
-    assert( eq(cu[4],4.0) );
-    assert( eq(cu[5],si2->getInfinity()) );
-    assert( eq(cu[6],si2->getInfinity()) );
-    assert( eq(cu[7],4.3) );
+    OSIUNITTEST_ASSERT_ERROR(eq(cl[0],2.5), ++errCnt, solverName, "problem cloned: columns lower bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(cl[1],0.0), ++errCnt, solverName, "problem cloned: columns lower bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(cl[2],0.0), ++errCnt, solverName, "problem cloned: columns lower bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(cl[3],0.0), ++errCnt, solverName, "problem cloned: columns lower bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(cl[4],0.5), ++errCnt, solverName, "problem cloned: columns lower bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(cl[5],0.0), ++errCnt, solverName, "problem cloned: columns lower bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(cl[6],0.0), ++errCnt, solverName, "problem cloned: columns lower bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(cl[7],0.0), ++errCnt, solverName, "problem cloned: columns lower bounds");
 
-    assert( eq(rl[0],2.5) );
-    assert( eq(rl[1],-si2->getInfinity()) );
-    assert( eq(rl[2],4.0) );
-    assert( eq(rl[3],1.8) );
-    assert( eq(rl[4],3.0) );
-    assert( eq(ru[0],si2->getInfinity()) );
-    assert( eq(ru[1],2.1) );
-    assert( eq(ru[2],4.0) );
-    assert( eq(ru[3],5.0) );
-    assert( eq(ru[4],15.0) );
+    const double * cu = si2->getColUpper();
+    OSIUNITTEST_ASSERT_ERROR(eq(cu[0],exmip1Si->getInfinity()), ++errCnt, solverName, "problem cloned: columns upper bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(cu[1],4.1), ++errCnt, solverName, "problem cloned: columns upper bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(cu[2],1.0), ++errCnt, solverName, "problem cloned: columns upper bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(cu[3],1.0), ++errCnt, solverName, "problem cloned: columns upper bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(cu[4],4.0), ++errCnt, solverName, "problem cloned: columns upper bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(cu[5],exmip1Si->getInfinity()), ++errCnt, solverName, "problem cloned: columns upper bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(cu[6],exmip1Si->getInfinity()), ++errCnt, solverName, "problem cloned: columns upper bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(cu[7],4.3), ++errCnt, solverName, "problem cloned: columns upper bounds");
+
+    const double * rl = si2->getRowLower();
+    OSIUNITTEST_ASSERT_ERROR(eq(rl[0],2.5), ++errCnt, solverName, "problem cloned: rows lower bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(rl[1],-exmip1Si->getInfinity()), ++errCnt, solverName, "problem cloned: rows lower bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(rl[2],4.0), ++errCnt, solverName, "problem cloned: rows lower bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(rl[3],1.8), ++errCnt, solverName, "problem cloned: rows lower bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(rl[4],3.0), ++errCnt, solverName, "problem cloned: rows lower bounds");
+
+    const double * ru = si2->getRowUpper();
+    OSIUNITTEST_ASSERT_ERROR(eq(ru[0],exmip1Si->getInfinity()), ++errCnt, solverName, "problem cloned: rows upper bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(ru[1],2.1), ++errCnt, solverName, "problem cloned: rows upper bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(ru[2],4.0), ++errCnt, solverName, "problem cloned: rows upper bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(ru[3],5.0), ++errCnt, solverName, "problem cloned: rows upper bounds");
+    OSIUNITTEST_ASSERT_ERROR(eq(ru[4],15.), ++errCnt, solverName, "problem cloned: rows upper bounds");
+
+    const double * objCoef = exmip1Si->getObjCoefficients();
+    OSIUNITTEST_ASSERT_ERROR(eq(objCoef[0], 1.0), ++errCnt, solverName, "problem cloned: objective coefficients");
+    OSIUNITTEST_ASSERT_ERROR(eq(objCoef[1], 0.0), ++errCnt, solverName, "problem cloned: objective coefficients");
+    OSIUNITTEST_ASSERT_ERROR(eq(objCoef[2], 0.0), ++errCnt, solverName, "problem cloned: objective coefficients");
+    OSIUNITTEST_ASSERT_ERROR(eq(objCoef[3], 0.0), ++errCnt, solverName, "problem cloned: objective coefficients");
+    OSIUNITTEST_ASSERT_ERROR(eq(objCoef[4], 2.0), ++errCnt, solverName, "problem cloned: objective coefficients");
+    OSIUNITTEST_ASSERT_ERROR(eq(objCoef[5], 0.0), ++errCnt, solverName, "problem cloned: objective coefficients");
+    OSIUNITTEST_ASSERT_ERROR(eq(objCoef[6], 0.0), ++errCnt, solverName, "problem cloned: objective coefficients");
+    OSIUNITTEST_ASSERT_ERROR(eq(objCoef[7],-1.0), ++errCnt, solverName, "problem cloned: objective coefficients");
 
     // make sure col solution is something reasonable,
     // that is between upper and lower bounds
@@ -4505,24 +3979,12 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       //	semantics of this test. -- lh, 03.04.29 --
       // if ( (cl[c]<inf || cu[c]<inf) && cs[c]>=inf ) okColSol=false;
     }
-    if( !okColSol )
-      failureMessage(solverName,"getColSolution before solve on cloned solverInterface");
+    OSIUNITTEST_ASSERT_WARNING(okColSol, ++errCnt, solverName, "problem cloned: column solution before solve");
 
-    assert( eq( si2->getObjCoefficients()[0],  1.0) );
-    assert( eq( si2->getObjCoefficients()[1],  0.0) );
-    assert( eq( si2->getObjCoefficients()[2],  0.0) );
-    assert( eq( si2->getObjCoefficients()[3],  0.0) );
-    assert( eq( si2->getObjCoefficients()[4],  2.0) );
-    assert( eq( si2->getObjCoefficients()[5],  0.0) );
-    assert( eq( si2->getObjCoefficients()[6],  0.0) );
-    assert( eq( si2->getObjCoefficients()[7], -1.0) );
-
-    // Test getting and setting of objective offset
+    // Test getting of objective offset
     double objOffset;
-    bool supported = si2->getDblParam(OsiObjOffset,objOffset);
-    assert( supported );
-    if( !eq( objOffset, 0.0 ) )
-      failureMessage(solverName,"getDblParam OsiObjOffset on cloned solverInterface");
+    OSIUNITTEST_ASSERT_ERROR(si2->getDblParam(OsiObjOffset,objOffset), ++errCnt, solverName, "problem cloned: getDblParam(OsiObjOffset)");
+    OSIUNITTEST_ASSERT_ERROR(eq(objOffset, 0.0), ++errCnt, solverName, "problem cloned: objective offset 0.0");
     delete si2;
   }
   // end of clone testing
@@ -4535,10 +3997,10 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     // Generate some cuts
     {
       // Get number of rows and columns in model
-      int nr=im.getNumRows();
-      int nc=im.getNumCols();
-      assert( nr == 5 );
-      assert( nc == 8 );
+      int nr = im.getNumRows();
+      int nc = im.getNumCols();
+      OSIUNITTEST_ASSERT_ERROR(nr == 5, return ++errCnt, solverName, "apply cuts: number of rows");
+      OSIUNITTEST_ASSERT_ERROR(nc == 8, return ++errCnt, solverName, "apply cuts: number of columns");
 
       // Generate a valid row cut from thin air
       int c;
@@ -4585,12 +4047,12 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
         OsiRowCut * rcP= new OsiRowCut;
         rcP->setEffectiveness(-1.);
         cuts.insert(rcP);
-        assert(rcP==NULL);
+        OSIUNITTEST_ASSERT_ERROR(rcP == NULL, ++errCnt, solverName, "apply cuts: insert row cut keeps pointer");
 
         OsiColCut * ccP= new OsiColCut;
         ccP->setEffectiveness(-12.);
         cuts.insert(ccP);
-        assert(ccP==NULL);
+        OSIUNITTEST_ASSERT_ERROR(ccP == NULL, ++errCnt, solverName, "apply cuts: insert column cut keeps pointer");
       }
       {
         //Generate inconsistent Row cut
@@ -4601,7 +4063,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
         rc.setRow(ne,inx,el);
         rc.setLb(3.);
         rc.setUb(4.);
-        assert(!rc.consistent());
+        OSIUNITTEST_ASSERT_ERROR(!rc.consistent(), ++errCnt, solverName, "apply cuts: inconsistent row cut");
         cuts.insert(rc);
       }
       {
@@ -4611,7 +4073,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
         int inx[ne]={-10};
         double el[ne]={2.5};
         cc.setUbs(ne,inx,el);
-        assert(!cc.consistent());
+        OSIUNITTEST_ASSERT_ERROR(!cc.consistent(), ++errCnt, solverName, "apply cuts: inconsistent column cut");
         cuts.insert(cc);
       }
       {
@@ -4621,8 +4083,8 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
         int inx[ne]={10};
         double el[ne]={2.5};
         rc.setRow(ne,inx,el);
-        assert(rc.consistent());
-        assert(!rc.consistent(im));
+        OSIUNITTEST_ASSERT_ERROR( rc.consistent(),   ++errCnt, solverName, "apply cuts: row cut inconsistent for model only");
+        OSIUNITTEST_ASSERT_ERROR(!rc.consistent(im), ++errCnt, solverName, "apply cuts: row cut inconsistent for model only");
         cuts.insert(rc);
       }
       {
@@ -4632,8 +4094,8 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
         int inx[ne]={30};
         double el[ne]={2.0};
         cc.setLbs(ne,inx,el);
-        assert(cc.consistent());
-        assert(!cc.consistent(im));
+        OSIUNITTEST_ASSERT_ERROR( cc.consistent(),   ++errCnt, solverName, "apply cuts: column cut inconsistent for model only");
+        OSIUNITTEST_ASSERT_ERROR(!cc.consistent(im), ++errCnt, solverName, "apply cuts: column cut inconsistent for model only");
         cuts.insert(cc);
       }
       {
@@ -4644,27 +4106,23 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
         double el[ne]={2.0};
         cc.setUbs(ne,inx,el);
         cc.setEffectiveness(1000.);
-        assert(cc.consistent());
-        assert(cc.consistent(im));
-        assert(cc.infeasible(im));
+        OSIUNITTEST_ASSERT_ERROR(cc.consistent(),   ++errCnt, solverName, "apply cuts: column cut infeasible for model");
+        OSIUNITTEST_ASSERT_ERROR(cc.consistent(im), ++errCnt, solverName, "apply cuts: column cut infeasible for model");
+        OSIUNITTEST_ASSERT_ERROR(cc.infeasible(im), ++errCnt, solverName, "apply cuts: column cut infeasible for model");
         cuts.insert(cc);
       }
     }
-    assert(cuts.sizeRowCuts()==4);
-    assert(cuts.sizeColCuts()==5);
+    OSIUNITTEST_ASSERT_ERROR(cuts.sizeRowCuts() == 4, ++errCnt, solverName, "apply cuts: number of stored row cuts");
+    OSIUNITTEST_ASSERT_ERROR(cuts.sizeColCuts() == 5, ++errCnt, solverName, "apply cuts: number of stored column cuts");
 
    {
       OsiSolverInterface::ApplyCutsReturnCode rc = im.applyCuts(cuts);
-      assert( rc.getNumIneffective() == 2 );
-      assert( rc.getNumApplied() == 2 );
-      assert( rc.getNumInfeasible() == 1 );
-      assert( rc.getNumInconsistentWrtIntegerModel() == 2 );
-      assert( rc.getNumInconsistent() == 2 );
-      assert( cuts.sizeCuts() == rc.getNumIneffective() +
-        rc.getNumApplied() +
-        rc.getNumInfeasible() +
-        rc.getNumInconsistentWrtIntegerModel() +
-        rc.getNumInconsistent() );
+      OSIUNITTEST_ASSERT_ERROR(rc.getNumIneffective() == 2, ++errCnt, solverName, "apply cuts: number of row cuts found ineffective");
+      OSIUNITTEST_ASSERT_ERROR(rc.getNumApplied() == 2, ++errCnt, solverName, "apply cuts: number of row cuts applied");
+      OSIUNITTEST_ASSERT_ERROR(rc.getNumInfeasible() == 1, ++errCnt, solverName, "apply cuts: number of row cuts found infeasible");
+      OSIUNITTEST_ASSERT_ERROR(rc.getNumInconsistentWrtIntegerModel() == 2, ++errCnt, solverName, "apply cuts: number of row cuts found inconsistent wr.t. integer model");
+      OSIUNITTEST_ASSERT_ERROR(rc.getNumInconsistent() == 2, ++errCnt, solverName, "apply cuts: number of row cuts found inconsistent");
+      OSIUNITTEST_ASSERT_ERROR(cuts.sizeCuts() == rc.getNumIneffective() + rc.getNumApplied() + rc.getNumInfeasible() + rc.getNumInconsistentWrtIntegerModel() + rc.getNumInconsistent(), ++errCnt, solverName, "apply cuts: consistent count of row cuts");
     }
 
     delete &im;
@@ -4690,93 +4148,83 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   testSettingSolutions(*exmip1Si) ;
 
   // Test column type methods
+  // skip for vol since it does not support this function
 
   if ( volSolverInterface ) {
-     // Test for vol since it does not support this function
-     failureMessage(solverName,
-		    "column type methods all report continuous (OK for vol)");
-  }
-  else {
+    OSIUNITTEST_ADD_OUTCOME(solverName, "testing column type methods", "skipped test for OsiVol", TestOutcome::NOTE, true);
+  } else {
     OsiSolverInterface & fim = *(emptySi->clone());
     std::string fn = mpsDir+"exmip1";
     fim.readMps(fn.c_str(),"mps");
 
     // exmip1.mps has 2 integer variables with index 2 & 3
-    assert(  fim.getNumIntegers() == 2 ) ;
+    OSIUNITTEST_ASSERT_ERROR( fim.getNumIntegers() == 2, ++errCnt, solverName, "column type methods: number of integers");
 
-    assert(  fim.isContinuous(0) );
-    assert(  fim.isContinuous(1) );
-    assert( !fim.isContinuous(2) );
-    assert( !fim.isContinuous(3) );
-    assert(  fim.isContinuous(4) );
+    OSIUNITTEST_ASSERT_ERROR( fim.isContinuous(0), ++errCnt, solverName, "column type methods: isContinuous");
+    OSIUNITTEST_ASSERT_ERROR( fim.isContinuous(1), ++errCnt, solverName, "column type methods: isContinuous");
+    OSIUNITTEST_ASSERT_ERROR(!fim.isContinuous(2), ++errCnt, solverName, "column type methods: isContinuous");
+    OSIUNITTEST_ASSERT_ERROR(!fim.isContinuous(3), ++errCnt, solverName, "column type methods: isContinuous");
+    OSIUNITTEST_ASSERT_ERROR( fim.isContinuous(4), ++errCnt, solverName, "column type methods: isContinuous");
 
-    assert( !fim.isInteger(0) );
-    assert( !fim.isInteger(1) );
-    assert(  fim.isInteger(2) );
-    assert(  fim.isInteger(3) );
-    assert( !fim.isInteger(4) );
+    OSIUNITTEST_ASSERT_ERROR(!fim.isInteger(0), ++errCnt, solverName, "column type methods: isInteger");
+    OSIUNITTEST_ASSERT_ERROR(!fim.isInteger(1), ++errCnt, solverName, "column type methods: isInteger");
+    OSIUNITTEST_ASSERT_ERROR( fim.isInteger(2), ++errCnt, solverName, "column type methods: isInteger");
+    OSIUNITTEST_ASSERT_ERROR( fim.isInteger(3), ++errCnt, solverName, "column type methods: isInteger");
+    OSIUNITTEST_ASSERT_ERROR(!fim.isInteger(4), ++errCnt, solverName, "column type methods: isInteger");
 
-    assert( !fim.isBinary(0) );
-    assert( !fim.isBinary(1) );
-    assert(  fim.isBinary(2) );
-    assert(  fim.isBinary(3) );
-    assert( !fim.isBinary(4) );
+    OSIUNITTEST_ASSERT_ERROR(!fim.isBinary(0), ++errCnt, solverName, "column type methods: isBinary");
+    OSIUNITTEST_ASSERT_ERROR(!fim.isBinary(1), ++errCnt, solverName, "column type methods: isBinary");
+    OSIUNITTEST_ASSERT_ERROR( fim.isBinary(2), ++errCnt, solverName, "column type methods: isBinary");
+    OSIUNITTEST_ASSERT_ERROR( fim.isBinary(3), ++errCnt, solverName, "column type methods: isBinary");
+    OSIUNITTEST_ASSERT_ERROR(!fim.isBinary(4), ++errCnt, solverName, "column type methods: isBinary");
 
-    assert( !fim.isIntegerNonBinary(0) );
-    assert( !fim.isIntegerNonBinary(1) );
-    assert( !fim.isIntegerNonBinary(2) );
-    assert( !fim.isIntegerNonBinary(3) );
-    assert( !fim.isIntegerNonBinary(4) );
+    OSIUNITTEST_ASSERT_ERROR(!fim.isIntegerNonBinary(0), ++errCnt, solverName, "column type methods: isIntegerNonBinary");
+    OSIUNITTEST_ASSERT_ERROR(!fim.isIntegerNonBinary(1), ++errCnt, solverName, "column type methods: isIntegerNonBinary");
+    OSIUNITTEST_ASSERT_ERROR(!fim.isIntegerNonBinary(2), ++errCnt, solverName, "column type methods: isIntegerNonBinary");
+    OSIUNITTEST_ASSERT_ERROR(!fim.isIntegerNonBinary(3), ++errCnt, solverName, "column type methods: isIntegerNonBinary");
+    OSIUNITTEST_ASSERT_ERROR(!fim.isIntegerNonBinary(4), ++errCnt, solverName, "column type methods: isIntegerNonBinary");
 
     // Test fractionalIndices
-
     {
       double sol[]={1.0, 2.0, 2.9, 3.0, 4.0,0.0,0.0,0.0};
       fim.setColSolution(sol);
       OsiVectorInt fi = fim.getFractionalIndices(1e-5);
-      assert( fi.size() == 1 );
-      assert( fi[0]==2 );
+      OSIUNITTEST_ASSERT_ERROR(fi.size() == 1, ++errCnt, solverName, "column type methods: getFractionalIndices");
+      OSIUNITTEST_ASSERT_ERROR(fi[0] == 2, ++errCnt, solverName, "column type methods: getFractionalIndices");
 
       // Set integer variables very close to integer values
       sol[2]=5 + .00001/2.;
       sol[3]=8 - .00001/2.;
       fim.setColSolution(sol);
       fi = fim.getFractionalIndices(1e-5);
-      assert( fi.size() == 0 );
+      OSIUNITTEST_ASSERT_ERROR(fi.size() == 0, ++errCnt, solverName, "column type methods: getFractionalIndices");
 
       // Set integer variables close, but beyond tolerances
       sol[2]=5 + .00001*2.;
       sol[3]=8 - .00001*2.;
       fim.setColSolution(sol);
       fi = fim.getFractionalIndices(1e-5);
-      assert( fi.size() == 2 );
-      assert( fi[0]==2 );
-      assert( fi[1]==3 );
+      OSIUNITTEST_ASSERT_ERROR(fi.size() == 2, ++errCnt, solverName, "column type methods: getFractionalIndices");
+      OSIUNITTEST_ASSERT_ERROR(fi[0] == 2, ++errCnt, solverName, "column type methods: getFractionalIndices");
+      OSIUNITTEST_ASSERT_ERROR(fi[1] == 3, ++errCnt, solverName, "column type methods: getFractionalIndices");
     }
 
     // Change data so column 2 & 3 are integerNonBinary
     fim.setColUpper(2,5.0);
-    assert( eq(fim.getColUpper()[2],5.0) );
     fim.setColUpper(3,6.0);
-    assert( eq(fim.getColUpper()[3],6.0) );
-    assert( !fim.isBinary(0) );
-    assert( !fim.isBinary(1) );
-    if( fim.isBinary(2) )
-      failureMessage(solverName,"isBinary or setColUpper");
-    if( fim.isBinary(3) )
-      failureMessage(solverName,"isBinary or setColUpper");
-    assert( !fim.isBinary(4) );
-
-    if (fim.getNumIntegers() != 2)
-      failureMessage(solverName,"getNumIntegers");
-
-    assert( !fim.isIntegerNonBinary(0) );
-    assert( !fim.isIntegerNonBinary(1) );
-    if( !fim.isIntegerNonBinary(2) )
-      failureMessage(solverName,"isIntegerNonBinary or setColUpper");
-    if( !fim.isIntegerNonBinary(3) )
-      failureMessage(solverName,"isIntegerNonBinary or setColUpper");
-    assert( !fim.isIntegerNonBinary(4) );
+    OSIUNITTEST_ASSERT_ERROR(eq(fim.getColUpper()[2],5.0), ++errCnt, solverName, "column type methods: convert binary to integer variable");
+    OSIUNITTEST_ASSERT_ERROR(eq(fim.getColUpper()[3],6.0), ++errCnt, solverName, "column type methods: convert binary to integer variable");
+    OSIUNITTEST_ASSERT_ERROR(!fim.isBinary(0), ++errCnt, solverName, "column type methods: convert binary to integer variable");
+    OSIUNITTEST_ASSERT_ERROR(!fim.isBinary(1), ++errCnt, solverName, "column type methods: convert binary to integer variable");
+    OSIUNITTEST_ASSERT_ERROR(!fim.isBinary(2), ++errCnt, solverName, "column type methods: convert binary to integer variable");
+    OSIUNITTEST_ASSERT_ERROR(!fim.isBinary(3), ++errCnt, solverName, "column type methods: convert binary to integer variable");
+    OSIUNITTEST_ASSERT_ERROR(!fim.isBinary(4), ++errCnt, solverName, "column type methods: convert binary to integer variable");
+    OSIUNITTEST_ASSERT_ERROR(fim.getNumIntegers() == 2, ++errCnt, solverName, "column type methods: convert binary to integer variable");
+    OSIUNITTEST_ASSERT_ERROR(!fim.isIntegerNonBinary(0), ++errCnt, solverName, "column type methods: convert binary to integer variable");
+    OSIUNITTEST_ASSERT_ERROR(!fim.isIntegerNonBinary(1), ++errCnt, solverName, "column type methods: convert binary to integer variable");
+    OSIUNITTEST_ASSERT_ERROR( fim.isIntegerNonBinary(2), ++errCnt, solverName, "column type methods: convert binary to integer variable");
+    OSIUNITTEST_ASSERT_ERROR( fim.isIntegerNonBinary(3), ++errCnt, solverName, "column type methods: convert binary to integer variable");
+    OSIUNITTEST_ASSERT_ERROR(!fim.isIntegerNonBinary(4), ++errCnt, solverName, "column type methods: convert binary to integer variable");
 
     delete &fim;
   }
@@ -4838,15 +4286,16 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 
     CoinPackedMatrix pm2 = *(si->getMatrixByRow());
 
-    assert(pm1.getNumRows()==pm2.getNumRows()-1);
+    OSIUNITTEST_ASSERT_ERROR(pm1.getNumRows()==pm2.getNumRows()-1, ++errCnt, solverName, "switching from column to row ordering: added row");
     int i;
     for( i=0; i<pm1.getNumRows(); ++i ) {
       const CoinShallowPackedVector neededBySunCC1 = pm1.getVector(i) ;
       const CoinShallowPackedVector neededBySunCC2 = pm2.getVector(i) ;
-      assert( neededBySunCC1 ==  neededBySunCC2 );
+      if (neededBySunCC1 != neededBySunCC2)
+      	break;
     }
-    // Test that last row of pm2 is same as added cut
-    assert( pm2.getVector(pm2.getNumRows()-1).isEquivalent(pv) );
+    OSIUNITTEST_ASSERT_ERROR(i == pm1.getNumRows(), ++errCnt, solverName, "switching from column to row ordering: matrix ok");
+    OSIUNITTEST_ASSERT_ERROR(pm2.getVector(pm2.getNumRows()-1).isEquivalent(pv), ++errCnt, solverName, "switching from column to row ordering: last row equals added cut");
 
     delete si;
   }
@@ -4881,29 +4330,30 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 
     CoinPackedMatrix pm2 = *(si->getMatrixByCol());
 
-    assert( pm1.isColOrdered() );
-    assert( pm2.isColOrdered() );
-    assert( pm1.getNumRows()==pm2.getNumRows()-1 );
+    OSIUNITTEST_ASSERT_ERROR(pm1.isColOrdered(), ++errCnt, solverName, "switching from row to column ordering");
+    OSIUNITTEST_ASSERT_ERROR(pm2.isColOrdered(), ++errCnt, solverName, "switching from row to column ordering");
+    OSIUNITTEST_ASSERT_ERROR(pm1.getNumRows()==pm2.getNumRows()-1, ++errCnt, solverName, "switching from row to column ordering: added row");
 
     CoinPackedMatrix pm1ByRow;
     pm1ByRow.reverseOrderedCopyOf(pm1);
     CoinPackedMatrix pm2ByRow;
     pm2ByRow.reverseOrderedCopyOf(pm2);
 
-    assert( !pm1ByRow.isColOrdered() );
-    assert( !pm2ByRow.isColOrdered() );
-    assert( pm1ByRow.getNumRows()==pm2ByRow.getNumRows()-1 );
-    assert( pm1.getNumRows() == pm1ByRow.getNumRows() );
-    assert( pm2.getNumRows() == pm2ByRow.getNumRows() );
+    OSIUNITTEST_ASSERT_ERROR(!pm1ByRow.isColOrdered(), ++errCnt, solverName, "switching from row to column ordering");
+    OSIUNITTEST_ASSERT_ERROR(!pm2ByRow.isColOrdered(), ++errCnt, solverName, "switching from row to column ordering");
+    OSIUNITTEST_ASSERT_ERROR(pm1ByRow.getNumRows() == pm2ByRow.getNumRows()-1, ++errCnt, solverName, "switching from row to column ordering");
+    OSIUNITTEST_ASSERT_ERROR(pm1.getNumRows() == pm1ByRow.getNumRows(), ++errCnt, solverName, "switching from row to column ordering");
+    OSIUNITTEST_ASSERT_ERROR(pm2.getNumRows() == pm2ByRow.getNumRows(), ++errCnt, solverName, "switching from row to column ordering");
 
     int i;
     for( i=0; i<pm1ByRow.getNumRows(); ++i ) {
       const CoinShallowPackedVector neededBySunCC1 = pm1ByRow.getVector(i) ;
       const CoinShallowPackedVector neededBySunCC2 = pm2ByRow.getVector(i) ;
-      assert( neededBySunCC1 ==  neededBySunCC2 );
+      if (neededBySunCC1 != neededBySunCC2)
+      	break;
     }
-    // Test that last row of pm2 is same as added cut
-    assert( pm2ByRow.getVector(pm2ByRow.getNumRows()-1).isEquivalent(pv) );
+    OSIUNITTEST_ASSERT_ERROR(i == pm1ByRow.getNumRows(), ++errCnt, solverName, "switching from row to column ordering: matrix ok");
+    OSIUNITTEST_ASSERT_ERROR(pm2ByRow.getVector(pm2ByRow.getNumRows()-1).isEquivalent(pv), ++errCnt, solverName, "switching from row to column ordering: last row is added cut");
 
     delete si;
   }
@@ -4918,62 +4368,61 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     double dval;
     bool hint;
     OsiHintStrength hintStrength;
-    assert(si->getIntParam(OsiLastIntParam, ival) == false);
-    assert(si->getDblParam(OsiLastDblParam, dval) == false);
-    assert(si->getHintParam(OsiLastHintParam, hint) == false);
-    assert(si->setIntParam(OsiLastIntParam, 0) == false);
-    assert(si->setDblParam(OsiLastDblParam, 0) == false);
-    assert(si->setHintParam(OsiLastHintParam, false) == false);
+    OSIUNITTEST_ASSERT_ERROR(si->getIntParam (OsiLastIntParam,  ival) == false, ++errCnt, solverName, "parameter methods: retrieve last int param");
+    OSIUNITTEST_ASSERT_ERROR(si->getDblParam (OsiLastDblParam,  dval) == false, ++errCnt, solverName, "parameter methods: retrieve last double param");
+    OSIUNITTEST_ASSERT_ERROR(si->getHintParam(OsiLastHintParam, hint) == false, ++errCnt, solverName, "parameter methods: retrieve last hint param");
+    OSIUNITTEST_ASSERT_ERROR(si->setIntParam (OsiLastIntParam,  0)     == false, ++errCnt, solverName, "parameter methods: set last int param");
+    OSIUNITTEST_ASSERT_ERROR(si->setDblParam (OsiLastDblParam,  0.0)   == false, ++errCnt, solverName, "parameter methods: set last double param");
+    OSIUNITTEST_ASSERT_ERROR(si->setHintParam(OsiLastHintParam, false) == false, ++errCnt, solverName, "parameter methods: set last hint param");
 
+    bool param_ok = true;
     for (i = 0; i < OsiLastIntParam; ++i) {
       const bool exists = si->getIntParam(static_cast<OsiIntParam>(i), ival);
       // existence and test should result in the same
-      assert(!exists ^ testIntParam(si, i, -1));
-      assert(!exists ^ testIntParam(si, i, 0));
-      assert(!exists ^ testIntParam(si, i, 1));
-      assert(!exists ^ testIntParam(si, i, 9999999));
-      assert(!exists ^ testIntParam(si, i, COIN_INT_MAX));
+      param_ok &= (!exists ^ testIntParam(si, i, -1));
+      param_ok &= (!exists ^ testIntParam(si, i, 0));
+      param_ok &= (!exists ^ testIntParam(si, i, 1));
+      param_ok &= (!exists ^ testIntParam(si, i, 9999999));
+      param_ok &= (!exists ^ testIntParam(si, i, COIN_INT_MAX));
       if (exists)
-        assert(si->getIntParam(static_cast<OsiIntParam>(i), ival));
+      	param_ok &= (si->getIntParam(static_cast<OsiIntParam>(i), ival));
     }
+    OSIUNITTEST_ASSERT_ERROR(param_ok == true, ++errCnt, solverName, "parameter methods: test intparam");
 
+    param_ok = true;
     for (i = 0; i < OsiLastDblParam; ++i) {
       const bool exists = si->getDblParam(static_cast<OsiDblParam>(i), dval);
       // existence and test should result in the same
-      assert(!exists ^ testDblParam(si, i, -1e50));
-      assert(!exists ^ testDblParam(si, i, -1e10));
-      assert(!exists ^ testDblParam(si, i, -1));
-      assert(!exists ^ testDblParam(si, i, -1e-4));
-      assert(!exists ^ testDblParam(si, i, -1e-15));
-      assert(!exists ^ testDblParam(si, i, 1e50));
-      assert(!exists ^ testDblParam(si, i, 1e10));
-      assert(!exists ^ testDblParam(si, i, 1));
-      assert(!exists ^ testDblParam(si, i, 1e-4));
-      assert(!exists ^ testDblParam(si, i, 1e-15));
+      param_ok &= (!exists ^ testDblParam(si, i, -1e50));
+      param_ok &= (!exists ^ testDblParam(si, i, -1e10));
+      param_ok &= (!exists ^ testDblParam(si, i, -1));
+      param_ok &= (!exists ^ testDblParam(si, i, -1e-4));
+      param_ok &= (!exists ^ testDblParam(si, i, -1e-15));
+      param_ok &= (!exists ^ testDblParam(si, i, 1e50));
+      param_ok &= (!exists ^ testDblParam(si, i, 1e10));
+      param_ok &= (!exists ^ testDblParam(si, i, 1));
+      param_ok &= (!exists ^ testDblParam(si, i, 1e-4));
+      param_ok &= (!exists ^ testDblParam(si, i, 1e-15));
       if (exists)
-	assert(si->setDblParam(static_cast<OsiDblParam>(i), dval));
+      	param_ok &= (si->setDblParam(static_cast<OsiDblParam>(i), dval));
     }
+    OSIUNITTEST_ASSERT_ERROR(param_ok == true, ++errCnt, solverName, "parameter methods: test dblparam");
 
     // test hints --- see testHintParam for detailed explanation.
-
     { int throws = 0 ;
-
+      param_ok = true;
       for (i = 0 ; i < OsiLastHintParam ; ++i)
-      { const bool exists =
-	  si->getHintParam(static_cast<OsiHintParam>(i),hint,hintStrength) ;
-
-	assert(!exists ^ testHintParam(si,i,true,OsiHintIgnore,&throws)) ;
-	assert(!exists ^ testHintParam(si,i,true,OsiHintTry,&throws)) ;
-	assert(!exists ^ testHintParam(si,i,false,OsiHintTry,&throws)) ;
-	assert(!exists ^ testHintParam(si,i,true,OsiHintDo,&throws)) ;
-	assert(!exists ^ testHintParam(si,i,false,OsiHintDo,&throws)) ;
-	assert(!exists ^ testHintParam(si,i,true,OsiForceDo,&throws)) ;
-	assert(!exists ^ testHintParam(si,i,false,OsiForceDo,&throws)) ; }
-
+      { const bool exists = si->getHintParam(static_cast<OsiHintParam>(i),hint,hintStrength) ;
+        param_ok &= (!exists ^ testHintParam(si,i,true,OsiHintIgnore,&throws)) ;
+        param_ok &= (!exists ^ testHintParam(si,i,true,OsiHintTry,&throws)) ;
+        param_ok &= (!exists ^ testHintParam(si,i,false,OsiHintTry,&throws)) ;
+        param_ok &= (!exists ^ testHintParam(si,i,true,OsiHintDo,&throws)) ;
+        param_ok &= (!exists ^ testHintParam(si,i,false,OsiHintDo,&throws)) ;
+        param_ok &= (!exists ^ testHintParam(si,i,true,OsiForceDo,&throws)) ;
+        param_ok &= (!exists ^ testHintParam(si,i,false,OsiForceDo,&throws)) ; }
       std::cout.flush() ;
-      std::cerr << "Checked " << OsiLastHintParam <<
-		   " hints x (true, false) at strength OsiForceDo; " <<
-		   throws << " throws." << std::endl ;
+      std::cerr << "Checked " << OsiLastHintParam << " hints x (true, false) at strength OsiForceDo; " << throws << " throws." << std::endl ;
+      OSIUNITTEST_ASSERT_ERROR(param_ok == true, ++errCnt, solverName, "parameter methods: test hintparam");
     }
 
     delete si;
@@ -4987,14 +4436,11 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 /*
   Test OsiPresolve. This is a `bolt on' presolve, distinct from any presolve
   that might be innate to the solver.
-
-  The conditional here used to exclude OsiFmp. Perhaps it should again, but no
-  one's tested it since OsiFmp was originally developed.
 */
   if ( !volSolverInterface && !symSolverInterface )
   { testOsiPresolve(emptySi,mpsDir) ; }
   else
-  { failureMessage(solverName, "Skipped OsiPresolve test.") ; }
+  { OSIUNITTEST_ADD_OUTCOME(solverName, "testOsiPresolved", "skipped test", OsiUnitTest::TestOutcome::NOTE, true); }
 /*
   Do a check to see if the solver returns the correct status for artificial
   variables. See the routine for detailed comments. Vol has no basis, hence no
@@ -5002,11 +4448,12 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 */
   if (!volSolverInterface)
     errCnt += testArtifStatus(emptySi) ;
+  else
+  	OSIUNITTEST_ADD_OUTCOME(solverName, "testArtifStatus", "skipped test", OsiUnitTest::TestOutcome::NOTE, true);
 
   // Perform tests that are embodied in functions
   if ( !volSolverInterface && !symSolverInterface)
   {
-
     typedef bool (*TestFunction)(OsiSolverInterface*);
     std::vector<std::pair<TestFunction, const char*> > test_functions;
     test_functions.push_back(std::pair<TestFunction, const char*>(&test1VivianDeSmedt, "test1VivianDeSmedt"));
@@ -5033,15 +4480,13 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       const char * testName = test_functions[i].second;
       {
         bool test = test_functions[i].first(s);
-        if (!test)
-        { failureMessage(*s, testName);
-	  errCnt++ ; }
+        OSIUNITTEST_ASSERT_ERROR(test == true, ++errCnt, solverName, testName);
       }
       delete s;
     }
   }
   else
-  { failureMessage(solverName,"Skipped DeSmedt tests.") ; }
+  	OSIUNITTEST_ADD_OUTCOME(solverName, "test*VivianDeSmedt and test*SebastianNowozin", "skipped test", OsiUnitTest::TestOutcome::NOTE, true);
 /*
   Test duals and reduced costs, then dual rays. Vol doesn't react well to
   either test.
@@ -5049,10 +4494,10 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   if (!volSolverInterface) {
     errCnt += testReducedCosts(emptySi,mpsDir) ;
     errCnt += testDualRays(emptySi,mpsDir) ;
+  } else {
+  	OSIUNITTEST_ADD_OUTCOME(solverName, "testReducedCosts", "skipped test", OsiUnitTest::TestOutcome::NOTE, true);
+  	OSIUNITTEST_ADD_OUTCOME(solverName, "testDualRays", "skipped test", OsiUnitTest::TestOutcome::NOTE, true);
   }
-  else
-  { failureMessage(solverName,
-		 "Skipped tests for duals, reduced costs, and dual rays.") ; }
 
   return (errCnt) ; }
 

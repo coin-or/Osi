@@ -119,8 +119,8 @@ public:
 	OsiUnitTest::outcomes.add(component, testname, testcondition, severity, __FILE__, __LINE__, expected)
 
 #define OSIUNITTEST_ASSERT_SEVERITY_EXPECTED(condition, failurecode, component, testname, severity, expected) \
-	do {\
-		if( condition ) {\
+	{ \
+		if( condition ) { \
 			OSIUNITTEST_ADD_OUTCOME(component, testname, #condition, OsiUnitTest::TestOutcome::PASSED, false); \
 		  if (OsiUnitTest::verbosity >= 2) { \
 		  	std::string successmsg(__FILE__ ":" OSIUNITTEST_QUOTEME(__LINE__) ": "); \
@@ -133,7 +133,7 @@ public:
 			OsiUnitTest::failureMessage(component, testname, #condition); \
 			failurecode; \
     } \
-	} while(false)
+	}
 
 #define OSIUNITTEST_ASSERT_ERROR(condition, failurecode, component, testname) \
 	OSIUNITTEST_ASSERT_SEVERITY_EXPECTED(condition, failurecode, component, testname, OsiUnitTest::TestOutcome::ERROR, false)
@@ -142,7 +142,7 @@ public:
 	OSIUNITTEST_ASSERT_SEVERITY_EXPECTED(condition, failurecode, component, testname, OsiUnitTest::TestOutcome::WARNING, false)
 
 #define OSIUNITTEST_CATCH_SEVERITY_EXPECTED(trycode, catchcode, component, testname, severity, expected) \
-	do {\
+	{\
 		try {\
 			trycode; \
 		  OSIUNITTEST_ADD_OUTCOME(component, testname, #trycode " did not threw exception", OsiUnitTest::TestOutcome::PASSED, false); \
@@ -167,7 +167,7 @@ public:
 		  OsiUnitTest::failureMessage(component, testname, errmsg.c_str()); \
 		  catchcode; \
 		} \
-	} while(false)
+	}
 
 #define OSIUNITTEST_CATCH_ERROR(trycode, catchcode, component, testname) \
 	OSIUNITTEST_CATCH_SEVERITY_EXPECTED(trycode, catchcode, component, testname, OsiUnitTest::TestOutcome::ERROR, false)

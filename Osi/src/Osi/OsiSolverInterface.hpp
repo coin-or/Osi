@@ -486,25 +486,26 @@ public:
    the data is unchanged and the solver is not called.
   */
   //@{
-    /// Get number of columns
+    /// Get the number of columns
     virtual int getNumCols() const = 0;
 
-    /// Get number of rows
+    /// Get the number of rows
     virtual int getNumRows() const = 0;
 
-    /// Get number of nonzero elements
+    /// Get the number of nonzero elements
     virtual int getNumElements() const = 0;
 
-    /// Get number of integer variables
+    /// Get the number of integer variables
     virtual int getNumIntegers() const ;
 
-    /// Get pointer to array[getNumCols()] of column lower bounds
+    /// Get a pointer to an array[getNumCols()] of column lower bounds
     virtual const double * getColLower() const = 0;
 
-    /// Get pointer to array[getNumCols()] of column upper bounds
+    /// Get a pointer to an array[getNumCols()] of column upper bounds
     virtual const double * getColUpper() const = 0;
 
-    /** Get pointer to array[getNumRows()] of row constraint senses.
+    /*! \brief Get a pointer to an array[getNumRows()] of row constraint senses.
+
       <ul>
       <li>'L': <= constraint
       <li>'E': =  constraint
@@ -515,7 +516,8 @@ public:
     */
     virtual const char * getRowSense() const = 0;
 
-    /** Get pointer to array[getNumRows()] of row right-hand sides
+    /*! \brief Get a pointer to an array[getNumRows()] of row right-hand sides
+
       <ul>
 	<li> if getRowSense()[i] == 'L' then
 	     getRightHandSide()[i] == getRowUpper()[i]
@@ -529,7 +531,8 @@ public:
     */
     virtual const double * getRightHandSide() const = 0;
 
-    /** Get pointer to array[getNumRows()] of row ranges.
+    /*! \brief Get a pointer to an array[getNumRows()] of row ranges.
+
       <ul>
 	  <li> if getRowSense()[i] == 'R' then
 		  getRowRange()[i] == getRowUpper()[i] - getRowLower()[i]
@@ -539,63 +542,83 @@ public:
     */
     virtual const double * getRowRange() const = 0;
 
-    /// Get pointer to array[getNumRows()] of row lower bounds
+    /// Get a pointer to an array[getNumRows()] of row lower bounds
     virtual const double * getRowLower() const = 0;
 
-    /// Get pointer to array[getNumRows()] of row upper bounds
+    /// Get a pointer to an array[getNumRows()] of row upper bounds
     virtual const double * getRowUpper() const = 0;
 
-    /// Get pointer to array[getNumCols()] of objective function coefficients
+    /*! \brief Get a pointer to an array[getNumCols()] of objective
+	       function coefficients.
+    */
     virtual const double * getObjCoefficients() const = 0;
 
-    /// Get objective function sense (1 for min (default), -1 for max)
+    /*! \brief Get the objective function sense
+    
+      -  1 for minimisation (default)
+      - -1 for maximisation
+    */
     virtual double getObjSense() const = 0;
 
-    /// Return true if variable is continuous
+    /// Return true if the variable is continuous
     virtual bool isContinuous(int colIndex) const = 0;
 
-    /// Return true if variable is binary
+    /// Return true if the variable is binary
     virtual bool isBinary(int colIndex) const;
 
-    /** Return true if column is integer.
-	Note: This function returns true if the the column
-	is binary or a general integer.
+    /*! \brief Return true if the variable is integer.
+
+      This method returns true if the variable is binary or general integer.
     */
     virtual bool isInteger(int colIndex) const;
 
-    /// Return true if variable is general integer
+    /// Return true if the variable is general integer
     virtual bool isIntegerNonBinary(int colIndex) const;
 
-    /// Return true if variable is binary and not fixed at either bound
+    /// Return true if the variable is binary and not fixed
     virtual bool isFreeBinary(int colIndex) const; 
-    /**  Return array of column length
-         0 - continuous
-         1 - binary (may get fixed to 0 or 1 later)
-         2 - general integer (may get fixed later)
-	 Deprecated usage
+
+    /*! \brief Return an array[getNumCols()] of column types
+
+      \deprecated See #getColType
     */
-    inline const char * columnType(bool refresh=false) const
-    { return getColType(refresh);}
-    /**  Return array of column length
-         0 - continuous
-         1 - binary (may get fixed to 0 or 1 later)
-         2 - general integer (may get fixed later)
+    inline const char *columnType(bool refresh=false) const
+    { return getColType(refresh); }
+
+    /*! \brief Return an array[getNumCols()] of column types
+
+       - 0 - continuous
+       - 1 - binary
+       - 2 - general integer
+      
+      If \p refresh is true, the classification of integer variables as
+      binary or general integer will be reevaluated. If the current bounds
+      are [0,1], or if the variable is fixed at 0 or 1, it will be classified
+      as binary, otherwise it will be classified as general integer.
     */
     virtual const char * getColType(bool refresh=false) const;
   
-    /// Get pointer to row-wise copy of matrix
+    /// Get a pointer to a row-wise copy of the matrix
     virtual const CoinPackedMatrix * getMatrixByRow() const = 0;
 
-    /// Get pointer to column-wise copy of matrix
+    /// Get a pointer to a column-wise copy of the matrix
     virtual const CoinPackedMatrix * getMatrixByCol() const = 0;
 
-    /// Get pointer to mutable row-wise copy of matrix (returns NULL if not meaningful)
+    /*! \brief Get a pointer to a mutable row-wise copy of the matrix.
+    
+      Returns NULL if the request is not meaningful (i.e., the OSI will not
+      recognise any modifications to the matrix).
+    */
     virtual CoinPackedMatrix * getMutableMatrixByRow() const {return NULL;}
 
-    /// Get pointer to mutable column-wise copy of matrix (returns NULL if not meaningful)
+    /*! \brief Get a pointer to a mutable column-wise copy of the matrix
+    
+      Returns NULL if the request is not meaningful (i.e., the OSI will not
+      recognise any modifications to the matrix).
+    */
     virtual CoinPackedMatrix * getMutableMatrixByCol() const {return NULL;}
 
-    /// Get solver's value for infinity
+    /// Get the solver's value for infinity
     virtual double getInfinity() const = 0;
   //@}
     

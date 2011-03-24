@@ -12,15 +12,14 @@
 
 The Base cut class contains:
   <ul>
-  <li>a measure of the cuts effectivness
+  <li>a measure of the cut's effectivness
   </ul>
 */
 
-#if 0
-/ // count of how many times the cut has been used
-/ // count of how many times the cut has been tested
-#endif
-
+/*
+  COIN_NOTEST_DUPLICATE is rooted in CoinUtils. Check there before you
+  meddle here.
+*/
 #ifndef COIN_NOTEST_DUPLICATE
 #define COIN_DEFAULT_VALUE_FOR_DUPLICATE true
 #else

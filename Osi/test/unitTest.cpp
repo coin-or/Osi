@@ -563,16 +563,16 @@ try {
 */
   OsiUnitTest::outcomes.print();
 
-  if (totalErrCnt)
+  int nerrors;
+  int nerrors_expected;
+  OsiUnitTest::outcomes.getCountBySeverity(OsiUnitTest::TestOutcome::ERROR, nerrors, nerrors_expected);
+
+  if (nerrors > nerrors_expected)
   { std::cout.flush() ;
     std::cerr
       << "Tests completed with " << totalErrCnt << " errors." << std::endl ; 
   } else
   { testingMessage("All tests completed successfully\n") ; }
-
-  int nerrors;
-  int nerrors_expected;
-  OsiUnitTest::outcomes.getCountBySeverity(OsiUnitTest::TestOutcome::ERROR, nerrors, nerrors_expected);
 
   return nerrors - nerrors_expected;
 }

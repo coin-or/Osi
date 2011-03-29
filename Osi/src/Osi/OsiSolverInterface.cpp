@@ -239,8 +239,8 @@ OsiSolverInterface::setObjCoeffSet(const int* indexFirst,
 				  const int* indexLast,
 				  const double* coeffList)
 {
-   const ptrdiff_t cnt = indexLast - indexFirst;
-   for (ptrdiff_t i = 0; i < cnt; ++i) {
+   const std::ptrdiff_t cnt = indexLast - indexFirst;
+   for (std::ptrdiff_t i = 0; i < cnt; ++i) {
       setObjCoeff(indexFirst[i], coeffList[i]);
    }
 }

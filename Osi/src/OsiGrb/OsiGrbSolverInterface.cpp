@@ -3045,10 +3045,11 @@ OsiGrbSolverInterface::loadProblem(const int numcols, const int numrows,
 	int modelsense;
 	GUROBI_CALL( "loadProblem", GRBgetintattr(getMutableLpPtr(), GRB_INT_ATTR_MODELSENSE, &modelsense) );
 
-	gutsOfDestructor(); // kill old LP, if any
-
 	std::string pn;
 	getStrParam(OsiProbName, pn);
+
+	gutsOfDestructor(); // kill old LP, if any
+
 	GUROBI_CALL( "loadProblem", GRBloadmodel(getEnvironmentPtr(), &lp_, const_cast<char*>(pn.c_str()),
 			nc, nr,
 			modelsense,
@@ -3577,6 +3578,8 @@ void OsiGrbSolverInterface::gutsOfConstructor()
 //-------------------------------------------------------------------
 void OsiGrbSolverInterface::gutsOfDestructor()
 {  
+  debugMessage("OsiGrbSolverInterface::gutsOfDestructor()\n");
+
   if ( lp_ != NULL )
   {
     GUROBI_CALL( "gutsOfDestructor", GRBfreemodel(lp_) );

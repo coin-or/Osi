@@ -1,3 +1,9 @@
+31/03/2011 OsiGrb
+  - fixed handling of free variables in setWarmStart
+
+30/03/2011 OsiGrb
+  - fixed memory leak in loadProblem
+
 21/03/2011 OsiCommonTest, unittest
   - add classes TestOutcome{s} to collect outcome of unittests
   - add macros to simplify asserts and exception catching and storing results as TestOutcome

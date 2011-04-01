@@ -162,6 +162,20 @@ void OGSI::initialSolve()
   Solve the lp.
 */
   int err = lpx_simplex(model) ;
+
+  // for Glpk, a solve fails if the initial basis is invalid or singular
+  // thus, we construct a (advanced) basis first and try again
+#ifdef LPX_E_BADB
+  if (err == LPX_E_BADB) {
+    lpx_adv_basis(model);
+    err = lpx_simplex(model) ;
+  } else
+#endif
+  if (err == LPX_E_SING || err == LPX_E_FAULT) {
+    lpx_adv_basis(model);
+    err = lpx_simplex(model) ;
+  }
+
   iter_used_ = lpx_get_int_parm(model, LPX_K_ITCNT) ;
 /*
   Sort out the various state indications.
@@ -201,6 +215,9 @@ void OGSI::initialSolve()
     } // no break here, so we still report abandoned
     case LPX_E_FAULT:
     case LPX_E_SING:
+#ifdef LPX_E_BADB
+    case LPX_E_BADB:
+#endif
     { isAbandoned_ = true ;
       break ; }
     case LPX_E_NOPFS:
@@ -242,14 +259,18 @@ void OGSI::resolve()
   // lpx_simplex will use the current basis if possible
   int err = lpx_simplex(model) ;
 
-#ifdef LPX_E_BADB
-  // in Glpk 4.30 a resolve fails if the initial basis is invalid
+  // for Glpk, a solve fails if the initial basis is invalid or singular
   // thus, we construct a (advanced) basis first and try again
+#ifdef LPX_E_BADB
   if (err == LPX_E_BADB) {
-  	lpx_adv_basis(model);
-  	err = lpx_simplex(model) ;
-  }
+    lpx_adv_basis(model);
+    err = lpx_simplex(model) ;
+  } else
 #endif
+  if (err == LPX_E_SING || err == LPX_E_FAULT) {
+    lpx_adv_basis(model);
+    err = lpx_simplex(model) ;
+  }
   
   iter_used_ = lpx_get_int_parm(model,LPX_K_ITCNT) ;
 
@@ -279,6 +300,9 @@ void OGSI::resolve()
     } // no break here, so we still report abandoned
     case LPX_E_FAULT:
     case LPX_E_SING:
+#ifdef LPX_E_BADB
+    case LPX_E_BADB:
+#endif
     { isAbandoned_ = true ;
       break ; }
     case LPX_E_NOPFS:

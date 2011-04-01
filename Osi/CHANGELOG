@@ -1,3 +1,7 @@
+01/04/2011 OsiGlpk
+  - if initial basis is invalid or singular in initialSolve or resolve,
+    construct advanced basis and try again
+
 31/03/2011 OsiGrb
   - fixed handling of free variables in setWarmStart
 

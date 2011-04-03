@@ -466,8 +466,11 @@ bool OsiRowCutDebugger::activate( const OsiSolverInterface & si,
     expectedNumberColumns=2756;
   }
 
-  // nw04
-  else if ( modelL == "nw04" ) {
+  /* nw04
+     It turns out that the NAME line in nw04.mps distributed in miplib is
+     actually NW-capital O-4. Who'd a thunk it?  -- lh, 110402 --
+  */
+  else if ( modelL == "nw04" || modelL == "nwo4" ) {
     probType=pure0_1;
     int intIndicesAt1[]={
       231 ,1792 ,1980 ,7548 ,21051 ,28514 ,53087 ,53382 ,76917 };

@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "CoinError.hpp"
+#include "CoinTypes.hpp"
 
 class OsiSolverInterface;
 class OsiSolverBranch;

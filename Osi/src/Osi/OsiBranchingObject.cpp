@@ -17,6 +17,7 @@
 #include "CoinPackedMatrix.hpp"
 #include "CoinSort.hpp"
 #include "CoinError.hpp"
+#include "CoinFinite.hpp"
 
 // Default Constructor
 OsiObject::OsiObject() 

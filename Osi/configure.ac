@@ -144,6 +144,14 @@ AC_DEFINE(GLPK_HAS_INTOPT, [1],
 
 AC_COIN_DOXYGEN(CoinUtils)
 
+#############################################################################
+#                  System header                                            #
+#############################################################################
+
+AC_COIN_CHECK_CXX_CHEADER(math)
+AC_COIN_CHECK_CXX_CHEADER(float)
+AC_COIN_CHECK_CXX_CHEADER(ieeefp)
+
 ##############################################################################
 #                   Finishing up by writing all the output                   #
 ##############################################################################

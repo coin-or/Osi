@@ -10,12 +10,14 @@
 #include "CoinHelperFunctions.hpp"
 #include "CoinWarmStartBasis.hpp"
 
+#include "OsiConfig.h"
+#include "CoinFinite.hpp"
+
 #include "OsiSolverInterface.hpp"
 #include "OsiSolverBranch.hpp"
 #include <cassert>
 #include <cmath>
 #include <cfloat>
-#include "CoinFinite.hpp"
 //#############################################################################
 // Constructors / Destructor / Assignment
 //#############################################################################

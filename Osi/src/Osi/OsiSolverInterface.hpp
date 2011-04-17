@@ -5,11 +5,13 @@
 #ifndef OsiSolverInterface_H
 #define OsiSolverInterface_H
 
+#include <cstdlib>
 #include <string>
 #include <vector>
 
 #include "CoinMessageHandler.hpp"
 #include "CoinPackedVectorBase.hpp"
+#include "CoinTypes.hpp"
 
 #include "OsiCollections.hpp"
 #include "OsiSolverParameters.hpp"
@@ -30,7 +32,6 @@ class CoinModel;
 class OsiSolverBranch;
 class OsiSolverResult;
 class OsiObject;
-#include "CoinFinite.hpp"
 
 
 //#############################################################################

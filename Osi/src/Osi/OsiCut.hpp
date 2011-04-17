@@ -20,6 +20,12 @@ The Base cut class contains:
   COIN_NOTEST_DUPLICATE is rooted in CoinUtils. Check there before you
   meddle here.
 */
+#ifdef COIN_FAST_CODE
+#ifndef COIN_NOTEST_DUPLICATE
+#define COIN_NOTEST_DUPLICATE
+#endif
+#endif
+
 #ifndef COIN_NOTEST_DUPLICATE
 #define COIN_DEFAULT_VALUE_FOR_DUPLICATE true
 #else

@@ -7,7 +7,6 @@
 
 class OsiSolverInterface;
 #include "CoinWarmStartBasis.hpp"
-#include "CoinFinite.hpp"
 
 //#############################################################################
 

@@ -12,6 +12,7 @@
 #include "OsiConfig.h"
 
 #include "CoinTime.hpp"
+#include "CoinFloatEqual.hpp"
 
 /*
   #include <cstdlib>

@@ -23,6 +23,8 @@
 */
 
 #include "CoinHelperFunctions.hpp"
+#include "CoinFinite.hpp"
+#include "CoinFloatEqual.hpp"
 #include "CoinPackedVector.hpp"
 #include "CoinPackedMatrix.hpp"
 #include "OsiSolverInterface.hpp"

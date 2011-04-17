@@ -601,14 +601,17 @@ int debugNumberColumns = -1;
 static int counter=1000000;
 static bool break2(CoinPresolveMatrix *prob)
 {
+  if (counter>0)
+    printf("counter %d\n",counter);
   counter--;
   if (debugSolution&&prob->ncols_==debugNumberColumns) {
     for (int i=0;i<prob->ncols_;i++) {
       double value = debugSolution[i];
-      if (value<prob->clo_[i])
+      if (value<prob->clo_[i]) {
 	printf("%d inf %g %g %g\n",i,prob->clo_[i],value,prob->cup_[i]);
-      else if (value>prob->cup_[i])
+      } else if (value>prob->cup_[i]) {
 	printf("%d inf %g %g %g\n",i,prob->clo_[i],value,prob->cup_[i]);
+      }
     }
   }
   if (!counter) {

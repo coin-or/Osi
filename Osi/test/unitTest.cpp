@@ -570,7 +570,7 @@ try {
   if (nerrors > nerrors_expected)
   { std::cout.flush() ;
     std::cerr
-      << "Tests completed with " << totalErrCnt << " errors." << std::endl ; 
+      << "Tests completed with " << nerrors - nerrors_expected << " unexpected errors." << std::endl ;
   } else
   { testingMessage("All tests completed successfully\n") ; }
 

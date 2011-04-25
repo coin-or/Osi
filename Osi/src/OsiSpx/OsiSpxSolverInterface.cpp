@@ -12,10 +12,7 @@
 // Corporation and others.  All Rights Reserved.
 // Last edit: $Id$
 
-#if defined(_MSC_VER)
-// Turn off compiler warning about long names
-#  pragma warning(disable:4786)
-#endif
+#include "CoinPragma.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -109,6 +106,8 @@ void OsiSpxSolverInterface::initialSolve()
   } catch (soplex::SPxException e) {
   	std::cerr << "SoPlex initial solve failed with exception " << e.what() << std::endl;
   }
+
+  freeCachedResults();
 }
 //-----------------------------------------------------------------------------
 void OsiSpxSolverInterface::resolve()
@@ -147,6 +146,8 @@ void OsiSpxSolverInterface::resolve()
   } catch (soplex::SPxException e) {
   	std::cerr << "SoPlex resolve failed with exception " << e.what() << std::endl;
   }
+
+  freeCachedResults();
 }
 //-----------------------------------------------------------------------------
 void OsiSpxSolverInterface::branchAndBound()
@@ -222,6 +223,10 @@ OsiSpxSolverInterface::setDblParam(OsiDblParam key, double value)
       break;
     }
   return retval;
+}
+
+void OsiSpxSolverInterface::setTimeLimit(double value) {
+	soplex_.setTerminationTime(value);
 }
 
 //-----------------------------------------------------------------------------
@@ -300,6 +305,11 @@ OsiSpxSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
   return true;
 }
 
+double OsiSpxSolverInterface::getTimeLimit() const
+{
+	return soplex_.terminationTime();
+}
+
 //#############################################################################
 // Methods returning info on how the solution process terminated
 //#############################################################################
@@ -346,6 +356,11 @@ bool OsiSpxSolverInterface::isDualObjectiveLimitReached() const
 bool OsiSpxSolverInterface::isIterationLimitReached() const
 {
   return ( soplex_.status() == soplex::SPxSolver::ABORT_ITER );
+}
+
+bool OsiSpxSolverInterface::isTimeLimitReached() const
+{
+  return ( soplex_.status() == soplex::SPxSolver::ABORT_TIME );
 }
 
 //#############################################################################
@@ -437,6 +452,8 @@ bool OsiSpxSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
   cstat = new soplex::SPxSolver::VarStatus[numcols];
   rstat = new soplex::SPxSolver::VarStatus[numrows];
 
+  // The OSI standard assumes the artificial slack variables to have positive coefficients.  SoPlex uses the convention
+  // Ax - s = 0, lhs <= s <= rhs, so we have to invert the atLowerBound and atUpperBound statuses.
   for( i = 0; i < numrows; ++i )
     {
       switch( ws->getArtifStatus( i ) )
@@ -445,10 +462,10 @@ bool OsiSpxSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
 	  rstat[i] = soplex::SPxSolver::BASIC;
 	  break;
 	case CoinWarmStartBasis::atLowerBound:
-	  rstat[i] = soplex::SPxSolver::ON_LOWER;
+	  rstat[i] = soplex::SPxSolver::ON_UPPER;
 	  break;
 	case CoinWarmStartBasis::atUpperBound:
-	  rstat[i] = soplex::SPxSolver::ON_UPPER;
+	  rstat[i] = soplex::SPxSolver::ON_LOWER;
 	  break;
 	case CoinWarmStartBasis::isFree:
 	  rstat[i] = soplex::SPxSolver::ZERO;

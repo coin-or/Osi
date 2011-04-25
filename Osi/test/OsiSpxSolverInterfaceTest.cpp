@@ -454,8 +454,6 @@ void OsiSpxSolverInterfaceUnitTest( const std::string & mpsDir, const std::strin
       soplexSi.setColUpper( 4, 10.2345 );
       assert( eq(soplexSi.getColUpper()[4],10.2345) );
 
-      assert( eq(soplexSi.getObjValue(),0.0) );
-
       assert( eq( soplexSi.getObjCoefficients()[0],  1.0) );
       assert( eq( soplexSi.getObjCoefficients()[1],  0.0) );
       assert( eq( soplexSi.getObjCoefficients()[2],  0.0) );

@@ -3,6 +3,9 @@
   - fix bug in solve methods where cached result vectors where not cleared
   - fix setWarmStart to swap status for slack variables as in getWarmStart
   - fix caching flags (bitwise negation is ~, not !)
+  - redirect set/get name discipline to base class
+  - fix primal/dual objective limit: take objoffset into account, correct check if limit changed after solve
+  - getColSolution and getObjValue now return lower bound and value in lower bound before solve
 
 01/04/2011 OsiGlpk
   - if initial basis is invalid or singular in initialSolve or resolve,

@@ -99,6 +99,17 @@ void OsiSpxSolverInterface::initialSolve()
       soplex_.setType( soplex::SPxSolver::ENTER );
   }
 
+  // set dual objective limit
+  double dualobjlimit;
+  OsiSolverInterface::getDblParam(OsiDualObjectiveLimit, dualobjlimit);
+  if( fabs(dualobjlimit) < getInfinity() )
+  {
+  	double objoffset;
+    OsiSolverInterface::getDblParam(OsiDualObjectiveLimit, objoffset);
+  	dualobjlimit += objoffset;
+  }
+  soplex_.setTerminationValue( dualobjlimit );
+
   // solve
   try 
   {
@@ -138,6 +149,17 @@ void OsiSpxSolverInterface::resolve()
     if( soplex_.type() != soplex::SPxSolver::ENTER )
       soplex_.setType( soplex::SPxSolver::ENTER );
   }
+
+  // set dual objective limit
+  double dualobjlimit;
+  OsiSolverInterface::getDblParam(OsiDualObjectiveLimit, dualobjlimit);
+  if( fabs(dualobjlimit) < getInfinity() )
+  {
+  	double objoffset;
+    OsiSolverInterface::getDblParam(OsiDualObjectiveLimit, objoffset);
+  	dualobjlimit += objoffset;
+  }
+  soplex_.setTerminationValue( dualobjlimit );
 
   // solve
   try 
@@ -183,7 +205,7 @@ OsiSpxSolverInterface::setIntParam(OsiIntParam key, int value)
       retval = false;
       break;
     case OsiNameDiscipline:
-      retval = false;
+      retval = OsiSolverInterface::setIntParam(key,value);
       break;
     }
   return retval;
@@ -198,12 +220,10 @@ OsiSpxSolverInterface::setDblParam(OsiDblParam key, double value)
   switch (key)
     {
     case OsiDualObjectiveLimit:
-      soplex_.setTerminationValue( value );
-      retval = true;
+      retval = OsiSolverInterface::setDblParam(key,value);
       break;
     case OsiPrimalObjectiveLimit:
-      // SoPlex doesn't support a primal objective limit
-      retval = false;
+      retval = OsiSolverInterface::setDblParam(key,value);
       break;
     case OsiDualTolerance:
       // SoPlex doesn't support different deltas for primal and dual
@@ -249,7 +269,7 @@ OsiSpxSolverInterface::getIntParam(OsiIntParam key, int& value) const
       retval = false;
       break;
     case OsiNameDiscipline:
-      retval = false;
+      retval = OsiSolverInterface::getIntParam(key,value);
       break;
     }
   return retval;
@@ -264,12 +284,10 @@ OsiSpxSolverInterface::getDblParam(OsiDblParam key, double& value) const
   switch (key) 
     {
     case OsiDualObjectiveLimit:
-      value = soplex_.terminationValue();
-      retval = true;
+      retval = OsiSolverInterface::getDblParam(key, value);
       break;
     case OsiPrimalObjectiveLimit:
-      // SoPlex doesn't support a primal objective limit
-      retval = false;
+      retval = OsiSolverInterface::getDblParam(key, value);
       break;
     case OsiDualTolerance:
       value = soplex_.delta();
@@ -344,13 +362,23 @@ bool OsiSpxSolverInterface::isProvenDualInfeasible() const
 
 bool OsiSpxSolverInterface::isPrimalObjectiveLimitReached() const
 {
-   // SoPlex does not support a primal objective limit
-   return false;
+  // SoPlex doesn't support a primal objective limit
+
+	double primalobjlimit;
+	getDblParam(OsiDualObjectiveLimit, primalobjlimit);
+
+  return getObjSense() * getObjValue() > getObjSense() * primalobjlimit;
 }
 
 bool OsiSpxSolverInterface::isDualObjectiveLimitReached() const
 {
-  return ( soplex_.status() == soplex::SPxSolver::ABORT_VALUE );
+	if( soplex_.status() == soplex::SPxSolver::ABORT_VALUE )
+		return true;
+
+	double dualobjlimit;
+	getDblParam(OsiDualObjectiveLimit, dualobjlimit);
+
+	return getObjSense() * getObjValue() > getObjSense() * dualobjlimit;
 }
 
 bool OsiSpxSolverInterface::isIterationLimitReached() const
@@ -809,19 +837,19 @@ double OsiSpxSolverInterface::getInfinity() const
 const double * OsiSpxSolverInterface::getColSolution() const
 {
   if( colsol_ == NULL )
-    {
-      int ncols = getNumCols();
-      if( ncols > 0 )
-	{
-	  colsol_ = new soplex::DVector( ncols );
-	  if( isProvenOptimal() )
-	    soplex_.getPrimal( *colsol_ );
-	  else
-	    colsol_->clear();
-	}
-      else
-	return NULL;
-    }
+  {
+  	int ncols = getNumCols();
+  	if( ncols > 0 )
+  	{
+  		colsol_ = new soplex::DVector( ncols );
+  		if( isProvenOptimal() )
+  			soplex_.getPrimal( *colsol_ );
+  		else
+  			*colsol_ = soplex_.lower();
+  	}
+  	else
+  		return NULL;
+  }
   return colsol_->get_const_ptr();
 }
 //------------------------------------------------------------------
@@ -894,8 +922,15 @@ double OsiSpxSolverInterface::getObjValue() const
       objval = soplex_.objValue();
       break;
     default:
+    {
+    	const double* colsol = getColSolution();
+    	const double* objcoef = getObjCoefficients();
+    	int ncols = getNumCols();
       objval = 0.0;
+      for( int i = 0; i < ncols; ++i )
+      	objval += colsol[i] * objcoef[i];
       break;
+    }
     }
 
   // Adjust objective function value by constant term in objective function
@@ -1094,6 +1129,33 @@ OsiSpxSolverInterface::deleteCols(const int num, const int * columnIndices)
 {
   soplex_.removeCols( const_cast<int*>(columnIndices), num );
   freeCachedData( OsiSpxSolverInterface::KEEPCACHED_ROW );
+
+  // took from OsiClp for updating names
+  int nameDiscipline;
+  getIntParam(OsiNameDiscipline,nameDiscipline) ;
+  if (num && nameDiscipline) {
+     // Very clumsy (and inefficient) - need to sort and then go backwards in ? chunks
+     int * indices = CoinCopyOfArray(columnIndices,num);
+     std::sort(indices,indices+num);
+     int num2 = num;
+     while (num2) {
+       int next = indices[num2-1];
+       int firstDelete = num2-1;
+       int i;
+       for (i = num2-2; i>=0; --i) {
+          if (indices[i]+1 == next) {
+             --next;
+             firstDelete = i;
+          } else {
+             break;
+          }
+       }
+       OsiSolverInterface::deleteColNames(indices[firstDelete],num2-firstDelete);
+       num2 = firstDelete;
+       assert (num2>=0);
+     }
+     delete [] indices;
+  }
 }
 //-----------------------------------------------------------------------------
 void 
@@ -1124,6 +1186,33 @@ OsiSpxSolverInterface::deleteRows(const int num, const int * rowIndices)
 {
   soplex_.removeRows( const_cast<int*>(rowIndices), num );
   freeCachedData( OsiSpxSolverInterface::KEEPCACHED_COLUMN );
+
+  // took from OsiClp for updating names
+  int nameDiscipline;
+  getIntParam(OsiNameDiscipline,nameDiscipline) ;
+  if (num && nameDiscipline) {
+    // Very clumsy (and inefficient) - need to sort and then go backwards in ? chunks
+    int * indices = CoinCopyOfArray(rowIndices,num);
+    std::sort(indices,indices+num);
+    int num2=num;
+    while (num2) {
+      int next = indices[num2-1];
+      int firstDelete = num2-1;
+      int i;
+      for (i = num2-2; i>=0; --i) {
+        if (indices[i]+1 == next) {
+        	--next;
+	        firstDelete = i;
+        } else {
+          break;
+        }
+      }
+      OsiSolverInterface::deleteRowNames(indices[firstDelete],num2-firstDelete);
+      num2 = firstDelete;
+      assert(num2 >= 0);
+    }
+    delete [] indices;
+  }
 }
 
 //#############################################################################

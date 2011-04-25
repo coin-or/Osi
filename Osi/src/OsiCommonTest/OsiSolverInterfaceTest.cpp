@@ -1993,7 +1993,7 @@ bool testHintParam(OsiSolverInterface * si, int k, bool sense,
       		ret = (si->getHintParam(key,post_sense,post_strength) == true) && (post_strength == strength) && (post_sense == sense);
       	}
     	} catch( CoinError& e ) {
-    		std::cout << tstname << " catched CoinError exception " << e.message() << std::endl;
+    		std::cout << tstname.str() << " catched CoinError exception " << e.message() << std::endl;
     		ret = true;
       	(*throws)++;
     	}

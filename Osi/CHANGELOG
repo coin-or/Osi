@@ -1,3 +1,6 @@
+29/04/2011 OsiMsk
+  - fix loss of Mosek task when copying OsiMsk
+
 25/04/2011 OsiSpx
   - add methods to set/get/check timelimit
   - fix bug in solve methods where cached result vectors where not cleared

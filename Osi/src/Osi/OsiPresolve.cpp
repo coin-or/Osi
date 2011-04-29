@@ -20,6 +20,7 @@
 #include <iostream>
 
 #include "CoinHelperFunctions.hpp"
+#include "CoinFinite.hpp"
 
 #include "CoinPackedMatrix.hpp"
 #include "CoinWarmStartBasis.hpp"

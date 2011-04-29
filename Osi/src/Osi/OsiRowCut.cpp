@@ -2,16 +2,13 @@
 // Corporation and others.  All Rights Reserved.
 // This code is licensed under the terms of the Eclipse Public License (EPL).
 
-#if defined(_MSC_VER)
-// Turn off compiler warning about long names
-#  pragma warning(disable:4786)
-#endif
-
 #include <cfloat>
 #include <cstdlib>
 #include <cstdio>
 #include <iostream>
 
+#include "CoinPragma.hpp"
+#include "CoinFinite.hpp"
 #include "OsiRowCut.hpp"
 
 #ifndef OSI_INLINE_ROWCUT_METHODS
@@ -136,28 +133,28 @@ OsiRowCut::violated(const double * solution) const
 char OsiRowCut::sense() const
 {
    if      ( lb_ == ub_ )                        return 'E';
-   else if ( lb_ == -DBL_MAX && ub_ == DBL_MAX ) return 'N';
-   else if ( lb_ == -DBL_MAX )                   return 'L';
-   else if ( ub_ == DBL_MAX )                    return 'G';
+   else if ( lb_ == -COIN_DBL_MAX && ub_ == COIN_DBL_MAX ) return 'N';
+   else if ( lb_ == -COIN_DBL_MAX )                   return 'L';
+   else if ( ub_ == COIN_DBL_MAX )                    return 'G';
    else                                          return 'R';
 }
 
 double OsiRowCut::rhs() const
 {
-   if      ( lb_ == ub_ )                        return ub_;
-   else if ( lb_ == -DBL_MAX && ub_ == DBL_MAX ) return 0.0;
-   else if ( lb_ == -DBL_MAX )                   return ub_;
-   else if ( ub_ == DBL_MAX )                    return lb_;
-   else                                          return ub_;
+   if      ( lb_ == ub_ )                                  return ub_;
+   else if ( lb_ == -COIN_DBL_MAX && ub_ == COIN_DBL_MAX ) return 0.0;
+   else if ( lb_ == -COIN_DBL_MAX )                        return ub_;
+   else if ( ub_ == COIN_DBL_MAX )                         return lb_;
+   else                                                     return ub_;
 }
 
 double OsiRowCut::range() const
 {
-   if      ( lb_ == ub_ )                        return 0.0;
-   else if ( lb_ == -DBL_MAX && ub_ == DBL_MAX ) return 0.0;
-   else if ( lb_ == -DBL_MAX )                   return 0.0;
-   else if ( ub_ == DBL_MAX )                    return 0.0;
-   else                                          return ub_ - lb_;
+   if      ( lb_ == ub_ )                                  return 0.0;
+   else if ( lb_ == -COIN_DBL_MAX && ub_ == COIN_DBL_MAX ) return 0.0;
+   else if ( lb_ == -COIN_DBL_MAX )                        return 0.0;
+   else if ( ub_ == COIN_DBL_MAX )                         return 0.0;
+   else                                                    return ub_ - lb_;
 }
 
 //-------------------------------------------------------------------
@@ -165,8 +162,8 @@ double OsiRowCut::range() const
 //-------------------------------------------------------------------
 OsiRowCut::OsiRowCut () : OsiCut(),
 			  row_(),
-			  lb_(-/*std::numeric_limits<double>::max()*/DBL_MAX),
-			  ub_( /*std::numeric_limits<double>::max()*/DBL_MAX)
+			  lb_(-COIN_DBL_MAX),
+			  ub_( COIN_DBL_MAX)
 {
    //#ifdef NDEBUG
    //row_.setTestForDuplicateIndex(false);

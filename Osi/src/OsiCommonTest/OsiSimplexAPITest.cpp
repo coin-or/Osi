@@ -40,7 +40,7 @@ namespace {
   Test that the given vector is a unit vector with a 1 in the specified index
   position
 */
-bool isUnitVector (int ndx, int len, double *vec)
+bool isUnitVector (int /* ndx */, int len, double *vec)
 { bool retval = false ;
 
   CoinAbsFltEq fltEq ;

@@ -98,8 +98,8 @@ void testingMessage( const char * const msg )
 //#############################################################################
 
 // A helper function to compare the equivalence of two vectors
-bool equivalentVectors (const OsiSolverInterface * si1,
-			const OsiSolverInterface * si2,
+bool equivalentVectors (const OsiSolverInterface * /* si1 */,
+                        const OsiSolverInterface * /* si2 */,
 			double tol,
 			const double * v1,
 			const double * v2,

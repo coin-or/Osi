@@ -1985,7 +1985,7 @@ bool testHintParam(OsiSolverInterface * si, int k, bool sense,
   if (si->getHintParam(key,post_sense,post_strength))
   { ret = false ;
   	std::ostringstream tstname;
-    tstname << "testHintParam: hint " << key << " sense " << sense << " strength " << strength;
+    tstname << "testHintParam: hint " << static_cast<int>(key) << " sense " << sense << " strength " << static_cast<int>(strength);
     if( strength == OsiForceDo )
     {
     	try {
@@ -2011,7 +2011,7 @@ bool testHintParam(OsiSolverInterface * si, int k, bool sense,
   else
   { ret = true ;
   	std::ostringstream tstname;
-  	tstname << "testHintParam: hint " << key << " sense " << sense << " strength " << strength;
+  	tstname << "testHintParam: hint " << static_cast<int>(key) << " sense " << sense << " strength " << static_cast<int>(strength);
   	OSIUNITTEST_CATCH_WARNING(ret = si->setHintParam(key,sense,strength),	(*throws)++; ret = !(strength == OsiForceDo), *si, tstname.str());
   }
 
@@ -3503,7 +3503,7 @@ int testDualRays (const OsiSolverInterface *emptySi,
 */
     raysReturned = static_cast<unsigned int>(rays.size()) ;
     OSIUNITTEST_ASSERT_ERROR(raysReturned >= 1, ++errCnt; break, solverName, "testDualRays: number of returned rays");
-    OSIUNITTEST_ASSERT_WARNING((int)raysReturned <= raysRequested, ++errCnt, solverName, "testDualRays: number of returned rays");
+    OSIUNITTEST_ASSERT_WARNING(static_cast<int>(raysReturned) <= raysRequested, ++errCnt, solverName, "testDualRays: number of returned rays");
 /*
   Do a bit of setup before checking each ray. If we're dealing with a full
   ray, we'll need variable bounds, solution value, and status. Acquire the
@@ -3676,7 +3676,7 @@ int testDualRays (const OsiSolverInterface *emptySi,
 int
 OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
 				 const std::string & mpsDir,
-				 const std::string & netlibDir)
+				 const std::string & /* netlibDir */)
 {
 
   CoinRelFltEq eq ;
@@ -3890,11 +3890,11 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       OsiSolverInterface * si1 = exmip1Si->clone();
       int ad = 13579;
       si1->setApplicationData(&ad);
-      OSIUNITTEST_ASSERT_ERROR(*((int *)(si1->getApplicationData())) == ad, ++errCnt, solverName, "storing application data");
+      OSIUNITTEST_ASSERT_ERROR(*(static_cast<int *>(si1->getApplicationData())) == ad, ++errCnt, solverName, "storing application data");
       si2 = si1->clone();
       delete si1;
     }
-    OSIUNITTEST_ASSERT_ERROR(*((int *)(si2->getApplicationData())) == ad, ++errCnt, solverName, "cloning of application data");
+    OSIUNITTEST_ASSERT_ERROR(*(static_cast<int *>(si2->getApplicationData())) == ad, ++errCnt, solverName, "cloning of application data");
 
     int nc = si2->getNumCols();
     int nr = si2->getNumRows();
@@ -4021,7 +4021,8 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
         int *inx = new int[nc];
         for (c=0;c<nc;c++) inx[c]=c;
         double *el = new double[nc];
-        for (c=0;c<nc;c++) el[c]=((double)c)*((double)c);
+        for (c=0;c<nc;c++)
+          el[c]=(static_cast<double>(c))*(static_cast<double>(c));
 
         OsiRowCut rc;
         rc.setRow(nc,inx,el);
@@ -4434,7 +4435,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
         param_ok &= (!exists ^ testHintParam(si,i,true,OsiForceDo,&throws)) ;
         param_ok &= (!exists ^ testHintParam(si,i,false,OsiForceDo,&throws)) ; }
       std::cout.flush() ;
-      std::cerr << "Checked " << OsiLastHintParam << " hints x (true, false) at strength OsiForceDo; " << throws << " throws." << std::endl ;
+      std::cerr << "Checked " << static_cast<int>(OsiLastHintParam) << " hints x (true, false) at strength OsiForceDo; " << throws << " throws." << std::endl ;
       OSIUNITTEST_ASSERT_ERROR(param_ok == true, ++errCnt, solverName, "parameter methods: test hintparam");
     }
 

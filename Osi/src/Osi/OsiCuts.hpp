@@ -406,7 +406,7 @@ OsiCut * OsiCuts::mostEffectiveCutPtr()
   iterator e=end();
   //return *(std::min_element(b,e,OsiCutCompare()));
   OsiCut * retVal = NULL;
-  double maxEff = DBL_MIN;
+  double maxEff = COIN_DBL_MIN;
   for ( OsiCuts::iterator it=b; it!=e; ++it ) {
     if (maxEff < (*it)->effectiveness() ) {
       maxEff = (*it)->effectiveness();

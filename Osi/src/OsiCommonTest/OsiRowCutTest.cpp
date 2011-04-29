@@ -25,8 +25,8 @@ OsiRowCutUnitTest(const OsiSolverInterface * baseSiP,
     OSIUNITTEST_ASSERT_ERROR(r.row_.getIndices()  == NULL, {}, "osirowcut", "default constructor");
     OSIUNITTEST_ASSERT_ERROR(r.row_.getElements() == NULL, {}, "osirowcut", "default constructor");
     OSIUNITTEST_ASSERT_ERROR(r.row_.getNumElements() == 0, {}, "osirowcut", "default constructor");
-    OSIUNITTEST_ASSERT_ERROR(r.lb_ == -/*std::numeric_limits<double>::max()*/DBL_MAX, {}, "osirowcut", "default constructor");
-    OSIUNITTEST_ASSERT_ERROR(r.ub_ ==  /*std::numeric_limits<double>::max()*/DBL_MAX, {}, "osirowcut", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(r.lb_ == -COIN_DBL_MAX, {}, "osirowcut", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(r.ub_ ==  COIN_DBL_MAX, {}, "osirowcut", "default constructor");
     OSIUNITTEST_ASSERT_ERROR(r.effectiveness() == 0.0, {}, "osirowcut", "default constructor");
   }
 

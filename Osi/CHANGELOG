@@ -1,3 +1,6 @@
+30/04/2011 OsiCpx, OsiGrb
+  - added option (mipstart) to pass column solution as initial solution to a MIP solve
+
 29/04/2011 OsiMsk
   - fix loss of Mosek task when copying OsiMsk
 

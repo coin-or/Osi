@@ -468,11 +468,31 @@ void OsiCpxSolverInterface::resolve()
 //-----------------------------------------------------------------------------
 void OsiCpxSolverInterface::branchAndBound()
 {
+	int term;
+
   debugMessage("OsiCpxSolverInterface::branchAndBound()\n");
 
   switchToMIP();
 
+  if( colsol_ != NULL && domipstart )
+  {
+  	int ncols = getNumCols();
+  	int* ind = new int[ncols];
+
+  	CoinIotaN(ind, ncols, 0);
+  	term = CPXcopymipstart(env_, getLpPtr( OsiCpxSolverInterface::KEEPCACHED_ALL ), ncols, ind, colsol_);
+  	checkCPXerror(term, "CPXcopymipstart", "branchAndBound");
+
+  	delete[] ind;
+
+    CPXsetintparam( env_, CPX_PARAM_ADVIND, CPX_ON );
+  }
+  else
+    CPXsetintparam( env_, CPX_PARAM_ADVIND, CPX_OFF );
+
   CPXLPptr lp = getLpPtr( OsiCpxSolverInterface::FREECACHED_RESULTS );
+
+
 
 //  if (messageHandler()->logLevel() == 0)
 //     CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_OFF );
@@ -486,7 +506,7 @@ void OsiCpxSolverInterface::branchAndBound()
   else if (messageHandler()->logLevel() > 1)
      CPXsetintparam( env_, CPX_PARAM_SIMDISPLAY, 2 );
 
-  int term = CPXmipopt( env_, lp );
+  term = CPXmipopt( env_, lp );
   checkCPXerror( term, "CPXmipopt", "branchAndBound" );
 }
 
@@ -2938,7 +2958,8 @@ OsiCpxSolverInterface::OsiCpxSolverInterface()
     matrixByCol_(NULL),
     coltype_(NULL),
     coltypesize_(0),
-    probtypemip_(false)
+    probtypemip_(false),
+    domipstart(false)
 {
   debugMessage("OsiCpxSolverInterface::OsiCpxSolverInterface()\n");
 
@@ -2984,7 +3005,8 @@ OsiCpxSolverInterface::OsiCpxSolverInterface( const OsiCpxSolverInterface & sour
     matrixByCol_(NULL),
     coltype_(NULL),
     coltypesize_(0),
-    probtypemip_(false)
+    probtypemip_(false),
+    domipstart(false)
 {
   debugMessage("OsiCpxSolverInterface::OsiCpxSolverInterface(%p)\n", (void*)&source);
 

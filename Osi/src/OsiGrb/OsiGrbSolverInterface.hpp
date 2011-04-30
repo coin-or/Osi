@@ -80,6 +80,10 @@ public:
 	bool getHintParam(OsiHintParam key, bool& yesNo, OsiHintStrength& strength) const;
 	// Get a hint parameter
 	bool getHintParam(OsiHintParam key, bool& yesNo) const;
+  // Set mipstart option (pass column solution to CPLEX before MIP start)
+  void setMipStart(bool value) { domipstart = value; }
+  // Get mipstart option value
+  bool getMipStart() const { return domipstart; }
 	//@}
 
 	//---------------------------------------------------------------------------
@@ -865,6 +869,9 @@ private:
 	//@{
   /// Stores whether we currently see the problem as a MIP
   mutable bool probtypemip_;
+
+  /// Whether to pass a column solution to CPLEX before starting MIP solve (copymipstart)
+  bool domipstart;
 
 	/// Size of allocated memory for coltype_, colmap_O2G, and (with offset auxcolspace) colmap_G2O.
   int colspace_;

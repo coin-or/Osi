@@ -360,6 +360,11 @@ void OsiGrbSolverInterface::branchAndBound()
 
   switchToMIP();
 
+  if( colsol_ != NULL && domipstart )
+  {
+    GUROBI_CALL( "branchAndBound", GRBsetdblattrarray(getMutableLpPtr(), GRB_DBL_ATTR_START, 0, getNumCols(), colsol_) );
+  }
+
   GRBmodel* lp = getLpPtr( OsiGrbSolverInterface::FREECACHED_RESULTS );
 
   GUROBI_CALL( "branchAndBound", GRBsetintparam(GRBgetenv(lp), GRB_INT_PAR_OUTPUTFLAG, (messageHandler()->logLevel() > 0)) );
@@ -2207,7 +2212,7 @@ void OsiGrbSolverInterface::setColSolution(const double * cs)
   	// Copy in new col solution.
   	CoinDisjointCopyN( cs, nc, colsol_ );
 
-  	*messageHandler() << "OsiGrb::setColSolution: Gurobi does not allow setting the column solution. Command is ignored." << CoinMessageEol;
+  	//*messageHandler() << "OsiGrb::setColSolution: Gurobi does not allow setting the column solution. Command is ignored." << CoinMessageEol;
   }
 }
 
@@ -3306,6 +3311,7 @@ OsiGrbSolverInterface::OsiGrbSolverInterface(bool use_local_env)
     matrixByRow_(NULL),
     matrixByCol_(NULL),
     probtypemip_(false),
+    domipstart(false),
     colspace_(0),
     coltype_(NULL),
     nauxcols(0),
@@ -3356,6 +3362,7 @@ OsiGrbSolverInterface::OsiGrbSolverInterface(GRBenv* localgrbenv)
     matrixByRow_(NULL),
     matrixByCol_(NULL),
     probtypemip_(false),
+    domipstart(false),
     colspace_(0),
     coltype_(NULL),
     nauxcols(0),
@@ -3418,6 +3425,7 @@ OsiGrbSolverInterface::OsiGrbSolverInterface( const OsiGrbSolverInterface & sour
     matrixByRow_(NULL),
     matrixByCol_(NULL),
     probtypemip_(false),
+    domipstart(false),
     colspace_(0),
     coltype_(NULL),
     nauxcols(0),

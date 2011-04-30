@@ -66,21 +66,18 @@
   repopulate the cache by interrogating glpk.
 */
 
-#if defined(_MSC_VER)
-// Turn off compiler warning about long names
-#  pragma warning(disable:4786)
-#endif
-
 #include <cassert>
+#include <cstdio>
+#include <cmath>
 #include <string>
 #include <iostream>
-#include <stdio.h>
 
 extern "C" {
 #include "glpk.h"
 }
 
 #include "CoinError.hpp"
+#include "CoinPragma.hpp"
 
 #include "OsiConfig.h"
 

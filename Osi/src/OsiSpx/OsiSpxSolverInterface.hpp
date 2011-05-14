@@ -25,7 +25,7 @@
     Instantiation of OsiSpxSolverInterface for SoPlex
 */
 
-class OsiSpxSolverInterface : virtual public OsiSolverInterface, public soplex::SoPlex {
+class OsiSpxSolverInterface : virtual public OsiSolverInterface {
   friend void OsiSpxSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
   
 public:

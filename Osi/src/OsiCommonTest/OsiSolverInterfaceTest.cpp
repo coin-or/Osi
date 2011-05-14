@@ -3519,6 +3519,8 @@ int testDualRays (const OsiSolverInterface *emptySi,
     const double *vlbs= 0 ;
     const double *vubs = 0 ;
     const double *xvals = 0 ;
+    const double *rhs = si->getRightHandSide() ;
+    const char* sense = si->getRowSense();
     if (fullRay == true)
     { rayLen += n ;
       wsb = dynamic_cast<CoinWarmStartBasis *>(si->getWarmStart()) ;
@@ -3541,7 +3543,7 @@ int testDualRays (const OsiSolverInterface *emptySi,
       { std::cout << "  Ray[" << rayNdx << "]: " << std::endl ;
         for (i = 0 ; i < m ; i++)
         { if (fabs(ray[i]) > tol)
-          { std::cout << "    " << si->getRowName(i) << " [" << i << "]: " << ray[i] << std::endl ; } }
+          { std::cout << "    " << si->getRowName(i) << " [" << i << "]: " << ray[i] << "\t rhs: " << rhs[i] << "\t sense: " << sense[i] << std::endl ; } }
         if (fullRay == true)
         { for (j = 0 ; j < n ; j++)
           { if (fabs(ray[m+j]) > tol)
@@ -3561,7 +3563,6 @@ int testDualRays (const OsiSolverInterface *emptySi,
 */
       double rdotb = 0.0 ;
       int nzoobCnt = 0 ;
-      const double *rhs = si->getRightHandSide() ;
       for (i = 0 ; i < m ; i++)
       { rdotb += rhs[i]*ray[i] ; }
       if (fullRay == true)
@@ -3591,6 +3592,8 @@ int testDualRays (const OsiSolverInterface *emptySi,
 	            break ; } } }
           OSIUNITTEST_ASSERT_ERROR(nzoobCnt <= 1, ++errCnt, solverName, "testDualRays: at most one nonzero ray entry for basic variables");
       }
+      if (OsiUnitTest::verbosity >= 2)
+        std::cout << "dot(r,b) = " << rdotb << std::endl;
       OSIUNITTEST_ASSERT_ERROR(rdotb < 0, ++errCnt, solverName, "testDualRays: ray points into right direction");
 /*
   On to rA >= 0. As with dot(r,b), it's trivially easy to do the calculation

@@ -9,7 +9,6 @@
 #include <cmath>
 
 #include "OsiTestSolver.hpp"
-#include "CoinFinite.hpp"
 
 //#############################################################################
 /// Usage: v=w; where w is a VOL_dvector

@@ -351,7 +351,8 @@ void TestOutcomes::print() const
 		++count[it->severity];
 		if( it->expected )
 			++expected[it->severity];
-		if( it->severity != TestOutcome::PASSED || OsiUnitTest::verbosity >= 2 )
+		if( (it->severity != TestOutcome::PASSED || OsiUnitTest::verbosity >= 2) &&
+				(it->severity != TestOutcome::NOTE || OsiUnitTest::verbosity >= 1) )
 			it->print();
 	}
 

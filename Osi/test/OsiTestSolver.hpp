@@ -12,6 +12,8 @@
 #include <cstdio>
 #include <cmath>
 
+#include "CoinFinite.hpp"
+
 #ifndef VOL_DEBUG
 // When VOL_DEBUG is 1, we check vector indices
 #define VOL_DEBUG 0
@@ -492,7 +494,7 @@ private:
 public:
    double lastvalue;
 
-   VOL_alpha_factor() {lastvalue = -DBL_MAX;}
+   VOL_alpha_factor() {lastvalue = -COIN_DBL_MAX;}
    ~VOL_alpha_factor() {}
 
    inline double factor(const VOL_parms& parm, const double lcost,
@@ -585,7 +587,7 @@ public:
        an integer solution  
        @param x (IN) the primal vector
        @param heur_val (OUT) the value of the integer solution (return 
-       <code>DBL_MAX</code> here if no feas sol was found 
+       <code>COIN_DBL_MAX</code> here if no feas sol was found
    */
    virtual int heuristics(const VOL_problem& p, 
 			  const VOL_dvector& x, double& heur_val) = 0;

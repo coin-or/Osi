@@ -644,8 +644,8 @@ void OsiGrbSolverInterfaceUnitTest( const std::string & mpsDir, const std::strin
 
         // Change Gurobi Model by adding free row
         OsiRowCut rc;
-        rc.setLb(-DBL_MAX);
-        rc.setUb( DBL_MAX);
+        rc.setLb(-COIN_DBL_MAX);
+        rc.setUb( COIN_DBL_MAX);
         OsiCuts cuts;
         cuts.insert(rc);
         siC1.applyCuts(cuts);

@@ -301,11 +301,11 @@ public:
       virtual void setObjCoeff( int elementIndex, double elementValue );
 
       /** Set a single column lower bound<br>
-    	  Use -DBL_MAX for -infinity. */
+    	  Use -COIN_DBL_MAX for -infinity. */
       virtual void setColLower( int elementIndex, double elementValue );
       
       /** Set a single column upper bound<br>
-    	  Use DBL_MAX for infinity. */
+    	  Use COIN_DBL_MAX for infinity. */
       virtual void setColUpper( int elementIndex, double elementValue );
       
       /** Set a single column lower and upper bound<br>
@@ -329,11 +329,11 @@ public:
 #endif
       
       /** Set a single row lower bound<br>
-    	  Use -DBL_MAX for -infinity. */
+    	  Use -COIN_DBL_MAX for -infinity. */
       virtual void setRowLower( int elementIndex, double elementValue );
       
       /** Set a single row upper bound<br>
-    	  Use DBL_MAX for infinity. */
+    	  Use COIN_DBL_MAX for infinity. */
       virtual void setRowUpper( int elementIndex, double elementValue );
     
       /** Set a single row lower and upper bound<br>

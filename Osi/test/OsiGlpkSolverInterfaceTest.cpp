@@ -145,7 +145,7 @@ OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & n
     // test infinity
     {
       OsiGlpkSolverInterface si;
-      OSIUNITTEST_ASSERT_ERROR(eq(si.getInfinity(),COIN_DBL_MAX), ++errCnt, "glpk", "infinity");
+      OSIUNITTEST_ASSERT_ERROR(si.getInfinity() == COIN_DBL_MAX, ++errCnt, "glpk", "infinity");
     }
     
 #if 0
@@ -481,8 +481,8 @@ OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & n
 
         // Change glpk Model by adding free row
         OsiRowCut rc;
-        rc.setLb(-DBL_MAX);
-        rc.setUb( DBL_MAX);
+        rc.setLb(-COIN_DBL_MAX);
+        rc.setUb( COIN_DBL_MAX);
         OsiCuts cuts;
         cuts.insert(rc);
         siC1.applyCuts(cuts);

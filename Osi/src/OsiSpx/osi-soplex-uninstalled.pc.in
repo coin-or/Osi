@@ -5,6 +5,6 @@ Name: OsiSoplex
 Description: COIN-OR Open Solver Interface for SoPlex
 URL: https://projects.coin-or.org/Osi
 Version: @PACKAGE_VERSION@
-Libs: ${libdir}/libOsiSpx.la -lOsiSpx @SPXLIB@
+Libs: ${libdir}/libOsiSpx.la -lOsiSpx @OSISPXLIB_PCLIBS@
 Cflags: -I@abs_source_dir@/src/OsiSpx
-Requires: osi
+Requires: osi @OSISPXLIB_PCREQUIRES@

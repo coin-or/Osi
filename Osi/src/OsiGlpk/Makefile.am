@@ -19,7 +19,7 @@ lib_LTLIBRARIES = libOsiGlpk.la
 libOsiGlpk_la_SOURCES = \
 	OsiGlpkSolverInterface.cpp OsiGlpkSolverInterface.hpp
 
-# This is for libtool (on Windows)
+# This is for libtool
 libOsiGlpk_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.  This

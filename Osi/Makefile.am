@@ -36,7 +36,7 @@ if COIN_HAS_GRB
   SUBDIRS += src/OsiGrb
   pkgconfiglib_DATA += osi-gurobi.pc
 endif
-if COIN_HAS_SPX
+if COIN_HAS_SOPLEX
   SUBDIRS += src/OsiSpx
   pkgconfiglib_DATA += osi-soplex.pc
 endif

@@ -16,15 +16,14 @@ lib_LTLIBRARIES = libOsiSpx.la
 # List all source files for this library, including headers
 libOsiSpx_la_SOURCES = OsiSpxSolverInterface.cpp OsiSpxSolverInterface.hpp
 
-# This is for libtool (on Windows)
+# This is for libtool
 libOsiSpx_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows.
 # "top_srcdir" refers to the basic directory for the main package that is
 # being compiled.
-AM_CPPFLAGS = $(COINUTILS_CFLAGS) \
-	-I`$(CYGPATH_W) $(SPXINCDIR)` \
+AM_CPPFLAGS = $(COINUTILS_CFLAGS) $(SOPLEX_CFLAGS) \
 	-I`$(CYGPATH_W) $(srcdir)/../Osi`
 
 # This line is necessary to allow VPATH compilation with MS compilers

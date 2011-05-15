@@ -83,13 +83,13 @@ if COIN_HAS_GRB
   LIBS += $(GRBLIB)
 endif
 
-if COIN_HAS_SPX
+if COIN_HAS_SOPLEX
   unitTest_SOURCES += OsiSpxSolverInterfaceTest.cpp
-  AM_CPPFLAGS += -I`$(CYGPATH_W) $(SPXINCDIR)` \
+  AM_CPPFLAGS += $(SOPLEX_CFLAGS) \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiSpx`
   unitTest_LDADD += ../src/OsiSpx/libOsiSpx.la
   unitTest_DEPENDENCIES += ../src/OsiSpx/libOsiSpx.la
-  LIBS += $(SPXLIB)
+  LIBS += $(SOPLEX_LIBS)
 endif
 
 unitTest_LDADD        += ../src/Osi/libOsi.la $(OSILIB_LIBS)

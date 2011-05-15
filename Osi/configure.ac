@@ -57,7 +57,8 @@ AC_COIN_CHECK_PACKAGE(CoinUtils, [coinutils], [OsiLib])
 if test $coin_has_coinutils != yes ; then
   AC_MSG_ERROR([Required package CoinUtils not available.])
 fi
-AC_COIN_CHECK_PACKAGE(Glpk,      [coinglpk >= 4.39],  [OsiGlpkLib])
+AC_COIN_CHECK_PACKAGE(Glpk,      [coinglpk >= 4.39], [OsiGlpkLib])
+AC_COIN_CHECK_PACKAGE(SoPlex,    [coinsoplex],       [OsiSpxLib])
 AC_COIN_CHECK_PACKAGE(Sample,    [coindatasample])
 AC_COIN_CHECK_PACKAGE(Netlib,    [coindatanetlib])
 
@@ -74,7 +75,6 @@ AC_COIN_CHECK_USER_LIBRARY([Cplex], [CPX],[cplex.h],   [CPXgetstat])
 AC_COIN_CHECK_USER_LIBRARY([Mosek], [MSK],[mosek.h],   [MSK_makeenv])
 AC_COIN_CHECK_USER_LIBRARY([Xpress],[XPR],[xprs.h],    [XPRSinit])
 AC_COIN_CHECK_USER_LIBRARY([Gurobi],[GRB],[gurobi_c.h],[GRBloadenv])
-AC_COIN_CHECK_USER_LIBRARY([Soplex],[SPX],[soplex.h])
 
 #############################################################################
 #                            Examples solver                                #
@@ -107,10 +107,10 @@ elif test $coin_has_xpr = true ; then
   OSI_EXAMPLES_SOLVER_CFLAGS="-I$XPRINCDIR"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiXpr $XPRLIB"
   OSI_EXAMPLES_SOLVER_PCNAME=osi-xpress
-elif test $coin_has_spx = true ; then
+elif test $coin_has_soplex = true ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiSpxSolverInterface
-  OSI_EXAMPLES_SOLVER_CFLAGS="-I$SPXINCDIR"
-  OSI_EXAMPLES_SOLVER_LIBS="-lOsiSpx $SPXLIB"
+  OSI_EXAMPLES_SOLVER_CFLAGS="$SOPLEX_CFLAGS"
+  OSI_EXAMPLES_SOLVER_LIBS="-lOsiSpx $SOPLEX_LIBS_INSTALLED"
   OSI_EXAMPLES_SOLVER_PCNAME=osi-soplex
 fi
 
@@ -197,7 +197,7 @@ if test $coin_has_xpr = true ; then
                    osi-xpress-uninstalled.pc:src/OsiXpr/osi-xpress-uninstalled.pc.in])
 fi
 
-if test $coin_has_spx = true ; then
+if test $coin_has_soplex = true ; then
   AC_CONFIG_FILES([osi-soplex.pc:src/OsiSpx/osi-soplex.pc.in
                    osi-soplex-uninstalled.pc:src/OsiSpx/osi-soplex-uninstalled.pc.in])
 fi

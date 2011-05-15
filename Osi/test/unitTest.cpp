@@ -50,7 +50,7 @@
 // #undef COIN_HAS_GLPK
 // #undef COIN_HAS_MSK
 // #undef COIN_HAS_GRB
-// #undef COIN_HAS_SPX
+// #undef COIN_HAS_SOPLEX
 
 #ifdef COIN_HAS_XPR
 #include "OsiXprSolverInterface.hpp"
@@ -88,7 +88,7 @@
 #endif
 #endif
 
-#ifdef COIN_HAS_SPX
+#ifdef COIN_HAS_SOPLEX
 #include "OsiSpxSolverInterface.hpp"
 #ifdef USETESTSOLVER
 #undef USETESTSOLVER
@@ -415,7 +415,7 @@ try {
   }
 #endif
 
-#ifdef COIN_HAS_SPX
+#ifdef COIN_HAS_SOPLEX
   {
     OsiSpxSolverInterface spxSi;
     testingMessage( "Testing OsiRowCut with OsiSpxSolverInterface\n" );
@@ -480,7 +480,7 @@ try {
   OsiGrbSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
 
-#ifdef COIN_HAS_SPX
+#ifdef COIN_HAS_SOPLEX
   testingMessage( "Testing OsiSpxSolverInterface\n" );
   OsiSpxSolverInterfaceUnitTest(mpsDir,netlibDir);
 #endif
@@ -515,7 +515,7 @@ try {
     OsiSolverInterface * grbSi = new OsiGrbSolverInterface;
     vecSi.push_back(grbSi);
 #   endif
-#   if COIN_HAS_SPX
+#   if COIN_HAS_SOPLEX
     OsiSolverInterface * spxSi = new OsiSpxSolverInterface;
     vecSi.push_back(spxSi);
 #   endif

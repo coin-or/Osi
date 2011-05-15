@@ -21,8 +21,8 @@
 /* Define to 1 if the Sample package is available */
 #undef COIN_HAS_SAMPLE
 
-/* Define to 1 if the Soplex package is available */
-#undef COIN_HAS_SPX
+/* Define to 1 if the SoPlex package is available */
+#undef COIN_HAS_SOPLEX
 
 /* Define to 1 if the Xpress package is available */
 #undef COIN_HAS_XPR

@@ -4,7 +4,6 @@
 //           Ambros Gleixner
 //           Wei Huang
 //           Konrad-Zuse-Zentrum Berlin (Germany)
-//           email: pfender@zib.de
 // date:     01/16/2002
 // license:  this file may be freely distributed under the terms of EPL
 //-----------------------------------------------------------------------------
@@ -1610,8 +1609,8 @@ OsiSpxSolverInterface::OsiSpxSolverInterface( const OsiSpxSolverInterface & sour
     matrixByRow_(NULL),
     matrixByCol_(NULL)
 {
-  setColSolution(source.getColSolution());
-  setRowPrice(source.getRowPrice());
+  if (source.colsol_ != NULL) setColSolution(source.getColSolution());
+  if (source.rowsol_ != NULL) setRowPrice(source.getRowPrice());
 }
 
 
@@ -1635,8 +1634,8 @@ OsiSpxSolverInterface& OsiSpxSolverInterface::operator=( const OsiSpxSolverInter
       OsiSolverInterface::operator=( source );
       spxintvars_ = source.spxintvars_;
       soplex_ = source.soplex_;
-      setColSolution(source.getColSolution());
-      setRowPrice(source.getRowPrice());
+      if (source.colsol_ != NULL) setColSolution(source.getColSolution());
+      if (source.rowsol_ != NULL) setRowPrice(source.getRowPrice());
       hotStartMaxIteration_ = source.hotStartMaxIteration_;
     }
   return *this;

@@ -98,18 +98,20 @@ void testingMessage( const char * const msg )
 //#############################################################################
 
 // A helper function to compare the equivalence of two vectors
-bool equivalentVectors (const OsiSolverInterface * /* si1 */,
-                        const OsiSolverInterface * /* si2 */,
+bool equivalentVectors (const OsiSolverInterface * si1,
+                        const OsiSolverInterface * si2,
 			double tol,
 			const double * v1,
 			const double * v2,
 			int size)
 {
   bool retVal = true;
+  double infty1 = si1->getInfinity();
+  double infty2 = si2->getInfinity();
   CoinRelFltEq eq(tol) ;
   int i;
   for ( i=0; i<size; i++ ) {
-    if ( !eq(v1[i],v2[i]) ) {
+    if ( !(v1[i] <= -infty1 && v2[i] <= -infty2) && !(v1[i] >= infty1 && v2[i] >= infty2) && !eq(v1[i],v2[i]) ) {
       std::cout.flush() ;
       std::cerr <<"eq " <<i <<" " <<v1[i] <<" " <<v2[i] <<std::endl;
       retVal = false;

@@ -16,15 +16,19 @@
 #define OsiSpxSolverInterface_H
 
 #include <string>
-#include "soplex.h"
 #include "OsiSolverInterface.hpp"
 #include "CoinWarmStartBasis.hpp"
 
-/** SoPlex Solver Interface
+/* forward declarations so the header can be compiled without having to include soplex.h */
+namespace soplex {
+  class DIdxSet;
+  class DVector;
+  class SoPlex;
+}
 
+/** SoPlex Solver Interface
     Instantiation of OsiSpxSolverInterface for SoPlex
 */
-
 class OsiSpxSolverInterface : virtual public OsiSolverInterface {
   friend int OsiSpxSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
   
@@ -622,7 +626,7 @@ protected:
   /**@name Protected member data */
   //@{
   /// SoPlex solver object
-  soplex::SoPlex soplex_;
+  soplex::SoPlex* soplex_;
   //@}
 
   
@@ -673,23 +677,20 @@ private:
 
   /// free all allocated memory
   void freeAllMemory();
-
-  /// Just for testing purposes
-  void printBounds(); 
   //@}
   
   
   /**@name Private member data */
   //@{
   /// indices of integer variables
-  soplex::DIdxSet   spxintvars_;
+  soplex::DIdxSet*   spxintvars_;
 
   /// Hotstart information
-  soplex::SPxSolver::VarStatus *hotStartCStat_;
-  int                       hotStartCStatSize_;
-  soplex::SPxSolver::VarStatus *hotStartRStat_;
-  int                       hotStartRStatSize_;
-  int                       hotStartMaxIteration_;
+  void* hotStartCStat_;
+  int   hotStartCStatSize_;
+  void* hotStartRStat_;
+  int   hotStartRStatSize_;
+  int   hotStartMaxIteration_;
 
   /**@name Cached information derived from the SoPlex model */
   //@{

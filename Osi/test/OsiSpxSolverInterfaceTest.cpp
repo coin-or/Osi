@@ -12,6 +12,11 @@
 
 #include "CoinPragma.hpp"
 #include "OsiConfig.h"
+
+// Added so windows build with dsp files works,
+// when not building with soplex.
+#ifdef COIN_HAS_SPX
+
 #include "OsiSpxSolverInterface.hpp"
 #include "OsiUnitTests.hpp"
 #include "OsiCuts.hpp"
@@ -20,49 +25,9 @@
 
 #include <iostream>
 
-// Added so windows build with dsp files works,
-// when not building with soplex.
-#ifdef COIN_HAS_SPX
+// to check for value of infinity
+#include "soplex.h"
 
-void OsiSpxSolverInterface::printBounds()
-{
-  int nc = getNumCols();
-  int nr = getNumRows();
-  const char * s = getRowSense();
-  const double * b = getRightHandSide();
-  const double * rng = getRowRange();
-  const double * cl = getColLower();
-  const double * cu = getColUpper();
-  const double * rl = getRowLower();
-  const double * ru = getRowUpper();
-  
-  std::cout << "ncols=" << nc << ", nrows=" << nr;
-  std::cout << std::endl << "sns=";
-  int i;
-  for( i = 0; i < nr; ++i )
-    std::cout << " " << s[i];
-  std::cout << std::endl << "rhs=";
-  for( i = 0; i < nr; ++i )
-    std::cout << " " << b[i];
-  std::cout << std::endl << "rng=";
-  for( i = 0; i < nr; ++i )
-    std::cout << " " << rng[i];
-  std::cout << std::endl << "cl =";
-  for( i = 0; i < nc; ++i )
-    std::cout << " " << cl[i];
-  std::cout << std::endl << "cu =";
-  for( i = 0; i < nc; ++i )
-    std::cout << " " << cu[i];
-  std::cout << std::endl << "rl =";
-  for( i = 0; i < nr; ++i )
-    std::cout << " " << rl[i];
-  std::cout << std::endl << "ru =";
-  for( i = 0; i < nr; ++i )
-    std::cout << " " << ru[i];
-  std::cout << std::endl;
-}
-
-//--------------------------------------------------------------------------
 int OsiSpxSolverInterfaceUnitTest( const std::string & mpsDir, const std::string & netlibDir )
 {
 	int errCnt = 0;
@@ -70,6 +35,7 @@ int OsiSpxSolverInterfaceUnitTest( const std::string & mpsDir, const std::string
   // Test default constructor
   {
     OsiSpxSolverInterface m;
+    OSIUNITTEST_ASSERT_ERROR(m.soplex_      != NULL, ++errCnt, "SoPlex", "default constructor");
     OSIUNITTEST_ASSERT_ERROR(m.getNumCols() == 0,    ++errCnt, "SoPlex", "default constructor");
     OSIUNITTEST_ASSERT_ERROR(m.rowsense_    == NULL, ++errCnt, "SoPlex", "default constructor");
     OSIUNITTEST_ASSERT_ERROR(m.rhs_         == NULL, ++errCnt, "SoPlex", "default constructor");

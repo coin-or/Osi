@@ -107,7 +107,7 @@ elif test $coin_has_xpr = true ; then
   OSI_EXAMPLES_SOLVER_CFLAGS="-I$XPRINCDIR"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiXpr $XPRLIB"
   OSI_EXAMPLES_SOLVER_PCNAME=osi-xpress
-elif test $coin_has_soplex = true ; then
+elif test $coin_has_soplex = yes ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiSpxSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="$SOPLEX_CFLAGS"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiSpx $SOPLEX_LIBS_INSTALLED"
@@ -197,7 +197,7 @@ if test $coin_has_xpr = true ; then
                    osi-xpress-uninstalled.pc:src/OsiXpr/osi-xpress-uninstalled.pc.in])
 fi
 
-if test $coin_has_soplex = true ; then
+if test $coin_has_soplex = yes ; then
   AC_CONFIG_FILES([osi-soplex.pc:src/OsiSpx/osi-soplex.pc.in
                    osi-soplex-uninstalled.pc:src/OsiSpx/osi-soplex-uninstalled.pc.in])
 fi

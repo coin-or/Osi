@@ -117,11 +117,21 @@ OsiXprSolverInterface::resolve() {
 
 void
 OsiXprSolverInterface::branchAndBound(){
+  int status;
+
+  if( colsol_ != NULL && domipstart )
+  {
+  	XPRS_CHECKED( XPRSloadmipsol, (prob_, colsol_, &status) );
+  	/* status = 0 .. accepted
+  	 *        = 1 .. infeasible
+  	 *        = 2 .. cutoff
+  	 *        = 3 .. LP reoptimization interrupted
+  	 */
+  }
 
   freeSolution();
 
 #if XPVERSION <= 20
-  int status;
   /* XPRSglobal cannot be called if there is no LP relaxation available yet
    * -> solve LP relaxation first, if no LP solution available */
   XPRS_CHECKED( XPRSgetintattrib, (prob_,XPRS_LPSTATUS, &status) );
@@ -2295,7 +2305,8 @@ rowprice_(NULL),
 colprice_(NULL),
 ivarind_(NULL),
 ivartype_(NULL),
-vartype_(NULL)
+vartype_(NULL),
+domipstart(false)
 {
     incrementInstanceCounter();
     
@@ -2347,7 +2358,8 @@ OsiXprSolverInterface (const OsiXprSolverInterface & source) :
    colprice_(NULL),
    ivarind_(NULL),
    ivartype_(NULL),
-   vartype_(NULL)
+   vartype_(NULL),
+   domipstart(false)
 {
     incrementInstanceCounter();
     xprProbname_ = "";

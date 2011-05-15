@@ -60,6 +60,10 @@ public:
     bool getDblParam(OsiDblParam key, double& value) const;
     // Get a string parameter
     bool getStrParam(OsiStrParam key, std::string& value) const;
+    // Set mipstart option (pass column solution to XPRESS before MIP start)
+    void setMipStart(bool value) { domipstart = value; }
+    // Get mipstart option value
+    bool getMipStart() const { return domipstart; }
   //@}
 
   //---------------------------------------------------------------------------
@@ -794,6 +798,9 @@ private:
       mutable bool lastsolvewasmip;
     //@}
   //@}
+
+      /// Whether to pass a column solution to XPRESS before starting MIP solve (loadmipsol)
+      bool            domipstart;
 };
 
 //#############################################################################

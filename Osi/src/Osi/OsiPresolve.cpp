@@ -506,15 +506,13 @@ OsiPresolve::postsolve(bool updateStatus)
     basis->setSize(ncols0,nrows0);
     int i;
     for (i=0;i<ncols0;i++) {
-      CoinWarmStartBasis::Status status = static_cast<CoinWarmStartBasis::Status> (prob.getColumnStatus(i));
-      assert(status != CoinWarmStartBasis::atLowerBound || originalModel_->getColLower()[i] > -originalModel_->getInfinity());
-      assert(status != CoinWarmStartBasis::atUpperBound || originalModel_->getColUpper()[i] <  originalModel_->getInfinity());
+      CoinWarmStartBasis::Status status = 
+	static_cast<CoinWarmStartBasis::Status> (prob.getColumnStatus(i));
       basis->setStructStatus(i,status);
     }
     for (i=0;i<nrows0;i++) {
-      CoinWarmStartBasis::Status status = static_cast<CoinWarmStartBasis::Status> (prob.getRowStatus(i));
-      assert(status != CoinWarmStartBasis::atUpperBound || originalModel_->getRowLower()[i] > -originalModel_->getInfinity());
-      assert(status != CoinWarmStartBasis::atLowerBound || originalModel_->getRowUpper()[i] <  originalModel_->getInfinity());
+      CoinWarmStartBasis::Status status = 
+	static_cast<CoinWarmStartBasis::Status> (prob.getRowStatus(i));
       basis->setArtifStatus(i,status);
     }
     originalModel_->setWarmStart(basis);

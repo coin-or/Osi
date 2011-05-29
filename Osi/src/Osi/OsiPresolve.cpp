@@ -506,13 +506,17 @@ OsiPresolve::postsolve(bool updateStatus)
     basis->setSize(ncols0,nrows0);
     int i;
     for (i=0;i<ncols0;i++) {
-      CoinWarmStartBasis::Status status = 
-	static_cast<CoinWarmStartBasis::Status> (prob.getColumnStatus(i));
+      CoinWarmStartBasis::Status status = static_cast<CoinWarmStartBasis::Status> (prob.getColumnStatus(i));
+      /* FIXME: these asserts seem correct, but seem to reveal some bugs in CoinPresolve */
+      // assert(status != CoinWarmStartBasis::atLowerBound || originalModel_->getColLower()[i] > -originalModel_->getInfinity());
+      // assert(status != CoinWarmStartBasis::atUpperBound || originalModel_->getColUpper()[i] <  originalModel_->getInfinity());
       basis->setStructStatus(i,status);
     }
     for (i=0;i<nrows0;i++) {
-      CoinWarmStartBasis::Status status = 
-	static_cast<CoinWarmStartBasis::Status> (prob.getRowStatus(i));
+      CoinWarmStartBasis::Status status = static_cast<CoinWarmStartBasis::Status> (prob.getRowStatus(i));
+      /* FIXME: these asserts seem correct, but seem to reveal some bugs in CoinPresolve */
+      // assert(status != CoinWarmStartBasis::atUpperBound || originalModel_->getRowLower()[i] > -originalModel_->getInfinity());
+      // assert(status != CoinWarmStartBasis::atLowerBound || originalModel_->getRowUpper()[i] <  originalModel_->getInfinity());
       basis->setArtifStatus(i,status);
     }
     originalModel_->setWarmStart(basis);

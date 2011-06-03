@@ -1372,7 +1372,8 @@ void OsiSolverInterface::writeLp(const char * filename,
 	char** colnames;
 	char** rownames;
   int nameDiscipline;
-  getIntParam(OsiNameDiscipline,nameDiscipline) ;
+  if (!getIntParam(OsiNameDiscipline,nameDiscipline))
+     nameDiscipline = 0;
 	if (useRowNames && nameDiscipline==2) {
 		colnames = new char*[getNumCols()];
 		rownames = new char*[getNumRows()];

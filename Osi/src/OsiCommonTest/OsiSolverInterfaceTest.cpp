@@ -2281,8 +2281,6 @@ int testReducedCosts (const OsiSolverInterface *emptySi,
   Get the unchanging components: size, matrix, objective.
 */
   int n = si->getNumCols() ;
-  const CoinPackedMatrix *mtx = si->getMatrixByCol() ;
-  const double *c = si->getObjCoefficients() ;
   double *cbarCalc = new double[n] ;
   double dualTol ;
   si->getDblParam(OsiDualTolerance,dualTol) ;
@@ -2305,6 +2303,8 @@ int testReducedCosts (const OsiSolverInterface *emptySi,
 /*
   Retrieve status, duals, and reduced costs. Calculate c - yA.
 */
+    const CoinPackedMatrix *mtx = si->getMatrixByCol() ;
+    const double *c = si->getObjCoefficients() ;
     const CoinWarmStartBasis *wsb = 
       dynamic_cast<CoinWarmStartBasis *>(si->getWarmStart()) ;
     double dir = si->getObjSense() ;

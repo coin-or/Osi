@@ -25,7 +25,6 @@
 
 #include "mosek.h"
 
-#define MSK_OSI_HAS_NAME_DISCIPLINE  1
 #define MSK_OSI_DEBUG_LEVEL          0
 #ifndef NDEBUG
 #define MSK_OSI_ASSERT_LEVEL         0
@@ -558,11 +557,9 @@ OsiMskSolverInterface::setIntParam(OsiIntParam key, int value)
       hotStartMaxIteration_ = CoinMax(0,value);
       retval = true;
       break;
-    #if MSK_OSI_HAS_NAME_DISCIPLINE > 0
     case OsiNameDiscipline:
       retval = false;
       break;
-    #endif
     case OsiLastIntParam:
       retval = false;
       break;
@@ -686,11 +683,9 @@ OsiMskSolverInterface::getIntParam(OsiIntParam key, int& value) const
       value = hotStartMaxIteration_;
       retval = true;
       break;
-      #if MSK_OSI_HAS_NAME_DISCIPLINE > 0
-      case OsiNameDiscipline:
-        retval = false;
-        break;
-      #endif
+    case OsiNameDiscipline:
+      retval = false;
+      break;
     case OsiLastIntParam:
       retval = false;
       break;

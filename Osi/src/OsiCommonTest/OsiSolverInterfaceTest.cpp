@@ -1447,7 +1447,7 @@ int testNames (const OsiSolverInterface *emptySi, std::string fn)
   if we can't read an MPS file.
 */
   // std::cout << "Testing lazy names from MPS input file." << std::endl ;
-  OSIUNITTEST_ASSERT_WARNING(si->setIntParam(OsiNameDiscipline, 1) == true, recognisesOsiNames = false, solverName, "testNames: switch to lazy names");
+  OSIUNITTEST_ASSERT_SEVERITY_EXPECTED(si->setIntParam(OsiNameDiscipline, 1) == true, recognisesOsiNames = false, solverName, "testNames: switch to lazy names", TestOutcome::NOTE, false);
 
   OSIUNITTEST_ASSERT_ERROR(si->readMps(fn.c_str(),"mps") == 0, delete si; return ++errCnt, solverName, "testNames: read MPS");
 

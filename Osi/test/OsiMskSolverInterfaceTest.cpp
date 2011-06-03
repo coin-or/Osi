@@ -448,11 +448,10 @@ void OsiMskSolverInterfaceUnitTest( const std::string & mpsDir, const std::strin
       assert( eq(MOSEKSi.getColLower()[3],1.2345) );
       
       assert( !eq(cu[4],10.2345) );
-      
       MOSEKSi.setColUpper( 4, 10.2345 );
       assert( eq(MOSEKSi.getColUpper()[4],10.2345) );
 
-      assert( eq(MOSEKSi.getObjValue(),0.0) );
+      assert( eq(MOSEKSi.getObjValue(), 1.0 * 1.0 + 2.0 * 5.0 - 1.0 * 8.0) );
 
       assert( eq( MOSEKSi.getObjCoefficients()[0],  1.0) );
       assert( eq( MOSEKSi.getObjCoefficients()[1],  0.0) );
@@ -542,8 +541,8 @@ void OsiMskSolverInterfaceUnitTest( const std::string & mpsDir, const std::strin
         assert( siC1.rhs_==NULL );
         assert( siC1.rowlower_==NULL );
         assert( siC1.rowupper_==NULL );
-        assert( siC1.colsol_!=NULL );
-        assert( siC1.rowsol_!=NULL );
+        assert( siC1.colsol_==NULL );
+        assert( siC1.rowsol_==NULL );
         assert( siC1.matrixByRow_==NULL );
 
         const char   * siC1rs  = siC1.getRowSense();
@@ -678,8 +677,8 @@ void OsiMskSolverInterfaceUnitTest( const std::string & mpsDir, const std::strin
       assert( lhs.rhs_==NULL ); 
       assert( lhs.rowlower_==NULL );
       assert( lhs.rowupper_==NULL );
-      assert( lhs.colsol_!=NULL );
-      assert( lhs.rowsol_!=NULL );
+      assert( lhs.colsol_==NULL );
+      assert( lhs.rowsol_==NULL );
       assert( lhs.matrixByRow_==NULL ); 
       
       const char * lhsrs  = lhs.getRowSense();

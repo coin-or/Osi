@@ -1,3 +1,9 @@
+03/06/2011 OsiMsk
+  - fix caching flags (bitwise negation is ~, not !)
+  - free all cached data when loading problem
+  - fix getDualRay and getPrimalRay so they should return a ray now 
+  - fixed various further issues in unittest, so OsiMsk passes it now
+
 15/05/2011 OsiXpr
   - added option (mipstart) to pass column solution as initial solution to a MIP solve
 

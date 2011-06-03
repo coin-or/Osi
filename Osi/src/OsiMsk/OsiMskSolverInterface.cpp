@@ -554,8 +554,12 @@ OsiMskSolverInterface::setIntParam(OsiIntParam key, int value)
       break;
       
     case OsiMaxNumIterationHotStart:
-      hotStartMaxIteration_ = CoinMax(0,value);
-      retval = true;
+      if (value < 0) {
+        retval = false;
+      } else {
+        hotStartMaxIteration_ = value;
+        retval = true;
+      }
       break;
     case OsiNameDiscipline:
       retval = false;
@@ -684,6 +688,7 @@ OsiMskSolverInterface::getIntParam(OsiIntParam key, int& value) const
       retval = true;
       break;
     case OsiNameDiscipline:
+      value = 0;
       retval = false;
       break;
     case OsiLastIntParam:
@@ -2713,7 +2718,7 @@ std::vector<double*> OsiMskSolverInterface::getDualRays(int maxNumRays,
   debugMessage("End OsiMskSolverInterface::getDualRays(%d)\n", maxNumRays);
   #endif
 
-  if( status != MSK_SOL_STA_DUAL_INFEAS_CER )
+  if( status != MSK_SOL_STA_PRIM_INFEAS_CER )
   { 
     delete[] farkasray;
     
@@ -2782,7 +2787,7 @@ std::vector<double*> OsiMskSolverInterface::getPrimalRays(int maxNumRays) const
   debugMessage("End OsiMskSolverInterface::getPrimalRays(%d)\n", maxNumRays);
   #endif
 
-  if( status != MSK_SOL_STA_PRIM_INFEAS_CER )
+  if( status != MSK_SOL_STA_DUAL_INFEAS_CER )
   { 
     delete[] farkasray;
     

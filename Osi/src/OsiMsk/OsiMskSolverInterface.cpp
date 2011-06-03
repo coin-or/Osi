@@ -29,7 +29,7 @@
 #ifndef NDEBUG
 #define MSK_OSI_ASSERT_LEVEL         0
 #else
-#define MSK_OSI_ASSERT_LEVEL         2
+#define MSK_OSI_ASSERT_LEVEL         4
 #endif
 #define MSK_DO_MOSEK_LOG             0
 
@@ -503,7 +503,7 @@ void OsiMskSolverInterface::resolve()
   }
 
   #if MSK_OSI_DEBUG_LEVEL > 1
-  debugMessage("End OsiMskSolverInterface::resolve\n");
+  debugMessage("End OsiMskSolverInterface::resolve... press any key to continue\n");
   getchar();
   #endif
 }
@@ -2343,7 +2343,7 @@ const double * OsiMskSolverInterface::getColSolution() const
   if( colsol_ != NULL )
   {
     #if MSK_OSI_DEBUG_LEVEL > 3
-    debugMessage("colsol_ != NULL");
+    debugMessage("colsol_ != NULL\n");
     #endif
 
     return colsol_;
@@ -3338,6 +3338,8 @@ void OsiMskSolverInterface::setColSolution(const double * cs)
     tbuc    = new MSKrealt[nr];    
 
     const CoinPackedMatrix *mtx = getMatrixByCol() ;
+    assert(mtx->getNumCols() == nc);
+    assert(mtx->getNumRows() == nr);
     mtx->times(cs,txc) ;
 
     /* Negate due to different Osi and Mosek slack representation */
@@ -4112,7 +4114,7 @@ OsiMskSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
       m->reverseOrderedCopyOf(matrix);
       freeMatrixRequired = true;
     } 
-    else 
+    else
       m = const_cast<CoinPackedMatrix *>(&matrix);
 
     MSKassert(3,nc == m->getNumCols(),"nc == m->getNumCols()","loadProblem");
@@ -4165,7 +4167,7 @@ OsiMskSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
       }
     }
 
-    int err=MSK_inputdata(getLpPtr( OsiMskSolverInterface::FREECACHED_RESULTS ),
+    int err=MSK_inputdata(getLpPtr( OsiMskSolverInterface::KEEPCACHED_NONE ),
                           nr,
                           nc,
                           nr,
@@ -4383,7 +4385,7 @@ OsiMskSolverInterface::loadProblem(const int numcols,
            MskConvertColBoundToTag( collb[j], colub[j], clb[j], cub[j], ctag[j]);
         }
 
-    int err=MSK_inputdata(getLpPtr( OsiMskSolverInterface::FREECACHED_RESULTS ),
+    int err=MSK_inputdata(getLpPtr( OsiMskSolverInterface::KEEPCACHED_NONE ),
                           nr,
                           nc,
                           nr,
@@ -4964,6 +4966,8 @@ void OsiMskSolverInterface::gutsOfDestructor()
   debugMessage("Begin OsiMskSolverInterface::gutsOfDestructor()\n");
   #endif
   
+  freeCachedData(KEEPCACHED_NONE);
+
   if ( task_ != NULL )
   {
   	MSK_unlinkfuncfromtaskstream(getMutableLpPtr(), MSK_STREAM_LOG);
@@ -4975,10 +4979,6 @@ void OsiMskSolverInterface::gutsOfDestructor()
       task_ = NULL;
       freeAllMemory();
   }
-
-  freeCacheDouble( colsol_ ); 
-  freeCacheDouble( collower_ ); 
-  freeCacheDouble( colupper_ ); 
 
   MSKassert(3,task_==NULL,"task_==NULL","gutsOfDestructor");
   MSKassert(3,obj_==NULL,"obj_==NULL","gutsOfDestructor");

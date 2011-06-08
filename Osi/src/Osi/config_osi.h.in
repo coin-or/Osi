@@ -1,4 +1,4 @@
-/* src/Osi/config.h.in. */
+/* src/Osi/config_osi.h.in. */
 
 #ifndef __CONFIG_OSI_H__
 #define __CONFIG_OSI_H__

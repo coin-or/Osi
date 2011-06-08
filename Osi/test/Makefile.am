@@ -31,9 +31,8 @@ AM_CPPFLAGS = $(NOLONGLONGCXXFLAGS) \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiCommonTest` \
 	$(COINUTILS_CFLAGS)
 
-# This line is necessary to allow VPATH compilation with MS compilers
-# on Cygwin
-DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/inc
+# This line is necessary to allow VPATH compilation
+DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/src/Osi
 
 # Depending of what solvers are available, we add the corresponding files,
 # libraries and include dirs

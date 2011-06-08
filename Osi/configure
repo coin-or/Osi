@@ -2851,7 +2851,7 @@ if test x"$CFLAGS" = x; then
       *)
         coin_opt_cflags="-O3"
         coin_add_cflags="-pipe"
-        coin_dbg_cflags="-g"
+        coin_dbg_cflags="-g -O0"
         coin_warn_cflags="-Wimplicit -Wparentheses -Wsequence-point -Wreturn-type -Wcast-qual -Wall -Wno-unknown-pragmas -Wno-long-long"
         case $build in
           *-darwin*)
@@ -3783,7 +3783,7 @@ if test x"$CXXFLAGS" = x; then
 # ToDo decide about unroll-loops
         coin_opt_cxxflags="-O3"
         coin_add_cxxflags="-pipe"
-        coin_dbg_cxxflags="-g"
+        coin_dbg_cxxflags="-g -O0"
         coin_warn_cxxflags="-Wparentheses -Wreturn-type -Wcast-qual -Wall -Wpointer-arith -Wwrite-strings -Wconversion -Wno-unknown-pragmas -Wno-long-long"
         case $build in
           *-darwin*)
@@ -20974,7 +20974,7 @@ COINUTILS_CFLAGS_INSTALLED=
 COINUTILS_DATA=
 COINUTILS_DATA_INSTALLED=
 
-# initial list of dependencies is "coinutils", but we need to filter out version number specifications (= x, <= x, >= x)
+# initial list of dependencies is "coinutils", but we need to filter out version number specifications (= x, <= x, >= x, != x)
 projtoprocess="coinutils"
 
 # we first expand the list of projects to process by adding all dependencies just behind the project which depends on it
@@ -21471,7 +21471,7 @@ GLPK_CFLAGS_INSTALLED=
 GLPK_DATA=
 GLPK_DATA_INSTALLED=
 
-# initial list of dependencies is "coinglpk >= 4.39", but we need to filter out version number specifications (= x, <= x, >= x)
+# initial list of dependencies is "coinglpk >= 4.39", but we need to filter out version number specifications (= x, <= x, >= x, != x)
 projtoprocess="coinglpk "
 
 # we first expand the list of projects to process by adding all dependencies just behind the project which depends on it
@@ -21963,7 +21963,7 @@ SOPLEX_CFLAGS_INSTALLED=
 SOPLEX_DATA=
 SOPLEX_DATA_INSTALLED=
 
-# initial list of dependencies is "coinsoplex", but we need to filter out version number specifications (= x, <= x, >= x)
+# initial list of dependencies is "coinsoplex", but we need to filter out version number specifications (= x, <= x, >= x, != x)
 projtoprocess="coinsoplex"
 
 # we first expand the list of projects to process by adding all dependencies just behind the project which depends on it
@@ -22440,7 +22440,7 @@ SAMPLE_CFLAGS_INSTALLED=
 SAMPLE_DATA=
 SAMPLE_DATA_INSTALLED=
 
-# initial list of dependencies is "coindatasample", but we need to filter out version number specifications (= x, <= x, >= x)
+# initial list of dependencies is "coindatasample", but we need to filter out version number specifications (= x, <= x, >= x, != x)
 projtoprocess="coindatasample"
 
 # we first expand the list of projects to process by adding all dependencies just behind the project which depends on it
@@ -22902,7 +22902,7 @@ NETLIB_CFLAGS_INSTALLED=
 NETLIB_DATA=
 NETLIB_DATA_INSTALLED=
 
-# initial list of dependencies is "coindatanetlib", but we need to filter out version number specifications (= x, <= x, >= x)
+# initial list of dependencies is "coindatanetlib", but we need to filter out version number specifications (= x, <= x, >= x, != x)
 projtoprocess="coindatanetlib"
 
 # we first expand the list of projects to process by adding all dependencies just behind the project which depends on it
@@ -25202,7 +25202,7 @@ fi
 
 
 # Here put the location and name of the configuration header file
-          ac_config_headers="$ac_config_headers inc/config_osi.h"
+                    ac_config_headers="$ac_config_headers src/Osi/config.h src/Osi/config_osi.h"
 
 
 # Finally, we let configure write all the output...
@@ -25993,7 +25993,8 @@ do
   "osi-soplex-uninstalled.pc" ) CONFIG_FILES="$CONFIG_FILES osi-soplex-uninstalled.pc:src/OsiSpx/osi-soplex-uninstalled.pc.in" ;;
   "doxydoc/doxygen.conf" ) CONFIG_FILES="$CONFIG_FILES doxydoc/doxygen.conf" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
-  "inc/config_osi.h" ) CONFIG_HEADERS="$CONFIG_HEADERS inc/config_osi.h" ;;
+  "src/Osi/config.h" ) CONFIG_HEADERS="$CONFIG_HEADERS src/Osi/config.h" ;;
+  "src/Osi/config_osi.h" ) CONFIG_HEADERS="$CONFIG_HEADERS src/Osi/config_osi.h" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
    { (exit 1); exit 1; }; };;

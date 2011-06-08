@@ -98,7 +98,8 @@ am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
-CONFIG_HEADER = $(top_builddir)/inc/config_osi.h
+CONFIG_HEADER = $(top_builddir)/src/Osi/config.h \
+	$(top_builddir)/src/Osi/config_osi.h
 CONFIG_CLEAN_FILES =
 PROGRAMS = $(noinst_PROGRAMS)
 am__unitTest_SOURCES_DIST = unitTest.cpp OsiTestSolver.cpp \
@@ -409,9 +410,8 @@ AM_CPPFLAGS = $(NOLONGLONGCXXFLAGS) -I`$(CYGPATH_W) \
 	$(am__append_2) $(am__append_7) $(am__append_12) \
 	$(am__append_17) $(am__append_22) $(am__append_27)
 
-# This line is necessary to allow VPATH compilation with MS compilers
-# on Cygwin
-DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/inc
+# This line is necessary to allow VPATH compilation
+DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/src/Osi
 unittestflags = $(am__append_31) $(am__append_32)
 
 ########################################################################

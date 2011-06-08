@@ -1,4 +1,4 @@
-/* inc/config_osi.h.in.  Generated from configure.ac by autoheader.  */
+/* src/Osi/config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* Define to 1 if the CoinUtils package is available */
 #undef COIN_HAS_COINUTILS

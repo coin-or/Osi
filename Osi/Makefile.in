@@ -76,7 +76,6 @@ DIST_COMMON = README $(am__configure_deps) \
 	$(srcdir)/osi-unittests.pc.in $(srcdir)/osi.pc.in \
 	$(top_srcdir)/configure $(top_srcdir)/doxydoc/doxygen.conf.in \
 	$(top_srcdir)/examples/Makefile.in \
-	$(top_srcdir)/inc/config_osi.h.in \
 	$(top_srcdir)/src/OsiCpx/osi-cplex-uninstalled.pc.in \
 	$(top_srcdir)/src/OsiCpx/osi-cplex.pc.in \
 	$(top_srcdir)/src/OsiGlpk/osi-glpk-uninstalled.pc.in \
@@ -101,7 +100,8 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno configure.status.lineno
 mkinstalldirs = $(install_sh) -d
-CONFIG_HEADER = $(top_builddir)/inc/config_osi.h
+CONFIG_HEADER = $(top_builddir)/src/Osi/config.h \
+	$(top_builddir)/src/Osi/config_osi.h
 CONFIG_CLEAN_FILES = examples/Makefile osi.pc osi-uninstalled.pc \
 	osi-unittests.pc osi-unittests-uninstalled.pc osi-cplex.pc \
 	osi-cplex-uninstalled.pc osi-glpk.pc osi-glpk-uninstalled.pc \
@@ -449,23 +449,6 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(srcdir) && $(AUTOCONF)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
-
-inc/config_osi.h: inc/stamp-h1
-	@if test ! -f $@; then \
-	  rm -f inc/stamp-h1; \
-	  $(MAKE) inc/stamp-h1; \
-	else :; fi
-
-inc/stamp-h1: $(top_srcdir)/inc/config_osi.h.in $(top_builddir)/config.status
-	@rm -f inc/stamp-h1
-	cd $(top_builddir) && $(SHELL) ./config.status inc/config_osi.h
-$(top_srcdir)/inc/config_osi.h.in: @MAINTAINER_MODE_TRUE@ $(am__configure_deps) 
-	cd $(top_srcdir) && $(AUTOHEADER)
-	rm -f inc/stamp-h1
-	touch $@
-
-distclean-hdr:
-	-rm -f inc/config_osi.h inc/stamp-h1
 examples/Makefile: $(top_builddir)/config.status $(top_srcdir)/examples/Makefile.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 osi.pc: $(top_builddir)/config.status $(srcdir)/osi.pc.in
@@ -665,7 +648,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkdir_p) $(distdir)/. $(distdir)/BuildTools $(distdir)/doxydoc $(distdir)/examples $(distdir)/inc $(distdir)/src/OsiCpx $(distdir)/src/OsiGlpk $(distdir)/src/OsiGrb $(distdir)/src/OsiMsk $(distdir)/src/OsiSpx $(distdir)/src/OsiXpr
+	$(mkdir_p) $(distdir)/. $(distdir)/BuildTools $(distdir)/doxydoc $(distdir)/examples $(distdir)/src/OsiCpx $(distdir)/src/OsiGlpk $(distdir)/src/OsiGrb $(distdir)/src/OsiMsk $(distdir)/src/OsiSpx $(distdir)/src/OsiXpr
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -845,8 +828,8 @@ clean-am: clean-generic clean-libtool clean-local mostlyclean-am
 distclean: distclean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 	-rm -f Makefile
-distclean-am: clean-am distclean-generic distclean-hdr \
-	distclean-libtool distclean-local distclean-tags
+distclean-am: clean-am distclean-generic distclean-libtool \
+	distclean-local distclean-tags
 
 dvi: dvi-recursive
 
@@ -899,11 +882,11 @@ uninstall-info: uninstall-info-recursive
 	check-am clean clean-generic clean-libtool clean-local \
 	clean-recursive ctags ctags-recursive dist dist-all dist-bzip2 \
 	dist-gzip dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-generic distclean-hdr distclean-libtool \
-	distclean-local distclean-recursive distclean-tags \
-	distcleancheck distdir distuninstallcheck dvi dvi-am html \
-	html-am info info-am install install-am install-data \
-	install-data-am install-data-hook install-exec install-exec-am \
+	distclean-generic distclean-libtool distclean-local \
+	distclean-recursive distclean-tags distcleancheck distdir \
+	distuninstallcheck dvi dvi-am html html-am info info-am \
+	install install-am install-data install-data-am \
+	install-data-hook install-exec install-exec-am \
 	install-exec-local install-info install-info-am install-man \
 	install-pkgconfiglibDATA install-strip installcheck \
 	installcheck-am installdirs installdirs-am maintainer-clean \

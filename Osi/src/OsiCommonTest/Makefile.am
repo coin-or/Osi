@@ -18,7 +18,8 @@ lib_LTLIBRARIES = libOsiCommonTests.la
 
 # List all source files for this library, including headers
 
-libOsiCommonTests_la_SOURCES = OsiCommonTests.hpp \
+libOsiCommonTests_la_SOURCES = \
+    OsiCommonTests.hpp \
 	OsiColCutTest.cpp \
 	OsiCutsTest.cpp \
 	OsiRowCutDebuggerTest.cpp \
@@ -37,10 +38,8 @@ libOsiCommonTests_la_LDFLAGS = $(LT_LDFLAGS)
 AM_CPPFLAGS = $(COINUTILS_CFLAGS) \
 	-I`$(CYGPATH_W) $(srcdir)/../Osi`
 
-# This line is necessary to allow VPATH compilation with MS compilers
-# on Cygwin
-
-DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/inc
+# This line is necessary to allow VPATH compilation
+DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/src/Osi
 
 ########################################################################
 #                Headers that need to be installed                     #
@@ -50,4 +49,3 @@ DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/inc
 
 includecoindir = $(includedir)/coin
 includecoin_HEADERS = OsiUnitTests.hpp
-

@@ -313,7 +313,7 @@ bool compareProblems (OsiSolverInterface *osi1, OsiSolverInterface *osi2) {
   return (true) ;
 }
 
-bool processParameters (int argc, const char **argv, std::map<std::string,std::string> &parms)
+bool processParameters (int argc, const char **argv, std::map<std::string,std::string>& parms, const std::map<std::string,int>& ignorekeywords)
 {
   /*
     Initialise the parameter keywords.
@@ -322,6 +322,7 @@ bool processParameters (int argc, const char **argv, std::map<std::string,std::s
   definedKeyWords.insert("-cerr2cout");
   definedKeyWords.insert("-mpsDir");
   definedKeyWords.insert("-netlibDir");
+  definedKeyWords.insert("-miplib3Dir");
   definedKeyWords.insert("-testOsiSolverInterface");
   definedKeyWords.insert("-nobuf");
   definedKeyWords.insert("-cutsOnly");
@@ -345,6 +346,7 @@ bool processParameters (int argc, const char **argv, std::map<std::string,std::s
 
   parms["-mpsDir"] = pathTmp + "Sample"  ;
   parms["-netlibDir"] = pathTmp + "Netlib" ;
+  parms["-miplib3Dir"] = pathTmp + "miplib3" ;
 
   /*
     Read the command line parameters and fill a map of parameter keys and
@@ -364,17 +366,29 @@ bool processParameters (int argc, const char **argv, std::map<std::string,std::s
       value = parm.substr(eqPos+1) ; }
 
     /*
-      Is the specifed key valid?
+     * Should the specified key be ignored?
+     */
+    if (ignorekeywords.find(key) != ignorekeywords.end())
+    {
+      assert(ignorekeywords.find(key)->second >= 0);
+      i += ignorekeywords.find(key)->second;
+      continue;
+    }
+
+    /*
+      Is the specified key valid?
      */
     if (definedKeyWords.find(key) == definedKeyWords.end())
     { std::cerr << "Undefined parameter \"" << key << "\"." << std::endl ;
-      std::cerr << "Usage: unitTest [-nobuf] [-mpsDir=V1] [-netlibDir=V2] [-testOsiSolverInterface] [-cutsOnly] [-verbosity=num]" << std::endl ;
+      std::cerr << "Usage: unitTest [-nobuf] [-mpsDir=V1] [-netlibDir=V2] [-miplibDir=V3] [-testOsiSolverInterface] [-cutsOnly] [-verbosity=num]" << std::endl ;
       std::cerr << "  where:" << std::endl ;
       std::cerr << "  -cerr2cout: redirect cerr to cout; sometimes useful to synchronise cout & cerr." << std::endl;
       std::cerr << "  -mpsDir: directory containing mps test files." << std::endl
                 << "       Default value V1=\"../../Data/Sample\"" << std::endl;
       std::cerr << "  -netlibDir: directory containing netlib files." << std::endl
                 << "       Default value V2=\"../../Data/Netlib\"" << std::endl;
+      std::cerr << "  -miplib3Dir: directory containing miplib3 files." << std::endl
+                << "       Default value V3=\"../../Data/miplib3\"" << std::endl;
       std::cerr << "  -testOsiSolverInterface: run each OSI on the netlib problem set." << std::endl
                 << "       Default is to not run the netlib problem set." << std::endl;
       std::cerr << "  -cutsOnly: If specified, only OsiCut tests are run." << std::endl;
@@ -395,8 +409,12 @@ bool processParameters (int argc, const char **argv, std::map<std::string,std::s
     Tack the directory separator onto the data directories so we don't have to
     worry about it later.
    */
-  parms["-mpsDir"] += dirsep ;
-  parms["-netlibDir"] += dirsep ;
+  if( parms["-mpsDir"].length() > 0 )
+    parms["-mpsDir"] += dirsep ;
+  if( parms["-netlibDir"].length() > 0 )
+    parms["-netlibDir"] += dirsep ;
+  if( parms["-miplib3"].length() > 0 )
+    parms["-miplib3Dir"] += dirsep ;
 
   /*
     Did the user request unbuffered i/o? It seems we need to go after this

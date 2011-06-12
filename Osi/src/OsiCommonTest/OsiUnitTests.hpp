@@ -69,10 +69,11 @@ bool compareProblems(OsiSolverInterface *osi1, OsiSolverInterface *osi2) ;
 bool isEquivalent(const CoinPackedVectorBase &pv, int n, const double *fv) ;
 
 /** Utility routine to process Osi unittest command line parameters.
- * An unrecognised parameter will trigger the help message and a return value of false.
+ * An unrecognised parameter which keyword is not in the ignorekeywords set will trigger the help message and a return value of false.
+ * The ignorekeywords mapping specifies for each keyword to ignore the number of following parameters that should be ignored.
  * This should be replaced with the one of the standard CoinUtils parameter mechanisms.
  */
-bool processParameters (int argc, const char **argv, std::map<std::string,std::string> &parms);
+bool processParameters (int argc, const char **argv, std::map<std::string,std::string>& parms, const std::map<std::string,int>& ignorekeywords=std::map<std::string,int>());
 
 class TestOutcome {
 public:

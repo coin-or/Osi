@@ -315,23 +315,23 @@ bool compareProblems (OsiSolverInterface *osi1, OsiSolverInterface *osi2) {
 
 bool processParameters (int argc, const char **argv, std::map<std::string,std::string> &parms)
 {
-  assert(argc >= 1);
-  assert(argv != NULL);
-/*
-  Initialise the parameter keywords.
-*/
+  /*
+    Initialise the parameter keywords.
+  */
   std::set<std::string> definedKeyWords;
   definedKeyWords.insert("-cerr2cout");
   definedKeyWords.insert("-mpsDir");
   definedKeyWords.insert("-netlibDir");
   definedKeyWords.insert("-testOsiSolverInterface");
   definedKeyWords.insert("-nobuf");
-/*
-  Set default values for data directories.
-*/
+  definedKeyWords.insert("-cutsOnly");
+  definedKeyWords.insert("-verbosity");
+
+  /*
+    Set default values for data directories.
+   */
   const char dirsep =  CoinFindDirSeparator() ;
   std::string pathTmp ;
-
   pathTmp = ".." ;
   pathTmp += dirsep ;
   pathTmp += ".." ;
@@ -339,18 +339,18 @@ bool processParameters (int argc, const char **argv, std::map<std::string,std::s
   pathTmp += "Data" ;
   pathTmp += dirsep ;
 # ifdef COIN_MSVS
-  // Visual Studio build is deeper
+  // Visual Studio builds are deeper
   pathTmp = "..\\..\\" + pathTmp ;
 # endif
 
   parms["-mpsDir"] = pathTmp + "Sample"  ;
   parms["-netlibDir"] = pathTmp + "Netlib" ;
 
-/*
-  Read the command line parameters and fill a map of parameter keys and
-  associated data. The parser allows for parameters which are only a keyword,
-  or parameters of the form keyword=value (no spaces).
-*/
+  /*
+    Read the command line parameters and fill a map of parameter keys and
+    associated data. The parser allows for parameters which are only a keyword,
+    or parameters of the form keyword=value (no spaces).
+   */
   for (int i = 1 ; i < argc ; i++)
   {
     std::string parm(argv[i]) ;
@@ -362,57 +362,48 @@ bool processParameters (int argc, const char **argv, std::map<std::string,std::s
     else
     { key = parm.substr(0,eqPos) ;
       value = parm.substr(eqPos+1) ; }
+
     /*
       Is the specifed key valid?
-    */
+     */
     if (definedKeyWords.find(key) == definedKeyWords.end())
     { std::cerr << "Undefined parameter \"" << key << "\"." << std::endl ;
-      std::cerr
-        << "Usage: " << argv[0]
-        << " [-nobuf] [-mpsDir=V1] [-netlibDir=V2] "
-        << "[-testOsiSolverInterface] " << std::endl ;
+      std::cerr << "Usage: unitTest [-nobuf] [-mpsDir=V1] [-netlibDir=V2] [-testOsiSolverInterface] [-cutsOnly] [-verbosity=num]" << std::endl ;
       std::cerr << "  where:" << std::endl ;
-      std::cerr
-        << "    "
-        << "-cerr2cout: redirect cerr to cout; sometimes useful." << std::endl
-        << "\t" << "to synchronise cout & cerr." << std::endl ;
-      std::cerr
-        << "    "
-        << "-mpsDir: directory containing mps test files." << std::endl
-        << "\t" << "Default value V1=\"../../Data/Sample\"" << std::endl ;
-      std::cerr
-        << "    "
-        << "-netlibDir: directory containing netlib files." << std::endl
-        << "\t" << "Default value V2=\"../../Data/Netlib\"" << std::endl ;
-      std::cerr
-        << "    "
-        << "-testOsiSolverInterface: "
-        << "run each OSI on the netlib problem set." << std::endl
-        << "\t"
-        << "Default is to not run the netlib problem set." << std::endl ;
-      std::cerr
-        << "    "
-        << "-nobuf: use unbuffered output." << std::endl
-        << "\t" << "Default is buffered output." << std::endl ;
-      return (false) ;
+      std::cerr << "  -cerr2cout: redirect cerr to cout; sometimes useful to synchronise cout & cerr." << std::endl;
+      std::cerr << "  -mpsDir: directory containing mps test files." << std::endl
+                << "       Default value V1=\"../../Data/Sample\"" << std::endl;
+      std::cerr << "  -netlibDir: directory containing netlib files." << std::endl
+                << "       Default value V2=\"../../Data/Netlib\"" << std::endl;
+      std::cerr << "  -testOsiSolverInterface: run each OSI on the netlib problem set." << std::endl
+                << "       Default is to not run the netlib problem set." << std::endl;
+      std::cerr << "  -cutsOnly: If specified, only OsiCut tests are run." << std::endl;
+      std::cerr << "  -nobuf: use unbuffered output." << std::endl
+                << "       Default is buffered output." << std::endl;
+      std::cerr << "  -verbosity: verbosity level of tests output (0-2)." << std::endl
+                << "       Default is 0 (minimal output)." << std::endl;
+      return false;
     }
+
     /*
       Valid keyword; stash the value for later reference.
      */
-    parms[key]=value ;
+    parms[key] = value;
   }
+
   /*
-  Tack the directory separator onto the data directories so we don't have to
-  worry about it later.
+    Tack the directory separator onto the data directories so we don't have to
+    worry about it later.
    */
   parms["-mpsDir"] += dirsep ;
   parms["-netlibDir"] += dirsep ;
+
   /*
-  Did the user request unbuffered i/o? It seems we need to go after this
-  through stdio --- using pubsetbuf(0,0) on the C++ streams has no
-  discernible affect. Nor, for that matter, did setting the unitbuf flag on
-  the streams. Why? At a guess, sync_with_stdio connects the streams to the
-  stdio buffers, and the C++ side isn't programmed to change them?
+    Did the user request unbuffered i/o? It seems we need to go after this
+    through stdio --- using pubsetbuf(0,0) on the C++ streams has no
+    discernible affect. Nor, for that matter, did setting the unitbuf flag on
+    the streams. Why? At a guess, sync_with_stdio connects the streams to the
+    stdio buffers, and the C++ side isn't programmed to change them?
    */
   if (parms.find("-nobuf") != parms.end())
   { // std::streambuf *coutBuf, *cerrBuf ;
@@ -420,14 +411,34 @@ bool processParameters (int argc, const char **argv, std::map<std::string,std::s
     // coutBuf->pubsetbuf(0,0) ;
     // cerrBuf = std::cerr.rdbuf() ;
     // cerrBuf->pubsetbuf(0,0) ;
-    setbuf(stderr,0) ;
-    setbuf(stdout,0) ; }
+    setbuf(stderr,0);
+    setbuf(stdout,0);
+  }
+
   /*
-  Did the user request a redirect for cerr? This must occur before any i/o is
-  performed.
+    Did the user request a redirect for cerr? This must occur before any i/o is
+    performed.
    */
   if (parms.find("-cerr2cout") != parms.end())
-  { std::cerr.rdbuf(std::cout.rdbuf()) ; }
+    std::cerr.rdbuf(std::cout.rdbuf());
+
+  /*
+   * Did the user set a verbosity level?
+   */
+  if (parms.find("-verbosity") != parms.end())
+  {
+    char* endptr;
+    std::string verbstring = parms["-verbosity"];
+    unsigned long verblevel = strtoul(verbstring.c_str(), &endptr, 10);
+
+    if( *endptr != '\0' || verblevel < 0)
+    {
+      std::cerr << "verbosity level must be a nonnegative number" << std::endl;
+      return false;
+    }
+
+    OsiUnitTest::verbosity = static_cast<unsigned int>(verblevel);
+  }
 
   return true;
 }

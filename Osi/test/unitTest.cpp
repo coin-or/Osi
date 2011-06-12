@@ -102,23 +102,7 @@ using namespace OsiUnitTest;
 
 
 //----------------------------------------------------------------
-// unitTest [-nobuf] [-mpsDir=V1] [-netlibDir=V2] [-testOsiSolverInterface]
-//	    [-cutsOnly]
-// 
-// where:
-//   -nobuf: remove buffering on cout (stdout); useful to keep cout and cerr
-//	 messages synchronised when redirecting output to a file or pipe.
-//   -mpsDir: directory containing mps test files
-//       Default value V1="../../Data/Sample"    
-//   -netlibDir: directory containing netlib files
-//       Default value V2="../../Data/Netlib"
-//   -testOsiSolverInterface
-//       If specified, then OsiSolveInterface::unitTest
-//       is skipped over and not run.
-//   -cutsOnly
-//	 If specified, only OsiCut tests are run.
-//
-// All parameters are optional.
+// to see parameter list, call unitTest -usage
 //----------------------------------------------------------------
 
 int main (int argc, const char *argv[])
@@ -151,7 +135,6 @@ int main (int argc, const char *argv[])
   Process command line parameters.
 */
   std::map<std::string,std::string> parms ;
-
   if (processParameters(argc,argv,parms) == false)
   { return (1) ; }
 

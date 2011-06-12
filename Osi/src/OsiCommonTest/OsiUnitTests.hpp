@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <list>
+#include <map>
 
 class OsiSolverInterface;
 class CoinPackedVectorBase;
@@ -66,6 +67,12 @@ bool equivalentVectors(const OsiSolverInterface * si1,
 bool compareProblems(OsiSolverInterface *osi1, OsiSolverInterface *osi2) ;
 
 bool isEquivalent(const CoinPackedVectorBase &pv, int n, const double *fv) ;
+
+/** Utility routine to process Osi unittest command line parameters.
+ * An unrecognised parameter will trigger the help message and a return value of false.
+ * This should be replaced with the one of the standard CoinUtils parameter mechanisms.
+ */
+bool processParameters (int argc, const char **argv, std::map<std::string,std::string> &parms);
 
 class TestOutcome {
 public:

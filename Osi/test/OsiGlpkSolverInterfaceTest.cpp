@@ -122,12 +122,13 @@ OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & n
         
         lhs = imC2;
       }
+
       // Test that lhs has correct values even though rhs has gone out of scope
-      
       OSIUNITTEST_ASSERT_ERROR(lhs.getModelPtr() != m.getModelPtr(), ++errCnt, "glpk", "assignment operator");
       OSIUNITTEST_ASSERT_ERROR(lhs.getNumCols()  == m.getNumCols(),  ++errCnt, "glpk", "copy constructor");
       OSIUNITTEST_ASSERT_ERROR(lhs.getNumRows()  == m.getNumRows(),  ++errCnt, "glpk", "copy constructor");
     }
+
     // Test clone
     {
       OsiGlpkSolverInterface glpkSi(m);
@@ -277,6 +278,7 @@ OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & n
       OSIUNITTEST_ASSERT_ERROR(ei[12] == 4, ++errCnt, "glpk", "getMatrixByRow: indices");
       OSIUNITTEST_ASSERT_ERROR(ei[11] == 7, ++errCnt, "glpk", "getMatrixByRow: indices");
     }
+
     // Test adding several cuts
     {
       OsiGlpkSolverInterface fim;
@@ -285,7 +287,6 @@ OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & n
       // exmip1.mps has 2 integer variables with index 2 & 3
       fim.initialSolve();
       OsiRowCut cuts[3];
-      
       
       // Generate one ineffective cut plus two trivial cuts
       int c;
@@ -336,6 +337,7 @@ OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & n
       delete[]el;
       delete[]inx;
     }
+
     // Test matrixByCol method
     {
       const OsiGlpkSolverInterface si(m);

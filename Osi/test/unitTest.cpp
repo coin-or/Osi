@@ -13,13 +13,14 @@
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
 #include "OsiCuts.hpp"
-#include "CoinHelperFunctions.hpp"
 #include "CoinSort.hpp"
 #include "CoinError.hpp"
 #include "OsiSolverInterface.hpp"
 #include "OsiRowCutDebugger.hpp"
 #include "OsiUnitTests.hpp"
 #include "OsiTestSolverInterface.hpp"
+
+using namespace OsiUnitTest;
 
 /*
   Currently the Osi unit test is configured to exercise only the external
@@ -99,157 +100,6 @@
 #include "OsiTestSolverInterface.hpp"
 #endif
 
-namespace {
-
-/*
-  If anyone is feeling ambitious, it'd be a really good idea to handle i/o for
-  the unittest by way of a standard CoinMessageHandler. Might require a bit of
-  tweaking in CoinMessageHandler.
-*/
- 
-// Display message on stdout and stderr. Flush cout buffer before printing the
-// message, so that output comes out in order in spite of buffered cout.
-
-void testingMessage( const char * const msg )
-{
-  std::cout.flush() ;
-  std::cerr <<msg;
-  //cout <<endl <<"*****************************************"
-  //     <<endl <<msg <<endl;
-}
-
-
-/*
-  Utility routine to process command line parameters. An unrecognised parameter
-  will trigger the help message and a return value of false.
-  
-  This should be replaced with the one of the standard CoinUtils parameter
-  mechanisms.
-*/
-bool processParameters (int argc, const char **argv,
-			std::map<std::string,std::string> &parms)
-
-{ 
-/*
-  Initialise the parameter keywords.
-*/
-  std::set<std::string> definedKeyWords;
-  definedKeyWords.insert("-cerr2cout");
-  definedKeyWords.insert("-mpsDir");
-  definedKeyWords.insert("-netlibDir");
-  definedKeyWords.insert("-testOsiSolverInterface");
-  definedKeyWords.insert("-nobuf");
-  definedKeyWords.insert("-cutsOnly");
-  definedKeyWords.insert("-verbosity");
-/*
-  Set default values for data directories.
-*/
-  const char dirsep =  CoinFindDirSeparator() ;
-  std::string pathTmp ;
-  pathTmp = ".." ;
-  pathTmp += dirsep ;
-  pathTmp += ".." ;
-  pathTmp += dirsep ;
-  pathTmp += "Data" ;
-  pathTmp += dirsep ;
-# ifdef COIN_MSVS
-  // Visual Studio builds are deeper
-    pathTmp = "..\\..\\" + pathTmp ;
-# endif
-
-  parms["-mpsDir"] = pathTmp + "Sample"  ;
-  parms["-netlibDir"] = pathTmp + "Netlib" ;
-
-/*
-  Read the command line parameters and fill a map of parameter keys and
-  associated data. The parser allows for parameters which are only a keyword,
-  or parameters of the form keyword=value (no spaces).
-*/
-  for (int i = 1 ; i < argc ; i++)
-  { std::string parm(argv[i]) ;
-    std::string key,value ;
-    std::string::size_type eqPos = parm.find('=');
-
-    if (eqPos == std::string::npos)
-    { key = parm ; }
-    else
-    { key = parm.substr(0,eqPos) ;
-      value = parm.substr(eqPos+1) ; }
-/*
-  Is the specifed key valid?
-*/
-    if (definedKeyWords.find(key) == definedKeyWords.end())
-    { std::cerr << "Undefined parameter \"" << key << "\"." << std::endl ;
-      std::cerr << "Usage: unitTest [-nobuf] [-mpsDir=V1] [-netlibDir=V2] [-testOsiSolverInterface] [-cutsOnly] [-verbosity=num]" << std::endl ;
-      std::cerr << "  where:" << std::endl ;
-      std::cerr << '\t' << "-cerr2cout: redirect cerr to cout; sometimes useful to synchronise cout & cerr." << std::endl;
-      std::cerr << '\t' << "-mpsDir: directory containing mps test files." << std::endl
-                << '\t' << "   Default value V1=\"../../Data/Sample\"" << std::endl;
-      std::cerr << '\t' << "-netlibDir: directory containing netlib files." << std::endl
-                << '\t' << "   Default value V2=\"../../Data/Netlib\"" << std::endl;
-      std::cerr << '\t'	<< "-testOsiSolverInterface: run each OSI on the netlib problem set." << std::endl
-                << '\t' << "   Default is to not run the netlib problem set." << std::endl;
-      std::cerr << '\t' << "-cutsOnly: If specified, only OsiCut tests are run." << std::endl;
-      std::cerr << '\t' << "-nobuf: use unbuffered output." << std::endl
-      		      << '\t' << "  Default is buffered output." << std::endl;
-      std::cerr << '\t' << "-verbosity: verbosity level of tests output (0-2)." << std::endl
-		            << '\t' << "  Default is 0 (minimal output)." << std::endl;
-      return (false) ; }
-/*
-  Valid keyword; stash the value for later reference.
-*/
-    parms[key]=value ; }
-/*
-  Tack the directory separator onto the data directories so we don't have to
-  worry about it later.
-*/
-  parms["-mpsDir"] += dirsep ;
-  parms["-netlibDir"] += dirsep ;
-/*
-  Did the user request unbuffered i/o? It seems we need to go after this
-  through stdio --- using pubsetbuf(0,0) on the C++ streams has no
-  discernible affect. Nor, for that matter, did setting the unitbuf flag on
-  the streams. Why? At a guess, sync_with_stdio connects the streams to the
-  stdio buffers, and the C++ side isn't programmed to change them?
-*/
-  if (parms.find("-nobuf") != parms.end())
-  { // std::streambuf *coutBuf, *cerrBuf ;
-    // coutBuf = std::cout.rdbuf() ;
-    // coutBuf->pubsetbuf(0,0) ;
-    // cerrBuf = std::cerr.rdbuf() ;
-    // cerrBuf->pubsetbuf(0,0) ;
-    setbuf(stderr,0) ;
-    setbuf(stdout,0) ; }
-/*
-  Did the user request a redirect for cerr? This must occur before any i/o is
-  performed.
-*/
-  if (parms.find("-cerr2cout") != parms.end())
-  { std::cerr.rdbuf(std::cout.rdbuf()) ; }
-/*
- * Did the user set a verbosity level?
- */
-  if (parms.find("-verbosity") != parms.end())
-  {
-  	char* endptr;
-  	std::string verbstring = parms["-verbosity"];
-  	unsigned long verblevel = strtoul(verbstring.c_str(), &endptr, 10);
-
-  	if( *endptr != '\0' || verblevel < 0)
-  	{
-  		std::cerr << "verbosity level must be a nonnegative number" << std::endl;
-  		return false;
-  	}
-
-  	OsiUnitTest::verbosity = verblevel;
-  }
-
-  return (true) ; }
-
-
-}	// end file-local namespace
-
-
 
 //----------------------------------------------------------------
 // unitTest [-nobuf] [-mpsDir=V1] [-netlibDir=V2] [-testOsiSolverInterface]
@@ -274,7 +124,7 @@ bool processParameters (int argc, const char **argv,
 int main (int argc, const char *argv[])
 
 { int totalErrCnt = 0;
-  OsiUnitTest::outcomes.clear();
+  outcomes.clear();
 
 /*
   Start off with various bits of initialisation that don't really belong
@@ -561,18 +411,17 @@ try {
 /*
   We're done. Report on the results.
 */
-  OsiUnitTest::outcomes.print();
+  std::cout.flush();
+  outcomes.print();
 
   int nerrors;
   int nerrors_expected;
-  OsiUnitTest::outcomes.getCountBySeverity(OsiUnitTest::TestOutcome::ERROR, nerrors, nerrors_expected);
+  outcomes.getCountBySeverity(TestOutcome::ERROR, nerrors, nerrors_expected);
 
   if (nerrors > nerrors_expected)
-  { std::cout.flush() ;
-    std::cerr
-      << "Tests completed with " << nerrors - nerrors_expected << " unexpected errors." << std::endl ;
-  } else
-  { testingMessage("All tests completed successfully\n") ; }
+    std::cerr << "Tests completed with " << nerrors - nerrors_expected << " unexpected errors." << std::endl ;
+  else
+    std::cerr << "All tests completed successfully\n";
 
   return nerrors - nerrors_expected;
 }

@@ -554,13 +554,13 @@ void OsiSpxSolverInterface::markHotStart()
   numrows = getNumRows();
   if( numcols > hotStartCStatSize_ )
     {
-      delete[] hotStartCStat_;
+      delete[] reinterpret_cast<soplex::SPxSolver::VarStatus*>(hotStartCStat_);
       hotStartCStatSize_ = static_cast<int>( 1.2 * static_cast<double>( numcols ) ); // get some extra space for future hot starts
       hotStartCStat_ = reinterpret_cast<void*>(new soplex::SPxSolver::VarStatus[hotStartCStatSize_]);
     }
   if( numrows > hotStartRStatSize_ )
     {
-      delete[] hotStartRStat_;
+      delete[] reinterpret_cast<soplex::SPxSolver::VarStatus*>(hotStartRStat_);
       hotStartRStatSize_ = static_cast<int>( 1.2 * static_cast<double>( numrows ) ); // get some extra space for future hot starts
       hotStartRStat_ = reinterpret_cast<void*>(new soplex::SPxSolver::VarStatus[hotStartRStatSize_]);
     }

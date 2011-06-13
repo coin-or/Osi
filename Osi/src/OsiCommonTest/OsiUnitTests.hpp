@@ -14,27 +14,49 @@
 class OsiSolverInterface;
 class CoinPackedVectorBase;
 
-/** \brief Run solvers on NetLib problems.
+/** A function that tests that a lot of problems given in MPS files (mostly the NETLIB problems) solve properly with all the specified solvers.
+ *
+ * The routine creates a vector of NetLib problems (problem name, objective,
+ * various other characteristics), and a vector of solvers to be tested.
+ *
+ * Each solver is run on each problem. The run is deemed successful if the
+ * solver reports the correct problem size after loading and returns the
+ * correct objective value after optimization.
 
-  The routine creates a vector of NetLib problems (problem name, objective,
-  various other characteristics), and a vector of solvers to be tested.
-
-  Each solver is run on each problem. The run is deemed successful if the
-  solver reports the correct problem size after loading and returns the
-  correct objective value after optimization.
-
-  If multiple solvers are available, the results are compared pairwise against
-  the results reported by adjacent solvers in the solver vector. Due to
-  limitations of the volume solver, it must be the last solver in vecEmptySiP.
-*/
-int OsiSolverInterfaceMpsUnitTest
+ * If multiple solvers are available, the results are compared pairwise against
+ * the results reported by adjacent solvers in the solver vector. Due to
+ * limitations of the volume solver, it must be the last solver in vecEmptySiP.
+ */
+void OsiSolverInterfaceMpsUnitTest
   (const std::vector<OsiSolverInterface*> & vecEmptySiP,
    const std::string& mpsDir);
 
-int OsiSolverInterfaceCommonUnitTest
+/** A function that tests the methods in the OsiSolverInterface class.
+ * Some time ago, if this method is compiled with optimization,
+ * the compilation took 10-15 minutes and the machine pages (has 256M core memory!)...
+ */
+void OsiSolverInterfaceCommonUnitTest
   (const OsiSolverInterface* emptySi,
    const std::string& mpsDir,
    const std::string& netlibDir);
+
+/** A function that tests the methods in the OsiColCut class. */
+void OsiColCutUnitTest
+  (const OsiSolverInterface * baseSiP,
+   const std::string & mpsDir);
+
+/** A function that tests the methods in the OsiRowCut class. */
+void OsiRowCutUnitTest
+  (const OsiSolverInterface * baseSiP,
+   const std::string & mpsDir);
+
+/** A function that tests the methods in the OsiRowCutDebugger class. */
+void OsiRowCutDebuggerUnitTest
+  (const OsiSolverInterface * siP,
+   const std::string & mpsDir);
+
+/** A function that tests the methods in the OsiCuts class. */
+void OsiCutsUnitTest();
 
 namespace OsiUnitTest {
 

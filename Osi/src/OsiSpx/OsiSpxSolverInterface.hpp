@@ -30,7 +30,7 @@ namespace soplex {
     Instantiation of OsiSpxSolverInterface for SoPlex
 */
 class OsiSpxSolverInterface : virtual public OsiSolverInterface {
-  friend int OsiSpxSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
+  friend void OsiSpxSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
   
 public:
   
@@ -728,11 +728,7 @@ private:
 };
 
 //#############################################################################
-/** A function that tests the methods in the OsiOslSolverInterface class. The
-    only reason for it not to be a member method is that this way it doesn't
-    have to be compiled into the library. And that's a gain, because the
-    library should be compiled with optimization on, but this method should be
-    compiled with debugging. */
-int OsiSpxSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
+/** A function that tests the methods in the OsiSpxSolverInterface class. */
+void OsiSpxSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 #endif

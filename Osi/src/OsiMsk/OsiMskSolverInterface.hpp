@@ -756,8 +756,6 @@ private:
   /// free all allocated memory
   void freeAllMemory();
 
-  /// Just for testing purposes
-  void printBounds(); 
  /**@name Private member data */
   //@{
   /// MOSEK model represented by this class instance
@@ -831,7 +829,6 @@ private:
 
 //#############################################################################
 /** A function that tests the methods in the OsiMskSolverInterface class */
-
 void OsiMskSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 #endif

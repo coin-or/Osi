@@ -26,7 +26,7 @@ static const double OsiTestInfinity = 1.0e31;
 
 class OsiTestSolverInterface :
    virtual public OsiSolverInterface, public VOL_user_hooks {
-   friend int OsiTestSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
+   friend void OsiTestSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 private:
   class OsiVolMatrixOneMinusOne_ {
@@ -860,15 +860,8 @@ private:
   VOL_problem volprob_;
 };
 
-//#############################################################################
-/** A function that tests the methods in the OsiTestSolverInterface class. The
-    only reason for it not to be a member method is that this way it doesn't
-    have to be compiled into the library. And that's a gain, because the
-    library should be compiled with optimization on, but this method should be
-    compiled with debugging. Also, if this method is compiled with
-    optimization, the compilation takes 10-15 minutes and the machine pages
-    (has 256M core memory!)... */
-int
+/** A function that tests the methods in the OsiTestSolverInterface class.  */
+void
 OsiTestSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 #endif

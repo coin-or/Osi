@@ -5,20 +5,12 @@
 // $Id$
 
 #include "CoinPragma.hpp"
-
 #include "OsiConfig.h"
 
 #include <iostream>
-#include <cstdio>
 
-#include "OsiRowCut.hpp"
-#include "OsiColCut.hpp"
-#include "OsiCuts.hpp"
-#include "CoinSort.hpp"
-#include "CoinError.hpp"
-#include "OsiSolverInterface.hpp"
-#include "OsiRowCutDebugger.hpp"
 #include "OsiUnitTests.hpp"
+#include "OsiSolverInterface.hpp"
 #include "OsiTestSolverInterface.hpp"
 
 using namespace OsiUnitTest;
@@ -128,8 +120,6 @@ int main (int argc, const char *argv[])
 #ifdef COIN_HAS_XPR
   OsiXprSolverInterface::setLogFileName("xprCallTrace.txt");
 #endif
-
-  outcomes.clear();
 
 /*
   Process command line parameters.

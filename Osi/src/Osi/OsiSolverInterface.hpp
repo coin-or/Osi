@@ -58,11 +58,11 @@ class OsiObject;
 */
 
 class OsiSolverInterface  {
-   friend int OsiSolverInterfaceCommonUnitTest(
+   friend void OsiSolverInterfaceCommonUnitTest(
       const OsiSolverInterface* emptySi,
       const std::string & mpsDir,
       const std::string & netlibDir);
-   friend int OsiSolverInterfaceMpsUnitTest(
+   friend void OsiSolverInterfaceMpsUnitTest(
       const std::vector<OsiSolverInterface*> & vecSiP,
       const std::string & mpsDir);
 
@@ -2059,28 +2059,6 @@ private:
 
  //@}
 };
-
-//#############################################################################
-/** A function that tests the methods in the OsiSolverInterface class. The
-    only reason for it not to be a member method is that this way it doesn't
-    have to be compiled into the library. And that's a gain, because the
-    library should be compiled with optimization on, but this method should be
-    compiled with debugging. Also, if this method is compiled with
-    optimization, the compilation takes 10-15 minutes and the machine pages
-    (has 256M core memory!)... */
-int
-OsiSolverInterfaceCommonUnitTest(
-   const OsiSolverInterface* emptySi,
-   const std::string & mpsDir,
-   const std::string & netlibDir);
-
-//#############################################################################
-/** A function that tests that a lot of problems given in MPS files (mostly
-    the NETLIB problems) solve properly with all the specified solvers. */
-int
-OsiSolverInterfaceMpsUnitTest(
-   const std::vector<OsiSolverInterface*> & vecSiP,
-   const std::string & mpsDir);
 
 //#############################################################################
 /** A quick inlined function to convert from the lb/ub style of constraint

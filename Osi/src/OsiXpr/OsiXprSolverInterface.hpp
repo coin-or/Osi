@@ -804,12 +804,7 @@ private:
 };
 
 //#############################################################################
-/** A function that tests the methods in the OsiXprSolverInterface class. The
-    only reason for it not to be a member method is that this way it doesn't
-    have to be compiled into the library. And that's a gain, because the
-    library should be compiled with optimization on, but this method should be
-    compiled with debugging. */
-void
-OsiXprSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
+/** A function that tests the methods in the OsiXprSolverInterface class. */
+void OsiXprSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 #endif

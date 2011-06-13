@@ -281,16 +281,6 @@ bool OsiRowCut::infeasible(const OsiSolverInterface &im) const
 
 #endif
 
-//#############################################################################
-/** A function that tests the methods in the OsiRowCut class. The
-    only reason for it not to be a member method is that this way it doesn't
-    have to be compiled into the library. And that's a gain, because the
-    library should be compiled with optimization on, but this method should be
-    compiled with debugging. */
-void
-OsiRowCutUnitTest(const OsiSolverInterface * baseSiP,    
-		  const std::string & mpsDir);
-
 /** Row Cut Class which refers back to row which created it.
     It may be useful to strengthen a row rather than add a cut.  To do this
     we need to know which row is strengthened.  This trivial extension

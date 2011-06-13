@@ -26,7 +26,7 @@ typedef struct { double _opaque_prob[100]; } glp_prob;
 #endif
 
 class OsiGlpkSolverInterface : virtual public OsiSolverInterface {
-  friend int OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
+  friend void OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
   
 public:
   
@@ -900,11 +900,7 @@ private:
 };
 
 //#############################################################################
-/** A function that tests the methods in the OsiGlpkSolverInterface class. The
-    only reason for it not to be a member method is that this way it doesn't
-    have to be compiled into the library. And that's a gain, because the
-    library should be compiled with optimization on, but this method should be
-    compiled with debugging. */
-int OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
+/** A function that tests the methods in the OsiGlpkSolverInterface class. */
+void OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 #endif // OsiGlpkSolverInterface_H

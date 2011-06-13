@@ -40,7 +40,7 @@
   limitations of the volume solver, it must be the last solver in vecEmptySiP.
 */
 
-int OsiSolverInterfaceMpsUnitTest
+void OsiSolverInterfaceMpsUnitTest
   (const std::vector<OsiSolverInterface*> & vecEmptySiP,
    const std::string & mpsDir)
 
@@ -292,12 +292,4 @@ int OsiSolverInterfaceMpsUnitTest
       << numProblems << " and took " << timeTaken[i] << " seconds."
       << std::endl ;
   }
-/*
-  If we're testing just one solver, return the number of failed problems.
-  If we're doing multiple solvers, always claim success.
-*/
-  if (numSolvers == 1)
-    return (numProblems-numProbSolved[0]) ;
-  else
-    return (0) ;
 }

@@ -28,44 +28,6 @@
 
 #include "mosek.h"
 
-void OsiMskSolverInterface::printBounds()
-{
-  int nc = getNumCols();
-  int nr = getNumRows();
-  const char * s = getRowSense();
-  const double * b = getRightHandSide();
-  const double * rng = getRowRange();
-  const double * cl = getColLower();
-  const double * cu = getColUpper();
-  const double * rl = getRowLower();
-  const double * ru = getRowUpper();
-  
-  std::cout << "ncols=" << nc << ", nrows=" << nr;
-  std::cout << std::endl << "sns=";
-  int i;
-  for( i = 0; i < nr; ++i )
-    std::cout << " " << s[i];
-  std::cout << std::endl << "rhs=";
-  for( i = 0; i < nr; ++i )
-    std::cout << " " << b[i];
-  std::cout << std::endl << "rng=";
-  for( i = 0; i < nr; ++i )
-    std::cout << " " << rng[i];
-  std::cout << std::endl << "cl =";
-  for( i = 0; i < nc; ++i )
-    std::cout << " " << cl[i];
-  std::cout << std::endl << "cu =";
-  for( i = 0; i < nc; ++i )
-    std::cout << " " << cu[i];
-  std::cout << std::endl << "rl =";
-  for( i = 0; i < nr; ++i )
-    std::cout << " " << rl[i];
-  std::cout << std::endl << "ru =";
-  for( i = 0; i < nr; ++i )
-    std::cout << " " << ru[i];
-  std::cout << std::endl;
-}
-
 //--------------------------------------------------------------------------
 void OsiMskSolverInterfaceUnitTest( const std::string & mpsDir, const std::string & netlibDir )
 {

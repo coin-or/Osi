@@ -6,6 +6,7 @@
 #define OSISOLVERINTERFACETEST_HPP_
 
 #include <string>
+#include <sstream>
 #include <vector>
 #include <list>
 #include <map>
@@ -161,11 +162,16 @@ public:
 				OsiUnitTest::testingMessage(successmsg.c_str()); \
 		  } \
 		} catch (CoinError& e) { \
-			std::string errmsg; \
-			errmsg = #trycode; \
-			errmsg = errmsg + " threw CoinError: " + e.message(); \
-			OSIUNITTEST_ADD_OUTCOME(component, testname, errmsg.c_str(), severity, expected); \
-			OsiUnitTest::failureMessage(component, testname, errmsg.c_str()); \
+			std::stringstream errmsg(#trycode); \
+			errmsg << " threw CoinError: " << e.message(); \
+			if (e.className().length() > 0) \
+			  errmsg << " in " << e.className(); \
+			if (e.methodName().length() > 0) \
+			  errmsg << " in " << e.methodName(); \
+			if (e.lineNumber() >= 0) \
+			  errmsg << " at " << e.fileName() << ":" << e.lineNumber(); \
+			OSIUNITTEST_ADD_OUTCOME(component, testname, errmsg.str().c_str(), severity, expected); \
+			OsiUnitTest::failureMessage(component, testname, errmsg.str().c_str()); \
 			catchcode; \
 		} catch (...) { \
 		  std::string errmsg; \

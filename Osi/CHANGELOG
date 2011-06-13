@@ -1,3 +1,6 @@
+13/06/2011 OsiCommonTest, unittest
+  - removed now redundant counting of unittest failures, so test functions now return void 
+
 03/06/2011 OsiMsk
   - fix caching flags (bitwise negation is ~, not !)
   - free all cached data when loading problem

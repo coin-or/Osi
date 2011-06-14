@@ -184,8 +184,8 @@ public:
 				OsiUnitTest::testingMessage(successmsg.c_str()); \
 		  } \
 		} catch (CoinError& e) { \
-			std::stringstream errmsg(#trycode); \
-			errmsg << " threw CoinError: " << e.message(); \
+			std::stringstream errmsg; \
+			errmsg << #trycode " threw CoinError: " << e.message(); \
 			if (e.className().length() > 0) \
 			  errmsg << " in " << e.className(); \
 			if (e.methodName().length() > 0) \

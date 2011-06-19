@@ -310,7 +310,7 @@ VOL_problem::set_default_parm()
    parm.alphainit = 0.01;
    parm.alphamin = 0.001;
    parm.alphafactor = 0.5;
-   parm.ubinit = DBL_MAX;
+   parm.ubinit = COIN_DBL_MAX;
    parm.primal_abs_precision = 0.02;
    //   parm.primal_rel_precision = 0.01;
    parm.gap_abs_precision = 0.0;
@@ -402,7 +402,7 @@ VOL_problem::solve(VOL_user_hooks& hooks, const bool use_preset_dual)
 				   primal.x, primal.v, primal.value);
    if (retval < 0)  return -1;
    // set target for the lagrangian value
-   double target = readjust_target(-DBL_MAX/2, dual.lcost);
+   double target = readjust_target(-COIN_DBL_MAX/2, dual.lcost);
    // find primal violation 
    primal.find_max_viol(dual_lb, dual_ub); // this may be left out for speed
 
@@ -475,7 +475,7 @@ VOL_problem::solve(VOL_user_hooks& hooks, const bool use_preset_dual)
       }
 
       if (iter_ % parm.heurinvl == 0) { // run primal heuristic
-	 double ub = DBL_MAX;
+	 double ub = COIN_DBL_MAX;
 	 retval = hooks.heuristics(*this, pstar.x, ub);
 	 if (retval < 0)  break;
 	 if (ub < best_ub)
@@ -551,7 +551,7 @@ VOL_problem::initialize(const bool use_preset_dual) {
    } else {
       // fill it with -infinity
       dual_lb.allocate(dsize);
-      dual_lb = - DBL_MAX;
+      dual_lb = - COIN_DBL_MAX;
    }
 
    if (dual_ub.size() > 0) {
@@ -562,7 +562,7 @@ VOL_problem::initialize(const bool use_preset_dual) {
    } else {
       // fill it with infinity
       dual_ub.allocate(dsize);
-      dual_ub = DBL_MAX;
+      dual_ub = COIN_DBL_MAX;
    }
    // setting initial values for parameters
    alpha_       = parm.alphainit;

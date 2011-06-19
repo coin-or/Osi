@@ -11,11 +11,8 @@
 
 #include "OsiConfig.h"
 
-#ifdef NDEBUG
-#undef NDEBUG
-#endif
-
 #include "CoinTime.hpp"
+#include "CoinFloatEqual.hpp"
 
 /*
   #include <cstdlib>
@@ -26,29 +23,8 @@
   #include <sstream>
   #include <cstdio>
 */
-/*
-  A utility definition which allows for easy suppression of unused variable
-  warnings from GCC. Handy in this environment, where we're constantly def'ing
-  things in and out.
-*/
-#ifndef UNUSED
-# if defined(__GNUC__)
-#   define UNUSED __attribute__((unused))
-# else
-#   define UNUSED
-# endif
-#endif
 
 #include "OsiSolverInterface.hpp"
-/*
-  #include "CoinPackedMatrix.hpp"
-  #include "CoinFloatEqual.hpp"
-  #include "CoinPackedVector.hpp"
-  #include "CoinWarmStartBasis.hpp"
-  #include "OsiRowCut.hpp"
-  #include "OsiCuts.hpp"
-  #include "OsiPresolve.hpp"
-*/
 
 /*! \brief Run solvers on NetLib problems.
 
@@ -64,7 +40,7 @@
   limitations of the volume solver, it must be the last solver in vecEmptySiP.
 */
 
-int OsiSolverInterfaceMpsUnitTest
+void OsiSolverInterfaceMpsUnitTest
   (const std::vector<OsiSolverInterface*> & vecEmptySiP,
    const std::string & mpsDir)
 
@@ -259,13 +235,11 @@ int OsiSolverInterfaceMpsUnitTest
       int s2 ;
       for (s2 = s1+1 ; s2 < numSolvers && siStage[s2] < 1 ; s2++) ;
       while (s2 < numSolvers) {
-        std::cout
-	  << "  comparing problem representation for "
-	  << siName[s1] << " and " << siName[s2] << " ..." ;
+        std::cout << "  comparing problem representation for " << siName[s1] << " and " << siName[s2] << " ..." ;
         if (OsiUnitTest::compareProblems(vecSiP[s1],vecSiP[s2]))
-	  std::cout << " ok." << std::endl  ;
-	s1 = s2 ;
-	for (s2++ ; s2 < numSolvers && siStage[s2] < 1 ; s2++) ;
+        	std::cout << " ok." << std::endl;
+        s1 = s2 ;
+        for (s2++ ; s2 < numSolvers && siStage[s2] < 1 ; s2++) ;
       }
     }
 /*
@@ -276,54 +250,33 @@ int OsiSolverInterfaceMpsUnitTest
     { if (siStage[i] < 1) continue ;
 
       double startTime = CoinCpuTime() ;
-      bool throwError = false ;
-      try
-      { vecSiP[i]->initialSolve() ; }
-      catch (CoinError &thrownErr)
-      { std::cout.flush() ;
-        std::cerr
-          << thrownErr.className() << "::" << thrownErr.methodName()
-	  << ": " << thrownErr.message() << std::endl ;
-	throwError = true ; }
-      catch (...)
-      { std::cout.flush() ;
-        std::cerr << siName[i] << " threw unknown exception." << std::endl ;
-        throwError = true ; }
-      if (throwError) continue ;
+      OSIUNITTEST_CATCH_ERROR(vecSiP[i]->initialSolve(), continue, *vecSiP[i], "netlib " + mpsName[m]);
 
       double timeOfSolution = CoinCpuTime()-startTime;
+      OSIUNITTEST_ASSERT_ERROR(vecSiP[i]->isProvenOptimal(), {}, *vecSiP[i], "netlib " + mpsName[m]);
       if (vecSiP[i]->isProvenOptimal())
       { double soln = vecSiP[i]->getObjValue();
-	CoinRelFltEq eq(objValueTol[m]) ;
-	if (eq(soln,objValue[m])) {
-	  std::cout
-	    << "  " << siName[i] << " "
-	    << soln << " = " << objValue[m] << ", "
-	    << vecSiP[i]->getIterationCount() << " iters"
-	    << "; okay" ;
-	  numProbSolved[i]++ ; }
-	else
-	{ std::cout.flush() ;
-	  std::cerr
-	    << "  " << siName[i]
-	    << soln << " != " << objValue[m] << "; error = "
-	    << fabs(objValue[m]-soln) ;
-	}
-	std::cout
-	  << " - took " << timeOfSolution << " seconds." << std::endl;
-	timeTaken[i] += timeOfSolution;
+        CoinRelFltEq eq(objValueTol[m]) ;
+        OSIUNITTEST_ASSERT_ERROR(eq(soln,objValue[m]),
+      	    std::cerr << soln << " != " << objValue[m] << "; error = " << fabs(objValue[m]-soln),
+            *vecSiP[i], "netlib " + mpsName[m]);
+        if (eq(soln,objValue[m])) {
+        	std::cout << "  " << siName[i] << " "	<< soln << " = " << objValue[m] << ", "	<< vecSiP[i]->getIterationCount() << " iters; okay" ;
+        	numProbSolved[i]++ ; }
+        std::cout << " - took " << timeOfSolution << " seconds." << std::endl;
+        timeTaken[i] += timeOfSolution;
       }
       else
       { std::cout.flush() ;
         std::cerr << "  " << siName[i] << "; error " ;
         if (vecSiP[i]->isProvenPrimalInfeasible())
-	  std::cerr << "primal infeasible" ;
+        	std::cerr << "primal infeasible" ;
         else if (vecSiP[i]->isIterationLimitReached())
-	  std::cerr << "iteration limit" ;
+        	std::cerr << "iteration limit" ;
         else if (vecSiP[i]->isAbandoned())
-	  std::cerr << "abandoned" ;
+        	std::cerr << "abandoned" ;
         else
-	  std::cerr << "unknown" ; } }
+        	std::cerr << "unknown" ; } }
 /*
   Delete the used solver interfaces so we can reload fresh clones for the
   next problem.
@@ -339,13 +292,4 @@ int OsiSolverInterfaceMpsUnitTest
       << numProblems << " and took " << timeTaken[i] << " seconds."
       << std::endl ;
   }
-/*
-  If we're testing just one solver, return the number of failed problems.
-  If we're doing multiple solvers, always claim success.
-*/
-  if (numSolvers == 1)
-    return (numProblems-numProbSolved[0]) ;
-  else
-    return (0) ;
 }
-

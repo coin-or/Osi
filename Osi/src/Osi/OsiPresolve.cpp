@@ -20,6 +20,7 @@
 #include <iostream>
 
 #include "CoinHelperFunctions.hpp"
+#include "CoinFinite.hpp"
 
 #include "CoinPackedMatrix.hpp"
 #include "CoinWarmStartBasis.hpp"
@@ -362,7 +363,9 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
 						     messages)
 						       <<numberChanges
 						       <<CoinMessageEol;
-	  if (!result&&totalPasses>0) {
+	  if (!result&&totalPasses>0&&
+	      // we can't go round again in integer if dupcols
+	      (prob.presolveOptions_ & 0x80000000) == 0) {
 	    result = -1; // round again
 	    const CoinPresolveAction *paction = paction_;
 	    while (paction) {
@@ -503,13 +506,17 @@ OsiPresolve::postsolve(bool updateStatus)
     basis->setSize(ncols0,nrows0);
     int i;
     for (i=0;i<ncols0;i++) {
-      CoinWarmStartBasis::Status status = 
-	static_cast<CoinWarmStartBasis::Status> (prob.getColumnStatus(i));
+      CoinWarmStartBasis::Status status = static_cast<CoinWarmStartBasis::Status> (prob.getColumnStatus(i));
+      /* FIXME: these asserts seem correct, but seem to reveal some bugs in CoinPresolve */
+      // assert(status != CoinWarmStartBasis::atLowerBound || originalModel_->getColLower()[i] > -originalModel_->getInfinity());
+      // assert(status != CoinWarmStartBasis::atUpperBound || originalModel_->getColUpper()[i] <  originalModel_->getInfinity());
       basis->setStructStatus(i,status);
     }
     for (i=0;i<nrows0;i++) {
-      CoinWarmStartBasis::Status status = 
-	static_cast<CoinWarmStartBasis::Status> (prob.getRowStatus(i));
+      CoinWarmStartBasis::Status status = static_cast<CoinWarmStartBasis::Status> (prob.getRowStatus(i));
+      /* FIXME: these asserts seem correct, but seem to reveal some bugs in CoinPresolve */
+      // assert(status != CoinWarmStartBasis::atUpperBound || originalModel_->getRowLower()[i] > -originalModel_->getInfinity());
+      // assert(status != CoinWarmStartBasis::atLowerBound || originalModel_->getRowUpper()[i] <  originalModel_->getInfinity());
       basis->setArtifStatus(i,status);
     }
     originalModel_->setWarmStart(basis);
@@ -592,7 +599,37 @@ void check_and_tell (const CoinPresolveMatrix *const prob,
 
 } // end anonymous namespace for debug routines
 #endif
-
+//#define COIN_PRESOLVE_BUG
+#ifdef COIN_PRESOLVE_BUG
+double * debugSolution = NULL;
+int debugNumberColumns = -1;
+static int counter=1000000;
+static bool break2(CoinPresolveMatrix *prob)
+{
+  if (counter>0)
+    printf("counter %d\n",counter);
+  counter--;
+  if (debugSolution&&prob->ncols_==debugNumberColumns) {
+    for (int i=0;i<prob->ncols_;i++) {
+      double value = debugSolution[i];
+      if (value<prob->clo_[i]) {
+	printf("%d inf %g %g %g\n",i,prob->clo_[i],value,prob->cup_[i]);
+      } else if (value>prob->cup_[i]) {
+	printf("%d inf %g %g %g\n",i,prob->clo_[i],value,prob->cup_[i]);
+      }
+    }
+  }
+  if (!counter) {
+    printf("skipping next and all\n");
+  }
+  return (counter<=0);
+}
+#define possibleBreak if (break2(prob)) break
+#define possibleSkip  if (!break2(prob)) 
+#else
+#define possibleBreak
+#define possibleSkip
+#endif
 // This is the presolve loop.
 // It is a separate virtual function so that it can be easily
 // customized by subclassing CoinPresolve.
@@ -737,9 +774,11 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
       // maybe allow integer columns to be checked
       if ((presolveActions_&1)!=0)
 	prob->setPresolveOptions(prob->presolveOptions()|1);
+      possibleSkip;
       paction_ = dupcol_action::presolve(prob, paction_);
     }
     if (duprow) {
+      possibleSkip;
       paction_ = duprow_action::presolve(prob, paction_);
     }
     // Check number rows dropped
@@ -786,9 +825,11 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 
 	if (slackd) {
 	  bool notFinished = true;
-	  while (notFinished) 
+	  while (notFinished) {
+	    possibleBreak;
 	    paction_ = slack_doubleton_action::presolve(prob, paction_,
 							notFinished);
+	  }
 	  if (prob->status_)
 	    break;
 #	  if PRESOLVE_DEBUG
@@ -797,6 +838,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 	}
 
 	if (dual&&whichPass==1) {
+	  possibleBreak;
 	  // this can also make E rows so do one bit here
 	  paction_ = remove_dual_action::presolve(prob, paction_);
 	  if (prob->status_)
@@ -804,6 +846,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 	}
 
 	if (doubleton) {
+	  possibleBreak;
 	  paction_ = doubleton_action::presolve(prob, paction_);
 	  if (prob->status_)
 	    break;
@@ -813,6 +856,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 	}
 
 	if (tripleton) {
+	  possibleBreak;
 	  paction_ = tripleton_action::presolve(prob, paction_);
 	  if (prob->status_)
 	    break;
@@ -822,6 +866,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 	}
 
 	if (zerocost) {
+	  possibleBreak;
 	  paction_ = do_tighten_action::presolve(prob, paction_);
 	  if (prob->status_)
 	    break;
@@ -832,6 +877,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 
 #ifndef NO_FORCING
 	if (forcing) {
+	  possibleBreak;
 	  paction_ = forcing_constraint_action::presolve(prob, paction_);
 	  if (prob->status_)
 	    break;
@@ -842,6 +888,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 #endif
 
 	if (ifree&&(whichPass%5)==1) {
+	  possibleBreak;
 	  paction_ = implied_free_action::presolve(prob, paction_,fill_level);
 	  if (prob->status_)
 	    break;
@@ -942,6 +989,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 	int itry;
 	for (itry=0;itry<5;itry++) {
 	  const CoinPresolveAction * const paction2 = paction_;
+	  possibleBreak;
 	  paction_ = remove_dual_action::presolve(prob, paction_);
 #	  if PRESOLVE_DEBUG
 	  check_and_tell(prob,paction_,pactiond) ;
@@ -956,8 +1004,10 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 	    int fill_level=IMPLIED2;
 #endif
 #endif
-	    if ((itry&1)==0)
+	    if ((itry&1)==0) {
+	      possibleBreak;
 	      paction_ = implied_free_action::presolve(prob, paction_,fill_level);
+	    }
 #	    if PRESOLVE_DEBUG
 	    check_and_tell(prob,paction_,pactiond) ;
 #	    endif
@@ -976,6 +1026,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 	int fill_level=IMPLIED2;
 #endif
 #endif
+	possibleBreak;
 	paction_ = implied_free_action::presolve(prob, paction_,fill_level);
 	if (prob->status_)
 	  break;
@@ -985,6 +1036,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
         // maybe allow integer columns to be checked
         if ((presolveActions_&1)!=0)
           prob->setPresolveOptions(prob->presolveOptions()|1);
+	possibleBreak;
 	paction_ = dupcol_action::presolve(prob, paction_);
 #	if PRESOLVE_DEBUG
 	check_and_tell(prob,paction_,pactiond) ;
@@ -994,6 +1046,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
       }
       
       if (duprow) {
+	possibleBreak;
 	paction_ = duprow_action::presolve(prob, paction_);
 #	if PRESOLVE_DEBUG
 	check_and_tell(prob,paction_,pactiond) ;
@@ -1002,6 +1055,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 	  break;
       }
       if ((presolveActions_&32)!=0) {
+	possibleBreak;
 	paction_ = gubrow_action::presolve(prob, paction_);
       }
 	  
@@ -1023,9 +1077,11 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
       if (slackSingleton) {
         // On most passes do not touch costed slacks
         if (paction_ != paction0&&!stopLoop) {
+	  possibleBreak;
           paction_ = slack_singleton_action::presolve(prob, paction_,NULL);
         } else {
           // do costed if Clp (at end as ruins rest of presolve)
+	  possibleBreak;
           paction_ = slack_singleton_action::presolve(prob, paction_,NULL);
           stopLoop=true;
         }
@@ -1058,7 +1114,6 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
     check_and_tell(prob,paction_,pactiond) ;
 #   endif
   }
-  
   // Messages
   CoinMessages messages = CoinMessage(prob->messages().language());
   if (prob->status_) {
@@ -1447,11 +1502,12 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
   delete m;
   {
     int i;
-    for (i=0;i<ncols_;i++)
-      if (si->isInteger(i))
+    for (i=0;i<ncols_;i++) {
+      if (si->isInteger(i))  
 	integerType_[i] = 1;
       else
 	integerType_[i] = 0;
+    }
   }
 
   // Set up prohibited bits if needed

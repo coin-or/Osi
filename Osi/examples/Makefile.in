@@ -103,7 +103,7 @@ ifeq ($(COIN_HAS_PKGCONFIG), TRUE)
   LIBS = `PKG_CONFIG_PATH=@COIN_PKG_CONFIG_PATH@ @PKG_CONFIG@ --libs @OSI_EXAMPLES_SOLVER_PCNAME@ osi`
 else
   ifeq ($(COIN_CXX_IS_CL), TRUE)
-    LIBS = /link /libpath:`$(CYGPATH_W) @abs_lib_dir@` libOsi.lib @OSI_EXAMPLES_SOLVER_LIBS@ @OSILIB_LIBS_INSTALLED@
+    LIBS = -link -libpath:`$(CYGPATH_W) @abs_lib_dir@` libOsi.lib @OSI_EXAMPLES_SOLVER_LIBS@ @OSILIB_LIBS_INSTALLED@
   else
     LIBS = -L@abs_lib_dir@ -lOsi @OSI_EXAMPLES_SOLVER_LIBS@ @OSILIB_LIBS_INSTALLED@
   endif

@@ -31,9 +31,8 @@ AM_CPPFLAGS = $(NOLONGLONGCXXFLAGS) \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiCommonTest` \
 	$(COINUTILS_CFLAGS)
 
-# This line is necessary to allow VPATH compilation with MS compilers
-# on Cygwin
-DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/inc
+# This line is necessary to allow VPATH compilation
+DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/src/Osi
 
 # Depending of what solvers are available, we add the corresponding files,
 # libraries and include dirs
@@ -83,13 +82,13 @@ if COIN_HAS_GRB
   LIBS += $(GRBLIB)
 endif
 
-if COIN_HAS_SPX
+if COIN_HAS_SOPLEX
   unitTest_SOURCES += OsiSpxSolverInterfaceTest.cpp
-  AM_CPPFLAGS += -I`$(CYGPATH_W) $(SPXINCDIR)` \
+  AM_CPPFLAGS += $(SOPLEX_CFLAGS) \
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiSpx`
   unitTest_LDADD += ../src/OsiSpx/libOsiSpx.la
   unitTest_DEPENDENCIES += ../src/OsiSpx/libOsiSpx.la
-  LIBS += $(SPXLIB)
+  LIBS += $(SOPLEX_LIBS)
 endif
 
 unitTest_LDADD        += ../src/Osi/libOsi.la $(OSILIB_LIBS)

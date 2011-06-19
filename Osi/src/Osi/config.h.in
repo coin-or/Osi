@@ -1,4 +1,4 @@
-/* inc/config_osi.h.in.  Generated from configure.ac by autoheader.  */
+/* src/Osi/config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* Define to 1 if the CoinUtils package is available */
 #undef COIN_HAS_COINUTILS
@@ -21,8 +21,8 @@
 /* Define to 1 if the Sample package is available */
 #undef COIN_HAS_SAMPLE
 
-/* Define to 1 if the Soplex package is available */
-#undef COIN_HAS_SPX
+/* Define to 1 if the SoPlex package is available */
+#undef COIN_HAS_SOPLEX
 
 /* Define to 1 if the Xpress package is available */
 #undef COIN_HAS_XPR
@@ -36,11 +36,29 @@
 /* Define to 1 if GLPK has the advanced B&B solver lpx_intopt */
 #undef GLPK_HAS_INTOPT
 
+/* Define to 1 if you have the <cfloat> header file. */
+#undef HAVE_CFLOAT
+
+/* Define to 1 if you have the <cieeefp> header file. */
+#undef HAVE_CIEEEFP
+
+/* Define to 1 if you have the <cmath> header file. */
+#undef HAVE_CMATH
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
+/* Define to 1 if you have the <float.h> header file. */
+#undef HAVE_FLOAT_H
+
+/* Define to 1 if you have the <ieeefp.h> header file. */
+#undef HAVE_IEEEFP_H
+
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
+
+/* Define to 1 if you have the <math.h> header file. */
+#undef HAVE_MATH_H
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
@@ -71,6 +89,15 @@
 
 /* Version number of project */
 #undef OSI_VERSION
+
+/* Major Version number of project */
+#undef OSI_VERSION_MAJOR
+
+/* Minor Version number of project */
+#undef OSI_VERSION_MINOR
+
+/* Release Version number of project */
+#undef OSI_VERSION_RELEASE
 
 /* Name of package */
 #undef PACKAGE

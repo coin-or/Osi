@@ -4,7 +4,6 @@
 //           Ambros Gleixner
 //           Wei Huang
 //           Konrad-Zuse-Zentrum Berlin (Germany)
-//           email: pfender@zib.de
 // date:     01/16/2002
 // license:  this file may be freely distributed under the terms of EPL
 //-----------------------------------------------------------------------------
@@ -12,10 +11,7 @@
 // Corporation and others.  All Rights Reserved.
 // Last edit: $Id$
 
-#if defined(_MSC_VER)
-// Turn off compiler warning about long names
-#  pragma warning(disable:4786)
-#endif
+#include "CoinPragma.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -30,6 +26,8 @@
 #include "OsiColCut.hpp"
 #include "CoinPackedMatrix.hpp"
 #include "CoinWarmStartBasis.hpp"
+
+#include "soplex.h"
 
 //#############################################################################
 // A couple of helper functions
@@ -87,28 +85,41 @@ void OsiSpxSolverInterface::initialSolve()
      dual = takeHint;
 
   // always use column representation
-  if( soplex_.rep() != soplex::SPxSolver::COLUMN )
-    soplex_.setRep( soplex::SPxSolver::COLUMN );
+  if( soplex_->rep() != soplex::SPxSolver::COLUMN )
+    soplex_->setRep( soplex::SPxSolver::COLUMN );
 
   // set algorithm type
   if( dual )
   {
-    if( soplex_.type() != soplex::SPxSolver::LEAVE )
-      soplex_.setType( soplex::SPxSolver::LEAVE );
+    if( soplex_->type() != soplex::SPxSolver::LEAVE )
+      soplex_->setType( soplex::SPxSolver::LEAVE );
   }
   else
   {
-    if( soplex_.type() != soplex::SPxSolver::ENTER )
-      soplex_.setType( soplex::SPxSolver::ENTER );
+    if( soplex_->type() != soplex::SPxSolver::ENTER )
+      soplex_->setType( soplex::SPxSolver::ENTER );
   }
+
+  // set dual objective limit
+  double dualobjlimit;
+  OsiSolverInterface::getDblParam(OsiDualObjectiveLimit, dualobjlimit);
+  if( fabs(dualobjlimit) < getInfinity() )
+  {
+  	double objoffset;
+    OsiSolverInterface::getDblParam(OsiDualObjectiveLimit, objoffset);
+  	dualobjlimit += objoffset;
+  }
+  soplex_->setTerminationValue( dualobjlimit );
 
   // solve
   try 
   {
-    soplex_.solve();
+    soplex_->solve();
   } catch (soplex::SPxException e) {
   	std::cerr << "SoPlex initial solve failed with exception " << e.what() << std::endl;
   }
+
+  freeCachedResults();
 }
 //-----------------------------------------------------------------------------
 void OsiSpxSolverInterface::resolve()
@@ -125,28 +136,41 @@ void OsiSpxSolverInterface::resolve()
      dual = takeHint;
 
   // always use column representation
-  if( soplex_.rep() != soplex::SPxSolver::COLUMN )
-    soplex_.setRep( soplex::SPxSolver::COLUMN );
+  if( soplex_->rep() != soplex::SPxSolver::COLUMN )
+    soplex_->setRep( soplex::SPxSolver::COLUMN );
 
   // set algorithm type
   if( dual )
   {
-    if( soplex_.type() != soplex::SPxSolver::LEAVE )
-      soplex_.setType( soplex::SPxSolver::LEAVE );
+    if( soplex_->type() != soplex::SPxSolver::LEAVE )
+      soplex_->setType( soplex::SPxSolver::LEAVE );
   }
   else
   {
-    if( soplex_.type() != soplex::SPxSolver::ENTER )
-      soplex_.setType( soplex::SPxSolver::ENTER );
+    if( soplex_->type() != soplex::SPxSolver::ENTER )
+      soplex_->setType( soplex::SPxSolver::ENTER );
   }
+
+  // set dual objective limit
+  double dualobjlimit;
+  OsiSolverInterface::getDblParam(OsiDualObjectiveLimit, dualobjlimit);
+  if( fabs(dualobjlimit) < getInfinity() )
+  {
+  	double objoffset;
+    OsiSolverInterface::getDblParam(OsiDualObjectiveLimit, objoffset);
+  	dualobjlimit += objoffset;
+  }
+  soplex_->setTerminationValue( dualobjlimit );
 
   // solve
   try 
   {
-    soplex_.solve();
+    soplex_->solve();
   } catch (soplex::SPxException e) {
   	std::cerr << "SoPlex resolve failed with exception " << e.what() << std::endl;
   }
+
+  freeCachedResults();
 }
 //-----------------------------------------------------------------------------
 void OsiSpxSolverInterface::branchAndBound()
@@ -166,7 +190,7 @@ OsiSpxSolverInterface::setIntParam(OsiIntParam key, int value)
   switch (key)
     {
     case OsiMaxNumIteration:
-      soplex_.setTerminationIter( value );
+      soplex_->setTerminationIter( value );
       retval = true;
       break;
     case OsiMaxNumIterationHotStart:
@@ -182,7 +206,7 @@ OsiSpxSolverInterface::setIntParam(OsiIntParam key, int value)
       retval = false;
       break;
     case OsiNameDiscipline:
-      retval = false;
+      retval = OsiSolverInterface::setIntParam(key,value);
       break;
     }
   return retval;
@@ -197,21 +221,19 @@ OsiSpxSolverInterface::setDblParam(OsiDblParam key, double value)
   switch (key)
     {
     case OsiDualObjectiveLimit:
-      soplex_.setTerminationValue( value );
-      retval = true;
+      retval = OsiSolverInterface::setDblParam(key,value);
       break;
     case OsiPrimalObjectiveLimit:
-      // SoPlex doesn't support a primal objective limit
-      retval = false;
+      retval = OsiSolverInterface::setDblParam(key,value);
       break;
     case OsiDualTolerance:
       // SoPlex doesn't support different deltas for primal and dual
-      soplex_.setDelta( value );
+      soplex_->setDelta( value );
       retval = true;
       break;
     case OsiPrimalTolerance:
       // SoPlex doesn't support different deltas for primal and dual
-      soplex_.setDelta( value );
+      soplex_->setDelta( value );
       retval = true;
       break;
     case OsiObjOffset:
@@ -224,6 +246,10 @@ OsiSpxSolverInterface::setDblParam(OsiDblParam key, double value)
   return retval;
 }
 
+void OsiSpxSolverInterface::setTimeLimit(double value) {
+	soplex_->setTerminationTime(value);
+}
+
 //-----------------------------------------------------------------------------
 
 bool
@@ -233,7 +259,7 @@ OsiSpxSolverInterface::getIntParam(OsiIntParam key, int& value) const
   switch (key)
     {
     case OsiMaxNumIteration:
-      value = soplex_.terminationIter();
+      value = soplex_->terminationIter();
       retval = true;
       break;
     case OsiMaxNumIterationHotStart:
@@ -244,7 +270,7 @@ OsiSpxSolverInterface::getIntParam(OsiIntParam key, int& value) const
       retval = false;
       break;
     case OsiNameDiscipline:
-      retval = false;
+      retval = OsiSolverInterface::getIntParam(key,value);
       break;
     }
   return retval;
@@ -259,19 +285,17 @@ OsiSpxSolverInterface::getDblParam(OsiDblParam key, double& value) const
   switch (key) 
     {
     case OsiDualObjectiveLimit:
-      value = soplex_.terminationValue();
-      retval = true;
+      retval = OsiSolverInterface::getDblParam(key, value);
       break;
     case OsiPrimalObjectiveLimit:
-      // SoPlex doesn't support a primal objective limit
-      retval = false;
+      retval = OsiSolverInterface::getDblParam(key, value);
       break;
     case OsiDualTolerance:
-      value = soplex_.delta();
+      value = soplex_->delta();
       retval = true;
       break;
     case OsiPrimalTolerance:
-      value = soplex_.delta();
+      value = soplex_->delta();
       retval = true;
       break;
     case OsiObjOffset:
@@ -300,13 +324,18 @@ OsiSpxSolverInterface::getStrParam(OsiStrParam key, std::string & value) const
   return true;
 }
 
+double OsiSpxSolverInterface::getTimeLimit() const
+{
+	return soplex_->terminationTime();
+}
+
 //#############################################################################
 // Methods returning info on how the solution process terminated
 //#############################################################################
 
 bool OsiSpxSolverInterface::isAbandoned() const
 {
-  int stat = soplex_.status();
+  int stat = soplex_->status();
 
   return ( stat == soplex::SPxSolver::SINGULAR ||
 	   stat == soplex::SPxSolver::ERROR    );
@@ -314,38 +343,53 @@ bool OsiSpxSolverInterface::isAbandoned() const
 
 bool OsiSpxSolverInterface::isProvenOptimal() const
 {
-  int stat = soplex_.status();
+  int stat = soplex_->status();
   return ( stat == soplex::SPxSolver::OPTIMAL );
 }
 
 bool OsiSpxSolverInterface::isProvenPrimalInfeasible() const
 {
-  int stat = soplex_.status();
+  int stat = soplex_->status();
 
   return ( stat == soplex::SPxSolver::INFEASIBLE );
 }
 
 bool OsiSpxSolverInterface::isProvenDualInfeasible() const
 {
-  int stat = soplex_.status();
+  int stat = soplex_->status();
 
   return ( stat == soplex::SPxSolver::UNBOUNDED );
 }
 
 bool OsiSpxSolverInterface::isPrimalObjectiveLimitReached() const
 {
-   // SoPlex does not support a primal objective limit
-   return false;
+  // SoPlex doesn't support a primal objective limit
+
+	double primalobjlimit;
+	getDblParam(OsiDualObjectiveLimit, primalobjlimit);
+
+  return getObjSense() * getObjValue() > getObjSense() * primalobjlimit;
 }
 
 bool OsiSpxSolverInterface::isDualObjectiveLimitReached() const
 {
-  return ( soplex_.status() == soplex::SPxSolver::ABORT_VALUE );
+	if( soplex_->status() == soplex::SPxSolver::ABORT_VALUE )
+		return true;
+
+	double dualobjlimit;
+	getDblParam(OsiDualObjectiveLimit, dualobjlimit);
+
+	return getObjSense() * getObjValue() > getObjSense() * dualobjlimit;
 }
 
 bool OsiSpxSolverInterface::isIterationLimitReached() const
 {
-  return ( soplex_.status() == soplex::SPxSolver::ABORT_ITER );
+  return ( soplex_->status() == soplex::SPxSolver::ABORT_ITER );
+}
+
+bool OsiSpxSolverInterface::isTimeLimitReached() const
+{
+  return ( soplex_->status() == soplex::SPxSolver::ABORT_TIME );
 }
 
 //#############################################################################
@@ -362,14 +406,14 @@ CoinWarmStart* OsiSpxSolverInterface::getWarmStart() const
   ws = new CoinWarmStartBasis();
   ws->setSize( numcols, numrows );
 
-  if( soplex_.status() <= soplex::SPxSolver::NO_PROBLEM )
+  if( soplex_->status() <= soplex::SPxSolver::NO_PROBLEM )
     return ws;
 
   // The OSI standard assumes the artificial slack variables to have positive coefficients.  SoPlex uses the convention
   // Ax - s = 0, lhs <= s <= rhs, so we have to invert the ON_LOWER and ON_UPPER statuses.
   for( i = 0; i < numrows; ++i )
   {
-    switch( soplex_.getBasisRowStatus( i ) )
+    switch( soplex_->getBasisRowStatus( i ) )
     {
     case soplex::SPxSolver::BASIC:
       ws->setArtifStatus( i, CoinWarmStartBasis::basic );
@@ -392,7 +436,7 @@ CoinWarmStart* OsiSpxSolverInterface::getWarmStart() const
 
   for( i = 0; i < numcols; ++i )
   {
-    switch( soplex_.getBasisColStatus( i ) )
+    switch( soplex_->getBasisColStatus( i ) )
     {
     case soplex::SPxSolver::BASIC:
       ws->setStructStatus( i, CoinWarmStartBasis::basic );
@@ -437,6 +481,8 @@ bool OsiSpxSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
   cstat = new soplex::SPxSolver::VarStatus[numcols];
   rstat = new soplex::SPxSolver::VarStatus[numrows];
 
+  // The OSI standard assumes the artificial slack variables to have positive coefficients.  SoPlex uses the convention
+  // Ax - s = 0, lhs <= s <= rhs, so we have to invert the atLowerBound and atUpperBound statuses.
   for( i = 0; i < numrows; ++i )
     {
       switch( ws->getArtifStatus( i ) )
@@ -445,10 +491,10 @@ bool OsiSpxSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
 	  rstat[i] = soplex::SPxSolver::BASIC;
 	  break;
 	case CoinWarmStartBasis::atLowerBound:
-	  rstat[i] = soplex::SPxSolver::ON_LOWER;
+	  rstat[i] = soplex::SPxSolver::ON_UPPER;
 	  break;
 	case CoinWarmStartBasis::atUpperBound:
-	  rstat[i] = soplex::SPxSolver::ON_UPPER;
+	  rstat[i] = soplex::SPxSolver::ON_LOWER;
 	  break;
 	case CoinWarmStartBasis::isFree:
 	  rstat[i] = soplex::SPxSolver::ZERO;
@@ -482,7 +528,7 @@ bool OsiSpxSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
 
   try 
   {
-    soplex_.setBasis( rstat, cstat );
+    soplex_->setBasis( rstat, cstat );
   } catch (soplex::SPxException e) {
     std::cerr << "SoPlex setting starting basis failed with exception " << e.what() << std::endl;
     retval = false;
@@ -508,17 +554,17 @@ void OsiSpxSolverInterface::markHotStart()
   numrows = getNumRows();
   if( numcols > hotStartCStatSize_ )
     {
-      delete[] hotStartCStat_;
+      delete[] reinterpret_cast<soplex::SPxSolver::VarStatus*>(hotStartCStat_);
       hotStartCStatSize_ = static_cast<int>( 1.2 * static_cast<double>( numcols ) ); // get some extra space for future hot starts
-      hotStartCStat_ = new soplex::SPxSolver::VarStatus[hotStartCStatSize_];
+      hotStartCStat_ = reinterpret_cast<void*>(new soplex::SPxSolver::VarStatus[hotStartCStatSize_]);
     }
   if( numrows > hotStartRStatSize_ )
     {
-      delete[] hotStartRStat_;
+      delete[] reinterpret_cast<soplex::SPxSolver::VarStatus*>(hotStartRStat_);
       hotStartRStatSize_ = static_cast<int>( 1.2 * static_cast<double>( numrows ) ); // get some extra space for future hot starts
-      hotStartRStat_ = new soplex::SPxSolver::VarStatus[hotStartRStatSize_];
+      hotStartRStat_ = reinterpret_cast<void*>(new soplex::SPxSolver::VarStatus[hotStartRStatSize_]);
     }
-  soplex_.getBasis( hotStartRStat_, hotStartCStat_ );
+  soplex_->getBasis( reinterpret_cast<soplex::SPxSolver::VarStatus*>(hotStartRStat_), reinterpret_cast<soplex::SPxSolver::VarStatus*>(hotStartCStat_) );
 }
 
 void OsiSpxSolverInterface::solveFromHotStart()
@@ -528,14 +574,15 @@ void OsiSpxSolverInterface::solveFromHotStart()
   assert( getNumCols() <= hotStartCStatSize_ );
   assert( getNumRows() <= hotStartRStatSize_ );
 
-  //soplex_.setBasis( hotStartRStat_, hotStartCStat_ );
+  // @todo why the hotstart basis is not set here ?????
+  //soplex_->setBasis(  reinterpret_cast<soplex::SPxSolver::VarStatus*>(hotStartRStat_),  reinterpret_cast<soplex::SPxSolver::VarStatus*>(hotStartCStat_) );
 
-  maxiter = soplex_.terminationIter();
-  soplex_.setTerminationIter( hotStartMaxIteration_ );
+  maxiter = soplex_->terminationIter();
+  soplex_->setTerminationIter( hotStartMaxIteration_ );
 
   resolve();
 
-  soplex_.setTerminationIter( maxiter );
+  soplex_->setTerminationIter( maxiter );
 }
 
 void OsiSpxSolverInterface::unmarkHotStart()
@@ -552,22 +599,22 @@ void OsiSpxSolverInterface::unmarkHotStart()
 //------------------------------------------------------------------
 int OsiSpxSolverInterface::getNumCols() const
 {
-  return soplex_.nCols();
+  return soplex_->nCols();
 }
 int OsiSpxSolverInterface::getNumRows() const
 {
-  return soplex_.nRows();
+  return soplex_->nRows();
 }
 int OsiSpxSolverInterface::getNumElements() const
 {
 #if 0
-  return soplex_.nNzos();
+  return soplex_->nNzos();
 #else   
   int retVal = 0;
   int nrows  = getNumRows();
   int row;
   for( row = 0; row < nrows; ++row ) {
-    const soplex::SVector& rowvec = soplex_.rowVector( row );
+    const soplex::SVector& rowvec = soplex_->rowVector( row );
     retVal += rowvec.size();
   }
   return retVal;
@@ -582,7 +629,7 @@ const double * OsiSpxSolverInterface::getColLower() const
 {
   const double * retVal = NULL;
   if ( getNumCols()!=0 ) 
-   retVal = soplex_.lower().get_const_ptr();
+   retVal = soplex_->lower().get_const_ptr();
   return retVal;
 }
 //------------------------------------------------------------------
@@ -590,7 +637,7 @@ const double * OsiSpxSolverInterface::getColUpper() const
 {
   const double * retVal = NULL;
   if ( getNumCols()!=0 ) 
-   retVal = soplex_.upper().get_const_ptr();
+   retVal = soplex_->upper().get_const_ptr();
   return retVal;
 }
 //------------------------------------------------------------------
@@ -622,7 +669,7 @@ const double * OsiSpxSolverInterface::getRightHandSide() const
 	  rowsense_ = new char[nrows];
 	  
 	  for( row = 0; row < nrows; ++row )
-	    convertBoundToSense( soplex_.lhs( row ), soplex_.rhs( row ),
+	    convertBoundToSense( soplex_->lhs( row ), soplex_->rhs( row ),
 				 rowsense_[row], rhs_[row], rowrange_[row] );
 	}
     }
@@ -644,7 +691,7 @@ const double * OsiSpxSolverInterface::getRowLower() const
 {
   const double * retVal = NULL;
   if ( getNumRows() != 0 )
-     retVal = soplex_.lhs().get_const_ptr();
+     retVal = soplex_->lhs().get_const_ptr();
   return retVal;
 }
 //------------------------------------------------------------------
@@ -652,7 +699,7 @@ const double * OsiSpxSolverInterface::getRowUpper() const
 {  
   const double * retVal = NULL;
   if ( getNumRows() != 0 )
-     retVal = soplex_.rhs().get_const_ptr();
+     retVal = soplex_->rhs().get_const_ptr();
   return retVal;
 }
 //------------------------------------------------------------------
@@ -662,7 +709,7 @@ const double * OsiSpxSolverInterface::getObjCoefficients() const
   if( obj_ == NULL ) {
     if ( getNumCols()!=0 ) {
       obj_ = new soplex::DVector( getNumCols() );
-      soplex_.getObj( *obj_ );
+      soplex_->getObj( *obj_ );
       retVal = obj_->get_const_ptr();
     }
   }
@@ -674,7 +721,7 @@ const double * OsiSpxSolverInterface::getObjCoefficients() const
 //------------------------------------------------------------------
 double OsiSpxSolverInterface::getObjSense() const
 {
-  switch( soplex_.spxSense() )
+  switch( soplex_->spxSense() )
     {
     case soplex::SPxLP::MINIMIZE:
       return +1.0;
@@ -692,7 +739,7 @@ double OsiSpxSolverInterface::getObjSense() const
 
 bool OsiSpxSolverInterface::isContinuous( int colNumber ) const
 {
-  return( spxintvars_.number( colNumber ) < 0 );
+  return( spxintvars_->number( colNumber ) < 0 );
 }
 
 //------------------------------------------------------------------
@@ -715,7 +762,7 @@ const CoinPackedMatrix * OsiSpxSolverInterface::getMatrixByRow() const
       elem = 0;
       for( row = 0; row < nrows; ++row )
 	{
-	  const soplex::SVector& rowvec = soplex_.rowVector( row );
+	  const soplex::SVector& rowvec = soplex_->rowVector( row );
 	  starts[row] = elem;
 	  len   [row] = rowvec.size();
 	  for( i = 0; i < len[row]; ++i, ++elem )
@@ -754,7 +801,7 @@ const CoinPackedMatrix * OsiSpxSolverInterface::getMatrixByCol() const
       elem = 0;
       for( col = 0; col < ncols; ++col )
 	{
-	  const soplex::SVector& colvec = soplex_.colVector( col );
+	  const soplex::SVector& colvec = soplex_->colVector( col );
 	  starts[col] = elem;
 	  len   [col] = colvec.size();
 	  for( i = 0; i < len[col]; ++i, ++elem )
@@ -792,19 +839,19 @@ double OsiSpxSolverInterface::getInfinity() const
 const double * OsiSpxSolverInterface::getColSolution() const
 {
   if( colsol_ == NULL )
-    {
-      int ncols = getNumCols();
-      if( ncols > 0 )
-	{
-	  colsol_ = new soplex::DVector( ncols );
-	  if( isProvenOptimal() )
-	    soplex_.getPrimal( *colsol_ );
-	  else
-	    colsol_->clear();
-	}
-      else
-	return NULL;
-    }
+  {
+  	int ncols = getNumCols();
+  	if( ncols > 0 )
+  	{
+  		colsol_ = new soplex::DVector( ncols );
+  		if( isProvenOptimal() )
+  			soplex_->getPrimal( *colsol_ );
+  		else
+  			*colsol_ = soplex_->lower();
+  	}
+  	else
+  		return NULL;
+  }
   return colsol_->get_const_ptr();
 }
 //------------------------------------------------------------------
@@ -817,7 +864,7 @@ const double * OsiSpxSolverInterface::getRowPrice() const
 	{
 	  rowsol_ = new soplex::DVector( nrows );
 	  if( isProvenOptimal() )
-	    soplex_.getDual( *rowsol_ );
+	    soplex_->getDual( *rowsol_ );
 	  else
 	    rowsol_->clear();
 	}
@@ -836,7 +883,7 @@ const double * OsiSpxSolverInterface::getReducedCost() const
 	{
 	  redcost_ = new soplex::DVector( ncols );
 	  if( isProvenOptimal() )
-	    soplex_.getRedCost( *redcost_ );
+	    soplex_->getRedCost( *redcost_ );
 	  else
 	    redcost_->clear();
 	}
@@ -855,7 +902,7 @@ const double * OsiSpxSolverInterface::getRowActivity() const
 	{
 	  rowact_ = new soplex::DVector( nrows );
 	  if( isProvenOptimal() )
-	    soplex_.getSlacks( *rowact_ );
+	    soplex_->getSlacks( *rowact_ );
 	  else
 	    rowact_->clear();
 	}
@@ -869,16 +916,23 @@ double OsiSpxSolverInterface::getObjValue() const
 {
   double objval;
 
-  switch( soplex_.status() )
+  switch( soplex_->status() )
     {
     case soplex::SPxSolver::OPTIMAL:
     case soplex::SPxSolver::UNBOUNDED:
     case soplex::SPxSolver::INFEASIBLE:
-      objval = soplex_.objValue();
+      objval = soplex_->objValue();
       break;
     default:
+    {
+    	const double* colsol = getColSolution();
+    	const double* objcoef = getObjCoefficients();
+    	int ncols = getNumCols();
       objval = 0.0;
+      for( int i = 0; i < ncols; ++i )
+      	objval += colsol[i] * objcoef[i];
       break;
+    }
     }
 
   // Adjust objective function value by constant term in objective function
@@ -891,7 +945,7 @@ double OsiSpxSolverInterface::getObjValue() const
 //------------------------------------------------------------------
 int OsiSpxSolverInterface::getIterationCount() const
 {
-  return soplex_.iteration();
+  return soplex_->iteration();
 }
 //------------------------------------------------------------------
 std::vector<double*> OsiSpxSolverInterface::getDualRays(int maxNumRays,
@@ -904,11 +958,11 @@ std::vector<double*> OsiSpxSolverInterface::getDualRays(int maxNumRays,
 
   std::vector<double*> ret = std::vector<double*>();
 
-  if (soplex_.status() == soplex::SPxSolver::INFEASIBLE && maxNumRays > 0)
+  if (soplex_->status() == soplex::SPxSolver::INFEASIBLE && maxNumRays > 0)
   {
     ret.push_back(new double[getNumRows()]);
     soplex::Vector proof(getNumRows(), ret[0]);
-    soplex_.getDualfarkas(proof);
+    soplex_->getDualfarkas(proof);
   }
 
   return ret;
@@ -928,46 +982,46 @@ std::vector<double*> OsiSpxSolverInterface::getPrimalRays(int maxNumRays) const
 
 void OsiSpxSolverInterface::setObjCoeff( int elementIndex, double elementValue )
 {
-  soplex_.changeObj( elementIndex, elementValue );
+  soplex_->changeObj( elementIndex, elementValue );
   freeCachedData( OsiSpxSolverInterface::FREECACHED_COLUMN );
 }
 
 void OsiSpxSolverInterface::setColLower(int elementIndex, double elementValue)
 {
-  soplex_.changeLower( elementIndex, elementValue );
+  soplex_->changeLower( elementIndex, elementValue );
   freeCachedData( OsiSpxSolverInterface::FREECACHED_COLUMN );
 }
 //-----------------------------------------------------------------------------
 void OsiSpxSolverInterface::setColUpper(int elementIndex, double elementValue)
 {  
-  soplex_.changeUpper( elementIndex, elementValue );
+  soplex_->changeUpper( elementIndex, elementValue );
   freeCachedData( OsiSpxSolverInterface::FREECACHED_COLUMN );
 } 
 //-----------------------------------------------------------------------------
 void OsiSpxSolverInterface::setColBounds( int elementIndex, double lower, double upper )
 {
-  soplex_.changeBounds( elementIndex, lower, upper );
+  soplex_->changeBounds( elementIndex, lower, upper );
   freeCachedData( OsiSpxSolverInterface::FREECACHED_COLUMN );
 }
 //-----------------------------------------------------------------------------
 void
 OsiSpxSolverInterface::setRowLower( int i, double elementValue )
 {
-  soplex_.changeLhs( i, elementValue );
+  soplex_->changeLhs( i, elementValue );
   freeCachedData( OsiSpxSolverInterface::FREECACHED_ROW );
 }
 //-----------------------------------------------------------------------------
 void
 OsiSpxSolverInterface::setRowUpper( int i, double elementValue )
 {
-  soplex_.changeRhs( i, elementValue );
+  soplex_->changeRhs( i, elementValue );
   freeCachedData( OsiSpxSolverInterface::FREECACHED_ROW );
 }
 //-----------------------------------------------------------------------------
 void
 OsiSpxSolverInterface::setRowBounds( int elementIndex, double lower, double upper )
 {
-  soplex_.changeRange( elementIndex, lower, upper );
+  soplex_->changeRange( elementIndex, lower, upper );
   freeCachedData( OsiSpxSolverInterface::FREECACHED_ROW );
 }
 //-----------------------------------------------------------------------------
@@ -985,10 +1039,10 @@ OsiSpxSolverInterface::setRowType(int i, char sense, double rightHandSide,
 void
 OsiSpxSolverInterface::setContinuous(int index)
 {
-  int pos = spxintvars_.number( index );
+  int pos = spxintvars_->number( index );
   if( pos >= 0 )
     {
-      spxintvars_.remove( pos );
+      spxintvars_->remove( pos );
       freeCachedData( OsiSpxSolverInterface::FREECACHED_COLUMN );
     }
 }
@@ -996,10 +1050,10 @@ OsiSpxSolverInterface::setContinuous(int index)
 void
 OsiSpxSolverInterface::setInteger(int index)
 {
-  int pos = spxintvars_.number( index );
+  int pos = spxintvars_->number( index );
   if( pos < 0 )
     {
-      spxintvars_.addIdx( index );
+      spxintvars_->addIdx( index );
       freeCachedData( OsiSpxSolverInterface::FREECACHED_COLUMN );
     }
 }
@@ -1010,9 +1064,9 @@ void OsiSpxSolverInterface::setObjSense(double s)
   if( s != getObjSense() )
     {
       if( s == +1.0 )
-	soplex_.changeSense( soplex::SPxLP::MINIMIZE );
+	soplex_->changeSense( soplex::SPxLP::MINIMIZE );
       else
-	soplex_.changeSense( soplex::SPxLP::MAXIMIZE );
+	soplex_->changeSense( soplex::SPxLP::MAXIMIZE );
       freeCachedData( OsiSpxSolverInterface::FREECACHED_RESULTS );
     }
 }
@@ -1068,15 +1122,42 @@ OsiSpxSolverInterface::addCol(const CoinPackedVectorBase& vec,
   soplex::DSVector colvec;
 
   colvec.add( vec.getNumElements(), vec.getIndices(), vec.getElements() );
-  soplex_.addCol( soplex::LPCol( obj, colvec, colub, collb ) );
+  soplex_->addCol( soplex::LPCol( obj, colvec, colub, collb ) );
   freeCachedData( OsiSpxSolverInterface::KEEPCACHED_ROW );
 }
 //-----------------------------------------------------------------------------
 void 
 OsiSpxSolverInterface::deleteCols(const int num, const int * columnIndices)
 {
-  soplex_.removeCols( const_cast<int*>(columnIndices), num );
+  soplex_->removeCols( const_cast<int*>(columnIndices), num );
   freeCachedData( OsiSpxSolverInterface::KEEPCACHED_ROW );
+
+  // took from OsiClp for updating names
+  int nameDiscipline;
+  getIntParam(OsiNameDiscipline,nameDiscipline) ;
+  if (num && nameDiscipline) {
+     // Very clumsy (and inefficient) - need to sort and then go backwards in ? chunks
+     int * indices = CoinCopyOfArray(columnIndices,num);
+     std::sort(indices,indices+num);
+     int num2 = num;
+     while (num2) {
+       int next = indices[num2-1];
+       int firstDelete = num2-1;
+       int i;
+       for (i = num2-2; i>=0; --i) {
+          if (indices[i]+1 == next) {
+             --next;
+             firstDelete = i;
+          } else {
+             break;
+          }
+       }
+       OsiSolverInterface::deleteColNames(indices[firstDelete],num2-firstDelete);
+       num2 = firstDelete;
+       assert (num2>=0);
+     }
+     delete [] indices;
+  }
 }
 //-----------------------------------------------------------------------------
 void 
@@ -1086,7 +1167,7 @@ OsiSpxSolverInterface::addRow(const CoinPackedVectorBase& vec,
   soplex::DSVector rowvec;
 
   rowvec.add( vec.getNumElements(), vec.getIndices(), vec.getElements() );
-  soplex_.addRow( soplex::LPRow( rowlb, rowvec, rowub ) );
+  soplex_->addRow( soplex::LPRow( rowlb, rowvec, rowub ) );
   freeCachedData( OsiSpxSolverInterface::KEEPCACHED_COLUMN );
 }
 //-----------------------------------------------------------------------------
@@ -1105,8 +1186,35 @@ OsiSpxSolverInterface::addRow(const CoinPackedVectorBase& vec,
 void 
 OsiSpxSolverInterface::deleteRows(const int num, const int * rowIndices)
 {
-  soplex_.removeRows( const_cast<int*>(rowIndices), num );
+  soplex_->removeRows( const_cast<int*>(rowIndices), num );
   freeCachedData( OsiSpxSolverInterface::KEEPCACHED_COLUMN );
+
+  // took from OsiClp for updating names
+  int nameDiscipline;
+  getIntParam(OsiNameDiscipline,nameDiscipline) ;
+  if (num && nameDiscipline) {
+    // Very clumsy (and inefficient) - need to sort and then go backwards in ? chunks
+    int * indices = CoinCopyOfArray(rowIndices,num);
+    std::sort(indices,indices+num);
+    int num2=num;
+    while (num2) {
+      int next = indices[num2-1];
+      int firstDelete = num2-1;
+      int i;
+      for (i = num2-2; i>=0; --i) {
+        if (indices[i]+1 == next) {
+        	--next;
+	        firstDelete = i;
+        } else {
+          break;
+        }
+      }
+      OsiSolverInterface::deleteRowNames(indices[firstDelete],num2-firstDelete);
+      num2 = firstDelete;
+      assert(num2 >= 0);
+    }
+    delete [] indices;
+  }
 }
 
 //#############################################################################
@@ -1165,8 +1273,8 @@ OsiSpxSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
     therowub = const_cast<double*>(rowub);
 
   // copy problem into soplex_
-  soplex_.clear();
-  spxintvars_.clear();
+  soplex_->clear();
+  spxintvars_->clear();
   freeCachedData( OsiSpxSolverInterface::KEEPCACHED_NONE );
 
   if( matrix.isColOrdered() )
@@ -1181,7 +1289,7 @@ OsiSpxSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
       rowvec.clear();
       for( row = 0; row < nrows; ++row )
          rowset.add( therowlb[row], rowvec, therowub[row] );
-      soplex_.addRows( rowset );
+      soplex_->addRows( rowset );
 
       /* create columns */
       for( col = 0; col < ncols; ++col )
@@ -1192,8 +1300,8 @@ OsiSpxSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
 	  colset.add( theobj[col], thecollb[col], colvec, thecolub[col] );
 	}
       
-      soplex_.addCols( colset );
-      // soplex_.changeRange( soplex::Vector( nrows, therowlb ), soplex::Vector( nrows, therowub ) );
+      soplex_->addCols( colset );
+      // soplex_->changeRange( soplex::Vector( nrows, therowlb ), soplex::Vector( nrows, therowub ) );
     }
   else
     {
@@ -1207,7 +1315,7 @@ OsiSpxSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
       colvec.clear();
       for( col = 0; col < ncols; ++col )
          colset.add( theobj[col], thecollb[col], colvec, thecolub[col] );
-      soplex_.addCols( colset );
+      soplex_->addCols( colset );
 
       /* create rows */
       for( row = 0; row < nrows; ++row )
@@ -1218,13 +1326,13 @@ OsiSpxSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
 	  rowset.add( therowlb[row], rowvec, therowub[row] );
 	}
       
-      soplex_.addRows( rowset );
-      // soplex_.changeObj( soplex::Vector( ncols, theobj ) );
-      // soplex_.changeBounds( soplex::Vector( ncols, thecollb ), soplex::Vector( ncols, thecolub ) );
+      soplex_->addRows( rowset );
+      // soplex_->changeObj( soplex::Vector( ncols, theobj ) );
+      // soplex_->changeBounds( soplex::Vector( ncols, thecollb ), soplex::Vector( ncols, thecolub ) );
     }
 
   // switch sense to minimization problem
-  soplex_.changeSense( soplex::SPxSolver::MINIMIZE );
+  soplex_->changeSense( soplex::SPxSolver::MINIMIZE );
 
   // delete default arrays if neccessary
   if( collb == NULL )
@@ -1343,8 +1451,8 @@ OsiSpxSolverInterface::loadProblem(const int numcols, const int numrows,
   soplex::LPColSet colset( numcols, start[numcols] );
   soplex::DSVector colvec;
   
-  soplex_.clear();
-  spxintvars_.clear();
+  soplex_->clear();
+  spxintvars_->clear();
   freeCachedData( OsiSpxSolverInterface::KEEPCACHED_NONE );
 
   for( col = 0; col < numcols; ++col )
@@ -1355,8 +1463,8 @@ OsiSpxSolverInterface::loadProblem(const int numcols, const int numrows,
       colset.add( obj[col], collb[col], colvec, colub[col] );
     }
   
-  soplex_.addCols( colset );
-  soplex_.changeRange( soplex::Vector( numrows, const_cast<double*>(rowlb) ), soplex::Vector( numrows, const_cast<double*>(rowub) ) );
+  soplex_->addCols( colset );
+  soplex_->changeRange( soplex::Vector( numrows, const_cast<double*>(rowlb) ), soplex::Vector( numrows, const_cast<double*>(rowub) ) );
 }
 
 //-----------------------------------------------------------------------------
@@ -1400,15 +1508,15 @@ int OsiSpxSolverInterface::readMps( const char * filename,
     return 1;
   }
 
-  soplex_.clear();
-  if( !soplex_.readMPS(file, NULL, NULL, NULL) )
+  soplex_->clear();
+  if( !soplex_->readMPS(file, NULL, NULL, NULL) )
     throwSPXerror( "error reading file <" + fullname + ">", "readMps" );
   #endif
 
   // we preserve the objective sense independent of the problem which is read
-  soplex::SPxLP::SPxSense objsen = soplex_.spxSense();
+  soplex::SPxLP::SPxSense objsen = soplex_->spxSense();
   int retval = OsiSolverInterface::readMps(filename,extension);
-  soplex_.changeSense(objsen);
+  soplex_->changeSense(objsen);
   return retval;
 }
 
@@ -1432,7 +1540,7 @@ void OsiSpxSolverInterface::writeMps( const char * filename,
   for (int i = 0; i < getNumCols(); ++i)
   	if (isInteger(i))
   		integers.addIdx(i);
-  soplex_.writeMPS(file, NULL, NULL, &integers);
+  soplex_->writeMPS(file, NULL, NULL, &integers);
 }
 
 //#############################################################################
@@ -1444,8 +1552,8 @@ void OsiSpxSolverInterface::writeMps( const char * filename,
 //-------------------------------------------------------------------
 OsiSpxSolverInterface::OsiSpxSolverInterface ()
   : OsiSolverInterface(),
-    soplex_(soplex::SPxSolver::ENTER, soplex::SPxSolver::COLUMN), // default is primal simplex algorithm
-    spxintvars_(),
+    soplex_(new soplex::SoPlex(soplex::SPxSolver::ENTER, soplex::SPxSolver::COLUMN)), // default is primal simplex algorithm
+    spxintvars_(new soplex::DIdxSet()),
     hotStartCStat_(NULL),
     hotStartCStatSize_(0),
     hotStartRStat_(NULL),
@@ -1469,7 +1577,7 @@ OsiSpxSolverInterface::OsiSpxSolverInterface ()
 #endif
 
   // SoPlex default objective sense is maximization, thus we explicitly set it to minimization
-  soplex_.changeSense( soplex::SPxLP::MINIMIZE );
+  soplex_->changeSense( soplex::SPxLP::MINIMIZE );
 }
 
 
@@ -1486,8 +1594,8 @@ OsiSolverInterface * OsiSpxSolverInterface::clone(bool copyData) const
 //-------------------------------------------------------------------
 OsiSpxSolverInterface::OsiSpxSolverInterface( const OsiSpxSolverInterface & source )
   : OsiSolverInterface(source),
-    soplex_(source.soplex_),
-    spxintvars_(source.spxintvars_),
+    soplex_(new soplex::SoPlex(*source.soplex_)),
+    spxintvars_(new soplex::DIdxSet(*source.spxintvars_)),
     hotStartCStat_(NULL),
     hotStartCStatSize_(0),
     hotStartRStat_(NULL),
@@ -1504,8 +1612,8 @@ OsiSpxSolverInterface::OsiSpxSolverInterface( const OsiSpxSolverInterface & sour
     matrixByRow_(NULL),
     matrixByCol_(NULL)
 {
-  setColSolution(source.getColSolution());
-  setRowPrice(source.getRowPrice());
+  if (source.colsol_ != NULL) setColSolution(source.getColSolution());
+  if (source.rowsol_ != NULL) setRowPrice(source.getRowPrice());
 }
 
 
@@ -1527,10 +1635,10 @@ OsiSpxSolverInterface& OsiSpxSolverInterface::operator=( const OsiSpxSolverInter
       freeAllMemory();
 
       OsiSolverInterface::operator=( source );
-      spxintvars_ = source.spxintvars_;
-      soplex_ = source.soplex_;
-      setColSolution(source.getColSolution());
-      setRowPrice(source.getRowPrice());
+      spxintvars_ = new soplex::DIdxSet(*source.spxintvars_);
+      soplex_ = new soplex::SoPlex(*source.soplex_);
+      if (source.colsol_ != NULL) setColSolution(source.getColSolution());
+      if (source.rowsol_ != NULL) setRowPrice(source.getRowPrice());
       hotStartMaxIteration_ = source.hotStartMaxIteration_;
     }
   return *this;
@@ -1622,14 +1730,12 @@ void OsiSpxSolverInterface::freeCachedData( int keepCached )
 void OsiSpxSolverInterface::freeAllMemory()
 {
   freeCachedData();
-  if( hotStartCStat_ != NULL )
-    delete[] hotStartCStat_;
-  if( hotStartRStat_ != NULL )
-    delete[] hotStartRStat_;
+  delete[] reinterpret_cast<soplex::SPxSolver::VarStatus*>(hotStartCStat_);
+  delete[] reinterpret_cast<soplex::SPxSolver::VarStatus*>(hotStartRStat_);
   hotStartCStat_     = NULL;
   hotStartCStatSize_ = 0;
   hotStartRStat_     = NULL;
   hotStartRStatSize_ = 0;
-  soplex_.clear();
-  spxintvars_.clear();
+  delete soplex_;
+  delete spxintvars_;
 }

@@ -36,7 +36,7 @@ if COIN_HAS_GRB
   SUBDIRS += src/OsiGrb
   pkgconfiglib_DATA += osi-gurobi.pc
 endif
-if COIN_HAS_SPX
+if COIN_HAS_SOPLEX
   SUBDIRS += src/OsiSpx
   pkgconfiglib_DATA += osi-soplex.pc
 endif
@@ -107,7 +107,11 @@ if COIN_HAS_PKGCONFIG
 	PKG_CONFIG_PATH=@COIN_PKG_CONFIG_PATH@ \
 	$(PKG_CONFIG) --libs osi > $(addlibsdir)/osi_addlibs.txt
 else
+if COIN_CXX_IS_CL
+	echo "/libpath:`$(CYGPATH_W) @abs_lib_dir@` libOsi.lib @OSILIB_LIBS_INSTALLED@" > $(addlibsdir)/osi_addlibs_cpp.txt
+else
 	echo -L@abs_lib_dir@ -lOsi @OSILIB_LIBS_INSTALLED@ > $(addlibsdir)/osi_addlibs.txt
+endif
 endif
 
 uninstall-hook:

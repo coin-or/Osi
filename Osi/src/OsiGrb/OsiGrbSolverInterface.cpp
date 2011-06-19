@@ -360,6 +360,11 @@ void OsiGrbSolverInterface::branchAndBound()
 
   switchToMIP();
 
+  if( colsol_ != NULL && domipstart )
+  {
+    GUROBI_CALL( "branchAndBound", GRBsetdblattrarray(getMutableLpPtr(), GRB_DBL_ATTR_START, 0, getNumCols(), colsol_) );
+  }
+
   GRBmodel* lp = getLpPtr( OsiGrbSolverInterface::FREECACHED_RESULTS );
 
   GUROBI_CALL( "branchAndBound", GRBsetintparam(GRBgetenv(lp), GRB_INT_PAR_OUTPUTFLAG, (messageHandler()->logLevel() > 0)) );
@@ -840,6 +845,9 @@ bool OsiGrbSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
   		case CoinWarmStartBasis::atUpperBound:
   			stat[i] = GRB_NONBASIC_LOWER;
   			break;
+      case CoinWarmStartBasis::isFree:
+         stat[i] = GRB_SUPERBASIC;
+         break;
   		default:  // unknown row status
   			delete[] stat;
   			return false;
@@ -865,6 +873,8 @@ bool OsiGrbSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
           stat[i] = GRB_NONBASIC_UPPER;
           break;
         case CoinWarmStartBasis::isFree:
+          stat[i] = GRB_SUPERBASIC;
+          break;
         default:  // unknown col status
           delete[] stat;
           return false;
@@ -884,6 +894,8 @@ bool OsiGrbSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
           stat[i] = GRB_NONBASIC_UPPER;
           break;
         case CoinWarmStartBasis::isFree:
+           stat[i] = GRB_SUPERBASIC;
+           break;
         default:  // unknown col status
           delete[] stat;
           return false;
@@ -2200,7 +2212,7 @@ void OsiGrbSolverInterface::setColSolution(const double * cs)
   	// Copy in new col solution.
   	CoinDisjointCopyN( cs, nc, colsol_ );
 
-  	*messageHandler() << "OsiGrb::setColSolution: Gurobi does not allow setting the column solution. Command is ignored." << CoinMessageEol;
+  	//*messageHandler() << "OsiGrb::setColSolution: Gurobi does not allow setting the column solution. Command is ignored." << CoinMessageEol;
   }
 }
 
@@ -2883,10 +2895,11 @@ OsiGrbSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
   
 	GUROBI_CALL( "loadProblem", GRBgetintattr(getMutableLpPtr(), GRB_INT_ATTR_MODELSENSE, &modelsense) );
 
-	gutsOfDestructor(); // kill old LP, if any
-
 	std::string pn;
 	getStrParam(OsiProbName, pn);
+
+	gutsOfDestructor(); // kill old LP, if any
+
 	GUROBI_CALL( "loadProblem", GRBloadmodel(getEnvironmentPtr(), &lp_, const_cast<char*>(pn.c_str()),
 			nc, nr,
 			modelsense,
@@ -3081,10 +3094,11 @@ OsiGrbSolverInterface::loadProblem(const int numcols, const int numrows,
 	int modelsense;
 	GUROBI_CALL( "loadProblem", GRBgetintattr(getMutableLpPtr(), GRB_INT_ATTR_MODELSENSE, &modelsense) );
 
-	gutsOfDestructor(); // kill old LP, if any
-
 	std::string pn;
 	getStrParam(OsiProbName, pn);
+
+	gutsOfDestructor(); // kill old LP, if any
+
 	GUROBI_CALL( "loadProblem", GRBloadmodel(getEnvironmentPtr(), &lp_, const_cast<char*>(pn.c_str()),
 			nc, nr,
 			modelsense,
@@ -3297,6 +3311,7 @@ OsiGrbSolverInterface::OsiGrbSolverInterface(bool use_local_env)
     matrixByRow_(NULL),
     matrixByCol_(NULL),
     probtypemip_(false),
+    domipstart(false),
     colspace_(0),
     coltype_(NULL),
     nauxcols(0),
@@ -3347,6 +3362,7 @@ OsiGrbSolverInterface::OsiGrbSolverInterface(GRBenv* localgrbenv)
     matrixByRow_(NULL),
     matrixByCol_(NULL),
     probtypemip_(false),
+    domipstart(false),
     colspace_(0),
     coltype_(NULL),
     nauxcols(0),
@@ -3409,6 +3425,7 @@ OsiGrbSolverInterface::OsiGrbSolverInterface( const OsiGrbSolverInterface & sour
     matrixByRow_(NULL),
     matrixByCol_(NULL),
     probtypemip_(false),
+    domipstart(false),
     colspace_(0),
     coltype_(NULL),
     nauxcols(0),
@@ -3613,6 +3630,8 @@ void OsiGrbSolverInterface::gutsOfConstructor()
 //-------------------------------------------------------------------
 void OsiGrbSolverInterface::gutsOfDestructor()
 {  
+  debugMessage("OsiGrbSolverInterface::gutsOfDestructor()\n");
+
   if ( lp_ != NULL )
   {
     GUROBI_CALL( "gutsOfDestructor", GRBfreemodel(lp_) );
@@ -3943,6 +3962,9 @@ void OsiGrbSolverInterface::getBasisStatus(int* cstat, int* rstat) const {
 	  {
 	    switch (rstat[i])
 	    {
+         case GRB_SUPERBASIC:
+	        rstat[i] = 0;
+	        break;
 	      case GRB_BASIC:
 	        rstat[i] = 1;
 	        break;

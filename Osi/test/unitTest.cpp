@@ -2,29 +2,18 @@
 // Corporation and others.  All Rights Reserved.
 // Test individual classes or groups of classes
 // This file is licensed under the terms of Eclipse Public License (EPL).
+// $Id$
 
 #include "CoinPragma.hpp"
-
 #include "OsiConfig.h"
 
-#ifdef NDEBUG
-#undef NDEBUG
-#endif
-
-#include <cassert>
 #include <iostream>
-#include <cstdio>
 
-#include "OsiRowCut.hpp"
-#include "OsiColCut.hpp"
-#include "OsiCuts.hpp"
-#include "CoinHelperFunctions.hpp"
-#include "CoinSort.hpp"
-#include "CoinError.hpp"
-#include "OsiSolverInterface.hpp"
-#include "OsiRowCutDebugger.hpp"
 #include "OsiUnitTests.hpp"
+#include "OsiSolverInterface.hpp"
 #include "OsiTestSolverInterface.hpp"
+
+using namespace OsiUnitTest;
 
 /*
   Currently the Osi unit test is configured to exercise only the external
@@ -55,7 +44,7 @@
 // #undef COIN_HAS_GLPK
 // #undef COIN_HAS_MSK
 // #undef COIN_HAS_GRB
-// #undef COIN_HAS_SPX
+// #undef COIN_HAS_SOPLEX
 
 #ifdef COIN_HAS_XPR
 #include "OsiXprSolverInterface.hpp"
@@ -93,7 +82,7 @@
 #endif
 #endif
 
-#ifdef COIN_HAS_SPX
+#ifdef COIN_HAS_SOPLEX
 #include "OsiSpxSolverInterface.hpp"
 #ifdef USETESTSOLVER
 #undef USETESTSOLVER
@@ -104,181 +93,13 @@
 #include "OsiTestSolverInterface.hpp"
 #endif
 
-namespace {
-
-/*
-  If anyone is feeling ambitious, it'd be a really good idea to handle i/o for
-  the unittest by way of a standard CoinMessageHandler. Might require a bit of
-  tweaking in CoinMessageHandler.
-*/
- 
-// Display message on stdout and stderr. Flush cout buffer before printing the
-// message, so that output comes out in order in spite of buffered cout.
-
-void testingMessage( const char * const msg )
-{
-  std::cout.flush() ;
-  std::cerr <<msg;
-  //cout <<endl <<"*****************************************"
-  //     <<endl <<msg <<endl;
-}
-
-
-/*
-  Utility routine to process command line parameters. An unrecognised parameter
-  will trigger the help message and a return value of false.
-  
-  This should be replaced with the one of the standard CoinUtils parameter
-  mechanisms.
-*/
-bool processParameters (int argc, const char **argv,
-			std::map<std::string,std::string> &parms)
-
-{ 
-/*
-  Initialise the parameter keywords.
-*/
-  std::set<std::string> definedKeyWords;
-  definedKeyWords.insert("-cerr2cout");
-  definedKeyWords.insert("-mpsDir");
-  definedKeyWords.insert("-netlibDir");
-  definedKeyWords.insert("-testOsiSolverInterface");
-  definedKeyWords.insert("-nobuf");
-  definedKeyWords.insert("-cutsOnly");
-/*
-  Set default values for data directories.
-*/
-  const char dirsep =  CoinFindDirSeparator() ;
-  std::string pathTmp ;
-  pathTmp = ".." ;
-  pathTmp += dirsep ;
-  pathTmp += ".." ;
-  pathTmp += dirsep ;
-  pathTmp += "Data" ;
-  pathTmp += dirsep ;
-# ifdef COIN_MSVS
-  // Visual Studio builds are deeper
-    pathTmp = "..\\..\\" + pathTmp ;
-# endif
-
-  parms["-mpsDir"] = pathTmp + "Sample"  ;
-  parms["-netlibDir"] = pathTmp + "Netlib" ;
-
-/*
-  Read the command line parameters and fill a map of parameter keys and
-  associated data. The parser allows for parameters which are only a keyword,
-  or parameters of the form keyword=value (no spaces).
-*/
-  for (int i = 1 ; i < argc ; i++)
-  { std::string parm(argv[i]) ;
-    std::string key,value ;
-    std::string::size_type eqPos = parm.find('=');
-
-    if (eqPos == std::string::npos)
-    { key = parm ; }
-    else
-    { key = parm.substr(0,eqPos) ;
-      value = parm.substr(eqPos+1) ; }
-/*
-  Is the specifed key valid?
-*/
-    if (definedKeyWords.find(key) == definedKeyWords.end())
-    { std::cerr << "Undefined parameter \"" << key << "\"." << std::endl ;
-      std::cerr
-	<< "Usage: "
-	<< "unitTest [-nobuf] [-mpsDir=V1] [-netlibDir=V2] "
-        << "[-testOsiSolverInterface] [-cutsOnly]" << std::endl ;
-      std::cerr << "  where:" << std::endl ;
-      std::cerr
-	<< "    "
-	<< "-cerr2cout: redirect cerr to cout; sometimes useful." << std::endl
-	<< "\t" << "to synchronise cout & cerr." << std::endl ;
-      std::cerr
-	<< "    "
-	<< "-mpsDir: directory containing mps test files." << std::endl
-        << "\t" << "Default value V1=\"../../Data/Sample\"" << std::endl ;
-      std::cerr
-	<< "    "
-	<< "-netlibDir: directory containing netlib files." << std::endl
-        << "\t" << "Default value V2=\"../../Data/Netlib\"" << std::endl ;
-      std::cerr
-	<< "    "
-	<< "-testOsiSolverInterface: "
-        << "run each OSI on the netlib problem set." << std::endl
-	<< "\t"
-	<< "Default is to not run the netlib problem set." << std::endl ;
-      std::cerr
-	<< "    "
-	<< "-cutsOnly: If specified, only OsiCut tests are run." << std::endl ;
-      std::cerr
-	<< "    "
-        << "-nobuf: use unbuffered output." << std::endl
-	<< "\t" << "Default is buffered output." << std::endl ;
-      
-      return (false) ; }
-/*
-  Valid keyword; stash the value for later reference.
-*/
-    parms[key]=value ; }
-/*
-  Tack the directory separator onto the data directories so we don't have to
-  worry about it later.
-*/
-  parms["-mpsDir"] += dirsep ;
-  parms["-netlibDir"] += dirsep ;
-/*
-  Did the user request unbuffered i/o? It seems we need to go after this
-  through stdio --- using pubsetbuf(0,0) on the C++ streams has no
-  discernible affect. Nor, for that matter, did setting the unitbuf flag on
-  the streams. Why? At a guess, sync_with_stdio connects the streams to the
-  stdio buffers, and the C++ side isn't programmed to change them?
-*/
-  if (parms.find("-nobuf") != parms.end())
-  { // std::streambuf *coutBuf, *cerrBuf ;
-    // coutBuf = std::cout.rdbuf() ;
-    // coutBuf->pubsetbuf(0,0) ;
-    // cerrBuf = std::cerr.rdbuf() ;
-    // cerrBuf->pubsetbuf(0,0) ;
-    setbuf(stderr,0) ;
-    setbuf(stdout,0) ; }
-/*
-  Did the user request a redirect for cerr? This must occur before any i/o is
-  performed.
-*/
-  if (parms.find("-cerr2cout") != parms.end())
-  { std::cerr.rdbuf(std::cout.rdbuf()) ; }
-
-  return (true) ; }
-
-
-}	// end file-local namespace
-
-
 
 //----------------------------------------------------------------
-// unitTest [-nobuf] [-mpsDir=V1] [-netlibDir=V2] [-testOsiSolverInterface]
-//	    [-cutsOnly]
-// 
-// where:
-//   -nobuf: remove buffering on cout (stdout); useful to keep cout and cerr
-//	 messages synchronised when redirecting output to a file or pipe.
-//   -mpsDir: directory containing mps test files
-//       Default value V1="../../Data/Sample"    
-//   -netlibDir: directory containing netlib files
-//       Default value V2="../../Data/Netlib"
-//   -testOsiSolverInterface
-//       If specified, then OsiSolveInterface::unitTest
-//       is skipped over and not run.
-//   -cutsOnly
-//	 If specified, only OsiCut tests are run.
-//
-// All parameters are optional.
+// to see parameter list, call unitTest -usage
 //----------------------------------------------------------------
 
 int main (int argc, const char *argv[])
-
-{ int totalErrCnt = 0;
-
+{
 /*
   Start off with various bits of initialisation that don't really belong
   anywhere else.
@@ -304,14 +125,12 @@ int main (int argc, const char *argv[])
   Process command line parameters.
 */
   std::map<std::string,std::string> parms ;
-
   if (processParameters(argc,argv,parms) == false)
-  { return (1) ; }
+    return 1;
 
   std::string mpsDir = parms["-mpsDir"] ;
   std::string netlibDir = parms["-netlibDir"] ;
 
-try {
 /*
   Test Osi{Row,Col}Cut routines.
 */
@@ -319,17 +138,17 @@ try {
   {
     OsiXprSolverInterface xprSi;
     testingMessage( "Testing OsiRowCut with OsiXprSolverInterface\n" );
-    OsiRowCutUnitTest(&xprSi,mpsDir);
+    OSIUNITTEST_CATCH_ERROR(OsiRowCutUnitTest(&xprSi,mpsDir), {}, xprSi, "rowcut unittest");
   }
   {
     OsiXprSolverInterface xprSi;
     testingMessage( "Testing OsiColCut with OsiXprSolverInterface\n" );
-    OsiColCutUnitTest(&xprSi,mpsDir);
+    OSIUNITTEST_CATCH_ERROR(OsiColCutUnitTest(&xprSi,mpsDir), {}, xprSi, "colcut unittest");
   }
   {
     OsiXprSolverInterface xprSi;
     testingMessage( "Testing OsiRowCutDebugger with OsiXprSolverInterface\n" );
-    OsiRowCutDebuggerUnitTest(&xprSi,mpsDir);
+    OSIUNITTEST_CATCH_ERROR(OsiRowCutDebuggerUnitTest(&xprSi,mpsDir), {}, xprSi, "rowcut debugger unittest");
   }
 #endif
 
@@ -337,17 +156,17 @@ try {
   {
     OsiCpxSolverInterface cpxSi;
     testingMessage( "Testing OsiRowCut with OsiCpxSolverInterface\n" );
-    OsiRowCutUnitTest(&cpxSi,mpsDir);
+    OSIUNITTEST_CATCH_ERROR(OsiRowCutUnitTest(&cpxSi,mpsDir), {}, cpxSi, "rowcut unittest");
   }
   {
     OsiCpxSolverInterface cpxSi;
     testingMessage( "Testing OsiColCut with OsiCpxSolverInterface\n" );
-    OsiColCutUnitTest(&cpxSi,mpsDir);
+    OSIUNITTEST_CATCH_ERROR(OsiColCutUnitTest(&cpxSi,mpsDir), {}, cpxSi, "colcut unittest");
   }
   {
     OsiCpxSolverInterface cpxSi;
     testingMessage( "Testing OsiRowCutDebugger with OsiCpxSolverInterface\n" );
-    OsiRowCutDebuggerUnitTest(&cpxSi,mpsDir);
+    OSIUNITTEST_CATCH_ERROR(OsiRowCutDebuggerUnitTest(&cpxSi,mpsDir), {}, cpxSi, "rowcut debugger unittest");
   }
 #endif
 
@@ -355,12 +174,12 @@ try {
   {
     OsiTestSolverInterface testSi;
     testingMessage( "Testing OsiRowCut with OsiTestSolverInterface\n" );
-    OsiRowCutUnitTest(&testSi,mpsDir);
+    OSIUNITTEST_CATCH_ERROR(OsiRowCutUnitTest(&testSi,mpsDir), {}, testSi, "rowcut unittest");
   }
   {
     OsiTestSolverInterface testSi;
     testingMessage( "Testing OsiColCut with OsiTestSolverInterface\n" );
-    OsiColCutUnitTest(&testSi,mpsDir);
+    OSIUNITTEST_CATCH_ERROR(OsiColCutUnitTest(&testSi,mpsDir), {}, testSi, "colcut unittest");
   }
 #endif
 
@@ -368,17 +187,17 @@ try {
   {
     OsiGlpkSolverInterface glpkSi;
     testingMessage( "Testing OsiRowCut with OsiGlpkSolverInterface\n" );
-    OsiRowCutUnitTest(&glpkSi,mpsDir);
+    OSIUNITTEST_CATCH_ERROR(OsiRowCutUnitTest(&glpkSi,mpsDir), {}, glpkSi, "rowcut unittest");
   }
   {
     OsiGlpkSolverInterface glpkSi;
     testingMessage( "Testing OsiColCut with OsiGlpkSolverInterface\n" );
-    OsiColCutUnitTest(&glpkSi,mpsDir);
+    OSIUNITTEST_CATCH_ERROR(OsiColCutUnitTest(&glpkSi,mpsDir), {}, glpkSi, "colcut unittest");
   }
   {
     OsiGlpkSolverInterface glpkSi;
     testingMessage( "Testing OsiRowCutDebugger with OsiGlpkSolverInterface\n" );
-    OsiRowCutDebuggerUnitTest(&glpkSi,mpsDir);
+    OSIUNITTEST_CATCH_ERROR(OsiRowCutDebuggerUnitTest(&glpkSi,mpsDir), {}, glpkSi, "rowcut debugger unittest");
   }
 #endif
 
@@ -386,17 +205,17 @@ try {
   {
     OsiMskSolverInterface MskSi;
     testingMessage( "Testing OsiRowCut with OsiMskSolverInterface\n" );
-    OsiRowCutUnitTest(&MskSi,mpsDir);
+    OSIUNITTEST_CATCH_ERROR(OsiRowCutUnitTest(&MskSi,mpsDir), {}, MskSi, "rowcut unittest");
   }
   {
     OsiMskSolverInterface MskSi;
     testingMessage( "Testing OsiColCut with OsiMskSolverInterface\n" );
-    OsiColCutUnitTest(&MskSi,mpsDir);
+    OSIUNITTEST_CATCH_ERROR(OsiColCutUnitTest(&MskSi,mpsDir), {}, MskSi, "colcut unittest");
   }
   {
     OsiMskSolverInterface MskSi;
     testingMessage( "Testing OsiRowCutDebugger with OsiMskSolverInterface\n" );
-    OsiRowCutDebuggerUnitTest(&MskSi,mpsDir);
+    OSIUNITTEST_CATCH_ERROR(OsiRowCutDebuggerUnitTest(&MskSi,mpsDir), {}, MskSi, "rowcut debugger unittest");
   }
 #endif
 
@@ -404,40 +223,40 @@ try {
   {
     OsiGrbSolverInterface grbSi;
     testingMessage( "Testing OsiRowCut with OsiGrbSolverInterface\n" );
-    OsiRowCutUnitTest(&grbSi,mpsDir);
+    OSIUNITTEST_CATCH_ERROR(OsiRowCutUnitTest(&grbSi,mpsDir), {}, grbSi, "rowcut unittest");
   }
   {
     OsiGrbSolverInterface grbSi;
     testingMessage( "Testing OsiColCut with OsiGrbSolverInterface\n" );
-    OsiColCutUnitTest(&grbSi,mpsDir);
+    OSIUNITTEST_CATCH_ERROR(OsiColCutUnitTest(&grbSi,mpsDir), {}, grbSi, "colcut unittest");
   }
   {
     OsiGrbSolverInterface grbSi;
     testingMessage( "Testing OsiRowCutDebugger with OsiGrbSolverInterface\n" );
-    OsiRowCutDebuggerUnitTest(&grbSi,mpsDir);
+    OSIUNITTEST_CATCH_ERROR(OsiRowCutDebuggerUnitTest(&grbSi,mpsDir), {}, grbSi, "rowcut debugger unittest");
   }
 #endif
 
-#ifdef COIN_HAS_SPX
+#ifdef COIN_HAS_SOPLEX
   {
     OsiSpxSolverInterface spxSi;
     testingMessage( "Testing OsiRowCut with OsiSpxSolverInterface\n" );
-    OsiRowCutUnitTest(&spxSi,mpsDir);
+    OSIUNITTEST_CATCH_ERROR(OsiRowCutUnitTest(&spxSi,mpsDir), {}, spxSi, "rowcut unittest");
   }
   {
     OsiSpxSolverInterface spxSi;
     testingMessage( "Testing OsiColCut with OsiSpxSolverInterface\n" );
-    OsiColCutUnitTest(&spxSi,mpsDir);
+    OSIUNITTEST_CATCH_ERROR(OsiColCutUnitTest(&spxSi,mpsDir), {}, spxSi, "colcut unittest");
   }
   {
     OsiSpxSolverInterface spxSi;
     testingMessage( "Testing OsiRowCutDebugger with OsiSpxSolverInterface\n" );
-    OsiRowCutDebuggerUnitTest(&spxSi,mpsDir);
+    OSIUNITTEST_CATCH_ERROR(OsiRowCutDebuggerUnitTest(&spxSi,mpsDir), {}, spxSi, "rowcut debugger unittest");
   }
 #endif
 
   testingMessage( "Testing OsiCuts\n" );
-  OsiCutsUnitTest();
+  OSIUNITTEST_CATCH_ERROR(OsiCutsUnitTest(), {}, "osi", "osicuts unittest");
 
 /*
   Testing OsiCuts only? A useful option when doing memory access and leak
@@ -455,37 +274,37 @@ try {
 */
 #ifdef COIN_HAS_XPR
   testingMessage( "Testing OsiXprSolverInterface\n" );
-  OsiXprSolverInterfaceUnitTest(mpsDir,netlibDir);
+  OSIUNITTEST_CATCH_ERROR(OsiXprSolverInterfaceUnitTest(mpsDir,netlibDir), {}, "xpress", "osixpr unittest");
 #endif
 
 #ifdef COIN_HAS_CPX
   testingMessage( "Testing OsiCpxSolverInterface\n" );
-  OsiCpxSolverInterfaceUnitTest(mpsDir,netlibDir);
+  OSIUNITTEST_CATCH_ERROR(OsiCpxSolverInterfaceUnitTest(mpsDir,netlibDir), {}, "cplex", "osicpx unittest");
 #endif
 
 #ifdef USETESTSOLVER
   testingMessage( "Testing OsiTestSolverInterface\n" );
-  totalErrCnt += OsiTestSolverInterfaceUnitTest(mpsDir,netlibDir);
+  OSIUNITTEST_CATCH_ERROR(OsiTestSolverInterfaceUnitTest(mpsDir,netlibDir), {}, "vol", "ositestsolver unittest");
 #endif
   
 #ifdef COIN_HAS_GLPK
   testingMessage( "Testing OsiGlpkSolverInterface\n" );
-  totalErrCnt += OsiGlpkSolverInterfaceUnitTest(mpsDir,netlibDir);
+  OSIUNITTEST_CATCH_ERROR(OsiGlpkSolverInterfaceUnitTest(mpsDir,netlibDir), {}, "glpk", "osiglpk unittest");
 #endif
   
 #ifdef COIN_HAS_MSK
   testingMessage( "Testing OsiMskSolverInterface\n" );
-  OsiMskSolverInterfaceUnitTest(mpsDir,netlibDir);
+  OSIUNITTEST_CATCH_ERROR(OsiMskSolverInterfaceUnitTest(mpsDir,netlibDir), {}, "mosek", "osimsk unittest");
 #endif
 
 #ifdef COIN_HAS_GRB
   testingMessage( "Testing OsiGrbSolverInterface\n" );
-  OsiGrbSolverInterfaceUnitTest(mpsDir,netlibDir);
+  OSIUNITTEST_CATCH_ERROR(OsiGrbSolverInterfaceUnitTest(mpsDir,netlibDir), {}, "gurobi", "osigrb unittest");
 #endif
 
-#ifdef COIN_HAS_SPX
+#ifdef COIN_HAS_SOPLEX
   testingMessage( "Testing OsiSpxSolverInterface\n" );
-  OsiSpxSolverInterfaceUnitTest(mpsDir,netlibDir);
+  OSIUNITTEST_CATCH_ERROR(OsiSpxSolverInterfaceUnitTest(mpsDir,netlibDir), {}, "soplex", "osispx unittest");
 #endif
 
 /*
@@ -518,7 +337,7 @@ try {
     OsiSolverInterface * grbSi = new OsiGrbSolverInterface;
     vecSi.push_back(grbSi);
 #   endif
-#   if COIN_HAS_SPX
+#   if COIN_HAS_SOPLEX
     OsiSolverInterface * spxSi = new OsiSpxSolverInterface;
     vecSi.push_back(spxSi);
 #   endif
@@ -540,7 +359,8 @@ try {
 
     if (vecSi.size() > 0)
     { testingMessage( "Testing OsiSolverInterface on Netlib problems.\n" );
-      totalErrCnt += OsiSolverInterfaceMpsUnitTest(vecSi,netlibDir); }
+      OSIUNITTEST_CATCH_ERROR(OsiSolverInterfaceMpsUnitTest(vecSi,netlibDir), {}, "osi", "netlib unittest");
+    }
 
     unsigned int i;
     for (i=0; i<vecSi.size(); i++)
@@ -550,26 +370,21 @@ try {
     testingMessage( "***Skipped Testing of OsiSolverInterface on Netlib problems***\n" );
     testingMessage( "***use -testOsiSolverInterface to run them.***\n" );
   }
-} catch (CoinError& error) {
-  std::cout.flush();
-  std::cerr << "Caught CoinError exception: ";
-  error.print(true);
-  totalErrCnt += 1;
-} catch (...) {
-  std::cout.flush() ;
-  std::cerr << "Caught unknown exception." ;
-  totalErrCnt += 1 ;
-}
 
 /*
   We're done. Report on the results.
 */
-  if (totalErrCnt)
-  { std::cout.flush() ;
-    std::cerr
-      << "Tests completed with " << totalErrCnt << " errors." << std::endl ; 
-  } else
-  { testingMessage("All tests completed successfully\n") ; }
-  return totalErrCnt;
-}
+  std::cout.flush();
+  outcomes.print();
 
+  int nerrors;
+  int nerrors_expected;
+  outcomes.getCountBySeverity(TestOutcome::ERROR, nerrors, nerrors_expected);
+
+  if (nerrors > nerrors_expected)
+    std::cerr << "Tests completed with " << nerrors - nerrors_expected << " unexpected errors." << std::endl ;
+  else
+    std::cerr << "All tests completed successfully\n";
+
+  return nerrors - nerrors_expected;
+}

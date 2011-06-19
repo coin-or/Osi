@@ -13,8 +13,8 @@ class CoinPresolveAction;
 /*! \class OsiPresolve
     \brief OSI interface to COIN problem simplification capabilities
 
-  COIN provides a number of classes which implement problem simplfication
-  algorithms (CoinPresolveAction, CoinPrePostSolveMatrix, and derived
+  COIN provides a number of classes which implement problem simplification
+  algorithms (CoinPresolveAction, CoinPrePostsolveMatrix, and derived
   classes). The model of operation is as follows:
   <ul>
     <li>

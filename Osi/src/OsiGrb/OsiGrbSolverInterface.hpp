@@ -80,6 +80,10 @@ public:
 	bool getHintParam(OsiHintParam key, bool& yesNo, OsiHintStrength& strength) const;
 	// Get a hint parameter
 	bool getHintParam(OsiHintParam key, bool& yesNo) const;
+  // Set mipstart option (pass column solution to CPLEX before MIP start)
+  void setMipStart(bool value) { domipstart = value; }
+  // Get mipstart option value
+  bool getMipStart() const { return domipstart; }
 	//@}
 
 	//---------------------------------------------------------------------------
@@ -293,12 +297,12 @@ public:
 
 	using OsiSolverInterface::setColLower;
 	/** Set a single column lower bound<br>
-	 Use -DBL_MAX for -infinity. */
+	 Use -COIN_DBL_MAX for -infinity. */
 	virtual void setColLower(int elementIndex, double elementValue);
 
 	using OsiSolverInterface::setColUpper;
 	/** Set a single column upper bound<br>
-	 Use DBL_MAX for infinity. */
+	 Use COIN_DBL_MAX for infinity. */
 	virtual void setColUpper(int elementIndex, double elementValue);
 
 	/** Set a single column lower and upper bound<br>
@@ -317,11 +321,11 @@ public:
 			const double* boundList);
 
 	/** Set a single row lower bound<br>
-	 Use -DBL_MAX for -infinity. */
+	 Use -COIN_DBL_MAX for -infinity. */
 	virtual void setRowLower(int elementIndex, double elementValue);
 
 	/** Set a single row upper bound<br>
-	 Use DBL_MAX for infinity. */
+	 Use COIN_DBL_MAX for infinity. */
 	virtual void setRowUpper(int elementIndex, double elementValue);
 
 	/** Set a single row lower and upper bound<br>
@@ -866,6 +870,9 @@ private:
   /// Stores whether we currently see the problem as a MIP
   mutable bool probtypemip_;
 
+  /// Whether to pass a column solution to CPLEX before starting MIP solve (copymipstart)
+  bool domipstart;
+
 	/// Size of allocated memory for coltype_, colmap_O2G, and (with offset auxcolspace) colmap_G2O.
   int colspace_;
 
@@ -899,11 +906,7 @@ private:
 };
 
 //#############################################################################
-/** A function that tests the methods in the OsiGrbSolverInterface class. The
- only reason for it not to be a member method is that this way it doesn't
- have to be compiled into the library. And that's a gain, because the
- library should be compiled with optimization on, but this method should be
- compiled with debugging. */
+/** A function that tests the methods in the OsiGrbSolverInterface class. */
 void OsiGrbSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 #endif

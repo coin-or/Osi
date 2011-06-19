@@ -19,7 +19,7 @@ lib_LTLIBRARIES = libOsiGlpk.la
 libOsiGlpk_la_SOURCES = \
 	OsiGlpkSolverInterface.cpp OsiGlpkSolverInterface.hpp
 
-# This is for libtool (on Windows)
+# This is for libtool
 libOsiGlpk_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.  This
@@ -29,9 +29,8 @@ libOsiGlpk_la_LDFLAGS = $(LT_LDFLAGS)
 AM_CPPFLAGS = $(COINUTILS_CFLAGS) $(GLPK_CFLAGS) \
 	-I`$(CYGPATH_W) $(srcdir)/../Osi`
 
-# This line is necessary to allow VPATH compilation with MS compilers
-# on Cygwin
-DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/inc
+# This line is necessary to allow VPATH compilation
+DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/src/Osi
 
 ########################################################################
 #                Headers that need to be installed                     #

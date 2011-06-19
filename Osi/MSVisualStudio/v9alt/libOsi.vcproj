@@ -275,11 +275,10 @@
 		<Configuration
 			Name="DebugDLL|Win32"
 			OutputDirectory="$(CoinBinDir)"
-			IntermediateDirectory="$(ProjectName)\$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="2"
 			InheritedPropertySheets="$(COIN_ROOT)\BuildTools\MSVisualStudio\v9alt\coin.vsprops;$(CoinRoot)\CoinUtils\CoinUtils\MSVisualStudio\v9alt\coinutils.vsprops"
 			CharacterSet="1"
-			ManagedExtensions="1"
+			ManagedExtensions="0"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -318,8 +317,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				LinkLibraryDependencies="false"
 				AdditionalLibraryDirectories=""
-				ModuleDefinitionFile="$(IntDir)\libOsi.def"
+				ModuleDefinitionFile="$(IntDir)\$(ProjectName).def"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -348,11 +348,10 @@
 		<Configuration
 			Name="DebugDLL|x64"
 			OutputDirectory="$(CoinBinDir)"
-			IntermediateDirectory="$(ProjectName)\$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="2"
 			InheritedPropertySheets="$(COIN_ROOT)\BuildTools\MSVisualStudio\v9alt\coin.vsprops;$(CoinRoot)\CoinUtils\CoinUtils\MSVisualStudio\v9alt\coinutils.vsprops"
 			CharacterSet="1"
-			ManagedExtensions="1"
+			ManagedExtensions="0"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -392,7 +391,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				ModuleDefinitionFile="$(IntDir)\libOsi.def"
+				LinkLibraryDependencies="false"
+				ModuleDefinitionFile="$(IntDir)\$(ProjectName).def"
 			/>
 			<Tool
 				Name="VCALinkTool"

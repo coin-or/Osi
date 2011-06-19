@@ -1,7 +1,24 @@
 * text=auto !eol
 /Dependencies -text
 /LICENSE -text
+Osi/CHANGELOG -text
 Osi/LICENSE -text
+Osi/MSVisualStudio/v10/Osi.sln -text
+Osi/MSVisualStudio/v10/OsiExamplesBasic/OsiExamplesBasic.vcxproj -text
+Osi/MSVisualStudio/v10/OsiExamplesBasic2/OsiExamplesBasic2.vcxproj -text
+Osi/MSVisualStudio/v10/OsiExamplesBuild/OsiExamplesBuild.vcxproj -text
+Osi/MSVisualStudio/v10/OsiExamplesParameters/OsiExamplesParameters.vcxproj -text
+Osi/MSVisualStudio/v10/OsiExamplesQuery/OsiExamplesQuery.vcxproj -text
+Osi/MSVisualStudio/v10/OsiExamplesSpecific/OsiExamplesSpecific.vcxproj -text
+Osi/MSVisualStudio/v10/OsiUnitTest/OsiUnitTest.vcxproj -text
+Osi/MSVisualStudio/v10/libOsi/libOsi.vcxproj -text
+Osi/MSVisualStudio/v10/libOsiCommonTest/libOsiCommonTest.vcxproj -text
+Osi/MSVisualStudio/v10alt/Osi.sln -text
+Osi/MSVisualStudio/v10alt/OsiUnitTest.vcxproj -text
+Osi/MSVisualStudio/v10alt/genDefForOsi.ps1 -text
+Osi/MSVisualStudio/v10alt/libOsi.vcxproj -text
+Osi/MSVisualStudio/v10alt/libOsiCommonTest.vcxproj -text
+Osi/MSVisualStudio/v10alt/osi.props -text
 Osi/MSVisualStudio/v6/libOsi/libOsi.dsp -text
 Osi/MSVisualStudio/v6/libOsiCbc/libOsiCbc.dsp -text
 Osi/MSVisualStudio/v6/libOsiClp/libOsiClp.dsp -text
@@ -61,7 +78,6 @@ Osi/examples/basic2.cpp -text
 Osi/examples/build.cpp -text
 Osi/examples/parameters.cpp -text
 Osi/examples/query.cpp -text
-Osi/inc/config_osi.h.in -text
 Osi/install-sh -text
 Osi/ltmain.sh -text
 Osi/missing -text
@@ -71,6 +87,10 @@ Osi/osi-unittests.pc.in -text
 Osi/osi.pc.in -text
 Osi/src/Osi/Makefile.am -text
 Osi/src/Osi/Makefile.in -text
+Osi/src/Osi/config.h.in -text
+Osi/src/Osi/config_default.h -text
+Osi/src/Osi/config_osi.h.in -text
+Osi/src/Osi/config_osi_default.h -text
 Osi/src/OsiCommonTest/Makefile.am -text
 Osi/src/OsiCommonTest/Makefile.in -text
 Osi/src/OsiCommonTest/OsiNetlibTest.cpp -text

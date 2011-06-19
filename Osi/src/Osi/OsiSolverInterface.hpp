@@ -5,11 +5,13 @@
 #ifndef OsiSolverInterface_H
 #define OsiSolverInterface_H
 
+#include <cstdlib>
 #include <string>
 #include <vector>
 
 #include "CoinMessageHandler.hpp"
 #include "CoinPackedVectorBase.hpp"
+#include "CoinTypes.hpp"
 
 #include "OsiCollections.hpp"
 #include "OsiSolverParameters.hpp"
@@ -30,7 +32,6 @@ class CoinModel;
 class OsiSolverBranch;
 class OsiSolverResult;
 class OsiObject;
-#include "CoinFinite.hpp"
 
 
 //#############################################################################
@@ -57,11 +58,11 @@ class OsiObject;
 */
 
 class OsiSolverInterface  {
-   friend int OsiSolverInterfaceCommonUnitTest(
+   friend void OsiSolverInterfaceCommonUnitTest(
       const OsiSolverInterface* emptySi,
       const std::string & mpsDir,
       const std::string & netlibDir);
-   friend int OsiSolverInterfaceMpsUnitTest(
+   friend void OsiSolverInterfaceMpsUnitTest(
       const std::vector<OsiSolverInterface*> & vecSiP,
       const std::string & mpsDir);
 
@@ -285,7 +286,7 @@ public:
     */
     virtual bool setHintParam(OsiHintParam key, bool yesNo=true,
 			      OsiHintStrength strength=OsiHintTry,
-			      void *otherInformation = NULL) {
+			      void * /*otherInformation*/ = NULL) {
       if (key==OsiLastHintParam)
 	return false; 
       hintParam_[key] = yesNo;
@@ -486,25 +487,26 @@ public:
    the data is unchanged and the solver is not called.
   */
   //@{
-    /// Get number of columns
+    /// Get the number of columns
     virtual int getNumCols() const = 0;
 
-    /// Get number of rows
+    /// Get the number of rows
     virtual int getNumRows() const = 0;
 
-    /// Get number of nonzero elements
+    /// Get the number of nonzero elements
     virtual int getNumElements() const = 0;
 
-    /// Get number of integer variables
+    /// Get the number of integer variables
     virtual int getNumIntegers() const ;
 
-    /// Get pointer to array[getNumCols()] of column lower bounds
+    /// Get a pointer to an array[getNumCols()] of column lower bounds
     virtual const double * getColLower() const = 0;
 
-    /// Get pointer to array[getNumCols()] of column upper bounds
+    /// Get a pointer to an array[getNumCols()] of column upper bounds
     virtual const double * getColUpper() const = 0;
 
-    /** Get pointer to array[getNumRows()] of row constraint senses.
+    /*! \brief Get a pointer to an array[getNumRows()] of row constraint senses.
+
       <ul>
       <li>'L': <= constraint
       <li>'E': =  constraint
@@ -515,7 +517,8 @@ public:
     */
     virtual const char * getRowSense() const = 0;
 
-    /** Get pointer to array[getNumRows()] of row right-hand sides
+    /*! \brief Get a pointer to an array[getNumRows()] of row right-hand sides
+
       <ul>
 	<li> if getRowSense()[i] == 'L' then
 	     getRightHandSide()[i] == getRowUpper()[i]
@@ -529,7 +532,8 @@ public:
     */
     virtual const double * getRightHandSide() const = 0;
 
-    /** Get pointer to array[getNumRows()] of row ranges.
+    /*! \brief Get a pointer to an array[getNumRows()] of row ranges.
+
       <ul>
 	  <li> if getRowSense()[i] == 'R' then
 		  getRowRange()[i] == getRowUpper()[i] - getRowLower()[i]
@@ -539,63 +543,83 @@ public:
     */
     virtual const double * getRowRange() const = 0;
 
-    /// Get pointer to array[getNumRows()] of row lower bounds
+    /// Get a pointer to an array[getNumRows()] of row lower bounds
     virtual const double * getRowLower() const = 0;
 
-    /// Get pointer to array[getNumRows()] of row upper bounds
+    /// Get a pointer to an array[getNumRows()] of row upper bounds
     virtual const double * getRowUpper() const = 0;
 
-    /// Get pointer to array[getNumCols()] of objective function coefficients
+    /*! \brief Get a pointer to an array[getNumCols()] of objective
+	       function coefficients.
+    */
     virtual const double * getObjCoefficients() const = 0;
 
-    /// Get objective function sense (1 for min (default), -1 for max)
+    /*! \brief Get the objective function sense
+    
+      -  1 for minimisation (default)
+      - -1 for maximisation
+    */
     virtual double getObjSense() const = 0;
 
-    /// Return true if variable is continuous
+    /// Return true if the variable is continuous
     virtual bool isContinuous(int colIndex) const = 0;
 
-    /// Return true if variable is binary
+    /// Return true if the variable is binary
     virtual bool isBinary(int colIndex) const;
 
-    /** Return true if column is integer.
-	Note: This function returns true if the the column
-	is binary or a general integer.
+    /*! \brief Return true if the variable is integer.
+
+      This method returns true if the variable is binary or general integer.
     */
     virtual bool isInteger(int colIndex) const;
 
-    /// Return true if variable is general integer
+    /// Return true if the variable is general integer
     virtual bool isIntegerNonBinary(int colIndex) const;
 
-    /// Return true if variable is binary and not fixed at either bound
+    /// Return true if the variable is binary and not fixed
     virtual bool isFreeBinary(int colIndex) const; 
-    /**  Return array of column length
-         0 - continuous
-         1 - binary (may get fixed to 0 or 1 later)
-         2 - general integer (may get fixed later)
-	 Deprecated usage
+
+    /*! \brief Return an array[getNumCols()] of column types
+
+      \deprecated See #getColType
     */
-    inline const char * columnType(bool refresh=false) const
-    { return getColType(refresh);}
-    /**  Return array of column length
-         0 - continuous
-         1 - binary (may get fixed to 0 or 1 later)
-         2 - general integer (may get fixed later)
+    inline const char *columnType(bool refresh=false) const
+    { return getColType(refresh); }
+
+    /*! \brief Return an array[getNumCols()] of column types
+
+       - 0 - continuous
+       - 1 - binary
+       - 2 - general integer
+      
+      If \p refresh is true, the classification of integer variables as
+      binary or general integer will be reevaluated. If the current bounds
+      are [0,1], or if the variable is fixed at 0 or 1, it will be classified
+      as binary, otherwise it will be classified as general integer.
     */
     virtual const char * getColType(bool refresh=false) const;
   
-    /// Get pointer to row-wise copy of matrix
+    /// Get a pointer to a row-wise copy of the matrix
     virtual const CoinPackedMatrix * getMatrixByRow() const = 0;
 
-    /// Get pointer to column-wise copy of matrix
+    /// Get a pointer to a column-wise copy of the matrix
     virtual const CoinPackedMatrix * getMatrixByCol() const = 0;
 
-    /// Get pointer to mutable row-wise copy of matrix (returns NULL if not meaningful)
+    /*! \brief Get a pointer to a mutable row-wise copy of the matrix.
+    
+      Returns NULL if the request is not meaningful (i.e., the OSI will not
+      recognise any modifications to the matrix).
+    */
     virtual CoinPackedMatrix * getMutableMatrixByRow() const {return NULL;}
 
-    /// Get pointer to mutable column-wise copy of matrix (returns NULL if not meaningful)
+    /*! \brief Get a pointer to a mutable column-wise copy of the matrix
+    
+      Returns NULL if the request is not meaningful (i.e., the OSI will not
+      recognise any modifications to the matrix).
+    */
     virtual CoinPackedMatrix * getMutableMatrixByCol() const {return NULL;}
 
-    /// Get solver's value for infinity
+    /// Get the solver's value for infinity
     virtual double getInfinity() const = 0;
   //@}
     
@@ -1660,35 +1684,56 @@ public:
   //@}
   //---------------------------------------------------------------------------
 
-  /**@name Methods related to testing generated cuts */
+  /*! @name Methods related to testing generated cuts
+  
+    See the documentation for OsiRowCutDebugger for additional details.
+  */
   //@{
-    /** Activate the row cut debugger.
+    /*! \brief Activate the row cut debugger.
 
-        If the model name passed is on list of known models
-	then all cuts are checked to see that they do NOT cut
-	off the known optimal solution.  
+      If \p modelName is in the set of known models then all cuts are
+      checked to see that they do NOT cut off the optimal solution known
+      to the debugger.
     */
-    virtual void activateRowCutDebugger (const char * modelName);
+    virtual void activateRowCutDebugger (const char *modelName);
 
-    /** Activate debugger using full solution array.
-        Only integer values need to be correct.
-        Up to user to get it correct.
-        Sets up debugger if solution was valid.
+    /*! \brief Activate the row cut debugger using a full solution array.
+
+
+      Activate the debugger for a model not included in the debugger's
+      internal database.  Cuts will be checked to see that they do NOT
+      cut off the given solution.
+
+      \p solution must be a full solution vector, but only the integer
+      variables need to be correct. The debugger will fill in the continuous
+      variables by solving an lp relaxation with the integer variables
+      fixed as specified. If the given values for the continuous variables
+      should be preserved, set \p keepContinuous to true.
     */
-    virtual void activateRowCutDebugger( const double * solution);
-    /** Get the row cut debugger.
+    virtual void activateRowCutDebugger(const double *solution,
+    					bool enforceOptimality = true);
 
-	If there is a row cut debugger object associated with
-	model AND if the known optimal solution is within the
-	current feasible region then a pointer to the object is
-	returned which may be used to test validity of cuts.
+    /*! \brief Get the row cut debugger provided the solution known to the
+    	       debugger is within the feasible region held in the solver.
 
-	Otherwise NULL is returned
+      If there is a row cut debugger object associated with model AND if
+      the solution known to the debugger is within the solver's current
+      feasible region (i.e., the column bounds held in the solver are
+      compatible with the known solution) then a pointer to the debugger
+      is returned which may be used to test validity of cuts.
+
+      Otherwise NULL is returned
     */
-    const OsiRowCutDebugger * getRowCutDebugger() const;
-    /// If you want to get debugger object even if not on optimal path then use this
-    const OsiRowCutDebugger * getRowCutDebuggerAlways() const;
+    const OsiRowCutDebugger *getRowCutDebugger() const;
 
+    /*! \brief Get the row cut debugger object
+
+      Return the row cut debugger object if it exists. One common usage of
+      this method is to obtain a debugger object in order to execute
+      OsiRowCutDebugger::redoSolution (so that the stored solution is again
+      compatible with the problem held in the solver).
+    */
+    OsiRowCutDebugger * getRowCutDebuggerAlways() const;
   //@} 
   
   /*! \name OsiSimplexInterface
@@ -1949,8 +1994,12 @@ protected:
 
   ///@name Protected member data
   //@{
-    /// Pointer to row cut debugger object
-    OsiRowCutDebugger * rowCutDebugger_;
+    /*! \brief Pointer to row cut debugger object
+
+      Mutable so that we can update the solution held in the debugger while
+      maintaining const'ness for the Osi object.
+    */
+    mutable OsiRowCutDebugger * rowCutDebugger_;
    // Why not just make useful stuff protected?
    /// Message handler
   CoinMessageHandler * handler_;
@@ -2010,28 +2059,6 @@ private:
 
  //@}
 };
-
-//#############################################################################
-/** A function that tests the methods in the OsiSolverInterface class. The
-    only reason for it not to be a member method is that this way it doesn't
-    have to be compiled into the library. And that's a gain, because the
-    library should be compiled with optimization on, but this method should be
-    compiled with debugging. Also, if this method is compiled with
-    optimization, the compilation takes 10-15 minutes and the machine pages
-    (has 256M core memory!)... */
-int
-OsiSolverInterfaceCommonUnitTest(
-   const OsiSolverInterface* emptySi,
-   const std::string & mpsDir,
-   const std::string & netlibDir);
-
-//#############################################################################
-/** A function that tests that a lot of problems given in MPS files (mostly
-    the NETLIB problems) solve properly with all the specified solvers. */
-int
-OsiSolverInterfaceMpsUnitTest(
-   const std::vector<OsiSolverInterface*> & vecSiP,
-   const std::string & mpsDir);
 
 //#############################################################################
 /** A quick inlined function to convert from the lb/ub style of constraint

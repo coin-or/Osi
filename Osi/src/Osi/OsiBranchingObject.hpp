@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "CoinError.hpp"
-#include "CoinFinite.hpp" /* to get CoinBigIndex, I know it looks strange */
+#include "CoinTypes.hpp"
 
 class OsiSolverInterface;
 class OsiSolverBranch;

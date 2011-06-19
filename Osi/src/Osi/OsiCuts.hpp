@@ -5,10 +5,7 @@
 #ifndef OsiCuts_H
 #define OsiCuts_H
 
-#if defined(_MSC_VER)
-// Turn off compiler warning about long names
-#  pragma warning(disable:4786)
-#endif
+#include "CoinPragma.hpp"
 
 #include <cmath>
 #include <cfloat>
@@ -409,7 +406,7 @@ OsiCut * OsiCuts::mostEffectiveCutPtr()
   iterator e=end();
   //return *(std::min_element(b,e,OsiCutCompare()));
   OsiCut * retVal = NULL;
-  double maxEff = DBL_MIN;
+  double maxEff = COIN_DBL_MIN;
   for ( OsiCuts::iterator it=b; it!=e; ++it ) {
     if (maxEff < (*it)->effectiveness() ) {
       maxEff = (*it)->effectiveness();
@@ -473,13 +470,5 @@ void OsiCuts::eraseAndDumpCuts(const std::vector<int> to_erase)
   rowCutPtrs_.clear();
 }
 
-//#############################################################################
-/** A function that tests the methods in the OsiCuts class. The
-    only reason for it not to be a member method is that this way it doesn't
-    have to be compiled into the library. And that's a gain, because the
-    library should be compiled with optimization on, but this method should be
-    compiled with debugging. */
-void
-OsiCutsUnitTest();
 
 #endif

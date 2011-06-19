@@ -11,9 +11,6 @@
 
 #include "OsiConfig.h"
 
-#ifdef NDEBUG
-#undef NDEBUG
-#endif
 /*
   #include "CoinTime.hpp"
   #include <cstdlib>
@@ -24,31 +21,13 @@
   #include <sstream>
   #include <cstdio>
 */
-/*
-  A utility definition which allows for easy suppression of unused variable
-  warnings from GCC. Handy in this environment, where we're constantly def'ing
-  things in and out.
-*/
-#ifndef UNUSED
-# if defined(__GNUC__)
-#   define UNUSED __attribute__((unused))
-# else
-#   define UNUSED
-# endif
-#endif
 
 #include "CoinHelperFunctions.hpp"
+#include "CoinFinite.hpp"
+#include "CoinFloatEqual.hpp"
 #include "CoinPackedVector.hpp"
 #include "CoinPackedMatrix.hpp"
 #include "OsiSolverInterface.hpp"
-/*
-  #include "CoinFloatEqual.hpp"
-  #include "CoinWarmStartBasis.hpp"
-  #include "OsiRowCut.hpp"
-  #include "OsiCuts.hpp"
-  #include "OsiPresolve.hpp"
-*/
-
 
 using namespace OsiUnitTest ;
 
@@ -61,9 +40,8 @@ namespace {
   Test that the given vector is a unit vector with a 1 in the specified index
   position
 */
-bool isUnitVector (int ndx, int len, double *vec)
-{ bool verbose = true ;
-  bool retval = false ; 
+bool isUnitVector (int /* ndx */, int len, double *vec)
+{ bool retval = false ;
 
   CoinAbsFltEq fltEq ;
 
@@ -80,7 +58,7 @@ bool isUnitVector (int ndx, int len, double *vec)
   if (nzCount == 1 && oneCount == 1 && onePosn >= 0)
   { retval = true ; }
   
-  if (verbose && !retval)
+  if (OsiUnitTest::verbosity >= 2 && !retval)
   { if (nzCount > oneCount)
     { std::cout
 	<< "    Vector contains " << nzCount-oneCount
@@ -102,8 +80,7 @@ bool isUnitVector (int ndx, int len, double *vec)
   loaded incorrectly, checks that B inv(B) = I will surely fail.
 */
 CoinPackedMatrix *buildBasisMatrix (const OsiSolverInterface *si)
-{ const bool verbose = false ;
-  std::string solverName ;
+{ std::string solverName ;
   si->getStrParam(OsiSolverName,solverName) ;
 
   CoinPackedMatrix *basisMtx = new CoinPackedMatrix() ;
@@ -117,7 +94,7 @@ CoinPackedMatrix *buildBasisMatrix (const OsiSolverInterface *si)
   for (int i = 0 ; i < m ; i++)
   { int j = basicIndices[i] ;
     if (j < n)
-    { if (verbose)
+    { if (OsiUnitTest::verbosity >= 2)
       { std::cout
 	  << "  Retrieving column " << j << " for basis pos'n " << i << "."
 	  << std::endl ; }
@@ -125,7 +102,7 @@ CoinPackedMatrix *buildBasisMatrix (const OsiSolverInterface *si)
       basisMtx->appendCol(col) ; }
     else
     { j -= n ;
-      if (verbose)
+      if (OsiUnitTest::verbosity >= 2)
       { std::cout
 	  << "  Fabricating e<" << j << "> for basis pos'n " << i << "."
 	  << std::endl ; }
@@ -144,16 +121,13 @@ CoinPackedMatrix *buildBasisMatrix (const OsiSolverInterface *si)
   queries: a problem has been loaded and solved to optimality and
   enableFactorization has been called.
 */
-int testBInvCol (const OsiSolverInterface *si)
-{ const bool verbose = false ;
-  std::string solverName ;
+void testBInvCol (const OsiSolverInterface *si)
+{ std::string solverName ;
   si->getStrParam(OsiSolverName,solverName) ;
 
   int m = si->getNumRows() ;
 
-  int errCnt = 0 ;
-
-  std::cout << "  Testing getBInvCol ... " ;
+  std::cout << "  Testing getBInvCol ... " << std::endl;
 
   CoinPackedMatrix *basisMtx = buildBasisMatrix(si) ;
 /*
@@ -166,34 +140,18 @@ int testBInvCol (const OsiSolverInterface *si)
   { 
     CoinFillN(betak,m,COIN_DBL_MAX) ;
     CoinFillN(ek,m,COIN_DBL_MAX) ;
-    try
-    { si->getBInvCol(k,betak) ; }
-    catch (CoinError e)
-    { std::cout
-	<< "  getBInvCol threw on request for beta<" << k
-	<< ">." << std::endl ;
-      std::cout
-	<< "  CoinError: " << e.fileName() << ":" << e.methodName() << ": "
-	<< e.message() << std::endl ; }
+    OSIUNITTEST_CATCH_ERROR(si->getBInvCol(k,betak), {}, solverName, "testBInvCol");
+
     basisMtx->times(betak,ek) ;
-    if (!isUnitVector(k,m,ek))
-    { errCnt++ ;
-      if (verbose)
-      { std::cout
-	  << "  " << "B beta<" << k
-	  << "> != e<" << k << ">." << std::endl ; } } }
+    OSIUNITTEST_ASSERT_ERROR(isUnitVector(k,m,ek),
+    	if (OsiUnitTest::verbosity >= 1)
+    	{ std::cout << "  " << "B beta<" << k << "> != e<" << k << ">." << std::endl ; },
+      solverName, "testBInvCol");
+  }
   delete[] betak ;
   delete[] ek ;
   delete basisMtx ;
-/*
-  Announce the result and we're done.
-*/
-  if (errCnt != 0)
-  { std::cout << errCnt << " errors." << std::endl ; }
-  else
-  { std::cout << "ok." << std::endl ; }
-
-  return (errCnt) ; }
+}
 
 /*
   Test rows beta<i> = e<i>inv(B) of the basis inverse by calculating beta<i>B
@@ -204,16 +162,13 @@ int testBInvCol (const OsiSolverInterface *si)
   a problem has been loaded and solved to optimality and enableFactorization
   has been called.
 */
-int testBInvRow (const OsiSolverInterface *si)
-{ const bool verbose = false ;
-  std::string solverName ;
+void testBInvRow (const OsiSolverInterface *si)
+{ std::string solverName ;
   si->getStrParam(OsiSolverName,solverName) ;
 
   int m = si->getNumRows() ;
 
-  int errCnt = 0 ;
-
-  std::cout << "  Testing getBInvRow ... " ;
+  std::cout << "  Testing getBInvRow ... " << std::endl;
 
 /*
   Should construct in row-major form for transposeTimes, but efficiency is
@@ -229,35 +184,18 @@ int testBInvRow (const OsiSolverInterface *si)
   for (int i = 0 ; i < m ; i++)
   { CoinFillN(betai,m,COIN_DBL_MAX) ;
     CoinFillN(ei,m,COIN_DBL_MAX) ;
-    try
-    { si->getBInvRow(i,betai) ; }
-    catch (CoinError e)
-    { std::cout
-	<< "  getBInvRow threw on request for beta<" << i
-	<< ">." << std::endl ;
-      std::cout
-	<< "  CoinError: " << e.fileName() << ":" << e.methodName() << ": "
-	<< e.message() << std::endl ; }
+    OSIUNITTEST_CATCH_ERROR(si->getBInvRow(i,betai), {}, solverName, "testBInvRow");
+
     basisMtx->transposeTimes(betai,ei) ;
-    if (!isUnitVector(i,m,ei))
-    { errCnt++ ;
-      if (verbose)
-      { std::cout
-	  << "  " << "beta<" << i
-	  << ">B != e<" << i << ">." << std::endl ; } } }
+    OSIUNITTEST_ASSERT_ERROR(isUnitVector(i,m,ei),
+    	if (OsiUnitTest::verbosity >= 1)
+      { std::cout << "  " << "beta<" << i << ">B != e<" << i << ">." << std::endl ; },
+      solverName, "testBInvRow");
+  }
   delete[] betai ;
   delete[] ei ;
   delete basisMtx ;
-/*
-  Announce the result and we're done.
-*/
-  if (errCnt != 0)
-  { std::cout << errCnt << " errors." << std::endl ; }
-  else
-  { std::cout << "ok." << std::endl ; }
-
-  return (errCnt) ; }
-
+}
 
 /*
   Test columns abar<j> = inv(B) a<j> by checking that B abar<j> = a<j>.
@@ -266,17 +204,14 @@ int testBInvRow (const OsiSolverInterface *si)
   queries: a problem has been loaded and solved to optimality and
   enableFactorization has been called.
 */
-int testBInvACol (const OsiSolverInterface *si)
-{ const bool verbose = false ;
-  std::string solverName ;
+void testBInvACol (const OsiSolverInterface *si)
+{ std::string solverName ;
   si->getStrParam(OsiSolverName,solverName) ;
 
   int n = si->getNumCols() ;
   int m = si->getNumRows() ;
 
-  int errCnt = 0 ;
-
-  std::cout << "  Testing getBInvACol ... " ;
+  std::cout << "  Testing getBInvACol ... " << std::endl;
 
   CoinPackedMatrix *basisMtx = buildBasisMatrix(si) ;
   const CoinPackedMatrix *mtx = si->getMatrixByCol() ;
@@ -289,36 +224,19 @@ int testBInvACol (const OsiSolverInterface *si)
   for (int j = 0 ; j < n ; j++)
   { CoinFillN(abarj,m,COIN_DBL_MAX) ;
     CoinFillN(aj,m,COIN_DBL_MAX) ;
-    try
-    { si->getBInvACol(j,abarj) ; }
-    catch (CoinError e)
-    { std::cout
-	<< "  getBInvACol threw on request for abar<" << j
-	<< ">." << std::endl ;
-      std::cout
-	<< "  CoinError: " << e.fileName() << ":" << e.methodName() << ": "
-	<< e.message() << std::endl ; }
+    OSIUNITTEST_CATCH_ERROR(si->getBInvACol(j,abarj), {}, solverName, "testBInvACol");
+
     basisMtx->times(abarj,aj) ;
     const CoinShallowPackedVector pv = mtx->getVector(j) ;
-    if (isEquivalent(pv,m,aj) == false)
-    { errCnt++ ;
-      if (verbose)
-      { std::cout
-	  << "  " << "B abar<" << j
-	  << "> != a<" << j << ">." << std::endl ; } } }
+    OSIUNITTEST_ASSERT_ERROR(isEquivalent(pv,m,aj),
+    	if (OsiUnitTest::verbosity >= 1)
+      { std::cout << "  " << "B abar<" << j << "> != a<" << j << ">." << std::endl ; },
+      solverName, "testBInvACol");
+  }
   delete[] abarj ;
   delete[] aj ;
   delete basisMtx ;
-/*
-  Announce the result and we're done.
-*/
-  if (errCnt != 0)
-  { std::cout << errCnt << " errors." << std::endl ; }
-  else
-  { std::cout << "ok." << std::endl ; }
-
-  return (errCnt) ; }
-
+}
 
 /*
   Test rows abar<i> = e<i>(inv(B)(A I)). This is an awkward thing to check,
@@ -334,17 +252,14 @@ int testBInvACol (const OsiSolverInterface *si)
   queries: a problem has been loaded and solved to optimality and
   enableFactorization has been called.
 */
-int testBInvARow (const OsiSolverInterface *si)
-{ const bool verbose = false ;
-  std::string solverName ;
+void testBInvARow (const OsiSolverInterface *si)
+{ std::string solverName ;
   si->getStrParam(OsiSolverName,solverName) ;
 
   int n = si->getNumCols() ;
   int m = si->getNumRows() ;
 
-  int errCnt = 0 ;
-
-  std::cout << "  Testing getBInvARow ... " ;
+  std::cout << "  Testing getBInvARow ... " << std::endl;
 
   CoinPackedMatrix *basisMtx = buildBasisMatrix(si) ;
 /*
@@ -366,7 +281,7 @@ int testBInvARow (const OsiSolverInterface *si)
   delete[] abarj ;
   abarjMtx.reverseOrdering() ;
   abarjMtx.setDimensions(m,n) ;
-  if (verbose)
+  if (OsiUnitTest::verbosity >= 1)
   { std::cout
       << "  Col-major tableau is " << abarjMtx.getNumRows() << " x "
       << abarjMtx.getNumCols() << " with " << abarjMtx.getNumElements()
@@ -383,18 +298,10 @@ int testBInvARow (const OsiSolverInterface *si)
   for (int i = 0 ; i < m ; i++)
   { CoinFillN(abari,n,COIN_DBL_MAX) ;
     CoinFillN(betai,m,COIN_DBL_MAX) ;
-    try
-    { si->getBInvARow(i,abari,betai) ; }
-    catch (CoinError e)
-    { std::cout
-	<< "  getBInvARow threw on request for abar<" << i
-	<< ">." << std::endl ;
-      std::cout
-	<< "  CoinError: " << e.fileName() << ":" << e.methodName() << ": "
-	<< e.message() << std::endl ; }
+    OSIUNITTEST_CATCH_ERROR(si->getBInvARow(i,abari,betai), {}, solverName, "testBInvARow");
     CoinPackedVector pkv ;
     pkv.setFullNonZero(n,abari) ;
-    if (verbose)
+    if (OsiUnitTest::verbosity >= 2)
     { std::cout << "  Adding" ;
       const int *indices = pkv.getIndices() ;
       for (int v = 0 ; v < pkv.getNumElements() ; v++)
@@ -404,14 +311,13 @@ int testBInvARow (const OsiSolverInterface *si)
         std::cout << "  !! packed abari != full abari !!" << std::endl ; }
     abariMtx.appendRow(pkv) ;
     basisMtx->transposeTimes(betai,ei) ;
-    if (!isUnitVector(i,m,ei))
-    { errCnt++ ;
-      if (verbose)
-      { std::cout
-	  << "  " << "beta<" << i
-	  << ">B != e<" << i << ">." << std::endl ; } } }
+    OSIUNITTEST_ASSERT_ERROR(isUnitVector(i,m,ei),
+    	if (OsiUnitTest::verbosity >= 1)
+      { std::cout << "  " << "beta<" << i << ">B != e<" << i << ">." << std::endl ; },
+      solverName, "testBInvARow");
+  }
   abariMtx.setDimensions(m,n) ;
-  if (verbose)
+  if (OsiUnitTest::verbosity >= 2)
   { std::cout
       << "  Row-major tableau is " << abariMtx.getNumRows() << " x "
       << abariMtx.getNumCols() << " with " << abariMtx.getNumElements()
@@ -425,20 +331,8 @@ int testBInvARow (const OsiSolverInterface *si)
   differences, but we won't get a good count. But then, one error is all we
   need to report.
 */
-  if (!abariMtx.isEquivalent2(abarjMtx))
-  { std::cout
-      << "  Tableau built by rows does not match tableau built by columns."
-      << std::endl ;
-    errCnt++ ; }
-/*
-  Announce the result and we're done.
-*/
-  if (errCnt != 0)
-  { std::cout << errCnt << " errors." << std::endl ; }
-  else
-  { std::cout << "ok." << std::endl ; }
-
-  return (errCnt) ; }
+  OSIUNITTEST_ASSERT_ERROR(abariMtx.isEquivalent2(abarjMtx), {}, solverName, "testBInvARow: tableaus built by rows and columns match");
+}
 
 /*
   Test the row and column duals returned by getReducedGradient.
@@ -465,15 +359,12 @@ int testBInvARow (const OsiSolverInterface *si)
   queries: a problem has been loaded and solved to optimality and
   enableFactorization has been called.
 */
-int testReducedGradient (const OsiSolverInterface *si)
-{ const bool verbose = false ;
-  std::string solverName ;
+void testReducedGradient (const OsiSolverInterface *si)
+{ std::string solverName ;
   si->getStrParam(OsiSolverName,solverName) ;
 
   int n = si->getNumCols() ;
   int m = si->getNumRows() ;
-
-  int errCnt = 0 ;
 
   double objSense = si->getObjSense() ;
   std::cout
@@ -495,13 +386,13 @@ int testReducedGradient (const OsiSolverInterface *si)
   for (int k = 0 ; k < m ; k++)
   { int j = basicIndices[k] ;
     if (j < n)
-    { if (verbose)
+    { if (OsiUnitTest::verbosity >= 2)
       { std::cout
 	  << "  Retrieving c<" << j << "> = " << c[j]
 	  << " for basis pos'n " << k << "." << std::endl ; }
     cB[k] = c[j] ; }
     else
-    { if (verbose)
+    { if (OsiUnitTest::verbosity >= 2)
       { std::cout
 	  << "  Assuming c<n+" << n-j << "> = " << 0.0
 	  << " for basis pos'n " << k << "." << std::endl ; }
@@ -512,18 +403,12 @@ int testReducedGradient (const OsiSolverInterface *si)
 */
   double *cbar = new double[n] ;
   double *y = new double[m] ;
-  try
-  { si->getReducedGradient(cbar,y,c) ; }
-  catch (CoinError e)
-  { std::cout
-      << "  getReducedGradient threw." << std::endl ;
-    std::cout
-      << "  CoinError: " << e.fileName() << ":" << e.methodName() << ": "
-      << e.message() << std::endl ;
-    errCnt++ ;
-    delete[] cbar ;
-    delete[] y ;
-    return (errCnt) ; }
+  OSIUNITTEST_CATCH_ERROR(si->getReducedGradient(cbar,y,c),
+  	delete[] cbar;
+  	delete[] y;
+  	return,
+  	solverName, "testReducedGradient");
+
 /*
   Run through the columns of the basis. Retrieve beta<j>, calculate
   dot(c<B>,beta<j>) and check that all three sources of y<k> agree.
@@ -535,18 +420,15 @@ int testReducedGradient (const OsiSolverInterface *si)
     si->getBInvCol(k,betaj) ;
     for (int i = 0 ; i < m ; i++)
     { yk += cB[i]*betaj[i] ; }
-    if (!(eq(y[k],yGold[k]) && eq(y[k],yk)))
-    { errCnt++ ;
-      if (!eq(y[k],yGold[k]) && verbose)
-      { std::cout
-	  << "  " << y[k] << " = y<" << k << "> != yGold<" << k << "> = "
-	  << yGold[k] << ", diff = "
-	  << y[k]-yGold[k] << "." << std::endl ; }
-      if (!eq(y[k],yk) && verbose)
-      { std::cout
-	  << "  " << y[k] << " = y<" << k << "> != c<B>beta<" << k << "> = "
-	  << yk << ", diff = "
-	  << y[k]-yk << "." << std::endl ; } } }
+    OSIUNITTEST_ASSERT_ERROR(eq(y[k],yGold[k]),
+      if (OsiUnitTest::verbosity >= 1)
+      	std::cout << "  " << y[k] << " = y<" << k << "> != yGold<" << k << "> = " << yGold[k] << ", diff = " << y[k]-yGold[k] << "." << std::endl,
+    	solverName, "testReducedGradient");
+    OSIUNITTEST_ASSERT_ERROR(eq(y[k],yk),
+      if (OsiUnitTest::verbosity >= 1)
+      	std::cout << "  " << y[k] << " = y<" << k << "> != c<B>beta<" << k << "> = " << yk << ", diff = " << y[k]-yk << "." << std::endl,
+    	solverName, "testReducedGradient");
+  }
   delete[] cB ;
   delete[] betaj ;
 /*
@@ -575,61 +457,46 @@ int testReducedGradient (const OsiSolverInterface *si)
   for (int j = 1 ; j < n ; j++)
   { double cbarj = cbar[j] ;
     int statj = archStatus[j] ;
-    if (verbose)
-    { std::cout
-	<< "  x<" << j << "> " << statNames[statj]
-	<< ", cbar<" << j << "> = " << cbarj << "." << std::endl ; }
-    if (!(eq(cbarj,cbarGold[j]) && eq(cbarj,cbarCalc[j])))
-    { errCnt++ ;
-      if (!eq(cbarj,cbarGold[j]) && verbose)
-      { std::cout
-	  << "  " << cbarj << " = cbar<" << j << "> != cbarGold<"
-	  << j << "> = " << cbarGold[j] << ", diff = "
-	  << cbarj-cbarGold[j] << "." << std::endl ; }
-      if (!eq(cbarj,cbarCalc[j]) && verbose)
-      { std::cout
-	  << "  " << cbarj << " = cbar<" << j << "> != c<"
-	  << j << "> - ya<" << j << "> = "
-	  << cbarCalc[j] << ", diff = "
-	  << cbarj-cbarCalc[j] << "." << std::endl ; } }
+    if (OsiUnitTest::verbosity >= 2)
+      std::cout << "  x<" << j << "> " << statNames[statj] << ", cbar<" << j << "> = " << cbarj << "." << std::endl ;
+    OSIUNITTEST_ASSERT_ERROR(eq(cbarj,cbarGold[j]),
+      if (OsiUnitTest::verbosity >= 1)
+      	std::cout << "  " << cbarj << " = cbar<" << j << "> != cbarGold<" << j << "> = " << cbarGold[j] << ", diff = " << cbarj-cbarGold[j] << "." << std::endl,
+    	solverName, "testReducedGradient");
+    OSIUNITTEST_ASSERT_ERROR(eq(cbarj,cbarCalc[j]),
+      if (OsiUnitTest::verbosity >= 1)
+    	  std::cout << "  " << cbarj << " = cbar<" << j << "> != c<" << j << "> - ya<" << j << "> = " << cbarCalc[j] << ", diff = " << cbarj-cbarCalc[j] << "." << std::endl,
+    	solverName, "testReducedGradient");
     double testcbarj = objSense*cbarj ;
     switch (statj)
     { case OsiSimplex_nbub:
-      { if (testcbarj > dualTol)
-	{ errCnt++ ;
-	  if (verbose)
-	  { std::cout
-	      << "  cbar<" << j << "> = " << cbarj
-	      << " has the wrong sign for a NBUB variable."
-	      << std::endl ; } }
-	break ; }
+      {
+        OSIUNITTEST_ASSERT_ERROR(testcbarj <= dualTol,
+          if (OsiUnitTest::verbosity >= 1)
+          	std::cout << "  cbar<" << j << "> = " << cbarj << " has the wrong sign for a NBUB variable." << std::endl,
+        	solverName, "testReducedGradient");
+        break ; }
       case OsiSimplex_nblb:
-      { if (testcbarj < -dualTol)
-	{ errCnt++ ;
-	  if (verbose)
-	  { std::cout
-	      << "  cbar<" << j << "> = " << cbarj
-	      << " has the wrong sign for a NBLB variable."
-	      << std::endl ; } }
-	break ; }
+      {
+        OSIUNITTEST_ASSERT_ERROR(testcbarj >= -dualTol,
+          if (OsiUnitTest::verbosity >= 1)
+          	std::cout << "  cbar<" << j << "> = " << cbarj << " has the wrong sign for a NBLB variable." << std::endl,
+        	solverName, "testReducedGradient");
+        break ; }
       case OsiSimplex_isFree:
-      { if (CoinAbs(testcbarj) > dualTol)
-	{ errCnt++ ;
-	  if (verbose)
-	  { std::cout
-	      << "  cbar<" << j << "> = " << cbarj
-	      << " should be zero for a NBFR variable."
-	      << std::endl ; } }
-	break ; }
+      {
+        OSIUNITTEST_ASSERT_ERROR(CoinAbs(testcbarj) <= dualTol,
+          if (OsiUnitTest::verbosity >= 1)
+          	std::cout  << "  cbar<" << j << "> = " << cbarj << " should be zero for a NBFR variable." << std::endl,
+        	solverName, "testReducedGradient");
+        break ; }
       case OsiSimplex_basic:
-      { if (CoinAbs(testcbarj) > dualTol)
-	{ errCnt++ ;
-	  if (verbose)
-	  { std::cout
-	      << "  cbar<" << j << "> = " << cbarj
-	      << " should be zero for a basic variable."
-	      << std::endl ; } }
-	break ; }
+      {
+        OSIUNITTEST_ASSERT_ERROR(CoinAbs(testcbarj) <= dualTol,
+          if (OsiUnitTest::verbosity >= 1)
+          	std::cout  << "  cbar<" << j << "> = " << cbarj << " should be zero for a basic variable." << std::endl,
+        	solverName, "testReducedGradient");
+        break ; }
       default:
       { break ; } } }
 
@@ -638,22 +505,13 @@ int testReducedGradient (const OsiSolverInterface *si)
   delete[] cbarCalc ;
   delete[] archStatus ;
   delete[] logStatus ;
-/*
-  Announce the result and we're done.
-*/
-  if (errCnt != 0)
-  { std::cout << errCnt << " errors." << std::endl ; }
-  else
-  { std::cout << "ok." << std::endl ; }
-
-  return (errCnt) ; }
-
+}
 
 /*
   Test the mode 2 portion of the simplex API.
   Solve an lp by hand
 */
-int testSimplexMode2 (const OsiSolverInterface *emptySi, std::string sampleDir)
+void testSimplexMode2 (const OsiSolverInterface *emptySi, std::string sampleDir)
 { OsiSolverInterface * si = emptySi->clone();
   std::string solverName;
   si->getStrParam(OsiSolverName,solverName);
@@ -695,21 +553,21 @@ int testSimplexMode2 (const OsiSolverInterface *emptySi, std::string sampleDir)
     for (i=0;i<numberRows;i++) {
       double value=dual[i];
       if (value>best) {
-	direction=-1;
-	best=value;
-	colIn=-i-1;
+      	direction=-1;
+      	best=value;
+      	colIn=-i-1;
       }
     }
     for (i=0;i<numberColumns;i++) {
       double value=dj[i];
       if (value<-best&&solution[i]<1.0e-6) {
-	direction=1;
-	best=-value;
-	colIn=i;
+      	direction=1;
+      	best=-value;
+      	colIn=i;
       } else if (value>best&&solution[i]>1.0-1.0e-6) {
-	direction=-1;
-	best=value;
-	colIn=i;
+      	direction=-1;
+      	best=value;
+      	colIn=i;
       }
     }
     if (colIn==9999)
@@ -717,7 +575,7 @@ int testSimplexMode2 (const OsiSolverInterface *emptySi, std::string sampleDir)
     int colOut;
     int outStatus;
     double theta;
-    assert(!si->primalPivotResult(colIn,direction,colOut,outStatus,theta,NULL));
+    OSIUNITTEST_ASSERT_ERROR(!si->primalPivotResult(colIn,direction,colOut,outStatus,theta,NULL), break, solverName, "testSimplexMode2");
     printf("out %d, direction %d theta %g\n",
 	   colOut,outStatus,theta);
     numberIterations++;
@@ -728,51 +586,38 @@ int testSimplexMode2 (const OsiSolverInterface *emptySi, std::string sampleDir)
   // exit special mode
   si->disableSimplexInterface();
   si->resolve();
-  assert (!si->getIterationCount());
+  OSIUNITTEST_ASSERT_ERROR(!si->getIterationCount(), {}, solverName, "testSimplexMode2: resolve after disable simplex interface");
   si->setObjSense(-1.0);
   si->initialSolve();
   std::cout<<solverName<<" passed OsiSimplexInterface test"<<std::endl;
   delete si;
-
-  return (0) ; }
+}
 
 /*
   Test Simplex API mode 1 (tableau access) methods.
 */
-int testSimplexMode1 (const OsiSolverInterface *emptySi, std::string sampleDir)
-{ bool verbose = false ;
-
-  OsiSolverInterface * si = emptySi->clone();
+void testSimplexMode1 (const OsiSolverInterface *emptySi, std::string sampleDir)
+{ OsiSolverInterface * si = emptySi->clone();
   std::string solverName;
   si->getStrParam(OsiSolverName,solverName);
   si->setHintParam(OsiDoReducePrint,true,OsiHintDo) ;
-
-  int errCnt = 0 ;
 /*
   Read p0033 and check that there's no optimal basis prior to solving.
 */
   std::string fn = sampleDir+"p0033";
   si->readMps(fn.c_str(),"mps");
 
-  bool testVal = si->basisIsAvailable() ;
-  if (testVal)
-  { failureMessage(*si,"Optimal basis available before initial solve.") ;
-    errCnt++ ; }
-  else
-  if (verbose)
-  { std::cout
-      << "  " << solverName << " shows no optimal basis before initial solve."
-      << std::endl ; }
+  OSIUNITTEST_ASSERT_ERROR(!si->basisIsAvailable(),
+    if (OsiUnitTest::verbosity >= 1)
+      std::cout << "  " << solverName << " shows no optimal basis before initial solve." << std::endl,
+    *si, "testSimplexMode1: basis before solve");
 /*
   Solve as minimisation problem.
 */
   si->setObjSense(1.0) ;
   si->initialSolve();
-  if (!si->isProvenOptimal())
-  { failureMessage(*si,"Failed to solve p0033 to optimality.") ;
-    return (1) ; }
-  else
-  if (verbose)
+  OSIUNITTEST_ASSERT_ERROR(si->isProvenOptimal(), return, *si, "testSimplexMode1: solve p0033");
+  if (OsiUnitTest::verbosity >= 1)
   { std::cout
       << "  " << solverName << " solved p0033 z = " << si->getObjValue()
       << "." << std::endl ; }
@@ -787,25 +632,12 @@ int testSimplexMode1 (const OsiSolverInterface *emptySi, std::string sampleDir)
       << "  " << ((minmax[ndx] < 0)?"maximisation ...":"minimisation")
       << " ..." << std::endl ;
     si->resolve() ;
-    if (!si->isProvenOptimal())
-    { failureMessage(*si,"Failed to solve p0033 to optimality.") ;
-      return (1) ; }
-    else
-    if (verbose)
-    { std::cout
-	<< "  " << solverName
-	<< ((si->getObjSense() < 0)?" maximised":" minimised")
-	<< " p0033 z = " << si->getObjValue()
-	<< "." << std::endl ; }
-    testVal = si->basisIsAvailable() ;
-    if (!testVal)
-    { failureMessage(*si,"No optimal basis available after resolve.") ;
-      errCnt++ ; }
-    else
-    if (verbose)
-    { std::cout
-	<< "  " << solverName << " shows optimal basis after resolve."
-	<< std::endl ; }
+    OSIUNITTEST_ASSERT_ERROR(si->isProvenOptimal(), return, *si, "testSimplexMode1: resolve p0033");
+    if (OsiUnitTest::verbosity >= 1)
+    { std::cout << "  " << solverName	<< ((si->getObjSense() < 0)?" maximised":" minimised") << " p0033 z = " << si->getObjValue() << "." << std::endl ; }
+    OSIUNITTEST_ASSERT_ERROR(si->basisIsAvailable(), {}, *si, "testSimplexMode1: basis available after resolve");
+    if (OsiUnitTest::verbosity >= 1 && si->basisIsAvailable())
+    { std::cout << "  " << solverName << " shows optimal basis after resolve." << std::endl ; }
 /*
   Enable simplex mode 1.
 */
@@ -813,11 +645,11 @@ int testSimplexMode1 (const OsiSolverInterface *emptySi, std::string sampleDir)
 /*
   Test the various methods.
 */
-    errCnt += testBInvCol(si) ;
-    errCnt += testBInvRow(si) ;
-    errCnt += testBInvACol(si) ;
-    errCnt += testBInvARow(si) ;
-    errCnt += testReducedGradient(si) ;
+    testBInvCol(si) ;
+    testBInvRow(si) ;
+    testBInvACol(si) ;
+    testBInvARow(si) ;
+    testReducedGradient(si) ;
 /*
   Disable simplex mode 1.
 */
@@ -826,18 +658,17 @@ int testSimplexMode1 (const OsiSolverInterface *emptySi, std::string sampleDir)
   Trash this solver and we're finished.
 */
   delete si ;
-
-  return (errCnt) ;
 }
 
 } // end file-local namespace
+
+namespace OsiUnitTest {
 
 /*
   Test a solver's implementation of the OSI simplex API.
 */
 
-int testSimplexAPI (const OsiSolverInterface *emptySi,
-		    const std::string &sampleDir)
+void testSimplexAPI (const OsiSolverInterface *emptySi, const std::string &sampleDir)
 { OsiSolverInterface *si = emptySi->clone() ;
   std::string solverName;
   si->getStrParam(OsiSolverName,solverName);
@@ -845,43 +676,26 @@ int testSimplexAPI (const OsiSolverInterface *emptySi,
   Do the tests only if the solver implements the simplex API.
 */
   if (si->canDoSimplexInterface() == 0)
-  { std::cout
-      << solverName << " has no OsiSimplex API." << std::endl ;
-    return (0) ; }
+  { OSIUNITTEST_ADD_OUTCOME(solverName, "testSimplexAPI", "skipped test", OsiUnitTest::TestOutcome::NOTE, true);
+  	std::cout << solverName << " has no OsiSimplex API." << std::endl ;
+    return; }
 /*
   Test the mode 1 (tableau access) portion of the API.
 */
-  int totalErrs = 0 ;
   if (si->canDoSimplexInterface() >= 1)
-  { std::cout
-      << "Testing Simplex API mode 1 for " << solverName << " ... "
-      << std::endl ;
-    int errCnt = testSimplexMode1(emptySi,sampleDir) ;
-    totalErrs += errCnt ;
-    if (errCnt > 0)
-    { std::cout
-        << "  Simplex API mode 1 tests incurred " << errCnt << " errors."
-	<< std::endl ; }
-    else
-    { std::cout << "  Simplex API mode 1 ok." << std::endl ; } }
+  { std::cout << "Testing Simplex API mode 1 for " << solverName << " ... " << std::endl ;
+    testSimplexMode1(emptySi,sampleDir) ;
+  }
 /*
   Test the mode 2 (pivot-by-pivot control) portion of the API.
 */
   if (si->canDoSimplexInterface() >= 2)
-  { std::cout
-      << "Testing Simplex API mode 2 for " << solverName << " ... "
-      << std::endl ;
-    int errCnt = testSimplexMode2(emptySi,sampleDir) ;
-    totalErrs += errCnt ;
-    if (errCnt > 0)
-    { std::cout
-        << "  Simplex API mode 1 tests incurred " << errCnt << " errors."
-	<< std::endl ; }
-    else
-    { std::cout << "  Simplex API mode 2 ok." << std::endl ; } }
+  { std::cout << "Testing Simplex API mode 2 for " << solverName << " ... " << std::endl ;
+    testSimplexMode2(emptySi,sampleDir) ;
+  }
   else
-  { std::cout
-      << solverName << " does not implement Simplex API mode 2."
-      << std::endl ; }
+  { OSIUNITTEST_ADD_OUTCOME(solverName, "testSimplexAPI mode 2", "skipped test", OsiUnitTest::TestOutcome::NOTE, true);
+  	std::cout << solverName << " does not implement Simplex API mode 2." << std::endl ; }
+}
 
-  return (totalErrs) ; }
+} /* namespace OsiUnitTest */

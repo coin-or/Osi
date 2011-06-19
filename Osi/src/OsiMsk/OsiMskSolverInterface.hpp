@@ -303,11 +303,11 @@ public:
 				  const double* coeffList);
 
       /** Set a single column lower bound<br>
-    	  Use -DBL_MAX for -infinity. */
+    	  Use -COIN_DBL_MAX for -infinity. */
       virtual void setColLower( int elementIndex, double elementValue );
       
       /** Set a single column upper bound<br>
-    	  Use DBL_MAX for infinity. */
+    	  Use COIN_DBL_MAX for infinity. */
       virtual void setColUpper( int elementIndex, double elementValue );
       
       /** Set a single column lower and upper bound<br>
@@ -328,11 +328,11 @@ public:
 				   const double* boundList);
       
       /** Set a single row lower bound<br>
-    	  Use -DBL_MAX for -infinity. */
+    	  Use -COIN_DBL_MAX for -infinity. */
       virtual void setRowLower( int elementIndex, double elementValue );
       
       /** Set a single row upper bound<br>
-    	  Use DBL_MAX for infinity. */
+    	  Use COIN_DBL_MAX for infinity. */
       virtual void setRowUpper( int elementIndex, double elementValue );
     
       /** Set a single row lower and upper bound<br>
@@ -608,13 +608,13 @@ public:
     /// keep all cached data (similar to getMutableLpPtr())
     KEEPCACHED_ALL     = KEEPCACHED_PROBLEM | KEEPCACHED_RESULTS,
     /// free only cached column and LP solution information
-    FREECACHED_COLUMN  = KEEPCACHED_PROBLEM & !KEEPCACHED_COLUMN,
+    FREECACHED_COLUMN  = KEEPCACHED_PROBLEM & ~KEEPCACHED_COLUMN,
     /// free only cached row and LP solution information
-    FREECACHED_ROW     = KEEPCACHED_PROBLEM & !KEEPCACHED_ROW,
+    FREECACHED_ROW     = KEEPCACHED_PROBLEM & ~KEEPCACHED_ROW,
     /// free only cached matrix and LP solution information
-    FREECACHED_MATRIX  = KEEPCACHED_PROBLEM & !KEEPCACHED_MATRIX,
+    FREECACHED_MATRIX  = KEEPCACHED_PROBLEM & ~KEEPCACHED_MATRIX,
     /// free only cached LP solution information
-    FREECACHED_RESULTS = KEEPCACHED_ALL & !KEEPCACHED_RESULTS
+    FREECACHED_RESULTS = KEEPCACHED_ALL & ~KEEPCACHED_RESULTS
   };
 
   MSKtask_t getLpPtr( int keepCached = KEEPCACHED_NONE );
@@ -756,8 +756,6 @@ private:
   /// free all allocated memory
   void freeAllMemory();
 
-  /// Just for testing purposes
-  void printBounds(); 
  /**@name Private member data */
   //@{
   /// MOSEK model represented by this class instance
@@ -831,7 +829,6 @@ private:
 
 //#############################################################################
 /** A function that tests the methods in the OsiMskSolverInterface class */
-
 void OsiMskSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 #endif

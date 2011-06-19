@@ -16,16 +16,20 @@
 #define OsiSpxSolverInterface_H
 
 #include <string>
-#include "soplex.h"
 #include "OsiSolverInterface.hpp"
 #include "CoinWarmStartBasis.hpp"
 
-/** SoPlex Solver Interface
+/* forward declarations so the header can be compiled without having to include soplex.h */
+namespace soplex {
+  class DIdxSet;
+  class DVector;
+  class SoPlex;
+}
 
+/** SoPlex Solver Interface
     Instantiation of OsiSpxSolverInterface for SoPlex
 */
-
-class OsiSpxSolverInterface : virtual public OsiSolverInterface, public soplex::SoPlex {
+class OsiSpxSolverInterface : virtual public OsiSolverInterface {
   friend void OsiSpxSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
   
 public:
@@ -69,6 +73,10 @@ public:
     bool getDblParam(OsiDblParam key, double& value) const;
     // Get a string parameter
     bool getStrParam(OsiStrParam key, std::string& value) const;
+    // Set timelimit
+    void setTimeLimit(double value);
+    // Get timelimit
+    double getTimeLimit() const;
   //@}
 
   //---------------------------------------------------------------------------
@@ -88,6 +96,8 @@ public:
     virtual bool isDualObjectiveLimitReached() const;
     /// Iteration limit reached?
     virtual bool isIterationLimitReached() const;
+    /// Time limit reached?
+    virtual bool isTimeLimitReached() const;
   //@}
 
   //---------------------------------------------------------------------------
@@ -295,11 +305,11 @@ public:
       virtual void setObjCoeff( int elementIndex, double elementValue );
 
       /** Set a single column lower bound<br>
-    	  Use -DBL_MAX for -infinity. */
+    	  Use -COIN_DBL_MAX for -infinity. */
       virtual void setColLower( int elementIndex, double elementValue );
       
       /** Set a single column upper bound<br>
-    	  Use DBL_MAX for infinity. */
+    	  Use COIN_DBL_MAX for infinity. */
       virtual void setColUpper( int elementIndex, double elementValue );
       
       /** Set a single column lower and upper bound<br>
@@ -323,11 +333,11 @@ public:
 #endif
       
       /** Set a single row lower bound<br>
-    	  Use -DBL_MAX for -infinity. */
+    	  Use -COIN_DBL_MAX for -infinity. */
       virtual void setRowLower( int elementIndex, double elementValue );
       
       /** Set a single row upper bound<br>
-    	  Use DBL_MAX for infinity. */
+    	  Use COIN_DBL_MAX for infinity. */
       virtual void setRowUpper( int elementIndex, double elementValue );
     
       /** Set a single row lower and upper bound<br>
@@ -616,7 +626,7 @@ protected:
   /**@name Protected member data */
   //@{
   /// SoPlex solver object
-  soplex::SoPlex soplex_;
+  soplex::SoPlex* soplex_;
   //@}
 
   
@@ -653,13 +663,13 @@ private:
     /// keep all cached data (similar to getMutableLpPtr())
     KEEPCACHED_ALL     = KEEPCACHED_PROBLEM | KEEPCACHED_RESULTS,
     /// free only cached column and LP solution information
-    FREECACHED_COLUMN  = KEEPCACHED_PROBLEM & !KEEPCACHED_COLUMN,
+    FREECACHED_COLUMN  = KEEPCACHED_PROBLEM & ~KEEPCACHED_COLUMN,
     /// free only cached row and LP solution information
-    FREECACHED_ROW     = KEEPCACHED_PROBLEM & !KEEPCACHED_ROW,
+    FREECACHED_ROW     = KEEPCACHED_PROBLEM & ~KEEPCACHED_ROW,
     /// free only cached matrix and LP solution information
-    FREECACHED_MATRIX  = KEEPCACHED_PROBLEM & !KEEPCACHED_MATRIX,
+    FREECACHED_MATRIX  = KEEPCACHED_PROBLEM & ~KEEPCACHED_MATRIX,
     /// free only cached LP solution information
-    FREECACHED_RESULTS = KEEPCACHED_ALL & !KEEPCACHED_RESULTS
+    FREECACHED_RESULTS = KEEPCACHED_ALL & ~KEEPCACHED_RESULTS
   };
 
   /// free all cached data (except specified entries, see getLpPtr())
@@ -667,23 +677,20 @@ private:
 
   /// free all allocated memory
   void freeAllMemory();
-
-  /// Just for testing purposes
-  void printBounds(); 
   //@}
   
   
   /**@name Private member data */
   //@{
   /// indices of integer variables
-  soplex::DIdxSet   spxintvars_;
+  soplex::DIdxSet*   spxintvars_;
 
   /// Hotstart information
-  soplex::SPxSolver::VarStatus *hotStartCStat_;
-  int                       hotStartCStatSize_;
-  soplex::SPxSolver::VarStatus *hotStartRStat_;
-  int                       hotStartRStatSize_;
-  int                       hotStartMaxIteration_;
+  void* hotStartCStat_;
+  int   hotStartCStatSize_;
+  void* hotStartRStat_;
+  int   hotStartRStatSize_;
+  int   hotStartMaxIteration_;
 
   /**@name Cached information derived from the SoPlex model */
   //@{
@@ -721,11 +728,7 @@ private:
 };
 
 //#############################################################################
-/** A function that tests the methods in the OsiOslSolverInterface class. The
-    only reason for it not to be a member method is that this way it doesn't
-    have to be compiled into the library. And that's a gain, because the
-    library should be compiled with optimization on, but this method should be
-    compiled with debugging. */
+/** A function that tests the methods in the OsiSpxSolverInterface class. */
 void OsiSpxSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 #endif

@@ -398,13 +398,15 @@ OsiTestSolverInterface::readMps(const char *filename, const char *extension)
    CoinMpsIO reader;
    reader.setInfinity(getInfinity());
    int retVal = reader.readMps(filename, extension);
-   loadProblem(*reader.getMatrixByCol(),
-	       reader.getColLower(), reader.getColUpper(),
-	       reader.getObjCoefficients(),
-	       reader.getRowLower(), reader.getRowUpper());
-   int nc = getNumCols();
-   assert (continuous_);
-   CoinFillN(continuous_, nc, true);
+   if (retVal == 0) {
+     loadProblem(*reader.getMatrixByCol(),
+	         reader.getColLower(),reader.getColUpper(),
+	         reader.getObjCoefficients(),
+	         reader.getRowLower(),reader.getRowUpper());
+     int nc = getNumCols();
+     assert (continuous_);
+     CoinFillN(continuous_, nc, true);
+   }
    return retVal;
 }
 

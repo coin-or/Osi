@@ -26,7 +26,7 @@ static const double OsiTestInfinity = 1.0e31;
 
 class OsiTestSolverInterface :
    virtual public OsiSolverInterface, public VOL_user_hooks {
-   friend int OsiTestSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
+   friend void OsiTestSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 private:
   class OsiVolMatrixOneMinusOne_ {
@@ -341,14 +341,14 @@ public:
 
       using OsiSolverInterface::setColLower ;
       /** Set a single column lower bound<br>
-    	  Use -DBL_MAX for -infinity. */
+    	  Use -COIN_DBL_MAX for -infinity. */
       virtual void setColLower( int elementIndex, double elementValue ) {
 	collower_[elementIndex] = elementValue;
       }
       
       using OsiSolverInterface::setColUpper ;
       /** Set a single column upper bound<br>
-    	  Use DBL_MAX for infinity. */
+    	  Use COIN_DBL_MAX for infinity. */
       virtual void setColUpper( int elementIndex, double elementValue ) {
 	colupper_[elementIndex] = elementValue;
       }
@@ -373,7 +373,7 @@ public:
 				   const double* boundList);
       
       /** Set a single row lower bound<br>
-    	  Use -DBL_MAX for -infinity. */
+    	  Use -COIN_DBL_MAX for -infinity. */
       virtual void setRowLower( int elementIndex, double elementValue ) {
 	rowlower_[elementIndex] = elementValue;
 	convertBoundToSense(elementValue, rowupper_[elementIndex],
@@ -382,7 +382,7 @@ public:
       }
       
       /** Set a single row upper bound<br>
-    	  Use DBL_MAX for infinity. */
+    	  Use COIN_DBL_MAX for infinity. */
       virtual void setRowUpper( int elementIndex, double elementValue ) {
 	rowupper_[elementIndex] = elementValue;
 	convertBoundToSense(rowlower_[elementIndex], elementValue,
@@ -729,7 +729,7 @@ private:
 	an integer solution. This is not done in LP solving. */
   virtual int heuristics(const VOL_problem& /*p*/, 
 			 const VOL_dvector& /*x*/, double& heur_val) {
-      heur_val = DBL_MAX;
+      heur_val = COIN_DBL_MAX;
       return 0;
     }
   //@}
@@ -860,15 +860,8 @@ private:
   VOL_problem volprob_;
 };
 
-//#############################################################################
-/** A function that tests the methods in the OsiTestSolverInterface class. The
-    only reason for it not to be a member method is that this way it doesn't
-    have to be compiled into the library. And that's a gain, because the
-    library should be compiled with optimization on, but this method should be
-    compiled with debugging. Also, if this method is compiled with
-    optimization, the compilation takes 10-15 minutes and the machine pages
-    (has 256M core memory!)... */
-int
+/** A function that tests the methods in the OsiTestSolverInterface class.  */
+void
 OsiTestSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 #endif

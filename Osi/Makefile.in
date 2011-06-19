@@ -62,8 +62,8 @@ host_triplet = @host@
 @COIN_HAS_XPR_TRUE@am__append_8 = osi-xpress.pc
 @COIN_HAS_GRB_TRUE@am__append_9 = src/OsiGrb
 @COIN_HAS_GRB_TRUE@am__append_10 = osi-gurobi.pc
-@COIN_HAS_SPX_TRUE@am__append_11 = src/OsiSpx
-@COIN_HAS_SPX_TRUE@am__append_12 = osi-soplex.pc
+@COIN_HAS_SOPLEX_TRUE@am__append_11 = src/OsiSpx
+@COIN_HAS_SOPLEX_TRUE@am__append_12 = osi-soplex.pc
 
 # We don't want to compile the test subdirectory, unless the test target is
 # specified.  But we need to list it as subdirectory to make sure that it is
@@ -76,7 +76,6 @@ DIST_COMMON = README $(am__configure_deps) \
 	$(srcdir)/osi-unittests.pc.in $(srcdir)/osi.pc.in \
 	$(top_srcdir)/configure $(top_srcdir)/doxydoc/doxygen.conf.in \
 	$(top_srcdir)/examples/Makefile.in \
-	$(top_srcdir)/inc/config_osi.h.in \
 	$(top_srcdir)/src/OsiCpx/osi-cplex-uninstalled.pc.in \
 	$(top_srcdir)/src/OsiCpx/osi-cplex.pc.in \
 	$(top_srcdir)/src/OsiGlpk/osi-glpk-uninstalled.pc.in \
@@ -90,8 +89,8 @@ DIST_COMMON = README $(am__configure_deps) \
 	$(top_srcdir)/src/OsiXpr/osi-xpress-uninstalled.pc.in \
 	$(top_srcdir)/src/OsiXpr/osi-xpress.pc.in AUTHORS config.guess \
 	config.sub depcomp install-sh ltmain.sh missing
-@HAVE_EXTERNALS_TRUE@am__append_14 = Externals
-@HAVE_EXTERNALS_TRUE@am__append_15 = .Externals-stamp
+@HAVE_EXTERNALS_TRUE@am__append_14 = Dependencies
+@HAVE_EXTERNALS_TRUE@am__append_15 = .Dependencies-stamp
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
@@ -101,7 +100,8 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno configure.status.lineno
 mkinstalldirs = $(install_sh) -d
-CONFIG_HEADER = $(top_builddir)/inc/config_osi.h
+CONFIG_HEADER = $(top_builddir)/src/Osi/config.h \
+	$(top_builddir)/src/Osi/config_osi.h
 CONFIG_CLEAN_FILES = examples/Makefile osi.pc osi-uninstalled.pc \
 	osi-unittests.pc osi-unittests-uninstalled.pc osi-cplex.pc \
 	osi-cplex-uninstalled.pc osi-glpk.pc osi-glpk-uninstalled.pc \
@@ -188,8 +188,8 @@ COIN_HAS_PKGCONFIG_FALSE = @COIN_HAS_PKGCONFIG_FALSE@
 COIN_HAS_PKGCONFIG_TRUE = @COIN_HAS_PKGCONFIG_TRUE@
 COIN_HAS_SAMPLE_FALSE = @COIN_HAS_SAMPLE_FALSE@
 COIN_HAS_SAMPLE_TRUE = @COIN_HAS_SAMPLE_TRUE@
-COIN_HAS_SPX_FALSE = @COIN_HAS_SPX_FALSE@
-COIN_HAS_SPX_TRUE = @COIN_HAS_SPX_TRUE@
+COIN_HAS_SOPLEX_FALSE = @COIN_HAS_SOPLEX_FALSE@
+COIN_HAS_SOPLEX_TRUE = @COIN_HAS_SOPLEX_TRUE@
 COIN_HAS_XPR_FALSE = @COIN_HAS_XPR_FALSE@
 COIN_HAS_XPR_TRUE = @COIN_HAS_XPR_TRUE@
 COIN_PKG_CONFIG_PATH = @COIN_PKG_CONFIG_PATH@
@@ -255,7 +255,6 @@ NETLIB_DATA_INSTALLED = @NETLIB_DATA_INSTALLED@
 NETLIB_DEPENDENCIES = @NETLIB_DEPENDENCIES@
 NETLIB_LIBS = @NETLIB_LIBS@
 NETLIB_LIBS_INSTALLED = @NETLIB_LIBS_INSTALLED@
-NOLONGLONGCXXFLAGS = @NOLONGLONGCXXFLAGS@
 OBJEXT = @OBJEXT@
 OPT_CFLAGS = @OPT_CFLAGS@
 OPT_CXXFLAGS = @OPT_CXXFLAGS@
@@ -273,6 +272,13 @@ OSILIB_LIBS = @OSILIB_LIBS@
 OSILIB_LIBS_INSTALLED = @OSILIB_LIBS_INSTALLED@
 OSILIB_PCLIBS = @OSILIB_PCLIBS@
 OSILIB_PCREQUIRES = @OSILIB_PCREQUIRES@
+OSISPXLIB_CFLAGS = @OSISPXLIB_CFLAGS@
+OSISPXLIB_CFLAGS_INSTALLED = @OSISPXLIB_CFLAGS_INSTALLED@
+OSISPXLIB_DEPENDENCIES = @OSISPXLIB_DEPENDENCIES@
+OSISPXLIB_LIBS = @OSISPXLIB_LIBS@
+OSISPXLIB_LIBS_INSTALLED = @OSISPXLIB_LIBS_INSTALLED@
+OSISPXLIB_PCLIBS = @OSISPXLIB_PCLIBS@
+OSISPXLIB_PCREQUIRES = @OSISPXLIB_PCREQUIRES@
 OSI_EXAMPLES_SOLVER_CFLAGS = @OSI_EXAMPLES_SOLVER_CFLAGS@
 OSI_EXAMPLES_SOLVER_LIBS = @OSI_EXAMPLES_SOLVER_LIBS@
 OSI_EXAMPLES_SOLVER_NAME = @OSI_EXAMPLES_SOLVER_NAME@
@@ -297,8 +303,13 @@ SAMPLE_LIBS = @SAMPLE_LIBS@
 SAMPLE_LIBS_INSTALLED = @SAMPLE_LIBS_INSTALLED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
-SPXINCDIR = @SPXINCDIR@
-SPXLIB = @SPXLIB@
+SOPLEX_CFLAGS = @SOPLEX_CFLAGS@
+SOPLEX_CFLAGS_INSTALLED = @SOPLEX_CFLAGS_INSTALLED@
+SOPLEX_DATA = @SOPLEX_DATA@
+SOPLEX_DATA_INSTALLED = @SOPLEX_DATA_INSTALLED@
+SOPLEX_DEPENDENCIES = @SOPLEX_DEPENDENCIES@
+SOPLEX_LIBS = @SOPLEX_LIBS@
+SOPLEX_LIBS_INSTALLED = @SOPLEX_LIBS_INSTALLED@
 STRIP = @STRIP@
 VERSION = @VERSION@
 VPATH_DISTCLEANFILES = @VPATH_DISTCLEANFILES@
@@ -438,23 +449,6 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(srcdir) && $(AUTOCONF)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
-
-inc/config_osi.h: inc/stamp-h1
-	@if test ! -f $@; then \
-	  rm -f inc/stamp-h1; \
-	  $(MAKE) inc/stamp-h1; \
-	else :; fi
-
-inc/stamp-h1: $(top_srcdir)/inc/config_osi.h.in $(top_builddir)/config.status
-	@rm -f inc/stamp-h1
-	cd $(top_builddir) && $(SHELL) ./config.status inc/config_osi.h
-$(top_srcdir)/inc/config_osi.h.in: @MAINTAINER_MODE_TRUE@ $(am__configure_deps) 
-	cd $(top_srcdir) && $(AUTOHEADER)
-	rm -f inc/stamp-h1
-	touch $@
-
-distclean-hdr:
-	-rm -f inc/config_osi.h inc/stamp-h1
 examples/Makefile: $(top_builddir)/config.status $(top_srcdir)/examples/Makefile.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 osi.pc: $(top_builddir)/config.status $(srcdir)/osi.pc.in
@@ -654,7 +648,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkdir_p) $(distdir)/. $(distdir)/BuildTools $(distdir)/doxydoc $(distdir)/examples $(distdir)/inc $(distdir)/src/OsiCpx $(distdir)/src/OsiGlpk $(distdir)/src/OsiGrb $(distdir)/src/OsiMsk $(distdir)/src/OsiSpx $(distdir)/src/OsiXpr
+	$(mkdir_p) $(distdir)/. $(distdir)/BuildTools $(distdir)/doxydoc $(distdir)/examples $(distdir)/src/OsiCpx $(distdir)/src/OsiGlpk $(distdir)/src/OsiGrb $(distdir)/src/OsiMsk $(distdir)/src/OsiSpx $(distdir)/src/OsiXpr
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -834,8 +828,8 @@ clean-am: clean-generic clean-libtool clean-local mostlyclean-am
 distclean: distclean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 	-rm -f Makefile
-distclean-am: clean-am distclean-generic distclean-hdr \
-	distclean-libtool distclean-local distclean-tags
+distclean-am: clean-am distclean-generic distclean-libtool \
+	distclean-local distclean-tags
 
 dvi: dvi-recursive
 
@@ -888,11 +882,11 @@ uninstall-info: uninstall-info-recursive
 	check-am clean clean-generic clean-libtool clean-local \
 	clean-recursive ctags ctags-recursive dist dist-all dist-bzip2 \
 	dist-gzip dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-generic distclean-hdr distclean-libtool \
-	distclean-local distclean-recursive distclean-tags \
-	distcleancheck distdir distuninstallcheck dvi dvi-am html \
-	html-am info info-am install install-am install-data \
-	install-data-am install-data-hook install-exec install-exec-am \
+	distclean-generic distclean-libtool distclean-local \
+	distclean-recursive distclean-tags distcleancheck distdir \
+	distuninstallcheck dvi dvi-am html html-am info info-am \
+	install install-am install-data install-data-am \
+	install-data-hook install-exec install-exec-am \
 	install-exec-local install-info install-info-am install-man \
 	install-pkgconfiglibDATA install-strip installcheck \
 	installcheck-am installdirs installdirs-am maintainer-clean \
@@ -936,7 +930,8 @@ install-data-hook:
 	@$(mkdir_p) "$(addlibsdir)"
 @COIN_HAS_PKGCONFIG_TRUE@	PKG_CONFIG_PATH=@COIN_PKG_CONFIG_PATH@ \
 @COIN_HAS_PKGCONFIG_TRUE@	$(PKG_CONFIG) --libs osi > $(addlibsdir)/osi_addlibs.txt
-@COIN_HAS_PKGCONFIG_FALSE@	echo -L@abs_lib_dir@ -lOsi @OSILIB_LIBS_INSTALLED@ > $(addlibsdir)/osi_addlibs.txt
+@COIN_CXX_IS_CL_TRUE@@COIN_HAS_PKGCONFIG_FALSE@	echo "/libpath:`$(CYGPATH_W) @abs_lib_dir@` libOsi.lib @OSILIB_LIBS_INSTALLED@" > $(addlibsdir)/osi_addlibs_cpp.txt
+@COIN_CXX_IS_CL_FALSE@@COIN_HAS_PKGCONFIG_FALSE@	echo -L@abs_lib_dir@ -lOsi @OSILIB_LIBS_INSTALLED@ > $(addlibsdir)/osi_addlibs.txt
 
 uninstall-hook:
 	rm -f $(addlibsdir)/osi_addlibs.txt
@@ -980,14 +975,14 @@ uninstall-doc:
 @MAINTAINER_MODE_TRUE@$(AUX_DIR)/ltmain.sh: $(BUILDTOOLSDIR)/ltmain.sh
 @MAINTAINER_MODE_TRUE@	cp $< $@
 
-# Take care of updating externals (if Externals file exists)
-@HAVE_EXTERNALS_TRUE@@MAINTAINER_MODE_TRUE@$(top_builddir)/Makefile: .Externals-stamp
+# Take care of updating externals (if Dependencies file exists)
+@HAVE_EXTERNALS_TRUE@@MAINTAINER_MODE_TRUE@$(top_builddir)/Makefile: .Dependencies-stamp
 
-@HAVE_EXTERNALS_TRUE@@MAINTAINER_MODE_TRUE@.Externals-stamp: $(srcdir)/Externals
-@HAVE_EXTERNALS_TRUE@@MAINTAINER_MODE_TRUE@	cd $(srcdir); svn propset svn:externals -F Externals .
-@HAVE_EXTERNALS_TRUE@@MAINTAINER_MODE_TRUE@	touch .Externals-stamp
+@HAVE_EXTERNALS_TRUE@@MAINTAINER_MODE_TRUE@.Dependencies-stamp: $(srcdir)/Dependencies
+@HAVE_EXTERNALS_TRUE@@MAINTAINER_MODE_TRUE@	cd $(srcdir); BuildTools/set_externals Dependencies
+@HAVE_EXTERNALS_TRUE@@MAINTAINER_MODE_TRUE@	touch .Dependencies-stamp
 
-@HAVE_EXTERNALS_TRUE@@MAINTAINER_MODE_TRUE@update-externals: .Externals-stamp
+@HAVE_EXTERNALS_TRUE@@MAINTAINER_MODE_TRUE@update-externals: .Dependencies-stamp
 @HAVE_EXTERNALS_TRUE@@MAINTAINER_MODE_TRUE@	cd $(srcdir); svn update
 
 .PHONY: install-doc uninstall-doc update-externals

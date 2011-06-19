@@ -468,11 +468,31 @@ void OsiCpxSolverInterface::resolve()
 //-----------------------------------------------------------------------------
 void OsiCpxSolverInterface::branchAndBound()
 {
+	int term;
+
   debugMessage("OsiCpxSolverInterface::branchAndBound()\n");
 
   switchToMIP();
 
+  if( colsol_ != NULL && domipstart )
+  {
+  	int ncols = getNumCols();
+  	int* ind = new int[ncols];
+
+  	CoinIotaN(ind, ncols, 0);
+  	term = CPXcopymipstart(env_, getLpPtr( OsiCpxSolverInterface::KEEPCACHED_ALL ), ncols, ind, colsol_);
+  	checkCPXerror(term, "CPXcopymipstart", "branchAndBound");
+
+  	delete[] ind;
+
+    CPXsetintparam( env_, CPX_PARAM_ADVIND, CPX_ON );
+  }
+  else
+    CPXsetintparam( env_, CPX_PARAM_ADVIND, CPX_OFF );
+
   CPXLPptr lp = getLpPtr( OsiCpxSolverInterface::FREECACHED_RESULTS );
+
+
 
 //  if (messageHandler()->logLevel() == 0)
 //     CPXsetintparam( env_, CPX_PARAM_SCRIND, CPX_OFF );
@@ -486,7 +506,7 @@ void OsiCpxSolverInterface::branchAndBound()
   else if (messageHandler()->logLevel() > 1)
      CPXsetintparam( env_, CPX_PARAM_SIMDISPLAY, 2 );
 
-  int term = CPXmipopt( env_, lp );
+  term = CPXmipopt( env_, lp );
   checkCPXerror( term, "CPXmipopt", "branchAndBound" );
 }
 
@@ -514,6 +534,9 @@ OsiCpxSolverInterface::setIntParam(OsiIntParam key, int value)
       else
 	retval = false;
       break;
+    case OsiNameDiscipline:
+       retval = OsiSolverInterface::setIntParam(key,value);
+       break;
     case OsiLastIntParam:
       retval = false;
       break;
@@ -605,6 +628,9 @@ OsiCpxSolverInterface::getIntParam(OsiIntParam key, int& value) const
       value = hotStartMaxIteration_;
       retval = true;
       break;
+    case OsiNameDiscipline:
+       retval  = OsiSolverInterface::getIntParam(key,value);
+       break;
     case OsiLastIntParam:
       retval = false;
       break;
@@ -2233,7 +2259,37 @@ OsiCpxSolverInterface::deleteCols(const int num, const int * columnIndices)
   }
 
   delete[] delstat;
+
+  //---
+  //--- MVG: took from OsiClp for updating names
+  //---
+  int nameDiscipline;
+  getIntParam(OsiNameDiscipline,nameDiscipline) ;
+  if (num && nameDiscipline) {
+     // Very clumsy (and inefficient) - need to sort and then go backwards in ? chunks
+     int * indices = CoinCopyOfArray(columnIndices,num);
+     std::sort(indices,indices+num);
+     int num2 = num;
+     while (num2) {
+       int next = indices[num2-1];
+       int firstDelete = num2-1;
+       int i;
+       for (i = num2-2; i>=0; --i) {
+          if (indices[i]+1 == next) {
+             --next;
+             firstDelete = i;
+          } else {
+             break;
+          }
+       }
+       OsiSolverInterface::deleteColNames(indices[firstDelete],num2-firstDelete);
+       num2 = firstDelete;
+       assert (num2>=0);
+     }
+     delete [] indices;
+  }
 }
+
 //-----------------------------------------------------------------------------
 void 
 OsiCpxSolverInterface::addRow(const CoinPackedVectorBase& vec,
@@ -2336,6 +2392,35 @@ OsiCpxSolverInterface::deleteRows(const int num, const int * rowIndices)
   err = CPXdelsetrows( env_, getLpPtr( OsiCpxSolverInterface::KEEPCACHED_COLUMN ), delstat );
   checkCPXerror( err, "CPXdelsetrows", "deleteRows" );
   delete[] delstat;
+
+  //---
+  //--- SV: took from OsiClp for updating names
+  //---
+  int nameDiscipline;
+  getIntParam(OsiNameDiscipline,nameDiscipline) ;
+  if (num && nameDiscipline) {
+    // Very clumsy (and inefficient) - need to sort and then go backwards in ? chunks
+    int * indices = CoinCopyOfArray(rowIndices,num);
+    std::sort(indices,indices+num);
+    int num2=num;
+    while (num2) {
+      int next = indices[num2-1];
+      int firstDelete = num2-1;
+      int i;
+      for (i = num2-2; i>=0; --i) {
+        if (indices[i]+1 == next) {
+        	--next;
+	        firstDelete = i;
+        } else {
+          break;
+        }
+      }
+      OsiSolverInterface::deleteRowNames(indices[firstDelete],num2-firstDelete);
+      num2 = firstDelete;
+      assert(num2 >= 0);
+    }
+    delete [] indices;
+  }
 }
 
 //#############################################################################
@@ -2873,7 +2958,8 @@ OsiCpxSolverInterface::OsiCpxSolverInterface()
     matrixByCol_(NULL),
     coltype_(NULL),
     coltypesize_(0),
-    probtypemip_(false)
+    probtypemip_(false),
+    domipstart(false)
 {
   debugMessage("OsiCpxSolverInterface::OsiCpxSolverInterface()\n");
 
@@ -2919,7 +3005,8 @@ OsiCpxSolverInterface::OsiCpxSolverInterface( const OsiCpxSolverInterface & sour
     matrixByCol_(NULL),
     coltype_(NULL),
     coltypesize_(0),
-    probtypemip_(false)
+    probtypemip_(false),
+    domipstart(false)
 {
   debugMessage("OsiCpxSolverInterface::OsiCpxSolverInterface(%p)\n", (void*)&source);
 

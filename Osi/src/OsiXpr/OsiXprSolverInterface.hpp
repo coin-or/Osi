@@ -60,6 +60,10 @@ public:
     bool getDblParam(OsiDblParam key, double& value) const;
     // Get a string parameter
     bool getStrParam(OsiStrParam key, std::string& value) const;
+    // Set mipstart option (pass column solution to XPRESS before MIP start)
+    void setMipStart(bool value) { domipstart = value; }
+    // Get mipstart option value
+    bool getMipStart() const { return domipstart; }
   //@}
 
   //---------------------------------------------------------------------------
@@ -284,11 +288,11 @@ public:
       virtual void setObjCoeff( int elementIndex, double elementValue );
 
       /** Set a single column lower bound<br>
-    	  Use -DBL_MAX for -infinity. */
+    	  Use -COIN_DBL_MAX for -infinity. */
       virtual void setColLower( int elementIndex, double elementValue );
       
       /** Set a single column upper bound<br>
-    	  Use DBL_MAX for infinity. */
+    	  Use COIN_DBL_MAX for infinity. */
       virtual void setColUpper( int elementIndex, double elementValue );
       
       /** Set a single column lower and upper bound<br>
@@ -310,11 +314,11 @@ public:
 				   const double* boundList);
       
       /** Set a single row lower bound<br>
-    	  Use -DBL_MAX for -infinity. */
+    	  Use -COIN_DBL_MAX for -infinity. */
       virtual void setRowLower( int elementIndex, double elementValue );
       
       /** Set a single row upper bound<br>
-    	  Use DBL_MAX for infinity. */
+    	  Use COIN_DBL_MAX for infinity. */
       virtual void setRowUpper( int elementIndex, double elementValue );
     
       /** Set a single row lower and upper bound<br>
@@ -794,15 +798,13 @@ private:
       mutable bool lastsolvewasmip;
     //@}
   //@}
+
+      /// Whether to pass a column solution to XPRESS before starting MIP solve (loadmipsol)
+      bool            domipstart;
 };
 
 //#############################################################################
-/** A function that tests the methods in the OsiXprSolverInterface class. The
-    only reason for it not to be a member method is that this way it doesn't
-    have to be compiled into the library. And that's a gain, because the
-    library should be compiled with optimization on, but this method should be
-    compiled with debugging. */
-void
-OsiXprSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
+/** A function that tests the methods in the OsiXprSolverInterface class. */
+void OsiXprSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 #endif

@@ -2042,8 +2042,8 @@ void testObjFunctions (const OsiSolverInterface *emptySi,
   OSIUNITTEST_ASSERT_ERROR(!si->isPrimalObjectiveLimitReached(), {}, solverName, "testObjFunctions: isPrimalObjectiveLimitReached without limit (min)");
   OSIUNITTEST_ASSERT_ERROR(!si->isDualObjectiveLimitReached(), {}, solverName, "testObjFunctions: isDualObjectiveLimitReached without limit (min)");
 /* One could think that also no limit should be reached in case of maximization.
- * However, by default primal and dual limits are set to plus or minus infinity.
- * So if we change the objective sense, we need to remember to set also the limits to a nonlimiting value
+ * However, by default primal and dual limits are not unset, but set to plus or minus infinity.
+ * So, if we change the objective sense, we need to remember to set also the limits to a nonlimiting value.
  */
   si->setObjSense(-1.0) ;
   si->setDblParam(OsiPrimalObjectiveLimit, COIN_DBL_MAX);

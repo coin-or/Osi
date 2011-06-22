@@ -2061,6 +2061,11 @@ void testObjFunctions (const OsiSolverInterface *emptySi,
   double optSense[2] = { -1.0, 1.0 } ;
   for (i = 0 ; i <= 1 ; i++)
   { si->setObjSense(optSense[i]) ;
+
+    // reset objective limits to infinity
+    si->setDblParam(OsiPrimalObjectiveLimit, -optSense[i] * COIN_DBL_MAX);
+    si->setDblParam(OsiDualObjectiveLimit,    optSense[i] * COIN_DBL_MAX);
+
     si->initialSolve() ;
     objValue = si->getObjValue() ;
     OSIUNITTEST_ASSERT_ERROR(eq(objValue,expectedObj[i]), {}, solverName, "testObjFunctions: optimal value during max/min switch");

@@ -1,3 +1,6 @@
+23/06/2011 OsiMsk
+  - add isLicenseError() to check whether last solve was abandoned due to a mosek licensing issue 
+
 22/06/2011 OsiCpx
   - fix handling of primal/dual objective limit so it correctly takes objoffset into account
   - preserve objective sense also when empty model is loaded

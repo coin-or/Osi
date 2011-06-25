@@ -1,3 +1,6 @@
+25/06/2011 OsiCommonTest
+  - add unittest command line parameter -onerror to specify behaviour in case of a failing test 
+
 23/06/2011 OsiMsk
   - add isLicenseError() to check whether last solve was abandoned due to a mosek licensing issue 
 

@@ -16,7 +16,10 @@ unit test to avoid attempting the test for a particular OsiXXX.
 The original approach was to use asserts in tests; the net effect is that the
 unit test chokes and dies as soon as something goes wrong. The current
 approach is to soldier on until something has gone wrong which makes further
-testing pointless. The general idea is to return the maximum amount of useful
+testing pointless if OsiUnitTest::haltonerror is set to 0, to hold and ask the
+user for pressing a key if OsiUnitTest::haltonerror is set to 1, and to stop
+immediately if OsiUnitTest::haltonerror is set to 2 (but only in case of an error,
+not for warnings). The general idea is to return the maximum amount of useful
 information with each run. The OsiUnitTest::verbosity variable should be used
 to decide on the amount of information to be printed. At level 0, only minimal
 output should be printed, at level 1, more information about failed tests

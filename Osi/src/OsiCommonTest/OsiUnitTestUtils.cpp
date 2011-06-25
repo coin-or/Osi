@@ -39,6 +39,8 @@ namespace OsiUnitTest {
 
 unsigned int verbosity = 0;
 
+unsigned int haltonerror = 0;
+
 TestOutcomes outcomes;
 
 //#############################################################################
@@ -327,6 +329,7 @@ bool processParameters (int argc, const char **argv, std::map<std::string,std::s
   definedKeyWords.insert("-nobuf");
   definedKeyWords.insert("-cutsOnly");
   definedKeyWords.insert("-verbosity");
+  definedKeyWords.insert("-onerror");
 
   /*
     Set default values for data directories.
@@ -379,7 +382,8 @@ bool processParameters (int argc, const char **argv, std::map<std::string,std::s
       Is the specified key valid?
      */
     if (definedKeyWords.find(key) == definedKeyWords.end())
-    { std::cerr << "Undefined parameter \"" << key << "\"." << std::endl ;
+    { if( key != "-usage" && key != "-help" )
+        std::cerr << "Undefined parameter \"" << key << "\"." << std::endl ;
       std::cerr << "Usage: unitTest [-nobuf] [-mpsDir=V1] [-netlibDir=V2] [-miplibDir=V3] [-testOsiSolverInterface] [-cutsOnly] [-verbosity=num]" << std::endl ;
       std::cerr << "  where:" << std::endl ;
       std::cerr << "  -cerr2cout: redirect cerr to cout; sometimes useful to synchronise cout & cerr." << std::endl;
@@ -396,6 +400,8 @@ bool processParameters (int argc, const char **argv, std::map<std::string,std::s
                 << "       Default is buffered output." << std::endl;
       std::cerr << "  -verbosity: verbosity level of tests output (0-2)." << std::endl
                 << "       Default is 0 (minimal output)." << std::endl;
+      std::cerr << "  -onerror: behaviour in case of failing test (continue, wait, stop)." << std::endl
+                << "       Default is continue." << std::endl;
       return false;
     }
 
@@ -456,6 +462,26 @@ bool processParameters (int argc, const char **argv, std::map<std::string,std::s
     }
 
     OsiUnitTest::verbosity = static_cast<unsigned int>(verblevel);
+  }
+
+  /*
+   * Did the user specify what to do in case of a failure?
+   */
+  if (parms.find("-onerror") != parms.end())
+  {
+    std::string onerror = parms["-onerror"];
+
+    if( onerror == "continue" )
+      OsiUnitTest::haltonerror = 0;
+    else if( onerror == "wait" )
+      OsiUnitTest::haltonerror = 1;
+    else if( onerror == "stop" )
+      OsiUnitTest::haltonerror = 2;
+    else
+    {
+      std::cerr << "-onerror must be specified with either 'continue', 'wait', or 'stop'" << std::endl;
+      return false;
+    }
   }
 
   return true;

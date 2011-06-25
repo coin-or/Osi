@@ -1823,17 +1823,22 @@ void testSettingSolutions (OsiSolverInterface &proto)
   OSIUNITTEST_ASSERT_ERROR(dummyRowSol != si->getRowPrice(), allOK = false, *si, "setting solutions: solver should not return original pointer");
   colVec = si->getRowPrice() ;
 
-  ok = true ;
-  for (i = 0 ; i < m ; i++)
-  { mval = colVec[i] ;
+  if( colVec != NULL )
+  {
+    ok = true ;
+    for (i = 0 ; i < m ; i++)
+    { mval = colVec[i] ;
     cval = dummyRowSol[i] ;
     if (mval != cval)
     { ok = false ;
-      std::cout
-        << "y<" << i << "> = " << mval
-        << ", expecting " << cval
-        << ", |error| = " << (mval-cval)
-        << "." << std::endl ; } }
+    std::cout
+    << "y<" << i << "> = " << mval
+    << ", expecting " << cval
+    << ", |error| = " << (mval-cval)
+    << "." << std::endl ; } }
+  }
+  else
+    ok = false;
   OSIUNITTEST_ASSERT_ERROR(ok == true, allOK = false, *si, "setting solutions: solver stored row price correctly");
 /*
   Now let's get serious. Check that reduced costs and row activities match
@@ -1846,17 +1851,20 @@ void testSettingSolutions (OsiSolverInterface &proto)
   objVec = si->getObjCoefficients() ;
   const CoinPackedMatrix *mtx = si->getMatrixByCol() ;
   mtx->transposeTimes(dummyRowSol,rowShouldBe) ;
-  ok = true ;
-  for (i = 0 ; i < n ; i++)
-  { mval = rowVec[i] ;
-    rval = objVec[i] - rowShouldBe[i] ;
-    if (!fltEq(mval,rval))
-    { ok = false ;
-      std::cout
+  if( rowVec != NULL )
+  { ok = true ;
+    for (i = 0 ; i < n ; i++)
+    { mval = rowVec[i] ;
+      rval = objVec[i] - rowShouldBe[i] ;
+      if (!fltEq(mval,rval))
+      { ok = false ;
+        std::cout
         << "cbar<" << i << "> = " << mval
         << ", expecting " << rval
         << ", |error| = " << (mval-rval)
         << "." << std::endl ; } }
+  } else
+    ok = false;
   OSIUNITTEST_ASSERT_WARNING(ok == true, allOK = false, *si, "setting solutions: reduced costs from solution set with setRowPrice");
 
 /*
@@ -4166,11 +4174,11 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     OSIUNITTEST_ASSERT_ERROR(!fim.isIntegerNonBinary(4), {}, solverName, "column type methods: isIntegerNonBinary");
 
     // Test fractionalIndices
-    {
+    do {
       double sol[]={1.0, 2.0, 2.9, 3.0, 4.0,0.0,0.0,0.0};
       fim.setColSolution(sol);
       OsiVectorInt fi = fim.getFractionalIndices(1e-5);
-      OSIUNITTEST_ASSERT_ERROR(fi.size() == 1, {}, solverName, "column type methods: getFractionalIndices");
+      OSIUNITTEST_ASSERT_ERROR(fi.size() == 1, break, solverName, "column type methods: getFractionalIndices");
       OSIUNITTEST_ASSERT_ERROR(fi[0] == 2, {}, solverName, "column type methods: getFractionalIndices");
 
       // Set integer variables very close to integer values
@@ -4185,10 +4193,10 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       sol[3]=8 - .00001*2.;
       fim.setColSolution(sol);
       fi = fim.getFractionalIndices(1e-5);
-      OSIUNITTEST_ASSERT_ERROR(fi.size() == 2, {}, solverName, "column type methods: getFractionalIndices");
+      OSIUNITTEST_ASSERT_ERROR(fi.size() == 2, break, solverName, "column type methods: getFractionalIndices");
       OSIUNITTEST_ASSERT_ERROR(fi[0] == 2, {}, solverName, "column type methods: getFractionalIndices");
       OSIUNITTEST_ASSERT_ERROR(fi[1] == 3, {}, solverName, "column type methods: getFractionalIndices");
-    }
+    } while(false);
 
     // Change data so column 2 & 3 are integerNonBinary
     fim.setColUpper(2,5.0);
@@ -4472,7 +4480,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   Test duals and reduced costs, then dual rays. Vol doesn't react well to
   either test.
 */
-  if (!volSolverInterface) {
+  if (!volSolverInterface && !symSolverInterface) {
     testReducedCosts(emptySi,mpsDir) ;
     testDualRays(emptySi,mpsDir) ;
   } else {

@@ -1,3 +1,6 @@
+25/06/2011 Osi
+  - add generic implementations of is{Primal,Dual}ObjectiveLimitReached
+
 25/06/2011 OsiCommonTest
   - add unittest command line parameter -onerror to specify behaviour in case of a failing test 
 

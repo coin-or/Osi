@@ -1593,6 +1593,26 @@ OsiSolverInterface::newLanguage(CoinMessages::Language language)
 {
   messages_ = CoinMessage(language);
 }
+// Is the given primal objective limit reached?
+bool
+OsiSolverInterface::isPrimalObjectiveLimitReached() const
+{
+  double primalobjlimit;
+  if (getDblParam(OsiPrimalObjectiveLimit, primalobjlimit))
+    return getObjSense() * getObjValue() < getObjSense() * primalobjlimit;
+  else
+    return false;
+}
+// Is the given dual objective limit reached?
+bool
+OsiSolverInterface::isDualObjectiveLimitReached() const
+{
+  double dualobjlimit;
+  if (getDblParam(OsiDualObjectiveLimit, dualobjlimit))
+    return getObjSense() * getObjValue() > getObjSense() * dualobjlimit;
+  else
+    return false;
+}
 // copy all parameters in this section from one solver to another
 void 
 OsiSolverInterface::copyParameters(OsiSolverInterface & rhs)

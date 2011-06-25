@@ -90,8 +90,7 @@ public:
     virtual bool isProvenPrimalInfeasible() const;
     /// Is dual infeasiblity proven?
     virtual bool isProvenDualInfeasible() const;
-    /// Is the given primal objective limit reached?
-    virtual bool isPrimalObjectiveLimitReached() const;
+    // Is the given primal objective limit reached? - use implementation from OsiSolverInterface
     /// Is the given dual objective limit reached?
     virtual bool isDualObjectiveLimitReached() const;
     /// Iteration limit reached?

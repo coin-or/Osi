@@ -361,25 +361,12 @@ bool OsiSpxSolverInterface::isProvenDualInfeasible() const
   return ( stat == soplex::SPxSolver::UNBOUNDED );
 }
 
-bool OsiSpxSolverInterface::isPrimalObjectiveLimitReached() const
-{
-  // SoPlex doesn't support a primal objective limit
-
-	double primalobjlimit;
-	getDblParam(OsiDualObjectiveLimit, primalobjlimit);
-
-  return getObjSense() * getObjValue() > getObjSense() * primalobjlimit;
-}
-
 bool OsiSpxSolverInterface::isDualObjectiveLimitReached() const
 {
 	if( soplex_->status() == soplex::SPxSolver::ABORT_VALUE )
 		return true;
 
-	double dualobjlimit;
-	getDblParam(OsiDualObjectiveLimit, dualobjlimit);
-
-	return getObjSense() * getObjValue() > getObjSense() * dualobjlimit;
+	return OsiSolverInterface::isDualObjectiveLimitReached();
 }
 
 bool OsiSpxSolverInterface::isIterationLimitReached() const

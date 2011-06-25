@@ -16,7 +16,10 @@ unit test to avoid attempting the test for a particular OsiXXX.
 The original approach was to use asserts in tests; the net effect is that the
 unit test chokes and dies as soon as something goes wrong. The current
 approach is to soldier on until something has gone wrong which makes further
-testing pointless. The general idea is to return the maximum amount of useful
+testing pointless if OsiUnitTest::haltonerror is set to 0, to hold and ask the
+user for pressing a key if OsiUnitTest::haltonerror is set to 1, and to stop
+immediately if OsiUnitTest::haltonerror is set to 2 (but only in case of an error,
+not for warnings). The general idea is to return the maximum amount of useful
 information with each run. The OsiUnitTest::verbosity variable should be used
 to decide on the amount of information to be printed. At level 0, only minimal
 output should be printed, at level 1, more information about failed tests
@@ -1820,17 +1823,22 @@ void testSettingSolutions (OsiSolverInterface &proto)
   OSIUNITTEST_ASSERT_ERROR(dummyRowSol != si->getRowPrice(), allOK = false, *si, "setting solutions: solver should not return original pointer");
   colVec = si->getRowPrice() ;
 
-  ok = true ;
-  for (i = 0 ; i < m ; i++)
-  { mval = colVec[i] ;
+  if( colVec != NULL )
+  {
+    ok = true ;
+    for (i = 0 ; i < m ; i++)
+    { mval = colVec[i] ;
     cval = dummyRowSol[i] ;
     if (mval != cval)
     { ok = false ;
-      std::cout
-        << "y<" << i << "> = " << mval
-        << ", expecting " << cval
-        << ", |error| = " << (mval-cval)
-        << "." << std::endl ; } }
+    std::cout
+    << "y<" << i << "> = " << mval
+    << ", expecting " << cval
+    << ", |error| = " << (mval-cval)
+    << "." << std::endl ; } }
+  }
+  else
+    ok = false;
   OSIUNITTEST_ASSERT_ERROR(ok == true, allOK = false, *si, "setting solutions: solver stored row price correctly");
 /*
   Now let's get serious. Check that reduced costs and row activities match
@@ -1843,17 +1851,20 @@ void testSettingSolutions (OsiSolverInterface &proto)
   objVec = si->getObjCoefficients() ;
   const CoinPackedMatrix *mtx = si->getMatrixByCol() ;
   mtx->transposeTimes(dummyRowSol,rowShouldBe) ;
-  ok = true ;
-  for (i = 0 ; i < n ; i++)
-  { mval = rowVec[i] ;
-    rval = objVec[i] - rowShouldBe[i] ;
-    if (!fltEq(mval,rval))
-    { ok = false ;
-      std::cout
+  if( rowVec != NULL )
+  { ok = true ;
+    for (i = 0 ; i < n ; i++)
+    { mval = rowVec[i] ;
+      rval = objVec[i] - rowShouldBe[i] ;
+      if (!fltEq(mval,rval))
+      { ok = false ;
+        std::cout
         << "cbar<" << i << "> = " << mval
         << ", expecting " << rval
         << ", |error| = " << (mval-rval)
         << "." << std::endl ; } }
+  } else
+    ok = false;
   OSIUNITTEST_ASSERT_WARNING(ok == true, allOK = false, *si, "setting solutions: reduced costs from solution set with setRowPrice");
 
 /*
@@ -2039,8 +2050,20 @@ void testObjFunctions (const OsiSolverInterface *emptySi,
   Test objective limit methods. If no limit has been specified, they should
   return false.
 */
-  OSIUNITTEST_ASSERT_ERROR(!si->isPrimalObjectiveLimitReached(), {}, solverName, "testObjFunctions: isPrimalObjectiveLimitReached without limit");
-  OSIUNITTEST_ASSERT_ERROR(!si->isDualObjectiveLimitReached(), {}, solverName, "testObjFunctions: isDualObjectiveLimitReached without limit");
+  OSIUNITTEST_ASSERT_ERROR(!si->isPrimalObjectiveLimitReached(), {}, solverName, "testObjFunctions: isPrimalObjectiveLimitReached without limit (min)");
+  OSIUNITTEST_ASSERT_ERROR(!si->isDualObjectiveLimitReached(), {}, solverName, "testObjFunctions: isDualObjectiveLimitReached without limit (min)");
+/* One could think that also no limit should be reached in case of maximization.
+ * However, by default primal and dual limits are not unset, but set to plus or minus infinity.
+ * So, if we change the objective sense, we need to remember to set also the limits to a nonlimiting value.
+ */
+  si->setObjSense(-1.0) ;
+  si->setDblParam(OsiPrimalObjectiveLimit, COIN_DBL_MAX);
+  si->setDblParam(OsiDualObjectiveLimit,  -COIN_DBL_MAX);
+  OSIUNITTEST_ASSERT_ERROR(!si->isPrimalObjectiveLimitReached(), {}, solverName, "testObjFunctions: isPrimalObjectiveLimitReached without limit (max)");
+  OSIUNITTEST_ASSERT_ERROR(!si->isDualObjectiveLimitReached(), {}, solverName, "testObjFunctions: isDualObjectiveLimitReached without limit (max)");
+  si->setObjSense(1.0) ;
+  si->setDblParam(OsiPrimalObjectiveLimit, -COIN_DBL_MAX);
+  si->setDblParam(OsiDualObjectiveLimit,    COIN_DBL_MAX);
 /*
   Test objective limit methods. There's no attempt to see if the solver stops
   early when given a limit that's tighter than the optimal objective.  All
@@ -2061,6 +2084,11 @@ void testObjFunctions (const OsiSolverInterface *emptySi,
   double optSense[2] = { -1.0, 1.0 } ;
   for (i = 0 ; i <= 1 ; i++)
   { si->setObjSense(optSense[i]) ;
+
+    // reset objective limits to infinity
+    si->setDblParam(OsiPrimalObjectiveLimit, -optSense[i] * COIN_DBL_MAX);
+    si->setDblParam(OsiDualObjectiveLimit,    optSense[i] * COIN_DBL_MAX);
+
     si->initialSolve() ;
     objValue = si->getObjValue() ;
     OSIUNITTEST_ASSERT_ERROR(eq(objValue,expectedObj[i]), {}, solverName, "testObjFunctions: optimal value during max/min switch");
@@ -4146,11 +4174,11 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
     OSIUNITTEST_ASSERT_ERROR(!fim.isIntegerNonBinary(4), {}, solverName, "column type methods: isIntegerNonBinary");
 
     // Test fractionalIndices
-    {
+    do {
       double sol[]={1.0, 2.0, 2.9, 3.0, 4.0,0.0,0.0,0.0};
       fim.setColSolution(sol);
       OsiVectorInt fi = fim.getFractionalIndices(1e-5);
-      OSIUNITTEST_ASSERT_ERROR(fi.size() == 1, {}, solverName, "column type methods: getFractionalIndices");
+      OSIUNITTEST_ASSERT_ERROR(fi.size() == 1, break, solverName, "column type methods: getFractionalIndices");
       OSIUNITTEST_ASSERT_ERROR(fi[0] == 2, {}, solverName, "column type methods: getFractionalIndices");
 
       // Set integer variables very close to integer values
@@ -4165,10 +4193,10 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
       sol[3]=8 - .00001*2.;
       fim.setColSolution(sol);
       fi = fim.getFractionalIndices(1e-5);
-      OSIUNITTEST_ASSERT_ERROR(fi.size() == 2, {}, solverName, "column type methods: getFractionalIndices");
+      OSIUNITTEST_ASSERT_ERROR(fi.size() == 2, break, solverName, "column type methods: getFractionalIndices");
       OSIUNITTEST_ASSERT_ERROR(fi[0] == 2, {}, solverName, "column type methods: getFractionalIndices");
       OSIUNITTEST_ASSERT_ERROR(fi[1] == 3, {}, solverName, "column type methods: getFractionalIndices");
-    }
+    } while(false);
 
     // Change data so column 2 & 3 are integerNonBinary
     fim.setColUpper(2,5.0);
@@ -4452,7 +4480,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   Test duals and reduced costs, then dual rays. Vol doesn't react well to
   either test.
 */
-  if (!volSolverInterface) {
+  if (!volSolverInterface && !symSolverInterface) {
     testReducedCosts(emptySi,mpsDir) ;
     testDualRays(emptySi,mpsDir) ;
   } else {

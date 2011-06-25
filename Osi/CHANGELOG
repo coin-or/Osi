@@ -1,3 +1,17 @@
+25/06/2011 Osi
+  - add generic implementations of is{Primal,Dual}ObjectiveLimitReached
+
+25/06/2011 OsiCommonTest
+  - add unittest command line parameter -onerror to specify behaviour in case of a failing test 
+
+23/06/2011 OsiMsk
+  - add isLicenseError() to check whether last solve was abandoned due to a mosek licensing issue 
+
+22/06/2011 OsiCpx
+  - fix handling of primal/dual objective limit so it correctly takes objoffset into account
+  - preserve objective sense also when empty model is loaded
+  - make sure getWarmStart returns proper atlower/atupper status for inequalities
+
 13/06/2011 OsiCommonTest, unittest
   - removed now redundant counting of unittest failures, so test functions now return void 
 

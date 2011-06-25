@@ -1179,6 +1179,24 @@ bool OsiMskSolverInterface::isIterationLimitReached() const
   return Mskerr == MSK_RES_TRM_MAX_ITERATIONS;
 }
 
+//-----------------------------------------------------------------------------
+// Returns true if a license problem occured in last call to optimize.
+
+bool OsiMskSolverInterface::isLicenseError() const
+{
+   #if MSK_OSI_DEBUG_LEVEL > 3
+   debugMessage("Begin OsiMskSolverInterface::isLicenseError()\n");
+   #endif
+
+   #if MSK_OSI_DEBUG_LEVEL > 3
+   debugMessage("license error %d \n",Mskerr);
+   debugMessage("End OsiMskSolverInterface::isLicenseError()\n");
+   #endif
+
+   return Mskerr >= MSK_RES_ERR_LICENSE && Mskerr <= MSK_RES_ERR_LICENSE_NO_SERVER_SUPPORT;
+}
+
+
 //#############################################################################
 // WarmStart related methods
 //#############################################################################

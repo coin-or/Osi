@@ -85,6 +85,8 @@ public:
     virtual bool isDualObjectiveLimitReached() const;
     /// Iteration limit reached?
     virtual bool isIterationLimitReached() const;
+    /// Has there been a license problem?
+    virtual bool isLicenseError() const;
   //@}
 
   //---------------------------------------------------------------------------

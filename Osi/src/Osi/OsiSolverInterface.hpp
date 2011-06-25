@@ -392,9 +392,9 @@ public:
     /// Is dual infeasibility proven?
     virtual bool isProvenDualInfeasible() const = 0;
     /// Is the given primal objective limit reached?
-    virtual bool isPrimalObjectiveLimitReached() const = 0;
+    virtual bool isPrimalObjectiveLimitReached() const;
     /// Is the given dual objective limit reached?
-    virtual bool isDualObjectiveLimitReached() const = 0;
+    virtual bool isDualObjectiveLimitReached() const;
     /// Iteration limit reached?
     virtual bool isIterationLimitReached() const = 0;
   //@}

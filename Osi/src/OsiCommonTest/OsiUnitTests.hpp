@@ -66,6 +66,13 @@ class TestOutcomes;
  * 0 (= default) for minimal output */
 extern unsigned int verbosity;
 
+/** behaviour on failing test
+ * 0 (= default) continue
+ * 1 press any key to continue
+ * 2 stop with abort()
+ */
+extern unsigned int haltonerror;
+
 /** a global TestOutcomes object to store test outcomes during a run of the Osi unittest
  */
 extern TestOutcomes outcomes;
@@ -162,6 +169,10 @@ public:
 		} else { \
 			OSIUNITTEST_ADD_OUTCOME(component, testname, #condition, severity, expected); \
 			OsiUnitTest::failureMessage(component, testname, #condition); \
+      switch( OsiUnitTest::haltonerror ) { \
+        case 2: if( severity >= OsiUnitTest::TestOutcome::ERROR ) abort(); break; \
+        case 1: std::cout << std::endl << "press any key to continue..." << std::endl; getchar(); \
+        default: ; } \
 			failurecode; \
     } \
 	}
@@ -194,6 +205,10 @@ public:
 			  errmsg << " at " << e.fileName() << ":" << e.lineNumber(); \
 			OSIUNITTEST_ADD_OUTCOME(component, testname, errmsg.str().c_str(), severity, expected); \
 			OsiUnitTest::failureMessage(component, testname, errmsg.str().c_str()); \
+      switch( OsiUnitTest::haltonerror ) { \
+        case 2: if( severity >= OsiUnitTest::TestOutcome::ERROR ) abort(); break; \
+        case 1: std::cout << std::endl << "press any key to continue..." << std::endl; getchar(); \
+        default: ; } \
 			catchcode; \
 		} catch (...) { \
 		  std::string errmsg; \

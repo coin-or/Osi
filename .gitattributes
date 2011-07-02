@@ -72,7 +72,6 @@ Osi/configure.ac -text
 Osi/depcomp -text
 Osi/doxydoc/doxygen.conf.in -text
 Osi/examples/Makefile.in -text
-Osi/examples/README -text
 Osi/examples/basic.cpp -text
 Osi/examples/basic2.cpp -text
 Osi/examples/build.cpp -text

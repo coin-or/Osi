@@ -57,8 +57,8 @@ AC_COIN_CHECK_PACKAGE(CoinUtils, [coinutils], [OsiLib])
 if test $coin_has_coinutils != yes ; then
   AC_MSG_ERROR([Required package CoinUtils not available.])
 fi
-AC_COIN_CHECK_PACKAGE(Glpk,      [coinglpk], [OsiGlpkLib])
-AC_COIN_CHECK_PACKAGE(SoPlex,    [coinsoplex],       [OsiSpxLib])
+AC_COIN_CHECK_PACKAGE(Glpk,      [coinglpk],  [OsiGlpkLib])
+AC_COIN_CHECK_PACKAGE(SoPlex,    [coinsoplex],[OsiSpxLib])
 AC_COIN_CHECK_PACKAGE(Sample,    [coindatasample])
 AC_COIN_CHECK_PACKAGE(Netlib,    [coindatanetlib])
 
@@ -112,12 +112,14 @@ elif test $coin_has_soplex = yes ; then
   OSI_EXAMPLES_SOLVER_CFLAGS="$SOPLEX_CFLAGS"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiSpx $SOPLEX_LIBS_INSTALLED"
   OSI_EXAMPLES_SOLVER_PCNAME=osi-soplex
+else
+  AC_MSG_WARN([No solver available, examples will not work.])
 fi
 
 # adjust linker flags for (i)cl compiler
 if test x$coin_cxx_is_cl = xtrue || test x$coin_cc_is_cl = xtrue ;
 then
-  [OSI_EXAMPLES_SOLVER_LIBS=`echo " $OSI_EXAMPLES_SOLVER_LIBS" | sed -e 's/ -L\([^ ]*\)/ \/libpath:\`$(CYGPATH_W) \1\`/g' -e 's/ -l\([^ ]*\)/ lib\1.lib/g'`]
+  [OSI_EXAMPLES_SOLVER_LIBS=`echo " $OSI_EXAMPLES_SOLVER_LIBS" | sed -e 's/ -l\([^ ]*\)/ lib\1.lib/g' -e 's/ -L\([^ ]*\)/ -libpath:\`$(CYGPATH_W) \1\`/g'`]
 fi
 
 AC_SUBST(OSI_EXAMPLES_SOLVER_NAME)

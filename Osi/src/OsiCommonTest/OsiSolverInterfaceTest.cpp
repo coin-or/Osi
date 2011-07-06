@@ -1783,6 +1783,9 @@ void testSettingSolutions (OsiSolverInterface &proto)
 
   CoinAbsFltEq fltEq ;
 
+  std::string solverName = "Unknown solver" ;
+  si->getStrParam(OsiSolverName,solverName) ;
+
   testingMessage("Checking that solver can set row and column solutions ...") ;
 
 /*
@@ -1839,7 +1842,7 @@ void testSettingSolutions (OsiSolverInterface &proto)
   }
   else
     ok = false;
-  OSIUNITTEST_ASSERT_ERROR(ok == true, allOK = false, *si, "setting solutions: solver stored row price correctly");
+  OSIUNITTEST_ASSERT_SEVERITY_EXPECTED(ok == true, allOK = false, *si, "setting solutions: solver stored row price correctly",TestOutcome::ERROR,solverName=="sym");
 /*
   Now let's get serious. Check that reduced costs and row activities match
   the values we just specified for row and column solutions. Absolute
@@ -2050,7 +2053,7 @@ void testObjFunctions (const OsiSolverInterface *emptySi,
   Test objective limit methods. If no limit has been specified, they should
   return false.
 */
-  OSIUNITTEST_ASSERT_ERROR(!si->isPrimalObjectiveLimitReached(), {}, solverName, "testObjFunctions: isPrimalObjectiveLimitReached without limit (min)");
+  OSIUNITTEST_ASSERT_SEVERITY_EXPECTED(!si->isPrimalObjectiveLimitReached(), {}, solverName, "testObjFunctions: isPrimalObjectiveLimitReached without limit (min)",TestOutcome::ERROR,solverName=="sym");
   OSIUNITTEST_ASSERT_ERROR(!si->isDualObjectiveLimitReached(), {}, solverName, "testObjFunctions: isDualObjectiveLimitReached without limit (min)");
 /* One could think that also no limit should be reached in case of maximization.
  * However, by default primal and dual limits are not unset, but set to plus or minus infinity.
@@ -2059,7 +2062,7 @@ void testObjFunctions (const OsiSolverInterface *emptySi,
   si->setObjSense(-1.0) ;
   si->setDblParam(OsiPrimalObjectiveLimit, COIN_DBL_MAX);
   si->setDblParam(OsiDualObjectiveLimit,  -COIN_DBL_MAX);
-  OSIUNITTEST_ASSERT_ERROR(!si->isPrimalObjectiveLimitReached(), {}, solverName, "testObjFunctions: isPrimalObjectiveLimitReached without limit (max)");
+  OSIUNITTEST_ASSERT_SEVERITY_EXPECTED(!si->isPrimalObjectiveLimitReached(), {}, solverName, "testObjFunctions: isPrimalObjectiveLimitReached without limit (max)",TestOutcome::ERROR,solverName=="sym");
   OSIUNITTEST_ASSERT_ERROR(!si->isDualObjectiveLimitReached(), {}, solverName, "testObjFunctions: isDualObjectiveLimitReached without limit (max)");
   si->setObjSense(1.0) ;
   si->setDblParam(OsiPrimalObjectiveLimit, -COIN_DBL_MAX);
@@ -2166,6 +2169,9 @@ void testArtifStatus (const OsiSolverInterface *emptySi)
 { OsiSolverInterface *si = emptySi->clone() ;
   double infty = si->getInfinity() ;
 
+  std::string solverName = "Unknown solver" ;
+  si->getStrParam(OsiSolverName,solverName) ;
+
   testingMessage("Testing status for artificial variables.\n") ;
 /*
   Set up the example problem in packed column-major vector format and load it
@@ -2220,7 +2226,7 @@ void testArtifStatus (const OsiSolverInterface *emptySi)
 
     CoinWarmStart *ws = si->getWarmStart() ;
     CoinWarmStartBasis *wsb = dynamic_cast<CoinWarmStartBasis *>(ws) ;
-    OSIUNITTEST_ASSERT_ERROR(wsb != NULL, {}; continue, *si, "testArtifStatus: initial solve warm start basis");
+    OSIUNITTEST_ASSERT_SEVERITY_EXPECTED(wsb != NULL, {}; continue, *si, "testArtifStatus: initial solve warm start basis",TestOutcome::ERROR,solverName=="sym");
 
     CoinWarmStartBasis::Status stati ;
 

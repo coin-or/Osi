@@ -403,11 +403,11 @@ void testReducedGradient (const OsiSolverInterface *si)
 */
   double *cbar = new double[n] ;
   double *y = new double[m] ;
-  OSIUNITTEST_CATCH_ERROR(si->getReducedGradient(cbar,y,c),
+  OSIUNITTEST_CATCH_SEVERITY_EXPECTED(si->getReducedGradient(cbar,y,c),
   	delete[] cbar;
   	delete[] y;
   	return,
-  	solverName, "testReducedGradient");
+  	solverName, "testReducedGradient", TestOutcome::ERROR, solverName == "cplex");
 
 /*
   Run through the columns of the basis. Retrieve beta<j>, calculate

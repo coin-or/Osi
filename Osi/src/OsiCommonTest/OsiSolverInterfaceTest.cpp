@@ -4435,7 +4435,7 @@ OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface* emptySi,
   variables. See the routine for detailed comments. Vol has no basis, hence no
   status.
 */
-  if (!volSolverInterface)
+  if (!volSolverInterface && !symSolverInterface)
     testArtifStatus(emptySi) ;
   else
   	OSIUNITTEST_ADD_OUTCOME(solverName, "testArtifStatus", "skipped test", OsiUnitTest::TestOutcome::NOTE, true);

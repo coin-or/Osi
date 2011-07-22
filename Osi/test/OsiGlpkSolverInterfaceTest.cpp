@@ -28,15 +28,6 @@
 // when not building with glpk.
 #ifdef COIN_HAS_GLPK
 
-//#############################################################################
-
-/*
-  Define helper routines in the file-local namespace. Makes it easier to see
-  the main flow of tests.
-*/
-
-
-//--------------------------------------------------------------------------
 void OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir)
 {
   // Test default constructor

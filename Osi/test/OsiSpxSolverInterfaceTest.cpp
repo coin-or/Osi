@@ -24,7 +24,7 @@
 #include "CoinFloatEqual.hpp"
 #include "CoinPackedMatrix.hpp"
 
-#include <iostream>
+//#include <iostream>
 
 // to check for value of infinity
 #include "soplex.h"

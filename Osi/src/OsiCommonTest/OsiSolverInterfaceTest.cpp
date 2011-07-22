@@ -3014,7 +3014,7 @@ void testLoadAndAssignProblem (const OsiSolverInterface *emptySi,
   else
   {
     failureMessage(solverName, "OsiGrb exposes inability to handle 'N' constraints (expected).") ;
-    OSIUNITTEST_ADD_OUTCOME(solverName, "testLoadAndAssignProblem", "ability to hande 'N' constraints", TestOutcome::ERROR, true);
+    OSIUNITTEST_ADD_OUTCOME(solverName, "testLoadAndAssignProblem", "ability to handle 'N' constraints", TestOutcome::ERROR, true);
   }
 /*
   Load problem with row rhs, sense and range, but leave column bounds and

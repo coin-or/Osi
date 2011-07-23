@@ -802,10 +802,7 @@ private:
 
   /// free all allocated memory
   void freeAllMemory();
-
   
-  /// Just for testing purposes
-  void printBounds(); 
   //@}
   
   

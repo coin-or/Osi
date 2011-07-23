@@ -4,580 +4,307 @@
   This file is licensed under the terms of Eclipse Public License (EPL).
 */
 
-#if defined(_MSC_VER)
-// Turn off compiler warning about long names
-#  pragma warning(disable:4786)
-#endif
-
-#ifdef NDEBUG
-#undef NDEBUG
-#endif
-
+#include "CoinPragma.hpp"
 #include "OsiConfig.h"
 
-#include <cassert>
-#include <iostream>
+//#include <cassert>
+//#include <iostream>
 
-#include <string>
-
+#include "OsiUnitTests.hpp"
 #include "OsiMskSolverInterface.hpp"
 #include "OsiCuts.hpp"
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
 #include "CoinPackedMatrix.hpp"
 
+// Added so build windows build with dsp files works,
+// when not building with gurobi.
+#ifdef COIN_HAS_MSK
 #include "mosek.h"
 
 //--------------------------------------------------------------------------
 void OsiMskSolverInterfaceUnitTest( const std::string & mpsDir, const std::string & netlibDir )
 {
+  unsigned int numInstancesStart = OsiMskSolverInterface::getNumInstances();
   // Test default constructor
   {
-    assert( OsiMskSolverInterface::getNumInstances()==0 );
     OsiMskSolverInterface m;
-    assert( m.obj_==NULL );
-    assert( m.collower_==NULL );
-    assert( m.colupper_==NULL );
-    assert( m.coltype_==NULL );
-    assert( m.rowsense_==NULL );
-    assert( m.rhs_==NULL );
-    assert( m.rowrange_==NULL );
-    assert( m.rowlower_==NULL );
-    assert( m.rowupper_==NULL );
-    assert( m.colsol_==NULL );
-    assert( m.rowsol_==NULL );
-    assert( m.matrixByRow_==NULL );
-    assert( m.matrixByCol_==NULL );
-    assert( m.coltype_==NULL );
-    assert( m.coltypesize_==0 );
-    assert( OsiMskSolverInterface::getNumInstances()==1 );
-    assert( m.getApplicationData() == NULL );
+    OSIUNITTEST_ASSERT_ERROR(m.obj_         == NULL, {}, "mosek", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.collower_    == NULL, {}, "mosek", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.colupper_    == NULL, {}, "mosek", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.coltype_     == NULL, {}, "mosek", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.coltypesize_ ==    0, {}, "mosek", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.rowsense_    == NULL, {}, "mosek", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.rhs_         == NULL, {}, "mosek", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.rowrange_    == NULL, {}, "mosek", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.rowlower_    == NULL, {}, "mosek", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.rowupper_    == NULL, {}, "mosek", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.colsol_      == NULL, {}, "mosek", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.rowsol_      == NULL, {}, "mosek", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.matrixByRow_ == NULL, {}, "mosek", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.matrixByCol_ == NULL, {}, "mosek", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.getNumCols() ==    0, {}, "mosek", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.getApplicationData() == NULL, {}, "mosek", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(OsiMskSolverInterface::getNumInstances() == numInstancesStart+1, {}, "mosek", "number of instances during first test");
     int i=2346;
     m.setApplicationData(&i);
-    assert( *((int *)(m.getApplicationData())) == i );
+    OSIUNITTEST_ASSERT_ERROR(*((int *)(m.getApplicationData())) == i, {}, "mosek", "default constructor");
   }
-  assert( OsiMskSolverInterface::getNumInstances()==0 );
+  OSIUNITTEST_ASSERT_ERROR(OsiMskSolverInterface::getNumInstances() == numInstancesStart, {}, "mosek", "number of instances after first test");
 
   {    
     CoinRelFltEq eq;
     OsiMskSolverInterface m;
-    assert( OsiMskSolverInterface::getNumInstances()==1 );
+    OSIUNITTEST_ASSERT_ERROR(OsiMskSolverInterface::getNumInstances() == numInstancesStart+1, {}, "mosek", "number of instances");
     std::string fn = mpsDir+"exmip1";
     m.readMps(fn.c_str(),"mps");
-    int ad = 13579;
-    m.setApplicationData(&ad);
-    assert( *((int *)(m.getApplicationData())) == ad );
 
     {
-      assert( m.getNumCols()==8 );
+      OSIUNITTEST_ASSERT_ERROR(m.getNumCols() == 8, {}, "mosek", "exmip1 read");
       const CoinPackedMatrix * colCopy = m.getMatrixByCol();
-      assert( colCopy->getNumCols() == 8 );
-      assert( colCopy->getMajorDim() == 8 );
-      assert( colCopy->getNumRows() == 5 );
-      assert( colCopy->getMinorDim() == 5 );
-      assert (colCopy->getVectorLengths()[7] == 2 );
+      OSIUNITTEST_ASSERT_ERROR(colCopy->getNumCols()  == 8, {}, "mosek", "exmip1 matrix");
+      OSIUNITTEST_ASSERT_ERROR(colCopy->getMajorDim() == 8, {}, "mosek", "exmip1 matrix");
+      OSIUNITTEST_ASSERT_ERROR(colCopy->getNumRows()  == 5, {}, "mosek", "exmip1 matrix");
+      OSIUNITTEST_ASSERT_ERROR(colCopy->getMinorDim() == 5, {}, "mosek", "exmip1 matrix");
+      OSIUNITTEST_ASSERT_ERROR(colCopy->getVectorLengths()[7] == 2, {}, "mosek", "exmip1 matrix");
       CoinPackedMatrix revColCopy;
       revColCopy.reverseOrderedCopyOf(*colCopy);
       CoinPackedMatrix rev2ColCopy;      
       rev2ColCopy.reverseOrderedCopyOf(revColCopy);
-      assert( rev2ColCopy.getNumCols() == 8 );
-      assert( rev2ColCopy.getMajorDim() == 8 );
-      assert( rev2ColCopy.getNumRows() == 5 );
-      assert( rev2ColCopy.getMinorDim() == 5 );
-      assert( rev2ColCopy.getVectorLengths()[7] == 2 );
+      OSIUNITTEST_ASSERT_ERROR(rev2ColCopy.getNumCols()  == 8, {}, "mosek", "twice reverse matrix copy");
+      OSIUNITTEST_ASSERT_ERROR(rev2ColCopy.getMajorDim() == 8, {}, "mosek", "twice reverse matrix copy");
+      OSIUNITTEST_ASSERT_ERROR(rev2ColCopy.getNumRows()  == 5, {}, "mosek", "twice reverse matrix copy");
+      OSIUNITTEST_ASSERT_ERROR(rev2ColCopy.getMinorDim() == 5, {}, "mosek", "twice reverse matrix copy");
+      OSIUNITTEST_ASSERT_ERROR(rev2ColCopy.getVectorLengths()[7] == 2, {}, "mosek", "twice reverse matrix copy");
     }
-    
-    {
-      OsiMskSolverInterface im;    
-      assert( im.getNumCols() == 0 ); 
-    }
-    
+
     // Test copy constructor and assignment operator
     {
       OsiMskSolverInterface lhs;
       {      
-        assert( *((int *)(m.getApplicationData())) == ad );
-        OsiMskSolverInterface im(m);   
-        assert( *((int *)(im.getApplicationData())) == ad );
+        OsiMskSolverInterface im(m);
 
-        OsiMskSolverInterface imC1(im);  
-        assert( *((int *)(imC1.getApplicationData())) == ad ); 
-        
+        OsiMskSolverInterface imC1(im);
+        OSIUNITTEST_ASSERT_ERROR(imC1.getNumCols() == im.getNumCols(),  {}, "mosek", "copy constructor");
+        OSIUNITTEST_ASSERT_ERROR(imC1.getNumRows() == im.getNumRows(),  {}, "mosek", "copy constructor");
         
         OsiMskSolverInterface imC2(im);
-        assert( *((int *)(imC2.getApplicationData())) == ad ); 
+        OSIUNITTEST_ASSERT_ERROR(imC2.getNumCols() == im.getNumCols(),  {}, "mosek", "copy constructor");
+        OSIUNITTEST_ASSERT_ERROR(imC2.getNumRows() == im.getNumRows(),  {}, "mosek", "copy constructor");
         
-        
-        lhs=imC2;
+        lhs = imC2;
       }
+
       // Test that lhs has correct values even though rhs has gone out of scope
-    
-      assert( *((int *)(lhs.getApplicationData())) == ad );
+      OSIUNITTEST_ASSERT_ERROR(lhs.getNumCols() == m.getNumCols(),  {}, "mosek", "copy constructor");
+      OSIUNITTEST_ASSERT_ERROR(lhs.getNumRows() == m.getNumRows(),  {}, "mosek", "copy constructor");
     }
     
     // Test clone
     {
-      OsiMskSolverInterface MOSEKSi(m);
-      OsiSolverInterface * siPtr = &MOSEKSi;
+      OsiMskSolverInterface mosekSi(m);
+      OsiSolverInterface * siPtr = &mosekSi;
       OsiSolverInterface * siClone = siPtr->clone();
-      OsiMskSolverInterface * MOSEKClone = dynamic_cast<OsiMskSolverInterface*>(siClone);
+      OsiMskSolverInterface * mosekClone = dynamic_cast<OsiMskSolverInterface*>(siClone);
+      OSIUNITTEST_ASSERT_ERROR(mosekClone != NULL, {}, "mosek", "clone");
+      OSIUNITTEST_ASSERT_ERROR(mosekClone->getNumRows() == mosekSi.getNumRows(), {}, "mosek", "clone");
+      OSIUNITTEST_ASSERT_ERROR(mosekClone->getNumCols() == m.getNumCols(), {}, "mosek", "clone");
       
-      assert( *((int *)(MOSEKClone->getApplicationData())) == ad );
       delete siClone;
     }
-   
+
     // test infinity
     {
       OsiMskSolverInterface si;
-      assert( eq( si.getInfinity(), MSK_INFINITY ) );
+      OSIUNITTEST_ASSERT_ERROR(si.getInfinity() == MSK_INFINITY, {}, "mosek", "value for infinity");
     }     
-    
-    // Test setting solution
-    {
-      OsiMskSolverInterface m1(m);
-      int i;
 
-      double * cs = new double[m1.getNumCols()];
-      for ( i = 0;  i < m1.getNumCols();  i++ ) 
-        cs[i] = i + .5;
-      m1.setColSolution(cs);
-      for ( i = 0;  i < m1.getNumCols();  i++ ) 
-        assert(m1.getColSolution()[i] == i + .5);
-      
-      double * rs = new double[m1.getNumRows()];
-      for ( i = 0;  i < m1.getNumRows();  i++ ) 
-        rs[i] = i - .5;
-      m1.setRowPrice(rs);
-      for ( i = 0;  i < m1.getNumRows();  i++ ) 
-        assert(m1.getRowPrice()[i] == i - .5);
-
-      delete [] cs;
-      delete [] rs;
-    }
-    
-    // Test fraction Indices
-    {
-      OsiMskSolverInterface fim;
-      std::string fn = mpsDir+"exmip1";
-      fim.readMps(fn.c_str(),"mps");
-      // exmip1.mps has 2 integer variables with index 2 & 3
-      assert(  fim.isContinuous(0) );
-      assert(  fim.isContinuous(1) );
-      assert( !fim.isContinuous(2) );
-      assert( !fim.isContinuous(3) );
-      assert(  fim.isContinuous(4) );
-      
-      assert( !fim.isInteger(0) );
-      assert( !fim.isInteger(1) );
-      assert(  fim.isInteger(2) );
-      assert(  fim.isInteger(3) );
-      assert( !fim.isInteger(4) );
-      
-      assert( !fim.isBinary(0) );
-      assert( !fim.isBinary(1) );
-      assert(  fim.isBinary(2) );
-      assert(  fim.isBinary(3) );
-      assert( !fim.isBinary(4) );
-      
-      assert( !fim.isIntegerNonBinary(0) );
-      assert( !fim.isIntegerNonBinary(1) );
-      assert( !fim.isIntegerNonBinary(2) );
-      assert( !fim.isIntegerNonBinary(3) );
-      assert( !fim.isIntegerNonBinary(4) );
-
-      
-      // Test fractionalIndices
-      {
-	    // Set a solution vector
-	    double * cs = new double[fim.getNumCols()];
-	    for ( int i = 0;  i < fim.getNumCols();  cs[i++] = 0.0 );
-	    cs[2] = 2.9;
-	    cs[3] = 3.0;
-	    fim.setColSolution(cs);
-
-        OsiVectorInt fi = fim.getFractionalIndices();
-        assert( fi.size() == 1 );
-        assert( fi[0]==2 );
-        
-        // Set integer variables very close to integer values
-        cs[2] = 5 + .00001/2.;
-        cs[3] = 8 - .00001/2.;
-	    fim.setColSolution(cs);
-        fi = fim.getFractionalIndices(1e-5);
-        assert( fi.size() == 0 );
-        
-        // Set integer variables close, but beyond tolerances
-        cs[2] = 5 + .00001*2.;
-        cs[3] = 8 - .00001*2.;
-	    fim.setColSolution(cs);
-        fi = fim.getFractionalIndices(1e-5);
-        assert( fi.size() == 2 );
-        assert( fi[0]==2 );
-        assert( fi[1]==3 );
-
-	    delete [] cs;
-      }
-
-      // Change data so column 2 & 3 are integerNonBinary
-      fim.setColUpper(2, 5);
-      fim.setColUpper(3, 6.0);
-      assert( !fim.isBinary(0) );
-      assert( !fim.isBinary(1) );
-      assert( !fim.isBinary(2) );
-      assert( !fim.isBinary(3) );
-      assert( !fim.isBinary(4) );
-      
-      assert( !fim.isIntegerNonBinary(0) );
-      assert( !fim.isIntegerNonBinary(1) );
-      assert(  fim.isIntegerNonBinary(2) );
-      assert(  fim.isIntegerNonBinary(3) );
-      assert( !fim.isIntegerNonBinary(4) );
-    }
-    
-    // Test apply cuts method
-    {      
-      OsiMskSolverInterface im(m);
-      OsiCuts cuts;
-      
-      // Generate some cuts 
-      {
-        // Get number of rows and columns in model
-        int nr=im.getNumRows();
-        int nc=im.getNumCols();
-        assert( nr == 5 );
-        assert( nc == 8 );
-        
-        // Generate a valid row cut from thin air
-        int c;
-        {
-          int *inx = new int[nc];
-          for (c=0;c<nc;c++) inx[c]=c;
-          double *el = new double[nc];
-          for (c=0;c<nc;c++) el[c]=((double)c)*((double)c);
-          
-          OsiRowCut rc;
-          rc.setRow(nc,inx,el);
-          rc.setLb(-100.);
-          rc.setUb(100.);
-          rc.setEffectiveness(22);
-          
-          cuts.insert(rc);
-          delete[]el;
-          delete[]inx;
-        }
-        
-        // Generate valid col cut from thin air
-        {
-          const double * MOSEKColLB = im.getColLower();
-          const double * MOSEKColUB = im.getColUpper();
-          int *inx = new int[nc];
-          for (c=0;c<nc;c++) inx[c]=c;
-          double *lb = new double[nc];
-          double *ub = new double[nc];
-          for (c=0;c<nc;c++) lb[c]=MOSEKColLB[c]+0.001;
-          for (c=0;c<nc;c++) ub[c]=MOSEKColUB[c]-0.001;
-          
-          OsiColCut cc;
-          cc.setLbs(nc,inx,lb);
-          cc.setUbs(nc,inx,ub);
-          
-          cuts.insert(cc);
-          delete [] ub;
-          delete [] lb;
-          delete [] inx;
-        }
-        
-        {
-          // Generate a row and column cut which have are ineffective
-          OsiRowCut * rcP= new OsiRowCut;
-          rcP->setEffectiveness(-1.);
-          cuts.insert(rcP);
-          assert(rcP==NULL);
-          
-          OsiColCut * ccP= new OsiColCut;
-          ccP->setEffectiveness(-12.);
-          cuts.insert(ccP);
-          assert(ccP==NULL);
-        }
-        {
-          //Generate inconsistent Row cut
-          OsiRowCut rc;
-          const int ne=1;
-          int inx[ne]={-10};
-          double el[ne]={2.5};
-          rc.setRow(ne,inx,el);
-          rc.setLb(3.);
-          rc.setUb(4.);
-          assert(!rc.consistent());
-          cuts.insert(rc);
-        }
-        {
-          //Generate inconsistent col cut
-          OsiColCut cc;
-          const int ne=1;
-          int inx[ne]={-10};
-          double el[ne]={2.5};
-          cc.setUbs(ne,inx,el);
-          assert(!cc.consistent());
-          cuts.insert(cc);
-        }
-        {
-          // Generate row cut which is inconsistent for model m
-          OsiRowCut rc;
-          const int ne=1;
-          int inx[ne]={10};
-          double el[ne]={2.5};
-          rc.setRow(ne,inx,el);
-          assert(rc.consistent());
-          assert(!rc.consistent(im));
-          cuts.insert(rc);
-        }
-        {
-          // Generate col cut which is inconsistent for model m
-          OsiColCut cc;
-          const int ne=1;
-          int inx[ne]={30};
-          double el[ne]={2.0};
-          cc.setLbs(ne,inx,el);
-          assert(cc.consistent());
-          assert(!cc.consistent(im));
-          cuts.insert(cc);
-        }
-        {
-          // Generate col cut which is infeasible
-          OsiColCut cc;
-          const int ne=1;
-          int inx[ne]={0};
-          double el[ne]={2.0};
-          cc.setUbs(ne,inx,el);
-          cc.setEffectiveness(1000.);
-          assert(cc.consistent());
-          assert(cc.consistent(im));
-          assert(cc.infeasible(im));
-          cuts.insert(cc);
-        }
-      }
-      assert(cuts.sizeRowCuts()==4);
-      assert(cuts.sizeColCuts()==5);
-        
-      OsiSolverInterface::ApplyCutsReturnCode rc = im.applyCuts(cuts);
-      assert( rc.getNumIneffective() == 2 );
-      assert( rc.getNumApplied() == 2 );
-      assert( rc.getNumInfeasible() == 1 );
-      assert( rc.getNumInconsistentWrtIntegerModel() == 2 );
-      assert( rc.getNumInconsistent() == 2 );
-      assert( cuts.sizeCuts() == rc.getNumIneffective() +
-      rc.getNumApplied() +
-      rc.getNumInfeasible() +
-      rc.getNumInconsistentWrtIntegerModel() +
-      rc.getNumInconsistent() );
-    }
     {    
-      OsiMskSolverInterface MOSEKSi(m);
-      int nc = MOSEKSi.getNumCols();
-      int nr = MOSEKSi.getNumRows();
-      const double * cl = MOSEKSi.getColLower();
-      const double * cu = MOSEKSi.getColUpper();
-      const double * rl = MOSEKSi.getRowLower();
-      const double * ru = MOSEKSi.getRowUpper();
+      OsiMskSolverInterface mosekSi(m);
+      int nc = mosekSi.getNumCols();
+      int nr = mosekSi.getNumRows();
+      const double * cl = mosekSi.getColLower();
+      const double * cu = mosekSi.getColUpper();
+      const double * rl = mosekSi.getRowLower();
+      const double * ru = mosekSi.getRowUpper();
 
-      assert( nc == 8 );
-      assert( nr == 5 );
-      assert( eq(cl[0],2.5) );
-      assert( eq(cl[1],0.0) );
-      assert( eq(cu[1],4.1) );
-      assert( eq(cu[2],1.0) );
-
-      assert( eq(rl[0],2.5) );
-      assert( eq(rl[4],3.0) );
-      assert( eq(ru[1],2.1) );
-      assert( eq(ru[4],15.0) );
+      OSIUNITTEST_ASSERT_ERROR(nc == 8, return, "mosek", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(nr == 5, return, "mosek", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(cl[0],2.5), {}, "mosek", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(cl[1],0.0), {}, "mosek", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(cu[1],4.1), {}, "mosek", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(cu[2],1.0), {}, "mosek", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(rl[0],2.5), {}, "mosek", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(rl[4],3.0), {}, "mosek", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(ru[1],2.1), {}, "mosek", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(ru[4],15.), {}, "mosek", "read and copy exmip1");
       
       double newCs[8] = {1., 2., 3., 4., 5., 6., 7., 8.};
-      MOSEKSi.setColSolution(newCs);
-      const double * cs = MOSEKSi.getColSolution();
-      assert( eq(cs[0],1.0) );
-      assert( eq(cs[7],8.0) );
+      mosekSi.setColSolution(newCs);
+      const double * cs = mosekSi.getColSolution();
+      OSIUNITTEST_ASSERT_ERROR(eq(cs[0],1.0), {}, "mosek", "set col solution");
+      OSIUNITTEST_ASSERT_ERROR(eq(cs[7],8.0), {}, "mosek", "set col solution");
       {
-        OsiMskSolverInterface solnSi(MOSEKSi);
+        OsiMskSolverInterface solnSi(mosekSi);
         const double * cs = solnSi.getColSolution();
-        assert( eq(cs[0],1.0) );
-        assert( eq(cs[7],8.0) );
+        OSIUNITTEST_ASSERT_ERROR(eq(cs[0],1.0), {}, "mosek", "set col solution and copy");
+        OSIUNITTEST_ASSERT_ERROR(eq(cs[7],8.0), {}, "mosek", "set col solution and copy");
       }
 
-      assert( !eq(cl[3],1.2345) );
-      MOSEKSi.setColLower( 3, 1.2345 );
-      assert( eq(MOSEKSi.getColLower()[3],1.2345) );
+      OSIUNITTEST_ASSERT_ERROR(!eq(cl[3],1.2345), {}, "mosek", "set col lower");
+      mosekSi.setColLower( 3, 1.2345 );
+      OSIUNITTEST_ASSERT_ERROR( eq(cl[3],1.2345), {}, "mosek", "set col lower");
       
-      assert( !eq(cu[4],10.2345) );
-      MOSEKSi.setColUpper( 4, 10.2345 );
-      assert( eq(MOSEKSi.getColUpper()[4],10.2345) );
+      OSIUNITTEST_ASSERT_ERROR(!eq(cu[4],10.2345), {}, "mosek", "set col upper");
+      mosekSi.setColUpper( 4, 10.2345 );
+      OSIUNITTEST_ASSERT_ERROR( eq(cu[4],10.2345), {}, "mosek", "set col upper");
 
-      assert( eq(MOSEKSi.getObjValue(), 1.0 * 1.0 + 2.0 * 5.0 - 1.0 * 8.0) );
-
-      assert( eq( MOSEKSi.getObjCoefficients()[0],  1.0) );
-      assert( eq( MOSEKSi.getObjCoefficients()[1],  0.0) );
-      assert( eq( MOSEKSi.getObjCoefficients()[2],  0.0) );
-      assert( eq( MOSEKSi.getObjCoefficients()[3],  0.0) );
-      assert( eq( MOSEKSi.getObjCoefficients()[4],  2.0) );
-      assert( eq( MOSEKSi.getObjCoefficients()[5],  0.0) );
-      assert( eq( MOSEKSi.getObjCoefficients()[6],  0.0) );
-      assert( eq( MOSEKSi.getObjCoefficients()[7], -1.0) );
+      OSIUNITTEST_ASSERT_ERROR(eq(mosekSi.getObjCoefficients()[0], 1.0), {}, "mosek", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(mosekSi.getObjCoefficients()[1], 0.0), {}, "mosek", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(mosekSi.getObjCoefficients()[2], 0.0), {}, "mosek", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(mosekSi.getObjCoefficients()[3], 0.0), {}, "mosek", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(mosekSi.getObjCoefficients()[4], 2.0), {}, "mosek", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(mosekSi.getObjCoefficients()[5], 0.0), {}, "mosek", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(mosekSi.getObjCoefficients()[6], 0.0), {}, "mosek", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(mosekSi.getObjCoefficients()[7],-1.0), {}, "mosek", "read and copy exmip1");
     }
-     
+
     // Test getMatrixByRow method
     { 
       const OsiMskSolverInterface si(m);
       const CoinPackedMatrix * smP = si.getMatrixByRow();
       
+      OSIUNITTEST_ASSERT_ERROR(smP->getMajorDim()    ==  5, return, "mosek", "getMatrixByRow: major dim");
+      OSIUNITTEST_ASSERT_ERROR(smP->getNumElements() == 14, return, "mosek", "getMatrixByRow: num elements");
+
       CoinRelFltEq eq;
       const double * ev = smP->getElements();
-      assert( eq(ev[0],   3.0) );
-      assert( eq(ev[1],   1.0) );
-      assert( eq(ev[2],  -2.0) );
-      assert( eq(ev[3],  -1.0) );
-      assert( eq(ev[4],  -1.0) );
-      assert( eq(ev[5],   2.0) );
-      assert( eq(ev[6],   1.1) );
-      assert( eq(ev[7],   1.0) );
-      assert( eq(ev[8],   1.0) );
-      assert( eq(ev[9],   2.8) );
-      assert( eq(ev[10], -1.2) );
-      assert( eq(ev[11],  5.6) );
-      assert( eq(ev[12],  1.0) );
-      assert( eq(ev[13],  1.9) );
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[0],   3.0), {}, "mosek", "getMatrixByRow: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[1],   1.0), {}, "mosek", "getMatrixByRow: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[2],  -2.0), {}, "mosek", "getMatrixByRow: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[3],  -1.0), {}, "mosek", "getMatrixByRow: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[4],  -1.0), {}, "mosek", "getMatrixByRow: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[5],   2.0), {}, "mosek", "getMatrixByRow: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[6],   1.1), {}, "mosek", "getMatrixByRow: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[7],   1.0), {}, "mosek", "getMatrixByRow: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[8],   1.0), {}, "mosek", "getMatrixByRow: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[9],   2.8), {}, "mosek", "getMatrixByRow: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[10], -1.2), {}, "mosek", "getMatrixByRow: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[11],  5.6), {}, "mosek", "getMatrixByRow: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[12],  1.0), {}, "mosek", "getMatrixByRow: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[13],  1.9), {}, "mosek", "getMatrixByRow: elements");
       
       const int * mi = smP->getVectorStarts();
-      assert( mi[0]==0 );
-      assert( mi[1]==5 );
-      assert( mi[2]==7 );
-      assert( mi[3]==9 );
-      assert( mi[4]==11 );
-      assert( mi[5]==14 );
+      OSIUNITTEST_ASSERT_ERROR(mi[0] ==  0, {}, "mosek", "getMatrixByRow: vector starts");
+      OSIUNITTEST_ASSERT_ERROR(mi[1] ==  5, {}, "mosek", "getMatrixByRow: vector starts");
+      OSIUNITTEST_ASSERT_ERROR(mi[2] ==  7, {}, "mosek", "getMatrixByRow: vector starts");
+      OSIUNITTEST_ASSERT_ERROR(mi[3] ==  9, {}, "mosek", "getMatrixByRow: vector starts");
+      OSIUNITTEST_ASSERT_ERROR(mi[4] == 11, {}, "mosek", "getMatrixByRow: vector starts");
+      OSIUNITTEST_ASSERT_ERROR(mi[5] == 14, {}, "mosek", "getMatrixByRow: vector starts");
       
       const int * ei = smP->getIndices();
-      assert( ei[0]  ==  0 );
-      assert( ei[1]  ==  1 );
-      assert( ei[2]  ==  3 );
-      assert( ei[3]  ==  4 );
-      assert( ei[4]  ==  7 );
-      assert( ei[5]  ==  1 );
-      assert( ei[6]  ==  2 );
-      assert( ei[7]  ==  2 );
-      assert( ei[8]  ==  5 );
-      assert( ei[9]  ==  3 );
-      assert( ei[10] ==  6 );
-      assert( ei[11] ==  0 );
-      assert( ei[12] ==  4 );
-      assert( ei[13] ==  7 );    
-      
-      assert( smP->getMajorDim() == 5 ); 
-      assert( smP->getNumElements() == 14 );
-      
+      OSIUNITTEST_ASSERT_ERROR(ei[ 0] == 0, {}, "mosek", "getMatrixByRow: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 1] == 1, {}, "mosek", "getMatrixByRow: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 2] == 3, {}, "mosek", "getMatrixByRow: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 3] == 4, {}, "mosek", "getMatrixByRow: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 4] == 7, {}, "mosek", "getMatrixByRow: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 5] == 1, {}, "mosek", "getMatrixByRow: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 6] == 2, {}, "mosek", "getMatrixByRow: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 7] == 2, {}, "mosek", "getMatrixByRow: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 8] == 5, {}, "mosek", "getMatrixByRow: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 9] == 3, {}, "mosek", "getMatrixByRow: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[10] == 6, {}, "mosek", "getMatrixByRow: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[11] == 0, {}, "mosek", "getMatrixByRow: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[12] == 4, {}, "mosek", "getMatrixByRow: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[13] == 7, {}, "mosek", "getMatrixByRow: indices");
     }
     //--------------
     // Test rowsense, rhs, rowrange, getMatrixByRow
     {
       OsiMskSolverInterface lhs;
       {     
-#if 0
-        assert( m.obj_==NULL );
-        assert( m.collower_==NULL );
-        assert( m.colupper_==NULL );
-        assert( m.rowrange_==NULL );
-        assert( m.rowsense_==NULL );
-        assert( m.rhs_==NULL );
-        assert( m.rowlower_==NULL );
-        assert( m.rowupper_==NULL );
-        assert( m.colsol_==NULL );
-        assert( m.rowsol_==NULL );
-        assert( m.matrixByRow_==NULL );
-#endif        
-        OsiMskSolverInterface siC1(m);     
-        assert( siC1.obj_==NULL );
-        assert( siC1.collower_==NULL );
-        assert( siC1.colupper_==NULL );
-        //assert( siC1.coltype_==NULL );
-        assert( siC1.rowrange_==NULL );
-        assert( siC1.rowsense_==NULL );
-        assert( siC1.rhs_==NULL );
-        assert( siC1.rowlower_==NULL );
-        assert( siC1.rowupper_==NULL );
-        assert( siC1.colsol_==NULL );
-        assert( siC1.rowsol_==NULL );
-        assert( siC1.matrixByRow_==NULL );
+        OsiMskSolverInterface siC1(m);
+        OSIUNITTEST_ASSERT_WARNING(siC1.obj_ == NULL, {}, "mosek", "objective");
+        OSIUNITTEST_ASSERT_WARNING(siC1.collower_ == NULL, {}, "mosek", "col lower");
+        OSIUNITTEST_ASSERT_WARNING(siC1.colupper_ == NULL, {}, "mosek", "col upper");
+        OSIUNITTEST_ASSERT_WARNING(siC1.rowrange_ == NULL, {}, "mosek", "row range");
+        OSIUNITTEST_ASSERT_WARNING(siC1.rowsense_ == NULL, {}, "mosek", "row sense");
+        OSIUNITTEST_ASSERT_WARNING(siC1.rowlower_ == NULL, {}, "mosek", "row lower");
+        OSIUNITTEST_ASSERT_WARNING(siC1.rowupper_ == NULL, {}, "mosek", "row upper");
+        OSIUNITTEST_ASSERT_WARNING(siC1.rhs_ == NULL, {}, "mosek", "right hand side");
+        OSIUNITTEST_ASSERT_WARNING(siC1.matrixByRow_ == NULL, {}, "mosek", "matrix by row");
+        OSIUNITTEST_ASSERT_WARNING(siC1.colsol_ == NULL, {}, "mosek", "col solution");
+        OSIUNITTEST_ASSERT_WARNING(siC1.rowsol_ == NULL, {}, "mosek", "row solution");
 
         const char   * siC1rs  = siC1.getRowSense();
-        assert( siC1rs[0]=='G' );
-        assert( siC1rs[1]=='L' );
-        assert( siC1rs[2]=='E' );
-        assert( siC1rs[3]=='R' );
-        assert( siC1rs[4]=='R' );
+        OSIUNITTEST_ASSERT_ERROR(siC1rs[0] == 'G', {}, "mosek", "row sense");
+        OSIUNITTEST_ASSERT_ERROR(siC1rs[1] == 'L', {}, "mosek", "row sense");
+        OSIUNITTEST_ASSERT_ERROR(siC1rs[2] == 'E', {}, "mosek", "row sense");
+        OSIUNITTEST_ASSERT_ERROR(siC1rs[3] == 'R', {}, "mosek", "row sense");
+        OSIUNITTEST_ASSERT_ERROR(siC1rs[4] == 'R', {}, "mosek", "row sense");
         
         const double * siC1rhs = siC1.getRightHandSide();
-        assert( eq(siC1rhs[0],2.5) );
-        assert( eq(siC1rhs[1],2.1) );
-        assert( eq(siC1rhs[2],4.0) );
-        assert( eq(siC1rhs[3],5.0) );
-        assert( eq(siC1rhs[4],15.) ); 
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rhs[0],2.5), {}, "mosek", "right hand side");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rhs[1],2.1), {}, "mosek", "right hand side");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rhs[2],4.0), {}, "mosek", "right hand side");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rhs[3],5.0), {}, "mosek", "right hand side");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rhs[4],15.), {}, "mosek", "right hand side");
         
         const double * siC1rr  = siC1.getRowRange();
-        assert( eq(siC1rr[0],0.0) );
-        assert( eq(siC1rr[1],0.0) );
-        assert( eq(siC1rr[2],0.0) );
-        assert( eq(siC1rr[3],5.0-1.8) );
-        assert( eq(siC1rr[4],15.0-3.0) );
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rr[0],0.0), {}, "mosek", "row range");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rr[1],0.0), {}, "mosek", "row range");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rr[2],0.0), {}, "mosek", "row range");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rr[3],5.0-1.8), {}, "mosek", "row range");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rr[4],15.0-3.0), {}, "mosek", "row range");
         
         const CoinPackedMatrix * siC1mbr = siC1.getMatrixByRow();
-        assert( siC1mbr != NULL );
+        OSIUNITTEST_ASSERT_ERROR(siC1mbr != NULL, {}, "mosek", "matrix by row");
+        OSIUNITTEST_ASSERT_ERROR(siC1mbr->getMajorDim()    ==  5, return, "mosek", "matrix by row: major dim");
+        OSIUNITTEST_ASSERT_ERROR(siC1mbr->getNumElements() == 14, return, "mosek", "matrix by row: num elements");
         
         const double * ev = siC1mbr->getElements();
-        assert( eq(ev[0],   3.0) );
-        assert( eq(ev[1],   1.0) );
-        assert( eq(ev[2],  -2.0) );
-        assert( eq(ev[3],  -1.0) );
-        assert( eq(ev[4],  -1.0) );
-        assert( eq(ev[5],   2.0) );
-        assert( eq(ev[6],   1.1) );
-        assert( eq(ev[7],   1.0) );
-        assert( eq(ev[8],   1.0) );
-        assert( eq(ev[9],   2.8) );
-        assert( eq(ev[10], -1.2) );
-        assert( eq(ev[11],  5.6) );
-        assert( eq(ev[12],  1.0) );
-        assert( eq(ev[13],  1.9) );
-        
-        const int * mi = siC1mbr->getVectorStarts();
-        assert( mi[0]==0 );
-        assert( mi[1]==5 );
-        assert( mi[2]==7 );
-        assert( mi[3]==9 );
-        assert( mi[4]==11 );
-        assert( mi[5]==14 );
+        OSIUNITTEST_ASSERT_ERROR(eq(ev[ 0], 3.0), {}, "mosek", "matrix by row: elements");
+        OSIUNITTEST_ASSERT_ERROR(eq(ev[ 1], 1.0), {}, "mosek", "matrix by row: elements");
+        OSIUNITTEST_ASSERT_ERROR(eq(ev[ 2],-2.0), {}, "mosek", "matrix by row: elements");
+        OSIUNITTEST_ASSERT_ERROR(eq(ev[ 3],-1.0), {}, "mosek", "matrix by row: elements");
+        OSIUNITTEST_ASSERT_ERROR(eq(ev[ 4],-1.0), {}, "mosek", "matrix by row: elements");
+        OSIUNITTEST_ASSERT_ERROR(eq(ev[ 5], 2.0), {}, "mosek", "matrix by row: elements");
+        OSIUNITTEST_ASSERT_ERROR(eq(ev[ 6], 1.1), {}, "mosek", "matrix by row: elements");
+        OSIUNITTEST_ASSERT_ERROR(eq(ev[ 7], 1.0), {}, "mosek", "matrix by row: elements");
+        OSIUNITTEST_ASSERT_ERROR(eq(ev[ 8], 1.0), {}, "mosek", "matrix by row: elements");
+        OSIUNITTEST_ASSERT_ERROR(eq(ev[ 9], 2.8), {}, "mosek", "matrix by row: elements");
+        OSIUNITTEST_ASSERT_ERROR(eq(ev[10],-1.2), {}, "mosek", "matrix by row: elements");
+        OSIUNITTEST_ASSERT_ERROR(eq(ev[11], 5.6), {}, "mosek", "matrix by row: elements");
+        OSIUNITTEST_ASSERT_ERROR(eq(ev[12], 1.0), {}, "mosek", "matrix by row: elements");
+        OSIUNITTEST_ASSERT_ERROR(eq(ev[13], 1.9), {}, "mosek", "matrix by row: elements");
+
+        const CoinBigIndex * mi = siC1mbr->getVectorStarts();
+        OSIUNITTEST_ASSERT_ERROR(mi[0] ==  0, {}, "mosek", "matrix by row: vector starts");
+        OSIUNITTEST_ASSERT_ERROR(mi[1] ==  5, {}, "mosek", "matrix by row: vector starts");
+        OSIUNITTEST_ASSERT_ERROR(mi[2] ==  7, {}, "mosek", "matrix by row: vector starts");
+        OSIUNITTEST_ASSERT_ERROR(mi[3] ==  9, {}, "mosek", "matrix by row: vector starts");
+        OSIUNITTEST_ASSERT_ERROR(mi[4] == 11, {}, "mosek", "matrix by row: vector starts");
+        OSIUNITTEST_ASSERT_ERROR(mi[5] == 14, {}, "mosek", "matrix by row: vector starts");
         
         const int * ei = siC1mbr->getIndices();
-        assert( ei[0]  ==  0 );
-        assert( ei[1]  ==  1 );
-        assert( ei[2]  ==  3 );
-        assert( ei[3]  ==  4 );
-        assert( ei[4]  ==  7 );
-        assert( ei[5]  ==  1 );
-        assert( ei[6]  ==  2 );
-        assert( ei[7]  ==  2 );
-        assert( ei[8]  ==  5 );
-        assert( ei[9]  ==  3 );
-        assert( ei[10] ==  6 );
-        assert( ei[11] ==  0 );
-        assert( ei[12] ==  4 );
-        assert( ei[13] ==  7 );    
-        
-        assert( siC1mbr->getMajorDim() == 5 ); 
-        assert( siC1mbr->getNumElements() == 14 );
-        
+        OSIUNITTEST_ASSERT_ERROR(ei[ 0] == 0, {}, "mosek", "matrix by row: indices");
+        OSIUNITTEST_ASSERT_ERROR(ei[ 1] == 1, {}, "mosek", "matrix by row: indices");
+        OSIUNITTEST_ASSERT_ERROR(ei[ 2] == 3, {}, "mosek", "matrix by row: indices");
+        OSIUNITTEST_ASSERT_ERROR(ei[ 3] == 4, {}, "mosek", "matrix by row: indices");
+        OSIUNITTEST_ASSERT_ERROR(ei[ 4] == 7, {}, "mosek", "matrix by row: indices");
+        OSIUNITTEST_ASSERT_ERROR(ei[ 5] == 1, {}, "mosek", "matrix by row: indices");
+        OSIUNITTEST_ASSERT_ERROR(ei[ 6] == 2, {}, "mosek", "matrix by row: indices");
+        OSIUNITTEST_ASSERT_ERROR(ei[ 7] == 2, {}, "mosek", "matrix by row: indices");
+        OSIUNITTEST_ASSERT_ERROR(ei[ 8] == 5, {}, "mosek", "matrix by row: indices");
+        OSIUNITTEST_ASSERT_ERROR(ei[ 9] == 3, {}, "mosek", "matrix by row: indices");
+        OSIUNITTEST_ASSERT_ERROR(ei[10] == 6, {}, "mosek", "matrix by row: indices");
+        OSIUNITTEST_ASSERT_ERROR(ei[11] == 0, {}, "mosek", "matrix by row: indices");
+        OSIUNITTEST_ASSERT_ERROR(ei[12] == 4, {}, "mosek", "matrix by row: indices");
+        OSIUNITTEST_ASSERT_ERROR(ei[13] == 7, {}, "mosek", "matrix by row: indices");
 
-        assert( siC1rs  == siC1.getRowSense() );
-        assert( siC1rhs == siC1.getRightHandSide() );
-        assert( siC1rr  == siC1.getRowRange() );
+        OSIUNITTEST_ASSERT_WARNING(siC1rs  == siC1.getRowSense(), {}, "mosek", "row sense");
+        OSIUNITTEST_ASSERT_WARNING(siC1rhs == siC1.getRightHandSide(), {}, "mosek", "right hand side");
+        OSIUNITTEST_ASSERT_WARNING(siC1rr  == siC1.getRowRange(), {}, "mosek", "row range");
 
         // Change MOSEK Model by adding free row
         OsiRowCut rc;
@@ -586,144 +313,139 @@ void OsiMskSolverInterfaceUnitTest( const std::string & mpsDir, const std::strin
         OsiCuts cuts;
         cuts.insert(rc);
         siC1.applyCuts(cuts);
-             
-        // Since model was changed, test that cached
-        // data is now freed.
-	    assert( siC1.obj_==NULL );
-	    assert( siC1.collower_==NULL );
-	    assert( siC1.colupper_==NULL );
-	    // assert( siC1.coltype_==NULL );
-        assert( siC1.rowrange_==NULL );
-        assert( siC1.rowsense_==NULL );
-        assert( siC1.rhs_==NULL );
-	    assert( siC1.rowlower_==NULL );
-	    assert( siC1.rowupper_==NULL );
-	    assert( siC1.colsol_==NULL );
-	    assert( siC1.rowsol_==NULL );
-	    assert( siC1.matrixByRow_==NULL );
-        
+
+        // Since model was changed, test that cached data is now freed.
+        OSIUNITTEST_ASSERT_ERROR(siC1.obj_ == NULL, {}, "mosek", "objective");
+        OSIUNITTEST_ASSERT_ERROR(siC1.collower_ == NULL, {}, "mosek", "col lower");
+        OSIUNITTEST_ASSERT_ERROR(siC1.colupper_ == NULL, {}, "mosek", "col upper");
+        OSIUNITTEST_ASSERT_ERROR(siC1.rowrange_ == NULL, {}, "mosek", "free cached data after adding row");
+        OSIUNITTEST_ASSERT_ERROR(siC1.rowsense_ == NULL, {}, "mosek", "free cached data after adding row");
+        OSIUNITTEST_ASSERT_ERROR(siC1.rowlower_ == NULL, {}, "mosek", "row lower");
+        OSIUNITTEST_ASSERT_ERROR(siC1.rowupper_ == NULL, {}, "mosek", "row upper");
+        OSIUNITTEST_ASSERT_ERROR(siC1.rhs_ == NULL, {}, "mosek", "free cached data after adding row");
+        OSIUNITTEST_ASSERT_ERROR(siC1.matrixByRow_ == NULL, {}, "mosek", "free cached data after adding row");
+        OSIUNITTEST_ASSERT_ERROR(siC1.matrixByCol_ == NULL, {}, "mosek", "free cached data after adding row");
+        OSIUNITTEST_ASSERT_ERROR(siC1.colsol_ == NULL, {}, "mosek", "free cached data after adding row");
+        OSIUNITTEST_ASSERT_ERROR(siC1.rowsol_ == NULL, {}, "mosek", "free cached data after adding row");
+
         siC1rs  = siC1.getRowSense();
+        OSIUNITTEST_ASSERT_ERROR(siC1rs[0] == 'G', {}, "mosek", "row sense after adding row");
+        OSIUNITTEST_ASSERT_ERROR(siC1rs[1] == 'L', {}, "mosek", "row sense after adding row");
+        OSIUNITTEST_ASSERT_ERROR(siC1rs[2] == 'E', {}, "mosek", "row sense after adding row");
+        OSIUNITTEST_ASSERT_ERROR(siC1rs[3] == 'R', {}, "mosek", "row sense after adding row");
+        OSIUNITTEST_ASSERT_ERROR(siC1rs[4] == 'R', {}, "mosek", "row sense after adding row");
+        OSIUNITTEST_ASSERT_ERROR(siC1rs[5] == 'N', {}, "mosek", "row sense after adding row");
+
         siC1rhs = siC1.getRightHandSide();
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rhs[0],2.5), {}, "mosek", "right hand side after adding row");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rhs[1],2.1), {}, "mosek", "right hand side after adding row");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rhs[2],4.0), {}, "mosek", "right hand side after adding row");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rhs[3],5.0), {}, "mosek", "right hand side after adding row");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rhs[4],15.), {}, "mosek", "right hand side after adding row");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rhs[5],0.0), {}, "mosek", "right hand side after adding row");
+
         siC1rr  = siC1.getRowRange();
-
-        assert( siC1rs[0]=='G' );
-        assert( siC1rs[1]=='L' );
-        assert( siC1rs[2]=='E' );
-        assert( siC1rs[3]=='R' );
-        assert( siC1rs[4]=='R' );
-        assert( siC1rs[5]=='N' );
-
-        assert( eq(siC1rhs[0],2.5) );
-        assert( eq(siC1rhs[1],2.1) );
-        assert( eq(siC1rhs[2],4.0) );
-        assert( eq(siC1rhs[3],5.0) );
-        assert( eq(siC1rhs[4],15.) ); 
-        assert( eq(siC1rhs[5],0.0) ); 
-
-        assert( eq(siC1rr[0],0.0) );
-        assert( eq(siC1rr[1],0.0) );
-        assert( eq(siC1rr[2],0.0) );
-        assert( eq(siC1rr[3],5.0-1.8) );
-        assert( eq(siC1rr[4],15.0-3.0) );
-        assert( eq(siC1rr[5],0.0) );
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rr[0],0.0), {}, "mosek", "row range after adding row");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rr[1],0.0), {}, "mosek", "row range after adding row");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rr[2],0.0), {}, "mosek", "row range after adding row");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rr[3],5.0-1.8), {}, "mosek", "row range after adding row");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rr[4],15.0-3.0), {}, "mosek", "row range after adding row");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rr[5],0.0), {}, "mosek", "row range after adding row");
     
-        lhs=siC1;
+        lhs = siC1;
       }
       // Test that lhs has correct values even though siC1 has gone out of scope    
-      assert( lhs.obj_==NULL );
-      assert( lhs.collower_==NULL );
-      assert( lhs.colupper_==NULL );
-      // assert( lhs.coltype_==NULL );
-      assert( lhs.rowrange_==NULL );
-      assert( lhs.rowsense_==NULL );
-      assert( lhs.rhs_==NULL ); 
-      assert( lhs.rowlower_==NULL );
-      assert( lhs.rowupper_==NULL );
-      assert( lhs.colsol_==NULL );
-      assert( lhs.rowsol_==NULL );
-      assert( lhs.matrixByRow_==NULL ); 
-      
+      OSIUNITTEST_ASSERT_ERROR(lhs.obj_ == NULL, {}, "mosek", "freed origin after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhs.collower_ == NULL, {}, "mosek", "freed origin after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhs.colupper_ == NULL, {}, "mosek", "freed origin after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhs.rowrange_ == NULL, {}, "mosek", "freed origin after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhs.rowsense_ == NULL, {}, "mosek", "freed origin after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhs.rowlower_ == NULL, {}, "mosek", "freed origin after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhs.rowupper_ == NULL, {}, "mosek", "freed origin after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhs.rhs_ == NULL, {}, "mosek", "freed origin after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhs.matrixByRow_ == NULL, {}, "mosek", "freed origin after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhs.matrixByCol_ == NULL, {}, "mosek", "freed origin after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhs.colsol_ == NULL, {}, "mosek", "freed origin after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhs.rowsol_ == NULL, {}, "mosek", "freed origin after assignment");
+
       const char * lhsrs  = lhs.getRowSense();
-      assert( lhsrs[0]=='G' );
-      assert( lhsrs[1]=='L' );
-      assert( lhsrs[2]=='E' );
-      assert( lhsrs[3]=='R' );
-      assert( lhsrs[4]=='R' );
-      assert( lhsrs[5]=='N' );
+      OSIUNITTEST_ASSERT_ERROR(lhsrs[0] == 'G', {}, "mosek", "row sense after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhsrs[1] == 'L', {}, "mosek", "row sense after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhsrs[2] == 'E', {}, "mosek", "row sense after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhsrs[3] == 'R', {}, "mosek", "row sense after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhsrs[4] == 'R', {}, "mosek", "row sense after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhsrs[5] == 'N', {}, "mosek", "row sense after assignment");
       
       const double * lhsrhs = lhs.getRightHandSide();
-      assert( eq(lhsrhs[0],2.5) );
-      assert( eq(lhsrhs[1],2.1) );
-      assert( eq(lhsrhs[2],4.0) );
-      assert( eq(lhsrhs[3],5.0) );
-      assert( eq(lhsrhs[4],15.) ); 
-      assert( eq(lhsrhs[5],0.0) ); 
+      OSIUNITTEST_ASSERT_ERROR(eq(lhsrhs[0],2.5), {}, "mosek", "right hand side after assignment");
+      OSIUNITTEST_ASSERT_ERROR(eq(lhsrhs[1],2.1), {}, "mosek", "right hand side after assignment");
+      OSIUNITTEST_ASSERT_ERROR(eq(lhsrhs[2],4.0), {}, "mosek", "right hand side after assignment");
+      OSIUNITTEST_ASSERT_ERROR(eq(lhsrhs[3],5.0), {}, "mosek", "right hand side after assignment");
+      OSIUNITTEST_ASSERT_ERROR(eq(lhsrhs[4],15.), {}, "mosek", "right hand side after assignment");
+      OSIUNITTEST_ASSERT_ERROR(eq(lhsrhs[5],0.0), {}, "mosek", "right hand side after assignment");
       
-      const double *lhsrr  = lhs.getRowRange();
-      assert( eq(lhsrr[0],0.0) );
-      assert( eq(lhsrr[1],0.0) );
-      assert( eq(lhsrr[2],0.0) );
-      assert( eq(lhsrr[3],5.0-1.8) );
-      assert( eq(lhsrr[4],15.0-3.0) );
-      assert( eq(lhsrr[5],0.0) );      
+      const double *lhsrr = lhs.getRowRange();
+      OSIUNITTEST_ASSERT_ERROR(eq(lhsrr[0],0.0), {}, "mosek", "row range after assignment");
+      OSIUNITTEST_ASSERT_ERROR(eq(lhsrr[1],0.0), {}, "mosek", "row range after assignment");
+      OSIUNITTEST_ASSERT_ERROR(eq(lhsrr[2],0.0), {}, "mosek", "row range after assignment");
+      OSIUNITTEST_ASSERT_ERROR(eq(lhsrr[3],5.0-1.8), {}, "mosek", "row range after assignment");
+      OSIUNITTEST_ASSERT_ERROR(eq(lhsrr[4],15.0-3.0), {}, "mosek", "row range after assignment");
+      OSIUNITTEST_ASSERT_ERROR(eq(lhsrr[5],0.0), {}, "mosek", "row range after assignment");
       
       const CoinPackedMatrix * lhsmbr = lhs.getMatrixByRow();
-      assert( lhsmbr != NULL );       
+      OSIUNITTEST_ASSERT_ERROR(lhsmbr != NULL, {}, "mosek", "matrix by row after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhsmbr->getMajorDim()    ==  6, return, "mosek", "matrix by row after assignment: major dim");
+      OSIUNITTEST_ASSERT_ERROR(lhsmbr->getNumElements() == 14, return, "mosek", "matrix by row after assignment: num elements");
+
       const double * ev = lhsmbr->getElements();
-      assert( eq(ev[0],   3.0) );
-      assert( eq(ev[1],   1.0) );
-      assert( eq(ev[2],  -2.0) );
-      assert( eq(ev[3],  -1.0) );
-      assert( eq(ev[4],  -1.0) );
-      assert( eq(ev[5],   2.0) );
-      assert( eq(ev[6],   1.1) );
-      assert( eq(ev[7],   1.0) );
-      assert( eq(ev[8],   1.0) );
-      assert( eq(ev[9],   2.8) );
-      assert( eq(ev[10], -1.2) );
-      assert( eq(ev[11],  5.6) );
-      assert( eq(ev[12],  1.0) );
-      assert( eq(ev[13],  1.9) );
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[ 0], 3.0), {}, "mosek", "matrix by row after assignment: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[ 1], 1.0), {}, "mosek", "matrix by row after assignment: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[ 2],-2.0), {}, "mosek", "matrix by row after assignment: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[ 3],-1.0), {}, "mosek", "matrix by row after assignment: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[ 4],-1.0), {}, "mosek", "matrix by row after assignment: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[ 5], 2.0), {}, "mosek", "matrix by row after assignment: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[ 6], 1.1), {}, "mosek", "matrix by row after assignment: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[ 7], 1.0), {}, "mosek", "matrix by row after assignment: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[ 8], 1.0), {}, "mosek", "matrix by row after assignment: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[ 9], 2.8), {}, "mosek", "matrix by row after assignment: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[10],-1.2), {}, "mosek", "matrix by row after assignment: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[11], 5.6), {}, "mosek", "matrix by row after assignment: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[12], 1.0), {}, "mosek", "matrix by row after assignment: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[13], 1.9), {}, "mosek", "matrix by row after assignment: elements");
       
-      const int * mi = lhsmbr->getVectorStarts();
-      assert( mi[0]==0 );
-      assert( mi[1]==5 );
-      assert( mi[2]==7 );
-      assert( mi[3]==9 );
-      assert( mi[4]==11 );
-      assert( mi[5]==14 );
+      const CoinBigIndex * mi = lhsmbr->getVectorStarts();
+      OSIUNITTEST_ASSERT_ERROR(mi[0] ==  0, {}, "mosek", "matrix by row after assignment: vector starts");
+      OSIUNITTEST_ASSERT_ERROR(mi[1] ==  5, {}, "mosek", "matrix by row after assignment: vector starts");
+      OSIUNITTEST_ASSERT_ERROR(mi[2] ==  7, {}, "mosek", "matrix by row after assignment: vector starts");
+      OSIUNITTEST_ASSERT_ERROR(mi[3] ==  9, {}, "mosek", "matrix by row after assignment: vector starts");
+      OSIUNITTEST_ASSERT_ERROR(mi[4] == 11, {}, "mosek", "matrix by row after assignment: vector starts");
+      OSIUNITTEST_ASSERT_ERROR(mi[5] == 14, {}, "mosek", "matrix by row after assignment: vector starts");
       
       const int * ei = lhsmbr->getIndices();
-      assert( ei[0]  ==  0 );
-      assert( ei[1]  ==  1 );
-      assert( ei[2]  ==  3 );
-      assert( ei[3]  ==  4 );
-      assert( ei[4]  ==  7 );
-      assert( ei[5]  ==  1 );
-      assert( ei[6]  ==  2 );
-      assert( ei[7]  ==  2 );
-      assert( ei[8]  ==  5 );
-      assert( ei[9]  ==  3 );
-      assert( ei[10] ==  6 );
-      assert( ei[11] ==  0 );
-      assert( ei[12] ==  4 );
-      assert( ei[13] ==  7 );    
-      
-      int md = lhsmbr->getMajorDim();
-      assert(  md == 6 ); 
-      assert( lhsmbr->getNumElements() == 14 );
+      OSIUNITTEST_ASSERT_ERROR(ei[ 0] == 0, {}, "mosek", "matrix by row after assignment: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 1] == 1, {}, "mosek", "matrix by row after assignment: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 2] == 3, {}, "mosek", "matrix by row after assignment: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 3] == 4, {}, "mosek", "matrix by row after assignment: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 4] == 7, {}, "mosek", "matrix by row after assignment: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 5] == 1, {}, "mosek", "matrix by row after assignment: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 6] == 2, {}, "mosek", "matrix by row after assignment: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 7] == 2, {}, "mosek", "matrix by row after assignment: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 8] == 5, {}, "mosek", "matrix by row after assignment: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 9] == 3, {}, "mosek", "matrix by row after assignment: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[10] == 6, {}, "mosek", "matrix by row after assignment: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[11] == 0, {}, "mosek", "matrix by row after assignment: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[12] == 4, {}, "mosek", "matrix by row after assignment: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[13] == 7, {}, "mosek", "matrix by row after assignment: indices");
     }
-    
-    //--------------
-    
-    assert(OsiMskSolverInterface::getNumInstances()==1);
+    OSIUNITTEST_ASSERT_ERROR(OsiMskSolverInterface::getNumInstances() == numInstancesStart+1, {}, "mosek", "number of instances");
   }
-  assert(OsiMskSolverInterface::getNumInstances()==0);
-    
+  OSIUNITTEST_ASSERT_ERROR(OsiMskSolverInterface::getNumInstances() == numInstancesStart, {}, "mosek", "number of instances at finish");
+
   // Do common solverInterface testing by calling the
   // base class testing method.
   {
     OsiMskSolverInterface m;
-    OsiSolverInterfaceCommonUnitTest(&m, mpsDir,netlibDir);
+    OsiSolverInterfaceCommonUnitTest(&m, mpsDir, netlibDir);
   }
 }
+#endif

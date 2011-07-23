@@ -3,29 +3,19 @@
 // template: OSI Cplex Interface written by T. Achterberg
 // author:   Stefan Vigerske
 //           Humboldt University Berlin
-// date:     01/02/2010
 // license:  this file may be freely distributed under the terms of EPL
 // comments: please scan this file for '???' and 'TODO' and read the comments
 //-----------------------------------------------------------------------------
 // Copyright (C) 2009 Humboldt University Berlin and others.
 // Corporation and others.  All Rights Reserved.
 
-#if defined(_MSC_VER)
-// Turn off compiler warning about long names
-#  pragma warning(disable:4786)
-#endif
-
-#ifdef NDEBUG
-#undef NDEBUG
-#endif
-
+#include "CoinPragma.hpp"
 #include "OsiConfig.h"
 
-#include <cassert>
-#include <iostream>
+//#include <cassert>
+//#include <iostream>
 
-#include <string>
-
+#include "OsiUnitTests.hpp"
 #include "OsiGrbSolverInterface.hpp"
 #include "OsiCuts.hpp"
 #include "OsiRowCut.hpp"
@@ -33,47 +23,9 @@
 #include "CoinPackedMatrix.hpp"
 
 // Added so build windows build with dsp files works,
-// when not building with cplex.
+// when not building with gurobi.
 #ifdef COIN_HAS_GRB
 #include "gurobi_c.h"
-
-//void OsiGrbSolverInterface::printBounds()
-//{
-//  int nc = getNumCols();
-//  int nr = getNumRows();
-//  const char * s = getRowSense();
-//  const double * b = getRightHandSide();
-//  const double * rng = getRowRange();
-//  const double * cl = getColLower();
-//  const double * cu = getColUpper();
-//  const double * rl = getRowLower();
-//  const double * ru = getRowUpper();
-//
-//  std::cout << "ncols=" << nc << ", nrows=" << nr;
-//  std::cout << std::endl << "sns=";
-//  int i;
-//  for( i = 0; i < nr; ++i )
-//    std::cout << " " << s[i];
-//  std::cout << std::endl << "rhs=";
-//  for( i = 0; i < nr; ++i )
-//    std::cout << " " << b[i];
-//  std::cout << std::endl << "rng=";
-//  for( i = 0; i < nr; ++i )
-//    std::cout << " " << rng[i];
-//  std::cout << std::endl << "cl =";
-//  for( i = 0; i < nc; ++i )
-//    std::cout << " " << cl[i];
-//  std::cout << std::endl << "cu =";
-//  for( i = 0; i < nc; ++i )
-//    std::cout << " " << cu[i];
-//  std::cout << std::endl << "rl =";
-//  for( i = 0; i < nr; ++i )
-//    std::cout << " " << rl[i];
-//  std::cout << std::endl << "ru =";
-//  for( i = 0; i < nr; ++i )
-//    std::cout << " " << ru[i];
-//  std::cout << std::endl;
-//}
 
 //--------------------------------------------------------------------------
 void OsiGrbSolverInterfaceUnitTest( const std::string & mpsDir, const std::string & netlibDir )
@@ -81,92 +33,77 @@ void OsiGrbSolverInterfaceUnitTest( const std::string & mpsDir, const std::strin
   // Test default constructor
   {
     OsiGrbSolverInterface m;
-    assert( m.obj_==NULL );
-    assert( m.collower_==NULL );
-    assert( m.colupper_==NULL );
-    assert( m.coltype_==NULL );
-    assert( m.rowsense_==NULL );
-    assert( m.rhs_==NULL );
-    assert( m.rowrange_==NULL );
-    assert( m.rowlower_==NULL );
-    assert( m.rowupper_==NULL );
-    assert( m.colsol_==NULL );
-    assert( m.rowsol_==NULL );
-    assert( m.matrixByRow_==NULL );
-    assert( m.matrixByCol_==NULL );
-    assert( m.coltype_==NULL );
-    assert( m.colspace_==0 );
-    assert( m.getApplicationData() == NULL );
+    OSIUNITTEST_ASSERT_ERROR(m.obj_         == NULL, {}, "gurobi", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.collower_    == NULL, {}, "gurobi", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.colupper_    == NULL, {}, "gurobi", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.coltype_     == NULL, {}, "gurobi", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.colspace_    ==    0, {}, "gurobi", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.rowsense_    == NULL, {}, "gurobi", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.rhs_         == NULL, {}, "gurobi", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.rowrange_    == NULL, {}, "gurobi", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.rowlower_    == NULL, {}, "gurobi", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.rowupper_    == NULL, {}, "gurobi", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.colsol_      == NULL, {}, "gurobi", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.rowsol_      == NULL, {}, "gurobi", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.matrixByRow_ == NULL, {}, "gurobi", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.matrixByCol_ == NULL, {}, "gurobi", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.getNumCols() ==    0, {}, "gurobi", "default constructor");
+    OSIUNITTEST_ASSERT_ERROR(m.getApplicationData() == NULL, {}, "gurobi", "default constructor");
     int i=2346;
     m.setApplicationData(&i);
-    assert( *((int *)(m.getApplicationData())) == i );
+    OSIUNITTEST_ASSERT_ERROR(*((int *)(m.getApplicationData())) == i, {}, "gurobi", "default constructor");
   }
 
-  if (false) {
+  {
     CoinRelFltEq eq;
     OsiGrbSolverInterface m;
     std::string fn = mpsDir+"exmip1";
     m.readMps(fn.c_str(),"mps");
-    int ad = 13579;
-    m.setApplicationData(&ad);
-    assert( *((int *)(m.getApplicationData())) == ad );
 
     {
-      assert( m.getNumCols()==8 );
+      OSIUNITTEST_ASSERT_ERROR(m.getNumCols() == 8, {}, "gurobi", "exmip1 read");
       const CoinPackedMatrix * colCopy = m.getMatrixByCol();
-      assert( colCopy->getNumCols() == 8 );
-      assert( colCopy->getMajorDim() == 8 );
-      assert( colCopy->getNumRows() == 5 );
-      assert( colCopy->getMinorDim() == 5 );
-      assert (colCopy->getVectorLengths()[7] == 2 );
+      OSIUNITTEST_ASSERT_ERROR(colCopy->getNumCols()  == 8, {}, "gurobi", "exmip1 matrix");
+      OSIUNITTEST_ASSERT_ERROR(colCopy->getMajorDim() == 8, {}, "gurobi", "exmip1 matrix");
+      OSIUNITTEST_ASSERT_ERROR(colCopy->getNumRows()  == 5, {}, "gurobi", "exmip1 matrix");
+      OSIUNITTEST_ASSERT_ERROR(colCopy->getMinorDim() == 5, {}, "gurobi", "exmip1 matrix");
+      OSIUNITTEST_ASSERT_ERROR(colCopy->getVectorLengths()[7] == 2, {}, "gurobi", "exmip1 matrix");
       CoinPackedMatrix revColCopy;
       revColCopy.reverseOrderedCopyOf(*colCopy);
       CoinPackedMatrix rev2ColCopy;      
       rev2ColCopy.reverseOrderedCopyOf(revColCopy);
-      assert( rev2ColCopy.getNumCols() == 8 );
-      assert( rev2ColCopy.getMajorDim() == 8 );
-      assert( rev2ColCopy.getNumRows() == 5 );
-      assert( rev2ColCopy.getMinorDim() == 5 );
-      assert( rev2ColCopy.getVectorLengths()[7] == 2 );
-    }
-    
-    {
-      OsiGrbSolverInterface im;
-      assert( im.getNumCols() == 0 ); 
+      OSIUNITTEST_ASSERT_ERROR(rev2ColCopy.getNumCols()  == 8, {}, "gurobi", "twice reverse matrix copy");
+      OSIUNITTEST_ASSERT_ERROR(rev2ColCopy.getMajorDim() == 8, {}, "gurobi", "twice reverse matrix copy");
+      OSIUNITTEST_ASSERT_ERROR(rev2ColCopy.getNumRows()  == 5, {}, "gurobi", "twice reverse matrix copy");
+      OSIUNITTEST_ASSERT_ERROR(rev2ColCopy.getMinorDim() == 5, {}, "gurobi", "twice reverse matrix copy");
+      OSIUNITTEST_ASSERT_ERROR(rev2ColCopy.getVectorLengths()[7] == 2, {}, "gurobi", "twice reverse matrix copy");
     }
     
     // Test copy constructor and assignment operator
     {
       OsiGrbSolverInterface lhs;
       {      
-        assert( *((int *)(m.getApplicationData())) == ad );
         OsiGrbSolverInterface im(m);
-        assert( *((int *)(im.getApplicationData())) == ad );
 
         OsiGrbSolverInterface imC1(im);
-        assert( imC1.lp_ != im.lp_ );
-        assert( imC1.getNumCols() == im.getNumCols() );
-        assert( imC1.getNumRows() == im.getNumRows() );   
-        assert( *((int *)(imC1.getApplicationData())) == ad ); 
-        
-        //im.setModelPtr(m);
+        OSIUNITTEST_ASSERT_ERROR(imC1.lp_          != im.lp_,           {}, "gurobi", "copy constructor");
+        OSIUNITTEST_ASSERT_ERROR(imC1.getNumCols() == im.getNumCols(),  {}, "gurobi", "copy constructor");
+        OSIUNITTEST_ASSERT_ERROR(imC1.getNumRows() == im.getNumRows(),  {}, "gurobi", "copy constructor");
         
         OsiGrbSolverInterface imC2(im);
-        assert( imC2.lp_ != im.lp_ );
-        assert( imC2.getNumCols() == im.getNumCols() );
-        assert( imC2.getNumRows() == im.getNumRows() );  
-        assert( *((int *)(imC2.getApplicationData())) == ad ); 
+        OSIUNITTEST_ASSERT_ERROR(imC2.lp_          != im.lp_,           {}, "gurobi", "copy constructor");
+        OSIUNITTEST_ASSERT_ERROR(imC2.getNumCols() == im.getNumCols(),  {}, "gurobi", "copy constructor");
+        OSIUNITTEST_ASSERT_ERROR(imC2.getNumRows() == im.getNumRows(),  {}, "gurobi", "copy constructor");
         
-        assert( imC2.lp_ != imC1.lp_ );
+        OSIUNITTEST_ASSERT_ERROR(imC1.lp_ != imC2.lp_, {}, "gurobi", "copy constructor");
         
-        lhs=imC2;
+        lhs = imC2;
       }
-      // Test that lhs has correct values even though rhs has gone out of scope
 
-      assert( lhs.lp_ != m.lp_ );
-      assert( lhs.getNumCols() == m.getNumCols() );
-      assert( lhs.getNumRows() == m.getNumRows() );      
-      assert( *((int *)(lhs.getApplicationData())) == ad );
+      // Test that lhs has correct values even though rhs has gone out of scope
+      OSIUNITTEST_ASSERT_ERROR(lhs.lp_          != m.lp_,           {}, "gurobi", "assignment operator");
+      OSIUNITTEST_ASSERT_ERROR(lhs.getNumCols() == m.getNumCols(),  {}, "gurobi", "copy constructor");
+      OSIUNITTEST_ASSERT_ERROR(lhs.getNumRows() == m.getNumRows(),  {}, "gurobi", "copy constructor");
     }
     
     // Test clone
@@ -174,264 +111,22 @@ void OsiGrbSolverInterfaceUnitTest( const std::string & mpsDir, const std::strin
       OsiGrbSolverInterface gurobiSi(m);
       OsiSolverInterface * siPtr = &gurobiSi;
       OsiSolverInterface * siClone = siPtr->clone();
-      OsiGrbSolverInterface * cplexClone = dynamic_cast<OsiGrbSolverInterface*>(siClone);
-      assert( cplexClone != NULL );
-      assert( cplexClone->lp_ != gurobiSi.lp_ );
-      assert( cplexClone->getNumRows() == gurobiSi.getNumRows() );
-      assert( cplexClone->getNumCols() == m.getNumCols() );
+      OsiGrbSolverInterface * gurobiClone = dynamic_cast<OsiGrbSolverInterface*>(siClone);
+      OSIUNITTEST_ASSERT_ERROR(gurobiClone != NULL, {}, "gurobi", "clone");
+      OSIUNITTEST_ASSERT_ERROR(gurobiClone->lp_          != gurobiSi.lp_, {}, "gurobi", "clone");
+      OSIUNITTEST_ASSERT_ERROR(gurobiClone->getNumRows() == gurobiSi.getNumRows(), {}, "gurobi", "clone");
+      OSIUNITTEST_ASSERT_ERROR(gurobiClone->getNumCols() == m.getNumCols(), {}, "gurobi", "clone");
       
-      assert( *((int *)(cplexClone->getApplicationData())) == ad );
       delete siClone;
     }
    
     // test infinity
     {
       OsiGrbSolverInterface si;
-      assert( eq( si.getInfinity(), GRB_INFINITY ) );
+      OSIUNITTEST_ASSERT_ERROR(si.getInfinity() == GRB_INFINITY, {}, "gurobi", "value for infinity");
     }     
-    
-    // Test setting solution
-    {
-      OsiGrbSolverInterface m1(m);
-      int i;
 
-      double * cs = new double[m1.getNumCols()];
-      for ( i = 0;  i < m1.getNumCols();  i++ ) 
-        cs[i] = i + .5;
-      m1.setColSolution(cs);
-      for ( i = 0;  i < m1.getNumCols();  i++ ) 
-        assert(m1.getColSolution()[i] == i + .5);
-      
-      double * rs = new double[m1.getNumRows()];
-      for ( i = 0;  i < m1.getNumRows();  i++ ) 
-        rs[i] = i - .5;
-      m1.setRowPrice(rs);
-      for ( i = 0;  i < m1.getNumRows();  i++ ) 
-        assert(m1.getRowPrice()[i] == i - .5);
 
-      delete [] cs;
-      delete [] rs;
-    }
-    
-    
-    // Test fraction Indices
-    if (false) {
-      OsiGrbSolverInterface fim;
-      std::string fn = mpsDir+"exmip1";
-      fim.readMps(fn.c_str(),"mps");
-      //fim.setModelPtr(m);
-      // exmip1.mps has 2 integer variables with index 2 & 3
-      assert(  fim.isContinuous(0) );
-      assert(  fim.isContinuous(1) );
-      assert( !fim.isContinuous(2) );
-      assert( !fim.isContinuous(3) );
-      assert(  fim.isContinuous(4) );
-      
-      assert( !fim.isInteger(0) );
-      assert( !fim.isInteger(1) );
-      assert(  fim.isInteger(2) );
-      assert(  fim.isInteger(3) );
-      assert( !fim.isInteger(4) );
-      
-      assert( !fim.isBinary(0) );
-      assert( !fim.isBinary(1) );
-      assert(  fim.isBinary(2) );
-      assert(  fim.isBinary(3) );
-      assert( !fim.isBinary(4) );
-      
-      assert( !fim.isIntegerNonBinary(0) );
-      assert( !fim.isIntegerNonBinary(1) );
-      assert( !fim.isIntegerNonBinary(2) );
-      assert( !fim.isIntegerNonBinary(3) );
-      assert( !fim.isIntegerNonBinary(4) );
-
-      
-      // Test fractionalIndices
-      {
-        // Set a solution vector
-        double * cs = new double[fim.getNumCols()];
-        for ( int i = 0;  i < fim.getNumCols();  cs[i++] = 0.0 );
-        cs[2] = 2.9;
-        cs[3] = 3.0;
-        fim.setColSolution(cs);
-
-        OsiVectorInt fi = fim.getFractionalIndices();
-        assert( fi.size() == 1 );
-        assert( fi[0]==2 );
-        
-        // Set integer variables very close to integer values
-        cs[2] = 5 + .00001/2.;
-        cs[3] = 8 - .00001/2.;
-        fim.setColSolution(cs);
-        fi = fim.getFractionalIndices(1e-5);
-        assert( fi.size() == 0 );
-        
-        // Set integer variables close, but beyond tolerances
-        cs[2] = 5 + .00001*2.;
-        cs[3] = 8 - .00001*2.;
-        fim.setColSolution(cs);
-        fi = fim.getFractionalIndices(1e-5);
-        assert( fi.size() == 2 );
-        assert( fi[0]==2 );
-        assert( fi[1]==3 );
-
-        delete [] cs;
-      }
-     
-      // Change data so column 2 & 3 are integerNonBinary
-      fim.setColUpper(2, 5);
-      fim.setColUpper(3, 6.0);
-      assert( !fim.isBinary(0) );
-      assert( !fim.isBinary(1) );
-      assert( !fim.isBinary(2) );
-      assert( !fim.isBinary(3) );
-      assert( !fim.isBinary(4) );
-      
-      assert( !fim.isIntegerNonBinary(0) );
-      assert( !fim.isIntegerNonBinary(1) );
-      assert(  fim.isIntegerNonBinary(2) );
-      assert(  fim.isIntegerNonBinary(3) );
-      assert( !fim.isIntegerNonBinary(4) );
-    }
-    
-    // Test apply cuts method
-    {      
-      OsiGrbSolverInterface im(m);
-      OsiCuts cuts;
-      
-      // Generate some cuts 
-      {
-        // Get number of rows and columns in model
-        int nr=im.getNumRows();
-        int nc=im.getNumCols();
-        assert( nr == 5 );
-        assert( nc == 8 );
-        
-        // Generate a valid row cut from thin air
-        int c;
-        {
-          int *inx = new int[nc];
-          for (c=0;c<nc;c++) inx[c]=c;
-          double *el = new double[nc];
-          for (c=0;c<nc;c++) el[c]=((double)c)*((double)c);
-          
-          OsiRowCut rc;
-          rc.setRow(nc,inx,el);
-          rc.setLb(-100.);
-          rc.setUb(100.);
-          rc.setEffectiveness(22);
-          
-          cuts.insert(rc);
-          delete[]el;
-          delete[]inx;
-        }
-        
-        // Generate valid col cut from thin air
-        {
-          const double * cplexColLB = im.getColLower();
-          const double * cplexColUB = im.getColUpper();
-          int *inx = new int[nc];
-          for (c=0;c<nc;c++) inx[c]=c;
-          double *lb = new double[nc];
-          double *ub = new double[nc];
-          for (c=0;c<nc;c++) lb[c]=cplexColLB[c]+0.001;
-          for (c=0;c<nc;c++) ub[c]=cplexColUB[c]-0.001;
-          
-          OsiColCut cc;
-          cc.setLbs(nc,inx,lb);
-          cc.setUbs(nc,inx,ub);
-          
-          cuts.insert(cc);
-          delete [] ub;
-          delete [] lb;
-          delete [] inx;
-        }
-        
-        {
-          // Generate a row and column cut which are ineffective
-          OsiRowCut * rcP= new OsiRowCut;
-          rcP->setEffectiveness(-1.);
-          cuts.insert(rcP);
-          assert(rcP==NULL);
-          
-          OsiColCut * ccP= new OsiColCut;
-          ccP->setEffectiveness(-12.);
-          cuts.insert(ccP);
-          assert(ccP==NULL);
-        }
-        {
-          //Generate inconsistent Row cut
-          OsiRowCut rc;
-          const int ne=1;
-          int inx[ne]={-10};
-          double el[ne]={2.5};
-          rc.setRow(ne,inx,el);
-          rc.setLb(3.);
-          rc.setUb(4.);
-          assert(!rc.consistent());
-          cuts.insert(rc);
-        }
-        {
-          //Generate inconsistent col cut
-          OsiColCut cc;
-          const int ne=1;
-          int inx[ne]={-10};
-          double el[ne]={2.5};
-          cc.setUbs(ne,inx,el);
-          assert(!cc.consistent());
-          cuts.insert(cc);
-        }
-        {
-          // Generate row cut which is inconsistent for model m
-          OsiRowCut rc;
-          const int ne=1;
-          int inx[ne]={10};
-          double el[ne]={2.5};
-          rc.setRow(ne,inx,el);
-          assert(rc.consistent());
-          assert(!rc.consistent(im));
-          cuts.insert(rc);
-        }
-        {
-          // Generate col cut which is inconsistent for model m
-          OsiColCut cc;
-          const int ne=1;
-          int inx[ne]={30};
-          double el[ne]={2.0};
-          cc.setLbs(ne,inx,el);
-          assert(cc.consistent());
-          assert(!cc.consistent(im));
-          cuts.insert(cc);
-        }
-        {
-          // Generate col cut which is infeasible
-          OsiColCut cc;
-          const int ne=1;
-          int inx[ne]={0};
-          double el[ne]={2.0};
-          cc.setUbs(ne,inx,el);
-          cc.setEffectiveness(1000.);
-          assert(cc.consistent());
-          assert(cc.consistent(im));
-          assert(cc.infeasible(im));
-          cuts.insert(cc);
-        }
-      }
-      assert(cuts.sizeRowCuts()==4);
-      assert(cuts.sizeColCuts()==5);
-      
-      OsiSolverInterface::ApplyCutsReturnCode rc = im.applyCuts(cuts);
-      assert( rc.getNumIneffective() == 2 );
-      assert( rc.getNumApplied() == 2 );
-      assert( rc.getNumInfeasible() == 1 );
-      assert( rc.getNumInconsistentWrtIntegerModel() == 2 );
-      assert( rc.getNumInconsistent() == 2 );
-      assert( cuts.sizeCuts() == rc.getNumIneffective() +
-        rc.getNumApplied() +
-        rc.getNumInfeasible() +
-        rc.getNumInconsistentWrtIntegerModel() +
-        rc.getNumInconsistent() );
-    }
     {    
       OsiGrbSolverInterface gurobiSi(m);
       int nc = gurobiSi.getNumCols();
@@ -441,349 +136,327 @@ void OsiGrbSolverInterfaceUnitTest( const std::string & mpsDir, const std::strin
       const double * rl = gurobiSi.getRowLower();
       const double * ru = gurobiSi.getRowUpper();
 
-      assert( nc == 8 );
-      assert( nr == 5 );
-      assert( eq(cl[0],2.5) );
-      assert( eq(cl[1],0.0) );
-      assert( eq(cu[1],4.1) );
-      assert( eq(cu[2],1.0) );
-
-      assert( eq(rl[0],2.5) );
-      assert( eq(rl[4],3.0) );
-      assert( eq(ru[1],2.1) );
-      assert( eq(ru[4],15.0) );
+      OSIUNITTEST_ASSERT_ERROR(nc == 8, return, "gurobi", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(nr == 5, return, "gurobi", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(cl[0],2.5), {}, "gurobi", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(cl[1],0.0), {}, "gurobi", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(cu[1],4.1), {}, "gurobi", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(cu[2],1.0), {}, "gurobi", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(rl[0],2.5), {}, "gurobi", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(rl[4],3.0), {}, "gurobi", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(ru[1],2.1), {}, "gurobi", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(ru[4],15.), {}, "gurobi", "read and copy exmip1");
       
       double newCs[8] = {1., 2., 3., 4., 5., 6., 7., 8.};
       gurobiSi.setColSolution(newCs);
       const double * cs = gurobiSi.getColSolution();
-      assert( eq(cs[0],1.0) );
-      assert( eq(cs[7],8.0) );
+      OSIUNITTEST_ASSERT_ERROR(eq(cs[0],1.0), {}, "gurobi", "set col solution");
+      OSIUNITTEST_ASSERT_ERROR(eq(cs[7],8.0), {}, "gurobi", "set col solution");
+#if 0 // TODO set and copy of solutions not supported by OsiGrb currently
       {
         OsiGrbSolverInterface solnSi(gurobiSi);
         const double * cs = solnSi.getColSolution();
-        assert( eq(cs[0],1.0) );
-        assert( eq(cs[7],8.0) );
+        OSIUNITTEST_ASSERT_ERROR(eq(cs[0],1.0), {}, "gurobi", "set col solution and copy");
+        OSIUNITTEST_ASSERT_ERROR(eq(cs[7],8.0), {}, "gurobi", "set col solution and copy");
       }
+#endif
 
-      assert( !eq(cl[3],1.2345) );
+      OSIUNITTEST_ASSERT_ERROR(!eq(cl[3],1.2345), {}, "gurobi", "set col lower");
       gurobiSi.setColLower( 3, 1.2345 );
-      assert( eq(gurobiSi.getColLower()[3],1.2345) );
+      OSIUNITTEST_ASSERT_ERROR( eq(cl[3],1.2345), {}, "gurobi", "set col lower");
       
-      assert( !eq(cu[4],10.2345) );
+      OSIUNITTEST_ASSERT_ERROR(!eq(cu[4],10.2345), {}, "gurobi", "set col upper");
       gurobiSi.setColUpper( 4, 10.2345 );
-      assert( eq(gurobiSi.getColUpper()[4],10.2345) );
+      OSIUNITTEST_ASSERT_ERROR( eq(cu[4],10.2345), {}, "gurobi", "set col upper");
 
-      assert( eq(gurobiSi.getObjValue(),0.0) );
-
-      assert( eq( gurobiSi.getObjCoefficients()[0],  1.0) );
-      assert( eq( gurobiSi.getObjCoefficients()[1],  0.0) );
-      assert( eq( gurobiSi.getObjCoefficients()[2],  0.0) );
-      assert( eq( gurobiSi.getObjCoefficients()[3],  0.0) );
-      assert( eq( gurobiSi.getObjCoefficients()[4],  2.0) );
-      assert( eq( gurobiSi.getObjCoefficients()[5],  0.0) );
-      assert( eq( gurobiSi.getObjCoefficients()[6],  0.0) );
-      assert( eq( gurobiSi.getObjCoefficients()[7], -1.0) );
+      OSIUNITTEST_ASSERT_ERROR(eq(gurobiSi.getObjCoefficients()[0], 1.0), {}, "gurobi", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(gurobiSi.getObjCoefficients()[1], 0.0), {}, "gurobi", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(gurobiSi.getObjCoefficients()[2], 0.0), {}, "gurobi", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(gurobiSi.getObjCoefficients()[3], 0.0), {}, "gurobi", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(gurobiSi.getObjCoefficients()[4], 2.0), {}, "gurobi", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(gurobiSi.getObjCoefficients()[5], 0.0), {}, "gurobi", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(gurobiSi.getObjCoefficients()[6], 0.0), {}, "gurobi", "read and copy exmip1");
+      OSIUNITTEST_ASSERT_ERROR(eq(gurobiSi.getObjCoefficients()[7],-1.0), {}, "gurobi", "read and copy exmip1");
     }
-    
+
     // Test getMatrixByRow method
     { 
       const OsiGrbSolverInterface si(m);
       const CoinPackedMatrix * smP = si.getMatrixByRow();
-      //const CoinPackedMatrix * osmP = dynamic_cast(const OsiGrbPackedMatrix*)(smP);
-      //assert( osmP!=NULL );
       
+      OSIUNITTEST_ASSERT_ERROR(smP->getMajorDim()    ==  5, return, "gurobi", "getMatrixByRow: major dim");
+      OSIUNITTEST_ASSERT_ERROR(smP->getNumElements() == 14, return, "gurobi", "getMatrixByRow: num elements");
+
       CoinRelFltEq eq;
       const double * ev = smP->getElements();
-      assert( eq(ev[0],   3.0) );
-      assert( eq(ev[1],   1.0) );
-      assert( eq(ev[2],  -2.0) );
-      assert( eq(ev[3],  -1.0) );
-      assert( eq(ev[4],  -1.0) );
-      assert( eq(ev[5],   2.0) );
-      assert( eq(ev[6],   1.1) );
-      assert( eq(ev[7],   1.0) );
-      assert( eq(ev[8],   1.0) );
-      assert( eq(ev[9],   2.8) );
-      assert( eq(ev[10], -1.2) );
-      assert( eq(ev[11],  5.6) );
-      assert( eq(ev[12],  1.0) );
-      assert( eq(ev[13],  1.9) );
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[0],   3.0), {}, "gurobi", "getMatrixByRow: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[1],   1.0), {}, "gurobi", "getMatrixByRow: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[2],  -2.0), {}, "gurobi", "getMatrixByRow: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[3],  -1.0), {}, "gurobi", "getMatrixByRow: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[4],  -1.0), {}, "gurobi", "getMatrixByRow: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[5],   2.0), {}, "gurobi", "getMatrixByRow: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[6],   1.1), {}, "gurobi", "getMatrixByRow: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[7],   1.0), {}, "gurobi", "getMatrixByRow: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[8],   1.0), {}, "gurobi", "getMatrixByRow: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[9],   2.8), {}, "gurobi", "getMatrixByRow: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[10], -1.2), {}, "gurobi", "getMatrixByRow: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[11],  5.6), {}, "gurobi", "getMatrixByRow: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[12],  1.0), {}, "gurobi", "getMatrixByRow: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[13],  1.9), {}, "gurobi", "getMatrixByRow: elements");
       
       const int * mi = smP->getVectorStarts();
-      assert( mi[0]==0 );
-      assert( mi[1]==5 );
-      assert( mi[2]==7 );
-      assert( mi[3]==9 );
-      assert( mi[4]==11 );
-      assert( mi[5]==14 );
+      OSIUNITTEST_ASSERT_ERROR(mi[0] ==  0, {}, "gurobi", "getMatrixByRow: vector starts");
+      OSIUNITTEST_ASSERT_ERROR(mi[1] ==  5, {}, "gurobi", "getMatrixByRow: vector starts");
+      OSIUNITTEST_ASSERT_ERROR(mi[2] ==  7, {}, "gurobi", "getMatrixByRow: vector starts");
+      OSIUNITTEST_ASSERT_ERROR(mi[3] ==  9, {}, "gurobi", "getMatrixByRow: vector starts");
+      OSIUNITTEST_ASSERT_ERROR(mi[4] == 11, {}, "gurobi", "getMatrixByRow: vector starts");
+      OSIUNITTEST_ASSERT_ERROR(mi[5] == 14, {}, "gurobi", "getMatrixByRow: vector starts");
       
       const int * ei = smP->getIndices();
-      assert( ei[0]  ==  0 );
-      assert( ei[1]  ==  1 );
-      assert( ei[2]  ==  3 );
-      assert( ei[3]  ==  4 );
-      assert( ei[4]  ==  7 );
-      assert( ei[5]  ==  1 );
-      assert( ei[6]  ==  2 );
-      assert( ei[7]  ==  2 );
-      assert( ei[8]  ==  5 );
-      assert( ei[9]  ==  3 );
-      assert( ei[10] ==  6 );
-      assert( ei[11] ==  0 );
-      assert( ei[12] ==  4 );
-      assert( ei[13] ==  7 );    
-      
-      assert( smP->getMajorDim() == 5 ); 
-      assert( smP->getNumElements() == 14 );
-      
+      OSIUNITTEST_ASSERT_ERROR(ei[ 0] == 0, {}, "gurobi", "getMatrixByRow: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 1] == 1, {}, "gurobi", "getMatrixByRow: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 2] == 3, {}, "gurobi", "getMatrixByRow: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 3] == 4, {}, "gurobi", "getMatrixByRow: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 4] == 7, {}, "gurobi", "getMatrixByRow: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 5] == 1, {}, "gurobi", "getMatrixByRow: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 6] == 2, {}, "gurobi", "getMatrixByRow: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 7] == 2, {}, "gurobi", "getMatrixByRow: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 8] == 5, {}, "gurobi", "getMatrixByRow: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 9] == 3, {}, "gurobi", "getMatrixByRow: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[10] == 6, {}, "gurobi", "getMatrixByRow: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[11] == 0, {}, "gurobi", "getMatrixByRow: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[12] == 4, {}, "gurobi", "getMatrixByRow: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[13] == 7, {}, "gurobi", "getMatrixByRow: indices");
     }
     //--------------
     // Test rowsense, rhs, rowrange, getMatrixByRow
     {
       OsiGrbSolverInterface lhs;
       {     
-#if 0
-        assert( m.obj_==NULL );
-        assert( m.collower_==NULL );
-        assert( m.colupper_==NULL );
-        assert( m.rowrange_==NULL );
-        assert( m.rowsense_==NULL );
-        assert( m.rhs_==NULL );
-        assert( m.rowlower_==NULL );
-        assert( m.rowupper_==NULL );
-        assert( m.colsol_==NULL );
-        assert( m.rowsol_==NULL );
-        assert( m.getMatrixByRow_==NULL );
-#endif
-
         OsiGrbSolverInterface siC1(m);
-        assert( siC1.obj_==NULL );
-        assert( siC1.collower_==NULL );
-        assert( siC1.colupper_==NULL );
-        // assert( siC1.coltype_==NULL );
-        assert( siC1.rowrange_==NULL );
-        assert( siC1.rowsense_==NULL );
-        assert( siC1.rhs_==NULL );
-        assert( siC1.rowlower_==NULL );
-        assert( siC1.rowupper_==NULL );
-        assert( siC1.colsol_!=NULL );
-        assert( siC1.rowsol_!=NULL );
-        assert( siC1.matrixByRow_==NULL );
+        OSIUNITTEST_ASSERT_WARNING(siC1.obj_ == NULL, {}, "gurobi", "objective");
+        OSIUNITTEST_ASSERT_WARNING(siC1.collower_ == NULL, {}, "gurobi", "col lower");
+        OSIUNITTEST_ASSERT_WARNING(siC1.colupper_ == NULL, {}, "gurobi", "col upper");
+        OSIUNITTEST_ASSERT_WARNING(siC1.rowrange_ == NULL, {}, "gurobi", "row range");
+        OSIUNITTEST_ASSERT_WARNING(siC1.rowsense_ == NULL, {}, "gurobi", "row sense");
+        OSIUNITTEST_ASSERT_WARNING(siC1.rowlower_ == NULL, {}, "gurobi", "row lower");
+        OSIUNITTEST_ASSERT_WARNING(siC1.rowupper_ == NULL, {}, "gurobi", "row upper");
+        OSIUNITTEST_ASSERT_WARNING(siC1.rhs_ == NULL, {}, "gurobi", "right hand side");
+        OSIUNITTEST_ASSERT_WARNING(siC1.matrixByRow_ == NULL, {}, "gurobi", "matrix by row");
+//TODO        OSIUNITTEST_ASSERT_WARNING(siC1.colsol_ != NULL, {}, "gurobi", "col solution");
+//TODO        OSIUNITTEST_ASSERT_WARNING(siC1.rowsol_ != NULL, {}, "gurobi", "row solution");
 
         const char   * siC1rs  = siC1.getRowSense();
-        assert( siC1rs[0]=='G' );
-        assert( siC1rs[1]=='L' );
-        assert( siC1rs[2]=='E' );
-        assert( siC1rs[3]=='R' );
-        assert( siC1rs[4]=='R' );
+        OSIUNITTEST_ASSERT_ERROR(siC1rs[0] == 'G', {}, "gurobi", "row sense");
+        OSIUNITTEST_ASSERT_ERROR(siC1rs[1] == 'L', {}, "gurobi", "row sense");
+        OSIUNITTEST_ASSERT_ERROR(siC1rs[2] == 'E', {}, "gurobi", "row sense");
+        OSIUNITTEST_ASSERT_ERROR(siC1rs[3] == 'R', {}, "gurobi", "row sense");
+        OSIUNITTEST_ASSERT_ERROR(siC1rs[4] == 'R', {}, "gurobi", "row sense");
         
         const double * siC1rhs = siC1.getRightHandSide();
-        assert( eq(siC1rhs[0],2.5) );
-        assert( eq(siC1rhs[1],2.1) );
-        assert( eq(siC1rhs[2],4.0) );
-        assert( eq(siC1rhs[3],5.0) );
-        assert( eq(siC1rhs[4],15.) ); 
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rhs[0],2.5), {}, "gurobi", "right hand side");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rhs[1],2.1), {}, "gurobi", "right hand side");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rhs[2],4.0), {}, "gurobi", "right hand side");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rhs[3],5.0), {}, "gurobi", "right hand side");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rhs[4],15.), {}, "gurobi", "right hand side");
         
         const double * siC1rr  = siC1.getRowRange();
-        assert( eq(siC1rr[0],0.0) );
-        assert( eq(siC1rr[1],0.0) );
-        assert( eq(siC1rr[2],0.0) );
-        assert( eq(siC1rr[3],5.0-1.8) );
-        assert( eq(siC1rr[4],15.0-3.0) );
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rr[0],0.0), {}, "gurobi", "row range");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rr[1],0.0), {}, "gurobi", "row range");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rr[2],0.0), {}, "gurobi", "row range");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rr[3],5.0-1.8), {}, "gurobi", "row range");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rr[4],15.0-3.0), {}, "gurobi", "row range");
         
         const CoinPackedMatrix * siC1mbr = siC1.getMatrixByRow();
-        assert( siC1mbr != NULL );
+        OSIUNITTEST_ASSERT_ERROR(siC1mbr != NULL, {}, "gurobi", "matrix by row");
+        OSIUNITTEST_ASSERT_ERROR(siC1mbr->getMajorDim()    ==  5, return, "gurobi", "matrix by row: major dim");
+        OSIUNITTEST_ASSERT_ERROR(siC1mbr->getNumElements() == 14, return, "gurobi", "matrix by row: num elements");
         
         const double * ev = siC1mbr->getElements();
-        assert( eq(ev[0],   3.0) );
-        assert( eq(ev[1],   1.0) );
-        assert( eq(ev[2],  -2.0) );
-        assert( eq(ev[3],  -1.0) );
-        assert( eq(ev[4],  -1.0) );
-        assert( eq(ev[5],   2.0) );
-        assert( eq(ev[6],   1.1) );
-        assert( eq(ev[7],   1.0) );
-        assert( eq(ev[8],   1.0) );
-        assert( eq(ev[9],   2.8) );
-        assert( eq(ev[10], -1.2) );
-        assert( eq(ev[11],  5.6) );
-        assert( eq(ev[12],  1.0) );
-        assert( eq(ev[13],  1.9) );
-        
-        const int * mi = siC1mbr->getVectorStarts();
-        assert( mi[0]==0 );
-        assert( mi[1]==5 );
-        assert( mi[2]==7 );
-        assert( mi[3]==9 );
-        assert( mi[4]==11 );
-        assert( mi[5]==14 );
+        OSIUNITTEST_ASSERT_ERROR(eq(ev[ 0], 3.0), {}, "gurobi", "matrix by row: elements");
+        OSIUNITTEST_ASSERT_ERROR(eq(ev[ 1], 1.0), {}, "gurobi", "matrix by row: elements");
+        OSIUNITTEST_ASSERT_ERROR(eq(ev[ 2],-2.0), {}, "gurobi", "matrix by row: elements");
+        OSIUNITTEST_ASSERT_ERROR(eq(ev[ 3],-1.0), {}, "gurobi", "matrix by row: elements");
+        OSIUNITTEST_ASSERT_ERROR(eq(ev[ 4],-1.0), {}, "gurobi", "matrix by row: elements");
+        OSIUNITTEST_ASSERT_ERROR(eq(ev[ 5], 2.0), {}, "gurobi", "matrix by row: elements");
+        OSIUNITTEST_ASSERT_ERROR(eq(ev[ 6], 1.1), {}, "gurobi", "matrix by row: elements");
+        OSIUNITTEST_ASSERT_ERROR(eq(ev[ 7], 1.0), {}, "gurobi", "matrix by row: elements");
+        OSIUNITTEST_ASSERT_ERROR(eq(ev[ 8], 1.0), {}, "gurobi", "matrix by row: elements");
+        OSIUNITTEST_ASSERT_ERROR(eq(ev[ 9], 2.8), {}, "gurobi", "matrix by row: elements");
+        OSIUNITTEST_ASSERT_ERROR(eq(ev[10],-1.2), {}, "gurobi", "matrix by row: elements");
+        OSIUNITTEST_ASSERT_ERROR(eq(ev[11], 5.6), {}, "gurobi", "matrix by row: elements");
+        OSIUNITTEST_ASSERT_ERROR(eq(ev[12], 1.0), {}, "gurobi", "matrix by row: elements");
+        OSIUNITTEST_ASSERT_ERROR(eq(ev[13], 1.9), {}, "gurobi", "matrix by row: elements");
+
+        const CoinBigIndex * mi = siC1mbr->getVectorStarts();
+        OSIUNITTEST_ASSERT_ERROR(mi[0] ==  0, {}, "gurobi", "matrix by row: vector starts");
+        OSIUNITTEST_ASSERT_ERROR(mi[1] ==  5, {}, "gurobi", "matrix by row: vector starts");
+        OSIUNITTEST_ASSERT_ERROR(mi[2] ==  7, {}, "gurobi", "matrix by row: vector starts");
+        OSIUNITTEST_ASSERT_ERROR(mi[3] ==  9, {}, "gurobi", "matrix by row: vector starts");
+        OSIUNITTEST_ASSERT_ERROR(mi[4] == 11, {}, "gurobi", "matrix by row: vector starts");
+        OSIUNITTEST_ASSERT_ERROR(mi[5] == 14, {}, "gurobi", "matrix by row: vector starts");
         
         const int * ei = siC1mbr->getIndices();
-        assert( ei[0]  ==  0 );
-        assert( ei[1]  ==  1 );
-        assert( ei[2]  ==  3 );
-        assert( ei[3]  ==  4 );
-        assert( ei[4]  ==  7 );
-        assert( ei[5]  ==  1 );
-        assert( ei[6]  ==  2 );
-        assert( ei[7]  ==  2 );
-        assert( ei[8]  ==  5 );
-        assert( ei[9]  ==  3 );
-        assert( ei[10] ==  6 );
-        assert( ei[11] ==  0 );
-        assert( ei[12] ==  4 );
-        assert( ei[13] ==  7 );    
-        
-        assert( siC1mbr->getMajorDim() == 5 ); 
-        assert( siC1mbr->getNumElements() == 14 );
-        
+        OSIUNITTEST_ASSERT_ERROR(ei[ 0] == 0, {}, "gurobi", "matrix by row: indices");
+        OSIUNITTEST_ASSERT_ERROR(ei[ 1] == 1, {}, "gurobi", "matrix by row: indices");
+        OSIUNITTEST_ASSERT_ERROR(ei[ 2] == 3, {}, "gurobi", "matrix by row: indices");
+        OSIUNITTEST_ASSERT_ERROR(ei[ 3] == 4, {}, "gurobi", "matrix by row: indices");
+        OSIUNITTEST_ASSERT_ERROR(ei[ 4] == 7, {}, "gurobi", "matrix by row: indices");
+        OSIUNITTEST_ASSERT_ERROR(ei[ 5] == 1, {}, "gurobi", "matrix by row: indices");
+        OSIUNITTEST_ASSERT_ERROR(ei[ 6] == 2, {}, "gurobi", "matrix by row: indices");
+        OSIUNITTEST_ASSERT_ERROR(ei[ 7] == 2, {}, "gurobi", "matrix by row: indices");
+        OSIUNITTEST_ASSERT_ERROR(ei[ 8] == 5, {}, "gurobi", "matrix by row: indices");
+        OSIUNITTEST_ASSERT_ERROR(ei[ 9] == 3, {}, "gurobi", "matrix by row: indices");
+        OSIUNITTEST_ASSERT_ERROR(ei[10] == 6, {}, "gurobi", "matrix by row: indices");
+        OSIUNITTEST_ASSERT_ERROR(ei[11] == 0, {}, "gurobi", "matrix by row: indices");
+        OSIUNITTEST_ASSERT_ERROR(ei[12] == 4, {}, "gurobi", "matrix by row: indices");
+        OSIUNITTEST_ASSERT_ERROR(ei[13] == 7, {}, "gurobi", "matrix by row: indices");
 
-        assert( siC1rs  == siC1.getRowSense() );
-        assert( siC1rhs == siC1.getRightHandSide() );
-        assert( siC1rr  == siC1.getRowRange() );
+        OSIUNITTEST_ASSERT_WARNING(siC1rs  == siC1.getRowSense(), {}, "gurobi", "row sense");
+        OSIUNITTEST_ASSERT_WARNING(siC1rhs == siC1.getRightHandSide(), {}, "gurobi", "right hand side");
+        OSIUNITTEST_ASSERT_WARNING(siC1rr  == siC1.getRowRange(), {}, "gurobi", "row range");
 
-        // Change Gurobi Model by adding free row
+#if 0 // TODO: free rows not really supported by OsiGrb
+        // Change GUROBI Model by adding free row
         OsiRowCut rc;
         rc.setLb(-COIN_DBL_MAX);
         rc.setUb( COIN_DBL_MAX);
         OsiCuts cuts;
         cuts.insert(rc);
         siC1.applyCuts(cuts);
-             
-        // Since model was changed, test that cached
-        // data is now freed.
-        assert( siC1.obj_==NULL );
-        assert( siC1.collower_==NULL );
-        assert( siC1.colupper_==NULL );
-        // assert( siC1.coltype_==NULL );
-        assert( siC1.rowrange_==NULL );
-        assert( siC1.rowsense_==NULL );
-        assert( siC1.rhs_==NULL );
-        assert( siC1.rowlower_==NULL );
-        assert( siC1.rowupper_==NULL );
-        assert( siC1.colsol_==NULL );
-        assert( siC1.rowsol_==NULL );
-        assert( siC1.matrixByRow_==NULL );
+
+        // Since model was changed, test that cached data is now freed.
+        OSIUNITTEST_ASSERT_ERROR(siC1.obj_ == NULL, {}, "gurobi", "objective");
+        OSIUNITTEST_ASSERT_ERROR(siC1.collower_ == NULL, {}, "gurobi", "col lower");
+        OSIUNITTEST_ASSERT_ERROR(siC1.colupper_ == NULL, {}, "gurobi", "col upper");
+        OSIUNITTEST_ASSERT_ERROR(siC1.rowrange_ == NULL, {}, "gurobi", "free cached data after adding row");
+        OSIUNITTEST_ASSERT_ERROR(siC1.rowsense_ == NULL, {}, "gurobi", "free cached data after adding row");
+        OSIUNITTEST_ASSERT_ERROR(siC1.rowlower_ == NULL, {}, "gurobi", "row lower");
+        OSIUNITTEST_ASSERT_ERROR(siC1.rowupper_ == NULL, {}, "gurobi", "row upper");
+        OSIUNITTEST_ASSERT_ERROR(siC1.rhs_ == NULL, {}, "gurobi", "free cached data after adding row");
+        OSIUNITTEST_ASSERT_ERROR(siC1.matrixByRow_ == NULL, {}, "gurobi", "free cached data after adding row");
+        OSIUNITTEST_ASSERT_ERROR(siC1.matrixByCol_ == NULL, {}, "gurobi", "free cached data after adding row");
+        OSIUNITTEST_ASSERT_ERROR(siC1.colsol_ == NULL, {}, "gurobi", "free cached data after adding row");
+        OSIUNITTEST_ASSERT_ERROR(siC1.rowsol_ == NULL, {}, "gurobi", "free cached data after adding row");
 
         siC1rs  = siC1.getRowSense();
+        OSIUNITTEST_ASSERT_ERROR(siC1rs[0] == 'G', {}, "gurobi", "row sense after adding row");
+        OSIUNITTEST_ASSERT_ERROR(siC1rs[1] == 'L', {}, "gurobi", "row sense after adding row");
+        OSIUNITTEST_ASSERT_ERROR(siC1rs[2] == 'E', {}, "gurobi", "row sense after adding row");
+        OSIUNITTEST_ASSERT_ERROR(siC1rs[3] == 'R', {}, "gurobi", "row sense after adding row");
+        OSIUNITTEST_ASSERT_ERROR(siC1rs[4] == 'R', {}, "gurobi", "row sense after adding row");
+        OSIUNITTEST_ASSERT_ERROR(siC1rs[5] == 'N', {}, "gurobi", "row sense after adding row");
+
         siC1rhs = siC1.getRightHandSide();
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rhs[0],2.5), {}, "gurobi", "right hand side after adding row");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rhs[1],2.1), {}, "gurobi", "right hand side after adding row");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rhs[2],4.0), {}, "gurobi", "right hand side after adding row");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rhs[3],5.0), {}, "gurobi", "right hand side after adding row");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rhs[4],15.), {}, "gurobi", "right hand side after adding row");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rhs[5],0.0), {}, "gurobi", "right hand side after adding row");
+
         siC1rr  = siC1.getRowRange();
-
-        assert( siC1rs[0]=='G' );
-        assert( siC1rs[1]=='L' );
-        assert( siC1rs[2]=='E' );
-        assert( siC1rs[3]=='R' );
-        assert( siC1rs[4]=='R' );
-        assert( siC1rs[5]=='N' );
-
-        assert( eq(siC1rhs[0],2.5) );
-        assert( eq(siC1rhs[1],2.1) );
-        assert( eq(siC1rhs[2],4.0) );
-        assert( eq(siC1rhs[3],5.0) );
-        assert( eq(siC1rhs[4],15.) ); 
-        assert( eq(siC1rhs[5],0.0) ); 
-
-        assert( eq(siC1rr[0],0.0) );
-        assert( eq(siC1rr[1],0.0) );
-        assert( eq(siC1rr[2],0.0) );
-        assert( eq(siC1rr[3],5.0-1.8) );
-        assert( eq(siC1rr[4],15.0-3.0) );
-        assert( eq(siC1rr[5],0.0) );
-    
-        lhs=siC1;
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rr[0],0.0), {}, "gurobi", "row range after adding row");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rr[1],0.0), {}, "gurobi", "row range after adding row");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rr[2],0.0), {}, "gurobi", "row range after adding row");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rr[3],5.0-1.8), {}, "gurobi", "row range after adding row");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rr[4],15.0-3.0), {}, "gurobi", "row range after adding row");
+        OSIUNITTEST_ASSERT_ERROR(eq(siC1rr[5],0.0), {}, "gurobi", "row range after adding row");
+#endif
+        lhs = siC1;
       }
       // Test that lhs has correct values even though siC1 has gone out of scope    
-      assert( lhs.obj_==NULL );
-      assert( lhs.collower_==NULL );
-      assert( lhs.colupper_==NULL );
-      // assert( lhs.coltype_==NULL );
-      assert( lhs.rowrange_==NULL );
-      assert( lhs.rowsense_==NULL );
-      assert( lhs.rhs_==NULL ); 
-      assert( lhs.rowlower_==NULL );
-      assert( lhs.rowupper_==NULL );
-      assert( lhs.colsol_!=NULL );
-      assert( lhs.rowsol_!=NULL );
-      assert( lhs.matrixByRow_==NULL ); 
-      
+      OSIUNITTEST_ASSERT_ERROR(lhs.obj_ == NULL, {}, "gurobi", "freed origin after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhs.collower_ == NULL, {}, "gurobi", "freed origin after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhs.colupper_ == NULL, {}, "gurobi", "freed origin after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhs.rowrange_ == NULL, {}, "gurobi", "freed origin after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhs.rowsense_ == NULL, {}, "gurobi", "freed origin after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhs.rowlower_ == NULL, {}, "gurobi", "freed origin after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhs.rowupper_ == NULL, {}, "gurobi", "freed origin after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhs.rhs_ == NULL, {}, "gurobi", "freed origin after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhs.matrixByRow_ == NULL, {}, "gurobi", "freed origin after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhs.matrixByCol_ == NULL, {}, "gurobi", "freed origin after assignment");
+//TODO      OSIUNITTEST_ASSERT_ERROR(lhs.colsol_ != NULL, {}, "gurobi", "freed origin after assignment");
+//TODO      OSIUNITTEST_ASSERT_ERROR(lhs.rowsol_ != NULL, {}, "gurobi", "freed origin after assignment");
+
+#if 0 // TODO: free rows not really supported by OsiGrb
       const char * lhsrs  = lhs.getRowSense();
-      assert( lhsrs[0]=='G' );
-      assert( lhsrs[1]=='L' );
-      assert( lhsrs[2]=='E' );
-      assert( lhsrs[3]=='R' );
-      assert( lhsrs[4]=='R' );
-      assert( lhsrs[5]=='N' );
+      OSIUNITTEST_ASSERT_ERROR(lhsrs[0] == 'G', {}, "gurobi", "row sense after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhsrs[1] == 'L', {}, "gurobi", "row sense after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhsrs[2] == 'E', {}, "gurobi", "row sense after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhsrs[3] == 'R', {}, "gurobi", "row sense after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhsrs[4] == 'R', {}, "gurobi", "row sense after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhsrs[5] == 'N', {}, "gurobi", "row sense after assignment");
       
       const double * lhsrhs = lhs.getRightHandSide();
-      assert( eq(lhsrhs[0],2.5) );
-      assert( eq(lhsrhs[1],2.1) );
-      assert( eq(lhsrhs[2],4.0) );
-      assert( eq(lhsrhs[3],5.0) );
-      assert( eq(lhsrhs[4],15.) ); 
-      assert( eq(lhsrhs[5],0.0) ); 
+      OSIUNITTEST_ASSERT_ERROR(eq(lhsrhs[0],2.5), {}, "gurobi", "right hand side after assignment");
+      OSIUNITTEST_ASSERT_ERROR(eq(lhsrhs[1],2.1), {}, "gurobi", "right hand side after assignment");
+      OSIUNITTEST_ASSERT_ERROR(eq(lhsrhs[2],4.0), {}, "gurobi", "right hand side after assignment");
+      OSIUNITTEST_ASSERT_ERROR(eq(lhsrhs[3],5.0), {}, "gurobi", "right hand side after assignment");
+      OSIUNITTEST_ASSERT_ERROR(eq(lhsrhs[4],15.), {}, "gurobi", "right hand side after assignment");
+      OSIUNITTEST_ASSERT_ERROR(eq(lhsrhs[5],0.0), {}, "gurobi", "right hand side after assignment");
       
-      const double *lhsrr  = lhs.getRowRange();
-      assert( eq(lhsrr[0],0.0) );
-      assert( eq(lhsrr[1],0.0) );
-      assert( eq(lhsrr[2],0.0) );
-      assert( eq(lhsrr[3],5.0-1.8) );
-      assert( eq(lhsrr[4],15.0-3.0) );
-      assert( eq(lhsrr[5],0.0) );      
+      const double *lhsrr = lhs.getRowRange();
+      OSIUNITTEST_ASSERT_ERROR(eq(lhsrr[0],0.0), {}, "gurobi", "row range after assignment");
+      OSIUNITTEST_ASSERT_ERROR(eq(lhsrr[1],0.0), {}, "gurobi", "row range after assignment");
+      OSIUNITTEST_ASSERT_ERROR(eq(lhsrr[2],0.0), {}, "gurobi", "row range after assignment");
+      OSIUNITTEST_ASSERT_ERROR(eq(lhsrr[3],5.0-1.8), {}, "gurobi", "row range after assignment");
+      OSIUNITTEST_ASSERT_ERROR(eq(lhsrr[4],15.0-3.0), {}, "gurobi", "row range after assignment");
+      OSIUNITTEST_ASSERT_ERROR(eq(lhsrr[5],0.0), {}, "gurobi", "row range after assignment");
       
       const CoinPackedMatrix * lhsmbr = lhs.getMatrixByRow();
-      assert( lhsmbr != NULL );       
+      OSIUNITTEST_ASSERT_ERROR(lhsmbr != NULL, {}, "gurobi", "matrix by row after assignment");
+      OSIUNITTEST_ASSERT_ERROR(lhsmbr->getMajorDim()    ==  6, return, "gurobi", "matrix by row after assignment: major dim");
+      OSIUNITTEST_ASSERT_ERROR(lhsmbr->getNumElements() == 14, return, "gurobi", "matrix by row after assignment: num elements");
+
       const double * ev = lhsmbr->getElements();
-      assert( eq(ev[0],   3.0) );
-      assert( eq(ev[1],   1.0) );
-      assert( eq(ev[2],  -2.0) );
-      assert( eq(ev[3],  -1.0) );
-      assert( eq(ev[4],  -1.0) );
-      assert( eq(ev[5],   2.0) );
-      assert( eq(ev[6],   1.1) );
-      assert( eq(ev[7],   1.0) );
-      assert( eq(ev[8],   1.0) );
-      assert( eq(ev[9],   2.8) );
-      assert( eq(ev[10], -1.2) );
-      assert( eq(ev[11],  5.6) );
-      assert( eq(ev[12],  1.0) );
-      assert( eq(ev[13],  1.9) );
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[ 0], 3.0), {}, "gurobi", "matrix by row after assignment: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[ 1], 1.0), {}, "gurobi", "matrix by row after assignment: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[ 2],-2.0), {}, "gurobi", "matrix by row after assignment: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[ 3],-1.0), {}, "gurobi", "matrix by row after assignment: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[ 4],-1.0), {}, "gurobi", "matrix by row after assignment: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[ 5], 2.0), {}, "gurobi", "matrix by row after assignment: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[ 6], 1.1), {}, "gurobi", "matrix by row after assignment: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[ 7], 1.0), {}, "gurobi", "matrix by row after assignment: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[ 8], 1.0), {}, "gurobi", "matrix by row after assignment: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[ 9], 2.8), {}, "gurobi", "matrix by row after assignment: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[10],-1.2), {}, "gurobi", "matrix by row after assignment: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[11], 5.6), {}, "gurobi", "matrix by row after assignment: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[12], 1.0), {}, "gurobi", "matrix by row after assignment: elements");
+      OSIUNITTEST_ASSERT_ERROR(eq(ev[13], 1.9), {}, "gurobi", "matrix by row after assignment: elements");
       
-      const int * mi = lhsmbr->getVectorStarts();
-      assert( mi[0]==0 );
-      assert( mi[1]==5 );
-      assert( mi[2]==7 );
-      assert( mi[3]==9 );
-      assert( mi[4]==11 );
-      assert( mi[5]==14 );
+      const CoinBigIndex * mi = lhsmbr->getVectorStarts();
+      OSIUNITTEST_ASSERT_ERROR(mi[0] ==  0, {}, "gurobi", "matrix by row after assignment: vector starts");
+      OSIUNITTEST_ASSERT_ERROR(mi[1] ==  5, {}, "gurobi", "matrix by row after assignment: vector starts");
+      OSIUNITTEST_ASSERT_ERROR(mi[2] ==  7, {}, "gurobi", "matrix by row after assignment: vector starts");
+      OSIUNITTEST_ASSERT_ERROR(mi[3] ==  9, {}, "gurobi", "matrix by row after assignment: vector starts");
+      OSIUNITTEST_ASSERT_ERROR(mi[4] == 11, {}, "gurobi", "matrix by row after assignment: vector starts");
+      OSIUNITTEST_ASSERT_ERROR(mi[5] == 14, {}, "gurobi", "matrix by row after assignment: vector starts");
       
       const int * ei = lhsmbr->getIndices();
-      assert( ei[0]  ==  0 );
-      assert( ei[1]  ==  1 );
-      assert( ei[2]  ==  3 );
-      assert( ei[3]  ==  4 );
-      assert( ei[4]  ==  7 );
-      assert( ei[5]  ==  1 );
-      assert( ei[6]  ==  2 );
-      assert( ei[7]  ==  2 );
-      assert( ei[8]  ==  5 );
-      assert( ei[9]  ==  3 );
-      assert( ei[10] ==  6 );
-      assert( ei[11] ==  0 );
-      assert( ei[12] ==  4 );
-      assert( ei[13] ==  7 );    
-      
-      int md = lhsmbr->getMajorDim();
-      assert(  md == 6 ); 
-      assert( lhsmbr->getNumElements() == 14 );
+      OSIUNITTEST_ASSERT_ERROR(ei[ 0] == 0, {}, "gurobi", "matrix by row after assignment: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 1] == 1, {}, "gurobi", "matrix by row after assignment: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 2] == 3, {}, "gurobi", "matrix by row after assignment: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 3] == 4, {}, "gurobi", "matrix by row after assignment: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 4] == 7, {}, "gurobi", "matrix by row after assignment: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 5] == 1, {}, "gurobi", "matrix by row after assignment: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 6] == 2, {}, "gurobi", "matrix by row after assignment: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 7] == 2, {}, "gurobi", "matrix by row after assignment: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 8] == 5, {}, "gurobi", "matrix by row after assignment: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[ 9] == 3, {}, "gurobi", "matrix by row after assignment: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[10] == 6, {}, "gurobi", "matrix by row after assignment: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[11] == 0, {}, "gurobi", "matrix by row after assignment: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[12] == 4, {}, "gurobi", "matrix by row after assignment: indices");
+      OSIUNITTEST_ASSERT_ERROR(ei[13] == 7, {}, "gurobi", "matrix by row after assignment: indices");
+#endif
     }
-    
   }
 
   // Do common solverInterface testing by calling the
   // base class testing method.
   {
     OsiGrbSolverInterface m;
-    OsiSolverInterfaceCommonUnitTest(&m, mpsDir,netlibDir);
+    OsiSolverInterfaceCommonUnitTest(&m, mpsDir, netlibDir);
   }
 }
 #endif

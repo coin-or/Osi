@@ -22,6 +22,10 @@
 
 #ifndef LPX
 #define LPX glp_prob
+#endif
+
+#ifndef GLP_PROB_DEFINED
+#define GLP_PROB_DEFINED
 typedef struct { double _opaque_prob[100]; } glp_prob;
 #endif
 

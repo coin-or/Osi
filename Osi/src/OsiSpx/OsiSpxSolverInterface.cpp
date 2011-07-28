@@ -950,6 +950,9 @@ std::vector<double*> OsiSpxSolverInterface::getDualRays(int maxNumRays,
     ret.push_back(new double[getNumRows()]);
     soplex::Vector proof(getNumRows(), ret[0]);
     soplex_->getDualfarkas(proof);
+
+    for (int i = 0; i < getNumRows(); ++i)
+      ret[0][i] *= -1.0;
   }
 
   return ret;

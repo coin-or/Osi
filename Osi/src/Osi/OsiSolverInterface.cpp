@@ -1376,11 +1376,12 @@ void OsiSolverInterface::writeLp(const char * filename,
      nameDiscipline = 0;
 	if (useRowNames && nameDiscipline==2) {
 		colnames = new char*[getNumCols()];
-		rownames = new char*[getNumRows()];
+		rownames = new char*[getNumRows()+1];
 		for (int i = 0; i < getNumCols(); ++i)
 			colnames[i] = strdup(getColName(i).c_str());
 		for (int i = 0; i < getNumRows(); ++i)
 			rownames[i] = strdup(getRowName(i).c_str());
+		rownames[getNumRows()] = strdup(getObjName().c_str());
 	} else {
 		colnames = NULL;
 		rownames = NULL;
@@ -1394,7 +1395,7 @@ void OsiSolverInterface::writeLp(const char * filename,
 	if (useRowNames && nameDiscipline==2) {
 		for (int i = 0; i < getNumCols(); ++i)
 			free(colnames[i]);
-		for (int i = 0; i < getNumRows(); ++i)
+		for (int i = 0; i < getNumRows()+1; ++i)
 			free(rownames[i]);
 		delete[] colnames;
 		delete[] rownames;
@@ -1415,11 +1416,12 @@ void OsiSolverInterface::writeLp(FILE *fp,
   getIntParam(OsiNameDiscipline,nameDiscipline) ;
 	if (useRowNames && nameDiscipline==2) {
 		colnames = new char*[getNumCols()];
-		rownames = new char*[getNumRows()];
+		rownames = new char*[getNumRows()+1];
 		for (int i = 0; i < getNumCols(); ++i)
 			colnames[i] = strdup(getColName(i).c_str());
 		for (int i = 0; i < getNumRows(); ++i)
 			rownames[i] = strdup(getRowName(i).c_str());
+      rownames[getNumRows()] = strdup(getObjName().c_str());
 	} else {
 		colnames = NULL;
 		rownames = NULL;
@@ -1433,7 +1435,7 @@ void OsiSolverInterface::writeLp(FILE *fp,
 	if (useRowNames && nameDiscipline==2) {
 		for (int i = 0; i < getNumCols(); ++i)
 			free(colnames[i]);
-		for (int i = 0; i < getNumRows(); ++i)
+		for (int i = 0; i < getNumRows()+1; ++i)
 			free(rownames[i]);
 		delete[] colnames;
 		delete[] rownames;

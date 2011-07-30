@@ -1227,38 +1227,38 @@ OsiSpxSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
   
   // create defaults if parameter is NULL
   if( collb == NULL )
-    {
-      thecollb = new double[ncols];
-      CoinFillN( thecollb, ncols, 0.0 );
-    }
+  {
+    thecollb = new double[ncols];
+    CoinFillN( thecollb, ncols, 0.0 );
+  }
   else
     thecollb = const_cast<double*>(collb);
   if( colub == NULL )
-    {
-      thecolub = new double[ncols];
-      CoinFillN( thecolub, ncols, getInfinity() );
-    }
+  {
+    thecolub = new double[ncols];
+    CoinFillN( thecolub, ncols, getInfinity() );
+  }
   else
     thecolub = const_cast<double*>(colub);
   if( obj == NULL )
-    {
-      theobj = new double[ncols];
-      CoinFillN( theobj, ncols, 0.0 );
-    }
+  {
+    theobj = new double[ncols];
+    CoinFillN( theobj, ncols, 0.0 );
+  }
   else
     theobj = const_cast<double*>(obj);
   if( rowlb == NULL )
-    {
-      therowlb = new double[nrows];
-      CoinFillN( therowlb, nrows, -getInfinity() );
-    }
+  {
+    therowlb = new double[nrows];
+    CoinFillN( therowlb, nrows, -getInfinity() );
+  }
   else
     therowlb = const_cast<double*>(rowlb);
   if( rowub == NULL )
-    {
-      therowub = new double[nrows];
-      CoinFillN( therowub, nrows, +getInfinity() );
-    }
+  {
+    therowub = new double[nrows];
+    CoinFillN( therowub, nrows, +getInfinity() );
+  }
   else
     therowub = const_cast<double*>(rowub);
 
@@ -1369,26 +1369,26 @@ OsiSpxSolverInterface::loadProblem( const CoinPackedMatrix& matrix,
   int     row;
   char    *therowsen;
   double  *therowrhs, *therowrng;
-  
+
   if( rowsen == NULL )
-    {
-      therowsen = new char[nrows];
-      CoinFillN( therowsen, nrows, 'G' );
-    }
+  {
+    therowsen = new char[nrows];
+    CoinFillN( therowsen, nrows, 'G' );
+  }
   else
     therowsen = const_cast<char*>(rowsen);
   if( rowrhs == NULL )
-    {
-      therowrhs = new double[nrows];
-      CoinFillN( therowrhs, nrows, 0.0 );
-    }
+  {
+    therowrhs = new double[nrows];
+    CoinFillN( therowrhs, nrows, 0.0 );
+  }
   else
     therowrhs = const_cast<double*>(rowrhs);
   if( rowrng == NULL )
-    {
-      therowrng = new double[nrows];
-      CoinFillN( therowrng, nrows, 0.0 );
-    }
+  {
+    therowrng = new double[nrows];
+    CoinFillN( therowrng, nrows, 0.0 );
+  }
   else
     therowrng = const_cast<double*>(rowrng);
 
@@ -1473,7 +1473,7 @@ OsiSpxSolverInterface::loadProblem(const int numcols, const int numrows,
   int     row;
 
   for( row = 0; row < numrows; ++row )
-    convertSenseToBound( rowsen[row], rowrhs[row], rowrng[row], rowlb[row], rowub[row] );
+    convertSenseToBound( rowsen != NULL ? rowsen[row] : 'G', rowrhs != NULL ? rowrhs[row] : 0.0, rowrng != NULL ? rowrng[row] : 0.0, rowlb[row], rowub[row] );
   
   loadProblem( numcols, numrows, start, index, value, collb, colub, obj, rowlb, rowub );
 

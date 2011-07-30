@@ -2775,12 +2775,10 @@ OGSI::loadProblem(const int numcols, const int numrows,
 				   const char* rowsen, const double* rowrhs,   
 				   const double* rowrng)
 {
-   assert( rowsen != NULL );
-   assert( rowrhs != NULL );
    double * rowlb = new double[numrows];
    double * rowub = new double[numrows];
    for (int i = numrows-1; i >= 0; --i) {   
-      convertSenseToBound(rowsen[i],rowrhs[i],rowrng[i],rowlb[i],rowub[i]);
+      convertSenseToBound(rowsen != NULL ? rowsen[i] : 'G', rowrhs != NULL ? rowrhs[i] : 0.0, rowrng != NULL ? rowrng[i] : 0.0, rowlb[i], rowub[i]);
    }
 
    loadProblem( numcols, numrows, start, index, value, collb, colub, obj,

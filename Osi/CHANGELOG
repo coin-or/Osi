@@ -1,3 +1,5 @@
+28/07/2011 OsiSpx
+  - invert dual ray in getDualRays to match Osi definition when testing infeasibility proof
 
 -------------------------------------------------------------------------------
 16/07/2011 Osi 0.105.0 released

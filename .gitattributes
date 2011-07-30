@@ -13,6 +13,16 @@ Osi/MSVisualStudio/v10/OsiExamplesSpecific/OsiExamplesSpecific.vcxproj -text
 Osi/MSVisualStudio/v10/OsiUnitTest/OsiUnitTest.vcxproj -text
 Osi/MSVisualStudio/v10/libOsi/libOsi.vcxproj -text
 Osi/MSVisualStudio/v10/libOsiCommonTest/libOsiCommonTest.vcxproj -text
+Osi/MSVisualStudio/v9/Osi.sln -text
+Osi/MSVisualStudio/v9/OsiExamplesBasic/OsiExamplesBasic.vcproj -text
+Osi/MSVisualStudio/v9/OsiExamplesBasic2/OsiExamplesBasic2.vcproj -text
+Osi/MSVisualStudio/v9/OsiExamplesBuild/OsiExamplesBuild.vcproj -text
+Osi/MSVisualStudio/v9/OsiExamplesParameters/OsiExamplesParameters.vcproj -text
+Osi/MSVisualStudio/v9/OsiExamplesQuery/OsiExamplesQuery.vcproj -text
+Osi/MSVisualStudio/v9/OsiExamplesSpecific/OsiExamplesSpecific.vcproj -text
+Osi/MSVisualStudio/v9/OsiUnitTest/OsiUnitTest.vcproj -text
+Osi/MSVisualStudio/v9/libOsi/libOsi.vcproj -text
+Osi/MSVisualStudio/v9/libOsiCommonTest/libOsiCommonTest.vcproj -text
 Osi/README -text
 Osi/config.guess -text
 Osi/config.sub -text

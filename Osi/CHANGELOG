@@ -1,3 +1,9 @@
+30/07/2011 Osi
+  - fix writing LP files with names: the objective name was not copied, leading to a segfault in CoinLpIO
+
+30/07/2011 OsiSpx, OsiGlpk
+  - allow NULLs for row* arguments in some loadProblem call
+
 28/07/2011 OsiSpx
   - invert dual ray in getDualRays to match Osi definition when testing infeasibility proof
 

@@ -21,11 +21,10 @@ libOsiGrb_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows.
-# "top_srcdir" refers to the basic directory for the main package that is
-# being compiled.
-AM_CPPFLAGS = $(COINUTILS_CFLAGS) \
+AM_CPPFLAGS = \
+	-I`$(CYGPATH_W) $(srcdir)/../Osi` \
 	-I`$(CYGPATH_W) $(GRBINCDIR)` \
-	-I`$(CYGPATH_W) $(srcdir)/../Osi`
+	$(COINUTILS_CFLAGS)
 
 # This line is necessary to allow VPATH compilation
 DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/src/Osi

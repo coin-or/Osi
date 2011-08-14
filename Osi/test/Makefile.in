@@ -404,8 +404,7 @@ unitTest_DEPENDENCIES = ../src/OsiCommonTest/libOsiCommonTests.la \
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows
-AM_CPPFLAGS = $(NOLONGLONGCXXFLAGS) -I`$(CYGPATH_W) \
-	$(srcdir)/../src/Osi` -I`$(CYGPATH_W) \
+AM_CPPFLAGS = -I`$(CYGPATH_W) $(srcdir)/../src/Osi` -I`$(CYGPATH_W) \
 	$(srcdir)/../src/OsiCommonTest` $(COINUTILS_CFLAGS) \
 	$(am__append_2) $(am__append_7) $(am__append_12) \
 	$(am__append_17) $(am__append_22) $(am__append_27)

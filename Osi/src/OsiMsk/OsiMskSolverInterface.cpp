@@ -4371,7 +4371,7 @@ OsiMskSolverInterface::loadProblem(const int numcols,
     }
 
     for( i=0; i < nr; i++ )
-      MskConvertSenseToBound( rowsen[i], rowrng[i], rowrhs[i], rlb[i], rub[i], rtag[i]);
+      MskConvertSenseToBound( rowsen[i], rowrng != NULL ? rowrng[i] : 0.0, rowrhs[i], rlb[i], rub[i], rtag[i]);
 
     double inf = getInfinity();
 

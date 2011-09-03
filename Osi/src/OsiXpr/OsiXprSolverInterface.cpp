@@ -51,6 +51,7 @@ void XPRS_CC OsiXprMessageCallback(XPRSprob prob, void *vUserDat, const char *ms
 	}
 }
 
+static
 void reporterror(const char *fname, int iline, int ierr)
 {
   fprintf( stdout, "ERROR: %s in line %d error %d occured\n",

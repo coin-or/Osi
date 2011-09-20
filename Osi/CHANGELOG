@@ -1,3 +1,6 @@
+-------------------------------------------------------------------------------
+20/09/2011 Osi 0.105.1 released
+
 03/09/2011 OsiMsk
   - fix bug in one loadProblem method when NULL was passed as row range array
 

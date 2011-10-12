@@ -115,8 +115,22 @@ void OsiSpxSolverInterface::initialSolve()
   try 
   {
     soplex_->solve();
-  } catch (soplex::SPxException e) {
-  	std::cerr << "SoPlex initial solve failed with exception " << e.what() << std::endl;
+  }
+  catch (soplex::SPxException e)
+  {
+  	*messageHandler() << "SoPlex initial solve failed with exception " << e.what() << CoinMessageEol;
+#if (SOPLEX_VERSION >= 160) || (SOPLEX_SUBVERSION >= 7)
+  	try
+  	{
+  	   *messageHandler() << "Retry with cleared basis" << CoinMessageEol;
+  	   soplex_->clearBasis();
+  	   soplex_->solve();
+  	}
+  	catch (soplex::SPxException e)
+  	{
+  	   *messageHandler() << "SoPlex initial solve with cleared basis failed with exception " << e.what() << CoinMessageEol;
+  	}
+#endif
   }
 
   freeCachedResults();
@@ -166,8 +180,22 @@ void OsiSpxSolverInterface::resolve()
   try 
   {
     soplex_->solve();
-  } catch (soplex::SPxException e) {
-  	std::cerr << "SoPlex resolve failed with exception " << e.what() << std::endl;
+  }
+  catch (soplex::SPxException e)
+  {
+   *messageHandler() << "SoPlex resolve failed with exception " << e.what() << CoinMessageEol;
+#if (SOPLEX_VERSION >= 160) || (SOPLEX_SUBVERSION >= 7)
+   try
+   {
+      *messageHandler() << "Retry with cleared basis" << CoinMessageEol;
+      soplex_->clearBasis();
+      soplex_->solve();
+   }
+   catch (soplex::SPxException e)
+   {
+      *messageHandler() << "SoPlex resolve with cleared basis failed with exception " << e.what() << CoinMessageEol;
+   }
+#endif
   }
 
   freeCachedResults();

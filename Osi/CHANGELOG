@@ -1,3 +1,7 @@
+12/11/2011 OsiSpx
+  - add resolve with cleared basis if solve fails with exception (which may be due to a singular startbasis),
+    needs SoPlex >= 1.5.0.7
+
 03/09/2011 OsiMsk
   - fix bug in one loadProblem method when NULL was passed as row range array
 

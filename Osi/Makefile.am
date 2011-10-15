@@ -108,7 +108,7 @@ if COIN_HAS_PKGCONFIG
 	$(PKG_CONFIG) --libs osi > $(addlibsdir)/osi_addlibs.txt
 else
 if COIN_CXX_IS_CL
-	echo "-libpath:`$(CYGPATH_W) @abs_lib_dir@` libOsi.lib @OSILIB_LIBS_INSTALLED@" > $(addlibsdir)/osi_addlibs_cpp.txt
+	echo "-libpath:`$(CYGPATH_W) @abs_lib_dir@` libOsi.lib @OSILIB_LIBS_INSTALLED@" > $(addlibsdir)/osi_addlibs.txt
 else
 	echo -L@abs_lib_dir@ -lOsi @OSILIB_LIBS_INSTALLED@ > $(addlibsdir)/osi_addlibs.txt
 endif

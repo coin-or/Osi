@@ -110,15 +110,20 @@ public:
     /**@name Accessing return code attributes */
     //@{
       /// Number of logically inconsistent cuts
-      inline int getNumInconsistent(){return intInconsistent_;}
+      inline int getNumInconsistent() const
+      {return intInconsistent_;}
       /// Number of cuts inconsistent with the current model
-      inline int getNumInconsistentWrtIntegerModel(){return extInconsistent_;}
+      inline int getNumInconsistentWrtIntegerModel() const
+      {return extInconsistent_;}
       /// Number of cuts that cause obvious infeasibility
-      inline int getNumInfeasible(){return infeasible_;}
+      inline int getNumInfeasible() const
+      {return infeasible_;}
       /// Number of redundant or ineffective cuts
-      inline int getNumIneffective(){return ineffective_;}
+      inline int getNumIneffective() const
+      {return ineffective_;}
       /// Number of cuts applied
-      inline int getNumApplied(){return applied_;}
+      inline int getNumApplied() const
+      {return applied_;}
     //@}
 
   private: 

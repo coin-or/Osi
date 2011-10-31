@@ -7,7 +7,6 @@ Osi/MSVisualStudio/v10/Osi.sln -text
 Osi/MSVisualStudio/v10/OsiExamplesBasic/OsiExamplesBasic.vcxproj -text
 Osi/MSVisualStudio/v10/OsiExamplesBasic2/OsiExamplesBasic2.vcxproj -text
 Osi/MSVisualStudio/v10/OsiExamplesBuild/OsiExamplesBuild.vcxproj -text
-Osi/MSVisualStudio/v10/OsiExamplesParameters/OsiExamplesParameters.vcxproj -text
 Osi/MSVisualStudio/v10/OsiExamplesParameters/OsiExamplesParameters.vcxproj.user -text
 Osi/MSVisualStudio/v10/OsiExamplesQuery/OsiExamplesQuery.vcxproj -text
 Osi/MSVisualStudio/v10/OsiExamplesSpecific/OsiExamplesSpecific.vcxproj -text

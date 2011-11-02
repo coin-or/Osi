@@ -747,7 +747,7 @@ bool OsiCpxSolverInterface::isProvenOptimal() const
 #else
   return ((probtypemip_ == false && 
 	  (stat == CPX_OPTIMAL || stat == CPX_OPTIMAL_INFEAS)) ||
-	  probtypemip_ == true && stat == CPXMIP_OPTIMAL);
+	  (probtypemip_ == true && stat == CPXMIP_OPTIMAL));
 #endif
 }
 
@@ -768,8 +768,8 @@ bool OsiCpxSolverInterface::isProvenPrimalInfeasible() const
 
   int method = CPXgetmethod( env_, getMutableLpPtr() );
 
-  return (method == CPX_ALG_PRIMAL && stat == CPX_INFEASIBLE || 
-	  method == CPX_ALG_DUAL && stat == CPX_UNBOUNDED || 
+  return ((method == CPX_ALG_PRIMAL && stat == CPX_INFEASIBLE) ||
+	  (method == CPX_ALG_DUAL && stat == CPX_UNBOUNDED) ||
 	  stat == CPX_ABORT_PRIM_INFEAS ||
 	  stat == CPX_ABORT_PRIM_DUAL_INFEAS);
 #endif
@@ -792,8 +792,8 @@ bool OsiCpxSolverInterface::isProvenDualInfeasible() const
 
   int method = CPXgetmethod( env_, getMutableLpPtr() );
 
-  return (method == CPX_ALG_PRIMAL && stat == CPX_UNBOUNDED || 
-	  method == CPX_ALG_DUAL && stat == CPX_INFEASIBLE || 
+  return ((method == CPX_ALG_PRIMAL && stat == CPX_UNBOUNDED) ||
+	  (method == CPX_ALG_DUAL && stat == CPX_INFEASIBLE) ||
 	  stat == CPX_ABORT_DUAL_INFEAS || 
 	  stat == CPX_ABORT_PRIM_DUAL_INFEAS);
 #endif

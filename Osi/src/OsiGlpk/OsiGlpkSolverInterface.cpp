@@ -639,7 +639,7 @@ bool OGSI::setHintParam (OsiHintParam key, bool sense,
 */
   try
   { retval = OsiSolverInterface::setHintParam(key,sense,strength) ; }
-  catch (CoinError)
+  catch (CoinError&)
   { retval = (strength == OsiForceDo) ; }
     
   if (retval == false) return (false) ;

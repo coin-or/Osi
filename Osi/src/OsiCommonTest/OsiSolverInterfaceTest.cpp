@@ -3476,7 +3476,7 @@ void testDualRays (const OsiSolverInterface *emptySi,
       catchSomeRays = true ;
       hasGetDualRays = true ;
       std::cout << "yes." << std::endl ; }
-    catch (CoinError err)
+    catch (CoinError& err)
     { std::cout << "no." << std::endl ;
       delete si ;
       si = 0 ;

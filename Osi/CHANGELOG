@@ -1,3 +1,6 @@
+26/11/2011 OsiGrb
+  - add implementation of OsiGrb::applyCuts that batches the row cuts before transfering them to Gurobi
+
 12/11/2011 OsiSpx
   - add resolve with cleared basis if solve fails with exception (which may be due to a singular startbasis),
     needs SoPlex >= 1.5.0.7

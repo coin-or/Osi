@@ -71,8 +71,8 @@ public:
   /// Internal class for obtaining status from the applyCuts method 
   class ApplyCutsReturnCode {
     friend class OsiSolverInterface;
-    friend class OsiOslSolverInterface;
     friend class OsiClpSolverInterface;
+    friend class OsiGrbSolverInterface;
 
   public:
     ///@name Constructors and desctructors

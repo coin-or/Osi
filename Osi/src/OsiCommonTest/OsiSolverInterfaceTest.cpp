@@ -3313,6 +3313,8 @@ int testOsiPresolve (const OsiSolverInterface *emptySi,
 
   for (unsigned i = 0 ; i < sampleProbs.size() ; i++)
   { OsiSolverInterface * si = emptySi->clone();
+    if (!si->setIntParam(OsiNameDiscipline,1))
+      std::cout << "  attempt to switch to lazy names failed." ;
 
     std::string mpsName = sampleProbs[i].first ;
     double correctObj = sampleProbs[i].second ;
@@ -3334,7 +3336,7 @@ int testOsiPresolve (const OsiSolverInterface *emptySi,
   Optimise the presolved model and check the objective.  We need to turn off
   any native presolve, which may or may not affect the objective.
 */
-    presolvedModel->setHintParam(OsiDoPresolveInInitial,false) ;
+    presolvedModel->setHintParam(OsiDoPresolveInInitial,false,OsiHintDo) ;
     presolvedModel->initialSolve() ;
     OSIUNITTEST_ASSERT_ERROR(eq(correctObj,presolvedModel->getObjValue()), delete si; ++errs; continue, solverName, "testOsiPresolve");
 /*
@@ -3345,7 +3347,7 @@ int testOsiPresolve (const OsiSolverInterface *emptySi,
 */
     pinfo.postsolve(true) ;
     delete presolvedModel ;
-    si->setHintParam(OsiDoPresolveInResolve,false) ;
+    si->setHintParam(OsiDoPresolveInResolve,false,OsiHintDo) ;
     si->resolve() ;
     OSIUNITTEST_ASSERT_ERROR(eq(correctObj,si->getObjValue()), ++errs, solverName, "testOsiPresolve: postsolve objective value");
     OSIUNITTEST_ASSERT_WARNING(si->getIterationCount() == 0, ++warnings, solverName, "testOsiPresolve: postsolve number of iterations");

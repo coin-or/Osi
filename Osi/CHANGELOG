@@ -1,3 +1,6 @@
+25/07/2011 OsiGrb
+  - fix mipstart option in OsiGrb: pass only values for discrete variables to Gurobi
+
 26/11/2011 OsiGrb
   - add implementation of OsiGrb::applyCuts that batches the row cuts before transfering them to Gurobi
 

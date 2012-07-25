@@ -363,7 +363,24 @@ void OsiGrbSolverInterface::branchAndBound()
 
   if( colsol_ != NULL && domipstart )
   {
-    GUROBI_CALL( "branchAndBound", GRBsetdblattrarray(getMutableLpPtr(), GRB_DBL_ATTR_START, 0, getNumCols(), colsol_) );
+    int* discridx = new int[getNumIntegers()];
+    double* discrval  = new double[getNumIntegers()];
+ 
+    int j = 0;
+    for( int i = 0; i < getNumCols() && j < getNumIntegers(); ++i )
+    {
+       if( !isInteger(i) && !isBinary(i) )
+          continue;
+       discridx[j] = i;
+       discrval[j] = colsol_[i];
+       ++j;
+    }
+    assert(j == getNumIntegers());
+
+    GUROBI_CALL( "branchAndBound", GRBsetdblattrlist(getMutableLpPtr(), GRB_DBL_ATTR_START, getNumIntegers(), discridx, discrval) );
+
+    delete[] discridx;
+    delete[] discrval;
   }
 
   GRBmodel* lp = getLpPtr( OsiGrbSolverInterface::FREECACHED_RESULTS );

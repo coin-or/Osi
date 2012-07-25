@@ -1,3 +1,6 @@
+25/07/2011 OsiGrb
+  - fix mipstart option in OsiGrb: pass only values for discrete variables to Gurobi
+
 -------------------------------------------------------------------------------
 06/02/2012 Osi 0.105.3 released
 

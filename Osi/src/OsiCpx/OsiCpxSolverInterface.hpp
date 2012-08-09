@@ -13,7 +13,31 @@
 #ifndef OsiCpxSolverInterface_H
 #define OsiCpxSolverInterface_H
 
+#include "CoinPragma.hpp"
+#include "CoinError.hpp"
+#include "CoinPackedMatrix.hpp"
+#include "CoinFinite.hpp"
+#include "CoinWarmStartBasis.hpp"
+
 #include "OsiSolverInterface.hpp"
+#include "OsiRowCut.hpp"
+#include "OsiColCut.hpp"
+
+#include "cplex.h"
+
+// CPLEX 10.0 removed CPXERR_NO_INT_SOLN
+#if !defined(CPXERR_NO_INT_SOLN)
+#define CPXERR_NO_INT_SOLN CPXERR_NO_SOLN
+#endif
+
+// #define DEBUG 1
+
+#ifdef DEBUG
+#define debugMessage printf
+#else
+#define debugMessage if( false ) printf
+#endif
+
 
 typedef struct cpxlp*  CPXLPptr;
 typedef struct cpxenv* CPXENVptr;

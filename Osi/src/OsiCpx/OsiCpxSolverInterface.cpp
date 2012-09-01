@@ -15,7 +15,31 @@
 #include <string>
 #include <numeric>
 
+#include "CoinPragma.hpp"
+#include "CoinError.hpp"
+
 #include "OsiCpxSolverInterface.hpp"
+#include "OsiRowCut.hpp"
+#include "OsiColCut.hpp"
+#include "CoinPackedMatrix.hpp"
+#include "CoinWarmStartBasis.hpp"
+#include "CoinFinite.hpp"
+
+#include "cplex.h"
+
+// CPLEX 10.0 removed CPXERR_NO_INT_SOLN
+#if !defined(CPXERR_NO_INT_SOLN)
+#define CPXERR_NO_INT_SOLN CPXERR_NO_SOLN
+#endif
+
+// #define DEBUG 1
+
+#ifdef DEBUG
+#define debugMessage printf
+#else
+#define debugMessage if( false ) printf
+#endif
+
 
 //#############################################################################
 // A couple of helper functions

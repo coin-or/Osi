@@ -578,6 +578,8 @@ bool OGSI::setStrParam (OsiStrParam key,
   switch (key)
   { case OsiProbName:
     { probName_ = value ;
+      if (probName_.length() == 0)
+        probName_ = "Pb";
       lpx_set_prob_name(lp_,const_cast<char *>(value.c_str())) ;
       retval = true ;
       break ; }

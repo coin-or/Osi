@@ -1,3 +1,7 @@
+20/11/2012 OsiGlpk, OsiCpx
+  - workaround problem in Glpk with empty problem name (patch by Bertrand Le Cun)
+  - not using CPXsolninfo for MIPs with CPLEX < 11.0 anymore
+
 25/07/2012 OsiGrb
   - fix mipstart option in OsiGrb: pass only values for discrete variables to Gurobi
 

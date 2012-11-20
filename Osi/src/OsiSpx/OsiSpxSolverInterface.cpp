@@ -215,6 +215,8 @@ bool
 OsiSpxSolverInterface::setIntParam(OsiIntParam key, int value)
 {
   bool retval = false;
+  try
+  {
   switch (key)
     {
     case OsiMaxNumIteration:
@@ -237,6 +239,13 @@ OsiSpxSolverInterface::setIntParam(OsiIntParam key, int value)
       retval = OsiSolverInterface::setIntParam(key,value);
       break;
     }
+  }
+  catch (soplex::SPxException e)
+  {
+     *messageHandler() << "OsiSpx::setDblParam failed with exception " << e.what() << CoinMessageEol;
+     retval = false;
+  }
+
   return retval;
 }
 
@@ -246,6 +255,8 @@ bool
 OsiSpxSolverInterface::setDblParam(OsiDblParam key, double value)
 {
   bool retval = false;
+  try
+  {
   switch (key)
     {
     case OsiDualObjectiveLimit:
@@ -271,6 +282,13 @@ OsiSpxSolverInterface::setDblParam(OsiDblParam key, double value)
       retval = false;
       break;
     }
+  }
+  catch (soplex::SPxException e)
+  {
+     *messageHandler() << "OsiSpx::setDblParam failed with exception " << e.what() << CoinMessageEol;
+     retval = false;
+  }
+
   return retval;
 }
 

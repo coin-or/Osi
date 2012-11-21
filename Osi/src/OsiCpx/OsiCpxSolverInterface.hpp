@@ -879,6 +879,9 @@ private:
   /// Whether to pass a column solution to CPLEX before starting MIP solve (copymipstart)
   bool            domipstart;
 
+  /// Whether to disable use of advanced basis (if given)
+  bool            disableadvbasis;
+
   //@}
 };
 

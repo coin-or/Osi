@@ -293,6 +293,8 @@ void OsiCpxSolverInterface::initialSolve()
   else if (messageHandler()->logLevel() > 1)
      CPXsetintparam( env_, CPX_PARAM_SIMDISPLAY, 2 );
 
+  CPXsetintparam( env_, CPX_PARAM_ADVIND, !disableadvbasis );
+
   double objoffset;
   double primalobjlimit;
   double dualobjlimit;
@@ -379,6 +381,8 @@ void OsiCpxSolverInterface::initialSolve()
      CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_ON );
   }
 #endif
+
+  disableadvbasis = false;
 }
 //-----------------------------------------------------------------------------
 void OsiCpxSolverInterface::resolve()
@@ -419,6 +423,8 @@ void OsiCpxSolverInterface::resolve()
      CPXsetintparam( env_, CPX_PARAM_SIMDISPLAY, 1 );
   else if (messageHandler()->logLevel() > 1)
      CPXsetintparam( env_, CPX_PARAM_SIMDISPLAY, 2 );
+
+  CPXsetintparam( env_, CPX_PARAM_ADVIND, !disableadvbasis );
 
   int term;
   switch( algorithm ) {
@@ -487,6 +493,8 @@ void OsiCpxSolverInterface::resolve()
     CPXsetintparam( env_, CPX_PARAM_PREIND, CPX_ON );
   }
 #endif
+
+  disableadvbasis = false;
 }
 //-----------------------------------------------------------------------------
 void OsiCpxSolverInterface::branchAndBound()
@@ -941,11 +949,15 @@ bool OsiCpxSolverInterface::setWarmStart(const CoinWarmStart* warmstart)
   if( !ws )
     return false;
 
-  numcols = ws->getNumStructural();
-  numrows = ws->getNumArtificial();
-  
-  if( numcols != getNumCols() || numrows != getNumRows() )
+  numcols = getNumCols();
+  numrows = getNumRows();
+
+  /* if too small warm start information is given, we take this as a sign to disable a warm start in the next LP solve */
+  if( ws->getNumStructural() < numcols || ws->getNumArtificial() < numrows )
+  {
+    disableadvbasis = true;
     return false;
+  }
 
   switchToLP();
 
@@ -3037,7 +3049,8 @@ OsiCpxSolverInterface::OsiCpxSolverInterface()
     coltype_(NULL),
     coltypesize_(0),
     probtypemip_(false),
-    domipstart(false)
+    domipstart(false),
+    disableadvbasis(false)
 {
   debugMessage("OsiCpxSolverInterface::OsiCpxSolverInterface()\n");
 
@@ -3084,7 +3097,8 @@ OsiCpxSolverInterface::OsiCpxSolverInterface( const OsiCpxSolverInterface & sour
     coltype_(NULL),
     coltypesize_(0),
     probtypemip_(false),
-    domipstart(false)
+    domipstart(false),
+    disableadvbasis(false)
 {
   debugMessage("OsiCpxSolverInterface::OsiCpxSolverInterface(%p)\n", (void*)&source);
 

@@ -1,3 +1,6 @@
+29/11/2012 OsiMsk
+  - added getRescode() to get result code of last MSK_optimize call
+
 21/11/2012 OsiCpx
   - calling setWarmStart with a too small basis now disables the use of an
     advanced basis for the next LP solve

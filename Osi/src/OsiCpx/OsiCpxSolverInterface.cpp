@@ -16,13 +16,8 @@
 #include <numeric>
 
 #include "CoinPragma.hpp"
-#include "CoinError.hpp"
 
 #include "OsiCpxSolverInterface.hpp"
-#include "OsiRowCut.hpp"
-#include "OsiColCut.hpp"
-#include "CoinPackedMatrix.hpp"
-#include "CoinFinite.hpp"
 
 #include "cplex.h"
 

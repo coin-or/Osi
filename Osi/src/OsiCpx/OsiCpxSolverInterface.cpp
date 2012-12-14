@@ -22,7 +22,6 @@
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
 #include "CoinPackedMatrix.hpp"
-#include "CoinWarmStartBasis.hpp"
 #include "CoinFinite.hpp"
 
 #include "cplex.h"

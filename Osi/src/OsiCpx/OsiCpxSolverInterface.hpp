@@ -14,6 +14,7 @@
 #define OsiCpxSolverInterface_H
 
 #include "OsiSolverInterface.hpp"
+#include "CoinWarmStartBasis.hpp"
 
 typedef struct cpxlp*  CPXLPptr;
 typedef struct cpxenv* CPXENVptr;

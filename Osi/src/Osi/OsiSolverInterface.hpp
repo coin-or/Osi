@@ -9,15 +9,17 @@
 #include <string>
 #include <vector>
 
+#include "CoinTypes.hpp"
 #include "CoinMessageHandler.hpp"
 #include "CoinPackedVectorBase.hpp"
-#include "CoinTypes.hpp"
+#include "CoinPackedMatrix.hpp"
+#include "CoinWarmStart.hpp"
+#include "CoinFinite.hpp"
+#include "CoinError.hpp"
 
 #include "OsiCollections.hpp"
 #include "OsiSolverParameters.hpp"
 
-class CoinPackedMatrix;
-class CoinWarmStart;
 class CoinSnapshot;
 class CoinLpIO;
 class CoinMpsIO;

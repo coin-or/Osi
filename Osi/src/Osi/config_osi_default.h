@@ -5,13 +5,13 @@
 /***************************************************************************/
 
 /* Version number of project */
-#define OSI_VERSION "0.105.7"
+#define OSI_VERSION      "0.105"
 
 /* Major Version number of project */
-#define OSI_VERSION_MAJOR 0
+#define OSI_VERSION_MAJOR      0
 
 /* Minor Version number of project */
-#define OSI_VERSION_MINOR 105
+#define OSI_VERSION_MINOR    105
 
 /* Release Version number of project */
-#define OSI_VERSION_RELEASE 7
+#define OSI_VERSION_RELEASE 9999

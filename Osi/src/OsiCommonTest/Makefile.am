@@ -2,7 +2,7 @@
 # All Rights Reserved.
 # This file is distributed under the Eclipse Public License.
 
-## $Id: Makefile.am 1465 2010-02-07 16:36:26Z stefan $
+## $Id$
 
 # Author:  Lou Hafer	SFU	2010-11-20
 

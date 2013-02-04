@@ -1,3 +1,6 @@
+04/02/2013 OsiMsk
+  - update to work with Mosek 7, too (contributed by Erling D. Andersen)
+
 02/02/2013 OsiUnitTest
   - replace macro for asserting a condition and collecting its outcome by a function
     to improve compilation speed (contributed by Victor Zverovich)

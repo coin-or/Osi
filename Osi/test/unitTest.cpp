@@ -39,12 +39,12 @@ using namespace OsiUnitTest;
   commented if you're happy with running the unitTest for all solvers in
   the build.
 */
-// #undef COIN_HAS_XPR
-// #undef COIN_HAS_CPX
-// #undef COIN_HAS_GLPK
+#undef COIN_HAS_XPR
+#undef COIN_HAS_CPX
+#undef COIN_HAS_GLPK
 // #undef COIN_HAS_MSK
-// #undef COIN_HAS_GRB
-// #undef COIN_HAS_SOPLEX
+#undef COIN_HAS_GRB
+#undef COIN_HAS_SOPLEX
 
 #ifdef COIN_HAS_XPR
 #include "OsiXprSolverInterface.hpp"

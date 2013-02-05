@@ -5,6 +5,8 @@
  -----------------------------------------------------------------------------
 
   This code is licensed under the terms of the Eclipse Public License (EPL).
+
+  Originally developed by Bo Jensen from MOSEK ApS.  No longer a maintainer.
 */
 
 #include <iostream>

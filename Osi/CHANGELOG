@@ -1,3 +1,10 @@
+04/02/2013 OsiMsk
+  - update to work with Mosek 7, too (contributed by Erling D. Andersen)
+
+02/02/2013 OsiUnitTest
+  - replace macro for asserting a condition and collecting its outcome by a function
+    to improve compilation speed (contributed by Victor Zverovich)
+
 29/11/2012 OsiMsk
   - added getRescode() to get result code of last MSK_optimize call
 

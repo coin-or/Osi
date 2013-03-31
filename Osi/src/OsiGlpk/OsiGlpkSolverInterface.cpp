@@ -75,6 +75,9 @@
 extern "C" {
 #include "glpk.h"
 }
+#ifndef GLP_PROB_DEFINED
+#define GLP_PROB_DEFINED
+#endif
 
 #include "CoinError.hpp"
 #include "CoinPragma.hpp"

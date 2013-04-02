@@ -501,10 +501,10 @@ OsiPresolve::postsolve(bool updateStatus)
     for (int i = 0 ; i < ncols0 ; i++) {
       CoinWarmStartBasis::Status status =
           static_cast<CoinWarmStartBasis::Status>(prob.getColumnStatus(i)) ;
-      //assert(status != CoinWarmStartBasis::atLowerBound ||
-      //     originalModel_->getColLower()[i] > -infty) ;
-      //assert(status != CoinWarmStartBasis::atUpperBound ||
-      //     originalModel_->getColUpper()[i] <  infty) ;
+      assert(status != CoinWarmStartBasis::atLowerBound ||
+      	     originalModel_->getColLower()[i] > -infty) ;
+      assert(status != CoinWarmStartBasis::atUpperBound ||
+      	     originalModel_->getColUpper()[i] <  infty) ;
       basis->setStructStatus(i,status);
     }
 

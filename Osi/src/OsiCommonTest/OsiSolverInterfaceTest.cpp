@@ -1388,7 +1388,7 @@ bool test17SebastianNowozin(OsiSolverInterface *si)
 */
 
 void testNames (const OsiSolverInterface *emptySi, std::string fn)
-{ int nameDiscipline ;
+{
   bool recognisesOsiNames = true ;
   bool ok ;
 
@@ -1715,7 +1715,6 @@ void testNames (const OsiSolverInterface *emptySi, std::string fn)
   vectors.
 */
   // std::cout << "Switching to full names." << std::endl ;
-  nameDiscipline = 2 ;
   OSIUNITTEST_ASSERT_WARNING(si->setIntParam(OsiNameDiscipline,2), delete si; return, solverName, "testNames lazy names: change name discipline");
   m = si->getNumRows() ;
   rowNames = si->getRowNames() ;
@@ -3431,7 +3430,6 @@ void testDualRays (const OsiSolverInterface *emptySi,
   OsiSolverInterface *si = 0 ;
 
   std::vector<double *> rays ;
-  bool catchSomeRays ;
   const int raysRequested = 5 ;
   const std::string mpsNames[] = { "galenet", "galenetbnds" } ;
   const bool rayTypes[] = { true, false } ;
@@ -3454,8 +3452,7 @@ void testDualRays (const OsiSolverInterface *emptySi,
       << "  checking if " << solverName << " implements getDualRays(maxRays"
       << ((fullRay == true)?",true":"") << ") ... " ;
 
-    int nameDiscipline = 1 ;
-    si->setIntParam(OsiNameDiscipline,nameDiscipline) ;
+    si->setIntParam(OsiNameDiscipline,1) ;
 
     OSIUNITTEST_ASSERT_ERROR(si->readMps(fn.c_str(),"mps") == 0, delete si; return, solverName, "testDualRays: read MPS");
 /*
@@ -3472,10 +3469,8 @@ void testDualRays (const OsiSolverInterface *emptySi,
   Try a call to getDualRays. If the call throws, abort this iteration and
   try again.
 */
-    catchSomeRays = false ;
     try
     { rays = si->getDualRays(raysRequested,fullRay) ;
-      catchSomeRays = true ;
       hasGetDualRays = true ;
       std::cout << "yes." << std::endl ; }
     catch (CoinError& err)

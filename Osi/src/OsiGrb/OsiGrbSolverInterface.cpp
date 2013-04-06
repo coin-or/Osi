@@ -258,7 +258,7 @@ void OsiGrbSolverInterface::resizeAuxColIndSpace()
 void OsiGrbSolverInterface::initialSolve()
 {
   debugMessage("OsiGrbSolverInterface::initialSolve()\n");
-  bool takeHint, gotHint;
+  bool takeHint;
   OsiHintStrength strength;
   int prevalgorithm = -1;
 
@@ -267,8 +267,7 @@ void OsiGrbSolverInterface::initialSolve()
   GRBmodel* lp = getLpPtr( OsiGrbSolverInterface::FREECACHED_RESULTS );
 
   /* set whether dual or primal, if hint has been given */
-  gotHint = getHintParam(OsiDoDualInInitial,takeHint,strength);
-  assert(gotHint);
+  getHintParam(OsiDoDualInInitial,takeHint,strength);
   if (strength != OsiHintIgnore) {
   	GUROBI_CALL( "initialSolve", GRBgetintparam(GRBgetenv(lp), GRB_INT_PAR_METHOD, &prevalgorithm) );
   	GUROBI_CALL( "initialSolve", GRBsetintparam(GRBgetenv(lp), GRB_INT_PAR_METHOD, takeHint ? GRB_METHOD_DUAL : GRB_METHOD_PRIMAL) );
@@ -276,8 +275,7 @@ void OsiGrbSolverInterface::initialSolve()
 
 	/* set whether presolve or not */
   int presolve = GRB_PRESOLVE_AUTO;
-  gotHint = getHintParam(OsiDoPresolveInInitial,takeHint,strength);
-  assert (gotHint);
+  getHintParam(OsiDoPresolveInInitial,takeHint,strength);
   if (strength != OsiHintIgnore)
   	presolve = takeHint ? GRB_PRESOLVE_AUTO : GRB_PRESOLVE_OFF;
 
@@ -308,7 +306,7 @@ void OsiGrbSolverInterface::initialSolve()
 void OsiGrbSolverInterface::resolve()
 {
   debugMessage("OsiGrbSolverInterface::resolve()\n");
-  bool takeHint, gotHint;
+  bool takeHint;
   OsiHintStrength strength;
   int prevalgorithm = -1;
 
@@ -317,8 +315,7 @@ void OsiGrbSolverInterface::resolve()
   GRBmodel* lp = getLpPtr( OsiGrbSolverInterface::FREECACHED_RESULTS );
 
   /* set whether primal or dual */
-  gotHint = getHintParam(OsiDoDualInResolve,takeHint,strength);
-  assert (gotHint);
+  getHintParam(OsiDoDualInResolve,takeHint,strength);
   if (strength != OsiHintIgnore) {
   	GUROBI_CALL( "resolve", GRBgetintparam(GRBgetenv(lp), GRB_INT_PAR_METHOD, &prevalgorithm) );
   	GUROBI_CALL( "resolve", GRBsetintparam(GRBgetenv(lp), GRB_INT_PAR_METHOD, takeHint ? GRB_METHOD_DUAL : GRB_METHOD_PRIMAL) );
@@ -326,8 +323,7 @@ void OsiGrbSolverInterface::resolve()
 
 	/* set whether presolve or not */
   int presolve = GRB_PRESOLVE_OFF;
-  gotHint = getHintParam(OsiDoPresolveInResolve,takeHint,strength);
-  assert (gotHint);
+  getHintParam(OsiDoPresolveInResolve,takeHint,strength);
   if (strength != OsiHintIgnore)
   	presolve = takeHint ? GRB_PRESOLVE_AUTO : GRB_PRESOLVE_OFF;
 

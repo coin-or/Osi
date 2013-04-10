@@ -5,7 +5,6 @@ Osi/CHANGELOG -text
 Osi/LICENSE -text
 Osi/MSVisualStudio/v10/Osi.sln -text
 Osi/MSVisualStudio/v10/OsiExamplesBasic/OsiExamplesBasic.vcxproj -text
-Osi/MSVisualStudio/v10/OsiExamplesBasic2/OsiExamplesBasic2.vcxproj -text
 Osi/MSVisualStudio/v10/OsiExamplesBuild/OsiExamplesBuild.vcxproj -text
 Osi/MSVisualStudio/v10/OsiExamplesParameters/OsiExamplesParameters.vcxproj -text
 Osi/MSVisualStudio/v10/OsiExamplesQuery/OsiExamplesQuery.vcxproj -text
@@ -15,7 +14,6 @@ Osi/MSVisualStudio/v10/libOsi/libOsi.vcxproj -text
 Osi/MSVisualStudio/v10/libOsiCommonTest/libOsiCommonTest.vcxproj -text
 Osi/MSVisualStudio/v9/Osi.sln -text
 Osi/MSVisualStudio/v9/OsiExamplesBasic/OsiExamplesBasic.vcproj -text
-Osi/MSVisualStudio/v9/OsiExamplesBasic2/OsiExamplesBasic2.vcproj -text
 Osi/MSVisualStudio/v9/OsiExamplesBuild/OsiExamplesBuild.vcproj -text
 Osi/MSVisualStudio/v9/OsiExamplesParameters/OsiExamplesParameters.vcproj -text
 Osi/MSVisualStudio/v9/OsiExamplesQuery/OsiExamplesQuery.vcproj -text
@@ -33,7 +31,6 @@ Osi/doxydoc/doxygen.conf.in -text
 Osi/examples/Makefile.in -text
 Osi/examples/README -text
 Osi/examples/basic.cpp -text
-Osi/examples/basic2.cpp -text
 Osi/examples/build.cpp -text
 Osi/examples/parameters.cpp -text
 Osi/examples/query.cpp -text

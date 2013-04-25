@@ -3531,7 +3531,7 @@ OsiSolverInterface::ApplyCutsReturnCode OsiGrbSolverInterface::applyCuts(const O
 
     // Loop once for each row cut
     int nToApply = 0;
-    uint space = 0;
+    size_t space = 0;
 
     for ( i = 0; i < cs.sizeRowCuts(); i ++ ) {
         if ( cs.rowCut(i).effectiveness() < effectivenessLb ) {

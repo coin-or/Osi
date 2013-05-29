@@ -34,9 +34,6 @@ libOsi_la_SOURCES = \
 	OsiSolverInterface.cpp OsiSolverInterface.hpp \
 	OsiSolverParameters.hpp
 
-# List all additionally required libraries
-libOsi_la_LIBADD = $(OSILIB_LIBS)
-
 # This is for libtool
 libOsi_la_LDFLAGS = $(LT_LDFLAGS)
 

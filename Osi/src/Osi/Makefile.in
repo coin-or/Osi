@@ -64,8 +64,7 @@ am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includecoindir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
-am__DEPENDENCIES_1 =
-libOsi_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+libOsi_la_LIBADD =
 am_libOsi_la_OBJECTS = OsiAuxInfo.lo OsiBranchingObject.lo \
 	OsiChooseVariable.lo OsiColCut.lo OsiCut.lo OsiCuts.lo \
 	OsiNames.lo OsiPresolve.lo OsiRowCut.lo OsiRowCutDebugger.lo \
@@ -359,9 +358,6 @@ libOsi_la_SOURCES = \
 	OsiSolverInterface.cpp OsiSolverInterface.hpp \
 	OsiSolverParameters.hpp
 
-
-# List all additionally required libraries
-libOsi_la_LIBADD = $(OSILIB_LIBS)
 
 # This is for libtool
 libOsi_la_LDFLAGS = $(LT_LDFLAGS)

@@ -2356,12 +2356,14 @@ OsiGrbSolverInterface::deleteCols(const int num, const int * columnIndices)
     return;
 
   GUROBI_CALL( "deleteCols", GRBupdatemodel(getMutableLpPtr()) );
+  
+  int* ind = NULL;
 
   if( nauxcols )
   {
     int nc = getNumCols();
 
-    int* ind = new int[num];
+    ind = new int[num];
 
     // translate into gurobi indices and sort
     for( int i = 0; i < num; ++i )
@@ -2403,8 +2405,6 @@ OsiGrbSolverInterface::deleteCols(const int num, const int * columnIndices)
         auxcolind[rngrowidx] = i;
       }
     }
-
-    delete[] ind;
   }
   else
   {
@@ -2432,8 +2432,19 @@ OsiGrbSolverInterface::deleteCols(const int num, const int * columnIndices)
   	coltype_ = NULL;
   }
 
-  for( int i = 0; i < num; ++i )
-    deleteColNames(columnIndices[i], 1);
+  if( !getColNames().empty() )
+  {
+    if( ind == NULL )
+      ind = new int[num];
+      
+    memcpy(ind, columnIndices, num * sizeof(int));
+    qsort((void*)ind, num, sizeof(int), intcompare);
+    
+    for( int i = num-1; i >= 0; --i )
+      deleteColNames(ind[i], 1);
+  }
+    
+  delete[] ind;
 }
 
 //-----------------------------------------------------------------------------
@@ -2689,11 +2700,14 @@ OsiGrbSolverInterface::deleteRows(const int num, const int * rowIndices)
 
   GUROBI_CALL( "deleteRows", GRBdelconstrs(getLpPtr( OsiGrbSolverInterface::KEEPCACHED_COLUMN ), num, const_cast<int*>(rowIndices)) );
 
+  if( nauxcols == 0 && getRowNames().empty() )
+    return;
+
+  int* ind = CoinCopyOfArray(rowIndices, num);
+  qsort((void*)ind, num, sizeof(int), intcompare);
+
   if( nauxcols )
   {
-    int* ind = CoinCopyOfArray(rowIndices, num);
-    qsort((void*)ind, num, sizeof(int), intcompare);
-
     int nr = getNumRows();
 
     int offset = 0;
@@ -2710,7 +2724,6 @@ OsiGrbSolverInterface::deleteRows(const int num, const int * rowIndices)
       if( auxcolind[i] >= 0 )
         colmap_G2O[auxcolind[i]] = - i - 1;
     }
-    delete[] ind;
   }
 
 #ifndef NDEBUG
@@ -2728,8 +2741,11 @@ OsiGrbSolverInterface::deleteRows(const int num, const int * rowIndices)
   }
 #endif
 
-  for( int i = 0; i < num; ++i )
-    deleteRowNames(rowIndices[i], 1);
+  if( !getRowNames().empty() )
+    for( int i = num-1; i >=0; --i )
+      deleteRowNames(ind[i], 1);
+    
+  delete[] ind;
 }
 
 //#############################################################################
@@ -3615,7 +3631,7 @@ OsiSolverInterface::ApplyCutsReturnCode OsiGrbSolverInterface::applyCuts(const O
     int nPrevVars = getNumCols();
 
     GUROBI_CALL( "applyRowCuts", GRBaddrangeconstrs( getLpPtr( OsiGrbSolverInterface::KEEPCACHED_COLUMN ),
-                 nToApply, space, start, indices, values, lower, upper, NULL) );
+                 nToApply, static_cast<int>(space), start, indices, values, lower, upper, NULL) );
 
     GUROBI_CALL( "applyRowCuts", GRBupdatemodel(getMutableLpPtr()) );
 

@@ -1,3 +1,6 @@
+08/30/2013 OsiGrb
+  - fixed bug in getObjectiveCoefficients and getBasisStatus for LPs without ranged rows
+
 08/23/2013 OsiGrb
   - fixed bug in deleting row or column names when deleting several rows/columns at once
 

@@ -1265,7 +1265,10 @@ const double * OsiGrbSolverInterface::getObjCoefficients() const
   		obj_ = new double[ncols];
   		GUROBI_CALL( "getObjCoefficients", GRBupdatemodel(getMutableLpPtr()) );
 
-  		GUROBI_CALL( "getObjCoefficients", GRBgetdblattrlist(getMutableLpPtr(), GRB_DBL_ATTR_OBJ, ncols, colmap_O2G, obj_) );
+    if( nauxcols )
+      GUROBI_CALL( "getObjCoefficients", GRBgetdblattrlist(getMutableLpPtr(), GRB_DBL_ATTR_OBJ, ncols, colmap_O2G, obj_) );
+    else
+      GUROBI_CALL( "getObjCoefficients", GRBgetdblattrarray(getMutableLpPtr(), GRB_DBL_ATTR_OBJ, 0, ncols, obj_) );
   	}
   }
   
@@ -4116,7 +4119,10 @@ void OsiGrbSolverInterface::getBasisStatus(int* cstat, int* rstat) const {
 
 	GUROBI_CALL( "getBasisStatus", GRBupdatemodel(getMutableLpPtr()) );
 
-	GUROBI_CALL( "getBasisStatus", GRBgetintattrlist(getMutableLpPtr(), GRB_INT_ATTR_VBASIS, numcols, colmap_O2G, cstat) );
+  if( nauxcols )
+    GUROBI_CALL( "getBasisStatus", GRBgetintattrlist(getMutableLpPtr(), GRB_INT_ATTR_VBASIS, numcols, colmap_O2G, cstat) );
+  else
+    GUROBI_CALL( "getBasisStatus", GRBgetintattrarray(getMutableLpPtr(), GRB_INT_ATTR_VBASIS, 0, numcols, cstat) );
 	
 	for (int i = 0; i < numcols; ++i)
 		switch (cstat[i])

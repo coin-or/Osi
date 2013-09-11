@@ -1,3 +1,6 @@
+09/11/2013 OsiCpx
+  - fixed getIterationCount() for MIPs (use CPXgetmipitcnt instead of CPXgetitcnt)
+
 08/30/2013 OsiGrb
   - fixed bug in getObjectiveCoefficients and getBasisStatus for LPs without ranged rows
 

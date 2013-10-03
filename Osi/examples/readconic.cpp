@@ -42,8 +42,10 @@ int main (int argc, const char *argv[])
       for (int i=0;i<numberEntries;i++)
 	printf("(%d wt %g) ",which[i],weights[i]);
       printf("\n");
+      delete SOS[iSOS];
     }
   }
+  delete [] SOS;
   int numberColumns=m_MpsData.getNumCols();
   if (columnStart[numberColumns]) {
     printf("Quadratic objective has %d entries\n",columnStart[numberColumns]);
@@ -56,6 +58,9 @@ int main (int argc, const char *argv[])
       }
     }
   }
+  delete [] columnStart;
+  delete [] columnIdx;
+  delete [] elements;
   if (nOfCones) {
     printf("Conic section has %d cones\n",nOfCones);
     for (int iCone=0;iCone<nOfCones;iCone++) {
@@ -65,5 +70,7 @@ int main (int argc, const char *argv[])
       printf("\n");
     }
   }
+  delete [] coneStart;
+  delete [] coneIdx;
   return 0;
 }    

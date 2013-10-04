@@ -30,7 +30,8 @@ int main (int argc, const char *argv[])
   int nOfCones;
   int * coneStart = NULL;
   int * coneIdx = NULL;
-  status = m_MpsData.readConicMps(NULL, coneStart, coneIdx, nOfCones);
+  int * coneType = NULL;
+  status = m_MpsData.readConicMps(NULL, coneStart, coneIdx, coneType, nOfCones);
   assert (!status);
   if (nOfSOS) {
     printf("%d SOS sets\n",nOfSOS);
@@ -64,7 +65,8 @@ int main (int argc, const char *argv[])
   if (nOfCones) {
     printf("Conic section has %d cones\n",nOfCones);
     for (int iCone=0;iCone<nOfCones;iCone++) {
-      printf("Cone %d has %d entries ",iCone,coneStart[iCone+1]-coneStart[iCone]);
+      printf("Cone %d has %d entries (type %d) ",iCone,coneStart[iCone+1]-coneStart[iCone],
+	     coneType[iCone]);
       for (int j=coneStart[iCone];j<coneStart[iCone+1];j++)
 	printf("%d ",coneIdx[j]);
       printf("\n");
@@ -72,5 +74,6 @@ int main (int argc, const char *argv[])
   }
   delete [] coneStart;
   delete [] coneIdx;
+  delete [] coneType;
   return 0;
 }    

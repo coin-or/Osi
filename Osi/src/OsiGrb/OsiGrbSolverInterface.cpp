@@ -19,6 +19,7 @@
 #include "CoinPragma.hpp"
 #include "CoinError.hpp"
 
+#include "OsiConfig.h"
 #include "OsiGrbSolverInterface.hpp"
 #include "OsiCuts.hpp"
 #include "OsiRowCut.hpp"
@@ -54,9 +55,13 @@ extern "C" {
   if( (_retcode = (x)) != 0 ) \
   { \
     char s[1001]; \
-    sprintf( s, "Error <%d> from GUROBI function call: ", _retcode ); \
     if (OsiGrbSolverInterface::globalenv_) \
+    { \
+      sprintf( s, "Error <%d> from GUROBI function call: ", _retcode ); \
       strncat(s, GRBgeterrormsg(OsiGrbSolverInterface::globalenv_), 1000); \
+    } \
+    else \
+      sprintf( s, "Error <%d> from GUROBI function call (no license?).", _retcode ); \
     debugMessage("%s:%d: %s", __FILE__, __LINE__, s); \
     throw CoinError( s, m, "OsiGrbSolverInterface", __FILE__, __LINE__ ); \
   } \

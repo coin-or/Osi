@@ -19,6 +19,11 @@ lib_LTLIBRARIES = libOsiGlpk.la
 libOsiGlpk_la_SOURCES = \
 	OsiGlpkSolverInterface.cpp OsiGlpkSolverInterface.hpp
 
+# List all additionally required libraries
+if DEPENDENCY_LINKING
+libOsiGlpk_la_LIBADD = $(OSILIB_LIBS) ../Osi/libOsi.la
+endif
+
 # This is for libtool
 libOsiGlpk_la_LDFLAGS = $(LT_LDFLAGS)
 

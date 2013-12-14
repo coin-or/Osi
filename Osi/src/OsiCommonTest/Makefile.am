@@ -29,6 +29,11 @@ libOsiCommonTests_la_SOURCES = \
 	OsiUnitTestUtils.cpp \
 	OsiSolverInterfaceTest.cpp
 
+# List all additionally required libraries
+if DEPENDENCY_LINKING
+libOsiCommonTests_la_LIBADD = $(OSILIB_LIBS) ../Osi/libOsi.la
+endif
+
 # Libtool flags
 libOsiCommonTests_la_LDFLAGS = $(LT_LDFLAGS)
 

@@ -34,6 +34,7 @@ Osi/examples/basic.cpp -text
 Osi/examples/build.cpp -text
 Osi/examples/parameters.cpp -text
 Osi/examples/query.cpp -text
+Osi/examples/readconic.cpp -text
 Osi/install-sh -text
 Osi/ltmain.sh -text
 Osi/missing -text

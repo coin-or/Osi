@@ -1,3 +1,6 @@
+17/01/2014 OsiGrb
+  - fixed bug in OsiGrb::deleteCols() where the columns types got lost
+
 11/18/2013 OsiMsk
   - changed MIP optimizer to Mosek's own conic MIP optimizer, if Mosek version >= 7
 

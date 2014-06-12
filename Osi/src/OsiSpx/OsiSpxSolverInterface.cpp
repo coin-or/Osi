@@ -21,13 +21,19 @@
 
 #include "CoinError.hpp"
 
-#include "OsiSpxSolverInterface.hpp"
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
 #include "CoinPackedMatrix.hpp"
 #include "CoinWarmStartBasis.hpp"
 
+#ifndef SOPLEX_LEGACY
+#define SOPLEX_LEGACY
+#endif
+
 #include "soplex.h"
+
+// it's important to include this header after soplex.h
+#include "OsiSpxSolverInterface.hpp"
 
 //#############################################################################
 // A couple of helper functions

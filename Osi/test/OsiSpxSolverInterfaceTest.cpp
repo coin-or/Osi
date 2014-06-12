@@ -17,7 +17,6 @@
 // when not building with soplex.
 #ifdef COIN_HAS_SOPLEX
 
-#include "OsiSpxSolverInterface.hpp"
 #include "OsiUnitTests.hpp"
 #include "OsiRowCut.hpp"
 #include "OsiCuts.hpp"
@@ -25,9 +24,15 @@
 #include "CoinPackedMatrix.hpp"
 
 //#include <iostream>
+#ifndef SOPLEX_LEGACY
+#define SOPLEX_LEGACY
+#endif
 
 // to check for value of infinity
 #include "soplex.h"
+
+// it's important to include this header after soplex.h
+#include "OsiSpxSolverInterface.hpp"
 
 void OsiSpxSolverInterfaceUnitTest( const std::string & mpsDir, const std::string & netlibDir )
 {

@@ -2059,6 +2059,7 @@ fi
 	       comps="xlc gcc pgcc icc cc"
 	     fi
 	     ;;
+  *-*-darwin*) comps="clang gcc cc" ;;
   *-linux-gnu*) comps="gcc cc pgcc icc xlc" ;;
   *-linux-*) comps="xlc gcc cc pgcc icc" ;;
   *)         comps="xlc_r xlc cc gcc pgcc icc" ;;
@@ -3215,7 +3216,7 @@ case $build in
       fi ;;
   *-*-solaris*)
   	     comps="CC xlC_r aCC g++ c++ pgCC icpc gpp cxx cc++ cl FCC KCC RCC" ;;
-  *-darwin*) comps="g++ c++ CC" ;;
+  *-darwin*) comps="clang++ g++ c++ CC" ;;
   *-linux-gnu*)
              comps="g++ c++ pgCC icpc gpp cxx cc++ cl FCC KCC RCC xlC_r aCC CC" ;;
           *) comps="xlC_r aCC CC g++ c++ pgCC icpc gpp cxx cc++ cl FCC KCC RCC" ;;
@@ -3652,7 +3653,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 coin_cxx_is_cl=false
 # It seems that we need to cleanup something here for the Windows
 case "$CXX" in
-  clang* ) ;;
+  clang* | */clang*) ;;
   cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
     sed -e 's/^void exit (int);//' confdefs.h >> confdefs.hh
     mv confdefs.hh confdefs.h
@@ -4085,31 +4086,30 @@ echo "$as_me: error: Shared libraries are disabled by user, but this is not feas
   fi
   enable_shared=yes;
 else
-  # On Cygwin and AIX, building DLLs doesn't work
   case $build in
     *-cygwin* | *-mingw*)
       coin_disable_shared=yes
       if test x"$enable_shared" = xyes; then
         case "$CC" in
           clang* )
-            { echo "$as_me:$LINENO: WARNING: DLL building not supported. I'm disabling your choice." >&5
-echo "$as_me: WARNING: DLL building not supported. I'm disabling your choice." >&2;}
+            { echo "$as_me:$LINENO: WARNING: Building of DLLs not supported in this configuration." >&5
+echo "$as_me: WARNING: Building of DLLs not supported in this configuration." >&2;}
             ;;
           cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
-            { echo "$as_me:$LINENO: DLL building not supported, but will build with -MD(d) instead of -MT(d)." >&5
-echo "$as_me: DLL building not supported, but will build with -MD(d) instead of -MT(d)." >&6;}
+            { echo "$as_me:$LINENO: Building of DLLs not supported in this configuration." >&5
+echo "$as_me: Building of DLLs not supported in this configuration." >&6;}
             ;;
           *gcc*)
 	    if test x"$enable_dependency_linking" = xyes; then
               coin_disable_shared=no
             else
-              { echo "$as_me:$LINENO: WARNING: To build shared libraries with gcc on CYGWIN or MSys, use --enable-dependency-linking" >&5
-echo "$as_me: WARNING: To build shared libraries with gcc on CYGWIN or MSys, use --enable-dependency-linking" >&2;}
+              { echo "$as_me:$LINENO: WARNING: Dependency linking seems to be disabled, so shared libraries (DLLs) will not be built" >&5
+echo "$as_me: WARNING: Dependency linking seems to be disabled, so shared libraries (DLLs) will not be built" >&2;}
             fi
             ;;
           *)
-            { echo "$as_me:$LINENO: WARNING: DLL building not supported. I'm disabling your choice." >&5
-echo "$as_me: WARNING: DLL building not supported. I'm disabling your choice." >&2;}
+            { echo "$as_me:$LINENO: WARNING: Building of DLLs not supported in this configuration." >&5
+echo "$as_me: WARNING: Building of DLLs not supported in this configuration." >&2;}
             ;;
         esac
       fi
@@ -4118,8 +4118,8 @@ echo "$as_me: WARNING: DLL building not supported. I'm disabling your choice." >
       coin_disable_shared=yes
       platform=AIX
       if test x"$enable_shared" = xyes; then
-        { echo "$as_me:$LINENO: WARNING: Shared objects are not supported. I'm disabling your choice." >&5
-echo "$as_me: WARNING: Shared objects are not supported. I'm disabling your choice." >&2;}
+        { echo "$as_me:$LINENO: WARNING: Shared objects are not supported." >&5
+echo "$as_me: WARNING: Shared objects are not supported." >&2;}
       fi
     ;;
   esac
@@ -20445,13 +20445,37 @@ if test "${enable_dependency_linking+set}" = set; then
   enableval="$enable_dependency_linking"
   dependency_linking="$enableval"
 else
-  dependency_linking=no
+  dependency_linking=auto
 fi;
 
-# ToDo
-# For now, don't use the -no-undefined flag, since the Makefiles are
-# not yet set up that way.  But we need to fix this, when we want
-# to comile DLLs under Windows.
+if test "$dependency_linking" = auto; then
+  # On Cygwin and AIX, building DLLs doesn't work
+  dependency_linking=no
+  if test x"$enable_shared" = xyes; then
+    case $build in
+      *-cygwin* | *-mingw*)
+        case "$CC" in
+          clang* )
+	    dependency_linking=yes
+            ;;
+          cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
+	    dependency_linking=no
+            ;;
+          *gcc*)
+	    dependency_linking=yes
+            ;;
+          *)
+	    dependency_linking=yes
+            ;;
+        esac
+        ;;
+      *)
+        dependency_linking=yes
+        ;;
+    esac
+  fi
+fi
+
 if test "$dependency_linking" = yes ;
 then
   LT_LDFLAGS="-no-undefined"
@@ -20720,7 +20744,6 @@ COINUTILS_DATA=
 COINUTILS_DEPENDENCIES=
 COINUTILS_PCLIBS=
 COINUTILS_PCREQUIRES=
-COINUTILS_DATA=
 
 
 
@@ -21236,7 +21259,6 @@ GLPK_DATA=
 GLPK_DEPENDENCIES=
 GLPK_PCLIBS=
 GLPK_PCREQUIRES=
-GLPK_DATA=
 
 
 
@@ -21747,7 +21769,6 @@ SOPLEX_DATA=
 SOPLEX_DEPENDENCIES=
 SOPLEX_PCLIBS=
 SOPLEX_PCREQUIRES=
-SOPLEX_DATA=
 
 
 
@@ -22258,7 +22279,6 @@ SAMPLE_DATA=
 SAMPLE_DEPENDENCIES=
 SAMPLE_PCLIBS=
 SAMPLE_PCREQUIRES=
-SAMPLE_DATA=
 
 
 
@@ -22739,7 +22759,6 @@ NETLIB_DATA=
 NETLIB_DEPENDENCIES=
 NETLIB_PCLIBS=
 NETLIB_PCREQUIRES=
-NETLIB_DATA=
 
 
 

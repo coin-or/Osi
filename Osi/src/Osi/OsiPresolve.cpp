@@ -1432,12 +1432,16 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
   delete m;
   {
     int i;
+    int numberIntegers=0;
     for (i=0;i<ncols_;i++) {
-      if (si->isInteger(i))  
+      if (si->isInteger(i)) {  
 	integerType_[i] = 1;
-      else
+	numberIntegers++;
+      } else {
 	integerType_[i] = 0;
+      }
     }
+    anyInteger_ = (numberIntegers!=0);
   }
 
   // Set up prohibited bits if needed

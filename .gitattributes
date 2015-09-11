@@ -100,3 +100,4 @@ Osi/test/OsiTestSolver.hpp -text
 doxydoc/doxygen.conf.in -text
 /install-sh -text
 /missing -text
+/test -text

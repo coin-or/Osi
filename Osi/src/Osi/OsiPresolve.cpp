@@ -1270,8 +1270,8 @@ CoinPrePostsolveMatrix::CoinPrePostsolveMatrix(const OsiSolverInterface * si,
 
 {
   bulk0_ = static_cast<CoinBigIndex>(bulkRatio_*nelems_in) ;
-  hrow_ = new int [bulk0_] ;
-  colels_ = new double[bulk0_] ;
+  hrow_ = new int [bulk0_+ncols_in] ;
+  colels_ = new double[bulk0_+ncols_in] ;
 
   si->getDblParam(OsiObjOffset,originalOffset_);
   int ncols = si->getNumCols();

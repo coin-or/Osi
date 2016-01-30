@@ -11,7 +11,7 @@ install:
   - 7z x msys2.tar.xz
   - 7z x msys2.tar > NUL
   - msys64\usr\bin\bash -lc ""
-  - msys64\usr\bin\bash -lc "for i in {1..3}; do pacman --noconfirm -Suy make wget && break || sleep 15; done"
+  - msys64\usr\bin\bash -lc "for i in {1..3}; do pacman --noconfirm -Suy make wget tar && break || sleep 15; done"
   - msys64\usr\bin\bash -lc "wget http://www.coin-or.org/BuildTools/Blas/blas-20130815.tgz; gunzip -f blas-20130815.tgz; tar -x -f blas-20130815.tar"
 
 build_script:

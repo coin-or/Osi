@@ -92,6 +92,7 @@ Osi/test/OsiSpxSolverInterfaceTest.cpp -text
 Osi/test/OsiTestSolver.cpp -text
 Osi/test/OsiTestSolver.hpp -text
 /README -text
+/appveyor.yml -text
 /compile -text
 /config.guess -text
 /config.sub -text

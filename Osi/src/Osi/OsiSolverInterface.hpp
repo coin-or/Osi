@@ -1571,6 +1571,13 @@ public:
   */
   int differentModel(OsiSolverInterface & other, 
 		     bool ignoreNames=true);
+  /** Get some statistics about model - min/max always computed
+      type 0->4 , larger gives more information
+      0 - Just set min and max values of coefficients
+  */
+  void statistics(double & minimumNegative, double & maximumNegative,
+		  double & minimumPositive, double & maximumPositive, 
+		  int type=3) const;
 #ifdef COIN_SNAPSHOT
   /// Return a CoinSnapshot
   virtual CoinSnapshot * snapshot(bool createArrays=true) const;

@@ -1,3 +1,6 @@
+15/02/2016 OsiCpx
+  - fixed OsiCpx::getRowActivity() when solved a MIP
+  
 09/06/2015 OsiSpx
   - added compatibility with SoPlex 2.2
   - added OsiSpx::getLpPtr()

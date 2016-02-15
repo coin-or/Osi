@@ -1547,6 +1547,9 @@ const double * OsiCpxSolverInterface::getRowActivity() const
               double *rowslack = new double[nrows];
               int err = CPXgetmipslack( env_, getMutableLpPtr(), rowslack, 0, nrows-1 );
               checkCPXerror( err, "CPXgetmipslack", "getRowActivity" );
+              for( int r = 0; r < nrows; ++r )
+                 rowact_[r] = getRightHandSide()[r] - rowslack[r];
+              delete[] rowslack;
            }
            else
            {

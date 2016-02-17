@@ -3497,7 +3497,34 @@ void OsiCpxSolverInterface::freeAllMemory()
 void 
 OsiCpxSolverInterface::reset()
 {
-  setInitialData(); // clear base class
+	int err;
+	CPXCHANNELptr cpxresults;
+	CPXCHANNELptr cpxwarning;
+	CPXCHANNELptr cpxerror;
+	CPXCHANNELptr cpxlog;
+
+	err = CPXgetchannels(env_, &cpxresults, &cpxwarning, &cpxerror, &cpxlog);
+
+	err = CPXdelfuncdest(env_, cpxresults, messageHandler(), OsiCpxMessageCallbackResultLog);
+	checkCPXerror( err, "CPXdelfuncdest", "reset" );
+	err = CPXdelfuncdest(env_, cpxlog,     messageHandler(), OsiCpxMessageCallbackResultLog);
+	checkCPXerror( err, "CPXdelfuncdest", "reset" );
+	err = CPXdelfuncdest(env_, cpxwarning, messageHandler(), OsiCpxMessageCallbackWarning);
+	checkCPXerror( err, "CPXdelfuncdest", "reset" );
+	err = CPXdelfuncdest(env_, cpxerror,   messageHandler(), OsiCpxMessageCallbackError);
+	checkCPXerror( err, "CPXdelfuncdest", "reset" );
+   
+	setInitialData(); // clear base class (this may reset the message handler, too)
+   
+	err = CPXaddfuncdest(env_, cpxresults, messageHandler(), OsiCpxMessageCallbackResultLog);
+	checkCPXerror( err, "CPXaddfuncdest", "reset" );
+	err = CPXaddfuncdest(env_, cpxlog,     messageHandler(), OsiCpxMessageCallbackResultLog);
+	checkCPXerror( err, "CPXaddfuncdest", "reset" );
+	err = CPXaddfuncdest(env_, cpxwarning, messageHandler(), OsiCpxMessageCallbackWarning);
+	checkCPXerror( err, "CPXaddfuncdest", "reset" );
+	err = CPXaddfuncdest(env_, cpxerror,   messageHandler(), OsiCpxMessageCallbackError);
+	checkCPXerror( err, "CPXaddfuncdest", "reset" );
+   
 	if (lp_ != NULL) { // kill old LP 
 		int err = CPXfreeprob( env_, &lp_ );
 		checkCPXerror( err, "CPXfreeprob", "loadProblem" );

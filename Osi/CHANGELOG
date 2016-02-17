@@ -1,3 +1,6 @@
+17/02/2016 OsiCpx
+  - fix handling of cplex message callbacks in OsiCpx::reset()
+
 15/02/2016 OsiCpx
   - fixed OsiCpx::getRowActivity() when solved a MIP
   

@@ -130,40 +130,29 @@ void MSKAPI OsiMskStreamFuncError(MSKuserhandle_t handle, MSKCONST char* str) {
 // Prints a error message and throws a exception
 
 static inline void
-checkMSKerror( int err, std::string mskfuncname, std::string osimethod )
+checkMSKerror( int err, const char* mskfuncname, const char* osimethod )
 {
   if( err != MSK_RES_OK )
   {
     char s[100];
-    sprintf( s, "%s returned error %d", mskfuncname.c_str(), err );
+    sprintf( s, "%s returned error %d", mskfuncname, err );
     std::cout << "ERROR: " << s << " (" << osimethod << 
     " in OsiMskSolverInterface)" << std::endl;
-    throw CoinError( s, osimethod.c_str(), "OsiMskSolverInterface" );
+    throw CoinError( s, osimethod, "OsiMskSolverInterface" );
   }
 }
 
 // Prints a error message and throws a exception
 
 static inline void
-MSKassert(int assertlevel, int test, std::string assertname, std::string osimethod )
+MSKassert(int assertlevel, int test, const char* assertname, const char* osimethod )
 {
   if( assertlevel > MSK_OSI_ASSERT_LEVEL && !test )
   {
-    char s[100];
-    sprintf( s, "%s", assertname.c_str());
-    std::cout << "Assert: " << s << " (" << osimethod << 
+    std::cout << "Assert: " << assertname << " (" << osimethod << 
     " in OsiMskSolverInterface)" << std::endl;
-    throw CoinError( s, osimethod.c_str(), "OsiMskSolverInterface" );
+    throw CoinError( assertname, osimethod, "OsiMskSolverInterface" );
   }
-}
-
-
-// Prints a warning message, can be shut off by undefining MSK_WARNING_ON
-
-static inline void
-OsiMSK_warning(std::string osimethod,  std::string warning)
-{
-   std::cout << "OsiMsk_warning: "<<warning<<" in "<<osimethod<< std::endl;
 }
 
 // Converts Range/Sense/Rhs to MSK bound structure

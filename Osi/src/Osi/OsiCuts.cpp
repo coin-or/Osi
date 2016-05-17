@@ -330,6 +330,8 @@ OsiCuts::insertIfNotDuplicate( OsiRowCut & rc , CoinAbsFltEq treatAsSame)
     newCutPtr->setLb(newLb);
     newCutPtr->setUb(newUb);
     newCutPtr->setRow(vector);
+    newCutPtr->setGloballyValid(rc.globallyValid());
+    newCutPtr->setEffectiveness(rc.effectiveness());
     rowCutPtrs_.push_back(newCutPtr);
   }
 }
@@ -375,6 +377,8 @@ OsiCuts::insertIfNotDuplicate( OsiRowCut & rc , CoinRelFltEq treatAsSame)
     newCutPtr->setLb(newLb);
     newCutPtr->setUb(newUb);
     newCutPtr->setRow(vector);
+    newCutPtr->setGloballyValid(rc.globallyValid());
+    newCutPtr->setEffectiveness(rc.effectiveness());
     rowCutPtrs_.push_back(newCutPtr);
   }
 }

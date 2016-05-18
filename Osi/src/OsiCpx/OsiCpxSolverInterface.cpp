@@ -503,8 +503,15 @@ void OsiCpxSolverInterface::branchAndBound()
   	int* ind = new int[ncols];
 
   	CoinIotaN(ind, ncols, 0);
-  	term = CPXcopymipstart(env_, getLpPtr( OsiCpxSolverInterface::KEEPCACHED_ALL ), ncols, ind, colsol_);
-  	checkCPXerror(term, "CPXcopymipstart", "branchAndBound");
+#if 1
+   int zero = 0;
+   term = CPXaddmipstarts(env_, getLpPtr( OsiCpxSolverInterface::KEEPCACHED_ALL ), 1, ncols, &zero, ind, colsol_, NULL, NULL);
+   checkCPXerror(term, "CPXaddmipstarts", "branchAndBound");
+#else
+   /* deprecated */
+   term = CPXcopymipstart(env_, getLpPtr( OsiCpxSolverInterface::KEEPCACHED_ALL ), ncols, ind, colsol_);
+   checkCPXerror(term, "CPXcopymipstart", "branchAndBound");
+#endif
 
   	delete[] ind;
 

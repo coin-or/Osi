@@ -316,7 +316,7 @@ OsiMskSolverInterface::switchToMIP( void )
   int err = MSK_putintparam(getMutableLpPtr(), MSK_IPAR_MIO_MODE, MSK_MIO_MODE_SATISFIED);
   checkMSKerror(err,"MSK_putintparam","switchToMIP");
 
-#if MSK_VERSION_MAJOR >= 7
+#if MSK_VERSION_MAJOR == 7
   err = MSK_putintparam(getMutableLpPtr(), MSK_IPAR_OPTIMIZER, MSK_OPTIMIZER_MIXED_INT_CONIC);
 #else
   err = MSK_putintparam(getMutableLpPtr(), MSK_IPAR_OPTIMIZER, MSK_OPTIMIZER_MIXED_INT);
@@ -4634,8 +4634,10 @@ void OsiMskSolverInterface::incrementInstanceCounter()
 
     checkMSKerror( err, "MSK_linkfunctoenvstream", "incrementInstanceCounter" );
 
+#if MSK_VERSION_MAJOR < 8
     err = MSK_initenv(env_);
     checkMSKerror( err, "MSK_initenv", "incrementInstanceCounter" );
+#endif
   }
 
   numInstances_++;

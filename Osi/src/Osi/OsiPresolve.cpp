@@ -325,7 +325,7 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
 
       // now clean up integer variables.  This can modify original
       {
-	int numberChanges=0;
+  	int numberChanges=0;
 	const double * lower0 = originalModel_->getColLower();
 	const double * upper0 = originalModel_->getColUpper();
 	const double * lower = presolvedModel_->getColLower();
@@ -339,14 +339,15 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
 	  double lowerValue = ceil(lower[i]-1.0e-5);
 	  double upperValue = floor(upper[i]+1.0e-5);
 	  presolvedModel_->setColBounds(i,lowerValue,upperValue);
+	  // need to be careful if dupcols
 	  if (lowerValue>upperValue) {
 	    numberChanges++;
 	    CoinMessageHandler *hdlr = presolvedModel_->messageHandler() ;
 	    hdlr->message(COIN_PRESOLVE_COLINFEAS,msgs)
 	        << iOriginal << lowerValue << upperValue << CoinMessageEol ;
 	    result=1;
-	  } else {
-	    if (lowerValue>lowerValue0+1.0e-8) {
+	  } else if ((prob.presolveOptions_&0x80000000) == 0) {
+	    if (lowerValue>lowerValue0+1.0e-8) { 
 	      originalModel_->setColLower(iOriginal,lowerValue);
 	      numberChanges++;
 	    }

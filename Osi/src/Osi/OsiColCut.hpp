@@ -303,7 +303,7 @@ bool OsiColCut::infeasible(const OsiSolverInterface &im) const
     double newUb = oldColUb[colIndx];
     if ( cutUbs.isExistingIndex(colIndx) )
       if ( cutUbs[colIndx] < newUb ) newUb = cutUbs[colIndx];
-      if ( newLb > newUb ) 
+    if ( newLb > newUb ) 
         return true;
   }
   
@@ -314,7 +314,7 @@ bool OsiColCut::infeasible(const OsiSolverInterface &im) const
     double newLb = oldColLb[colIndx];
     if ( cutLbs.isExistingIndex(colIndx) )
       if ( cutLbs[colIndx] > newLb ) newLb = cutLbs[colIndx];
-      if ( newUb < newLb ) 
+    if ( newUb < newLb ) 
         return true;
   }
   

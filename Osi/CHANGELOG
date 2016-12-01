@@ -1,6 +1,9 @@
 31/05/2016 OsiMsk
   - get it compiling with Mosek 8 beta (conic MIP only with Mosek 7, MSK_initenv() removed)
 
+18/05/2016 OsiCpx
+  - switch from deprecated CPXcopymipstart to CPXaddmipstarts
+
 10/03/2016 OsiMsk
   - improved performance of frequently called checkMSKerror() and MSKassert()
     functions (contributed by Geoff Leyland)

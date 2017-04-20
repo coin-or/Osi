@@ -1,3 +1,6 @@
+20/04/2017 OsiSpx
+  - add compatibility with SoPlex 3.0
+
 31/05/2016 OsiMsk
   - get it compiling with Mosek 8 beta (conic MIP only with Mosek 7, MSK_initenv() removed)
 

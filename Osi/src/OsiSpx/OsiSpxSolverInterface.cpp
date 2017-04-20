@@ -772,7 +772,11 @@ double OsiSpxSolverInterface::getObjSense() const
 
 bool OsiSpxSolverInterface::isContinuous( int colNumber ) const
 {
+#if SOPLEX_VERSION >= 300
+  return( spxintvars_->pos( colNumber ) < 0 );
+#else
   return( spxintvars_->number( colNumber ) < 0 );
+#endif
 }
 
 //------------------------------------------------------------------
@@ -1075,7 +1079,11 @@ OsiSpxSolverInterface::setRowType(int i, char sense, double rightHandSide,
 void
 OsiSpxSolverInterface::setContinuous(int index)
 {
+#if SOPLEX_VERSION >= 300
+  int pos = spxintvars_->pos( index );
+#else
   int pos = spxintvars_->number( index );
+#endif
   if( pos >= 0 )
     {
       spxintvars_->remove( pos );
@@ -1086,7 +1094,11 @@ OsiSpxSolverInterface::setContinuous(int index)
 void
 OsiSpxSolverInterface::setInteger(int index)
 {
+#if SOPLEX_VERSION >= 300
+  int pos = spxintvars_->pos( index );
+#else
   int pos = spxintvars_->number( index );
+#endif
   if( pos < 0 )
     {
       spxintvars_->addIdx( index );

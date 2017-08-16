@@ -501,7 +501,7 @@ public:
     virtual int getNumRows() const = 0;
 
     /// Get the number of nonzero elements
-    virtual int getNumElements() const = 0;
+    virtual CoinBigIndex getNumElements() const = 0;
 
     /// Get the number of integer variables
     virtual int getNumIntegers() const ;

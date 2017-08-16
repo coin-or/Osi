@@ -76,7 +76,7 @@ OsiSolverInterface::getFractionalIndices(const double etol) const
 }
 
 
-int OsiSolverInterface::getNumElements() const
+CoinBigIndex OsiSolverInterface::getNumElements() const
 {
   return getMatrixByRow()->getNumElements();
 }
@@ -481,7 +481,7 @@ OsiSolverInterface::addCols( CoinModel & modelObject)
         new CoinPackedVectorBase * [numberColumns2];
       assert (columnLower);
       for (iColumn=0;iColumn<numberColumns2;iColumn++) {
-        int start = columnStart[iColumn];
+        CoinBigIndex start = columnStart[iColumn];
         columns[iColumn] = 
           new CoinPackedVector(columnLength[iColumn],
                                row+start,element+start);
@@ -683,7 +683,7 @@ OsiSolverInterface::addRows( CoinModel & modelObject)
         new CoinPackedVectorBase * [numberRows2];
       assert (rowLower);
       for (iRow=0;iRow<numberRows2;iRow++) {
-        int start = rowStart[iRow];
+        CoinBigIndex start = rowStart[iRow];
         rows[iRow] = 
           new CoinPackedVector(rowLength[iRow],
                                column+start,element+start);
@@ -2582,7 +2582,7 @@ OsiSolverInterface::statistics(double & minimumNegative, double & maximumNegativ
   const int * row = getMatrixByCol()->getIndices();
   int numberColumns = getNumCols();
   int numberRows = getNumRows();
-  int numberElements = getMatrixByCol()->getNumElements();
+  CoinBigIndex numberElements = getMatrixByCol()->getNumElements();
   int i;
   for (i = 0; i < numberColumns; i++) {
     CoinBigIndex j;

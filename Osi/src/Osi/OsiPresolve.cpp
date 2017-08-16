@@ -169,7 +169,7 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
       
       for (colx = 0; colx < ncols; ++colx) {
 	double solutionValue = csol[colx];
-	for (int i=mcstrt[colx]; i<mcstrt[colx]+hincol[colx]; ++i) {
+	for (CoinBigIndex i=mcstrt[colx]; i<mcstrt[colx]+hincol[colx]; ++i) {
 	  int row = hrow[i];
 	  double coeff = colels[i];
 	  acts[row] += solutionValue*coeff;
@@ -1387,17 +1387,18 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
   const int * length = m1->getVectorLengths();
   const int * row = m1->getIndices();
   const double * element = m1->getElements();
-  int icol,nel=0;
+  int icol;
+  CoinBigIndex nel=0;
   mcstrt_[0]=0;
   for (icol=0;icol<ncols_;icol++) {
-    int j;
+    CoinBigIndex j;
     for (j=start[icol];j<start[icol]+length[icol];j++) {
       if (fabs(element[j])>ZTOLDP) {
         hrow_[nel]=row[j];
 	colels_[nel++]=element[j];
       }
     }
-    hincol_[icol]=nel-mcstrt_[icol];
+    hincol_[icol]=static_cast<int>(nel-mcstrt_[icol]);
     mcstrt_[icol+1]=nel;
   }
 
@@ -1419,14 +1420,14 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
   nel=0;
   mrstrt_[0]=0;
   for (irow=0;irow<nrows_;irow++) {
-    int j;
+    CoinBigIndex j;
     for (j=start[irow];j<start[irow]+length[irow];j++) {
       if (fabs(element[j])>ZTOLDP) {
         hcol_[nel]=column[j];
         rowels_[nel++]=element[j];
       }
     }
-    hinrow_[irow]=nel-mrstrt_[irow];
+    hinrow_[irow]=static_cast<int>(nel-mrstrt_[irow]);
     mrstrt_[irow+1]=nel;
   }
   nelems_=nel;
@@ -1450,7 +1451,7 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
   if (nonLinearValue) {
     anyProhibited_ = true;
     for (icol=0;icol<ncols_;icol++) {
-      int j;
+      CoinBigIndex j;
       bool nonLinearColumn = false;
       if (cost_[icol]==nonLinearValue)
 	nonLinearColumn=true;
@@ -1642,7 +1643,7 @@ CoinPostsolveMatrix::CoinPostsolveMatrix(OsiSolverInterface*  si,
 */
   free_list_ = 0 ;
   maxlink_ = bulk0_ ;
-  link_ = new int[maxlink_] ;
+  link_ = new CoinBigIndex[maxlink_] ;
 
   nrows_ = si->getNumRows() ;
   ncols_ = si->getNumCols() ;
@@ -1754,7 +1755,7 @@ CoinPostsolveMatrix::CoinPostsolveMatrix(OsiSolverInterface*  si,
       link_[kce-1] = NO_LINK ;
   }
   if (maxlink_>0) {
-    int ml = maxlink_;
+    CoinBigIndex ml = maxlink_;
     for (CoinBigIndex k=nelemsr; k<ml; ++k)
       link_[k] = k+1;
     link_[ml-1] = NO_LINK;

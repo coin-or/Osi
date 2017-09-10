@@ -498,9 +498,20 @@ OsiPresolve::postsolve(bool updateStatus)
     CoinWarmStartBasis *basis = 
       dynamic_cast<CoinWarmStartBasis *>(presolvedModel_->getEmptyWarmStart()) ;
     basis->setSize(ncols0,nrows0) ;
+    const double * lower = originalModel_->getColLower();
+    const double * upper = originalModel_->getColUpper();
+    const double * solution = originalModel_->getColSolution();
     for (int i = 0 ; i < ncols0 ; i++) {
       CoinWarmStartBasis::Status status =
           static_cast<CoinWarmStartBasis::Status>(prob.getColumnStatus(i)) ;
+      // Fix obvious mistakes
+      if (status != CoinWarmStartBasis::basic &&
+	  status != CoinWarmStartBasis::isFree) {
+	if (solution[i] < lower[i]+1.0e-8)
+	  status = CoinWarmStartBasis::atLowerBound;
+	else if (solution[i] > upper[i]-1.0e-8)
+	  status = CoinWarmStartBasis::atUpperBound;
+      }
       assert(status != CoinWarmStartBasis::atLowerBound || originalModel_->getColLower()[i] > -originalModel_->getInfinity()) ;
       assert(status != CoinWarmStartBasis::atUpperBound || originalModel_->getColUpper()[i] <  originalModel_->getInfinity()) ;
       basis->setStructStatus(i,status);

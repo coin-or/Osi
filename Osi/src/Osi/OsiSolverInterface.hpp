@@ -1096,7 +1096,7 @@ public:
       The default implementation simply makes repeated calls to
       addCol().
     */
-    virtual void addCols(const int numcols, const int* columnStarts,
+    virtual void addCols(const int numcols, const CoinBigIndex* columnStarts,
 			 const int* rows, const double* elements,
 			 const double* collb, const double* colub,   
 			 const double* obj);
@@ -1185,7 +1185,7 @@ public:
       The default implementation simply makes repeated calls to
       addRow().
     */
-    virtual void addRows(const int numrows, const int *rowStarts,
+    virtual void addRows(const int numrows, const CoinBigIndex *rowStarts,
 			 const int *columns, const double *element,
 			 const double *rowlb, const double *rowub);
 

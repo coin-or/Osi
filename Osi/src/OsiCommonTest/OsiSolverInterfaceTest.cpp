@@ -3147,7 +3147,7 @@ void testAddToEmptySystem (const OsiSolverInterface *emptySi,
     double row1E[]={4.0,7.0,5.0};
     double row2E[]={7.0,4.0,5.0};
     double row12E[]={4.0,7.0,5.0,7.0,4.0,5.0};
-    int starts[]={0,3,6};
+    CoinBigIndex starts[]={0,3,6};
     double ub[]={100.0,100.0};
 
     double objective[]={5.0,6.0,5.5};
@@ -3228,7 +3228,7 @@ void testAddToEmptySystem (const OsiSolverInterface *emptySi,
     double col1E[]={4.0,7.0};
     double col23E[]={7.0,4.0,5.0,5.0};
     int row23E[]={0,1,0,1};
-    int start23E[]={0,2,4};
+    CoinBigIndex start23E[]={0,2,4};
     double ub23E[]={10.0,10.0};
 
     double objective[]={5.0,6.0,5.5};

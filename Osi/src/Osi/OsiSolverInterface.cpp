@@ -377,15 +377,15 @@ OsiSolverInterface::addCols(const int numcols,
   }
 }
 
-void OsiSolverInterface::addCols(const int numcols, const int* columnStarts,
+void OsiSolverInterface::addCols(const int numcols, const CoinBigIndex* columnStarts,
 				 const int* rows, const double* elements,
 				 const double* collb, const double* colub,   
 				 const double* obj)
 {
   double infinity = getInfinity();
   for (int i = 0; i < numcols; ++i) {
-    int start = columnStarts[i];
-    int number = columnStarts[i+1]-start;
+    CoinBigIndex start = columnStarts[i];
+    int number = static_cast<int>(columnStarts[i+1]-start);
     assert (number>=0);
     addCol(number, rows+start, elements+start, collb ? collb[i] : 0.0, 
 	   colub ? colub[i] : infinity, 
@@ -559,14 +559,14 @@ OsiSolverInterface::addRow(int numberElements,
   The default implementation simply makes repeated calls to addRow().
 */
 void 
-OsiSolverInterface::addRows(const int numrows, const int* rowStarts,
+OsiSolverInterface::addRows(const int numrows, const CoinBigIndex* rowStarts,
 			    const int* columns, const double* elements,
 			    const double* rowlb, const double* rowub)
 {
   double infinity = getInfinity();
   for (int i = 0; i < numrows; ++i) {
-    int start = rowStarts[i];
-    int number = rowStarts[i+1]-start;
+    CoinBigIndex start = rowStarts[i];
+    int number = static_cast<int>(rowStarts[i+1]-start);
     assert (number>=0);
     addRow(number, columns+start, elements+start, rowlb ? rowlb[i] : -infinity, 
 	   rowub ? rowub[i] : infinity);

@@ -2494,7 +2494,7 @@ void testLoadAndAssignProblem (const OsiSolverInterface *emptySi,
   CoinRelFltEq eq(1.0e-8) ;
   std::string solverName;
   if( !emptySi->getStrParam(OsiSolverName, solverName) )
-     solverName == "unknown";
+     solverName = "unknown";
 /*
   Test each variant of loadProblem and assignProblem. Clone a whack of solvers
   and use one for each variant. Then run initialSolve() on each solver. Then

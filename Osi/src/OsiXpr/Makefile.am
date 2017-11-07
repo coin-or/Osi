@@ -19,6 +19,11 @@ lib_LTLIBRARIES = libOsiXpr.la
 libOsiXpr_la_SOURCES = \
 	OsiXprSolverInterface.cpp OsiXprSolverInterface.hpp
 
+# List all additionally required libraries
+if DEPENDENCY_LINKING
+libOsiXpr_la_LIBADD = $(OSILIB_LIBS) ../Osi/libOsi.la $(XPRLIB)
+endif
+
 # This is for libtool (on Windows)
 libOsiXpr_la_LDFLAGS = $(LT_LDFLAGS)
 

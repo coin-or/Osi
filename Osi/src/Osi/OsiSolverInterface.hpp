@@ -593,11 +593,17 @@ public:
     inline const char *columnType(bool refresh=false) const
     { return getColType(refresh); }
 
+    /// Set column type
+    inline void setColumnType(int iColumn,char type)
+    { if (!columnType_) getColType(true); columnType_[iColumn]=type;}
+
     /*! \brief Return an array[getNumCols()] of column types
 
        - 0 - continuous
        - 1 - binary
        - 2 - general integer
+       - 3 - if supported - semi-continuous
+       - 4 - if supported - semi-continuous integer
       
       If \p refresh is true, the classification of integer variables as
       binary or general integer will be reevaluated. If the current bounds
@@ -2043,6 +2049,8 @@ protected:
       0 - continuous
       1 - binary (may get fixed later)
       2 - general integer (may get fixed later)
+      3 - if supported - semi-continuous
+      4 - if supported - semi-continuous integer
   */
   mutable char * columnType_;
 

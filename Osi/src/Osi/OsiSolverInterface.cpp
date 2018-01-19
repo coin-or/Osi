@@ -1313,14 +1313,12 @@ OsiSolverInterface::writeMpsNative(const char *filename,
 				   const CoinSet * setInfo ) const
 {
    const int numcols = getNumCols();
-   char* integrality = new char[numcols];
+   char* integrality = CoinCopyOfArray(getColType(false),numcols);
    bool hasInteger = false;
    for (int i = 0; i < numcols; ++i) {
-      if (isInteger(i)) {
-	 integrality[i] = 1;
+     if (isInteger(i)) { 
 	 hasInteger = true;
-      } else {
-	 integrality[i] = 0;
+	 break;
       }
    }
 

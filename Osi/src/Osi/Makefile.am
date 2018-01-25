@@ -43,11 +43,7 @@ endif
 libOsi_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags.
-AM_CPPFLAGS = $(COINUTILS_CFLAGS)
-
-# This line is necessary to allow VPATH compilation.
-# This "cygpath" stuff is necessary to compile with native compilers on Windows.
-DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)`
+AM_CPPFLAGS = $(OSILIB_CFLAGS)
 
 ########################################################################
 #                Headers that need to be installed                     #

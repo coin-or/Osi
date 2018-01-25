@@ -27,7 +27,7 @@ AM_CPPFLAGS = \
 	$(COINUTILS_CFLAGS)
 
 # This line is necessary to allow VPATH compilation
-DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/src/Osi
+# DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/src/Osi
 
 ########################################################################
 #                Headers that need to be installed                     #

@@ -74,16 +74,7 @@ test: all
 
 unitTest: test
 
-# Doxygen documentation
-
-doxydoc:
-	doxygen doxydoc/doxygen.conf
-
-clean-doxydoc:
-	( cd doxydoc ; rm -rf html *.log *.tag )
-
-
-clean-local: clean-doxydoc
+clean-local: clean-doxygen-docs
 	if test -r test/Makefile; then cd test; $(MAKE) clean; fi
 
 distclean-local:
@@ -91,31 +82,9 @@ distclean-local:
 
 install-exec-local: install-doc
 
-uninstall-local: uninstall-doc
+uninstall-local: uninstall-doc uninstall-doxygen-docs
 
-.PHONY: test unitTest doxydoc
-
-########################################################################
-#                  Installation of the addlibs file                    #
-########################################################################
-
-addlibsdir = $(DESTDIR)$(datadir)/coin/doc/Osi
-	
-install-data-hook:
-	@$(mkdir_p) "$(addlibsdir)"
-if COIN_HAS_PKGCONFIG
-	PKG_CONFIG_PATH=@COIN_PKG_CONFIG_PATH@ \
-	$(PKG_CONFIG) --libs osi > $(addlibsdir)/osi_addlibs.txt
-else
-if COIN_CXX_IS_CL
-	echo "-libpath:`$(CYGPATH_W) @abs_lib_dir@` libOsi.lib @OSILIB_LIBS_INSTALLED@" > $(addlibsdir)/osi_addlibs.txt
-else
-	echo -L@abs_lib_dir@ -lOsi @OSILIB_LIBS_INSTALLED@ > $(addlibsdir)/osi_addlibs.txt
-endif
-endif
-
-uninstall-hook:
-	rm -f $(addlibsdir)/osi_addlibs.txt
+.PHONY: test unitTest
 
 ########################################################################
 #                         Maintainer Stuff                             #
@@ -124,6 +93,7 @@ uninstall-hook:
 CLEANFILES =
 
 # Files that are generated and should be cleaned with make distclean
+
 DISTCLEANFILES =
 
 include BuildTools/Makemain.inc

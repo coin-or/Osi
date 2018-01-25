@@ -29,10 +29,9 @@ libOsiGlpk_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows.
-AM_CPPFLAGS = -I`$(CYGPATH_W) $(srcdir)/../Osi` $(COINUTILS_CFLAGS) $(GLPK_CFLAGS)
 
-# This line is necessary to allow VPATH compilation
-DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/src/Osi
+AM_CPPFLAGS = -I`$(CYGPATH_W) $(srcdir)/../Osi` \
+              $(OSILIB_CFLAGS) $(OSIGLPKLIB_CFLAGS)
 
 ########################################################################
 #                Headers that need to be installed                     #

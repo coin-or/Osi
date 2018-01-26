@@ -1,4 +1,5 @@
 * text=auto !eol
+/.travis.yml -text
 /Dependencies -text
 /LICENSE -text
 Osi/CHANGELOG -text
@@ -83,6 +84,7 @@ Osi/test/OsiSpxSolverInterfaceTest.cpp -text
 Osi/test/OsiTestSolver.cpp -text
 Osi/test/OsiTestSolver.hpp -text
 /README -text
+/appveyor.yml -text
 /compile -text
 /config.guess -text
 /config.sub -text

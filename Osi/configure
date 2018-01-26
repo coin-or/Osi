@@ -17668,12 +17668,9 @@ fi
 
 # Finalize libs and cflags for building OsiLib.
 
-  save_pkgconfig_path=$PKG_CONFIG_PATH
-  PKG_CONFIG_PATH=$COIN_PKG_CONFIG_PATH
-
   if test -n "${OSILIB_PCFILES}" ; then
-       temp_CFLAGS=`$PKG_CONFIG --cflags ${OSILIB_PCFILES}`
-       temp_LIBS=`$PKG_CONFIG --libs ${OSILIB_PCFILES}`
+       temp_CFLAGS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --cflags ${OSILIB_PCFILES}`
+       temp_LIBS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --libs ${OSILIB_PCFILES}`
        OSILIB_CFLAGS="$temp_CFLAGS ${OSILIB_CFLAGS}"
        OSILIB_LIBS="$temp_LIBS ${OSILIB_LIBS}"
      fi
@@ -17689,19 +17686,14 @@ $as_echo "$as_me: OSILIB_LIBS is \"${OSILIB_LIBS}\"" >&6;}
 $as_echo "$as_me: OSILIB_CFLAGS is \"${OSILIB_CFLAGS}\"" >&6;}
      fi
 
-  PKG_CONFIG_PATH=$save_pkgconfig_path
-
 
 # choose a solver interface that can be used in the examples
 
 if test "$coin_has_glpk" = yes ; then
 
-  save_pkgconfig_path=$PKG_CONFIG_PATH
-  PKG_CONFIG_PATH=$COIN_PKG_CONFIG_PATH
-
   if test -n "${OSIGLPKLIB_PCFILES}" ; then
-       temp_CFLAGS=`$PKG_CONFIG --cflags ${OSIGLPKLIB_PCFILES}`
-       temp_LIBS=`$PKG_CONFIG --libs ${OSIGLPKLIB_PCFILES}`
+       temp_CFLAGS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --cflags ${OSIGLPKLIB_PCFILES}`
+       temp_LIBS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --libs ${OSIGLPKLIB_PCFILES}`
        OSIGLPKLIB_CFLAGS="$temp_CFLAGS ${OSIGLPKLIB_CFLAGS}"
        OSIGLPKLIB_LIBS="$temp_LIBS ${OSIGLPKLIB_LIBS}"
      fi
@@ -17716,8 +17708,6 @@ $as_echo "$as_me: OSIGLPKLIB_LIBS is \"${OSIGLPKLIB_LIBS}\"" >&6;}
        { $as_echo "$as_me:${as_lineno-$LINENO}: OSIGLPKLIB_CFLAGS is \"${OSIGLPKLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSIGLPKLIB_CFLAGS is \"${OSIGLPKLIB_CFLAGS}\"" >&6;}
      fi
-
-  PKG_CONFIG_PATH=$save_pkgconfig_path
 
   OSI_EXAMPLES_SOLVER_NAME=OsiGlpkSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="$GLPK_CFLAGS"
@@ -17745,12 +17735,9 @@ elif test "$coin_has_xpr" = true ; then
   OSI_EXAMPLES_SOLVER_PCNAME=osi-xpress
 elif test "$coin_has_soplex" = yes ; then
 
-  save_pkgconfig_path=$PKG_CONFIG_PATH
-  PKG_CONFIG_PATH=$COIN_PKG_CONFIG_PATH
-
   if test -n "${OSISPXLIB_PCFILES}" ; then
-       temp_CFLAGS=`$PKG_CONFIG --cflags ${OSISPXLIB_PCFILES}`
-       temp_LIBS=`$PKG_CONFIG --libs ${OSISPXLIB_PCFILES}`
+       temp_CFLAGS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --cflags ${OSISPXLIB_PCFILES}`
+       temp_LIBS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --libs ${OSISPXLIB_PCFILES}`
        OSISPXLIB_CFLAGS="$temp_CFLAGS ${OSISPXLIB_CFLAGS}"
        OSISPXLIB_LIBS="$temp_LIBS ${OSISPXLIB_LIBS}"
      fi
@@ -17765,8 +17752,6 @@ $as_echo "$as_me: OSISPXLIB_LIBS is \"${OSISPXLIB_LIBS}\"" >&6;}
        { $as_echo "$as_me:${as_lineno-$LINENO}: OSISPXLIB_CFLAGS is \"${OSISPXLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSISPXLIB_CFLAGS is \"${OSISPXLIB_CFLAGS}\"" >&6;}
      fi
-
-  PKG_CONFIG_PATH=$save_pkgconfig_path
 
   OSI_EXAMPLES_SOLVER_NAME=OsiSpxSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="$SOPLEX_CFLAGS"

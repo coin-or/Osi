@@ -6,6 +6,8 @@
 
 AUTOMAKE_OPTIONS = foreign
 
+include $(top_srcdir)/BuildTools/Makemain.inc
+
 ########################################################################
 #                             libOsiGrb                                 
 ########################################################################
@@ -35,5 +37,5 @@ AM_CPPFLAGS = \
 
 # Here list all the header files that are required by a user of the library,
 # and that therefore should be installed in 'include/coin'
-includecoindir = $(includedir)/coin
+includecoindir = $(pkgincludedir)
 includecoin_HEADERS = OsiGrbSolverInterface.hpp

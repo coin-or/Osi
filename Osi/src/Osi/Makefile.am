@@ -8,6 +8,8 @@
 
 AUTOMAKE_OPTIONS = foreign
 
+include $(top_srcdir)/BuildTools/Makemain.inc
+
 ########################################################################
 #                               libOsi                                 #
 ########################################################################
@@ -52,7 +54,7 @@ AM_CPPFLAGS = $(OSILIB_CFLAGS)
 # Here list all the header files that are required by a user of the library,
 # and that therefore should be installed in 'includedir/coin'
 
-includecoindir = $(includedir)/coin
+includecoindir = $(pkgincludedir)
 includecoin_HEADERS = \
 	OsiAuxInfo.hpp \
 	OsiBranchingObject.hpp \

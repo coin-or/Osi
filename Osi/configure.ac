@@ -10,7 +10,7 @@
 #                       Names and other basic things                        #
 #############################################################################
 
-AC_INIT([Osi],[trunk],[osi@list.coin-or.org],[osi],
+AC_INIT([Osi],[trunk],[osi@list.coin-or.org],[coin-or-osi],
 	[https://projects.coin-or.org/Osi])
 AC_COPYRIGHT([
 Copyright 2006 International Business Machines and others.

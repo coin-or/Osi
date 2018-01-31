@@ -239,7 +239,6 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
-COINUTILS_DATA = @COINUTILS_DATA@
 COIN_PKG_CONFIG_PATH = @COIN_PKG_CONFIG_PATH@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
@@ -259,7 +258,6 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
-GLPK_DATA = @GLPK_DATA@
 GREP = @GREP@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
@@ -324,7 +322,6 @@ SAMPLE_DATA = @SAMPLE_DATA@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
-SOPLEX_DATA = @SOPLEX_DATA@
 STRIP = @STRIP@
 VERSION = @VERSION@
 abs_builddir = @abs_builddir@
@@ -389,6 +386,25 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = foreign
+pkgdocdir = $(docdir)
+
+# doxydocdir is the top-level directory for doxygen documentation. It holds
+# the tag file and possibly the PDF or Postscript version. doxyhtmldir is
+# typically a subdirectory containing all the files doxygen creates for
+# html documentation.
+doxydocdir = $(pkgdocdir)/doxydoc
+doxyhtmldir = $(doxydocdir)/html
+
+########################################################################
+#                    Documentation installation                        #
+########################################################################
+DocFiles = README AUTHORS LICENSE
+COIN_HAS_DOXYGEN = @COIN_HAS_DOXYGEN_TRUE@TRUE
+COIN_HAS_LATEX = @COIN_HAS_LATEX_TRUE@TRUE
+
+# Needless to say, it's important that doxydocdir_nosub not be a target for
+# autoconf substitution.
+DOXYTAG_EDIT = sed -e 's|@baredocdir_nosub@|$(datarootdir)/doc|g'
 
 ########################################################################
 #            Subdirectories and installation of .pc files              #
@@ -424,25 +440,6 @@ CLEANFILES =
 
 # Files that are generated and should be cleaned with make distclean
 DISTCLEANFILES = 
-pkgdocdir = $(docdir)
-
-# doxydocdir is the top-level directory for doxygen documentation. It holds
-# the tag file and possibly the PDF or Postscript version. doxyhtmldir is
-# typically a subdirectory containing all the files doxygen creates for
-# html documentation.
-doxydocdir = $(pkgdocdir)/doxydoc
-doxyhtmldir = $(doxydocdir)/html
-
-########################################################################
-#                    Documentation installation                        #
-########################################################################
-DocFiles = README AUTHORS LICENSE
-COIN_HAS_DOXYGEN = @COIN_HAS_DOXYGEN_TRUE@TRUE
-COIN_HAS_LATEX = @COIN_HAS_LATEX_TRUE@TRUE
-
-# Needless to say, it's important that doxydocdir_nosub not be a target for
-# autoconf substitution.
-DOXYTAG_EDIT = sed -e 's|@baredocdir_nosub@|$(datarootdir)/doc|g'
 all: all-recursive
 
 .SUFFIXES:
@@ -767,27 +764,6 @@ uninstall-am: uninstall-local uninstall-pkgconfiglibDATA
 .PRECIOUS: Makefile
 
 
-########################################################################
-#                           Extra Targets                              #
-########################################################################
-
-test: all
-	cd test; $(MAKE) test
-
-unitTest: test
-
-clean-local: clean-doxygen-docs
-	if test -r test/Makefile; then cd test; $(MAKE) clean; fi
-
-distclean-local:
-	if test -r test/Makefile; then cd test; $(MAKE) distclean; fi
-
-install-exec-local: install-doc
-
-uninstall-local: uninstall-doc uninstall-doxygen-docs
-
-.PHONY: test unitTest
-
 doxygen-docs: 
 	if test "$(COIN_HAS_DOXYGEN)" = TRUE; then \
 	  if test -d "doxydoc/"; then \
@@ -895,6 +871,27 @@ uninstall-doc:
 .PHONY: install-doc uninstall-doc \
 	doxygen-docs pdf-doxygen-docs clean-doxygen-docs \
 	install-doxygen-docs uninstall-doxygen-docs
+
+########################################################################
+#                           Extra Targets                              #
+########################################################################
+
+test: all
+	cd test; $(MAKE) test
+
+unitTest: test
+
+clean-local: clean-doxygen-docs
+	if test -r test/Makefile; then cd test; $(MAKE) clean; fi
+
+distclean-local:
+	if test -r test/Makefile; then cd test; $(MAKE) distclean; fi
+
+install-exec-local: install-doc
+
+uninstall-local: uninstall-doc uninstall-doxygen-docs
+
+.PHONY: test unitTest
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

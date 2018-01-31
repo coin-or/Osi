@@ -59,8 +59,8 @@ AC_COIN_CHK_PKG(CoinUtils,[OsiLib])
 if test "$coin_has_coinutils" != yes ; then
   AC_MSG_ERROR([Required package CoinUtils not available.])
 fi
-AC_COIN_CHK_PKG(Sample,,[coindatasample])
-AC_COIN_CHK_PKG(Netlib,,[coindatanetlib])
+AC_COIN_CHK_PKG(Sample,,[coindatasample],[],[],dataonly)
+AC_COIN_CHK_PKG(Netlib,,[coindatanetlib],[],[],dataonly)
 
 # These are third-party solvers with source distributions that can be
 # downloaded and built.
@@ -165,7 +165,7 @@ AC_DEFINE(GLPK_HAS_INTOPT, [1],
 #                  Check for doxygen                                        #
 #############################################################################
 
-AC_COIN_DOXYGEN(CoinUtils)
+AC_COIN_DOXYGEN([CoinUtils])
 
 ##############################################################################
 #                   Finishing up by writing all the output                   #
@@ -218,3 +218,4 @@ AC_CONFIG_HEADER([src/Osi/config.h src/Osi/config_osi.h])
 
 # Finally, we let configure write all the output...
 AC_COIN_FINALIZE
+

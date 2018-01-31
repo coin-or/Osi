@@ -667,7 +667,6 @@ COIN_HAS_MSK_FALSE
 COIN_HAS_MSK_TRUE
 COIN_HAS_CPX_FALSE
 COIN_HAS_CPX_TRUE
-SOPLEX_DATA
 COIN_HAS_SOPLEX_FALSE
 COIN_HAS_SOPLEX_TRUE
 OSISPXLIB_PCFILES_PUB
@@ -676,7 +675,6 @@ OSISPXLIB_LIBS_PUB
 OSISPXLIB_PCFILES
 OSISPXLIB_CFLAGS
 OSISPXLIB_LIBS
-GLPK_DATA
 COIN_HAS_GLPK_FALSE
 COIN_HAS_GLPK_TRUE
 OSIGLPKLIB_PCFILES_PUB
@@ -691,7 +689,6 @@ COIN_HAS_NETLIB_TRUE
 SAMPLE_DATA
 COIN_HAS_SAMPLE_FALSE
 COIN_HAS_SAMPLE_TRUE
-COINUTILS_DATA
 COIN_HAS_COINUTILS_FALSE
 COIN_HAS_COINUTILS_TRUE
 OSILIB_PCFILES_PUB
@@ -851,23 +848,16 @@ enable_libtool_lock
 with_coinutils
 with_coinutils_libs
 with_coinutils_cflags
-with_coinutils_data
 with_sample
-with_sample_libs
-with_sample_cflags
 with_sample_data
 with_netlib
-with_netlib_libs
-with_netlib_cflags
 with_netlib_data
 with_glpk
 with_glpk_libs
 with_glpk_cflags
-with_glpk_data
 with_soplex
 with_soplex_libs
 with_soplex_cflags
-with_soplex_data
 with_dot
 '
       ac_precious_vars='build_alias
@@ -1531,71 +1521,47 @@ Optional Packages:
   --with-gnu-ld           assume the C compiler uses GNU ld [default=no]
   --with-sysroot[=DIR]    Search for dependent libraries within DIR (or the
                           compiler's sysroot if not specified).
-  --with-coinutils        Use coinutils. If an argument is given, 'yes' is
+  --with-coinutils        Use CoinUtils. If an argument is given, 'yes' is
                           equivalent to --with-coinutils, 'no' is
-                          equivalent to --without-coinutils,
-                          'build' requests a COIN package. Any other argument
-                          should be a linker library specification appropriate
-                          for your environment.
-  --with-coinutils-lib    Linker flags for coinutils appropriate for your
+                          equivalent to --without-coinutils. Any other
+                          argument is applied as for --with-coinutils-libs
+  --with-coinutils-libs   Linker flags for CoinUtils appropriate for your
                           environment. (Most often, -l specs for libraries.)
-  --with-coinutils-cflags Compiler flags for coinutils appropriate for your
+  --with-coinutils-cflags Compiler flags for CoinUtils appropriate for your
                           environment. (Most often, -I specs for header file
                           directories.)
-  --with-coinutils-data   A data directory specification for coinutils
-                          appropriate for your environment.
-  --with-sample           Use sample. If an argument is given, 'yes' is
+  --with-sample           Use Sample. If an argument is given, 'yes' is
                           equivalent to --with-sample, 'no' is
-                          equivalent to --without-sample, 'build'
-                          requests a COIN package. Any other argument should
-                          be a linker library specification appropriate for
-                          your environment.
-  --with-sample-lib       Linker flags for sample appropriate for your
-                          environment. (Most often, -l specs for libraries.)
-  --with-sample-cflags    Compiler flags for sample appropriate for your
-                          environment. (Most often, -I specs for header file
-                          directories.)
-  --with-sample-data      A data directory specification for sample
+                          equivalent to --without-sample. Any other argument
+                          is applied as for --with-sample-data
+  --with-sample-data      A data directory specification for Sample
                           appropriate for your environment.
-  --with-netlib           Use netlib. If an argument is given, 'yes' is
+  --with-netlib           Use Netlib. If an argument is given, 'yes' is
                           equivalent to --with-netlib, 'no' is
-                          equivalent to --without-netlib, 'build'
-                          requests a COIN package. Any other argument should
-                          be a linker library specification appropriate for
-                          your environment.
-  --with-netlib-lib       Linker flags for netlib appropriate for your
-                          environment. (Most often, -l specs for libraries.)
-  --with-netlib-cflags    Compiler flags for netlib appropriate for your
-                          environment. (Most often, -I specs for header file
-                          directories.)
-  --with-netlib-data      A data directory specification for netlib
+                          equivalent to --without-netlib. Any other argument
+                          is applied as for --with-netlib-data
+  --with-netlib-data      A data directory specification for Netlib
                           appropriate for your environment.
-  --with-glpk             Use glpk. If an argument is given, 'yes' is
+  --with-glpk             Use Glpk. If an argument is given, 'yes' is
                           equivalent to --with-glpk, 'no' is
-                          equivalent to --without-glpk, 'build'
-                          requests a COIN package. Any other argument should
-                          be a linker library specification appropriate for
-                          your environment.
-  --with-glpk-lib         Linker flags for glpk appropriate for your
+                          equivalent to --without-glpk, 'build' will prefer a
+                          COIN ThirdParty package. Any other argument is
+                          applied as for --with-glpk-libs
+  --with-glpk-libs        Linker flags for Glpk appropriate for your
                           environment. (Most often, -l specs for libraries.)
-  --with-glpk-cflags      Compiler flags for glpk appropriate for your
+  --with-glpk-cflags      Compiler flags for Glpk appropriate for your
                           environment. (Most often, -I specs for header file
                           directories.)
-  --with-glpk-data        A data directory specification for glpk appropriate
-                          for your environment.
-  --with-soplex           Use soplex. If an argument is given, 'yes' is
+  --with-soplex           Use SoPlex. If an argument is given, 'yes' is
                           equivalent to --with-soplex, 'no' is
-                          equivalent to --without-soplex, 'build'
-                          requests a COIN package. Any other argument should
-                          be a linker library specification appropriate for
-                          your environment.
-  --with-soplex-lib       Linker flags for soplex appropriate for your
+                          equivalent to --without-soplex, 'build' will prefer
+                          a COIN ThirdParty package. Any other argument is
+                          applied as for --with-soplex-libs
+  --with-soplex-libs      Linker flags for SoPlex appropriate for your
                           environment. (Most often, -l specs for libraries.)
-  --with-soplex-cflags    Compiler flags for soplex appropriate for your
+  --with-soplex-cflags    Compiler flags for SoPlex appropriate for your
                           environment. (Most often, -I specs for header file
                           directories.)
-  --with-soplex-data      A data directory specification for soplex
-                          appropriate for your environment.
   --with-dot              use dot (from graphviz) when creating documentation
                           with doxygen if available; --without-dot to disable
 
@@ -16384,25 +16350,10 @@ $as_echo_n "checking for package CoinUtils... " >&6; }
 
 
 
-# Invoke CHK_PKG_CORE to do the heavy lifting.
-
-
-
-
-  dflt_action=yes
-
-# Initialize variables for the primary package. Make sure variables for the
-# client packages are set up as output variables.
-
-  coin_has_coinutils=noInfo
-  coinutils_libs=
-  coinutils_cflags=
-  coinutils_data=
-  coinutils_pcfiles=
-
 # Check to see if the user has overridden configure parameters from the
 # environment.
 
+  coin_has_coinutils=noInfo
   if test x"$COIN_SKIP_PROJECTS" != x ; then
     for pkg in $COIN_SKIP_PROJECTS ; do
       if test "$pkg" = "$coinutils" ; then
@@ -16411,80 +16362,108 @@ $as_echo_n "checking for package CoinUtils... " >&6; }
     done
   fi
 
-# Check to see if the user specified --with-xxx.
+# If we're not skipping this project, define and process the command line
+# options according to the cmdopts parameter. Then invoke FIND_PRIM_PKG to do
+# the heavy lifting.
 
   if test "$coin_has_coinutils" != skipping ; then
+
+
+
 
 # Check whether --with-coinutils was given.
 if test "${with_coinutils+set}" = set; then :
-  withval=$with_coinutils; case "$withval" in
-         no )
-	   coin_has_coinutils=skipping
-	   ;;
-	 yes )
-	   coin_has_coinutils=requested
-	   ;;
-	 build )
-	   coin_has_coinutils=build
-	   ;;
-	 * )
-	   coin_has_coinutils=yes
-	   coinutils_libs=$withval
-   	   ;;
-       esac
+  withval=$with_coinutils;
 fi
 
-  fi
 
-# Check if the user specified any of --with-xxx-lib, --with-xxx-incdir, and
-# --with-xxx-datadir for the package.
-
-  if test "$coin_has_coinutils" != skipping ; then
 
 # Check whether --with-coinutils-libs was given.
 if test "${with_coinutils_libs+set}" = set; then :
-  withval=$with_coinutils_libs; case "$withval" in
-         build | no | yes )
-	   as_fn_error $? "\"$withval\" is not valid here; please specify linker flags appropriate for your environment." "$LINENO" 5
-	   ;;
-	 * )
-	   coin_has_coinutils=yes
-	   coinutils_libs=$withval
-	   ;;
-       esac
+  withval=$with_coinutils_libs;
 fi
 
 
 
 # Check whether --with-coinutils-cflags was given.
 if test "${with_coinutils_cflags+set}" = set; then :
-  withval=$with_coinutils_cflags; case "$withval" in
-         build | no | yes )
-	   as_fn_error $? "\"$withval\" is not valid here; please specify compiler flags appropriate for your environment." "$LINENO" 5
-	   ;;
-	 * )
-	   coin_has_coinutils=yes
-	   coinutils_cflags="$withval"
-	   ;;
-       esac
+  withval=$with_coinutils_cflags;
 fi
 
 
 
-# Check whether --with-coinutils-data was given.
-if test "${with_coinutils_data+set}" = set; then :
-  withval=$with_coinutils_data; case "$withval" in
-         build | no | yes )
-	   as_fn_error $? "\"$withval\" is not valid here; please give a data directory specification appropriate for your environment." "$LINENO" 5
-	   ;;
-	 * )
-	   coin_has_coinutils=yes
-	   coinutils_data="$withval"
-	   ;;
-       esac
-fi
 
+
+
+
+  dflt_action=yes
+
+# Initialize variables for the primary package.
+
+  coin_has_coinutils=noInfo
+  coinutils_libs=
+  coinutils_cflags=
+  coinutils_data=
+  coinutils_pcfiles=
+
+# --with-prim is always present. If the client specified dataonly, its value
+# is assigned to prim_data.
+
+  withval=$with_coinutils
+  if test -n "$withval" ; then
+    case "$withval" in
+      no )
+	coin_has_coinutils=skipping
+	;;
+      yes )
+	coin_has_coinutils=requested
+	;;
+      build )
+	coin_has_coinutils=build
+	;;
+      * )
+	coin_has_coinutils=yes
+	coinutils_libs=$withval
+	;;
+    esac
   fi
+
+# --with-prim-libs and --with-prim-cflags are present unless the client
+# specified dataonly. Specifying --with-prim=no overrides the individual
+# options for libs and cflags.
+
+  if test "$coin_has_coinutils" != skipping ; then
+       withval=$with_coinutils_lib
+       if test -n "$withval" ; then
+	 case "$withval" in
+	   build | no | yes )
+	     as_fn_error $? "\"$withval\" is not valid here; please specify linker flags appropriate for your environment." "$LINENO" 5
+	     ;;
+	   * )
+	     coin_has_coinutils=yes
+	     coinutils_libs=$withval
+	     ;;
+	 esac
+       fi
+
+       withval=$with_coinutils_cflags
+       if test -n "$withval" ; then
+	 case "$withval" in
+	   build | no | yes )
+	     as_fn_error $? "\"$withval\" is not valid here; please specify compiler flags appropriate for your environment." "$LINENO" 5
+	     ;;
+	   * )
+	     coin_has_coinutils=yes
+	     coinutils_cflags="$withval"
+	     ;;
+	 esac
+       fi
+     fi
+
+# --with-prim-data will be present unless the client specified nodata.
+# Specifying --with-prim=no overrides the individual option for data.
+
+
 
 # At this point, coin_has_prim can be one of noInfo (no user options
 # specified), skipping (user said no), requested or build (user said yes
@@ -16548,8 +16527,8 @@ fi
     skipping | yes )
       ;;
     * )
-      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Unexpected status \"$coin_has_coinutils\" in COIN_CHK_PKG_CORE" >&5
-$as_echo "$as_me: WARNING: Unexpected status \"$coin_has_coinutils\" in COIN_CHK_PKG_CORE" >&2;}
+      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Unexpected status \"$coin_has_coinutils\" in COIN_FIND_PRIM_PKG" >&5
+$as_echo "$as_me: WARNING: Unexpected status \"$coin_has_coinutils\" in COIN_FIND_PRIM_PKG" >&2;}
       ;;
   esac
 
@@ -16561,8 +16540,8 @@ $as_echo "$as_me: WARNING: Unexpected status \"$coin_has_coinutils\" in COIN_CHK
 # Change the test to enable / disable debugging output
 
     if test 1 = 1 ; then
-      { $as_echo "$as_me:${as_lineno-$LINENO}: CHK_PKG_CORE result for coinutils: \"$coin_has_coinutils\"" >&5
-$as_echo "$as_me: CHK_PKG_CORE result for coinutils: \"$coin_has_coinutils\"" >&6;}
+      { $as_echo "$as_me:${as_lineno-$LINENO}: FIND_PRIM_PKG result for coinutils: \"$coin_has_coinutils\"" >&5
+$as_echo "$as_me: FIND_PRIM_PKG result for coinutils: \"$coin_has_coinutils\"" >&6;}
       { $as_echo "$as_me:${as_lineno-$LINENO}: Collected values for package 'coinutils'" >&5
 $as_echo "$as_me: Collected values for package 'coinutils'" >&6;}
       { $as_echo "$as_me:${as_lineno-$LINENO}: coinutils_libs is \"$coinutils_libs\"" >&5
@@ -16576,9 +16555,12 @@ $as_echo "$as_me: coinutils_pcfiles is \"$coinutils_pcfiles\"" >&6;}
     fi
 
 
-
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $coin_has_coinutils" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: $coin_has_coinutils" >&5
 $as_echo "$coin_has_coinutils" >&6; }
+  else
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: $coin_has_coinutils due to COIN_SKIP_PROJECTS" >&5
+$as_echo "$coin_has_coinutils due to COIN_SKIP_PROJECTS" >&6; }
+  fi
 
 # Create an automake conditional COIN_HAS_PRIM.
 
@@ -16612,10 +16594,9 @@ $as_echo "#define COIN_HAS_COINUTILS 1" >>confdefs.h
       :
     fi
 
-# Finally, set up PRIM_DATA.
+# Finally, set up PRIM_DATA, unless the user specified nodata.
 
 
-    COINUTILS_DATA=$coinutils_data
   fi
 
 if test "$coin_has_coinutils" != yes ; then
@@ -16633,25 +16614,10 @@ $as_echo_n "checking for package Sample... " >&6; }
 
 
 
-# Invoke CHK_PKG_CORE to do the heavy lifting.
-
-
-
-
-  dflt_action=yes
-
-# Initialize variables for the primary package. Make sure variables for the
-# client packages are set up as output variables.
-
-  coin_has_sample=noInfo
-  sample_libs=
-  sample_cflags=
-  sample_data=
-  sample_pcfiles=
-
 # Check to see if the user has overridden configure parameters from the
 # environment.
 
+  coin_has_sample=noInfo
   if test x"$COIN_SKIP_PROJECTS" != x ; then
     for pkg in $COIN_SKIP_PROJECTS ; do
       if test "$pkg" = "$sample" ; then
@@ -16660,80 +16626,90 @@ $as_echo_n "checking for package Sample... " >&6; }
     done
   fi
 
-# Check to see if the user specified --with-xxx.
+# If we're not skipping this project, define and process the command line
+# options according to the cmdopts parameter. Then invoke FIND_PRIM_PKG to do
+# the heavy lifting.
 
   if test "$coin_has_sample" != skipping ; then
+
+
+
 
 # Check whether --with-sample was given.
 if test "${with_sample+set}" = set; then :
-  withval=$with_sample; case "$withval" in
-         no )
-	   coin_has_sample=skipping
-	   ;;
-	 yes )
-	   coin_has_sample=requested
-	   ;;
-	 build )
-	   coin_has_sample=build
-	   ;;
-	 * )
-	   coin_has_sample=yes
-	   sample_libs=$withval
-   	   ;;
-       esac
-fi
-
-  fi
-
-# Check if the user specified any of --with-xxx-lib, --with-xxx-incdir, and
-# --with-xxx-datadir for the package.
-
-  if test "$coin_has_sample" != skipping ; then
-
-# Check whether --with-sample-libs was given.
-if test "${with_sample_libs+set}" = set; then :
-  withval=$with_sample_libs; case "$withval" in
-         build | no | yes )
-	   as_fn_error $? "\"$withval\" is not valid here; please specify linker flags appropriate for your environment." "$LINENO" 5
-	   ;;
-	 * )
-	   coin_has_sample=yes
-	   sample_libs=$withval
-	   ;;
-       esac
+  withval=$with_sample;
 fi
 
 
 
-# Check whether --with-sample-cflags was given.
-if test "${with_sample_cflags+set}" = set; then :
-  withval=$with_sample_cflags; case "$withval" in
-         build | no | yes )
-	   as_fn_error $? "\"$withval\" is not valid here; please specify compiler flags appropriate for your environment." "$LINENO" 5
-	   ;;
-	 * )
-	   coin_has_sample=yes
-	   sample_cflags="$withval"
-	   ;;
-       esac
-fi
+
 
 
 
 # Check whether --with-sample-data was given.
 if test "${with_sample_data+set}" = set; then :
-  withval=$with_sample_data; case "$withval" in
-         build | no | yes )
-	   as_fn_error $? "\"$withval\" is not valid here; please give a data directory specification appropriate for your environment." "$LINENO" 5
-	   ;;
-	 * )
-	   coin_has_sample=yes
-	   sample_data="$withval"
-	   ;;
-       esac
+  withval=$with_sample_data;
 fi
 
+
+
+
+
+  dflt_action=yes
+
+# Initialize variables for the primary package.
+
+  coin_has_sample=noInfo
+  sample_libs=
+  sample_cflags=
+  sample_data=
+  sample_pcfiles=
+
+# --with-prim is always present. If the client specified dataonly, its value
+# is assigned to prim_data.
+
+  withval=$with_sample
+  if test -n "$withval" ; then
+    case "$withval" in
+      no )
+	coin_has_sample=skipping
+	;;
+      yes )
+	coin_has_sample=requested
+	;;
+      build )
+	coin_has_sample=build
+	;;
+      * )
+	coin_has_sample=yes
+	sample_data=$withval
+	;;
+    esac
   fi
+
+# --with-prim-libs and --with-prim-cflags are present unless the client
+# specified dataonly. Specifying --with-prim=no overrides the individual
+# options for libs and cflags.
+
+
+
+# --with-prim-data will be present unless the client specified nodata.
+# Specifying --with-prim=no overrides the individual option for data.
+
+  if test "$coin_has_sample" != skipping ; then
+       withval=$with_sample_data
+       if test -n "$withval" ; then
+	 case "$withval" in
+	   build | no | yes )
+	     as_fn_error $? "\"$withval\" is not valid here; please give a data directory specification appropriate for your environment." "$LINENO" 5
+	     ;;
+	   * )
+	     coin_has_sample=yes
+	     sample_data="$withval"
+	     ;;
+	 esac
+       fi
+     fi
 
 # At this point, coin_has_prim can be one of noInfo (no user options
 # specified), skipping (user said no), requested or build (user said yes
@@ -16793,8 +16769,8 @@ fi
     skipping | yes )
       ;;
     * )
-      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Unexpected status \"$coin_has_sample\" in COIN_CHK_PKG_CORE" >&5
-$as_echo "$as_me: WARNING: Unexpected status \"$coin_has_sample\" in COIN_CHK_PKG_CORE" >&2;}
+      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Unexpected status \"$coin_has_sample\" in COIN_FIND_PRIM_PKG" >&5
+$as_echo "$as_me: WARNING: Unexpected status \"$coin_has_sample\" in COIN_FIND_PRIM_PKG" >&2;}
       ;;
   esac
 
@@ -16806,8 +16782,8 @@ $as_echo "$as_me: WARNING: Unexpected status \"$coin_has_sample\" in COIN_CHK_PK
 # Change the test to enable / disable debugging output
 
     if test 1 = 1 ; then
-      { $as_echo "$as_me:${as_lineno-$LINENO}: CHK_PKG_CORE result for sample: \"$coin_has_sample\"" >&5
-$as_echo "$as_me: CHK_PKG_CORE result for sample: \"$coin_has_sample\"" >&6;}
+      { $as_echo "$as_me:${as_lineno-$LINENO}: FIND_PRIM_PKG result for sample: \"$coin_has_sample\"" >&5
+$as_echo "$as_me: FIND_PRIM_PKG result for sample: \"$coin_has_sample\"" >&6;}
       { $as_echo "$as_me:${as_lineno-$LINENO}: Collected values for package 'sample'" >&5
 $as_echo "$as_me: Collected values for package 'sample'" >&6;}
       { $as_echo "$as_me:${as_lineno-$LINENO}: sample_libs is \"$sample_libs\"" >&5
@@ -16821,9 +16797,12 @@ $as_echo "$as_me: sample_pcfiles is \"$sample_pcfiles\"" >&6;}
     fi
 
 
-
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $coin_has_sample" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: $coin_has_sample" >&5
 $as_echo "$coin_has_sample" >&6; }
+  else
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: $coin_has_sample due to COIN_SKIP_PROJECTS" >&5
+$as_echo "$coin_has_sample due to COIN_SKIP_PROJECTS" >&6; }
+  fi
 
 # Create an automake conditional COIN_HAS_PRIM.
 
@@ -16853,10 +16832,10 @@ $as_echo "#define COIN_HAS_SAMPLE 1" >>confdefs.h
       :
     fi
 
-# Finally, set up PRIM_DATA.
+# Finally, set up PRIM_DATA, unless the user specified nodata.
 
 
-    SAMPLE_DATA=$sample_data
+       SAMPLE_DATA=$sample_data
   fi
 
 
@@ -16871,25 +16850,10 @@ $as_echo_n "checking for package Netlib... " >&6; }
 
 
 
-# Invoke CHK_PKG_CORE to do the heavy lifting.
-
-
-
-
-  dflt_action=yes
-
-# Initialize variables for the primary package. Make sure variables for the
-# client packages are set up as output variables.
-
-  coin_has_netlib=noInfo
-  netlib_libs=
-  netlib_cflags=
-  netlib_data=
-  netlib_pcfiles=
-
 # Check to see if the user has overridden configure parameters from the
 # environment.
 
+  coin_has_netlib=noInfo
   if test x"$COIN_SKIP_PROJECTS" != x ; then
     for pkg in $COIN_SKIP_PROJECTS ; do
       if test "$pkg" = "$netlib" ; then
@@ -16898,80 +16862,90 @@ $as_echo_n "checking for package Netlib... " >&6; }
     done
   fi
 
-# Check to see if the user specified --with-xxx.
+# If we're not skipping this project, define and process the command line
+# options according to the cmdopts parameter. Then invoke FIND_PRIM_PKG to do
+# the heavy lifting.
 
   if test "$coin_has_netlib" != skipping ; then
+
+
+
 
 # Check whether --with-netlib was given.
 if test "${with_netlib+set}" = set; then :
-  withval=$with_netlib; case "$withval" in
-         no )
-	   coin_has_netlib=skipping
-	   ;;
-	 yes )
-	   coin_has_netlib=requested
-	   ;;
-	 build )
-	   coin_has_netlib=build
-	   ;;
-	 * )
-	   coin_has_netlib=yes
-	   netlib_libs=$withval
-   	   ;;
-       esac
-fi
-
-  fi
-
-# Check if the user specified any of --with-xxx-lib, --with-xxx-incdir, and
-# --with-xxx-datadir for the package.
-
-  if test "$coin_has_netlib" != skipping ; then
-
-# Check whether --with-netlib-libs was given.
-if test "${with_netlib_libs+set}" = set; then :
-  withval=$with_netlib_libs; case "$withval" in
-         build | no | yes )
-	   as_fn_error $? "\"$withval\" is not valid here; please specify linker flags appropriate for your environment." "$LINENO" 5
-	   ;;
-	 * )
-	   coin_has_netlib=yes
-	   netlib_libs=$withval
-	   ;;
-       esac
+  withval=$with_netlib;
 fi
 
 
 
-# Check whether --with-netlib-cflags was given.
-if test "${with_netlib_cflags+set}" = set; then :
-  withval=$with_netlib_cflags; case "$withval" in
-         build | no | yes )
-	   as_fn_error $? "\"$withval\" is not valid here; please specify compiler flags appropriate for your environment." "$LINENO" 5
-	   ;;
-	 * )
-	   coin_has_netlib=yes
-	   netlib_cflags="$withval"
-	   ;;
-       esac
-fi
+
 
 
 
 # Check whether --with-netlib-data was given.
 if test "${with_netlib_data+set}" = set; then :
-  withval=$with_netlib_data; case "$withval" in
-         build | no | yes )
-	   as_fn_error $? "\"$withval\" is not valid here; please give a data directory specification appropriate for your environment." "$LINENO" 5
-	   ;;
-	 * )
-	   coin_has_netlib=yes
-	   netlib_data="$withval"
-	   ;;
-       esac
+  withval=$with_netlib_data;
 fi
 
+
+
+
+
+  dflt_action=yes
+
+# Initialize variables for the primary package.
+
+  coin_has_netlib=noInfo
+  netlib_libs=
+  netlib_cflags=
+  netlib_data=
+  netlib_pcfiles=
+
+# --with-prim is always present. If the client specified dataonly, its value
+# is assigned to prim_data.
+
+  withval=$with_netlib
+  if test -n "$withval" ; then
+    case "$withval" in
+      no )
+	coin_has_netlib=skipping
+	;;
+      yes )
+	coin_has_netlib=requested
+	;;
+      build )
+	coin_has_netlib=build
+	;;
+      * )
+	coin_has_netlib=yes
+	netlib_data=$withval
+	;;
+    esac
   fi
+
+# --with-prim-libs and --with-prim-cflags are present unless the client
+# specified dataonly. Specifying --with-prim=no overrides the individual
+# options for libs and cflags.
+
+
+
+# --with-prim-data will be present unless the client specified nodata.
+# Specifying --with-prim=no overrides the individual option for data.
+
+  if test "$coin_has_netlib" != skipping ; then
+       withval=$with_netlib_data
+       if test -n "$withval" ; then
+	 case "$withval" in
+	   build | no | yes )
+	     as_fn_error $? "\"$withval\" is not valid here; please give a data directory specification appropriate for your environment." "$LINENO" 5
+	     ;;
+	   * )
+	     coin_has_netlib=yes
+	     netlib_data="$withval"
+	     ;;
+	 esac
+       fi
+     fi
 
 # At this point, coin_has_prim can be one of noInfo (no user options
 # specified), skipping (user said no), requested or build (user said yes
@@ -17031,8 +17005,8 @@ fi
     skipping | yes )
       ;;
     * )
-      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Unexpected status \"$coin_has_netlib\" in COIN_CHK_PKG_CORE" >&5
-$as_echo "$as_me: WARNING: Unexpected status \"$coin_has_netlib\" in COIN_CHK_PKG_CORE" >&2;}
+      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Unexpected status \"$coin_has_netlib\" in COIN_FIND_PRIM_PKG" >&5
+$as_echo "$as_me: WARNING: Unexpected status \"$coin_has_netlib\" in COIN_FIND_PRIM_PKG" >&2;}
       ;;
   esac
 
@@ -17044,8 +17018,8 @@ $as_echo "$as_me: WARNING: Unexpected status \"$coin_has_netlib\" in COIN_CHK_PK
 # Change the test to enable / disable debugging output
 
     if test 1 = 1 ; then
-      { $as_echo "$as_me:${as_lineno-$LINENO}: CHK_PKG_CORE result for netlib: \"$coin_has_netlib\"" >&5
-$as_echo "$as_me: CHK_PKG_CORE result for netlib: \"$coin_has_netlib\"" >&6;}
+      { $as_echo "$as_me:${as_lineno-$LINENO}: FIND_PRIM_PKG result for netlib: \"$coin_has_netlib\"" >&5
+$as_echo "$as_me: FIND_PRIM_PKG result for netlib: \"$coin_has_netlib\"" >&6;}
       { $as_echo "$as_me:${as_lineno-$LINENO}: Collected values for package 'netlib'" >&5
 $as_echo "$as_me: Collected values for package 'netlib'" >&6;}
       { $as_echo "$as_me:${as_lineno-$LINENO}: netlib_libs is \"$netlib_libs\"" >&5
@@ -17059,9 +17033,12 @@ $as_echo "$as_me: netlib_pcfiles is \"$netlib_pcfiles\"" >&6;}
     fi
 
 
-
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $coin_has_netlib" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: $coin_has_netlib" >&5
 $as_echo "$coin_has_netlib" >&6; }
+  else
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: $coin_has_netlib due to COIN_SKIP_PROJECTS" >&5
+$as_echo "$coin_has_netlib due to COIN_SKIP_PROJECTS" >&6; }
+  fi
 
 # Create an automake conditional COIN_HAS_PRIM.
 
@@ -17091,10 +17068,10 @@ $as_echo "#define COIN_HAS_NETLIB 1" >>confdefs.h
       :
     fi
 
-# Finally, set up PRIM_DATA.
+# Finally, set up PRIM_DATA, unless the user specified nodata.
 
 
-    NETLIB_DATA=$netlib_data
+       NETLIB_DATA=$netlib_data
   fi
 
 
@@ -17118,25 +17095,10 @@ $as_echo_n "checking for package Glpk... " >&6; }
 
 
 
-# Invoke CHK_PKG_CORE to do the heavy lifting.
-
-
-
-
-  dflt_action=build
-
-# Initialize variables for the primary package. Make sure variables for the
-# client packages are set up as output variables.
-
-  coin_has_glpk=noInfo
-  glpk_libs=
-  glpk_cflags=
-  glpk_data=
-  glpk_pcfiles=
-
 # Check to see if the user has overridden configure parameters from the
 # environment.
 
+  coin_has_glpk=noInfo
   if test x"$COIN_SKIP_PROJECTS" != x ; then
     for pkg in $COIN_SKIP_PROJECTS ; do
       if test "$pkg" = "$glpk" ; then
@@ -17145,80 +17107,108 @@ $as_echo_n "checking for package Glpk... " >&6; }
     done
   fi
 
-# Check to see if the user specified --with-xxx.
+# If we're not skipping this project, define and process the command line
+# options according to the cmdopts parameter. Then invoke FIND_PRIM_PKG to do
+# the heavy lifting.
 
   if test "$coin_has_glpk" != skipping ; then
+
+
+
 
 # Check whether --with-glpk was given.
 if test "${with_glpk+set}" = set; then :
-  withval=$with_glpk; case "$withval" in
-         no )
-	   coin_has_glpk=skipping
-	   ;;
-	 yes )
-	   coin_has_glpk=requested
-	   ;;
-	 build )
-	   coin_has_glpk=build
-	   ;;
-	 * )
-	   coin_has_glpk=yes
-	   glpk_libs=$withval
-   	   ;;
-       esac
+  withval=$with_glpk;
 fi
 
-  fi
 
-# Check if the user specified any of --with-xxx-lib, --with-xxx-incdir, and
-# --with-xxx-datadir for the package.
-
-  if test "$coin_has_glpk" != skipping ; then
 
 # Check whether --with-glpk-libs was given.
 if test "${with_glpk_libs+set}" = set; then :
-  withval=$with_glpk_libs; case "$withval" in
-         build | no | yes )
-	   as_fn_error $? "\"$withval\" is not valid here; please specify linker flags appropriate for your environment." "$LINENO" 5
-	   ;;
-	 * )
-	   coin_has_glpk=yes
-	   glpk_libs=$withval
-	   ;;
-       esac
+  withval=$with_glpk_libs;
 fi
 
 
 
 # Check whether --with-glpk-cflags was given.
 if test "${with_glpk_cflags+set}" = set; then :
-  withval=$with_glpk_cflags; case "$withval" in
-         build | no | yes )
-	   as_fn_error $? "\"$withval\" is not valid here; please specify compiler flags appropriate for your environment." "$LINENO" 5
-	   ;;
-	 * )
-	   coin_has_glpk=yes
-	   glpk_cflags="$withval"
-	   ;;
-       esac
+  withval=$with_glpk_cflags;
 fi
 
 
 
-# Check whether --with-glpk-data was given.
-if test "${with_glpk_data+set}" = set; then :
-  withval=$with_glpk_data; case "$withval" in
-         build | no | yes )
-	   as_fn_error $? "\"$withval\" is not valid here; please give a data directory specification appropriate for your environment." "$LINENO" 5
-	   ;;
-	 * )
-	   coin_has_glpk=yes
-	   glpk_data="$withval"
-	   ;;
-       esac
-fi
 
+
+
+
+  dflt_action=build
+
+# Initialize variables for the primary package.
+
+  coin_has_glpk=noInfo
+  glpk_libs=
+  glpk_cflags=
+  glpk_data=
+  glpk_pcfiles=
+
+# --with-prim is always present. If the client specified dataonly, its value
+# is assigned to prim_data.
+
+  withval=$with_glpk
+  if test -n "$withval" ; then
+    case "$withval" in
+      no )
+	coin_has_glpk=skipping
+	;;
+      yes )
+	coin_has_glpk=requested
+	;;
+      build )
+	coin_has_glpk=build
+	;;
+      * )
+	coin_has_glpk=yes
+	glpk_libs=$withval
+	;;
+    esac
   fi
+
+# --with-prim-libs and --with-prim-cflags are present unless the client
+# specified dataonly. Specifying --with-prim=no overrides the individual
+# options for libs and cflags.
+
+  if test "$coin_has_glpk" != skipping ; then
+       withval=$with_glpk_lib
+       if test -n "$withval" ; then
+	 case "$withval" in
+	   build | no | yes )
+	     as_fn_error $? "\"$withval\" is not valid here; please specify linker flags appropriate for your environment." "$LINENO" 5
+	     ;;
+	   * )
+	     coin_has_glpk=yes
+	     glpk_libs=$withval
+	     ;;
+	 esac
+       fi
+
+       withval=$with_glpk_cflags
+       if test -n "$withval" ; then
+	 case "$withval" in
+	   build | no | yes )
+	     as_fn_error $? "\"$withval\" is not valid here; please specify compiler flags appropriate for your environment." "$LINENO" 5
+	     ;;
+	   * )
+	     coin_has_glpk=yes
+	     glpk_cflags="$withval"
+	     ;;
+	 esac
+       fi
+     fi
+
+# --with-prim-data will be present unless the client specified nodata.
+# Specifying --with-prim=no overrides the individual option for data.
+
+
 
 # At this point, coin_has_prim can be one of noInfo (no user options
 # specified), skipping (user said no), requested or build (user said yes
@@ -17282,8 +17272,8 @@ fi
     skipping | yes )
       ;;
     * )
-      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Unexpected status \"$coin_has_glpk\" in COIN_CHK_PKG_CORE" >&5
-$as_echo "$as_me: WARNING: Unexpected status \"$coin_has_glpk\" in COIN_CHK_PKG_CORE" >&2;}
+      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Unexpected status \"$coin_has_glpk\" in COIN_FIND_PRIM_PKG" >&5
+$as_echo "$as_me: WARNING: Unexpected status \"$coin_has_glpk\" in COIN_FIND_PRIM_PKG" >&2;}
       ;;
   esac
 
@@ -17295,8 +17285,8 @@ $as_echo "$as_me: WARNING: Unexpected status \"$coin_has_glpk\" in COIN_CHK_PKG_
 # Change the test to enable / disable debugging output
 
     if test 1 = 1 ; then
-      { $as_echo "$as_me:${as_lineno-$LINENO}: CHK_PKG_CORE result for glpk: \"$coin_has_glpk\"" >&5
-$as_echo "$as_me: CHK_PKG_CORE result for glpk: \"$coin_has_glpk\"" >&6;}
+      { $as_echo "$as_me:${as_lineno-$LINENO}: FIND_PRIM_PKG result for glpk: \"$coin_has_glpk\"" >&5
+$as_echo "$as_me: FIND_PRIM_PKG result for glpk: \"$coin_has_glpk\"" >&6;}
       { $as_echo "$as_me:${as_lineno-$LINENO}: Collected values for package 'glpk'" >&5
 $as_echo "$as_me: Collected values for package 'glpk'" >&6;}
       { $as_echo "$as_me:${as_lineno-$LINENO}: glpk_libs is \"$glpk_libs\"" >&5
@@ -17310,9 +17300,12 @@ $as_echo "$as_me: glpk_pcfiles is \"$glpk_pcfiles\"" >&6;}
     fi
 
 
-
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $coin_has_glpk" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: $coin_has_glpk" >&5
 $as_echo "$coin_has_glpk" >&6; }
+  else
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: $coin_has_glpk due to COIN_SKIP_PROJECTS" >&5
+$as_echo "$coin_has_glpk due to COIN_SKIP_PROJECTS" >&6; }
+  fi
 
 # Create an automake conditional COIN_HAS_PRIM.
 
@@ -17346,10 +17339,9 @@ $as_echo "#define COIN_HAS_GLPK 1" >>confdefs.h
       :
     fi
 
-# Finally, set up PRIM_DATA.
+# Finally, set up PRIM_DATA, unless the user specified nodata.
 
 
-    GLPK_DATA=$glpk_data
   fi
 
 
@@ -17369,25 +17361,10 @@ $as_echo_n "checking for package SoPlex... " >&6; }
 
 
 
-# Invoke CHK_PKG_CORE to do the heavy lifting.
-
-
-
-
-  dflt_action=build
-
-# Initialize variables for the primary package. Make sure variables for the
-# client packages are set up as output variables.
-
-  coin_has_soplex=noInfo
-  soplex_libs=
-  soplex_cflags=
-  soplex_data=
-  soplex_pcfiles=
-
 # Check to see if the user has overridden configure parameters from the
 # environment.
 
+  coin_has_soplex=noInfo
   if test x"$COIN_SKIP_PROJECTS" != x ; then
     for pkg in $COIN_SKIP_PROJECTS ; do
       if test "$pkg" = "$soplex" ; then
@@ -17396,80 +17373,108 @@ $as_echo_n "checking for package SoPlex... " >&6; }
     done
   fi
 
-# Check to see if the user specified --with-xxx.
+# If we're not skipping this project, define and process the command line
+# options according to the cmdopts parameter. Then invoke FIND_PRIM_PKG to do
+# the heavy lifting.
 
   if test "$coin_has_soplex" != skipping ; then
+
+
+
 
 # Check whether --with-soplex was given.
 if test "${with_soplex+set}" = set; then :
-  withval=$with_soplex; case "$withval" in
-         no )
-	   coin_has_soplex=skipping
-	   ;;
-	 yes )
-	   coin_has_soplex=requested
-	   ;;
-	 build )
-	   coin_has_soplex=build
-	   ;;
-	 * )
-	   coin_has_soplex=yes
-	   soplex_libs=$withval
-   	   ;;
-       esac
+  withval=$with_soplex;
 fi
 
-  fi
 
-# Check if the user specified any of --with-xxx-lib, --with-xxx-incdir, and
-# --with-xxx-datadir for the package.
-
-  if test "$coin_has_soplex" != skipping ; then
 
 # Check whether --with-soplex-libs was given.
 if test "${with_soplex_libs+set}" = set; then :
-  withval=$with_soplex_libs; case "$withval" in
-         build | no | yes )
-	   as_fn_error $? "\"$withval\" is not valid here; please specify linker flags appropriate for your environment." "$LINENO" 5
-	   ;;
-	 * )
-	   coin_has_soplex=yes
-	   soplex_libs=$withval
-	   ;;
-       esac
+  withval=$with_soplex_libs;
 fi
 
 
 
 # Check whether --with-soplex-cflags was given.
 if test "${with_soplex_cflags+set}" = set; then :
-  withval=$with_soplex_cflags; case "$withval" in
-         build | no | yes )
-	   as_fn_error $? "\"$withval\" is not valid here; please specify compiler flags appropriate for your environment." "$LINENO" 5
-	   ;;
-	 * )
-	   coin_has_soplex=yes
-	   soplex_cflags="$withval"
-	   ;;
-       esac
+  withval=$with_soplex_cflags;
 fi
 
 
 
-# Check whether --with-soplex-data was given.
-if test "${with_soplex_data+set}" = set; then :
-  withval=$with_soplex_data; case "$withval" in
-         build | no | yes )
-	   as_fn_error $? "\"$withval\" is not valid here; please give a data directory specification appropriate for your environment." "$LINENO" 5
-	   ;;
-	 * )
-	   coin_has_soplex=yes
-	   soplex_data="$withval"
-	   ;;
-       esac
-fi
 
+
+
+
+  dflt_action=build
+
+# Initialize variables for the primary package.
+
+  coin_has_soplex=noInfo
+  soplex_libs=
+  soplex_cflags=
+  soplex_data=
+  soplex_pcfiles=
+
+# --with-prim is always present. If the client specified dataonly, its value
+# is assigned to prim_data.
+
+  withval=$with_soplex
+  if test -n "$withval" ; then
+    case "$withval" in
+      no )
+	coin_has_soplex=skipping
+	;;
+      yes )
+	coin_has_soplex=requested
+	;;
+      build )
+	coin_has_soplex=build
+	;;
+      * )
+	coin_has_soplex=yes
+	soplex_libs=$withval
+	;;
+    esac
   fi
+
+# --with-prim-libs and --with-prim-cflags are present unless the client
+# specified dataonly. Specifying --with-prim=no overrides the individual
+# options for libs and cflags.
+
+  if test "$coin_has_soplex" != skipping ; then
+       withval=$with_soplex_lib
+       if test -n "$withval" ; then
+	 case "$withval" in
+	   build | no | yes )
+	     as_fn_error $? "\"$withval\" is not valid here; please specify linker flags appropriate for your environment." "$LINENO" 5
+	     ;;
+	   * )
+	     coin_has_soplex=yes
+	     soplex_libs=$withval
+	     ;;
+	 esac
+       fi
+
+       withval=$with_soplex_cflags
+       if test -n "$withval" ; then
+	 case "$withval" in
+	   build | no | yes )
+	     as_fn_error $? "\"$withval\" is not valid here; please specify compiler flags appropriate for your environment." "$LINENO" 5
+	     ;;
+	   * )
+	     coin_has_soplex=yes
+	     soplex_cflags="$withval"
+	     ;;
+	 esac
+       fi
+     fi
+
+# --with-prim-data will be present unless the client specified nodata.
+# Specifying --with-prim=no overrides the individual option for data.
+
+
 
 # At this point, coin_has_prim can be one of noInfo (no user options
 # specified), skipping (user said no), requested or build (user said yes
@@ -17533,8 +17538,8 @@ fi
     skipping | yes )
       ;;
     * )
-      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Unexpected status \"$coin_has_soplex\" in COIN_CHK_PKG_CORE" >&5
-$as_echo "$as_me: WARNING: Unexpected status \"$coin_has_soplex\" in COIN_CHK_PKG_CORE" >&2;}
+      { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Unexpected status \"$coin_has_soplex\" in COIN_FIND_PRIM_PKG" >&5
+$as_echo "$as_me: WARNING: Unexpected status \"$coin_has_soplex\" in COIN_FIND_PRIM_PKG" >&2;}
       ;;
   esac
 
@@ -17546,8 +17551,8 @@ $as_echo "$as_me: WARNING: Unexpected status \"$coin_has_soplex\" in COIN_CHK_PK
 # Change the test to enable / disable debugging output
 
     if test 1 = 1 ; then
-      { $as_echo "$as_me:${as_lineno-$LINENO}: CHK_PKG_CORE result for soplex: \"$coin_has_soplex\"" >&5
-$as_echo "$as_me: CHK_PKG_CORE result for soplex: \"$coin_has_soplex\"" >&6;}
+      { $as_echo "$as_me:${as_lineno-$LINENO}: FIND_PRIM_PKG result for soplex: \"$coin_has_soplex\"" >&5
+$as_echo "$as_me: FIND_PRIM_PKG result for soplex: \"$coin_has_soplex\"" >&6;}
       { $as_echo "$as_me:${as_lineno-$LINENO}: Collected values for package 'soplex'" >&5
 $as_echo "$as_me: Collected values for package 'soplex'" >&6;}
       { $as_echo "$as_me:${as_lineno-$LINENO}: soplex_libs is \"$soplex_libs\"" >&5
@@ -17561,9 +17566,12 @@ $as_echo "$as_me: soplex_pcfiles is \"$soplex_pcfiles\"" >&6;}
     fi
 
 
-
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $coin_has_soplex" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: $coin_has_soplex" >&5
 $as_echo "$coin_has_soplex" >&6; }
+  else
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: $coin_has_soplex due to COIN_SKIP_PROJECTS" >&5
+$as_echo "$coin_has_soplex due to COIN_SKIP_PROJECTS" >&6; }
+  fi
 
 # Create an automake conditional COIN_HAS_PRIM.
 
@@ -17597,10 +17605,9 @@ $as_echo "#define COIN_HAS_SOPLEX 1" >>confdefs.h
       :
     fi
 
-# Finally, set up PRIM_DATA.
+# Finally, set up PRIM_DATA, unless the user specified nodata.
 
 
-    SOPLEX_DATA=$soplex_data
   fi
 
 
@@ -20662,5 +20669,6 @@ fi
 $as_echo "$as_me: In case of trouble, first consult the troubleshooting page at https://projects.coin-or.org/BuildTools/wiki/user-troubleshooting" >&6;}
   { $as_echo "$as_me:${as_lineno-$LINENO}: Configuration of $PACKAGE_NAME successful" >&5
 $as_echo "$as_me: Configuration of $PACKAGE_NAME successful" >&6;}
+
 
 

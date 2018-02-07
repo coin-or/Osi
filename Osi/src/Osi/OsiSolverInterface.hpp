@@ -1501,7 +1501,7 @@ public:
                const char *extension = "lp",
                 double epsilon = 1e-5,
                 int numberAcross = 10,
-                int decimals = 5,
+                int decimals = 9,
                 double objSense = 0.0,
 	        bool useRowNames = true) const;
 

@@ -130,40 +130,29 @@ void MSKAPI OsiMskStreamFuncError(MSKuserhandle_t handle, MSKCONST char* str) {
 // Prints a error message and throws a exception
 
 static inline void
-checkMSKerror( int err, std::string mskfuncname, std::string osimethod )
+checkMSKerror( int err, const char* mskfuncname, const char* osimethod )
 {
   if( err != MSK_RES_OK )
   {
     char s[100];
-    sprintf( s, "%s returned error %d", mskfuncname.c_str(), err );
+    sprintf( s, "%s returned error %d", mskfuncname, err );
     std::cout << "ERROR: " << s << " (" << osimethod << 
     " in OsiMskSolverInterface)" << std::endl;
-    throw CoinError( s, osimethod.c_str(), "OsiMskSolverInterface" );
+    throw CoinError( s, osimethod, "OsiMskSolverInterface" );
   }
 }
 
 // Prints a error message and throws a exception
 
 static inline void
-MSKassert(int assertlevel, int test, std::string assertname, std::string osimethod )
+MSKassert(int assertlevel, int test, const char* assertname, const char* osimethod )
 {
   if( assertlevel > MSK_OSI_ASSERT_LEVEL && !test )
   {
-    char s[100];
-    sprintf( s, "%s", assertname.c_str());
-    std::cout << "Assert: " << s << " (" << osimethod << 
+    std::cout << "Assert: " << assertname << " (" << osimethod << 
     " in OsiMskSolverInterface)" << std::endl;
-    throw CoinError( s, osimethod.c_str(), "OsiMskSolverInterface" );
+    throw CoinError( assertname, osimethod, "OsiMskSolverInterface" );
   }
-}
-
-
-// Prints a warning message, can be shut off by undefining MSK_WARNING_ON
-
-static inline void
-OsiMSK_warning(std::string osimethod,  std::string warning)
-{
-   std::cout << "OsiMsk_warning: "<<warning<<" in "<<osimethod<< std::endl;
 }
 
 // Converts Range/Sense/Rhs to MSK bound structure
@@ -327,7 +316,7 @@ OsiMskSolverInterface::switchToMIP( void )
   int err = MSK_putintparam(getMutableLpPtr(), MSK_IPAR_MIO_MODE, MSK_MIO_MODE_SATISFIED);
   checkMSKerror(err,"MSK_putintparam","switchToMIP");
 
-#if MSK_VERSION_MAJOR >= 7
+#if MSK_VERSION_MAJOR == 7
   err = MSK_putintparam(getMutableLpPtr(), MSK_IPAR_OPTIMIZER, MSK_OPTIMIZER_MIXED_INT_CONIC);
 #else
   err = MSK_putintparam(getMutableLpPtr(), MSK_IPAR_OPTIMIZER, MSK_OPTIMIZER_MIXED_INT);
@@ -2764,7 +2753,7 @@ std::vector<double*> OsiMskSolverInterface::getPrimalRays(int maxNumRays) const
 
   OsiMskSolverInterface solver(*this);
 
-  int numrows = getNumRows(), r;
+  int numcols = getNumCols(), r;
   MSKsolstae status;
   MSKsoltypee solution;
 
@@ -2788,7 +2777,7 @@ std::vector<double*> OsiMskSolverInterface::getPrimalRays(int maxNumRays) const
       return std::vector<double*>();     
   }
 
-  double *farkasray = new double[numrows];
+  double *farkasray = new double[numcols];
 
   r = MSK_getsolution(getMutableLpPtr(),
                       solution,
@@ -4645,8 +4634,10 @@ void OsiMskSolverInterface::incrementInstanceCounter()
 
     checkMSKerror( err, "MSK_linkfunctoenvstream", "incrementInstanceCounter" );
 
+#if MSK_VERSION_MAJOR < 8
     err = MSK_initenv(env_);
     checkMSKerror( err, "MSK_initenv", "incrementInstanceCounter" );
+#endif
   }
 
   numInstances_++;

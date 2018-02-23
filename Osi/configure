@@ -17692,7 +17692,7 @@ $as_echo "$as_me: FINALIZE_FLAGS for OsiLib: adding \"${OSILIB_PCFILES}\"" >&6;}
 $as_echo "$as_me: OSILIB_LIBS is \"${OSILIB_LIBS}\"" >&6;}
        { $as_echo "$as_me:${as_lineno-$LINENO}: OSILIB_CFLAGS is \"${OSILIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSILIB_CFLAGS is \"${OSILIB_CFLAGS}\"" >&6;}
-     fi
+     fi ;
 
 
 # choose a solver interface that can be used in the examples
@@ -17715,7 +17715,7 @@ $as_echo "$as_me: FINALIZE_FLAGS for OsiGlpkLib: adding \"${OSIGLPKLIB_PCFILES}\
 $as_echo "$as_me: OSIGLPKLIB_LIBS is \"${OSIGLPKLIB_LIBS}\"" >&6;}
        { $as_echo "$as_me:${as_lineno-$LINENO}: OSIGLPKLIB_CFLAGS is \"${OSIGLPKLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSIGLPKLIB_CFLAGS is \"${OSIGLPKLIB_CFLAGS}\"" >&6;}
-     fi
+     fi ;
 
   OSI_EXAMPLES_SOLVER_NAME=OsiGlpkSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="$GLPK_CFLAGS"
@@ -17759,7 +17759,7 @@ $as_echo "$as_me: FINALIZE_FLAGS for OsiSpxLib: adding \"${OSISPXLIB_PCFILES}\""
 $as_echo "$as_me: OSISPXLIB_LIBS is \"${OSISPXLIB_LIBS}\"" >&6;}
        { $as_echo "$as_me:${as_lineno-$LINENO}: OSISPXLIB_CFLAGS is \"${OSISPXLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSISPXLIB_CFLAGS is \"${OSISPXLIB_CFLAGS}\"" >&6;}
-     fi
+     fi ;
 
   OSI_EXAMPLES_SOLVER_NAME=OsiSpxSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="$SOPLEX_CFLAGS"

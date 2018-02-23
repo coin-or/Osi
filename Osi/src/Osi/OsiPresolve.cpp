@@ -169,7 +169,7 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
       
       for (colx = 0; colx < ncols; ++colx) {
 	double solutionValue = csol[colx];
-	for (int i=mcstrt[colx]; i<mcstrt[colx]+hincol[colx]; ++i) {
+	for (CoinBigIndex i=mcstrt[colx]; i<mcstrt[colx]+hincol[colx]; ++i) {
 	  int row = hrow[i];
 	  double coeff = colels[i];
 	  acts[row] += solutionValue*coeff;
@@ -325,7 +325,7 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
 
       // now clean up integer variables.  This can modify original
       {
-	int numberChanges=0;
+  	int numberChanges=0;
 	const double * lower0 = originalModel_->getColLower();
 	const double * upper0 = originalModel_->getColUpper();
 	const double * lower = presolvedModel_->getColLower();
@@ -339,14 +339,15 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
 	  double lowerValue = ceil(lower[i]-1.0e-5);
 	  double upperValue = floor(upper[i]+1.0e-5);
 	  presolvedModel_->setColBounds(i,lowerValue,upperValue);
+	  // need to be careful if dupcols
 	  if (lowerValue>upperValue) {
 	    numberChanges++;
 	    CoinMessageHandler *hdlr = presolvedModel_->messageHandler() ;
 	    hdlr->message(COIN_PRESOLVE_COLINFEAS,msgs)
 	        << iOriginal << lowerValue << upperValue << CoinMessageEol ;
 	    result=1;
-	  } else {
-	    if (lowerValue>lowerValue0+1.0e-8) {
+	  } else if ((prob.presolveOptions_&0x80000000) == 0) {
+	    if (lowerValue>lowerValue0+1.0e-8) { 
 	      originalModel_->setColLower(iOriginal,lowerValue);
 	      numberChanges++;
 	    }
@@ -497,9 +498,20 @@ OsiPresolve::postsolve(bool updateStatus)
     CoinWarmStartBasis *basis = 
       dynamic_cast<CoinWarmStartBasis *>(presolvedModel_->getEmptyWarmStart()) ;
     basis->setSize(ncols0,nrows0) ;
+    const double * lower = originalModel_->getColLower();
+    const double * upper = originalModel_->getColUpper();
+    const double * solution = originalModel_->getColSolution();
     for (int i = 0 ; i < ncols0 ; i++) {
       CoinWarmStartBasis::Status status =
           static_cast<CoinWarmStartBasis::Status>(prob.getColumnStatus(i)) ;
+      // Fix obvious mistakes
+      if (status != CoinWarmStartBasis::basic &&
+	  status != CoinWarmStartBasis::isFree) {
+	if (solution[i] < lower[i]+1.0e-8)
+	  status = CoinWarmStartBasis::atLowerBound;
+	else if (solution[i] > upper[i]-1.0e-8)
+	  status = CoinWarmStartBasis::atUpperBound;
+      }
       assert(status != CoinWarmStartBasis::atLowerBound || originalModel_->getColLower()[i] > -originalModel_->getInfinity()) ;
       assert(status != CoinWarmStartBasis::atUpperBound || originalModel_->getColUpper()[i] <  originalModel_->getInfinity()) ;
       basis->setStructStatus(i,status);
@@ -847,6 +859,16 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 	  if (prob->status_) break ;
 	}
 
+	if (zerocost) {
+	  possibleBreak ;
+	  paction_ = do_tighten_action::presolve(prob,paction_) ;
+#	  if PRESOLVE_DEBUG > 0
+	  check_and_tell(prob,paction_,pactiond) ;
+	  if (monitor) monitor->checkAndTell(prob) ;
+#	  endif
+	  if (prob->status_) break ;
+	}
+
 	if (dual && whichPass == 1) {
 	  possibleBreak;
 	  // this can also make E rows so do one bit here
@@ -871,16 +893,6 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 	if (tripleton) {
 	  possibleBreak ;
 	  paction_ = tripleton_action::presolve(prob,paction_) ;
-#	  if PRESOLVE_DEBUG > 0
-	  check_and_tell(prob,paction_,pactiond) ;
-	  if (monitor) monitor->checkAndTell(prob) ;
-#	  endif
-	  if (prob->status_) break ;
-	}
-
-	if (zerocost) {
-	  possibleBreak ;
-	  paction_ = do_tighten_action::presolve(prob,paction_) ;
 #	  if PRESOLVE_DEBUG > 0
 	  check_and_tell(prob,paction_,pactiond) ;
 	  if (monitor) monitor->checkAndTell(prob) ;
@@ -1270,8 +1282,8 @@ CoinPrePostsolveMatrix::CoinPrePostsolveMatrix(const OsiSolverInterface * si,
 
 {
   bulk0_ = static_cast<CoinBigIndex>(bulkRatio_*nelems_in) ;
-  hrow_ = new int [bulk0_] ;
-  colels_ = new double[bulk0_] ;
+  hrow_ = new int [bulk0_+ncols_in] ;
+  colels_ = new double[bulk0_+ncols_in] ;
 
   si->getDblParam(OsiObjOffset,originalOffset_);
   int ncols = si->getNumCols();
@@ -1349,6 +1361,7 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
     mrstrt_(new CoinBigIndex[nrows_in+1]),
     hinrow_(new int[nrows_in+1]),
     integerType_(new unsigned char[ncols0_in]),
+    anyInteger_(false),
     tuning_(false),
     startTime_(0.0),
     feasibilityTolerance_(0.0),
@@ -1385,17 +1398,18 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
   const int * length = m1->getVectorLengths();
   const int * row = m1->getIndices();
   const double * element = m1->getElements();
-  int icol,nel=0;
+  int icol;
+  CoinBigIndex nel=0;
   mcstrt_[0]=0;
   for (icol=0;icol<ncols_;icol++) {
-    int j;
+    CoinBigIndex j;
     for (j=start[icol];j<start[icol]+length[icol];j++) {
       if (fabs(element[j])>ZTOLDP) {
         hrow_[nel]=row[j];
 	colels_[nel++]=element[j];
       }
     }
-    hincol_[icol]=nel-mcstrt_[icol];
+    hincol_[icol]=static_cast<int>(nel-mcstrt_[icol]);
     mcstrt_[icol+1]=nel;
   }
 
@@ -1417,14 +1431,14 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
   nel=0;
   mrstrt_[0]=0;
   for (irow=0;irow<nrows_;irow++) {
-    int j;
+    CoinBigIndex j;
     for (j=start[irow];j<start[irow]+length[irow];j++) {
       if (fabs(element[j])>ZTOLDP) {
         hcol_[nel]=column[j];
         rowels_[nel++]=element[j];
       }
     }
-    hinrow_[irow]=nel-mrstrt_[irow];
+    hinrow_[irow]=static_cast<int>(nel-mrstrt_[irow]);
     mrstrt_[irow+1]=nel;
   }
   nelems_=nel;
@@ -1432,19 +1446,23 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
   delete m;
   {
     int i;
+    int numberIntegers=0;
     for (i=0;i<ncols_;i++) {
-      if (si->isInteger(i))  
+      if (si->isInteger(i)) {  
 	integerType_[i] = 1;
-      else
+	numberIntegers++;
+      } else {
 	integerType_[i] = 0;
+      }
     }
+    anyInteger_ = (numberIntegers!=0);
   }
 
   // Set up prohibited bits if needed
   if (nonLinearValue) {
     anyProhibited_ = true;
     for (icol=0;icol<ncols_;icol++) {
-      int j;
+      CoinBigIndex j;
       bool nonLinearColumn = false;
       if (cost_[icol]==nonLinearValue)
 	nonLinearColumn=true;
@@ -1636,7 +1654,7 @@ CoinPostsolveMatrix::CoinPostsolveMatrix(OsiSolverInterface*  si,
 */
   free_list_ = 0 ;
   maxlink_ = bulk0_ ;
-  link_ = new int[maxlink_] ;
+  link_ = new CoinBigIndex[maxlink_] ;
 
   nrows_ = si->getNumRows() ;
   ncols_ = si->getNumCols() ;
@@ -1748,7 +1766,7 @@ CoinPostsolveMatrix::CoinPostsolveMatrix(OsiSolverInterface*  si,
       link_[kce-1] = NO_LINK ;
   }
   if (maxlink_>0) {
-    int ml = maxlink_;
+    CoinBigIndex ml = maxlink_;
     for (CoinBigIndex k=nelemsr; k<ml; ++k)
       link_[k] = k+1;
     link_[ml-1] = NO_LINK;

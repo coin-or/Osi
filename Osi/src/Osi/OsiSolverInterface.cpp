@@ -76,7 +76,7 @@ OsiSolverInterface::getFractionalIndices(const double etol) const
 }
 
 
-int OsiSolverInterface::getNumElements() const
+CoinBigIndex OsiSolverInterface::getNumElements() const
 {
   return getMatrixByRow()->getNumElements();
 }
@@ -377,15 +377,15 @@ OsiSolverInterface::addCols(const int numcols,
   }
 }
 
-void OsiSolverInterface::addCols(const int numcols, const int* columnStarts,
+void OsiSolverInterface::addCols(const int numcols, const CoinBigIndex* columnStarts,
 				 const int* rows, const double* elements,
 				 const double* collb, const double* colub,   
 				 const double* obj)
 {
   double infinity = getInfinity();
   for (int i = 0; i < numcols; ++i) {
-    int start = columnStarts[i];
-    int number = columnStarts[i+1]-start;
+    CoinBigIndex start = columnStarts[i];
+    int number = static_cast<int>(columnStarts[i+1]-start);
     assert (number>=0);
     addCol(number, rows+start, elements+start, collb ? collb[i] : 0.0, 
 	   colub ? colub[i] : infinity, 
@@ -481,7 +481,7 @@ OsiSolverInterface::addCols( CoinModel & modelObject)
         new CoinPackedVectorBase * [numberColumns2];
       assert (columnLower);
       for (iColumn=0;iColumn<numberColumns2;iColumn++) {
-        int start = columnStart[iColumn];
+        CoinBigIndex start = columnStart[iColumn];
         columns[iColumn] = 
           new CoinPackedVector(columnLength[iColumn],
                                row+start,element+start);
@@ -559,14 +559,14 @@ OsiSolverInterface::addRow(int numberElements,
   The default implementation simply makes repeated calls to addRow().
 */
 void 
-OsiSolverInterface::addRows(const int numrows, const int* rowStarts,
+OsiSolverInterface::addRows(const int numrows, const CoinBigIndex* rowStarts,
 			    const int* columns, const double* elements,
 			    const double* rowlb, const double* rowub)
 {
   double infinity = getInfinity();
   for (int i = 0; i < numrows; ++i) {
-    int start = rowStarts[i];
-    int number = rowStarts[i+1]-start;
+    CoinBigIndex start = rowStarts[i];
+    int number = static_cast<int>(rowStarts[i+1]-start);
     assert (number>=0);
     addRow(number, columns+start, elements+start, rowlb ? rowlb[i] : -infinity, 
 	   rowub ? rowub[i] : infinity);
@@ -683,7 +683,7 @@ OsiSolverInterface::addRows( CoinModel & modelObject)
         new CoinPackedVectorBase * [numberRows2];
       assert (rowLower);
       for (iRow=0;iRow<numberRows2;iRow++) {
-        int start = rowStart[iRow];
+        CoinBigIndex start = rowStart[iRow];
         rows[iRow] = 
           new CoinPackedVector(rowLength[iRow],
                                column+start,element+start);
@@ -1313,14 +1313,12 @@ OsiSolverInterface::writeMpsNative(const char *filename,
 				   const CoinSet * setInfo ) const
 {
    const int numcols = getNumCols();
-   char* integrality = new char[numcols];
+   char* integrality = CoinCopyOfArray(getColType(false),numcols);
    bool hasInteger = false;
    for (int i = 0; i < numcols; ++i) {
-      if (isInteger(i)) {
-	 integrality[i] = 1;
+     if (isInteger(i)) { 
 	 hasInteger = true;
-      } else {
-	 integrality[i] = 0;
+	 break;
       }
    }
 
@@ -1864,6 +1862,113 @@ OsiSolverInterface::getBasics(int* ) const
   // Throw an exception
   throw CoinError("Needs coding for this interface", "getBasics",
 		  "OsiSolverInterface");
+}
+/* Check two models against each other.  Return nonzero if different.
+   Ignore names if that set.
+   May modify both models by cleaning up
+*/
+int 
+OsiSolverInterface::differentModel(OsiSolverInterface & other, 
+				   bool /*ignoreNames*/)
+{
+  // set reasonable defaults
+  bool takeHint;
+  OsiHintStrength strength;
+  // Switch off printing if asked to
+  bool gotHint = (getHintParam(OsiDoReducePrint,takeHint,strength));
+  assert (gotHint);
+  bool printStuff=true;
+  if (strength!=OsiHintIgnore&&takeHint) 
+    printStuff=false;
+  int returnCode=0;
+  int numberRows = getNumRows();
+  int numberColumns = getNumCols();
+  int numberIntegers = getNumIntegers();
+  if (numberRows!=other.getNumRows()||numberColumns!=other.getNumCols()) {
+    if (printStuff)
+      printf("** Mismatch on size, this has %d rows, %d columns - other has %d rows, %d columns\n",
+             numberRows,numberColumns,other.getNumRows(),other.getNumCols());
+    return 1000;
+  }
+  if (numberIntegers!=other.getNumIntegers()) {
+    if (printStuff)
+      printf("** Mismatch on number of integers, this has %d - other has %d\n",
+             numberIntegers,other.getNumIntegers());
+    return 1001;
+  }
+  int numberErrors1=0;
+  int numberErrors2=0;
+  for (int i=0;i<numberColumns;i++) {
+    if (isInteger(i)) {
+      if (!other.isInteger(i))
+	numberErrors1++;
+    } else {
+      if (other.isInteger(i))
+	numberErrors2++;
+    }
+  }
+  if (numberErrors1||numberErrors2) {
+    if (printStuff)
+      printf("** Mismatch on integers, %d (this int, other not), %d (this not other int)\n",
+             numberErrors1,numberErrors2);
+    return 1002;
+  }
+  // Arrays
+  const double * rowLower = getRowLower();
+  const double * rowUpper = getRowUpper();
+  const double * columnLower = getColLower();
+  const double * columnUpper = getColUpper();
+  const double * objective = getObjCoefficients();
+  const double * rowLower2 = other.getRowLower();
+  const double * rowUpper2 = other.getRowUpper();
+  const double * columnLower2 = other.getColLower();
+  const double * columnUpper2 = other.getColUpper();
+  const double * objective2 = other.getObjCoefficients();
+  const CoinPackedMatrix * matrix = getMatrixByCol();
+  const CoinPackedMatrix * matrix2 = other.getMatrixByCol();
+  CoinRelFltEq tolerance;
+  int numberDifferentL = 0;
+  int numberDifferentU = 0;
+  for (int i=0;i<numberRows;i++) {
+    if (!tolerance(rowLower[i],rowLower2[i]))
+      numberDifferentL++;
+    if (!tolerance(rowUpper[i],rowUpper2[i]))
+      numberDifferentU++;
+  }
+  int n = numberDifferentL+numberDifferentU;
+  returnCode+=n;
+  if (n&&printStuff)
+    printf("Row differences , %d lower, %d upper\n",
+	   numberDifferentL,numberDifferentU);
+  numberDifferentL = 0;
+  numberDifferentU = 0;
+  int numberDifferentO = 0;
+  for (int i=0;i<numberColumns;i++) {
+    if (!tolerance(columnLower[i],columnLower2[i]))
+      numberDifferentL++;
+    if (!tolerance(columnUpper[i],columnUpper2[i]))
+      numberDifferentU++;
+    if (!tolerance(objective[i],objective2[i]))
+      numberDifferentO++;
+  }
+  n = numberDifferentL+numberDifferentU+numberDifferentO;
+  returnCode+=n;
+  if (n&&printStuff)
+    printf("Column differences , %d lower, %d upper, %d objective\n",
+	   numberDifferentL,numberDifferentU,numberDifferentO);
+  if (matrix->getNumElements()==other.getNumElements()) {
+    if (!matrix->isEquivalent(*matrix2,tolerance)) {
+      returnCode+=100;
+      if (printStuff)
+	printf("Two matrices are not same\n");
+    }
+  } else {
+    returnCode+=200;
+    if (printStuff)
+      printf("Two matrices are not same - %d elements and %d elements\n",
+	     matrix->getNumElements(),matrix2->getNumElements());
+  }
+  return returnCode;
 }
 #ifdef COIN_SNAPSHOT
 // Fill in a CoinSnapshot
@@ -2455,3 +2560,296 @@ OsiSolverInterface::solveBranches(int depth,const OsiSolverBranch * branch,
   return numberFeasible;
 }
 #endif
+/* Get some statistics about model - min/max always computed
+   type 0->4 , larger gives more information
+   0 - Just set min and max values of coefficients
+*/
+void 
+OsiSolverInterface::statistics(double & minimumNegative, double & maximumNegative,
+			       double & minimumPositive, double & maximumPositive,
+			       int type) const
+{
+  minimumNegative = -COIN_DBL_MAX;
+  maximumNegative = 0.0;
+  minimumPositive = COIN_DBL_MAX;
+  maximumPositive = 0.0;
+  // get matrix data pointers
+  const double * elementByColumn = getMatrixByCol()->getElements();
+  const CoinBigIndex * columnStart = getMatrixByCol()->getVectorStarts();
+  const int * columnLength = getMatrixByCol()->getVectorLengths();
+  const int * row = getMatrixByCol()->getIndices();
+  int numberColumns = getNumCols();
+  int numberRows = getNumRows();
+  CoinBigIndex numberElements = getMatrixByCol()->getNumElements();
+  int i;
+  for (i = 0; i < numberColumns; i++) {
+    CoinBigIndex j;
+    for (j = columnStart[i]; j < columnStart[i] + columnLength[i]; j++) {
+      double value = elementByColumn[j];
+      if (value > 0.0) {
+	minimumPositive = CoinMin(minimumPositive, value);
+	maximumPositive = CoinMax(maximumPositive, value);
+      } else if (value < 0.0) {
+	minimumNegative = CoinMax(minimumNegative, value);
+	maximumNegative = CoinMin(maximumNegative, value);
+      }
+    }
+  }
+  if (!type) 
+    return;
+  // more statistics
+  const char * integerInformation  = getColType();
+  const double * columnLower = getColLower();
+  const double * columnUpper = getColUpper();
+  int numberIntegers = getNumIntegers();
+  int iRow, iColumn;
+  int numberBinary = 0;
+  if (numberIntegers) {
+    for (iColumn = 0; iColumn < numberColumns; iColumn++) {
+      if (integerInformation[iColumn]==1)
+	numberBinary++;
+    }
+    if (type==1)
+      printf("Problem has %d rows, %d columns - %d integers (%d of which binary)\n",
+	     numberRows,numberColumns,numberIntegers,numberBinary);
+    else
+      printf("Problem has %d integers (%d of which binary)\n",
+	     numberIntegers,numberBinary);
+  } else if (type==1) {
+    printf("Problem has %d rows, %d columns\n",
+	   numberRows,numberColumns);
+  }
+  const double * objective = getObjCoefficients();
+  if (numberIntegers) {
+    double * obj = new double [numberIntegers];
+    int * which = new int [numberIntegers];
+    int numberFixed=0;
+    int numberZeroContinuous=0;
+    int numberZeroInteger=0;
+    int numberSort=0;
+    for (int iColumn = 0; iColumn < numberColumns; iColumn++) {
+      if (columnUpper[iColumn] > columnLower[iColumn]) {
+	if (!objective[iColumn]) {
+	  if (integerInformation[iColumn])
+	    numberZeroInteger++;
+	  else
+	    numberZeroContinuous++;
+	} else if (integerInformation[iColumn]) {
+	  obj[numberSort] = objective[iColumn];
+	  which[numberSort++] = iColumn;
+	} 
+      } else {
+	numberFixed++;
+      }
+    }
+    if (numberFixed)
+      printf("%d variables fixed\n",numberFixed);
+    if (numberZeroContinuous||numberZeroInteger)
+      printf("Zero Objective coefficients - %d continuous and %d integer\n",
+	     numberZeroContinuous,numberZeroInteger);
+    for (int ifAbs=0;ifAbs<2;ifAbs++) {
+      int numberDifferentObj=0;
+      CoinSort_2(obj,obj+numberSort,which);
+      double last=obj[0];
+      for (int jColumn = 1; jColumn < numberSort; jColumn++) {
+	if (fabs(obj[jColumn]-last)>1.0e-12) {
+	  numberDifferentObj++;
+	  last=obj[jColumn];
+	}
+	obj[jColumn]=fabs(last);
+      }
+      numberDifferentObj++;
+      printf("Range of integer objective coefficients %s ",ifAbs ? "(absolute values) " : "");
+      printf("(%g -> %g)  - %d unique values\n",obj[0],last,numberDifferentObj);
+      obj[0]=fabs(last);
+    }
+    delete [] which;
+    delete [] obj;
+  }
+  if (type<2)
+    return;
+  printf("\n");
+  const double * rowLower = getRowLower();
+  const double * rowUpper = getRowUpper();
+  int * number = new int[2*CoinMax(numberRows,numberColumns)];
+  memset(number, 0, 2*CoinMax(numberRows,numberColumns)*sizeof(int));
+  int * rowCount = number+CoinMax(numberRows,numberColumns);
+  int numberObjSingletons = 0;
+  /* cType
+     0 0/inf, 1 0/up, 2 lo/inf, 3 lo/up, 4 free, 5 fix, 6 -inf/0, 7 -inf/up,
+     8 0/1
+  */
+  int cType[9];
+  std::string cName[] = {"0.0->inf,", "0.0->up,", "lo->inf,", "lo->up,", "free,", "fixed,", "-inf->0.0,",
+			 "-inf->up,", "0.0->1.0"
+  };
+  int nObjective = 0;
+  memset(cType, 0, sizeof(cType));
+  for (iColumn = 0; iColumn < numberColumns; iColumn++) {
+    int length = columnLength[iColumn];
+    if (length == 1 && objective[iColumn])
+      numberObjSingletons++;
+    number[length]++;
+    CoinBigIndex j;
+    for (j = columnStart[iColumn]; j < columnStart[iColumn] + columnLength[iColumn]; j++) {
+      rowCount[row[j]]++;
+    }
+    if (objective[iColumn])
+      nObjective++;
+    if (columnLower[iColumn] > -1.0e20) {
+      if (columnLower[iColumn] == 0.0) {
+	if (columnUpper[iColumn] > 1.0e20)
+	  cType[0]++;
+	else if (columnUpper[iColumn] == 1.0)
+	  cType[8]++;
+	else if (columnUpper[iColumn] == 0.0)
+	  cType[5]++;
+	else
+	  cType[1]++;
+      } else {
+	if (columnUpper[iColumn] > 1.0e20)
+	  cType[2]++;
+	else if (columnUpper[iColumn] == columnLower[iColumn])
+	  cType[5]++;
+	else
+	  cType[3]++;
+      }
+    } else {
+      if (columnUpper[iColumn] > 1.0e20)
+	cType[4]++;
+      else if (columnUpper[iColumn] == 0.0)
+	cType[6]++;
+      else
+	cType[7]++;
+    }
+  }
+  /* rType
+     0 E 0, 1 E 1, 2 E -1, 3 E other, 4 G 0, 5 G 1, 6 G other,
+     7 L 0,  8 L 1, 9 L other, 10 Range 0/1, 11 Range other, 12 free
+  */
+  int rType[13];
+  std::string rName[] = {"E 0.0,", "E 1.0,", "E -1.0,", "E other,", "G 0.0,", "G 1.0,", "G other,",
+			 "L 0.0,", "L 1.0,", "L other,", "Range 0.0->1.0,", "Range other,", "Free"
+  };
+  memset(rType, 0, sizeof(rType));
+  for (iRow = 0; iRow < numberRows; iRow++) {
+    if (rowLower[iRow] > -1.0e20) {
+      if (rowLower[iRow] == 0.0) {
+	if (rowUpper[iRow] > 1.0e20)
+	  rType[4]++;
+	else if (rowUpper[iRow] == 1.0)
+	  rType[10]++;
+	else if (rowUpper[iRow] == 0.0)
+	  rType[0]++;
+	else
+	  rType[11]++;
+      } else if (rowLower[iRow] == 1.0) {
+	if (rowUpper[iRow] > 1.0e20)
+	  rType[5]++;
+	else if (rowUpper[iRow] == rowLower[iRow])
+	  rType[1]++;
+	else
+	  rType[11]++;
+      } else if (rowLower[iRow] == -1.0) {
+	if (rowUpper[iRow] > 1.0e20)
+	  rType[6]++;
+	else if (rowUpper[iRow] == rowLower[iRow])
+	  rType[2]++;
+	else
+	  rType[11]++;
+      } else {
+	if (rowUpper[iRow] > 1.0e20)
+	  rType[6]++;
+	else if (rowUpper[iRow] == rowLower[iRow])
+	  rType[3]++;
+	else
+	  rType[11]++;
+      }
+    } else {
+      if (rowUpper[iRow] > 1.0e20)
+	rType[12]++;
+      else if (rowUpper[iRow] == 0.0)
+	rType[7]++;
+      else if (rowUpper[iRow] == 1.0)
+	rType[8]++;
+      else
+	rType[9]++;
+    }
+  }
+  // Basic statistics
+  printf("Problem has %d rows, %d columns (%d with objective) and %d elements\n",
+	 numberRows, numberColumns, nObjective, numberElements);
+  if (number[0] + number[1]) {
+    printf("There are ");
+    if (numberObjSingletons)
+      printf("%d singletons with objective ", numberObjSingletons);
+    int numberNoObj = number[1] - numberObjSingletons;
+    if (numberNoObj)
+      printf("%d singletons with no objective ", numberNoObj);
+    if (number[0])
+      printf("** %d columns have no entries", number[0]);
+    printf("\n");
+  }
+  printf("Column breakdown:\n");
+  int k;
+  for (k = 0; k < static_cast<int> (sizeof(cType) / sizeof(int)); k++) {
+    printf("%d of type %s ", cType[k], cName[k].c_str());
+    if (((k + 1) % 3) == 0)
+      printf("\n");
+  }
+  if ((k % 3) != 0)
+    printf("\n");
+  printf("\nRow breakdown:\n");
+  for (k = 0; k < static_cast<int> (sizeof(rType) / sizeof(int)); k++) {
+    printf("%d of type %s ", rType[k], rName[k].c_str());
+    if (((k + 1) % 3) == 0)
+      printf("\n");
+  }
+  if ((k % 3) != 0)
+    printf("\n");
+  if (type < 3)
+    return ;
+  int kMax = type > 3 ? 1000000 : 10;
+  k = 0;
+  printf("\n");
+  for (iRow = 1; iRow <= numberRows; iRow++) {
+    if (number[iRow]) {
+      k++;
+      printf("%d columns have %d entries\n", number[iRow], iRow);
+      if (k == kMax)
+	break;
+    }
+  }
+  if (k == kMax) {
+    int n = 0;
+    for (; iRow < numberRows; iRow++) {
+      n += number[iRow];
+    }
+    if (n)
+      printf("%d columns have more than %d entries\n", n, kMax);
+  }
+  memset(number, 0, numberColumns*sizeof(int));
+  for (iRow = 0; iRow < numberRows; iRow++) {
+    int length = rowCount[iRow];
+    number[length]++;
+  }
+  k = 0;
+  printf("\n");
+  for (iRow = 1; iRow <= numberRows; iRow++) {
+    if (number[iRow]) {
+      k++;
+      printf("%d rows have %d entries\n", number[iRow], iRow);
+      if (k == kMax)
+	break;
+    }
+  }
+  if (k == kMax) {
+    int n = 0;
+    for (; iRow < numberRows; iRow++) {
+      n += number[iRow];
+    }
+    if (n)
+      printf("%d rows have more than %d entries\n", n, kMax);
+  }
+  delete [] number;
+}

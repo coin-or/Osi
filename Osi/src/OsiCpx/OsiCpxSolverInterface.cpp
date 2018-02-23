@@ -503,8 +503,15 @@ void OsiCpxSolverInterface::branchAndBound()
   	int* ind = new int[ncols];
 
   	CoinIotaN(ind, ncols, 0);
-  	term = CPXcopymipstart(env_, getLpPtr( OsiCpxSolverInterface::KEEPCACHED_ALL ), ncols, ind, colsol_);
-  	checkCPXerror(term, "CPXcopymipstart", "branchAndBound");
+#if 1
+   int zero = 0;
+   term = CPXaddmipstarts(env_, getLpPtr( OsiCpxSolverInterface::KEEPCACHED_ALL ), 1, ncols, &zero, ind, colsol_, NULL, NULL);
+   checkCPXerror(term, "CPXaddmipstarts", "branchAndBound");
+#else
+   /* deprecated */
+   term = CPXcopymipstart(env_, getLpPtr( OsiCpxSolverInterface::KEEPCACHED_ALL ), ncols, ind, colsol_);
+   checkCPXerror(term, "CPXcopymipstart", "branchAndBound");
+#endif
 
   	delete[] ind;
 
@@ -1547,6 +1554,9 @@ const double * OsiCpxSolverInterface::getRowActivity() const
               double *rowslack = new double[nrows];
               int err = CPXgetmipslack( env_, getMutableLpPtr(), rowslack, 0, nrows-1 );
               checkCPXerror( err, "CPXgetmipslack", "getRowActivity" );
+              for( int r = 0; r < nrows; ++r )
+                 rowact_[r] = getRightHandSide()[r] - rowslack[r];
+              delete[] rowslack;
            }
            else
            {
@@ -3238,6 +3248,13 @@ CPXLPptr OsiCpxSolverInterface::getMutableLpPtr() const
   return lp_;
 }
 
+//------------------------------------------------------------------- 
+CPXENVptr OsiCpxSolverInterface::getMutableEnvironmentPtr() const
+{
+  assert( env_ != NULL ); 
+  return env_;
+}
+
 //-------------------------------------------------------------------
 
 void OsiCpxSolverInterface::gutsOfCopy( const OsiCpxSolverInterface & source )
@@ -3487,7 +3504,34 @@ void OsiCpxSolverInterface::freeAllMemory()
 void 
 OsiCpxSolverInterface::reset()
 {
-  setInitialData(); // clear base class
+	int err;
+	CPXCHANNELptr cpxresults;
+	CPXCHANNELptr cpxwarning;
+	CPXCHANNELptr cpxerror;
+	CPXCHANNELptr cpxlog;
+
+	err = CPXgetchannels(env_, &cpxresults, &cpxwarning, &cpxerror, &cpxlog);
+
+	err = CPXdelfuncdest(env_, cpxresults, messageHandler(), OsiCpxMessageCallbackResultLog);
+	checkCPXerror( err, "CPXdelfuncdest", "reset" );
+	err = CPXdelfuncdest(env_, cpxlog,     messageHandler(), OsiCpxMessageCallbackResultLog);
+	checkCPXerror( err, "CPXdelfuncdest", "reset" );
+	err = CPXdelfuncdest(env_, cpxwarning, messageHandler(), OsiCpxMessageCallbackWarning);
+	checkCPXerror( err, "CPXdelfuncdest", "reset" );
+	err = CPXdelfuncdest(env_, cpxerror,   messageHandler(), OsiCpxMessageCallbackError);
+	checkCPXerror( err, "CPXdelfuncdest", "reset" );
+   
+	setInitialData(); // clear base class (this may reset the message handler, too)
+   
+	err = CPXaddfuncdest(env_, cpxresults, messageHandler(), OsiCpxMessageCallbackResultLog);
+	checkCPXerror( err, "CPXaddfuncdest", "reset" );
+	err = CPXaddfuncdest(env_, cpxlog,     messageHandler(), OsiCpxMessageCallbackResultLog);
+	checkCPXerror( err, "CPXaddfuncdest", "reset" );
+	err = CPXaddfuncdest(env_, cpxwarning, messageHandler(), OsiCpxMessageCallbackWarning);
+	checkCPXerror( err, "CPXaddfuncdest", "reset" );
+	err = CPXaddfuncdest(env_, cpxerror,   messageHandler(), OsiCpxMessageCallbackError);
+	checkCPXerror( err, "CPXaddfuncdest", "reset" );
+   
 	if (lp_ != NULL) { // kill old LP 
 		int err = CPXfreeprob( env_, &lp_ );
 		checkCPXerror( err, "CPXfreeprob", "loadProblem" );

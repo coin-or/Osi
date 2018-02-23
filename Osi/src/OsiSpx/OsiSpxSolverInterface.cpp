@@ -21,13 +21,19 @@
 
 #include "CoinError.hpp"
 
-#include "OsiSpxSolverInterface.hpp"
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
 #include "CoinPackedMatrix.hpp"
 #include "CoinWarmStartBasis.hpp"
 
+#ifndef SOPLEX_LEGACY
+#define SOPLEX_LEGACY
+#endif
+
 #include "soplex.h"
+
+// it's important to include this header after soplex.h
+#include "OsiSpxSolverInterface.hpp"
 
 //#############################################################################
 // A couple of helper functions
@@ -766,7 +772,11 @@ double OsiSpxSolverInterface::getObjSense() const
 
 bool OsiSpxSolverInterface::isContinuous( int colNumber ) const
 {
+#if SOPLEX_VERSION >= 300
+  return( spxintvars_->pos( colNumber ) < 0 );
+#else
   return( spxintvars_->number( colNumber ) < 0 );
+#endif
 }
 
 //------------------------------------------------------------------
@@ -1069,7 +1079,11 @@ OsiSpxSolverInterface::setRowType(int i, char sense, double rightHandSide,
 void
 OsiSpxSolverInterface::setContinuous(int index)
 {
+#if SOPLEX_VERSION >= 300
+  int pos = spxintvars_->pos( index );
+#else
   int pos = spxintvars_->number( index );
+#endif
   if( pos >= 0 )
     {
       spxintvars_->remove( pos );
@@ -1080,7 +1094,11 @@ OsiSpxSolverInterface::setContinuous(int index)
 void
 OsiSpxSolverInterface::setInteger(int index)
 {
+#if SOPLEX_VERSION >= 300
+  int pos = spxintvars_->pos( index );
+#else
   int pos = spxintvars_->number( index );
+#endif
   if( pos < 0 )
     {
       spxintvars_->addIdx( index );
@@ -1582,7 +1600,13 @@ void OsiSpxSolverInterface::writeMps( const char * filename,
 //-------------------------------------------------------------------
 OsiSpxSolverInterface::OsiSpxSolverInterface ()
   : OsiSolverInterface(),
+#if SOPLEX_VERSION >= 220
+    spxout_(new soplex::SPxOut),
+    soplex_(new soplex::SoPlex(*spxout_, soplex::SPxSolver::ENTER, soplex::SPxSolver::COLUMN)), // default is primal simplex algorithm
+#else
+    spxout_(NULL),
     soplex_(new soplex::SoPlex(soplex::SPxSolver::ENTER, soplex::SPxSolver::COLUMN)), // default is primal simplex algorithm
+#endif
     spxintvars_(new soplex::DIdxSet()),
     hotStartCStat_(NULL),
     hotStartCStatSize_(0),
@@ -1600,10 +1624,18 @@ OsiSpxSolverInterface::OsiSpxSolverInterface ()
     matrixByRow_(NULL),
     matrixByCol_(NULL)
 {
+#if SOPLEX_VERSION >= 220
+#ifndef NDEBUG
+  spxout_->setVerbosity(soplex::SPxOut::INFO1);
+#else
+  spxout_->setVerbosity(soplex::SPxOut::DEBUG);
+#endif
+#else
 #ifndef NDEBUG
   soplex::Param::setVerbose( 3 );
 #else
   soplex::Param::setVerbose( 2 );
+#endif
 #endif
 
   // SoPlex default objective sense is maximization, thus we explicitly set it to minimization
@@ -1653,6 +1685,16 @@ OsiSpxSolverInterface::OsiSpxSolverInterface( const OsiSpxSolverInterface & sour
 OsiSpxSolverInterface::~OsiSpxSolverInterface ()
 {
   freeAllMemory();
+}
+
+//-------------------------------------------------------------------
+// SPX specific public interfaces
+//-------------------------------------------------------------------
+
+soplex::SoPlex* OsiSpxSolverInterface::getLpPtr( int keepCached )
+{
+  freeCachedData( keepCached );
+  return soplex_;
 }
 
 //----------------------------------------------------------------
@@ -1767,5 +1809,8 @@ void OsiSpxSolverInterface::freeAllMemory()
   hotStartRStat_     = NULL;
   hotStartRStatSize_ = 0;
   delete soplex_;
+#if SOPLEX_VERSION >= 220
+  delete spxout_;
+#endif
   delete spxintvars_;
 }

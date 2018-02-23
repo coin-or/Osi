@@ -19,12 +19,17 @@
 #include "OsiSolverInterface.hpp"
 #include "CoinWarmStartBasis.hpp"
 
-/* forward declarations so the header can be compiled without having to include soplex.h */
+#ifndef _SOPLEX_H_
+/* forward declarations so the header can be compiled without having to include soplex.h
+ * however, these declaration work only for SoPlex < 2.0, so we do them only if soplex.h hasn't been included already
+ */
 namespace soplex {
   class DIdxSet;
   class DVector;
+  class SPxOut;
   class SoPlex;
 }
+#endif
 
 /** SoPlex Solver Interface
     Instantiation of OsiSpxSolverInterface for SoPlex
@@ -608,42 +613,7 @@ public:
   /// Destructor 
   virtual ~OsiSpxSolverInterface();
   //@}
-  
-protected:
-  
-  /**@name Protected methods */
-  //@{
-  /// Apply a row cut. Return true if cut was applied.
-  virtual void applyRowCut( const OsiRowCut & rc );
-  
-  /** Apply a column cut (bound adjustment). 
-      Return true if cut was applied.
-  */
-  virtual void applyColCut( const OsiColCut & cc );
-  //@}
 
-  /**@name Protected member data */
-  //@{
-  /// SoPlex solver object
-  soplex::SoPlex* soplex_;
-  //@}
-
-  
-private:
-  /**@name Private methods */
-  //@{
-  
-  /// free cached column rim vectors
-  void freeCachedColRim();
-
-  /// free cached row rim vectors
-  void freeCachedRowRim();
-
-  /// free cached result vectors
-  void freeCachedResults();
-  
-  /// free cached matrices
-  void freeCachedMatrix();
 
   enum keepCachedFlag
   {
@@ -670,6 +640,47 @@ private:
     /// free only cached LP solution information
     FREECACHED_RESULTS = KEEPCACHED_ALL & ~KEEPCACHED_RESULTS
   };
+  soplex::SoPlex* getLpPtr( int keepCached = KEEPCACHED_NONE );
+
+  soplex::SPxOut* getSPxOut() { return spxout_; }
+  
+protected:
+  
+  /**@name Protected methods */
+  //@{
+  /// Apply a row cut. Return true if cut was applied.
+  virtual void applyRowCut( const OsiRowCut & rc );
+  
+  /** Apply a column cut (bound adjustment). 
+      Return true if cut was applied.
+  */
+  virtual void applyColCut( const OsiColCut & cc );
+  //@}
+
+  /**@name Protected member data */
+  //@{
+  /// SoPlex output object
+  soplex::SPxOut *spxout_;
+  /// SoPlex solver object
+  soplex::SoPlex *soplex_;
+  //@}
+
+  
+private:
+  /**@name Private methods */
+  //@{
+  
+  /// free cached column rim vectors
+  void freeCachedColRim();
+
+  /// free cached row rim vectors
+  void freeCachedRowRim();
+
+  /// free cached result vectors
+  void freeCachedResults();
+  
+  /// free cached matrices
+  void freeCachedMatrix();
 
   /// free all cached data (except specified entries, see getLpPtr())
   void freeCachedData( int keepCached = KEEPCACHED_NONE );
@@ -682,7 +693,7 @@ private:
   /**@name Private member data */
   //@{
   /// indices of integer variables
-  soplex::DIdxSet*   spxintvars_;
+  soplex::DIdxSet   *spxintvars_;
 
   /// Hotstart information
   void* hotStartCStat_;

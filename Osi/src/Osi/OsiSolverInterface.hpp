@@ -501,7 +501,7 @@ public:
     virtual int getNumRows() const = 0;
 
     /// Get the number of nonzero elements
-    virtual int getNumElements() const = 0;
+    virtual CoinBigIndex getNumElements() const = 0;
 
     /// Get the number of integer variables
     virtual int getNumIntegers() const ;
@@ -593,11 +593,17 @@ public:
     inline const char *columnType(bool refresh=false) const
     { return getColType(refresh); }
 
+    /// Set column type
+    inline void setColumnType(int iColumn,char type)
+    { if (!columnType_) getColType(true); columnType_[iColumn]=type;}
+
     /*! \brief Return an array[getNumCols()] of column types
 
        - 0 - continuous
        - 1 - binary
        - 2 - general integer
+       - 3 - if supported - semi-continuous
+       - 4 - if supported - semi-continuous integer
       
       If \p refresh is true, the classification of integer variables as
       binary or general integer will be reevaluated. If the current bounds
@@ -1096,7 +1102,7 @@ public:
       The default implementation simply makes repeated calls to
       addCol().
     */
-    virtual void addCols(const int numcols, const int* columnStarts,
+    virtual void addCols(const int numcols, const CoinBigIndex* columnStarts,
 			 const int* rows, const double* elements,
 			 const double* collb, const double* colub,   
 			 const double* obj);
@@ -1185,7 +1191,7 @@ public:
       The default implementation simply makes repeated calls to
       addRow().
     */
-    virtual void addRows(const int numrows, const int *rowStarts,
+    virtual void addRows(const int numrows, const CoinBigIndex *rowStarts,
 			 const int *columns, const double *element,
 			 const double *rowlb, const double *rowub);
 
@@ -1495,7 +1501,7 @@ public:
                const char *extension = "lp",
                 double epsilon = 1e-5,
                 int numberAcross = 10,
-                int decimals = 5,
+                int decimals = 9,
                 double objSense = 0.0,
 	        bool useRowNames = true) const;
 
@@ -1564,6 +1570,20 @@ public:
 
   /**@name Miscellaneous */
   //@{
+  /** Check two models against each other.  Return nonzero if different.
+      Ignore names if that set.
+      (Note initial version does not check names)
+      May modify both models by cleaning up
+  */
+  int differentModel(OsiSolverInterface & other, 
+		     bool ignoreNames=true);
+  /** Get some statistics about model - min/max always computed
+      type 0->4 , larger gives more information
+      0 - Just set min and max values of coefficients
+  */
+  void statistics(double & minimumNegative, double & maximumNegative,
+		  double & minimumPositive, double & maximumPositive, 
+		  int type=3) const;
 #ifdef COIN_SNAPSHOT
   /// Return a CoinSnapshot
   virtual CoinSnapshot * snapshot(bool createArrays=true) const;
@@ -2029,6 +2049,8 @@ protected:
       0 - continuous
       1 - binary (may get fixed later)
       2 - general integer (may get fixed later)
+      3 - if supported - semi-continuous
+      4 - if supported - semi-continuous integer
   */
   mutable char * columnType_;
 

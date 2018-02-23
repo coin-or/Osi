@@ -1199,7 +1199,7 @@ int OGSI::getNumRows() const
 	return lpx_get_num_rows( getMutableModelPtr() );
 }
 
-int OGSI::getNumElements() const
+CoinBigIndex OGSI::getNumElements() const
 {
 	return lpx_get_num_nz( getMutableModelPtr() );
 }
@@ -2721,7 +2721,7 @@ OGSI::assignProblem( CoinPackedMatrix*& matrix,
 
 void
 OGSI::loadProblem(const int numcols, const int numrows,
-				   const int* start, const int* index,
+				   const CoinBigIndex* start, const int* index,
 				   const double* value,
 				   const double* collb, const double* colub,
 				   const double* obj,
@@ -2738,7 +2738,7 @@ OGSI::loadProblem(const int numcols, const int numrows,
     lpx_add_rows( model, numrows );
 
   // How many elements?  Column-major, so indices of start are columns
-  int numelem = start[ numcols ];
+  CoinBigIndex numelem = start[ numcols ];
   //  int numelem = 0;
   //  while ( index[numelem] != 0 )
   //    numelem++;
@@ -2756,7 +2756,8 @@ OGSI::loadProblem(const int numcols, const int numrows,
   {
 	setColBounds( i, collb ? collb[i]:0.0, 
 		    colub ? colub[i]:inf );
-	lpx_set_mat_col( model, i+1, start[i+1]-start[i], &(index_adj[start[i]]), &(value_adj[start[i]]) );
+	lpx_set_mat_col( model, i+1, static_cast<int>(start[i+1]-start[i]),
+			 &(index_adj[start[i]]), &(value_adj[start[i]]) );
     setObjCoeff( i, obj ? obj[i]:0.0 );
   }
   int j;
@@ -2773,7 +2774,7 @@ OGSI::loadProblem(const int numcols, const int numrows,
 
 void
 OGSI::loadProblem(const int numcols, const int numrows,
-				   const int* start, const int* index,
+				   const CoinBigIndex* start, const int* index,
 				   const double* value,
 				   const double* collb, const double* colub,
 				   const double* obj,

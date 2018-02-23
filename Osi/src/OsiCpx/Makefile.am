@@ -21,6 +21,11 @@ lib_LTLIBRARIES = libOsiCpx.la
 libOsiCpx_la_SOURCES = \
 	OsiCpxSolverInterface.cpp OsiCpxSolverInterface.hpp
 
+# List all additionally required libraries
+if DEPENDENCY_LINKING
+libOsiCpx_la_LIBADD = $(OSILIB_LIBS) ../Osi/libOsi.la $(CPXLIB)
+endif
+
 # This is for libtool (on Windows)
 libOsiCpx_la_LDFLAGS = $(LT_LDFLAGS)
 

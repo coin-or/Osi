@@ -1544,8 +1544,8 @@ Optional Packages:
                           appropriate for your environment.
   --with-glpk             Use Glpk. If an argument is given, 'yes' is
                           equivalent to --with-glpk, 'no' is
-                          equivalent to --without-glpk, 'build' will prefer a
-                          COIN ThirdParty package. Any other argument is
+                          equivalent to --without-glpk, 'build' will look for
+                          a COIN ThirdParty package. Any other argument is
                           applied as for --with-glpk-libs
   --with-glpk-libs        Linker flags for Glpk appropriate for your
                           environment. (Most often, -l specs for libraries.)
@@ -1554,8 +1554,8 @@ Optional Packages:
                           directories.)
   --with-soplex           Use SoPlex. If an argument is given, 'yes' is
                           equivalent to --with-soplex, 'no' is
-                          equivalent to --without-soplex, 'build' will prefer
-                          a COIN ThirdParty package. Any other argument is
+                          equivalent to --without-soplex, 'build' will look
+                          for a COIN ThirdParty package. Any other argument is
                           applied as for --with-soplex-libs
   --with-soplex-libs      Linker flags for SoPlex appropriate for your
                           environment. (Most often, -l specs for libraries.)
@@ -8980,10 +8980,6 @@ _lt_linker_boilerplate=`cat conftest.err`
 $RM -r conftest*
 
 
-## CAVEAT EMPTOR:
-## There is no encapsulation within the following macros, do not change
-## the running order or otherwise move them around unless you know exactly
-## what you are doing...
 if test -n "$compiler"; then
 
 lt_prog_compiler_no_builtin_flag=
@@ -16562,6 +16558,12 @@ $as_echo "$coin_has_coinutils" >&6; }
 $as_echo "$coin_has_coinutils due to COIN_SKIP_PROJECTS" >&6; }
   fi
 
+# Possibilities are `yes', 'no', or `skipping'. Normalise to `yes' or `no'.
+
+  if test "$coin_has_coinutils" != yes ; then
+    coin_has_coinutils=no
+  fi
+
 # Create an automake conditional COIN_HAS_PRIM.
 
    if test $coin_has_coinutils = yes; then
@@ -16573,10 +16575,10 @@ else
 fi
 
 
-# If we've located the package, define preprocessor symbol COIN_HAS_PRIM
-# and augment the necessary variables for the client packages. We need the
-# final ':' (noop) below because it's possible that PRIM is data-only and the
-# list of client packages is empty.
+# If we've located the package, define preprocessor symbol COIN_HAS_PRIM and
+# augment the necessary variables for the client packages. We need the final
+# ':' (noop) below because it's possible that the list of client packages
+# is empty.
 
   if test $coin_has_coinutils = yes ; then
 
@@ -16804,6 +16806,12 @@ $as_echo "$coin_has_sample" >&6; }
 $as_echo "$coin_has_sample due to COIN_SKIP_PROJECTS" >&6; }
   fi
 
+# Possibilities are `yes', 'no', or `skipping'. Normalise to `yes' or `no'.
+
+  if test "$coin_has_sample" != yes ; then
+    coin_has_sample=no
+  fi
+
 # Create an automake conditional COIN_HAS_PRIM.
 
    if test $coin_has_sample = yes; then
@@ -16815,10 +16823,10 @@ else
 fi
 
 
-# If we've located the package, define preprocessor symbol COIN_HAS_PRIM
-# and augment the necessary variables for the client packages. We need the
-# final ':' (noop) below because it's possible that PRIM is data-only and the
-# list of client packages is empty.
+# If we've located the package, define preprocessor symbol COIN_HAS_PRIM and
+# augment the necessary variables for the client packages. We need the final
+# ':' (noop) below because it's possible that the list of client packages
+# is empty.
 
   if test $coin_has_sample = yes ; then
 
@@ -17040,6 +17048,12 @@ $as_echo "$coin_has_netlib" >&6; }
 $as_echo "$coin_has_netlib due to COIN_SKIP_PROJECTS" >&6; }
   fi
 
+# Possibilities are `yes', 'no', or `skipping'. Normalise to `yes' or `no'.
+
+  if test "$coin_has_netlib" != yes ; then
+    coin_has_netlib=no
+  fi
+
 # Create an automake conditional COIN_HAS_PRIM.
 
    if test $coin_has_netlib = yes; then
@@ -17051,10 +17065,10 @@ else
 fi
 
 
-# If we've located the package, define preprocessor symbol COIN_HAS_PRIM
-# and augment the necessary variables for the client packages. We need the
-# final ':' (noop) below because it's possible that PRIM is data-only and the
-# list of client packages is empty.
+# If we've located the package, define preprocessor symbol COIN_HAS_PRIM and
+# augment the necessary variables for the client packages. We need the final
+# ':' (noop) below because it's possible that the list of client packages
+# is empty.
 
   if test $coin_has_netlib = yes ; then
 
@@ -17307,6 +17321,12 @@ $as_echo "$coin_has_glpk" >&6; }
 $as_echo "$coin_has_glpk due to COIN_SKIP_PROJECTS" >&6; }
   fi
 
+# Possibilities are `yes', 'no', or `skipping'. Normalise to `yes' or `no'.
+
+  if test "$coin_has_glpk" != yes ; then
+    coin_has_glpk=no
+  fi
+
 # Create an automake conditional COIN_HAS_PRIM.
 
    if test $coin_has_glpk = yes; then
@@ -17318,10 +17338,10 @@ else
 fi
 
 
-# If we've located the package, define preprocessor symbol COIN_HAS_PRIM
-# and augment the necessary variables for the client packages. We need the
-# final ':' (noop) below because it's possible that PRIM is data-only and the
-# list of client packages is empty.
+# If we've located the package, define preprocessor symbol COIN_HAS_PRIM and
+# augment the necessary variables for the client packages. We need the final
+# ':' (noop) below because it's possible that the list of client packages
+# is empty.
 
   if test $coin_has_glpk = yes ; then
 
@@ -17573,6 +17593,12 @@ $as_echo "$coin_has_soplex" >&6; }
 $as_echo "$coin_has_soplex due to COIN_SKIP_PROJECTS" >&6; }
   fi
 
+# Possibilities are `yes', 'no', or `skipping'. Normalise to `yes' or `no'.
+
+  if test "$coin_has_soplex" != yes ; then
+    coin_has_soplex=no
+  fi
+
 # Create an automake conditional COIN_HAS_PRIM.
 
    if test $coin_has_soplex = yes; then
@@ -17584,10 +17610,10 @@ else
 fi
 
 
-# If we've located the package, define preprocessor symbol COIN_HAS_PRIM
-# and augment the necessary variables for the client packages. We need the
-# final ':' (noop) below because it's possible that PRIM is data-only and the
-# list of client packages is empty.
+# If we've located the package, define preprocessor symbol COIN_HAS_PRIM and
+# augment the necessary variables for the client packages. We need the final
+# ':' (noop) below because it's possible that the list of client packages
+# is empty.
 
   if test $coin_has_soplex = yes ; then
 

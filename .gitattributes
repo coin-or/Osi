@@ -1,8 +1,7 @@
 * text=auto !eol
 /.travis.yml -text
-/Dependencies -text
-/LICENSE -text
 Osi/CHANGELOG -text
+Osi/Dependencies -text
 Osi/LICENSE -text
 Osi/MSVisualStudio/v10/Osi.sln -text
 Osi/MSVisualStudio/v10/OsiExamplesBasic/OsiExamplesBasic.vcxproj -text
@@ -83,14 +82,4 @@ Osi/test/OsiGrbSolverInterfaceTest.cpp -text
 Osi/test/OsiSpxSolverInterfaceTest.cpp -text
 Osi/test/OsiTestSolver.cpp -text
 Osi/test/OsiTestSolver.hpp -text
-/README -text
 /appveyor.yml -text
-/compile -text
-/config.guess -text
-/config.sub -text
-/configure -text
-/configure.ac -text
-/depcomp -text
-doxydoc/doxygen.conf.in -text
-/install-sh -text
-/missing -text

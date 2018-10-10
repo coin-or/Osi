@@ -23,7 +23,7 @@ libOsiGlpk_la_SOURCES = \
 
 # List all additionally required libraries
 if DEPENDENCY_LINKING
-libOsiGlpk_la_LIBADD = $(OSILIB_LIBS) ../Osi/libOsi.la
+libOsiGlpk_la_LIBADD = $(OSILIB_LFLAGS) ../Osi/libOsi.la
 endif
 
 # This is for libtool
@@ -32,8 +32,8 @@ libOsiGlpk_la_LDFLAGS = $(LT_LDFLAGS)
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows.
 
-AM_CPPFLAGS = -I`$(CYGPATH_W) $(srcdir)/../Osi` \
-              $(OSILIB_CFLAGS) $(OSIGLPKLIB_CFLAGS)
+AM_CPPFLAGS = `$(CYGPATH_W) -I$(srcdir)/../Osi` \
+              `$(CYGPATH_W) $(OSIGLPKLIB_CFLAGS)`
 
 ########################################################################
 #                Headers that need to be installed                     #

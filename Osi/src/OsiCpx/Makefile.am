@@ -23,7 +23,7 @@ libOsiCpx_la_SOURCES = \
 
 # List all additionally required libraries
 if DEPENDENCY_LINKING
-libOsiCpx_la_LIBADD = $(OSILIB_LIBS) ../Osi/libOsi.la $(CPXLIB)
+libOsiCpx_la_LIBADD = $(OSILIB_LFLAGS) ../Osi/libOsi.la $(OSICPXLIB_LFLAGS)
 endif
 
 # This is for libtool (on Windows)
@@ -31,13 +31,10 @@ libOsiCpx_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows.
-AM_CPPFLAGS = \
-	-I`$(CYGPATH_W) $(CPXINCDIR)` \
-	-I`$(CYGPATH_W) $(srcdir)/../Osi` \
-	$(COINUTILS_CFLAGS)
 
-# This line is necessary to allow VPATH compilation
-# DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/src/Osi
+AM_CPPFLAGS = \
+	`$(CYGPATH_W) $(OSICPXLIB_CFLAGS)` \
+	`$(CYGPATH_W) -I$(srcdir)/../Osi`
 
 ########################################################################
 #                Headers that need to be installed                     #

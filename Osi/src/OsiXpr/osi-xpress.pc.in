@@ -7,6 +7,8 @@ Name: OsiXpress
 Description: COIN-OR Open Solver Interface for Xpress
 URL: https://projects.coin-or.org/Osi
 Version: @PACKAGE_VERSION@
-Libs: -L${libdir} -lOsiXpr @XPRLIB@
-Cflags: -I${includedir} -I@XPRINCDIR@
-Requires: osi
+Libs: @OSIXPRLIB_LFLAGS_PUB@
+Libs.private: @OSIXPRLIB_LFLAGS_NOPC@
+Cflags: @OSIXPRLIB_CFLAGS_PUB@
+Requires: @OSIXPRLIB_PCFILES_PUB@
+Requires.private: @OSIXPRLIB_PCFILES@

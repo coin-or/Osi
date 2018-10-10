@@ -16,12 +16,12 @@ include $(top_srcdir)/BuildTools/Makemain.inc
 
 # Name of the library compiled in this directory.  We want it to be installed
 # in $libdir
-lib_LTLIBRARIES = libOsiCommonTests.la
+lib_LTLIBRARIES = libOsiCommonTest.la
 
 # List all source files for this library, including headers
 
-libOsiCommonTests_la_SOURCES = \
-    OsiCommonTests.hpp \
+libOsiCommonTest_la_SOURCES = \
+    OsiCommonTest.hpp \
 	OsiColCutTest.cpp \
 	OsiCutsTest.cpp \
 	OsiRowCutDebuggerTest.cpp \
@@ -33,15 +33,16 @@ libOsiCommonTests_la_SOURCES = \
 
 # List all additionally required libraries
 if DEPENDENCY_LINKING
-libOsiCommonTests_la_LIBADD = $(OSILIB_LIBS) ../Osi/libOsi.la
+libOsiCommonTest_la_LIBADD = $(OSICOMMONTESTLIB_LFLAGS)
 endif
 
 # Libtool flags
-libOsiCommonTests_la_LDFLAGS = $(LT_LDFLAGS)
+libOsiCommonTest_la_LDFLAGS = $(LT_LDFLAGS)
 
-# Here list all include flags, relative to this "srcdir" directory.  This
-# "cygpath" stuff is necessary to compile with native compilers on Windows
-AM_CPPFLAGS = -I`$(CYGPATH_W) $(srcdir)/../Osi` $(OSILIB_CFLAGS)
+# Here list all include flags, relative to this "srcdir" directory. This
+# "cygpath" stuff is necessary to compile with native compilers on Cygwin.
+
+AM_CPPFLAGS = `$(CYGPATH_W) -I$(srcdir)/../Osi $(OSICOMMONTESTLIB_CFLAGS)`
 
 ########################################################################
 #                Headers that need to be installed                     #

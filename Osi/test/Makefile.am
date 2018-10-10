@@ -23,15 +23,15 @@ unitTest_SOURCES = unitTest.cpp \
   OsiTestSolverInterfaceTest.cpp
 
 # List libraries of COIN projects
-unitTest_LDADD        = ../src/OsiCommonTest/libOsiCommonTests.la
-unitTest_DEPENDENCIES = ../src/OsiCommonTest/libOsiCommonTests.la
+unitTest_LDADD        = ../src/OsiCommonTest/libOsiCommonTest.la
+unitTest_DEPENDENCIES = ../src/OsiCommonTest/libOsiCommonTest.la
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows
 AM_CPPFLAGS = \
-	-I`$(CYGPATH_W) $(srcdir)/../src/Osi` \
-	-I`$(CYGPATH_W) $(srcdir)/../src/OsiCommonTest` \
-	$(OSILIB_CFLAGS)
+	`$(CYGPATH_W) -I$(srcdir)/../src/Osi` \
+	`$(CYGPATH_W) -I$(srcdir)/../src/OsiCommonTest` \
+	`$(CYGPATH_W) $(OSICOMMONTESTLIB_CFLAGS)`
 
 # This line is necessary to allow VPATH compilation
 # DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/src/Osi
@@ -54,7 +54,7 @@ if COIN_HAS_GLPK
 	-I`$(CYGPATH_W) $(srcdir)/../src/OsiGlpk`
   unitTest_LDADD += ../src/OsiGlpk/libOsiGlpk.la
   unitTest_DEPENDENCIES += ../src/OsiGlpk/libOsiGlpk.la
-  LIBS += $(OSIGLPKLIB_LIBS)
+  LIBS += $(OSIGLPKLIB_LFLAGS)
 endif
 
 if COIN_HAS_MSK
@@ -93,8 +93,8 @@ if COIN_HAS_SOPLEX
   LIBS += $(SOPLEX_LIBS)
 endif
 
-unitTest_LDADD        += ../src/Osi/libOsi.la $(OSILIB_LIBS)
-unitTest_DEPENDENCIES += ../src/Osi/libOsi.la $(OSILIB_DEPENDENCIES)
+unitTest_LDADD        += ../src/Osi/libOsi.la $(OSILIB_LFLAGS)
+unitTest_DEPENDENCIES += ../src/Osi/libOsi.la
 
 unittestflags =
 if COIN_HAS_SAMPLE

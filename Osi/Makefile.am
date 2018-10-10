@@ -14,10 +14,11 @@ include BuildTools/Makemain.inc
 #            Subdirectories and installation of .pc files              #
 ########################################################################
 
+SUBDIRS = src/Osi src/OsiCommonTest
+
 pkgconfiglibdir = $(libdir)/pkgconfig
 pkgconfiglib_DATA = osi.pc osi-unittests.pc
 
-SUBDIRS = src/Osi src/OsiCommonTest
 if COIN_HAS_CPX
   SUBDIRS += src/OsiCpx
   pkgconfiglib_DATA += osi-cplex.pc
@@ -43,9 +44,9 @@ if COIN_HAS_SOPLEX
   pkgconfiglib_DATA += osi-soplex.pc
 endif
 
-# We don't want to compile the test subdirectory, unless the test target is
-# specified.  But we need to list it as subdirectory to make sure that it is
-# included in the tarball
+# We don't want to compile the test subdirectory, unless the test target
+# is specified.  But we need to list it as subdirectory to make sure that
+# it's included in the tarball
 
 if ALWAYS_FALSE
   SUBDIRS += test

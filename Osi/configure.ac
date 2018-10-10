@@ -12,6 +12,7 @@
 
 AC_INIT([Osi],[trunk],[osi@list.coin-or.org],[coin-or-osi],
 	[https://projects.coin-or.org/Osi])
+
 AC_COPYRIGHT([
 Copyright 2006 International Business Machines and others.
 All Rights Reserved.
@@ -23,7 +24,8 @@ under the Eclipse Public License.])
 
 AC_CONFIG_SRCDIR(src/Osi/OsiSolverInterface.cpp)
 
-# Do some initialization work (version numbers, change prefix default, ...)
+# Do some project-level  initialization work (version numbers, change prefix
+# default, ...)
 
 AC_COIN_INITIALIZE(Osi)
 
@@ -55,22 +57,52 @@ AC_COIN_CHECK_MATH_HDRS
 #                              COIN-OR components                           #
 #############################################################################
 
+# Initialise variables for OsiLib
+
+AC_COIN_INIT_LIBVARS([OsiLib],[-L\${libdir} -lOsi],[-I\${includedir}])
+
+# Find components for OsiLib
+
 AC_COIN_CHK_PKG(CoinUtils,[OsiLib])
 if test "$coin_has_coinutils" != yes ; then
   AC_MSG_ERROR([Required package CoinUtils not available.])
 fi
-AC_COIN_CHK_PKG(Sample,,[coindatasample],[],[],dataonly)
-AC_COIN_CHK_PKG(Netlib,,[coindatanetlib],[],[],dataonly)
 
-# These are third-party solvers with source distributions that can be
-# downloaded and built.
+# Finalize libs and cflags for building OsiLib.
 
-AC_COIN_CHK_PKG(Glpk,[OsiGlpkLib],,[build])
-AC_COIN_CHK_PKG(SoPlex,[OsiSpxLib],,[build])
+AC_COIN_FINALIZE_FLAGS(OsiLib)
+
+# Initialise variables for OsiCommonTestLib
+
+AC_COIN_INIT_LIBVARS([OsiCommonTestLib],
+		     [-L\${libdir} -lOsiCommonTest],[-I\${includedir}])
+
+# We just need the OSI_HAS_XXX variables for the data projects.
+
+AC_COIN_CHK_PKG(Sample,,[coindatasample],[],dataonly)
+AC_COIN_CHK_PKG(Netlib,,[coindatanetlib],[],dataonly)
+
+# Finalise lflags and cflags, then tack on information from OsiLib, which is
+# not yet installed.
+
+AC_COIN_FINALIZE_FLAGS(OsiCommonTestLib)
+AC_COIN_CHK_HERE([OsiLib],[OsiCommonTestLib],[osi])
 
 #############################################################################
 #                            Third party solvers                            #
 #############################################################################
+
+# These are third-party solvers with source distributions that can be
+# downloaded and built. The general flow here is as above: Initialise the
+# library, add external components, finalize the flags, and add any components
+# being built here.
+
+AC_COIN_INIT_LIBVARS([OsiGlpkLib],[-L\${libdir} -lOsiGlpk],[-I\${includedir}])
+AC_COIN_CHK_PKG(Glpk,[OsiGlpkLib],,[build])
+AC_COIN_INIT_LIBVARS([OsiSpxLib],[-L\${libdir} -lOsiSpx],[-I\${includedir}])
+AC_COIN_CHK_PKG(SoPlex,[OsiSpxLib],,[build])
+AC_COIN_FINALIZE_FLAGS([OsiGlpkLib OskSpxLib])
+AC_COIN_CHK_HERE([OsiLib],[OsiGlpkLib OsiSpxLib],[osi])
 
 # These are proprietary third-party solvers. Cplex detection has been
 # tested on a semi-regular basis, and Mosek detection most likely works. For
@@ -82,30 +114,36 @@ AC_COIN_CHK_PKG(SoPlex,[OsiSpxLib],,[build])
 # AC_COIN_CHECK_USER_LIBRARY([Xpress],[XPR],[xprs.h],    [XPRSinit])
 # AC_COIN_CHECK_USER_LIBRARY([Gurobi],[GRB],[gurobi_c.h],[GRBloadenv])
 
+AC_COIN_INIT_LIBVARS([OsiCpxLib],[-L\${libdir} -lOsiCpx],[-I\${includedir}])
+AC_COIN_CHK_LIB(Cplex,[OsiCpxLib],[-lcplex],[-I/usr/include])
+AC_COIN_INIT_LIBVARS([OsiMskLib],[-L\${libdir} -lOsiMsk],[-I\${includedir}])
+AC_COIN_CHK_LIB(Mosek,[OsiMskLib],[-lmosek],[-I/usr/include])
+AC_COIN_INIT_LIBVARS([OsiXprLib],[-L\${libdir} -lOsiXpr],[-I\${includedir}])
+AC_COIN_CHK_LIB(Xpress,[OsiXprLib],[-lxpress],[-I/usr/include])
+AC_COIN_INIT_LIBVARS([OsiGrbLib],[-L\${libdir} -lOsiGrb],[-I\${includedir}])
+AC_COIN_CHK_LIB(Gurobi,[OsiGrbLib],[-lgurobi],[-I/usr/include])
+AC_COIN_FINALIZE_FLAGS([OsiCpxLib OsiMskLib OsiXprLib OsiGrbLib])
+AC_COIN_CHK_HERE([OsiLib],[OsiCpxLib OsiMskLib OsiXprLib OsiGrbLib],[osi])
+
+# Force the automake conditionals to false until third-party link check is
+# reimplemented.
+
 AM_CONDITIONAL(COIN_HAS_CPX,[test 0 = 1])
 AM_CONDITIONAL(COIN_HAS_MSK,[test 0 = 1])
 AM_CONDITIONAL(COIN_HAS_XPR,[test 0 = 1])
 AM_CONDITIONAL(COIN_HAS_GRB,[test 0 = 1])
 
-# (lh, 180119) DEPENDENCY_LINKING sucks all dependencies into the
-# library. Seems like something to be avoided if possible.
-
-AM_CONDITIONAL(DEPENDENCY_LINKING,[test 0 = 1])
 
 #############################################################################
 #                            Examples solver                                #
 #############################################################################
 
-# Finalize libs and cflags for building OsiLib.
-AC_COIN_FINALIZE_FLAGS(OsiLib)
-
-# choose a solver interface that can be used in the examples
+# Choose a solver interface that can be used in the examples
 
 if test "$coin_has_glpk" = yes ; then
-  AC_COIN_FINALIZE_FLAGS(OsiGlpkLib)
   OSI_EXAMPLES_SOLVER_NAME=OsiGlpkSolverInterface
-  OSI_EXAMPLES_SOLVER_CFLAGS="$GLPK_CFLAGS"
-  OSI_EXAMPLES_SOLVER_LIBS="-lOsiGlpk $GLPK_LIBS"
+  OSI_EXAMPLES_SOLVER_CFLAGS="$OSIGLPKLIB_CFLAGS"
+  OSI_EXAMPLES_SOLVER_LIBS="$OSIGLPKLIB_LFLAGS"
   OSI_EXAMPLES_SOLVER_PCNAME=osi-glpk
 elif test "$coin_has_cpx" = true ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiCpxSolverInterface
@@ -128,7 +166,6 @@ elif test "$coin_has_xpr" = true ; then
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiXpr $XPRLIB"
   OSI_EXAMPLES_SOLVER_PCNAME=osi-xpress
 elif test "$coin_has_soplex" = yes ; then
-  AC_COIN_FINALIZE_FLAGS(OsiSpxLib)
   OSI_EXAMPLES_SOLVER_NAME=OsiSpxSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="$SOPLEX_CFLAGS"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiSpx $SOPLEX_LIBS"

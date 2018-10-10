@@ -38,21 +38,21 @@ libOsi_la_SOURCES = \
 
 # List all additionally required libraries
 if DEPENDENCY_LINKING
-libOsi_la_LIBADD = $(OSILIB_LIBS)
+libOsi_la_LIBADD = $(OSILIB_LFLAGS)
 endif
 
 # This is for libtool
 libOsi_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags.
-AM_CPPFLAGS = $(OSILIB_CFLAGS)
+AM_CPPFLAGS = -DOSI_BUILD `$(CYGPATH_W) $(OSILIB_CFLAGS)`
 
 ########################################################################
 #                Headers that need to be installed                     #
 ########################################################################
 
 # Here list all the header files that are required by a user of the library,
-# and that therefore should be installed in 'includedir/coin'
+# and that therefore should be installed in pkgincludedir
 
 includecoindir = $(pkgincludedir)
 includecoin_HEADERS = \

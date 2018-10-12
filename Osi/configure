@@ -17791,11 +17791,7 @@ fi
   case $coin_has_soplex in
     requested | build )
       if test -n "$PKG_CONFIG" ; then
-	if test $coin_has_soplex = build ; then
-	     pcfile=coinsoplex
-	   else
-	     pcfile=soplex
-	   fi
+	pcfile=coinsoplex < 1.7
 
 
 

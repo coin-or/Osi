@@ -2614,8 +2614,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 
-# Do some project-level  initialization work (version numbers, change prefix
-# default, ...)
+# Do some initialization work (version numbers, change prefix default, ...)
 
 
   # Check whether --enable-msvc was given.
@@ -4860,7 +4859,7 @@ ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ex
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 
-# Initialize libtool
+# Initialize libtool.
 
 case `pwd` in
   *\ * | *\	*)
@@ -16517,6 +16516,7 @@ $as_echo_n "checking for package CoinUtils... " >&6; }
 
 
 
+
 # Check to see if the user has set an override to skip this primary.
 
   coin_has_coinutils=noInfo
@@ -16756,6 +16756,7 @@ $as_echo "#define COIN_HAS_COINUTILS 1" >>confdefs.h
        OSILIB_LFLAGS="$coinutils_lflags $OSILIB_LFLAGS"
        OSILIB_CFLAGS="$coinutils_cflags $OSILIB_CFLAGS"
 
+
 # Finally, set up PRIM_DATA, unless the user specified nodata.
 
 
@@ -16796,7 +16797,8 @@ $as_echo "$as_me: adding \"${OSILIB_PCFILES}\"" >&6;}
 $as_echo "$as_me: OSILIB_LFLAGS: \"${OSILIB_LFLAGS}\"" >&6;}
         { $as_echo "$as_me:${as_lineno-$LINENO}: OSILIB_CFLAGS: \"${OSILIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSILIB_CFLAGS: \"${OSILIB_CFLAGS}\"" >&6;}
-      fi ;
+      fi
+
 
 
 # Initialise variables for OsiCommonTestLib
@@ -16812,7 +16814,7 @@ $as_echo "$as_me: OSILIB_CFLAGS: \"${OSILIB_CFLAGS}\"" >&6;}
 
 
 
-# We just need the OSI_HAS_XXX variables for the data projects.
+# We just need the COIN_HAS_XXX and XXX_DATA variables for the data projects.
 
 
 
@@ -17309,11 +17311,13 @@ $as_echo "$as_me: adding \"${OSICOMMONTESTLIB_PCFILES}\"" >&6;}
 $as_echo "$as_me: OSICOMMONTESTLIB_LFLAGS: \"${OSICOMMONTESTLIB_LFLAGS}\"" >&6;}
         { $as_echo "$as_me:${as_lineno-$LINENO}: OSICOMMONTESTLIB_CFLAGS: \"${OSICOMMONTESTLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSICOMMONTESTLIB_CFLAGS: \"${OSICOMMONTESTLIB_CFLAGS}\"" >&6;}
-      fi ;
+      fi
+
 
 
 
 # Make sure the necessary variables exist for each client package.
+
 
 
 
@@ -17336,7 +17340,8 @@ $as_echo "$as_me: OSICOMMONTESTLIB_PCFILES: \"${OSICOMMONTESTLIB_PCFILES}\"" >&6
 $as_echo "$as_me: OSICOMMONTESTLIB_LFLAGS: \"${OSICOMMONTESTLIB_LFLAGS}\"" >&6;}
 	 { $as_echo "$as_me:${as_lineno-$LINENO}: OSICOMMONTESTLIB_CFLAGS: \"${OSICOMMONTESTLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSICOMMONTESTLIB_CFLAGS: \"${OSICOMMONTESTLIB_CFLAGS}\"" >&6;}
-       fi ;
+       fi
+
 
 
 
@@ -17366,6 +17371,7 @@ $as_echo "$as_me: OSICOMMONTESTLIB_CFLAGS: \"${OSICOMMONTESTLIB_CFLAGS}\"" >&6;}
 $as_echo_n "checking for package Glpk... " >&6; }
 
 # Make sure the necessary variables exist for each client package.
+
 
 
 
@@ -17610,6 +17616,7 @@ $as_echo "#define COIN_HAS_GLPK 1" >>confdefs.h
        OSIGLPKLIB_LFLAGS="$glpk_lflags $OSIGLPKLIB_LFLAGS"
        OSIGLPKLIB_CFLAGS="$glpk_cflags $OSIGLPKLIB_CFLAGS"
 
+
 # Finally, set up PRIM_DATA, unless the user specified nodata.
 
 
@@ -17632,6 +17639,7 @@ $as_echo "#define COIN_HAS_GLPK 1" >>confdefs.h
 $as_echo_n "checking for package SoPlex... " >&6; }
 
 # Make sure the necessary variables exist for each client package.
+
 
 
 
@@ -17876,6 +17884,7 @@ $as_echo "#define COIN_HAS_SOPLEX 1" >>confdefs.h
        OSISPXLIB_LFLAGS="$soplex_lflags $OSISPXLIB_LFLAGS"
        OSISPXLIB_CFLAGS="$soplex_cflags $OSISPXLIB_CFLAGS"
 
+
 # Finally, set up PRIM_DATA, unless the user specified nodata.
 
 
@@ -17910,7 +17919,8 @@ $as_echo "$as_me: adding \"${OSIGLPKLIB_PCFILES}\"" >&6;}
 $as_echo "$as_me: OSIGLPKLIB_LFLAGS: \"${OSIGLPKLIB_LFLAGS}\"" >&6;}
         { $as_echo "$as_me:${as_lineno-$LINENO}: OSIGLPKLIB_CFLAGS: \"${OSIGLPKLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSIGLPKLIB_CFLAGS: \"${OSIGLPKLIB_CFLAGS}\"" >&6;}
-      fi ;  if test 1 = 1 ; then
+      fi
+     if test 1 = 1 ; then
         { $as_echo "$as_me:${as_lineno-$LINENO}: FINALIZE_FLAGS for OskSpxLib:" >&5
 $as_echo "$as_me: FINALIZE_FLAGS for OskSpxLib:" >&6;}
       fi
@@ -17938,11 +17948,14 @@ $as_echo "$as_me: adding \"${OSKSPXLIB_PCFILES}\"" >&6;}
 $as_echo "$as_me: OSKSPXLIB_LFLAGS: \"${OSKSPXLIB_LFLAGS}\"" >&6;}
         { $as_echo "$as_me:${as_lineno-$LINENO}: OSKSPXLIB_CFLAGS: \"${OSKSPXLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSKSPXLIB_CFLAGS: \"${OSKSPXLIB_CFLAGS}\"" >&6;}
-      fi ;
+      fi
+
 
 
 
 # Make sure the necessary variables exist for each client package.
+
+
 
 
 
@@ -17967,7 +17980,8 @@ $as_echo "$as_me: OSIGLPKLIB_PCFILES: \"${OSIGLPKLIB_PCFILES}\"" >&6;}
 $as_echo "$as_me: OSIGLPKLIB_LFLAGS: \"${OSIGLPKLIB_LFLAGS}\"" >&6;}
 	 { $as_echo "$as_me:${as_lineno-$LINENO}: OSIGLPKLIB_CFLAGS: \"${OSIGLPKLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSIGLPKLIB_CFLAGS: \"${OSIGLPKLIB_CFLAGS}\"" >&6;}
-       fi ; OSISPXLIB_PCFILES="$OSISPXLIB_PCFILES osi"
+       fi
+      OSISPXLIB_PCFILES="$OSISPXLIB_PCFILES osi"
        OSISPXLIB_LFLAGS="$OSISPXLIB_LFLAGS $OSILIB_LFLAGS"
        OSISPXLIB_CFLAGS="$OSISPXLIB_CFLAGS $OSILIB_CFLAGS"
 
@@ -17982,7 +17996,8 @@ $as_echo "$as_me: OSISPXLIB_PCFILES: \"${OSISPXLIB_PCFILES}\"" >&6;}
 $as_echo "$as_me: OSISPXLIB_LFLAGS: \"${OSISPXLIB_LFLAGS}\"" >&6;}
 	 { $as_echo "$as_me:${as_lineno-$LINENO}: OSISPXLIB_CFLAGS: \"${OSISPXLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSISPXLIB_CFLAGS: \"${OSISPXLIB_CFLAGS}\"" >&6;}
-       fi ;
+       fi
+
 
 
 
@@ -18011,6 +18026,7 @@ $as_echo "$as_me: OSISPXLIB_CFLAGS: \"${OSISPXLIB_CFLAGS}\"" >&6;}
 $as_echo_n "checking for package Cplex... " >&6; }
 
 # Make sure the necessary variables exist for each client package.
+
 
 
 
@@ -18225,6 +18241,7 @@ $as_echo "#define COIN_HAS_CPLEX 1" >>confdefs.h
     OSICPXLIB_LFLAGS="$cplex_lflags $OSICPXLIB_LFLAGS"
        OSICPXLIB_CFLAGS="$cplex_cflags $OSICPXLIB_CFLAGS"
 
+
 # Finally, set up PRIM_DATA, unless the user specified nodata.
 
 
@@ -18245,6 +18262,7 @@ $as_echo "#define COIN_HAS_CPLEX 1" >>confdefs.h
 $as_echo_n "checking for package Mosek... " >&6; }
 
 # Make sure the necessary variables exist for each client package.
+
 
 
 
@@ -18459,6 +18477,7 @@ $as_echo "#define COIN_HAS_MOSEK 1" >>confdefs.h
     OSIMSKLIB_LFLAGS="$mosek_lflags $OSIMSKLIB_LFLAGS"
        OSIMSKLIB_CFLAGS="$mosek_cflags $OSIMSKLIB_CFLAGS"
 
+
 # Finally, set up PRIM_DATA, unless the user specified nodata.
 
 
@@ -18479,6 +18498,7 @@ $as_echo "#define COIN_HAS_MOSEK 1" >>confdefs.h
 $as_echo_n "checking for package Xpress... " >&6; }
 
 # Make sure the necessary variables exist for each client package.
+
 
 
 
@@ -18693,6 +18713,7 @@ $as_echo "#define COIN_HAS_XPRESS 1" >>confdefs.h
     OSIXPRLIB_LFLAGS="$xpress_lflags $OSIXPRLIB_LFLAGS"
        OSIXPRLIB_CFLAGS="$xpress_cflags $OSIXPRLIB_CFLAGS"
 
+
 # Finally, set up PRIM_DATA, unless the user specified nodata.
 
 
@@ -18713,6 +18734,7 @@ $as_echo "#define COIN_HAS_XPRESS 1" >>confdefs.h
 $as_echo_n "checking for package Gurobi... " >&6; }
 
 # Make sure the necessary variables exist for each client package.
+
 
 
 
@@ -18927,6 +18949,7 @@ $as_echo "#define COIN_HAS_GUROBI 1" >>confdefs.h
     OSIGRBLIB_LFLAGS="$gurobi_lflags $OSIGRBLIB_LFLAGS"
        OSIGRBLIB_CFLAGS="$gurobi_cflags $OSIGRBLIB_CFLAGS"
 
+
 # Finally, set up PRIM_DATA, unless the user specified nodata.
 
 
@@ -18961,7 +18984,8 @@ $as_echo "$as_me: adding \"${OSICPXLIB_PCFILES}\"" >&6;}
 $as_echo "$as_me: OSICPXLIB_LFLAGS: \"${OSICPXLIB_LFLAGS}\"" >&6;}
         { $as_echo "$as_me:${as_lineno-$LINENO}: OSICPXLIB_CFLAGS: \"${OSICPXLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSICPXLIB_CFLAGS: \"${OSICPXLIB_CFLAGS}\"" >&6;}
-      fi ;  if test 1 = 1 ; then
+      fi
+     if test 1 = 1 ; then
         { $as_echo "$as_me:${as_lineno-$LINENO}: FINALIZE_FLAGS for OsiMskLib:" >&5
 $as_echo "$as_me: FINALIZE_FLAGS for OsiMskLib:" >&6;}
       fi
@@ -18989,7 +19013,8 @@ $as_echo "$as_me: adding \"${OSIMSKLIB_PCFILES}\"" >&6;}
 $as_echo "$as_me: OSIMSKLIB_LFLAGS: \"${OSIMSKLIB_LFLAGS}\"" >&6;}
         { $as_echo "$as_me:${as_lineno-$LINENO}: OSIMSKLIB_CFLAGS: \"${OSIMSKLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSIMSKLIB_CFLAGS: \"${OSIMSKLIB_CFLAGS}\"" >&6;}
-      fi ;  if test 1 = 1 ; then
+      fi
+     if test 1 = 1 ; then
         { $as_echo "$as_me:${as_lineno-$LINENO}: FINALIZE_FLAGS for OsiXprLib:" >&5
 $as_echo "$as_me: FINALIZE_FLAGS for OsiXprLib:" >&6;}
       fi
@@ -19017,7 +19042,8 @@ $as_echo "$as_me: adding \"${OSIXPRLIB_PCFILES}\"" >&6;}
 $as_echo "$as_me: OSIXPRLIB_LFLAGS: \"${OSIXPRLIB_LFLAGS}\"" >&6;}
         { $as_echo "$as_me:${as_lineno-$LINENO}: OSIXPRLIB_CFLAGS: \"${OSIXPRLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSIXPRLIB_CFLAGS: \"${OSIXPRLIB_CFLAGS}\"" >&6;}
-      fi ;  if test 1 = 1 ; then
+      fi
+     if test 1 = 1 ; then
         { $as_echo "$as_me:${as_lineno-$LINENO}: FINALIZE_FLAGS for OsiGrbLib:" >&5
 $as_echo "$as_me: FINALIZE_FLAGS for OsiGrbLib:" >&6;}
       fi
@@ -19045,11 +19071,16 @@ $as_echo "$as_me: adding \"${OSIGRBLIB_PCFILES}\"" >&6;}
 $as_echo "$as_me: OSIGRBLIB_LFLAGS: \"${OSIGRBLIB_LFLAGS}\"" >&6;}
         { $as_echo "$as_me:${as_lineno-$LINENO}: OSIGRBLIB_CFLAGS: \"${OSIGRBLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSIGRBLIB_CFLAGS: \"${OSIGRBLIB_CFLAGS}\"" >&6;}
-      fi ;
+      fi
+
 
 
 
 # Make sure the necessary variables exist for each client package.
+
+
+
+
 
 
 
@@ -19078,7 +19109,8 @@ $as_echo "$as_me: OSICPXLIB_PCFILES: \"${OSICPXLIB_PCFILES}\"" >&6;}
 $as_echo "$as_me: OSICPXLIB_LFLAGS: \"${OSICPXLIB_LFLAGS}\"" >&6;}
 	 { $as_echo "$as_me:${as_lineno-$LINENO}: OSICPXLIB_CFLAGS: \"${OSICPXLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSICPXLIB_CFLAGS: \"${OSICPXLIB_CFLAGS}\"" >&6;}
-       fi ; OSIMSKLIB_PCFILES="$OSIMSKLIB_PCFILES osi"
+       fi
+      OSIMSKLIB_PCFILES="$OSIMSKLIB_PCFILES osi"
        OSIMSKLIB_LFLAGS="$OSIMSKLIB_LFLAGS $OSILIB_LFLAGS"
        OSIMSKLIB_CFLAGS="$OSIMSKLIB_CFLAGS $OSILIB_CFLAGS"
 
@@ -19093,7 +19125,8 @@ $as_echo "$as_me: OSIMSKLIB_PCFILES: \"${OSIMSKLIB_PCFILES}\"" >&6;}
 $as_echo "$as_me: OSIMSKLIB_LFLAGS: \"${OSIMSKLIB_LFLAGS}\"" >&6;}
 	 { $as_echo "$as_me:${as_lineno-$LINENO}: OSIMSKLIB_CFLAGS: \"${OSIMSKLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSIMSKLIB_CFLAGS: \"${OSIMSKLIB_CFLAGS}\"" >&6;}
-       fi ; OSIXPRLIB_PCFILES="$OSIXPRLIB_PCFILES osi"
+       fi
+      OSIXPRLIB_PCFILES="$OSIXPRLIB_PCFILES osi"
        OSIXPRLIB_LFLAGS="$OSIXPRLIB_LFLAGS $OSILIB_LFLAGS"
        OSIXPRLIB_CFLAGS="$OSIXPRLIB_CFLAGS $OSILIB_CFLAGS"
 
@@ -19108,7 +19141,8 @@ $as_echo "$as_me: OSIXPRLIB_PCFILES: \"${OSIXPRLIB_PCFILES}\"" >&6;}
 $as_echo "$as_me: OSIXPRLIB_LFLAGS: \"${OSIXPRLIB_LFLAGS}\"" >&6;}
 	 { $as_echo "$as_me:${as_lineno-$LINENO}: OSIXPRLIB_CFLAGS: \"${OSIXPRLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSIXPRLIB_CFLAGS: \"${OSIXPRLIB_CFLAGS}\"" >&6;}
-       fi ; OSIGRBLIB_PCFILES="$OSIGRBLIB_PCFILES osi"
+       fi
+      OSIGRBLIB_PCFILES="$OSIGRBLIB_PCFILES osi"
        OSIGRBLIB_LFLAGS="$OSIGRBLIB_LFLAGS $OSILIB_LFLAGS"
        OSIGRBLIB_CFLAGS="$OSIGRBLIB_CFLAGS $OSILIB_CFLAGS"
 
@@ -19123,7 +19157,8 @@ $as_echo "$as_me: OSIGRBLIB_PCFILES: \"${OSIGRBLIB_PCFILES}\"" >&6;}
 $as_echo "$as_me: OSIGRBLIB_LFLAGS: \"${OSIGRBLIB_LFLAGS}\"" >&6;}
 	 { $as_echo "$as_me:${as_lineno-$LINENO}: OSIGRBLIB_CFLAGS: \"${OSIGRBLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSIGRBLIB_CFLAGS: \"${OSIGRBLIB_CFLAGS}\"" >&6;}
-       fi ;
+       fi
+
 
 
 

@@ -24,8 +24,7 @@ under the Eclipse Public License.])
 
 AC_CONFIG_SRCDIR(src/Osi/OsiSolverInterface.cpp)
 
-# Do some project-level  initialization work (version numbers, change prefix
-# default, ...)
+# Do some initialization work (version numbers, change prefix default, ...)
 
 AC_COIN_INITIALIZE(Osi)
 
@@ -41,7 +40,7 @@ AC_COIN_PROG_CXX
 
 AC_LANG_PUSH(C++)
 
-# Initialize libtool
+# Initialize libtool.
 
 AC_COIN_PROG_LIBTOOL
 
@@ -77,7 +76,7 @@ AC_COIN_FINALIZE_FLAGS(OsiLib)
 AC_COIN_INIT_LIBVARS([OsiCommonTestLib],
 		     [-L\${libdir} -lOsiCommonTest],[-I\${includedir}])
 
-# We just need the OSI_HAS_XXX variables for the data projects.
+# We just need the COIN_HAS_XXX and XXX_DATA variables for the data projects.
 
 AC_COIN_CHK_PKG(Sample,,[coindatasample],[],dataonly)
 AC_COIN_CHK_PKG(Netlib,,[coindatanetlib],[],dataonly)

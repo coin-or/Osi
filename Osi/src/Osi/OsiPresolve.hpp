@@ -165,6 +165,12 @@ public:
   */
   inline void setPresolveActions(int action)
   { presolveActions_  = (presolveActions_&0xffff0000)|(action&0xffff);}
+  /// Get presolved model
+  inline OsiSolverInterface * presolvedModel() const
+  { return presolvedModel_; }
+  /// Set presolved model
+  inline void setPresolvedModel(OsiSolverInterface * presolvedModel)
+  { presolvedModel_ = presolvedModel; }
 
 private:
   /*! Original model (solver interface loaded with the original problem).

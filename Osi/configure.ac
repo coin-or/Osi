@@ -99,7 +99,7 @@ AC_COIN_CHK_HERE([OsiLib],[OsiCommonTestLib],[osi])
 AC_COIN_INIT_LIBVARS([OsiGlpkLib],[-L\${libdir} -lOsiGlpk],[-I\${includedir}])
 AC_COIN_CHK_PKG(Glpk,[OsiGlpkLib],,[build])
 AC_COIN_INIT_LIBVARS([OsiSpxLib],[-L\${libdir} -lOsiSpx],[-I\${includedir}])
-AC_COIN_CHK_PKG(SoPlex,[OsiSpxLib],,[build])
+AC_COIN_CHK_PKG(SoPlex,[OsiSpxLib],[coinsoplex < 1.7],[build])
 AC_COIN_FINALIZE_FLAGS([OsiGlpkLib OskSpxLib])
 AC_COIN_CHK_HERE([OsiLib],[OsiGlpkLib OsiSpxLib],[osi])
 

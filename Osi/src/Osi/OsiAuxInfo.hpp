@@ -169,6 +169,12 @@ public:
   /// Set pointer to upper bounds before branch (only if extraCharacteristics set)
   inline void setBeforeUpper(const double * array)
   { beforeUpper_ = array;}
+  /// Set pointer to extra stuff
+  inline void setExtraPointer(void * extraInfo)
+  { extraInfo_ = extraInfo; }
+  /// get pointer to extra info
+  inline void * getExtraPointer() const
+  { return extraInfo_; }
 protected:
   /// Objective value of best solution (if there is one) (minimization)
   double bestObjectiveValue_;
@@ -182,6 +188,8 @@ protected:
   const double * beforeLower_;
   /// Pointer to upper bounds before branch (only if extraCharacteristics set)
   const double * beforeUpper_;
+  /// Pointer to extra info
+  void * extraInfo_;
   /** Solver type
       0 - normal LP solver
       1 - DW - may also return heuristic solutions

@@ -53,6 +53,7 @@ OsiBabSolver::OsiBabSolver(int solverType)
    bestSolution_(NULL),
    beforeLower_(NULL),
    beforeUpper_(NULL),
+   extraInfo_(NULL),
    solverType_(solverType),
    sizeSolution_(0),
    extraCharacteristics_(0)
@@ -82,6 +83,7 @@ OsiBabSolver::OsiBabSolver(const OsiBabSolver & rhs)
   bestSolution_(NULL),
   beforeLower_(rhs.beforeLower_),
   beforeUpper_(rhs.beforeUpper_),
+  extraInfo_(rhs.extraInfo_),
   solverType_(rhs.solverType_),
   sizeSolution_(rhs.sizeSolution_),
   extraCharacteristics_(rhs.extraCharacteristics_)
@@ -106,6 +108,7 @@ OsiBabSolver::operator=(const OsiBabSolver &rhs)
     extraCharacteristics_ = rhs.extraCharacteristics_;
     beforeLower_ = rhs.beforeLower_;
     beforeUpper_ = rhs.beforeUpper_;
+    extraInfo_ = rhs.extraInfo_;
     if (rhs.bestSolution_) {
       assert (solver_);
       bestSolution_ = CoinCopyOfArray(rhs.bestSolution_,sizeSolution_);

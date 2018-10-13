@@ -113,25 +113,27 @@ AC_COIN_CHK_HERE([OsiLib],[OsiGlpkLib OsiSpxLib],[osi])
 # AC_COIN_CHECK_USER_LIBRARY([Xpress],[XPR],[xprs.h],    [XPRSinit])
 # AC_COIN_CHECK_USER_LIBRARY([Gurobi],[GRB],[gurobi_c.h],[GRBloadenv])
 
+# Use abbreviations for Cplex, Mosek, Xpress, and Gurobi to minimize
+# disruption of existing symbols.
+
 AC_COIN_INIT_LIBVARS([OsiCpxLib],[-L\${libdir} -lOsiCpx],[-I\${includedir}])
-AC_COIN_CHK_LIB(Cplex,[OsiCpxLib],[-lcplex],[-I/usr/include])
+AC_COIN_CHK_LIB(Cpx,[OsiCpxLib],[-lcplex],[-I/usr/include],[],
+                [CPXgetstat])
+
 AC_COIN_INIT_LIBVARS([OsiMskLib],[-L\${libdir} -lOsiMsk],[-I\${includedir}])
-AC_COIN_CHK_LIB(Mosek,[OsiMskLib],[-lmosek],[-I/usr/include])
+AC_COIN_CHK_LIB(Msk,[OsiMskLib],[-lmosek],[-I/usr/include],[],
+                [MSK_makeenv])
+
 AC_COIN_INIT_LIBVARS([OsiXprLib],[-L\${libdir} -lOsiXpr],[-I\${includedir}])
-AC_COIN_CHK_LIB(Xpress,[OsiXprLib],[-lxpress],[-I/usr/include])
+AC_COIN_CHK_LIB(Xpr,[OsiXprLib],[-lxpress],[-I/usr/include],[],
+                [XPRSinit])
+
 AC_COIN_INIT_LIBVARS([OsiGrbLib],[-L\${libdir} -lOsiGrb],[-I\${includedir}])
-AC_COIN_CHK_LIB(Gurobi,[OsiGrbLib],[-lgurobi],[-I/usr/include])
+AC_COIN_CHK_LIB(Grb,[OsiGrbLib],[-lgurobi],[-I/usr/include],[],
+                [GRBloadenv])
+
 AC_COIN_FINALIZE_FLAGS([OsiCpxLib OsiMskLib OsiXprLib OsiGrbLib])
 AC_COIN_CHK_HERE([OsiLib],[OsiCpxLib OsiMskLib OsiXprLib OsiGrbLib],[osi])
-
-# Force the automake conditionals to false until third-party link check is
-# reimplemented.
-
-AM_CONDITIONAL(COIN_HAS_CPX,[test 0 = 1])
-AM_CONDITIONAL(COIN_HAS_MSK,[test 0 = 1])
-AM_CONDITIONAL(COIN_HAS_XPR,[test 0 = 1])
-AM_CONDITIONAL(COIN_HAS_GRB,[test 0 = 1])
-
 
 #############################################################################
 #                            Examples solver                                #

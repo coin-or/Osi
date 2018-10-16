@@ -24,12 +24,8 @@ libOsiGrb_la_LIBADD = $(OSILIB_LIBS) ../Osi/libOsi.la $(GRBLIB)
 # This is for libtool (on Windows)
 libOsiGrb_la_LDFLAGS = $(LT_LDFLAGS)
 
-# Here list all include flags, relative to this "srcdir" directory.  This
-# "cygpath" stuff is necessary to compile with native compilers on Windows.
-AM_CPPFLAGS = \
-	-I`$(CYGPATH_W) $(srcdir)/../Osi` \
-	-I`$(CYGPATH_W) $(GRBINCDIR)` \
-	$(COINUTILS_CFLAGS)
+# Here list all include flags, relative to this "srcdir" directory.
+AM_CPPFLAGS = $(srcdir)/../Osi $(GRBINCDIR) $(COINUTILS_CFLAGS)
 
 # This line is necessary to allow VPATH compilation
 # DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/src/Osi

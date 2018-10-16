@@ -115,44 +115,32 @@ noinst_PROGRAMS = unitTest$(EXEEXT)
 # Depending of what solvers are available, we add the corresponding files,
 # libraries and include dirs
 @COIN_HAS_CPX_TRUE@am__append_1 = OsiCpxSolverInterfaceTest.cpp
-@COIN_HAS_CPX_TRUE@am__append_2 = -I`$(CYGPATH_W) $(CPXINCDIR)` \
-@COIN_HAS_CPX_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiCpx`
-
+@COIN_HAS_CPX_TRUE@am__append_2 = -I$(CPXINCDIR) -I$(srcdir)/../src/OsiCpx
 @COIN_HAS_CPX_TRUE@am__append_3 = ../src/OsiCpx/libOsiCpx.la
 @COIN_HAS_CPX_TRUE@am__append_4 = ../src/OsiCpx/libOsiCpx.la
 @COIN_HAS_CPX_TRUE@am__append_5 = $(CPXLIB)
 @COIN_HAS_GLPK_TRUE@am__append_6 = OsiGlpkSolverInterfaceTest.cpp
-@COIN_HAS_GLPK_TRUE@am__append_7 = $(OSIGLPKLIB_CFLAGS) -DCOIN_HAS_GLPK \
-@COIN_HAS_GLPK_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiGlpk`
-
+@COIN_HAS_GLPK_TRUE@am__append_7 = $(OSIGLPKLIB_CFLAGS) -DCOIN_HAS_GLPK -I$(srcdir)/../src/OsiGlpk
 @COIN_HAS_GLPK_TRUE@am__append_8 = ../src/OsiGlpk/libOsiGlpk.la
 @COIN_HAS_GLPK_TRUE@am__append_9 = ../src/OsiGlpk/libOsiGlpk.la
 @COIN_HAS_GLPK_TRUE@am__append_10 = $(OSIGLPKLIB_LFLAGS)
 @COIN_HAS_MSK_TRUE@am__append_11 = OsiMskSolverInterfaceTest.cpp
-@COIN_HAS_MSK_TRUE@am__append_12 = -I`$(CYGPATH_W) $(MSKINCDIR)` \
-@COIN_HAS_MSK_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiMsk`
-
+@COIN_HAS_MSK_TRUE@am__append_12 = -I$(MSKINCDIR) -I$(srcdir)/../src/OsiMsk
 @COIN_HAS_MSK_TRUE@am__append_13 = ../src/OsiMsk/libOsiMsk.la
 @COIN_HAS_MSK_TRUE@am__append_14 = ../src/OsiMsk/libOsiMsk.la
 @COIN_HAS_MSK_TRUE@am__append_15 = $(MSKLIB)
 @COIN_HAS_XPR_TRUE@am__append_16 = OsiXprSolverInterfaceTest.cpp
-@COIN_HAS_XPR_TRUE@am__append_17 = -I`$(CYGPATH_W) $(XPRINCDIR)` \
-@COIN_HAS_XPR_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiXpr`
-
+@COIN_HAS_XPR_TRUE@am__append_17 = -I$(XPRINCDIR) -I$(srcdir)/../src/OsiXpr
 @COIN_HAS_XPR_TRUE@am__append_18 = ../src/OsiXpr/libOsiXpr.la
 @COIN_HAS_XPR_TRUE@am__append_19 = ../src/OsiXpr/libOsiXpr.la
 @COIN_HAS_XPR_TRUE@am__append_20 = $(XPRLIB)
 @COIN_HAS_GRB_TRUE@am__append_21 = OsiGrbSolverInterfaceTest.cpp
-@COIN_HAS_GRB_TRUE@am__append_22 = -I`$(CYGPATH_W) $(GRBINCDIR)` \
-@COIN_HAS_GRB_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiGrb`
-
+@COIN_HAS_GRB_TRUE@am__append_22 = -I$(GRBINCDIR) -I$(srcdir)/../src/OsiGrb
 @COIN_HAS_GRB_TRUE@am__append_23 = ../src/OsiGrb/libOsiGrb.la
 @COIN_HAS_GRB_TRUE@am__append_24 = ../src/OsiGrb/libOsiGrb.la
 @COIN_HAS_GRB_TRUE@am__append_25 = $(GRBLIB)
 @COIN_HAS_SOPLEX_TRUE@am__append_26 = OsiSpxSolverInterfaceTest.cpp
-@COIN_HAS_SOPLEX_TRUE@am__append_27 = $(SOPLEX_CFLAGS) \
-@COIN_HAS_SOPLEX_TRUE@	-I`$(CYGPATH_W) $(srcdir)/../src/OsiSpx`
-
+@COIN_HAS_SOPLEX_TRUE@am__append_27 = $(SOPLEX_CFLAGS) -I$(srcdir)/../src/OsiSpx
 @COIN_HAS_SOPLEX_TRUE@am__append_28 = ../src/OsiSpx/libOsiSpx.la
 @COIN_HAS_SOPLEX_TRUE@am__append_29 = ../src/OsiSpx/libOsiSpx.la
 @COIN_HAS_SOPLEX_TRUE@am__append_30 = $(SOPLEX_LIBS)
@@ -503,11 +491,9 @@ unitTest_DEPENDENCIES = ../src/OsiCommonTest/libOsiCommonTest.la \
 	$(am__append_19) $(am__append_24) $(am__append_29) \
 	../src/Osi/libOsi.la
 
-# Here list all include flags, relative to this "srcdir" directory.  This
-# "cygpath" stuff is necessary to compile with native compilers on Windows
-AM_CPPFLAGS = `$(CYGPATH_W) -I$(srcdir)/../src/Osi` `$(CYGPATH_W) \
-	-I$(srcdir)/../src/OsiCommonTest` `$(CYGPATH_W) \
-	$(OSICOMMONTESTLIB_CFLAGS)` $(am__append_2) $(am__append_7) \
+# Here list all include flags, relative to this "srcdir" directory.
+AM_CPPFLAGS = -I$(srcdir)/../src/Osi -I$(srcdir)/../src/OsiCommonTest \
+	$(OSICOMMONTESTLIB_CFLAGS) $(am__append_2) $(am__append_7) \
 	$(am__append_12) $(am__append_17) $(am__append_22) \
 	$(am__append_27)
 unittestflags = $(am__append_31) $(am__append_32)

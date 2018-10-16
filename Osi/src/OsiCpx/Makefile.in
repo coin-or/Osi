@@ -490,12 +490,8 @@ libOsiCpx_la_LIBADD = $(OSILIB_LFLAGS) ../Osi/libOsi.la $(OSICPXLIB_LFLAGS)
 # This is for libtool (on Windows)
 libOsiCpx_la_LDFLAGS = $(LT_LDFLAGS)
 
-# Here list all include flags, relative to this "srcdir" directory.  This
-# "cygpath" stuff is necessary to compile with native compilers on Windows.
-AM_CPPFLAGS = \
-	`$(CYGPATH_W) $(OSICPXLIB_CFLAGS)` \
-	`$(CYGPATH_W) -I$(srcdir)/../Osi`
-
+# Here list all include flags, relative to this "srcdir" directory.
+AM_CPPFLAGS = $(OSICPXLIB_CFLAGS) -I$(srcdir)/../Osi
 
 ########################################################################
 #                Headers that need to be installed                     #

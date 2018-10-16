@@ -27,14 +27,10 @@ libOsiXpr_la_LIBADD = $(OSILIB_LIBS) ../Osi/libOsi.la $(XPRLIB)
 # This is for libtool (on Windows)
 libOsiXpr_la_LDFLAGS = $(LT_LDFLAGS)
 
-# Here list all include flags, relative to this "srcdir" directory.  This
-# "cygpath" stuff is necessary to compile with native compilers on Windows.
+# Here list all include flags, relative to this "srcdir" directory.
 # "top_srcdir" refers to the basic directory for the main package that is
 # being compiled.
-AM_CPPFLAGS = \
-	-I`$(CYGPATH_W) $(srcdir)/../Osi` \
-	-I`$(CYGPATH_W) $(XPRINCDIR)` \
-	$(COINUTILS_CFLAGS)
+AM_CPPFLAGS = $(srcdir)/../Osi $(XPRINCDIR) $(COINUTILS_CFLAGS)
 
 # This line is necessary to allow VPATH compilation
 # DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/src/Osi

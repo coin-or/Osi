@@ -16479,7 +16479,7 @@ $as_echo_n "checking for package CoinUtils... " >&6; }
   if test x"$COIN_SKIP_PROJECTS" != x ; then
     for pkg in $COIN_SKIP_PROJECTS ; do
       if test "$pkg" = "$coinutils" ; then
-	coin_has_coinutils=skipping
+        coin_has_coinutils=skipping
       fi
     done
   fi
@@ -16535,18 +16535,18 @@ fi
   if test -n "$withval" ; then
     case "$withval" in
       no )
-	coin_has_coinutils=skipping
-	;;
+        coin_has_coinutils=skipping
+        ;;
       yes )
-	coin_has_coinutils=requested
-	;;
+        coin_has_coinutils=requested
+        ;;
       build )
-	coin_has_coinutils=build
-	;;
+        coin_has_coinutils=build
+        ;;
       * )
-	coin_has_coinutils=yes
-	coinutils_lflags=$withval
-	;;
+        coin_has_coinutils=yes
+        coinutils_lflags=$withval
+        ;;
     esac
   fi
 
@@ -16557,28 +16557,28 @@ fi
   if test "$coin_has_coinutils" != skipping ; then
        withval=$with_coinutils_lflags
        if test -n "$withval" ; then
-	 case "$withval" in
-	   build | no | yes )
-	     as_fn_error $? "\"$withval\" is not valid here; please specify linker flags appropriate for your environment." "$LINENO" 5
-	     ;;
-	   * )
-	     coin_has_coinutils=yes
-	     coinutils_lflags=$withval
-	     ;;
-	 esac
+         case "$withval" in
+           build | no | yes )
+             as_fn_error $? "\"$withval\" is not valid here; please specify linker flags appropriate for your environment." "$LINENO" 5
+             ;;
+           * )
+             coin_has_coinutils=yes
+             coinutils_lflags=$withval
+             ;;
+         esac
        fi
 
        withval=$with_coinutils_cflags
        if test -n "$withval" ; then
-	 case "$withval" in
-	   build | no | yes )
-	     as_fn_error $? "\"$withval\" is not valid here; please specify compiler flags appropriate for your environment." "$LINENO" 5
-	     ;;
-	   * )
-	     coin_has_coinutils=yes
-	     coinutils_cflags="$withval"
-	     ;;
-	 esac
+         case "$withval" in
+           build | no | yes )
+             as_fn_error $? "\"$withval\" is not valid here; please specify compiler flags appropriate for your environment." "$LINENO" 5
+             ;;
+           * )
+             coin_has_coinutils=yes
+             coinutils_cflags="$withval"
+             ;;
+         esac
        fi
      fi
 
@@ -16600,14 +16600,14 @@ fi
   if test "$coin_has_coinutils" = noInfo ; then
     case $dflt_action in
       no )
-	coin_has_coinutils=skipping
-	;;
+        coin_has_coinutils=skipping
+        ;;
       build )
-	coin_has_coinutils=build
-	;;
+        coin_has_coinutils=build
+        ;;
       * )
         coin_has_coinutils=requested
-	;;
+        ;;
     esac
   fi
 
@@ -16619,11 +16619,11 @@ fi
   case $coin_has_coinutils in
     requested | build )
       if test -n "$PKG_CONFIG" ; then
-	if test $coin_has_coinutils = build ; then
-	     pcfile=coincoinutils
-	   else
-	     pcfile=coinutils
-	   fi
+        if test $coin_has_coinutils = build ; then
+             pcfile=coincoinutils
+           else
+             pcfile=coinutils
+           fi
 
 
 
@@ -16631,8 +16631,8 @@ fi
     if PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --exists "$pcfile" ; then
       COINUTILS_VERSIONS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --modversion "$pcfile" 2>/dev/null | tr '\n' ' '`
       coin_has_coinutils=yes
-	   coinutils_data=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --variable=datadir $pcfile 2>/dev/null`
-	   coinutils_pcfiles="$pcfile"
+           coinutils_data=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --variable=datadir $pcfile 2>/dev/null`
+           coinutils_pcfiles="$pcfile"
     else
       COINUTILS_PKG_ERRORS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG $pkg_short_errors --errors-to-stdout --print-errors "$pcfile"`
       coin_has_coinutils=no
@@ -16642,8 +16642,8 @@ fi
   fi
 
       else
-	coin_has_coinutils=yes
-	# AC_MSG_WARN([skipped check via pkgconf as no pkgconf available])
+        coin_has_coinutils=yes
+        # AC_MSG_WARN([skipped check via pkgconf as no pkgconf available])
       fi
       ;;
     skipping | yes )
@@ -16788,7 +16788,7 @@ $as_echo_n "checking for package Sample... " >&6; }
   if test x"$COIN_SKIP_PROJECTS" != x ; then
     for pkg in $COIN_SKIP_PROJECTS ; do
       if test "$pkg" = "$sample" ; then
-	coin_has_sample=skipping
+        coin_has_sample=skipping
       fi
     done
   fi
@@ -16839,18 +16839,18 @@ fi
   if test -n "$withval" ; then
     case "$withval" in
       no )
-	coin_has_sample=skipping
-	;;
+        coin_has_sample=skipping
+        ;;
       yes )
-	coin_has_sample=requested
-	;;
+        coin_has_sample=requested
+        ;;
       build )
-	coin_has_sample=build
-	;;
+        coin_has_sample=build
+        ;;
       * )
-	coin_has_sample=yes
-	sample_data=$withval
-	;;
+        coin_has_sample=yes
+        sample_data=$withval
+        ;;
     esac
   fi
 
@@ -16866,15 +16866,15 @@ fi
   if test "$coin_has_sample" != skipping ; then
        withval=$with_sample_data
        if test -n "$withval" ; then
-	 case "$withval" in
-	   build | no | yes )
-	     as_fn_error $? "\"$withval\" is not valid here; please give a data directory specification appropriate for your environment." "$LINENO" 5
-	     ;;
-	   * )
-	     coin_has_sample=yes
-	     sample_data="$withval"
-	     ;;
-	 esac
+         case "$withval" in
+           build | no | yes )
+             as_fn_error $? "\"$withval\" is not valid here; please give a data directory specification appropriate for your environment." "$LINENO" 5
+             ;;
+           * )
+             coin_has_sample=yes
+             sample_data="$withval"
+             ;;
+         esac
        fi
      fi
 
@@ -16891,14 +16891,14 @@ fi
   if test "$coin_has_sample" = noInfo ; then
     case $dflt_action in
       no )
-	coin_has_sample=skipping
-	;;
+        coin_has_sample=skipping
+        ;;
       build )
-	coin_has_sample=build
-	;;
+        coin_has_sample=build
+        ;;
       * )
         coin_has_sample=requested
-	;;
+        ;;
     esac
   fi
 
@@ -16910,7 +16910,7 @@ fi
   case $coin_has_sample in
     requested | build )
       if test -n "$PKG_CONFIG" ; then
-	pcfile=coindatasample
+        pcfile=coindatasample
 
 
 
@@ -16918,8 +16918,8 @@ fi
     if PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --exists "$pcfile" ; then
       SAMPLE_VERSIONS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --modversion "$pcfile" 2>/dev/null | tr '\n' ' '`
       coin_has_sample=yes
-	   sample_data=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --variable=datadir $pcfile 2>/dev/null`
-	   sample_pcfiles="$pcfile"
+           sample_data=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --variable=datadir $pcfile 2>/dev/null`
+           sample_pcfiles="$pcfile"
     else
       SAMPLE_PKG_ERRORS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG $pkg_short_errors --errors-to-stdout --print-errors "$pcfile"`
       coin_has_sample=no
@@ -16929,8 +16929,8 @@ fi
   fi
 
       else
-	coin_has_sample=yes
-	# AC_MSG_WARN([skipped check via pkgconf as no pkgconf available])
+        coin_has_sample=yes
+        # AC_MSG_WARN([skipped check via pkgconf as no pkgconf available])
       fi
       ;;
     skipping | yes )
@@ -17019,7 +17019,7 @@ $as_echo_n "checking for package Netlib... " >&6; }
   if test x"$COIN_SKIP_PROJECTS" != x ; then
     for pkg in $COIN_SKIP_PROJECTS ; do
       if test "$pkg" = "$netlib" ; then
-	coin_has_netlib=skipping
+        coin_has_netlib=skipping
       fi
     done
   fi
@@ -17070,18 +17070,18 @@ fi
   if test -n "$withval" ; then
     case "$withval" in
       no )
-	coin_has_netlib=skipping
-	;;
+        coin_has_netlib=skipping
+        ;;
       yes )
-	coin_has_netlib=requested
-	;;
+        coin_has_netlib=requested
+        ;;
       build )
-	coin_has_netlib=build
-	;;
+        coin_has_netlib=build
+        ;;
       * )
-	coin_has_netlib=yes
-	netlib_data=$withval
-	;;
+        coin_has_netlib=yes
+        netlib_data=$withval
+        ;;
     esac
   fi
 
@@ -17097,15 +17097,15 @@ fi
   if test "$coin_has_netlib" != skipping ; then
        withval=$with_netlib_data
        if test -n "$withval" ; then
-	 case "$withval" in
-	   build | no | yes )
-	     as_fn_error $? "\"$withval\" is not valid here; please give a data directory specification appropriate for your environment." "$LINENO" 5
-	     ;;
-	   * )
-	     coin_has_netlib=yes
-	     netlib_data="$withval"
-	     ;;
-	 esac
+         case "$withval" in
+           build | no | yes )
+             as_fn_error $? "\"$withval\" is not valid here; please give a data directory specification appropriate for your environment." "$LINENO" 5
+             ;;
+           * )
+             coin_has_netlib=yes
+             netlib_data="$withval"
+             ;;
+         esac
        fi
      fi
 
@@ -17122,14 +17122,14 @@ fi
   if test "$coin_has_netlib" = noInfo ; then
     case $dflt_action in
       no )
-	coin_has_netlib=skipping
-	;;
+        coin_has_netlib=skipping
+        ;;
       build )
-	coin_has_netlib=build
-	;;
+        coin_has_netlib=build
+        ;;
       * )
         coin_has_netlib=requested
-	;;
+        ;;
     esac
   fi
 
@@ -17141,7 +17141,7 @@ fi
   case $coin_has_netlib in
     requested | build )
       if test -n "$PKG_CONFIG" ; then
-	pcfile=coindatanetlib
+        pcfile=coindatanetlib
 
 
 
@@ -17149,8 +17149,8 @@ fi
     if PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --exists "$pcfile" ; then
       NETLIB_VERSIONS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --modversion "$pcfile" 2>/dev/null | tr '\n' ' '`
       coin_has_netlib=yes
-	   netlib_data=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --variable=datadir $pcfile 2>/dev/null`
-	   netlib_pcfiles="$pcfile"
+           netlib_data=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --variable=datadir $pcfile 2>/dev/null`
+           netlib_pcfiles="$pcfile"
     else
       NETLIB_PKG_ERRORS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG $pkg_short_errors --errors-to-stdout --print-errors "$pcfile"`
       coin_has_netlib=no
@@ -17160,8 +17160,8 @@ fi
   fi
 
       else
-	coin_has_netlib=yes
-	# AC_MSG_WARN([skipped check via pkgconf as no pkgconf available])
+        coin_has_netlib=yes
+        # AC_MSG_WARN([skipped check via pkgconf as no pkgconf available])
       fi
       ;;
     skipping | yes )
@@ -17288,13 +17288,13 @@ $as_echo "$as_me: OSICOMMONTESTLIB_CFLAGS: \"${OSICOMMONTESTLIB_CFLAGS}\"" >&6;}
 # Change the test to enable / disable debugging output
 
        if test 1 = 1 ; then
-	 { $as_echo "$as_me:${as_lineno-$LINENO}: CHK_HERE adding OsiLib to OsiCommonTestLib:" >&5
+         { $as_echo "$as_me:${as_lineno-$LINENO}: CHK_HERE adding OsiLib to OsiCommonTestLib:" >&5
 $as_echo "$as_me: CHK_HERE adding OsiLib to OsiCommonTestLib:" >&6;}
-	 { $as_echo "$as_me:${as_lineno-$LINENO}: OSICOMMONTESTLIB_PCFILES: \"${OSICOMMONTESTLIB_PCFILES}\"" >&5
+         { $as_echo "$as_me:${as_lineno-$LINENO}: OSICOMMONTESTLIB_PCFILES: \"${OSICOMMONTESTLIB_PCFILES}\"" >&5
 $as_echo "$as_me: OSICOMMONTESTLIB_PCFILES: \"${OSICOMMONTESTLIB_PCFILES}\"" >&6;}
-	 { $as_echo "$as_me:${as_lineno-$LINENO}: OSICOMMONTESTLIB_LFLAGS: \"${OSICOMMONTESTLIB_LFLAGS}\"" >&5
+         { $as_echo "$as_me:${as_lineno-$LINENO}: OSICOMMONTESTLIB_LFLAGS: \"${OSICOMMONTESTLIB_LFLAGS}\"" >&5
 $as_echo "$as_me: OSICOMMONTESTLIB_LFLAGS: \"${OSICOMMONTESTLIB_LFLAGS}\"" >&6;}
-	 { $as_echo "$as_me:${as_lineno-$LINENO}: OSICOMMONTESTLIB_CFLAGS: \"${OSICOMMONTESTLIB_CFLAGS}\"" >&5
+         { $as_echo "$as_me:${as_lineno-$LINENO}: OSICOMMONTESTLIB_CFLAGS: \"${OSICOMMONTESTLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSICOMMONTESTLIB_CFLAGS: \"${OSICOMMONTESTLIB_CFLAGS}\"" >&6;}
        fi
 
@@ -17339,7 +17339,7 @@ $as_echo_n "checking for package Glpk... " >&6; }
   if test x"$COIN_SKIP_PROJECTS" != x ; then
     for pkg in $COIN_SKIP_PROJECTS ; do
       if test "$pkg" = "$glpk" ; then
-	coin_has_glpk=skipping
+        coin_has_glpk=skipping
       fi
     done
   fi
@@ -17395,18 +17395,18 @@ fi
   if test -n "$withval" ; then
     case "$withval" in
       no )
-	coin_has_glpk=skipping
-	;;
+        coin_has_glpk=skipping
+        ;;
       yes )
-	coin_has_glpk=requested
-	;;
+        coin_has_glpk=requested
+        ;;
       build )
-	coin_has_glpk=build
-	;;
+        coin_has_glpk=build
+        ;;
       * )
-	coin_has_glpk=yes
-	glpk_lflags=$withval
-	;;
+        coin_has_glpk=yes
+        glpk_lflags=$withval
+        ;;
     esac
   fi
 
@@ -17417,28 +17417,28 @@ fi
   if test "$coin_has_glpk" != skipping ; then
        withval=$with_glpk_lflags
        if test -n "$withval" ; then
-	 case "$withval" in
-	   build | no | yes )
-	     as_fn_error $? "\"$withval\" is not valid here; please specify linker flags appropriate for your environment." "$LINENO" 5
-	     ;;
-	   * )
-	     coin_has_glpk=yes
-	     glpk_lflags=$withval
-	     ;;
-	 esac
+         case "$withval" in
+           build | no | yes )
+             as_fn_error $? "\"$withval\" is not valid here; please specify linker flags appropriate for your environment." "$LINENO" 5
+             ;;
+           * )
+             coin_has_glpk=yes
+             glpk_lflags=$withval
+             ;;
+         esac
        fi
 
        withval=$with_glpk_cflags
        if test -n "$withval" ; then
-	 case "$withval" in
-	   build | no | yes )
-	     as_fn_error $? "\"$withval\" is not valid here; please specify compiler flags appropriate for your environment." "$LINENO" 5
-	     ;;
-	   * )
-	     coin_has_glpk=yes
-	     glpk_cflags="$withval"
-	     ;;
-	 esac
+         case "$withval" in
+           build | no | yes )
+             as_fn_error $? "\"$withval\" is not valid here; please specify compiler flags appropriate for your environment." "$LINENO" 5
+             ;;
+           * )
+             coin_has_glpk=yes
+             glpk_cflags="$withval"
+             ;;
+         esac
        fi
      fi
 
@@ -17460,14 +17460,14 @@ fi
   if test "$coin_has_glpk" = noInfo ; then
     case $dflt_action in
       no )
-	coin_has_glpk=skipping
-	;;
+        coin_has_glpk=skipping
+        ;;
       build )
-	coin_has_glpk=build
-	;;
+        coin_has_glpk=build
+        ;;
       * )
         coin_has_glpk=requested
-	;;
+        ;;
     esac
   fi
 
@@ -17479,11 +17479,11 @@ fi
   case $coin_has_glpk in
     requested | build )
       if test -n "$PKG_CONFIG" ; then
-	if test $coin_has_glpk = build ; then
-	     pcfile=coinglpk
-	   else
-	     pcfile=glpk
-	   fi
+        if test $coin_has_glpk = build ; then
+             pcfile=coinglpk
+           else
+             pcfile=glpk
+           fi
 
 
 
@@ -17491,8 +17491,8 @@ fi
     if PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --exists "$pcfile" ; then
       GLPK_VERSIONS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --modversion "$pcfile" 2>/dev/null | tr '\n' ' '`
       coin_has_glpk=yes
-	   glpk_data=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --variable=datadir $pcfile 2>/dev/null`
-	   glpk_pcfiles="$pcfile"
+           glpk_data=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --variable=datadir $pcfile 2>/dev/null`
+           glpk_pcfiles="$pcfile"
     else
       GLPK_PKG_ERRORS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG $pkg_short_errors --errors-to-stdout --print-errors "$pcfile"`
       coin_has_glpk=no
@@ -17502,8 +17502,8 @@ fi
   fi
 
       else
-	coin_has_glpk=yes
-	# AC_MSG_WARN([skipped check via pkgconf as no pkgconf available])
+        coin_has_glpk=yes
+        # AC_MSG_WARN([skipped check via pkgconf as no pkgconf available])
       fi
       ;;
     skipping | yes )
@@ -17607,7 +17607,7 @@ $as_echo_n "checking for package SoPlex... " >&6; }
   if test x"$COIN_SKIP_PROJECTS" != x ; then
     for pkg in $COIN_SKIP_PROJECTS ; do
       if test "$pkg" = "$soplex" ; then
-	coin_has_soplex=skipping
+        coin_has_soplex=skipping
       fi
     done
   fi
@@ -17663,18 +17663,18 @@ fi
   if test -n "$withval" ; then
     case "$withval" in
       no )
-	coin_has_soplex=skipping
-	;;
+        coin_has_soplex=skipping
+        ;;
       yes )
-	coin_has_soplex=requested
-	;;
+        coin_has_soplex=requested
+        ;;
       build )
-	coin_has_soplex=build
-	;;
+        coin_has_soplex=build
+        ;;
       * )
-	coin_has_soplex=yes
-	soplex_lflags=$withval
-	;;
+        coin_has_soplex=yes
+        soplex_lflags=$withval
+        ;;
     esac
   fi
 
@@ -17685,28 +17685,28 @@ fi
   if test "$coin_has_soplex" != skipping ; then
        withval=$with_soplex_lflags
        if test -n "$withval" ; then
-	 case "$withval" in
-	   build | no | yes )
-	     as_fn_error $? "\"$withval\" is not valid here; please specify linker flags appropriate for your environment." "$LINENO" 5
-	     ;;
-	   * )
-	     coin_has_soplex=yes
-	     soplex_lflags=$withval
-	     ;;
-	 esac
+         case "$withval" in
+           build | no | yes )
+             as_fn_error $? "\"$withval\" is not valid here; please specify linker flags appropriate for your environment." "$LINENO" 5
+             ;;
+           * )
+             coin_has_soplex=yes
+             soplex_lflags=$withval
+             ;;
+         esac
        fi
 
        withval=$with_soplex_cflags
        if test -n "$withval" ; then
-	 case "$withval" in
-	   build | no | yes )
-	     as_fn_error $? "\"$withval\" is not valid here; please specify compiler flags appropriate for your environment." "$LINENO" 5
-	     ;;
-	   * )
-	     coin_has_soplex=yes
-	     soplex_cflags="$withval"
-	     ;;
-	 esac
+         case "$withval" in
+           build | no | yes )
+             as_fn_error $? "\"$withval\" is not valid here; please specify compiler flags appropriate for your environment." "$LINENO" 5
+             ;;
+           * )
+             coin_has_soplex=yes
+             soplex_cflags="$withval"
+             ;;
+         esac
        fi
      fi
 
@@ -17728,14 +17728,14 @@ fi
   if test "$coin_has_soplex" = noInfo ; then
     case $dflt_action in
       no )
-	coin_has_soplex=skipping
-	;;
+        coin_has_soplex=skipping
+        ;;
       build )
-	coin_has_soplex=build
-	;;
+        coin_has_soplex=build
+        ;;
       * )
         coin_has_soplex=requested
-	;;
+        ;;
     esac
   fi
 
@@ -17747,7 +17747,7 @@ fi
   case $coin_has_soplex in
     requested | build )
       if test -n "$PKG_CONFIG" ; then
-	pcfile=coinsoplex < 1.7
+        pcfile=coinsoplex < 1.7
 
 
 
@@ -17755,8 +17755,8 @@ fi
     if PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --exists "$pcfile" ; then
       SOPLEX_VERSIONS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --modversion "$pcfile" 2>/dev/null | tr '\n' ' '`
       coin_has_soplex=yes
-	   soplex_data=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --variable=datadir $pcfile 2>/dev/null`
-	   soplex_pcfiles="$pcfile"
+           soplex_data=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --variable=datadir $pcfile 2>/dev/null`
+           soplex_pcfiles="$pcfile"
     else
       SOPLEX_PKG_ERRORS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG $pkg_short_errors --errors-to-stdout --print-errors "$pcfile"`
       coin_has_soplex=no
@@ -17766,8 +17766,8 @@ fi
   fi
 
       else
-	coin_has_soplex=yes
-	# AC_MSG_WARN([skipped check via pkgconf as no pkgconf available])
+        coin_has_soplex=yes
+        # AC_MSG_WARN([skipped check via pkgconf as no pkgconf available])
       fi
       ;;
     skipping | yes )
@@ -17924,13 +17924,13 @@ $as_echo "$as_me: OSKSPXLIB_CFLAGS: \"${OSKSPXLIB_CFLAGS}\"" >&6;}
 # Change the test to enable / disable debugging output
 
        if test 1 = 1 ; then
-	 { $as_echo "$as_me:${as_lineno-$LINENO}: CHK_HERE adding OsiLib to OsiGlpkLib:" >&5
+         { $as_echo "$as_me:${as_lineno-$LINENO}: CHK_HERE adding OsiLib to OsiGlpkLib:" >&5
 $as_echo "$as_me: CHK_HERE adding OsiLib to OsiGlpkLib:" >&6;}
-	 { $as_echo "$as_me:${as_lineno-$LINENO}: OSIGLPKLIB_PCFILES: \"${OSIGLPKLIB_PCFILES}\"" >&5
+         { $as_echo "$as_me:${as_lineno-$LINENO}: OSIGLPKLIB_PCFILES: \"${OSIGLPKLIB_PCFILES}\"" >&5
 $as_echo "$as_me: OSIGLPKLIB_PCFILES: \"${OSIGLPKLIB_PCFILES}\"" >&6;}
-	 { $as_echo "$as_me:${as_lineno-$LINENO}: OSIGLPKLIB_LFLAGS: \"${OSIGLPKLIB_LFLAGS}\"" >&5
+         { $as_echo "$as_me:${as_lineno-$LINENO}: OSIGLPKLIB_LFLAGS: \"${OSIGLPKLIB_LFLAGS}\"" >&5
 $as_echo "$as_me: OSIGLPKLIB_LFLAGS: \"${OSIGLPKLIB_LFLAGS}\"" >&6;}
-	 { $as_echo "$as_me:${as_lineno-$LINENO}: OSIGLPKLIB_CFLAGS: \"${OSIGLPKLIB_CFLAGS}\"" >&5
+         { $as_echo "$as_me:${as_lineno-$LINENO}: OSIGLPKLIB_CFLAGS: \"${OSIGLPKLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSIGLPKLIB_CFLAGS: \"${OSIGLPKLIB_CFLAGS}\"" >&6;}
        fi
       OSISPXLIB_PCFILES="$OSISPXLIB_PCFILES osi"
@@ -17940,13 +17940,13 @@ $as_echo "$as_me: OSIGLPKLIB_CFLAGS: \"${OSIGLPKLIB_CFLAGS}\"" >&6;}
 # Change the test to enable / disable debugging output
 
        if test 1 = 1 ; then
-	 { $as_echo "$as_me:${as_lineno-$LINENO}: CHK_HERE adding OsiLib to OsiSpxLib:" >&5
+         { $as_echo "$as_me:${as_lineno-$LINENO}: CHK_HERE adding OsiLib to OsiSpxLib:" >&5
 $as_echo "$as_me: CHK_HERE adding OsiLib to OsiSpxLib:" >&6;}
-	 { $as_echo "$as_me:${as_lineno-$LINENO}: OSISPXLIB_PCFILES: \"${OSISPXLIB_PCFILES}\"" >&5
+         { $as_echo "$as_me:${as_lineno-$LINENO}: OSISPXLIB_PCFILES: \"${OSISPXLIB_PCFILES}\"" >&5
 $as_echo "$as_me: OSISPXLIB_PCFILES: \"${OSISPXLIB_PCFILES}\"" >&6;}
-	 { $as_echo "$as_me:${as_lineno-$LINENO}: OSISPXLIB_LFLAGS: \"${OSISPXLIB_LFLAGS}\"" >&5
+         { $as_echo "$as_me:${as_lineno-$LINENO}: OSISPXLIB_LFLAGS: \"${OSISPXLIB_LFLAGS}\"" >&5
 $as_echo "$as_me: OSISPXLIB_LFLAGS: \"${OSISPXLIB_LFLAGS}\"" >&6;}
-	 { $as_echo "$as_me:${as_lineno-$LINENO}: OSISPXLIB_CFLAGS: \"${OSISPXLIB_CFLAGS}\"" >&5
+         { $as_echo "$as_me:${as_lineno-$LINENO}: OSISPXLIB_CFLAGS: \"${OSISPXLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSISPXLIB_CFLAGS: \"${OSISPXLIB_CFLAGS}\"" >&6;}
        fi
 
@@ -17993,7 +17993,7 @@ $as_echo_n "checking for package Cpx... " >&6; }
   if test x"$COIN_SKIP_PROJECTS" != x ; then
     for pkg in $COIN_SKIP_PROJECTS ; do
       if test "$pkg" = "$cpx" ; then
-	coin_has_cpx=skipping
+        coin_has_cpx=skipping
       fi
     done
   fi
@@ -18046,18 +18046,18 @@ fi
   if test -n "$withval" ; then
     case "$withval" in
       no )
-	coin_has_cpx=skipping
-	;;
+        coin_has_cpx=skipping
+        ;;
       yes )
-	coin_has_cpx=requested
-	;;
+        coin_has_cpx=requested
+        ;;
       build )
-	coin_has_cpx=build
-	;;
+        coin_has_cpx=build
+        ;;
       * )
-	coin_has_cpx=yes
-	cpx_lflags=$withval
-	;;
+        coin_has_cpx=yes
+        cpx_lflags=$withval
+        ;;
     esac
   fi
 
@@ -18068,28 +18068,28 @@ fi
   if test "$coin_has_cpx" != skipping ; then
        withval=$with_cpx_lflags
        if test -n "$withval" ; then
-	 case "$withval" in
-	   build | no | yes )
-	     as_fn_error $? "\"$withval\" is not valid here; please specify linker flags appropriate for your environment." "$LINENO" 5
-	     ;;
-	   * )
-	     coin_has_cpx=yes
-	     cpx_lflags=$withval
-	     ;;
-	 esac
+         case "$withval" in
+           build | no | yes )
+             as_fn_error $? "\"$withval\" is not valid here; please specify linker flags appropriate for your environment." "$LINENO" 5
+             ;;
+           * )
+             coin_has_cpx=yes
+             cpx_lflags=$withval
+             ;;
+         esac
        fi
 
        withval=$with_cpx_cflags
        if test -n "$withval" ; then
-	 case "$withval" in
-	   build | no | yes )
-	     as_fn_error $? "\"$withval\" is not valid here; please specify compiler flags appropriate for your environment." "$LINENO" 5
-	     ;;
-	   * )
-	     coin_has_cpx=yes
-	     cpx_cflags="$withval"
-	     ;;
-	 esac
+         case "$withval" in
+           build | no | yes )
+             as_fn_error $? "\"$withval\" is not valid here; please specify compiler flags appropriate for your environment." "$LINENO" 5
+             ;;
+           * )
+             coin_has_cpx=yes
+             cpx_cflags="$withval"
+             ;;
+         esac
        fi
      fi
 
@@ -18111,14 +18111,14 @@ fi
   if test "$coin_has_cpx" = noInfo ; then
     case $dflt_action in
       no )
-	coin_has_cpx=skipping
-	;;
+        coin_has_cpx=skipping
+        ;;
       build )
-	coin_has_cpx=build
-	;;
+        coin_has_cpx=build
+        ;;
       * )
         coin_has_cpx=requested
-	;;
+        ;;
     esac
   fi
 
@@ -18151,9 +18151,9 @@ $as_echo "$as_me: WARNING: Unexpected status \"$coin_has_cpx\" in COIN_FIND_PRIM
        cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #ifdef __cplusplus
-	     extern "C"
-	   #endif
-	   void CPXgetstat();
+             extern "C"
+           #endif
+           void CPXgetstat();
 int
 main ()
 {
@@ -18262,7 +18262,7 @@ $as_echo_n "checking for package Msk... " >&6; }
   if test x"$COIN_SKIP_PROJECTS" != x ; then
     for pkg in $COIN_SKIP_PROJECTS ; do
       if test "$pkg" = "$msk" ; then
-	coin_has_msk=skipping
+        coin_has_msk=skipping
       fi
     done
   fi
@@ -18315,18 +18315,18 @@ fi
   if test -n "$withval" ; then
     case "$withval" in
       no )
-	coin_has_msk=skipping
-	;;
+        coin_has_msk=skipping
+        ;;
       yes )
-	coin_has_msk=requested
-	;;
+        coin_has_msk=requested
+        ;;
       build )
-	coin_has_msk=build
-	;;
+        coin_has_msk=build
+        ;;
       * )
-	coin_has_msk=yes
-	msk_lflags=$withval
-	;;
+        coin_has_msk=yes
+        msk_lflags=$withval
+        ;;
     esac
   fi
 
@@ -18337,28 +18337,28 @@ fi
   if test "$coin_has_msk" != skipping ; then
        withval=$with_msk_lflags
        if test -n "$withval" ; then
-	 case "$withval" in
-	   build | no | yes )
-	     as_fn_error $? "\"$withval\" is not valid here; please specify linker flags appropriate for your environment." "$LINENO" 5
-	     ;;
-	   * )
-	     coin_has_msk=yes
-	     msk_lflags=$withval
-	     ;;
-	 esac
+         case "$withval" in
+           build | no | yes )
+             as_fn_error $? "\"$withval\" is not valid here; please specify linker flags appropriate for your environment." "$LINENO" 5
+             ;;
+           * )
+             coin_has_msk=yes
+             msk_lflags=$withval
+             ;;
+         esac
        fi
 
        withval=$with_msk_cflags
        if test -n "$withval" ; then
-	 case "$withval" in
-	   build | no | yes )
-	     as_fn_error $? "\"$withval\" is not valid here; please specify compiler flags appropriate for your environment." "$LINENO" 5
-	     ;;
-	   * )
-	     coin_has_msk=yes
-	     msk_cflags="$withval"
-	     ;;
-	 esac
+         case "$withval" in
+           build | no | yes )
+             as_fn_error $? "\"$withval\" is not valid here; please specify compiler flags appropriate for your environment." "$LINENO" 5
+             ;;
+           * )
+             coin_has_msk=yes
+             msk_cflags="$withval"
+             ;;
+         esac
        fi
      fi
 
@@ -18380,14 +18380,14 @@ fi
   if test "$coin_has_msk" = noInfo ; then
     case $dflt_action in
       no )
-	coin_has_msk=skipping
-	;;
+        coin_has_msk=skipping
+        ;;
       build )
-	coin_has_msk=build
-	;;
+        coin_has_msk=build
+        ;;
       * )
         coin_has_msk=requested
-	;;
+        ;;
     esac
   fi
 
@@ -18420,9 +18420,9 @@ $as_echo "$as_me: WARNING: Unexpected status \"$coin_has_msk\" in COIN_FIND_PRIM
        cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #ifdef __cplusplus
-	     extern "C"
-	   #endif
-	   void MSK_makeenv();
+             extern "C"
+           #endif
+           void MSK_makeenv();
 int
 main ()
 {
@@ -18531,7 +18531,7 @@ $as_echo_n "checking for package Xpr... " >&6; }
   if test x"$COIN_SKIP_PROJECTS" != x ; then
     for pkg in $COIN_SKIP_PROJECTS ; do
       if test "$pkg" = "$xpr" ; then
-	coin_has_xpr=skipping
+        coin_has_xpr=skipping
       fi
     done
   fi
@@ -18584,18 +18584,18 @@ fi
   if test -n "$withval" ; then
     case "$withval" in
       no )
-	coin_has_xpr=skipping
-	;;
+        coin_has_xpr=skipping
+        ;;
       yes )
-	coin_has_xpr=requested
-	;;
+        coin_has_xpr=requested
+        ;;
       build )
-	coin_has_xpr=build
-	;;
+        coin_has_xpr=build
+        ;;
       * )
-	coin_has_xpr=yes
-	xpr_lflags=$withval
-	;;
+        coin_has_xpr=yes
+        xpr_lflags=$withval
+        ;;
     esac
   fi
 
@@ -18606,28 +18606,28 @@ fi
   if test "$coin_has_xpr" != skipping ; then
        withval=$with_xpr_lflags
        if test -n "$withval" ; then
-	 case "$withval" in
-	   build | no | yes )
-	     as_fn_error $? "\"$withval\" is not valid here; please specify linker flags appropriate for your environment." "$LINENO" 5
-	     ;;
-	   * )
-	     coin_has_xpr=yes
-	     xpr_lflags=$withval
-	     ;;
-	 esac
+         case "$withval" in
+           build | no | yes )
+             as_fn_error $? "\"$withval\" is not valid here; please specify linker flags appropriate for your environment." "$LINENO" 5
+             ;;
+           * )
+             coin_has_xpr=yes
+             xpr_lflags=$withval
+             ;;
+         esac
        fi
 
        withval=$with_xpr_cflags
        if test -n "$withval" ; then
-	 case "$withval" in
-	   build | no | yes )
-	     as_fn_error $? "\"$withval\" is not valid here; please specify compiler flags appropriate for your environment." "$LINENO" 5
-	     ;;
-	   * )
-	     coin_has_xpr=yes
-	     xpr_cflags="$withval"
-	     ;;
-	 esac
+         case "$withval" in
+           build | no | yes )
+             as_fn_error $? "\"$withval\" is not valid here; please specify compiler flags appropriate for your environment." "$LINENO" 5
+             ;;
+           * )
+             coin_has_xpr=yes
+             xpr_cflags="$withval"
+             ;;
+         esac
        fi
      fi
 
@@ -18649,14 +18649,14 @@ fi
   if test "$coin_has_xpr" = noInfo ; then
     case $dflt_action in
       no )
-	coin_has_xpr=skipping
-	;;
+        coin_has_xpr=skipping
+        ;;
       build )
-	coin_has_xpr=build
-	;;
+        coin_has_xpr=build
+        ;;
       * )
         coin_has_xpr=requested
-	;;
+        ;;
     esac
   fi
 
@@ -18689,9 +18689,9 @@ $as_echo "$as_me: WARNING: Unexpected status \"$coin_has_xpr\" in COIN_FIND_PRIM
        cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #ifdef __cplusplus
-	     extern "C"
-	   #endif
-	   void XPRSinit();
+             extern "C"
+           #endif
+           void XPRSinit();
 int
 main ()
 {
@@ -18800,7 +18800,7 @@ $as_echo_n "checking for package Grb... " >&6; }
   if test x"$COIN_SKIP_PROJECTS" != x ; then
     for pkg in $COIN_SKIP_PROJECTS ; do
       if test "$pkg" = "$grb" ; then
-	coin_has_grb=skipping
+        coin_has_grb=skipping
       fi
     done
   fi
@@ -18853,18 +18853,18 @@ fi
   if test -n "$withval" ; then
     case "$withval" in
       no )
-	coin_has_grb=skipping
-	;;
+        coin_has_grb=skipping
+        ;;
       yes )
-	coin_has_grb=requested
-	;;
+        coin_has_grb=requested
+        ;;
       build )
-	coin_has_grb=build
-	;;
+        coin_has_grb=build
+        ;;
       * )
-	coin_has_grb=yes
-	grb_lflags=$withval
-	;;
+        coin_has_grb=yes
+        grb_lflags=$withval
+        ;;
     esac
   fi
 
@@ -18875,28 +18875,28 @@ fi
   if test "$coin_has_grb" != skipping ; then
        withval=$with_grb_lflags
        if test -n "$withval" ; then
-	 case "$withval" in
-	   build | no | yes )
-	     as_fn_error $? "\"$withval\" is not valid here; please specify linker flags appropriate for your environment." "$LINENO" 5
-	     ;;
-	   * )
-	     coin_has_grb=yes
-	     grb_lflags=$withval
-	     ;;
-	 esac
+         case "$withval" in
+           build | no | yes )
+             as_fn_error $? "\"$withval\" is not valid here; please specify linker flags appropriate for your environment." "$LINENO" 5
+             ;;
+           * )
+             coin_has_grb=yes
+             grb_lflags=$withval
+             ;;
+         esac
        fi
 
        withval=$with_grb_cflags
        if test -n "$withval" ; then
-	 case "$withval" in
-	   build | no | yes )
-	     as_fn_error $? "\"$withval\" is not valid here; please specify compiler flags appropriate for your environment." "$LINENO" 5
-	     ;;
-	   * )
-	     coin_has_grb=yes
-	     grb_cflags="$withval"
-	     ;;
-	 esac
+         case "$withval" in
+           build | no | yes )
+             as_fn_error $? "\"$withval\" is not valid here; please specify compiler flags appropriate for your environment." "$LINENO" 5
+             ;;
+           * )
+             coin_has_grb=yes
+             grb_cflags="$withval"
+             ;;
+         esac
        fi
      fi
 
@@ -18918,14 +18918,14 @@ fi
   if test "$coin_has_grb" = noInfo ; then
     case $dflt_action in
       no )
-	coin_has_grb=skipping
-	;;
+        coin_has_grb=skipping
+        ;;
       build )
-	coin_has_grb=build
-	;;
+        coin_has_grb=build
+        ;;
       * )
         coin_has_grb=requested
-	;;
+        ;;
     esac
   fi
 
@@ -18958,9 +18958,9 @@ $as_echo "$as_me: WARNING: Unexpected status \"$coin_has_grb\" in COIN_FIND_PRIM
        cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #ifdef __cplusplus
-	     extern "C"
-	   #endif
-	   void GRBloadenv();
+             extern "C"
+           #endif
+           void GRBloadenv();
 int
 main ()
 {
@@ -19188,13 +19188,13 @@ $as_echo "$as_me: OSIGRBLIB_CFLAGS: \"${OSIGRBLIB_CFLAGS}\"" >&6;}
 # Change the test to enable / disable debugging output
 
        if test 1 = 1 ; then
-	 { $as_echo "$as_me:${as_lineno-$LINENO}: CHK_HERE adding OsiLib to OsiCpxLib:" >&5
+         { $as_echo "$as_me:${as_lineno-$LINENO}: CHK_HERE adding OsiLib to OsiCpxLib:" >&5
 $as_echo "$as_me: CHK_HERE adding OsiLib to OsiCpxLib:" >&6;}
-	 { $as_echo "$as_me:${as_lineno-$LINENO}: OSICPXLIB_PCFILES: \"${OSICPXLIB_PCFILES}\"" >&5
+         { $as_echo "$as_me:${as_lineno-$LINENO}: OSICPXLIB_PCFILES: \"${OSICPXLIB_PCFILES}\"" >&5
 $as_echo "$as_me: OSICPXLIB_PCFILES: \"${OSICPXLIB_PCFILES}\"" >&6;}
-	 { $as_echo "$as_me:${as_lineno-$LINENO}: OSICPXLIB_LFLAGS: \"${OSICPXLIB_LFLAGS}\"" >&5
+         { $as_echo "$as_me:${as_lineno-$LINENO}: OSICPXLIB_LFLAGS: \"${OSICPXLIB_LFLAGS}\"" >&5
 $as_echo "$as_me: OSICPXLIB_LFLAGS: \"${OSICPXLIB_LFLAGS}\"" >&6;}
-	 { $as_echo "$as_me:${as_lineno-$LINENO}: OSICPXLIB_CFLAGS: \"${OSICPXLIB_CFLAGS}\"" >&5
+         { $as_echo "$as_me:${as_lineno-$LINENO}: OSICPXLIB_CFLAGS: \"${OSICPXLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSICPXLIB_CFLAGS: \"${OSICPXLIB_CFLAGS}\"" >&6;}
        fi
       OSIMSKLIB_PCFILES="$OSIMSKLIB_PCFILES osi"
@@ -19204,13 +19204,13 @@ $as_echo "$as_me: OSICPXLIB_CFLAGS: \"${OSICPXLIB_CFLAGS}\"" >&6;}
 # Change the test to enable / disable debugging output
 
        if test 1 = 1 ; then
-	 { $as_echo "$as_me:${as_lineno-$LINENO}: CHK_HERE adding OsiLib to OsiMskLib:" >&5
+         { $as_echo "$as_me:${as_lineno-$LINENO}: CHK_HERE adding OsiLib to OsiMskLib:" >&5
 $as_echo "$as_me: CHK_HERE adding OsiLib to OsiMskLib:" >&6;}
-	 { $as_echo "$as_me:${as_lineno-$LINENO}: OSIMSKLIB_PCFILES: \"${OSIMSKLIB_PCFILES}\"" >&5
+         { $as_echo "$as_me:${as_lineno-$LINENO}: OSIMSKLIB_PCFILES: \"${OSIMSKLIB_PCFILES}\"" >&5
 $as_echo "$as_me: OSIMSKLIB_PCFILES: \"${OSIMSKLIB_PCFILES}\"" >&6;}
-	 { $as_echo "$as_me:${as_lineno-$LINENO}: OSIMSKLIB_LFLAGS: \"${OSIMSKLIB_LFLAGS}\"" >&5
+         { $as_echo "$as_me:${as_lineno-$LINENO}: OSIMSKLIB_LFLAGS: \"${OSIMSKLIB_LFLAGS}\"" >&5
 $as_echo "$as_me: OSIMSKLIB_LFLAGS: \"${OSIMSKLIB_LFLAGS}\"" >&6;}
-	 { $as_echo "$as_me:${as_lineno-$LINENO}: OSIMSKLIB_CFLAGS: \"${OSIMSKLIB_CFLAGS}\"" >&5
+         { $as_echo "$as_me:${as_lineno-$LINENO}: OSIMSKLIB_CFLAGS: \"${OSIMSKLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSIMSKLIB_CFLAGS: \"${OSIMSKLIB_CFLAGS}\"" >&6;}
        fi
       OSIXPRLIB_PCFILES="$OSIXPRLIB_PCFILES osi"
@@ -19220,13 +19220,13 @@ $as_echo "$as_me: OSIMSKLIB_CFLAGS: \"${OSIMSKLIB_CFLAGS}\"" >&6;}
 # Change the test to enable / disable debugging output
 
        if test 1 = 1 ; then
-	 { $as_echo "$as_me:${as_lineno-$LINENO}: CHK_HERE adding OsiLib to OsiXprLib:" >&5
+         { $as_echo "$as_me:${as_lineno-$LINENO}: CHK_HERE adding OsiLib to OsiXprLib:" >&5
 $as_echo "$as_me: CHK_HERE adding OsiLib to OsiXprLib:" >&6;}
-	 { $as_echo "$as_me:${as_lineno-$LINENO}: OSIXPRLIB_PCFILES: \"${OSIXPRLIB_PCFILES}\"" >&5
+         { $as_echo "$as_me:${as_lineno-$LINENO}: OSIXPRLIB_PCFILES: \"${OSIXPRLIB_PCFILES}\"" >&5
 $as_echo "$as_me: OSIXPRLIB_PCFILES: \"${OSIXPRLIB_PCFILES}\"" >&6;}
-	 { $as_echo "$as_me:${as_lineno-$LINENO}: OSIXPRLIB_LFLAGS: \"${OSIXPRLIB_LFLAGS}\"" >&5
+         { $as_echo "$as_me:${as_lineno-$LINENO}: OSIXPRLIB_LFLAGS: \"${OSIXPRLIB_LFLAGS}\"" >&5
 $as_echo "$as_me: OSIXPRLIB_LFLAGS: \"${OSIXPRLIB_LFLAGS}\"" >&6;}
-	 { $as_echo "$as_me:${as_lineno-$LINENO}: OSIXPRLIB_CFLAGS: \"${OSIXPRLIB_CFLAGS}\"" >&5
+         { $as_echo "$as_me:${as_lineno-$LINENO}: OSIXPRLIB_CFLAGS: \"${OSIXPRLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSIXPRLIB_CFLAGS: \"${OSIXPRLIB_CFLAGS}\"" >&6;}
        fi
       OSIGRBLIB_PCFILES="$OSIGRBLIB_PCFILES osi"
@@ -19236,13 +19236,13 @@ $as_echo "$as_me: OSIXPRLIB_CFLAGS: \"${OSIXPRLIB_CFLAGS}\"" >&6;}
 # Change the test to enable / disable debugging output
 
        if test 1 = 1 ; then
-	 { $as_echo "$as_me:${as_lineno-$LINENO}: CHK_HERE adding OsiLib to OsiGrbLib:" >&5
+         { $as_echo "$as_me:${as_lineno-$LINENO}: CHK_HERE adding OsiLib to OsiGrbLib:" >&5
 $as_echo "$as_me: CHK_HERE adding OsiLib to OsiGrbLib:" >&6;}
-	 { $as_echo "$as_me:${as_lineno-$LINENO}: OSIGRBLIB_PCFILES: \"${OSIGRBLIB_PCFILES}\"" >&5
+         { $as_echo "$as_me:${as_lineno-$LINENO}: OSIGRBLIB_PCFILES: \"${OSIGRBLIB_PCFILES}\"" >&5
 $as_echo "$as_me: OSIGRBLIB_PCFILES: \"${OSIGRBLIB_PCFILES}\"" >&6;}
-	 { $as_echo "$as_me:${as_lineno-$LINENO}: OSIGRBLIB_LFLAGS: \"${OSIGRBLIB_LFLAGS}\"" >&5
+         { $as_echo "$as_me:${as_lineno-$LINENO}: OSIGRBLIB_LFLAGS: \"${OSIGRBLIB_LFLAGS}\"" >&5
 $as_echo "$as_me: OSIGRBLIB_LFLAGS: \"${OSIGRBLIB_LFLAGS}\"" >&6;}
-	 { $as_echo "$as_me:${as_lineno-$LINENO}: OSIGRBLIB_CFLAGS: \"${OSIGRBLIB_CFLAGS}\"" >&5
+         { $as_echo "$as_me:${as_lineno-$LINENO}: OSIGRBLIB_CFLAGS: \"${OSIGRBLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSIGRBLIB_CFLAGS: \"${OSIGRBLIB_CFLAGS}\"" >&6;}
        fi
 
@@ -22141,8 +22141,8 @@ _LT_EOF
 
  ;;
     "libtoolpatch":C) sed -e 's|AR_FLAGS |AR_FLAGS|g' libtool > libtool.tmp
-	 mv libtool.tmp libtool
-	 chmod 755 libtool ;;
+         mv libtool.tmp libtool
+         chmod 755 libtool ;;
 
   esac
 done # for ac_tag

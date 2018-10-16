@@ -34,6 +34,7 @@ Osi/MSVisualStudio/v9alt/libOsi.vcproj -text
 Osi/MSVisualStudio/v9alt/libOsiCommonTest.vcproj -text
 Osi/MSVisualStudio/v9alt/osi.vsprops -text
 Osi/README -text
+Osi/compile -text
 Osi/config.guess -text
 Osi/config.sub -text
 Osi/configure -text

@@ -148,7 +148,7 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includecoindir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-@DEPENDENCY_LINKING_TRUE@libOsiMsk_la_DEPENDENCIES = ../Osi/libOsi.la
+libOsiMsk_la_DEPENDENCIES = ../Osi/libOsi.la
 am_libOsiMsk_la_OBJECTS = OsiMskSolverInterface.lo
 libOsiMsk_la_OBJECTS = $(am_libOsiMsk_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -483,7 +483,7 @@ libOsiMsk_la_SOURCES = \
 
 
 # List all additionally required libraries
-@DEPENDENCY_LINKING_TRUE@libOsiMsk_la_LIBADD = $(OSILIB_LIBS) ../Osi/libOsi.la $(MSKLIB)
+libOsiMsk_la_LIBADD = $(OSILIB_LIBS) ../Osi/libOsi.la $(MSKLIB)
 
 # This is for libtool (on Windows)
 libOsiMsk_la_LDFLAGS = $(LT_LDFLAGS)

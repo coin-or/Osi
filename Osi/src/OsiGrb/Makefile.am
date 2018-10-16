@@ -19,9 +19,7 @@ lib_LTLIBRARIES = libOsiGrb.la
 libOsiGrb_la_SOURCES = OsiGrbSolverInterface.cpp OsiGrbSolverInterface.hpp
 
 # List all additionally required libraries
-if DEPENDENCY_LINKING
 libOsiGrb_la_LIBADD = $(OSILIB_LIBS) ../Osi/libOsi.la $(GRBLIB)
-endif
 
 # This is for libtool (on Windows)
 libOsiGrb_la_LDFLAGS = $(LT_LDFLAGS)

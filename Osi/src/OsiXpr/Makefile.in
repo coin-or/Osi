@@ -148,7 +148,7 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includecoindir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-@DEPENDENCY_LINKING_TRUE@libOsiXpr_la_DEPENDENCIES = ../Osi/libOsi.la
+libOsiXpr_la_DEPENDENCIES = ../Osi/libOsi.la
 am_libOsiXpr_la_OBJECTS = OsiXprSolverInterface.lo
 libOsiXpr_la_OBJECTS = $(am_libOsiXpr_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -483,7 +483,7 @@ libOsiXpr_la_SOURCES = \
 
 
 # List all additionally required libraries
-@DEPENDENCY_LINKING_TRUE@libOsiXpr_la_LIBADD = $(OSILIB_LIBS) ../Osi/libOsi.la $(XPRLIB)
+libOsiXpr_la_LIBADD = $(OSILIB_LIBS) ../Osi/libOsi.la $(XPRLIB)
 
 # This is for libtool (on Windows)
 libOsiXpr_la_LDFLAGS = $(LT_LDFLAGS)

@@ -754,8 +754,6 @@ OSILIB_DATA_PUB
 OSILIB_PCFILES_PUB
 OSILIB_CFLAGS_PUB
 OSILIB_LFLAGS_PUB
-DEPENDENCY_LINKING_FALSE
-DEPENDENCY_LINKING_TRUE
 LT_LDFLAGS
 CXXCPP
 CPP
@@ -899,7 +897,6 @@ with_aix_soname
 with_gnu_ld
 with_sysroot
 enable_libtool_lock
-enable_dependency_linking
 with_coinutils
 with_coinutils_lflags
 with_coinutils_cflags
@@ -1576,9 +1573,6 @@ Optional Features:
   --enable-fast-install[=PKGS]
                           optimize for fast installation [default=yes]
   --disable-libtool-lock  avoid locking (might break parallel builds)
-  --enable-dependency-linking
-                          Link all library dependencies into shared libraries
-                          at creation (default=yes)
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -11855,9 +11849,6 @@ fi
   # before this can be enabled.
   hardcode_into_libs=yes
 
-  # Add ABI-specific directories to the system library path.
-  sys_lib_dlsearch_path_spec="/lib64 /usr/lib64 /lib /usr/lib"
-
   # Ideally, we could use ldconfig to report *all* directores which are
   # searched for libraries, however this is still not possible.  Aside from not
   # being certain /sbin/ldconfig is available, command
@@ -11866,7 +11857,7 @@ fi
   # appending ld.so.conf contents (and includes) to the search path.
   if test -f /etc/ld.so.conf; then
     lt_ld_extra=`awk '/^include / { system(sprintf("cd /etc; cat %s 2>/dev/null", \$2)); skip = 1; } { if (!skip) print \$0; skip = 0; }' < /etc/ld.so.conf | $SED -e 's/#.*//;/^[	 ]*hwcap[	 ]/d;s/[:,	]/ /g;s/=[^=]*$//;s/=[^= ]* / /g;s/"//g;/^$/d' | tr '\n' ' '`
-    sys_lib_dlsearch_path_spec="$sys_lib_dlsearch_path_spec $lt_ld_extra"
+    sys_lib_dlsearch_path_spec="/lib /usr/lib $lt_ld_extra"
   fi
 
   # We used to test for /lib/ld.so.1 and disable shared libraries on
@@ -15820,9 +15811,6 @@ fi
   # before this can be enabled.
   hardcode_into_libs=yes
 
-  # Add ABI-specific directories to the system library path.
-  sys_lib_dlsearch_path_spec="/lib64 /usr/lib64 /lib /usr/lib"
-
   # Ideally, we could use ldconfig to report *all* directores which are
   # searched for libraries, however this is still not possible.  Aside from not
   # being certain /sbin/ldconfig is available, command
@@ -15831,7 +15819,7 @@ fi
   # appending ld.so.conf contents (and includes) to the search path.
   if test -f /etc/ld.so.conf; then
     lt_ld_extra=`awk '/^include / { system(sprintf("cd /etc; cat %s 2>/dev/null", \$2)); skip = 1; } { if (!skip) print \$0; skip = 0; }' < /etc/ld.so.conf | $SED -e 's/#.*//;/^[	 ]*hwcap[	 ]/d;s/[:,	]/ /g;s/=[^=]*$//;s/=[^= ]* / /g;s/"//g;/^$/d' | tr '\n' ' '`
-    sys_lib_dlsearch_path_spec="$sys_lib_dlsearch_path_spec $lt_ld_extra"
+    sys_lib_dlsearch_path_spec="/lib /usr/lib $lt_ld_extra"
   fi
 
   # We used to test for /lib/ld.so.1 and disable shared libraries on
@@ -16219,32 +16207,8 @@ $as_echo "$coin_libversion" >&6; }
 $as_echo "no" >&6; }
   fi
 
-# Check if dependency linking is enabled or disabled.
-
-
-  # Check whether --enable-dependency-linking was given.
-if test "${enable_dependency_linking+set}" = set; then :
-  enableval=$enable_dependency_linking; dependency_linking="$enableval"
-else
-  dependency_linking=yes
-fi
-
-
-# AC_SUBST([LT_LDFLAGS])
-# if test "$dependency_linking" = yes ; then
-#   LT_LDFLAGS="$LT_LDFLAGS -no-undefined"
-# fi
-
-   if test "$dependency_linking" = yes; then
-  DEPENDENCY_LINKING_TRUE=
-  DEPENDENCY_LINKING_FALSE='#'
-else
-  DEPENDENCY_LINKING_TRUE='#'
-  DEPENDENCY_LINKING_FALSE=
-fi
-
-
-
+  #TODO we should be able to add this flag
+  #LT_LDFLAGS="$LT_LDFLAGS -no-undefined"
 
 
 #############################################################################
@@ -19729,10 +19693,6 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${am__fastdepCXX_TRUE}" && test -z "${am__fastdepCXX_FALSE}"; then
   as_fn_error $? "conditional \"am__fastdepCXX\" was never defined.
-Usually this means the macro was only invoked conditionally." "$LINENO" 5
-fi
-if test -z "${DEPENDENCY_LINKING_TRUE}" && test -z "${DEPENDENCY_LINKING_FALSE}"; then
-  as_fn_error $? "conditional \"DEPENDENCY_LINKING\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${COIN_HAS_PKGCONFIG_TRUE}" && test -z "${COIN_HAS_PKGCONFIG_FALSE}"; then

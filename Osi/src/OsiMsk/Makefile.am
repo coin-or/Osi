@@ -22,9 +22,7 @@ libOsiMsk_la_SOURCES = \
 	OsiMskSolverInterface.cpp OsiMskSolverInterface.hpp
 
 # List all additionally required libraries
-if DEPENDENCY_LINKING
 libOsiMsk_la_LIBADD = $(OSILIB_LIBS) ../Osi/libOsi.la $(MSKLIB)
-endif
 
 # This is for libtool (on Windows)
 libOsiMsk_la_LDFLAGS = $(LT_LDFLAGS)

@@ -19,9 +19,7 @@ lib_LTLIBRARIES = libOsiSpx.la
 libOsiSpx_la_SOURCES = OsiSpxSolverInterface.cpp OsiSpxSolverInterface.hpp
 
 # List all additionally required libraries
-if DEPENDENCY_LINKING
 libOsiSpx_la_LIBADD = $(OSILIB_LIBS) ../Osi/libOsi.la
-endif
 
 # This is for libtool
 libOsiSpx_la_LDFLAGS = $(LT_LDFLAGS)

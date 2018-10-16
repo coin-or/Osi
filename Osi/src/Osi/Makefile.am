@@ -37,9 +37,7 @@ libOsi_la_SOURCES = \
 	OsiSolverParameters.hpp
 
 # List all additionally required libraries
-if DEPENDENCY_LINKING
 libOsi_la_LIBADD = $(OSILIB_LFLAGS)
-endif
 
 # This is for libtool
 libOsi_la_LDFLAGS = $(LT_LDFLAGS)

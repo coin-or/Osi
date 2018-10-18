@@ -4,6 +4,8 @@
 
 #ifndef OsiPresolve_H
 #define OsiPresolve_H
+
+#include "OsiExport.h"
 #include "OsiSolverInterface.hpp"
 
 class CoinPresolveAction;
@@ -59,7 +61,7 @@ class CoinPresolveAction;
 
 
 
-class OsiPresolve {
+class OSILIB_EXPORT OsiPresolve {
 public:
   /// Default constructor (empty object)
   OsiPresolve();

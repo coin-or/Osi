@@ -12,11 +12,12 @@
 #include "OsiCollections.hpp"
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
+#include "OsiExport.h"
 #include "CoinFloatEqual.hpp"
 
 /** Collections of row cuts and column cuts
 */
-class OsiCuts {
+class OSILIB_EXPORT OsiCuts {
    friend void OsiCutsUnitTest();
 
 public:
@@ -27,7 +28,7 @@ public:
 
       This is a class for iterating over the collection of cuts.
     */
-    class iterator {
+    class OSILIB_EXPORT iterator {
       friend class OsiCuts;
     public:
       iterator(OsiCuts& cuts); 

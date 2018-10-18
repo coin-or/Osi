@@ -9,6 +9,7 @@
 
 #include "OsiCollections.hpp"
 #include "OsiCut.hpp"
+#include "OsiExport.h"
 
 //#define OSI_INLINE_ROWCUT_METHODS
 #ifdef OSI_INLINE_ROWCUT_METHODS
@@ -26,7 +27,7 @@ A row cut has:
   <li>a vector of row elements
   </ul>
 */
-class OsiRowCut : public OsiCut {
+class OSILIB_EXPORT OsiRowCut : public OsiCut {
    friend void OsiRowCutUnitTest(const OsiSolverInterface * baseSiP,    
 				 const std::string & mpsDir);
 

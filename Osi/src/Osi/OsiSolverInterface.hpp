@@ -19,6 +19,7 @@
 
 #include "OsiCollections.hpp"
 #include "OsiSolverParameters.hpp"
+#include "OsiExport.h"
 
 class CoinSnapshot;
 class CoinLpIO;
@@ -59,7 +60,7 @@ class OsiObject;
   the methods that return vectors.
 */
 
-class OsiSolverInterface  {
+class OSILIB_EXPORT OsiSolverInterface  {
    friend void OsiSolverInterfaceCommonUnitTest(
       const OsiSolverInterface* emptySi,
       const std::string & mpsDir,

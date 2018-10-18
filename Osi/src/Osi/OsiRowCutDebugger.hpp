@@ -15,6 +15,7 @@
 
 #include "OsiCuts.hpp"
 #include "OsiSolverInterface.hpp"
+#include "OsiExport.h"
 
 /*! \brief Validate cuts against a known solution
 
@@ -39,7 +40,7 @@
   transformations, your solution must match the presolved problem. (But see
   #redoSolution().)
 */
-class OsiRowCutDebugger {
+class OSILIB_EXPORT OsiRowCutDebugger {
   friend void OsiRowCutDebuggerUnitTest(const OsiSolverInterface * siP,    
 					const std::string & mpsDir);
 

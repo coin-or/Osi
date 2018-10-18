@@ -32,7 +32,7 @@ libOsiCommonTest_la_SOURCES = \
 	OsiSolverInterfaceTest.cpp
 
 # List all additionally required libraries
-libOsiCommonTest_la_LIBADD = $(OSICOMMONTESTLIB_LFLAGS)
+libOsiCommonTest_la_LIBADD = $(OSICOMMONTESTLIB_LFLAGS) ../Osi/libOsi.la
 
 # Libtool flags
 libOsiCommonTest_la_LDFLAGS = $(LT_LDFLAGS)

@@ -76,8 +76,10 @@ function invoke_make {
         $MAKE -j $jobs $2 >& /dev/null
     elif [ $1 = 2 ]; then
         $MAKE -j $jobs $2 > /dev/null
-    else
+    elif [ $1 = 3 ]; then
         $MAKE -j $jobs $2
+    else
+        $MAKE -j $jobs V=1 $2
     fi
 }
 
@@ -454,7 +456,6 @@ function build {
             exit 3
         else
             mkdir -p $build_dir
-            rm -f $build_dir/coin_subdirs.txt
         fi
         for dir in `cat .subdirs`
         do
@@ -464,7 +465,6 @@ function build {
                     proj_dir=$dir
                 fi
                 mkdir -p $build_dir/$proj_dir
-                echo -n $proj_dir" " >> $build_dir/coin_subdirs.txt
                 cd $build_dir/$proj_dir
             else
                 cd $dir

@@ -149,7 +149,8 @@ am__uninstall_files_from_dir = { \
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includecoindir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
-libOsiCommonTest_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+libOsiCommonTest_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+	../Osi/libOsi.la
 am_libOsiCommonTest_la_OBJECTS = OsiColCutTest.lo OsiCutsTest.lo \
 	OsiRowCutDebuggerTest.lo OsiRowCutTest.lo OsiSimplexAPITest.lo \
 	OsiNetlibTest.lo OsiUnitTestUtils.lo OsiSolverInterfaceTest.lo
@@ -246,6 +247,7 @@ ACLOCAL = @ACLOCAL@
 AMTAR = @AMTAR@
 AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 AR = @AR@
+AS = @AS@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
@@ -496,7 +498,7 @@ libOsiCommonTest_la_SOURCES = \
 
 
 # List all additionally required libraries
-libOsiCommonTest_la_LIBADD = $(OSICOMMONTESTLIB_LFLAGS)
+libOsiCommonTest_la_LIBADD = $(OSICOMMONTESTLIB_LFLAGS) ../Osi/libOsi.la
 
 # Libtool flags
 libOsiCommonTest_la_LDFLAGS = $(LT_LDFLAGS)

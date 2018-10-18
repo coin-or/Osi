@@ -72,7 +72,7 @@ public:
 
       This is a class for iterating over the collection of cuts.
     */ 
-    class const_iterator {
+    class OSILIB_EXPORT const_iterator {
       friend class OsiCuts;
 	public:
 	  typedef std::forward_iterator_tag iterator_category;

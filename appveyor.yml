@@ -4,12 +4,12 @@ platform:
 environment:
   matrix:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-      ARCH: win32-msvc9
-      HOST_ARCH_ARG: --enable-msvc=MD
-      ADD_PATH: /mingw64/bin
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       ARCH: win32-msvc14
       HOST_ARCH_ARG: --enable-msvc
+      ADD_PATH: /mingw64/bin
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      ARCH: win32-msvc14-static
+      HOST_ARCH_ARG: --enable-msvc --disable-shared
       ADD_PATH: /mingw64/bin
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       ARCH: win32-msvc15

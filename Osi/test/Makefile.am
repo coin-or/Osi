@@ -83,9 +83,6 @@ if COIN_HAS_SOPLEX
   LIBS += $(SOPLEX_LIBS)
 endif
 
-unitTest_LDADD        += ../src/Osi/libOsi.la $(OSILIB_LFLAGS)
-unitTest_DEPENDENCIES += ../src/Osi/libOsi.la
-
 unittestflags =
 if COIN_HAS_SAMPLE
   unittestflags += -mpsDir=`$(CYGPATH_W) $(SAMPLE_DATA)`

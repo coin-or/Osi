@@ -177,7 +177,6 @@ am_unitTest_OBJECTS = unitTest.$(OBJEXT) OsiTestSolver.$(OBJEXT) \
 	$(am__objects_2) $(am__objects_3) $(am__objects_4) \
 	$(am__objects_5) $(am__objects_6)
 unitTest_OBJECTS = $(am_unitTest_OBJECTS)
-am__DEPENDENCIES_1 =
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -485,12 +484,10 @@ unitTest_SOURCES = unitTest.cpp OsiTestSolver.cpp \
 # List libraries of COIN projects
 unitTest_LDADD = ../src/OsiCommonTest/libOsiCommonTest.la \
 	$(am__append_3) $(am__append_8) $(am__append_13) \
-	$(am__append_18) $(am__append_23) $(am__append_28) \
-	../src/Osi/libOsi.la $(OSILIB_LFLAGS)
+	$(am__append_18) $(am__append_23) $(am__append_28)
 unitTest_DEPENDENCIES = ../src/OsiCommonTest/libOsiCommonTest.la \
 	$(am__append_4) $(am__append_9) $(am__append_14) \
-	$(am__append_19) $(am__append_24) $(am__append_29) \
-	../src/Osi/libOsi.la
+	$(am__append_19) $(am__append_24) $(am__append_29)
 
 # Here list all include flags, relative to this "srcdir" directory.
 AM_CPPFLAGS = -I$(srcdir)/../src/Osi -I$(srcdir)/../src/OsiCommonTest \

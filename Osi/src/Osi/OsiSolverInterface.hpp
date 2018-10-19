@@ -61,6 +61,7 @@ class OsiObject;
 */
 
 class OSILIB_EXPORT OsiSolverInterface  {
+/*
    friend void OsiSolverInterfaceCommonUnitTest(
       const OsiSolverInterface* emptySi,
       const std::string & mpsDir,
@@ -68,6 +69,7 @@ class OSILIB_EXPORT OsiSolverInterface  {
    friend void OsiSolverInterfaceMpsUnitTest(
       const std::vector<OsiSolverInterface*> & vecSiP,
       const std::string & mpsDir);
+*/
 
 public:
 

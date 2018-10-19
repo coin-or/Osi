@@ -232,13 +232,15 @@ class OSICOMMONTEST_EXPORT TestOutcome {
 };
 
 /// Utility class to maintain a list of test outcomes.
-class OSICOMMONTEST_EXPORT TestOutcomes : public std::list<TestOutcome> {
+class OSICOMMONTEST_EXPORT TestOutcomes {
+  private :
+    std::list<TestOutcome> outcomes;
   public:
     /// Add an outcome to the list
     void add(std::string comp, std::string tst, const char* cond,
     	     TestOutcome::SeverityLevel sev, const char* file, int line,
 	     bool exp = false)
-    { push_back(TestOutcome(comp,tst,cond,sev,file,line,exp)); }
+    { outcomes.push_back(TestOutcome(comp,tst,cond,sev,file,line,exp)); }
 
     /*! \brief Add an outcome to the list
 

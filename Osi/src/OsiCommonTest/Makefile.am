@@ -38,7 +38,7 @@ libOsiCommonTest_la_LIBADD = $(OSICOMMONTESTLIB_LFLAGS) ../Osi/libOsi.la
 libOsiCommonTest_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.
-AM_CPPFLAGS = -I$(srcdir)/../Osi $(OSICOMMONTESTLIB_CFLAGS)
+AM_CPPFLAGS = -I$(srcdir)/../Osi $(OSICOMMONTESTLIB_CFLAGS) -DOSICOMMONTEST_BUILD
 
 # FIXME this should be added only for the object files that use the main Osi DLL (not the LIB)
 AM_CPPFLAGS += -DOSILIB_DLLIMPORT

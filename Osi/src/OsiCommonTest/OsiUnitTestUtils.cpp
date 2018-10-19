@@ -542,7 +542,7 @@ void TestOutcomes::add(const OsiSolverInterface& si, std::string tst, const char
 {
     std::string solverName;
     si.getStrParam(OsiSolverName, solverName);
-    push_back(TestOutcome(solverName, tst, cond, sev, file, line, exp));
+    outcomes.push_back(TestOutcome(solverName, tst, cond, sev, file, line, exp));
 }
 
 void TestOutcomes::print() const
@@ -557,7 +557,7 @@ void TestOutcomes::print() const
       Walk the list, counting entries at each severity level. Print if verbosity
       level is high enough.
     */
-    for (const_iterator it(begin()); it != end(); ++it) {
+    for (std::list<TestOutcome>::const_iterator it(outcomes.begin()); it != outcomes.end(); ++it) {
         ++count[it->severity];
         if (it->expected) ++expected[it->severity];
         if ((it->severity != TestOutcome::PASSED || OsiUnitTest::verbosity >= 2) &&
@@ -579,7 +579,7 @@ void TestOutcomes::getCountBySeverity(TestOutcome::SeverityLevel sev,
     total = 0;
     expected = 0;
 
-    for( const_iterator it(begin()); it != end(); ++it ) {
+    for (std::list<TestOutcome>::const_iterator it(outcomes.begin()); it != outcomes.end(); ++it) {
         if( it->severity != sev ) continue;
         ++total;
         if( it->expected ) ++expected;

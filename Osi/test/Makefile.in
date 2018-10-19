@@ -492,9 +492,8 @@ unitTest_DEPENDENCIES = ../src/OsiCommonTest/libOsiCommonTest.la \
 # Here list all include flags, relative to this "srcdir" directory.
 AM_CPPFLAGS = -I$(srcdir)/../src/Osi -I$(srcdir)/../src/OsiCommonTest \
 	$(OSICOMMONTESTLIB_CFLAGS) -DOSICOMMONTEST_DLLIMPORT \
-	-DOSILIB_DLLIMPORT $(am__append_2) $(am__append_7) \
-	$(am__append_12) $(am__append_17) $(am__append_22) \
-	$(am__append_27)
+	$(am__append_2) $(am__append_7) $(am__append_12) \
+	$(am__append_17) $(am__append_22) $(am__append_27)
 unittestflags = $(am__append_31) $(am__append_32)
 
 ########################################################################

@@ -1281,7 +1281,7 @@ CoinPrePostsolveMatrix::CoinPrePostsolveMatrix(const OsiSolverInterface * si,
   messages_()
 
 {
-  bulk0_ = static_cast<CoinBigIndex>(bulkRatio_*nelems_in) ;
+  bulk0_ = static_cast<CoinBigIndex>(bulkRatio_*nelems_in+ncols_in) ;
   hrow_ = new int [bulk0_+ncols_in] ;
   colels_ = new double[bulk0_+ncols_in] ;
 
@@ -1382,7 +1382,7 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
   hcol_ = new int [bulk0_] ;
 
   nrows_ = si->getNumRows() ;
-  const CoinBigIndex bufsize = static_cast<CoinBigIndex>(bulkRatio_*nelems_in) ;
+  const CoinBigIndex bufsize = bulk0_;
 
   // Set up change bits
   rowChanged_ = new unsigned char[nrows_];

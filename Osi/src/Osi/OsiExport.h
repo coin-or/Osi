@@ -1,16 +1,15 @@
 #ifdef _WIN32
-#  ifdef DLL_EXPORT
-#    ifdef OSILIB_BUILD  /* build of Osi DLL */
+#  ifdef OSILIB_BUILD
+#    ifdef DLL_EXPORT  /* build of Osi DLL */
 #      define OSILIB_EXPORT __declspec(dllexport)
-#    else  /* use of Osi DLL */
-#      define OSILIB_EXPORT __declspec(dllimport)
+#    else  /* build of Osi LIB */
+#      define OSILIB_EXPORT
 #    endif
-#  endif
-#  ifdef OSILIB_DLLIMPORT  /* alternative to indicate using Osi DLL */
+#  elif defined(OSILIB_DLLIMPORT)  /* using Osi DLL */
 #    define OSILIB_EXPORT __declspec(dllimport)
+#  else   /* using Osi LIB */
+#    define OSILIB_EXPORT
 #  endif
-#endif
-
-#ifndef OSILIB_EXPORT
-#  define OSILIB_EXPORT
+#else  /* Unix */
+#    define OSILIB_EXPORT
 #endif

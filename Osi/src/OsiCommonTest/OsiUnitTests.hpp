@@ -20,20 +20,19 @@
 #include <map>
 
 #ifdef _WIN32
-#  ifdef DLL_EXPORT
-#    ifdef OSICOMMONTEST_BUILD  /* build of OsiCommonTest DLL */
+#  ifdef OSICOMMONTEST_BUILD
+#    ifdef DLL_EXPORT  /* build of OsiCommonTest DLL */
 #      define OSICOMMONTEST_EXPORT __declspec(dllexport)
-#    else  /* use of OsiCommonTest DLL */
-#      define OSICOMMONTEST_EXPORT __declspec(dllimport)
+#    else  /* build of OsiCommonTest LIB */
+#      define OSICOMMONTEST_EXPORT
 #    endif
-#  endif
-#  ifdef OSICOMMONTEST_DLLIMPORT  /* alternative to indicate using OsiCommonTest DLL */
+#  elif defined(OSICOMMONTEST_DLLIMPORT)  /* using OsiCommonTest DLL */
 #    define OSICOMMONTEST_EXPORT __declspec(dllimport)
+#  else   /* using OsiCommonTest LIB */
+#    define OSICOMMONTEST_EXPORT
 #  endif
-#endif
-
-#ifndef OSICOMMONTEST_EXPORT
-#  define OSICOMMONTEST_EXPORT
+#else  /* Unix */
+#    define OSICOMMONTEST_EXPORT
 #endif
 
 class OsiSolverInterface;

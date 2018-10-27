@@ -145,11 +145,12 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
     }
 
     
-    CoinPresolveMatrix prob(ncols_,
+    CoinPresolveMatrix* probptr = construct_CoinPresolveMatrix(ncols_,
 			    maxmin,
 			    presolvedModel_,
 			    nrows_, nelems_,doStatus,nonLinearValue_,prohibited,
 			    rowProhibited);
+    CoinPresolveMatrix& prob(*probptr);
     // make sure row solution correct
     if (doStatus) {
       double *colels	= prob.colels_;
@@ -231,7 +232,7 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
 */
     if (prob.status_ == 0) {
     
-      prob.update_model(presolvedModel_, nrows_, ncols_, nelems_);
+      update_model_CoinPresolveMatrix(prob,presolvedModel_, nrows_, ncols_, nelems_);
 
 # if PRESOLVE_CONSISTENCY > 0
       if (doStatus)
@@ -379,6 +380,7 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
       // infeasible or unbounded
       result = 1 ;
     }
+    delete probptr;
   }
   if (!result) {
     int nrowsAfter = presolvedModel_->getNumRows();
@@ -394,6 +396,7 @@ OsiPresolve::presolvedModel(OsiSolverInterface & si,
     delete presolvedModel_;
     presolvedModel_=NULL;
   }
+  
   return presolvedModel_;
 }
 
@@ -474,9 +477,10 @@ OsiPresolve::postsolve(bool updateStatus)
   Postsolve back to the original problem.  The CoinPostsolveMatrix object
   assumes ownership of sol, acts, colstat, and rowstat.
 */
-  CoinPostsolveMatrix prob(presolvedModel_,ncols0,nrows0,nelems0,
+  CoinPostsolveMatrix* probptr = construct_CoinPostsolveMatrix(presolvedModel_,ncols0,nrows0,nelems0,
 			   presolvedModel_->getObjSense(),
 			   sol,acts,colstat,rowstat) ;
+  CoinPostsolveMatrix& prob(*probptr);
   postsolve(prob) ;
 
 # if PRESOLVE_CONSISTENCY > 0
@@ -536,6 +540,7 @@ OsiPresolve::postsolve(bool updateStatus)
     delete basis ;
   } 
 
+  delete probptr;
 }
 
 // return pointer to original columns
@@ -1238,7 +1243,7 @@ static inline double getTolerance(const OsiSolverInterface  *si, OsiDblParam key
   return (tol) ;
 }
 
-
+#if SV
 // Assumptions:
 // 1. nrows>=m.getNumRows()
 // 2. ncols>=m.getNumCols()
@@ -1325,6 +1330,7 @@ CoinPrePostsolveMatrix::CoinPrePostsolveMatrix(const OsiSolverInterface * si,
   colstat_=NULL;
   rowstat_=NULL;
 }
+#endif
 
 // I am not familiar enough with CoinPackedMatrix to be confident
 // that I will implement a row-ordered version of toColumnOrderedGapFree
@@ -1341,7 +1347,8 @@ static bool isGapFree(const CoinPackedMatrix& matrix)
   return (! (i >= 0));
 }
 
-CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
+OSILIB_EXPORT
+CoinPresolveMatrix* construct_CoinPresolveMatrix(int ncols0_in,
 				       double maxmin,
 				       // end prepost members
 				       OsiSolverInterface * si,
@@ -1352,43 +1359,32 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
 				       double nonLinearValue,
                                        const char * prohibited,
 				       const char * rowProhibited)
-  : CoinPrePostsolveMatrix(si,ncols0_in,nrows_in,nelems_in),
-    clink_(new presolvehlink[ncols0_in+1]),
-    rlink_(new presolvehlink[nrows_in+1]),
-    dobias_(0.0),
-
-    // temporary init
-    mrstrt_(new CoinBigIndex[nrows_in+1]),
-    hinrow_(new int[nrows_in+1]),
-    integerType_(new unsigned char[ncols0_in]),
-    anyInteger_(false),
-    tuning_(false),
-    startTime_(0.0),
-    feasibilityTolerance_(0.0),
-    status_(-1),
-    maxSubstLevel_(3),
-    colsToDo_(new int [ncols0_in]),
-    numberColsToDo_(0),
-    nextColsToDo_(new int[ncols0_in]),
-    numberNextColsToDo_(0),
-    rowsToDo_(new int [nrows_in]),
-    numberRowsToDo_(0),
-    nextRowsToDo_(new int[nrows_in]),
-    numberNextRowsToDo_(0),
-    presolveOptions_(0)
 {
+  CoinPresolveMatrix* cpm = new CoinPresolveMatrix(ncols0_in,nrows_in,nelems_in);
+  //CoinPrePostsolveMatrix(si,ncols0_in,nrows_in,nelems_in),
+  cpm->clink_ = new presolvehlink[ncols0_in+1];
+  cpm->rlink_ = new presolvehlink[nrows_in+1];
 
-  rowels_ = new double [bulk0_] ;
-  hcol_ = new int [bulk0_] ;
+  // temporary init
+  cpm->mrstrt_ = new CoinBigIndex[nrows_in+1];
+  cpm->hinrow_ = new int[nrows_in+1];
+  cpm->integerType_ = new unsigned char[ncols0_in];
+  cpm->colsToDo_ = new int [ncols0_in];
+  cpm->nextColsToDo_ = new int[ncols0_in];
+  cpm->rowsToDo_ = new int [nrows_in];
+  cpm->nextRowsToDo_ = new int[nrows_in];
 
-  nrows_ = si->getNumRows() ;
-  const CoinBigIndex bufsize = static_cast<CoinBigIndex>(bulkRatio_*nelems_in) ;
+  cpm->rowels_ = new double [cpm->bulk0_] ;
+  cpm->hcol_ = new int [cpm->bulk0_] ;
+
+  cpm->nrows_ = si->getNumRows() ;
+  const CoinBigIndex bufsize = static_cast<CoinBigIndex>(cpm->bulkRatio_*nelems_in) ;
 
   // Set up change bits
-  rowChanged_ = new unsigned char[nrows_];
-  memset(rowChanged_,0,nrows_);
-  colChanged_ = new unsigned char[ncols_];
-  memset(colChanged_,0,ncols_);
+  cpm->rowChanged_ = new unsigned char[cpm->nrows_];
+  memset(cpm->rowChanged_,0,cpm->nrows_);
+  cpm->colChanged_ = new unsigned char[cpm->ncols_];
+  memset(cpm->colChanged_,0,cpm->ncols_);
   const CoinPackedMatrix * m1 = si->getMatrixByCol();
 
   // The coefficient matrix is a big hunk of stuff.
@@ -1400,28 +1396,28 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
   const double * element = m1->getElements();
   int icol;
   CoinBigIndex nel=0;
-  mcstrt_[0]=0;
-  for (icol=0;icol<ncols_;icol++) {
+  cpm->mcstrt_[0]=0;
+  for (icol=0;icol<cpm->ncols_;icol++) {
     CoinBigIndex j;
     for (j=start[icol];j<start[icol]+length[icol];j++) {
       if (fabs(element[j])>ZTOLDP) {
-        hrow_[nel]=row[j];
-	colels_[nel++]=element[j];
+        cpm->hrow_[nel]=row[j];
+        cpm->colels_[nel++]=element[j];
       }
     }
-    hincol_[icol]=static_cast<int>(nel-mcstrt_[icol]);
-    mcstrt_[icol+1]=nel;
+    cpm->hincol_[icol]=static_cast<int>(nel-cpm->mcstrt_[icol]);
+    cpm->mcstrt_[icol+1]=nel;
   }
 
   // same thing for row rep
   CoinPackedMatrix * m = new CoinPackedMatrix();
   m->reverseOrderedCopyOf(*si->getMatrixByCol());
   // do by hand because of zeros m->removeGaps();
-  CoinDisjointCopyN(m->getVectorStarts(),  nrows_,  mrstrt_);
-  mrstrt_[nrows_] = nelems_;
-  CoinDisjointCopyN(m->getVectorLengths(), nrows_,  hinrow_);
-  CoinDisjointCopyN(m->getIndices(),       nelems_, hcol_);
-  CoinDisjointCopyN(m->getElements(),      nelems_, rowels_);
+  CoinDisjointCopyN(m->getVectorStarts(),  cpm->nrows_,  cpm->mrstrt_);
+  cpm->mrstrt_[cpm->nrows_] = cpm->nelems_;
+  CoinDisjointCopyN(m->getVectorLengths(), cpm->nrows_,  cpm->hinrow_);
+  CoinDisjointCopyN(m->getIndices(),       cpm->nelems_, cpm->hcol_);
+  CoinDisjointCopyN(m->getElements(),      cpm->nelems_, cpm->rowels_);
   start = m->getVectorStarts();
   length = m->getVectorLengths();
   const int * column = m->getIndices();
@@ -1429,104 +1425,104 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
   // out zeros
   int irow;
   nel=0;
-  mrstrt_[0]=0;
-  for (irow=0;irow<nrows_;irow++) {
+  cpm->mrstrt_[0]=0;
+  for (irow=0;irow<cpm->nrows_;irow++) {
     CoinBigIndex j;
     for (j=start[irow];j<start[irow]+length[irow];j++) {
       if (fabs(element[j])>ZTOLDP) {
-        hcol_[nel]=column[j];
-        rowels_[nel++]=element[j];
+        cpm->hcol_[nel]=column[j];
+        cpm->rowels_[nel++]=element[j];
       }
     }
-    hinrow_[irow]=static_cast<int>(nel-mrstrt_[irow]);
-    mrstrt_[irow+1]=nel;
+    cpm->hinrow_[irow]=static_cast<int>(nel-cpm->mrstrt_[irow]);
+    cpm->mrstrt_[irow+1]=nel;
   }
-  nelems_=nel;
+  cpm->nelems_=nel;
 
   delete m;
   {
     int i;
     int numberIntegers=0;
-    for (i=0;i<ncols_;i++) {
+    for (i=0;i<cpm->ncols_;i++) {
       if (si->isInteger(i)) {  
-	integerType_[i] = 1;
+	cpm->integerType_[i] = 1;
 	numberIntegers++;
       } else {
-	integerType_[i] = 0;
+	cpm->integerType_[i] = 0;
       }
     }
-    anyInteger_ = (numberIntegers!=0);
+    cpm->anyInteger_ = (numberIntegers!=0);
   }
 
   // Set up prohibited bits if needed
   if (nonLinearValue) {
-    anyProhibited_ = true;
-    for (icol=0;icol<ncols_;icol++) {
+    cpm->anyProhibited_ = true;
+    for (icol=0;icol<cpm->ncols_;icol++) {
       CoinBigIndex j;
       bool nonLinearColumn = false;
-      if (cost_[icol]==nonLinearValue)
+      if (cpm->cost_[icol]==nonLinearValue)
 	nonLinearColumn=true;
-      for (j=mcstrt_[icol];j<mcstrt_[icol+1];j++) {
-	if (colels_[j]==nonLinearValue) {
+      for (j=cpm->mcstrt_[icol];j<cpm->mcstrt_[icol+1];j++) {
+	if (cpm->colels_[j]==nonLinearValue) {
 	  nonLinearColumn=true;
-	  setRowProhibited(hrow_[j]);
+	  cpm->setRowProhibited(cpm->hrow_[j]);
 	}
       }
       if (nonLinearColumn)
-	setColProhibited(icol);
+	cpm->setColProhibited(icol);
     }
   } else if (prohibited) {
-    anyProhibited_ = true;
-    for (icol=0;icol<ncols_;icol++) {
+    cpm->anyProhibited_ = true;
+    for (icol=0;icol<cpm->ncols_;icol++) {
       if (prohibited[icol])
-	setColProhibited(icol);
+	cpm->setColProhibited(icol);
     }
   } else {
-    anyProhibited_ = false;
+    cpm->anyProhibited_ = false;
   }
   // Any rows special?
   if (rowProhibited) {
-    anyProhibited_ = true;
-    for (int irow=0;irow<nrows_;irow++) {
+    cpm->anyProhibited_ = true;
+    for (int irow=0;irow<cpm->nrows_;irow++) {
       if (rowProhibited[irow])
-	setRowProhibited(irow);
+	cpm->setRowProhibited(irow);
     }
   }
   // Go to minimization
   if (maxmin<0.0) {
-    for (int i=0;i<ncols_;i++)
-      cost_[i]=-cost_[i];
-    maxmin_=1.0;
+    for (int i=0;i<cpm->ncols_;i++)
+      cpm->cost_[i]=-cpm->cost_[i];
+    cpm->maxmin_=1.0;
   }
   if (doStatus) {
     // allow for status and solution
-    sol_ = new double[ncols_];
+    cpm->sol_ = new double[cpm->ncols_];
     const double *presol ;
     presol = si->getColSolution() ;
-    memcpy(sol_,presol,ncols_*sizeof(double));;
-    acts_ = new double [nrows_];
-    memcpy(acts_,si->getRowActivity(),nrows_*sizeof(double));
+    memcpy(cpm->sol_,presol,cpm->ncols_*sizeof(double));;
+    cpm->acts_ = new double [cpm->nrows_];
+    memcpy(cpm->acts_,si->getRowActivity(),cpm->nrows_*sizeof(double));
     CoinWarmStartBasis * basis  = 
     dynamic_cast<CoinWarmStartBasis*>(si->getWarmStart());
-    colstat_ = new unsigned char [nrows_+ncols_];
-    rowstat_ = colstat_+ncols_;
+    cpm->colstat_ = new unsigned char [cpm->nrows_+cpm->ncols_];
+    cpm->rowstat_ = cpm->colstat_+cpm->ncols_;
     // If basis is NULL then put in all slack basis
-    if (basis&&basis->getNumStructural()==ncols_) {
+    if (basis&&basis->getNumStructural()==cpm->ncols_) {
       int i;
-      for (i=0;i<ncols_;i++) {
-	colstat_[i] = basis->getStructStatus(i);
+      for (i=0;i<cpm->ncols_;i++) {
+	cpm->colstat_[i] = basis->getStructStatus(i);
       }
-      for (i=0;i<nrows_;i++) {
-	rowstat_[i] = basis->getArtifStatus(i);
+      for (i=0;i<cpm->nrows_;i++) {
+	cpm->rowstat_[i] = basis->getArtifStatus(i);
       }
     } else {
       int i;
       // no basis
-      for (i=0;i<ncols_;i++) {
-	colstat_[i] = 3;
+      for (i=0;i<cpm->ncols_;i++) {
+	cpm->colstat_[i] = 3;
       }
-      for (i=0;i<nrows_;i++) {
-	rowstat_[i] = 1;
+      for (i=0;i<cpm->nrows_;i++) {
+	cpm->rowstat_[i] = 1;
       }
     }
     delete basis;
@@ -1544,80 +1540,66 @@ CoinPresolveMatrix::CoinPresolveMatrix(int ncols0_in,
   #if 0
 */
 # if 0
-  presolve_make_memlists(mcstrt_, hincol_, clink_, ncols_);
-  presolve_make_memlists(mrstrt_, hinrow_, rlink_, nrows_);
+  presolve_make_memlists(cpm->mcstrt_, cpm->hincol_, cpm->clink_, cpm->ncols_);
+  presolve_make_memlists(cpm->mrstrt_, cpm->hinrow_, cpm->rlink_, cpm->nrows_);
 # else
-  presolve_make_memlists(/*mcstrt_,*/ hincol_, clink_, ncols_);
-  presolve_make_memlists(/*mrstrt_,*/ hinrow_, rlink_, nrows_);
+  presolve_make_memlists(/*mcstrt_,*/ cpm->hincol_, cpm->clink_, cpm->ncols_);
+  presolve_make_memlists(/*mrstrt_,*/ cpm->hinrow_, cpm->rlink_, cpm->nrows_);
 # endif
 
   // this allows last col/row to expand up to bufsize-1 (22);
   // this must come after the calls to presolve_prefix
-  mcstrt_[ncols_] = bufsize-1;
-  mrstrt_[nrows_] = bufsize-1;
+  cpm->mcstrt_[cpm->ncols_] = bufsize-1;
+  cpm->mrstrt_[cpm->nrows_] = bufsize-1;
   // Allocate useful arrays
-  initializeStuff();
+  cpm->initializeStuff();
 
 # if PRESOLVE_CONSISTENCY > 0
   presolve_consistent(this) ;
 # endif
+
+  return cpm;
 }
 
-// avoid compiler warnings about unused variables
-#if PRESOLVE_SUMMARY > 0
-void CoinPresolveMatrix::update_model(OsiSolverInterface * si,
+OSILIB_EXPORT
+void update_model_CoinPresolveMatrix(CoinPresolveMatrix& cpm, OsiSolverInterface * si,
 				      int nrows0, int ncols0,
 				      CoinBigIndex nelems0)
-#else
-void CoinPresolveMatrix::update_model(OsiSolverInterface * si,
-				      int /*nrows0*/, int /*ncols0*/,
-				      CoinBigIndex /*nelems0*/)
-#endif
 {
   int nels=0;
   int i;
   if (si->getObjSense() < 0.0) {
-    for (int i=0;i<ncols_;i++)
-      cost_[i]=-cost_[i];
-    dobias_=-dobias_;
-    maxmin_ = -1.0;
+    for (int i=0;i<cpm.ncols_;i++)
+      cpm.cost_[i]=-cpm.cost_[i];
+    cpm.dobias_=-cpm.dobias_;
+    cpm.maxmin_ = -1.0;
   }
-  for ( i=0; i<ncols_; i++) 
-    nels += hincol_[i];
-  CoinPackedMatrix m(true,nrows_,ncols_,nels, colels_, hrow_,mcstrt_,hincol_);
-  si->loadProblem(m, clo_, cup_, cost_, rlo_, rup_);
+  for ( i=0; i<cpm.ncols_; i++) 
+    nels += cpm.hincol_[i];
+  CoinPackedMatrix m(true,cpm.nrows_,cpm.ncols_,nels, cpm.colels_, cpm.hrow_,cpm.mcstrt_,cpm.hincol_);
+  si->loadProblem(m, cpm.clo_, cpm.cup_, cpm.cost_, cpm.rlo_, cpm.rup_);
 
-  for ( i=0; i<ncols_; i++) {
-    if (integerType_[i])
+  for ( i=0; i<cpm.ncols_; i++) {
+    if (cpm.integerType_[i])
       si->setInteger(i);
     else
       si->setContinuous(i);
   }
-  si->setDblParam(OsiObjOffset,originalOffset_-dobias_);
+  si->setDblParam(OsiObjOffset,cpm.originalOffset_-cpm.dobias_);
 
 # if PRESOLVE_SUMMARY > 0
   std::cout
     << "New ncol/nrow/nels: "
-    << ncols_ << "(-" << ncols0-ncols_ << ") "
-    << nrows_ << "(-" << nrows0-nrows_ << ") "
+    << cpm.ncols_ << "(-" << ncols0-cpm.ncols_ << ") "
+    << cpm.nrows_ << "(-" << nrows0-cpm.nrows_ << ") "
     << si->getNumElements() << "(-" << nelems0-si->getNumElements() << ") "
     << std::endl ;
 # endif
 }
 
-
-
-
-
-
-
-
-
-
-
 ////////////////  POSTSOLVE
-
-CoinPostsolveMatrix::CoinPostsolveMatrix(OsiSolverInterface*  si,
+OSILIB_EXPORT
+CoinPostsolveMatrix* construct_CoinPostsolveMatrix(OsiSolverInterface*  si,
 				       int ncols0_in,
 				       int nrows0_in,
 				       CoinBigIndex nelems0,
@@ -1629,22 +1611,19 @@ CoinPostsolveMatrix::CoinPostsolveMatrix(OsiSolverInterface*  si,
 				       double *acts_in,
 
 				       unsigned char *colstat_in,
-				       unsigned char *rowstat_in) :
-
-  CoinPrePostsolveMatrix(si, ncols0_in, nrows0_in, nelems0),
+				       unsigned char *rowstat_in)
+{
+  CoinPostsolveMatrix* cpm = new CoinPostsolveMatrix(ncols0_in, nrows0_in, nelems0);
+  //CoinPrePostsolveMatrix(si, ncols0_in, nrows0_in, nelems0)
 /*
   Used only to mark processed columns and rows so that debugging routines know
   what to check.
 */
 # if PRESOLVE_DEBUG > 0 || PRESOLVE_CONSISTENCY > 0
-  cdone_(new char[ncols0_in]),
-  rdone_(new char[nrows0_in])
-# else
-  cdone_(0),
-  rdone_(0)
+  cpm->cdone_ = new char[ncols0_in];
+  cpm->rdone_ = new char[nrows0_in];
 # endif
 
-{
 /*
   The CoinPrePostsolveMatrix constructor will set bulk0_ to bulkRatio_*nelems0.
   By default, bulkRatio_ is 2. This is certainly larger than absolutely
@@ -1652,24 +1631,23 @@ CoinPostsolveMatrix::CoinPostsolveMatrix(OsiSolverInterface*  si,
   store). The main storage arrays for the threaded column-major representation
   (hrow_, colels_, link_) should be allocated to this size.
 */
-  free_list_ = 0 ;
-  maxlink_ = bulk0_ ;
-  link_ = new CoinBigIndex[maxlink_] ;
+  cpm->maxlink_ = cpm->bulk0_ ;
+  cpm->link_ = new CoinBigIndex[cpm->maxlink_] ;
 
-  nrows_ = si->getNumRows() ;
-  ncols_ = si->getNumCols() ;
+  cpm->nrows_ = si->getNumRows() ;
+  cpm->ncols_ = si->getNumCols() ;
 
-  sol_=sol_in;
-  rowduals_=NULL;
-  acts_=acts_in;
+  cpm->sol_=sol_in;
+  cpm->rowduals_=NULL;
+  cpm->acts_=acts_in;
 
-  rcosts_=NULL;
-  colstat_=colstat_in;
-  rowstat_=rowstat_in;
+  cpm->rcosts_=NULL;
+  cpm->colstat_=colstat_in;
+  cpm->rowstat_=rowstat_in;
 
   // this is the *reduced* model, which is probably smaller
-  int ncols1 = ncols_ ;
-  int nrows1 = nrows_ ;
+  int ncols1 = cpm->ncols_ ;
+  int nrows1 = cpm->nrows_ ;
 
   const CoinPackedMatrix * m = si->getMatrixByCol();
 #if 0
@@ -1681,12 +1659,12 @@ CoinPostsolveMatrix::CoinPostsolveMatrix(OsiSolverInterface*  si,
   const CoinBigIndex nelemsr = m->getNumElements();
 
   if (isGapFree(*m)) {
-    CoinDisjointCopyN(m->getVectorStarts(), ncols1, mcstrt_);
-    CoinZeroN(mcstrt_+ncols1,ncols0_-ncols1);
-    mcstrt_[ncols_] = nelems0;	// points to end of bulk store
-    CoinDisjointCopyN(m->getVectorLengths(),ncols1,  hincol_);
-    CoinDisjointCopyN(m->getIndices(),      nelemsr, hrow_);
-    CoinDisjointCopyN(m->getElements(),     nelemsr, colels_);
+    CoinDisjointCopyN(m->getVectorStarts(), ncols1, cpm->mcstrt_);
+    CoinZeroN(cpm->mcstrt_+ncols1,cpm->ncols0_-ncols1);
+    cpm->mcstrt_[cpm->ncols_] = nelems0;	// points to end of bulk store
+    CoinDisjointCopyN(m->getVectorLengths(),ncols1,  cpm->hincol_);
+    CoinDisjointCopyN(m->getIndices(),      nelemsr, cpm->hrow_);
+    CoinDisjointCopyN(m->getElements(),     nelemsr, cpm->colels_);
   }
   else
   {
@@ -1694,34 +1672,34 @@ CoinPostsolveMatrix::CoinPostsolveMatrix(OsiSolverInterface*  si,
     if( mm->hasGaps())
       mm->removeGaps();
     assert(nelemsr == mm->getNumElements());
-    CoinDisjointCopyN(mm->getVectorStarts(), ncols1, mcstrt_);
-    CoinZeroN(mcstrt_+ncols1,ncols0_-ncols1);
-    mcstrt_[ncols_] = nelems0;  // points to end of bulk store
-    CoinDisjointCopyN(mm->getVectorLengths(),ncols1,  hincol_);
-    CoinDisjointCopyN(mm->getIndices(),      nelemsr, hrow_);
-    CoinDisjointCopyN(mm->getElements(),     nelemsr, colels_);
+    CoinDisjointCopyN(mm->getVectorStarts(), ncols1, cpm->mcstrt_);
+    CoinZeroN(cpm->mcstrt_+ncols1,cpm->ncols0_-ncols1);
+    cpm->mcstrt_[cpm->ncols_] = nelems0;  // points to end of bulk store
+    CoinDisjointCopyN(mm->getVectorLengths(),ncols1,  cpm->hincol_);
+    CoinDisjointCopyN(mm->getIndices(),      nelemsr, cpm->hrow_);
+    CoinDisjointCopyN(mm->getElements(),     nelemsr, cpm->colels_);
   }
 
 # if PRESOLVE_DEBUG > 0 || PRESOLVE_CONSISTENCY > 0
-  memset(cdone_, -1, ncols0_);
-  memset(rdone_, -1, nrows0_);
+  memset(cpm->cdone_, -1, cpm->ncols0_);
+  memset(cpm->rdone_, -1, cpm->nrows0_);
 # endif
 
-  rowduals_ = new double[nrows0_];
-  CoinDisjointCopyN(si->getRowPrice(), nrows1, rowduals_);
-  rcosts_ = new double[ncols0_];
-  CoinDisjointCopyN(si->getReducedCost(), ncols1, rcosts_);
+  cpm->rowduals_ = new double[cpm->nrows0_];
+  CoinDisjointCopyN(si->getRowPrice(), nrows1, cpm->rowduals_);
+  cpm->rcosts_ = new double[cpm->ncols0_];
+  CoinDisjointCopyN(si->getReducedCost(), ncols1, cpm->rcosts_);
 
 #if PRESOLVE_DEBUG > 0
   // check accuracy of reduced costs (rcosts_ is recalculated reduced costs)
-  si->getMatrixByCol()->transposeTimes(rowduals_,rcosts_) ;
+  si->getMatrixByCol()->transposeTimes(cpm->rowduals_,cpm->rcosts_) ;
   const double *obj = si->getObjCoefficients() ;
   const double *dj = si->getReducedCost() ;
   {
     int i;
     for (i=0;i<ncols1;i++) {
-      double newDj = obj[i]-rcosts_[i];
-      rcosts_[i]=newDj;
+      double newDj = obj[i]-cpm->rcosts_[i];
+      cpm->rcosts_[i]=newDj;
       assert (fabs(newDj-dj[i])<1.0e-1);
     }
   }
@@ -1730,10 +1708,10 @@ CoinPostsolveMatrix::CoinPostsolveMatrix(OsiSolverInterface*  si,
     int i;
     for (i=0;i<ncols1;i++)
       if (columnIsBasic(i))
-	assert (fabs(rcosts_[i])<1.0e-5);
+	assert (fabs(cpm->rcosts_[i])<1.0e-5);
     for (i=0;i<nrows1;i++)
       if (rowIsBasic(i))
-	assert (fabs(rowduals_[i])<1.0e-5);
+	assert (fabs(cpm->rowduals_[i])<1.0e-5);
   }
 #endif
 /*
@@ -1742,9 +1720,9 @@ CoinPostsolveMatrix::CoinPostsolveMatrix(OsiSolverInterface*  si,
 */
   if (maxmin<0.0) {
     for (int i = 0 ; i < nrows1 ; i++)
-      rowduals_[i] = -rowduals_[i] ;
+      cpm->rowduals_[i] = -cpm->rowduals_[i] ;
     for (int j = 0 ; j < ncols1 ; j++) {
-      rcosts_[j] = -rcosts_[j] ;
+      cpm->rcosts_[j] = -cpm->rcosts_[j] ;
     }
   }
 
@@ -1752,36 +1730,36 @@ CoinPostsolveMatrix::CoinPostsolveMatrix(OsiSolverInterface*  si,
   CoinPresolve requires both column solution and row activity for correct
   operation.
 */
-  CoinDisjointCopyN(si->getColSolution(), ncols1, sol_);
-  CoinDisjointCopyN(si->getRowActivity(), nrows1, acts_) ;
-  si->setDblParam(OsiObjOffset,originalOffset_);
+  CoinDisjointCopyN(si->getColSolution(), ncols1, cpm->sol_);
+  CoinDisjointCopyN(si->getRowActivity(), nrows1, cpm->acts_) ;
+  si->setDblParam(OsiObjOffset,cpm->originalOffset_);
 
   for (int j=0; j<ncols1; j++) {
-    CoinBigIndex kcs = mcstrt_[j];
-    CoinBigIndex kce = kcs + hincol_[j];
+    CoinBigIndex kcs = cpm->mcstrt_[j];
+    CoinBigIndex kce = kcs + cpm->hincol_[j];
     for (CoinBigIndex k=kcs; k<kce; ++k) {
-      link_[k] = k+1;
+      cpm->link_[k] = k+1;
     }
     if (kce>0)
-      link_[kce-1] = NO_LINK ;
+      cpm->link_[kce-1] = NO_LINK ;
   }
-  if (maxlink_>0) {
-    CoinBigIndex ml = maxlink_;
+  if (cpm->maxlink_>0) {
+    CoinBigIndex ml = cpm->maxlink_;
     for (CoinBigIndex k=nelemsr; k<ml; ++k)
-      link_[k] = k+1;
-    link_[ml-1] = NO_LINK;
+      cpm->link_[k] = k+1;
+    cpm->link_[ml-1] = NO_LINK;
   }
-  free_list_ = nelemsr;
+  cpm->free_list_ = nelemsr;
 
 # if PRESOLVE_DEBUG > 0 || PRESOLVE_CONSISTENCY > 0
 /*
   These are used to track the action of postsolve transforms during debugging.
 */
-  CoinFillN(cdone_,ncols1,PRESENT_IN_REDUCED) ;
-  CoinZeroN(cdone_+ncols1,ncols0_in-ncols1) ;
-  CoinFillN(rdone_,nrows1,PRESENT_IN_REDUCED) ;
-  CoinZeroN(rdone_+nrows1,nrows0_in-nrows1) ;
+  CoinFillN(cpm->cdone_,ncols1,PRESENT_IN_REDUCED) ;
+  CoinZeroN(cpm->cdone_+ncols1,ncols0_in-ncols1) ;
+  CoinFillN(cpm->rdone_,nrows1,PRESENT_IN_REDUCED) ;
+  CoinZeroN(cpm->rdone_+nrows1,nrows0_in-nrows1) ;
 # endif
+
+  return cpm;
 }
-
-

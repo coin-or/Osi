@@ -21,20 +21,20 @@
 #include "OsiCollections.hpp"
 #include "OsiSolverParameters.hpp"
 
-class CoinSnapshot;
-class CoinLpIO;
-class CoinMpsIO;
+class COINUTILSLIB_EXPORT CoinSnapshot;
+class COINUTILSLIB_EXPORT CoinLpIO;
+class COINUTILSLIB_EXPORT CoinMpsIO;
 
-class OsiCuts;
-class OsiAuxInfo;
-class OsiRowCut;
-class OsiRowCutDebugger;
-class CoinSet;
-class CoinBuild;
-class CoinModel;
-class OsiSolverBranch;
-class OsiSolverResult;
-class OsiObject;
+class OSILIB_EXPORT OsiCuts;
+class OSILIB_EXPORT OsiAuxInfo;
+class OSILIB_EXPORT OsiRowCut;
+class OSILIB_EXPORT OsiRowCutDebugger;
+class COINUTILSLIB_EXPORT CoinSet;
+class COINUTILSLIB_EXPORT CoinBuild;
+class COINUTILSLIB_EXPORT CoinModel;
+class OSILIB_EXPORT OsiSolverBranch;
+class OSILIB_EXPORT OsiSolverResult;
+class OSILIB_EXPORT OsiObject;
 
 
 //#############################################################################

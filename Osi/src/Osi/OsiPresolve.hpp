@@ -8,7 +8,7 @@
 #include "OsiConfig.h"
 #include "OsiSolverInterface.hpp"
 
-class CoinPresolveAction;
+class COINUTILSLIB_EXPORT CoinPresolveAction;
 #include "CoinPresolveMatrix.hpp"
 
 

@@ -85,10 +85,10 @@ endif
 
 unittestflags =
 if COIN_HAS_SAMPLE
-  unittestflags += -mpsDir=`$(CYGPATH_W) $(SAMPLE_DATA)`
+  unittestflags += -mpsDir=$(SAMPLE_DATA)
 endif
 if COIN_HAS_NETLIB
-  unittestflags += -netlibDir=`$(CYGPATH_W) $(NETLIB_DATA)` -testOsiSolverInterface
+  unittestflags += -netlibDir=$(NETLIB_DATA) -testOsiSolverInterface
 endif
 
 test: unitTest$(EXEEXT)

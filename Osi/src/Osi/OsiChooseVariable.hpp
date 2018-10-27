@@ -8,8 +8,9 @@
 #include <string>
 #include <vector>
 
-#include "CoinWarmStartBasis.hpp"
+#include "OsiConfig.h"
 #include "OsiBranchingObject.hpp"
+#include "CoinWarmStartBasis.hpp"
 
 class OsiSolverInterface;
 class OsiHotInfo;

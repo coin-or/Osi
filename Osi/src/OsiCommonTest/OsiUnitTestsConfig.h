@@ -2,9 +2,7 @@
  * All Rights Reserved.
  * This code is published under the Eclipse Public License.
  *
- * $Id$
- *
- * Include file for the configuration of Osi.
+ * Include file for the configuration of OsiCommonTest.
  *
  * On systems where the code is configured with the configure script
  * (i.e., compilation is always done with HAVE_CONFIG_H defined), this
@@ -21,33 +19,38 @@
  * files.
  */
 
-#ifndef __OSICONFIG_H__
-#define __OSICONFIG_H__
+#ifndef __OSIUNITTESTSCONFIG_H__
+#define __OSIUNITTESTSCONFIG_H__
 
 #ifdef HAVE_CONFIG_H
-#ifdef OSILIB_BUILD
-#include "config.h"
+#ifdef OSICOMMONTEST_BUILD
 
-/* overwrite OSILIB_EXPORT from config.h
- * we want it to be __declspec(dllexport) when building a DLL on Windows
- */
 #ifdef DLL_EXPORT
-#undef OSILIB_EXPORT
-#define OSILIB_EXPORT __declspec(dllexport)
+#define OSICOMMONTESTLIB_EXPORT __declspec(dllexport)
 #endif
 
 #else
-#include "config_osi.h"
+#include "config_osicommontest.h"
 #endif
 
 #else /* HAVE_CONFIG_H */
 
+
+#ifndef OSICOMMONTESTLIB_EXPORT
+#ifdef _WIN32
 #ifdef OSILIB_BUILD
-#include "config_default.h"
+#define OSICOMMONTESTLIB_EXPORT __declspec(dllexport)
 #else
-#include "config_osi_default.h"
+#define OSICOMMONTESTLIB_EXPORT __declspec(dllimport)
+#endif
+#endif
 #endif
 
+
 #endif /* HAVE_CONFIG_H */
+
+#ifndef OSICOMMONTESTLIB_EXPORT
+#define OSICOMMONTESTLIB_EXPORT
+#endif
 
 #endif /*__OSICONFIG_H__*/

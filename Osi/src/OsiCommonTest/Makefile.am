@@ -40,9 +40,6 @@ libOsiCommonTest_la_LDFLAGS = $(LT_LDFLAGS)
 # Here list all include flags, relative to this "srcdir" directory.
 AM_CPPFLAGS = -I$(srcdir)/../Osi $(OSICOMMONTESTLIB_CFLAGS) -DOSICOMMONTEST_BUILD
 
-# FIXME this should be added only for the object files that use the main Osi DLL (not the LIB)
-AM_CPPFLAGS += -DOSILIB_DLLIMPORT
-
 ########################################################################
 #                Headers that need to be installed                     #
 ########################################################################
@@ -51,3 +48,6 @@ AM_CPPFLAGS += -DOSILIB_DLLIMPORT
 
 includecoindir = $(pkgincludedir)
 includecoin_HEADERS = OsiUnitTests.hpp
+
+install-exec-local:
+	$(install_sh_DATA) config_osicommontest.h $(DESTDIR)$(includecoindir)/OsiUnitTestsConfig.h

@@ -7,9 +7,9 @@
 
 #include "CoinPackedVector.hpp"
 
+#include "OsiConfig.h"
 #include "OsiCollections.hpp"
 #include "OsiCut.hpp"
-#include "OsiExport.h"
 
 //#define OSI_INLINE_ROWCUT_METHODS
 #ifdef OSI_INLINE_ROWCUT_METHODS

@@ -5,6 +5,8 @@
 #ifndef OsiSolverBranch_H
 #define OsiSolverBranch_H
 
+#include "OsiConfig.h"
+
 class OsiSolverInterface;
 #include "CoinWarmStartBasis.hpp"
 

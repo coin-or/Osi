@@ -10,6 +10,8 @@
 #ifndef OSISOLVERINTERFACETEST_HPP_
 #define OSISOLVERINTERFACETEST_HPP_
 
+#include "OsiUnitTestsConfig.h"
+
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
@@ -18,22 +20,6 @@
 #include <vector>
 #include <list>
 #include <map>
-
-#ifdef _WIN32
-#  ifdef OSICOMMONTEST_BUILD
-#    ifdef DLL_EXPORT  /* build of OsiCommonTest DLL */
-#      define OSICOMMONTEST_EXPORT __declspec(dllexport)
-#    else  /* build of OsiCommonTest LIB */
-#      define OSICOMMONTEST_EXPORT
-#    endif
-#  elif defined(OSICOMMONTEST_DLLIMPORT)  /* using OsiCommonTest DLL */
-#    define OSICOMMONTEST_EXPORT __declspec(dllimport)
-#  else   /* using OsiCommonTest LIB */
-#    define OSICOMMONTEST_EXPORT
-#  endif
-#else  /* Unix */
-#    define OSICOMMONTEST_EXPORT
-#endif
 
 class OsiSolverInterface;
 class CoinPackedVectorBase;
@@ -51,7 +37,7 @@ class CoinPackedVectorBase;
  * the results reported by adjacent solvers in the solver vector. Due to
  * limitations of the volume solver, it must be the last solver in vecEmptySiP.
  */
-OSICOMMONTEST_EXPORT
+OSICOMMONTESTLIB_EXPORT
 void OsiSolverInterfaceMpsUnitTest
   (const std::vector<OsiSolverInterface*> & vecEmptySiP,
    const std::string& mpsDir);
@@ -60,32 +46,32 @@ void OsiSolverInterfaceMpsUnitTest
  * Some time ago, if this method is compiled with optimization,
  * the compilation took 10-15 minutes and the machine pages (has 256M core memory!)...
  */
-OSICOMMONTEST_EXPORT
+OSICOMMONTESTLIB_EXPORT
 void OsiSolverInterfaceCommonUnitTest
   (const OsiSolverInterface* emptySi,
    const std::string& mpsDir,
    const std::string& netlibDir);
 
 /** A function that tests the methods in the OsiColCut class. */
-OSICOMMONTEST_EXPORT
+OSICOMMONTESTLIB_EXPORT
 void OsiColCutUnitTest
   (const OsiSolverInterface * baseSiP,
    const std::string & mpsDir);
 
 /** A function that tests the methods in the OsiRowCut class. */
-OSICOMMONTEST_EXPORT
+OSICOMMONTESTLIB_EXPORT
 void OsiRowCutUnitTest
   (const OsiSolverInterface * baseSiP,
    const std::string & mpsDir);
 
 /** A function that tests the methods in the OsiRowCutDebugger class. */
-OSICOMMONTEST_EXPORT
+OSICOMMONTESTLIB_EXPORT
 void OsiRowCutDebuggerUnitTest
   (const OsiSolverInterface * siP,
    const std::string & mpsDir);
 
 /** A function that tests the methods in the OsiCuts class. */
-OSICOMMONTEST_EXPORT
+OSICOMMONTESTLIB_EXPORT
 void OsiCutsUnitTest();
 
 /// A namespace so we can define a few `global' variables to use during tests.
@@ -97,7 +83,7 @@ class TestOutcomes;
 
  0 (default) for minimal output; larger numbers produce more output
 */
-extern OSICOMMONTEST_EXPORT unsigned int verbosity;
+extern OSICOMMONTESTLIB_EXPORT unsigned int verbosity;
 
 /*! \brief Behaviour on failing a test
 
@@ -105,14 +91,14 @@ extern OSICOMMONTEST_EXPORT unsigned int verbosity;
  - 1 press any key to continue
  - 2 stop with abort()
 */
-extern OSICOMMONTEST_EXPORT unsigned int haltonerror;
+extern OSICOMMONTESTLIB_EXPORT unsigned int haltonerror;
 
 /*! \brief Test outcomes
 
   A global TestOutcomes object to store test outcomes during the run of the unit test
   for an OSI.
  */
-extern OSICOMMONTEST_EXPORT TestOutcomes outcomes;
+extern OSICOMMONTESTLIB_EXPORT TestOutcomes outcomes;
 
 /*! \brief Print an error message
 
@@ -121,11 +107,11 @@ extern OSICOMMONTEST_EXPORT TestOutcomes outcomes;
 
   Flushes std::cout before printing to std::cerr.
 */
-OSICOMMONTEST_EXPORT
+OSICOMMONTESTLIB_EXPORT
 void failureMessage(const std::string &solverName,
 		    const std::string &message) ;
 /// \overload
-OSICOMMONTEST_EXPORT
+OSICOMMONTESTLIB_EXPORT
 void failureMessage(const OsiSolverInterface &si,
 		    const std::string &message) ;
 
@@ -135,12 +121,12 @@ void failureMessage(const OsiSolverInterface &si,
   Xxx is the OsiStrParam::OsiSolverName parameter of the \p si.
   Flushes std::cout before printing to std::cerr.
 */
-OSICOMMONTEST_EXPORT
+OSICOMMONTESTLIB_EXPORT
 void failureMessage(const std::string &solverName,
 		    const std::string &testname, const std::string &testcond) ;
 
 /// \overload
-OSICOMMONTEST_EXPORT
+OSICOMMONTESTLIB_EXPORT
 void failureMessage(const OsiSolverInterface &si,
 		    const std::string &testname, const std::string &testcond) ;
 
@@ -148,7 +134,7 @@ void failureMessage(const OsiSolverInterface &si,
 
   Prints the message as given. Flushes std::cout before printing to std::cerr.
 */
-OSICOMMONTEST_EXPORT
+OSICOMMONTESTLIB_EXPORT
 void testingMessage(const char *const msg) ;
 
 /*! \brief Utility method to check equality
@@ -157,7 +143,7 @@ void testingMessage(const char *const msg) ;
   notion of solver infinity and obtains the value for infinity from the solver
   interfaces supplied as parameters.
 */
-OSICOMMONTEST_EXPORT
+OSICOMMONTESTLIB_EXPORT
 bool equivalentVectors(const OsiSolverInterface * si1,
 		       const OsiSolverInterface * si2,
 		       double tol, const double * v1, const double * v2, int size) ;
@@ -168,7 +154,7 @@ bool equivalentVectors(const OsiSolverInterface * si1,
   bounds, column type, and objective. Rows are checked using upper and lower bounds
   and using sense, bound, and range.
 */
-OSICOMMONTEST_EXPORT
+OSICOMMONTESTLIB_EXPORT
 bool compareProblems(OsiSolverInterface *osi1, OsiSolverInterface *osi2) ;
 
 /*! \brief Compare a packed vector with an expanded vector
@@ -177,7 +163,7 @@ bool compareProblems(OsiSolverInterface *osi1, OsiSolverInterface *osi2) ;
   and checks that there are no extra entries in the full vector. Uses CoinRelFltEq
   with the default tolerance.
 */
-OSICOMMONTEST_EXPORT
+OSICOMMONTESTLIB_EXPORT
 bool isEquivalent(const CoinPackedVectorBase &pv, int n, const double *fv) ;
 
 /*! \brief Process command line parameters.
@@ -188,13 +174,13 @@ bool isEquivalent(const CoinPackedVectorBase &pv, int n, const double *fv) ;
 
  This should be replaced with the one of the standard CoinUtils parameter mechanisms.
  */
-OSICOMMONTEST_EXPORT
+OSICOMMONTESTLIB_EXPORT
 bool processParameters (int argc, const char **argv,
 			std::map<std::string,std::string>& parms,
       const std::map<std::string,int>& ignorekeywords = std::map<std::string,int>());
 
 /// A single test outcome record.
-class OSICOMMONTEST_EXPORT TestOutcome {
+class OSICOMMONTESTLIB_EXPORT TestOutcome {
   public:
     /// Test result
     typedef enum {
@@ -232,7 +218,7 @@ class OSICOMMONTEST_EXPORT TestOutcome {
 };
 
 /// Utility class to maintain a list of test outcomes.
-class OSICOMMONTEST_EXPORT TestOutcomes {
+class OSICOMMONTESTLIB_EXPORT TestOutcomes {
   private :
     std::list<TestOutcome> outcomes;
   public:

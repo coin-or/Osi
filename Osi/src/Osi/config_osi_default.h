@@ -15,3 +15,12 @@
 
 /* Release Version number of project */
 #define OSI_VERSION_RELEASE 9999
+
+#ifndef OSILIB_EXPORT
+#ifdef _WIN32
+/* assuming we link against a Osi DLL */
+#define OSILIB_EXPORT __declspec(dllimport)
+#else
+#define OSILIB_EXPORT
+#endif
+#endif

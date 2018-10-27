@@ -9,10 +9,10 @@
 
 #include <cmath>
 #include <cfloat>
+#include "OsiConfig.h"
 #include "OsiCollections.hpp"
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
-#include "OsiExport.h"
 #include "CoinFloatEqual.hpp"
 
 /** Collections of row cuts and column cuts

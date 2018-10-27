@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "OsiConfig.h"
 #include "CoinError.hpp"
 #include "CoinTypes.hpp"
 

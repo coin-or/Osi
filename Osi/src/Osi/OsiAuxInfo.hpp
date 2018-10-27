@@ -5,6 +5,8 @@
 #ifndef OsiAuxInfo_H
 #define OsiAuxInfo_H
 
+#include "OsiConfig.h"
+
 class OsiSolverInterface;
 
 //#############################################################################

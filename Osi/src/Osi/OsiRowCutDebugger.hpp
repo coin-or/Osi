@@ -13,9 +13,9 @@
 
 #include <string>
 
+#include "OsiConfig.h"
 #include "OsiCuts.hpp"
 #include "OsiSolverInterface.hpp"
-#include "OsiExport.h"
 
 /*! \brief Validate cuts against a known solution
 

@@ -2,6 +2,16 @@
 /* include the COIN-OR-wide system specific configure header */
 #include "configall_system.h"
 
+/* this needs to come before the include of config_osi_default.h */
+#ifndef OSILIB_EXPORT
+#ifdef _WIN32
+/* assuming we build a CoinUtils DLL */
+#define OSILIB_EXPORT __declspec(dllexport)
+#else
+#define OSILIB_EXPORT
+#endif
+#endif
+
 /* include the public project specific macros */
 #include "config_osi_default.h"
 

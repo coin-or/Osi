@@ -55,7 +55,6 @@ Osi/osi-unittests.pc.in -text
 Osi/osi.pc.in -text
 Osi/src/Osi/Makefile.am -text
 Osi/src/Osi/Makefile.in -text
-Osi/src/Osi/OsiExport.h -text
 Osi/src/Osi/config.h.in -text
 Osi/src/Osi/config_default.h -text
 Osi/src/Osi/config_osi.h.in -text
@@ -66,6 +65,7 @@ Osi/src/OsiCommonTest/OsiNetlibTest.cpp -text
 Osi/src/OsiCommonTest/OsiSimplexAPITest.cpp -text
 Osi/src/OsiCommonTest/OsiUnitTestUtils.cpp -text
 Osi/src/OsiCommonTest/OsiUnitTests.hpp -text
+Osi/src/OsiCommonTest/config_osicommontest.h.in -text
 Osi/src/OsiCpx/osi-cplex.pc.in -text
 Osi/src/OsiGlpk/osi-glpk.pc.in -text
 Osi/src/OsiGrb/Makefile.am -text

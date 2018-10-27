@@ -5,7 +5,7 @@
 #ifndef OsiPresolve_H
 #define OsiPresolve_H
 
-#include "OsiExport.h"
+#include "OsiConfig.h"
 #include "OsiSolverInterface.hpp"
 
 class CoinPresolveAction;

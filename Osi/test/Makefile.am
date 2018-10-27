@@ -27,7 +27,7 @@ unitTest_LDADD        = ../src/OsiCommonTest/libOsiCommonTest.la
 unitTest_DEPENDENCIES = ../src/OsiCommonTest/libOsiCommonTest.la
 
 # Here list all include flags, relative to this "srcdir" directory.
-AM_CPPFLAGS = -I$(srcdir)/../src/Osi -I$(srcdir)/../src/OsiCommonTest $(OSICOMMONTESTLIB_CFLAGS) -DOSICOMMONTEST_DLLIMPORT -DOSILIB_DLLIMPORT
+AM_CPPFLAGS = -I$(srcdir)/../src/Osi -I$(srcdir)/../src/OsiCommonTest $(OSICOMMONTESTLIB_CFLAGS)
 
 # This line is necessary to allow VPATH compilation
 # DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/src/Osi

@@ -154,7 +154,8 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 DIST_COMMON = $(srcdir)/Makefile.am
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/src/Osi/config.h \
-	$(top_builddir)/src/Osi/config_osi.h
+	$(top_builddir)/src/Osi/config_osi.h \
+	$(top_builddir)/src/OsiCommonTest/config_osicommontest.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 PROGRAMS = $(noinst_PROGRAMS)
@@ -193,7 +194,7 @@ AM_V_at = $(am__v_at_@AM_V@)
 am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
 am__v_at_0 = @
 am__v_at_1 = 
-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/src/Osi
+DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/src/Osi -I$(top_builddir)/src/OsiCommonTest
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 am__mv = mv -f
@@ -491,8 +492,7 @@ unitTest_DEPENDENCIES = ../src/OsiCommonTest/libOsiCommonTest.la \
 
 # Here list all include flags, relative to this "srcdir" directory.
 AM_CPPFLAGS = -I$(srcdir)/../src/Osi -I$(srcdir)/../src/OsiCommonTest \
-	$(OSICOMMONTESTLIB_CFLAGS) -DOSICOMMONTEST_DLLIMPORT \
-	-DOSILIB_DLLIMPORT $(am__append_2) $(am__append_7) \
+	$(OSICOMMONTESTLIB_CFLAGS) $(am__append_2) $(am__append_7) \
 	$(am__append_12) $(am__append_17) $(am__append_22) \
 	$(am__append_27)
 unittestflags = $(am__append_31) $(am__append_32)

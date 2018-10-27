@@ -17,9 +17,9 @@
 #include "CoinFinite.hpp"
 #include "CoinError.hpp"
 
+#include "OsiConfig.h"
 #include "OsiCollections.hpp"
 #include "OsiSolverParameters.hpp"
-#include "OsiExport.h"
 
 class CoinSnapshot;
 class CoinLpIO;

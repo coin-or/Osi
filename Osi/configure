@@ -16943,9 +16943,9 @@ $as_echo "$as_me: WARNING: Unexpected status \"$coin_has_coinutils\" in COIN_FIN
 # user said `don't use.' Yes means we have something, from the user or
 # from pkgconfig. Note that we haven't run a useability test!
 
-# Change the test to enable / disable debugging output
+# Define BUILDTOOLS_DEBUG to enable debugging output
 
-    if test 1 = 1 ; then
+    if test "$BUILDTOOLS_DEBUG" = 1 ; then
       { $as_echo "$as_me:${as_lineno-$LINENO}: FIND_PRIM_PKG result for coinutils: \"$coin_has_coinutils\"" >&5
 $as_echo "$as_me: FIND_PRIM_PKG result for coinutils: \"$coin_has_coinutils\"" >&6;}
       { $as_echo "$as_me:${as_lineno-$LINENO}: Collected values for package 'coinutils'" >&5
@@ -17009,7 +17009,7 @@ fi
 # Finalize libs and cflags for building OsiLib.
 
 
-   if test 1 = 1 ; then
+   if test "$BUILDTOOLS_DEBUG" = 1 ; then
         { $as_echo "$as_me:${as_lineno-$LINENO}: FINALIZE_FLAGS for OsiLib:" >&5
 $as_echo "$as_me: FINALIZE_FLAGS for OsiLib:" >&6;}
       fi
@@ -17024,9 +17024,24 @@ $as_echo "$as_me: FINALIZE_FLAGS for OsiLib:" >&6;}
         OSILIB_LFLAGS="$temp_LFLAGS ${OSILIB_LFLAGS}"
       fi
 
-# Change the test to enable / disable debugging output
+      # setup XYZ_EXPORT symbol for library users
+      libexport_attribute=
+      if test "$enable_shared" = yes ; then
+        # TODO better check for this? we essentially want to know whether we're building DLLs
+        # or do we also need this for GCC on Windows?
+        case $CC in */compile\ cl | cl | */cl | */compile\ icl | icl | */icl )
+          libexport_attribute="__declspec(dllimport)"
+        esac
+      fi
 
-      if test 1 = 1 ; then
+cat >>confdefs.h <<_ACEOF
+#define OSILIB_EXPORT $libexport_attribute
+_ACEOF
+
+
+# Define BUILDTOOLS_DEBUG to enable debugging output
+
+      if test "$BUILDTOOLS_DEBUG" = 1 ; then
         { $as_echo "$as_me:${as_lineno-$LINENO}: OSILIB_LFLAGS_NOPC: \"${OSILIB_LFLAGS_NOPC}\"" >&5
 $as_echo "$as_me: OSILIB_LFLAGS_NOPC: \"${OSILIB_LFLAGS_NOPC}\"" >&6;}
         { $as_echo "$as_me:${as_lineno-$LINENO}: OSILIB_CFLAGS_NOPC: \"${OSILIB_CFLAGS_NOPC}\"" >&5
@@ -17230,9 +17245,9 @@ $as_echo "$as_me: WARNING: Unexpected status \"$coin_has_sample\" in COIN_FIND_P
 # user said `don't use.' Yes means we have something, from the user or
 # from pkgconfig. Note that we haven't run a useability test!
 
-# Change the test to enable / disable debugging output
+# Define BUILDTOOLS_DEBUG to enable debugging output
 
-    if test 1 = 1 ; then
+    if test "$BUILDTOOLS_DEBUG" = 1 ; then
       { $as_echo "$as_me:${as_lineno-$LINENO}: FIND_PRIM_PKG result for sample: \"$coin_has_sample\"" >&5
 $as_echo "$as_me: FIND_PRIM_PKG result for sample: \"$coin_has_sample\"" >&6;}
       { $as_echo "$as_me:${as_lineno-$LINENO}: Collected values for package 'sample'" >&5
@@ -17461,9 +17476,9 @@ $as_echo "$as_me: WARNING: Unexpected status \"$coin_has_netlib\" in COIN_FIND_P
 # user said `don't use.' Yes means we have something, from the user or
 # from pkgconfig. Note that we haven't run a useability test!
 
-# Change the test to enable / disable debugging output
+# Define BUILDTOOLS_DEBUG to enable debugging output
 
-    if test 1 = 1 ; then
+    if test "$BUILDTOOLS_DEBUG" = 1 ; then
       { $as_echo "$as_me:${as_lineno-$LINENO}: FIND_PRIM_PKG result for netlib: \"$coin_has_netlib\"" >&5
 $as_echo "$as_me: FIND_PRIM_PKG result for netlib: \"$coin_has_netlib\"" >&6;}
       { $as_echo "$as_me:${as_lineno-$LINENO}: Collected values for package 'netlib'" >&5
@@ -17523,7 +17538,7 @@ $as_echo "#define COIN_HAS_NETLIB 1" >>confdefs.h
 # not yet installed.
 
 
-   if test 1 = 1 ; then
+   if test "$BUILDTOOLS_DEBUG" = 1 ; then
         { $as_echo "$as_me:${as_lineno-$LINENO}: FINALIZE_FLAGS for OsiCommonTestLib:" >&5
 $as_echo "$as_me: FINALIZE_FLAGS for OsiCommonTestLib:" >&6;}
       fi
@@ -17538,9 +17553,24 @@ $as_echo "$as_me: FINALIZE_FLAGS for OsiCommonTestLib:" >&6;}
         OSICOMMONTESTLIB_LFLAGS="$temp_LFLAGS ${OSICOMMONTESTLIB_LFLAGS}"
       fi
 
-# Change the test to enable / disable debugging output
+      # setup XYZ_EXPORT symbol for library users
+      libexport_attribute=
+      if test "$enable_shared" = yes ; then
+        # TODO better check for this? we essentially want to know whether we're building DLLs
+        # or do we also need this for GCC on Windows?
+        case $CC in */compile\ cl | cl | */cl | */compile\ icl | icl | */icl )
+          libexport_attribute="__declspec(dllimport)"
+        esac
+      fi
 
-      if test 1 = 1 ; then
+cat >>confdefs.h <<_ACEOF
+#define OSICOMMONTESTLIB_EXPORT $libexport_attribute
+_ACEOF
+
+
+# Define BUILDTOOLS_DEBUG to enable debugging output
+
+      if test "$BUILDTOOLS_DEBUG" = 1 ; then
         { $as_echo "$as_me:${as_lineno-$LINENO}: OSICOMMONTESTLIB_LFLAGS_NOPC: \"${OSICOMMONTESTLIB_LFLAGS_NOPC}\"" >&5
 $as_echo "$as_me: OSICOMMONTESTLIB_LFLAGS_NOPC: \"${OSICOMMONTESTLIB_LFLAGS_NOPC}\"" >&6;}
         { $as_echo "$as_me:${as_lineno-$LINENO}: OSICOMMONTESTLIB_CFLAGS_NOPC: \"${OSICOMMONTESTLIB_CFLAGS_NOPC}\"" >&5
@@ -17569,9 +17599,9 @@ $as_echo "$as_me: OSICOMMONTESTLIB_CFLAGS: \"${OSICOMMONTESTLIB_CFLAGS}\"" >&6;}
        OSICOMMONTESTLIB_LFLAGS="$OSICOMMONTESTLIB_LFLAGS $OSILIB_LFLAGS"
        OSICOMMONTESTLIB_CFLAGS="$OSICOMMONTESTLIB_CFLAGS $OSILIB_CFLAGS"
 
-# Change the test to enable / disable debugging output
+# Define BUILDTOOLS_DEBUG to enable debugging output
 
-       if test 1 = 1 ; then
+       if test "$BUILDTOOLS_DEBUG" = 1 ; then
          { $as_echo "$as_me:${as_lineno-$LINENO}: CHK_HERE adding OsiLib to OsiCommonTestLib:" >&5
 $as_echo "$as_me: CHK_HERE adding OsiLib to OsiCommonTestLib:" >&6;}
          { $as_echo "$as_me:${as_lineno-$LINENO}: OSICOMMONTESTLIB_PCFILES: \"${OSICOMMONTESTLIB_PCFILES}\"" >&5
@@ -17803,9 +17833,9 @@ $as_echo "$as_me: WARNING: Unexpected status \"$coin_has_glpk\" in COIN_FIND_PRI
 # user said `don't use.' Yes means we have something, from the user or
 # from pkgconfig. Note that we haven't run a useability test!
 
-# Change the test to enable / disable debugging output
+# Define BUILDTOOLS_DEBUG to enable debugging output
 
-    if test 1 = 1 ; then
+    if test "$BUILDTOOLS_DEBUG" = 1 ; then
       { $as_echo "$as_me:${as_lineno-$LINENO}: FIND_PRIM_PKG result for glpk: \"$coin_has_glpk\"" >&5
 $as_echo "$as_me: FIND_PRIM_PKG result for glpk: \"$coin_has_glpk\"" >&6;}
       { $as_echo "$as_me:${as_lineno-$LINENO}: Collected values for package 'glpk'" >&5
@@ -18067,9 +18097,9 @@ $as_echo "$as_me: WARNING: Unexpected status \"$coin_has_soplex\" in COIN_FIND_P
 # user said `don't use.' Yes means we have something, from the user or
 # from pkgconfig. Note that we haven't run a useability test!
 
-# Change the test to enable / disable debugging output
+# Define BUILDTOOLS_DEBUG to enable debugging output
 
-    if test 1 = 1 ; then
+    if test "$BUILDTOOLS_DEBUG" = 1 ; then
       { $as_echo "$as_me:${as_lineno-$LINENO}: FIND_PRIM_PKG result for soplex: \"$coin_has_soplex\"" >&5
 $as_echo "$as_me: FIND_PRIM_PKG result for soplex: \"$coin_has_soplex\"" >&6;}
       { $as_echo "$as_me:${as_lineno-$LINENO}: Collected values for package 'soplex'" >&5
@@ -18127,7 +18157,7 @@ $as_echo "#define COIN_HAS_SOPLEX 1" >>confdefs.h
   fi
 
 
-   if test 1 = 1 ; then
+   if test "$BUILDTOOLS_DEBUG" = 1 ; then
         { $as_echo "$as_me:${as_lineno-$LINENO}: FINALIZE_FLAGS for OsiGlpkLib:" >&5
 $as_echo "$as_me: FINALIZE_FLAGS for OsiGlpkLib:" >&6;}
       fi
@@ -18142,9 +18172,24 @@ $as_echo "$as_me: FINALIZE_FLAGS for OsiGlpkLib:" >&6;}
         OSIGLPKLIB_LFLAGS="$temp_LFLAGS ${OSIGLPKLIB_LFLAGS}"
       fi
 
-# Change the test to enable / disable debugging output
+      # setup XYZ_EXPORT symbol for library users
+      libexport_attribute=
+      if test "$enable_shared" = yes ; then
+        # TODO better check for this? we essentially want to know whether we're building DLLs
+        # or do we also need this for GCC on Windows?
+        case $CC in */compile\ cl | cl | */cl | */compile\ icl | icl | */icl )
+          libexport_attribute="__declspec(dllimport)"
+        esac
+      fi
 
-      if test 1 = 1 ; then
+cat >>confdefs.h <<_ACEOF
+#define OSIGLPKLIB_EXPORT $libexport_attribute
+_ACEOF
+
+
+# Define BUILDTOOLS_DEBUG to enable debugging output
+
+      if test "$BUILDTOOLS_DEBUG" = 1 ; then
         { $as_echo "$as_me:${as_lineno-$LINENO}: OSIGLPKLIB_LFLAGS_NOPC: \"${OSIGLPKLIB_LFLAGS_NOPC}\"" >&5
 $as_echo "$as_me: OSIGLPKLIB_LFLAGS_NOPC: \"${OSIGLPKLIB_LFLAGS_NOPC}\"" >&6;}
         { $as_echo "$as_me:${as_lineno-$LINENO}: OSIGLPKLIB_CFLAGS_NOPC: \"${OSIGLPKLIB_CFLAGS_NOPC}\"" >&5
@@ -18156,7 +18201,7 @@ $as_echo "$as_me: OSIGLPKLIB_LFLAGS: \"${OSIGLPKLIB_LFLAGS}\"" >&6;}
         { $as_echo "$as_me:${as_lineno-$LINENO}: OSIGLPKLIB_CFLAGS: \"${OSIGLPKLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSIGLPKLIB_CFLAGS: \"${OSIGLPKLIB_CFLAGS}\"" >&6;}
       fi
-     if test 1 = 1 ; then
+     if test "$BUILDTOOLS_DEBUG" = 1 ; then
         { $as_echo "$as_me:${as_lineno-$LINENO}: FINALIZE_FLAGS for OskSpxLib:" >&5
 $as_echo "$as_me: FINALIZE_FLAGS for OskSpxLib:" >&6;}
       fi
@@ -18171,9 +18216,24 @@ $as_echo "$as_me: FINALIZE_FLAGS for OskSpxLib:" >&6;}
         OSKSPXLIB_LFLAGS="$temp_LFLAGS ${OSKSPXLIB_LFLAGS}"
       fi
 
-# Change the test to enable / disable debugging output
+      # setup XYZ_EXPORT symbol for library users
+      libexport_attribute=
+      if test "$enable_shared" = yes ; then
+        # TODO better check for this? we essentially want to know whether we're building DLLs
+        # or do we also need this for GCC on Windows?
+        case $CC in */compile\ cl | cl | */cl | */compile\ icl | icl | */icl )
+          libexport_attribute="__declspec(dllimport)"
+        esac
+      fi
 
-      if test 1 = 1 ; then
+cat >>confdefs.h <<_ACEOF
+#define OSKSPXLIB_EXPORT $libexport_attribute
+_ACEOF
+
+
+# Define BUILDTOOLS_DEBUG to enable debugging output
+
+      if test "$BUILDTOOLS_DEBUG" = 1 ; then
         { $as_echo "$as_me:${as_lineno-$LINENO}: OSKSPXLIB_LFLAGS_NOPC: \"${OSKSPXLIB_LFLAGS_NOPC}\"" >&5
 $as_echo "$as_me: OSKSPXLIB_LFLAGS_NOPC: \"${OSKSPXLIB_LFLAGS_NOPC}\"" >&6;}
         { $as_echo "$as_me:${as_lineno-$LINENO}: OSKSPXLIB_CFLAGS_NOPC: \"${OSKSPXLIB_CFLAGS_NOPC}\"" >&5
@@ -18205,9 +18265,9 @@ $as_echo "$as_me: OSKSPXLIB_CFLAGS: \"${OSKSPXLIB_CFLAGS}\"" >&6;}
        OSIGLPKLIB_LFLAGS="$OSIGLPKLIB_LFLAGS $OSILIB_LFLAGS"
        OSIGLPKLIB_CFLAGS="$OSIGLPKLIB_CFLAGS $OSILIB_CFLAGS"
 
-# Change the test to enable / disable debugging output
+# Define BUILDTOOLS_DEBUG to enable debugging output
 
-       if test 1 = 1 ; then
+       if test "$BUILDTOOLS_DEBUG" = 1 ; then
          { $as_echo "$as_me:${as_lineno-$LINENO}: CHK_HERE adding OsiLib to OsiGlpkLib:" >&5
 $as_echo "$as_me: CHK_HERE adding OsiLib to OsiGlpkLib:" >&6;}
          { $as_echo "$as_me:${as_lineno-$LINENO}: OSIGLPKLIB_PCFILES: \"${OSIGLPKLIB_PCFILES}\"" >&5
@@ -18221,9 +18281,9 @@ $as_echo "$as_me: OSIGLPKLIB_CFLAGS: \"${OSIGLPKLIB_CFLAGS}\"" >&6;}
        OSISPXLIB_LFLAGS="$OSISPXLIB_LFLAGS $OSILIB_LFLAGS"
        OSISPXLIB_CFLAGS="$OSISPXLIB_CFLAGS $OSILIB_CFLAGS"
 
-# Change the test to enable / disable debugging output
+# Define BUILDTOOLS_DEBUG to enable debugging output
 
-       if test 1 = 1 ; then
+       if test "$BUILDTOOLS_DEBUG" = 1 ; then
          { $as_echo "$as_me:${as_lineno-$LINENO}: CHK_HERE adding OsiLib to OsiSpxLib:" >&5
 $as_echo "$as_me: CHK_HERE adding OsiLib to OsiSpxLib:" >&6;}
          { $as_echo "$as_me:${as_lineno-$LINENO}: OSISPXLIB_PCFILES: \"${OSISPXLIB_PCFILES}\"" >&5
@@ -18460,9 +18520,9 @@ rm -f core conftest.err conftest.$ac_objext \
 # the link check failed. Yes means that we passed the link check, or no link
 # check was performed. Skipping means the user said `don't use.'
 
-# Change the test to enable / disable debugging output
+# Define BUILDTOOLS_DEBUG to enable debugging output
 
-    if test 1 = 1 ; then
+    if test "$BUILDTOOLS_DEBUG" = 1 ; then
       { $as_echo "$as_me:${as_lineno-$LINENO}: FIND_PRIM_LIB result for cpx: \"$coin_has_cpx\"" >&5
 $as_echo "$as_me: FIND_PRIM_LIB result for cpx: \"$coin_has_cpx\"" >&6;}
       { $as_echo "$as_me:${as_lineno-$LINENO}: Collected values for package 'cpx'" >&5
@@ -18729,9 +18789,9 @@ rm -f core conftest.err conftest.$ac_objext \
 # the link check failed. Yes means that we passed the link check, or no link
 # check was performed. Skipping means the user said `don't use.'
 
-# Change the test to enable / disable debugging output
+# Define BUILDTOOLS_DEBUG to enable debugging output
 
-    if test 1 = 1 ; then
+    if test "$BUILDTOOLS_DEBUG" = 1 ; then
       { $as_echo "$as_me:${as_lineno-$LINENO}: FIND_PRIM_LIB result for msk: \"$coin_has_msk\"" >&5
 $as_echo "$as_me: FIND_PRIM_LIB result for msk: \"$coin_has_msk\"" >&6;}
       { $as_echo "$as_me:${as_lineno-$LINENO}: Collected values for package 'msk'" >&5
@@ -18998,9 +19058,9 @@ rm -f core conftest.err conftest.$ac_objext \
 # the link check failed. Yes means that we passed the link check, or no link
 # check was performed. Skipping means the user said `don't use.'
 
-# Change the test to enable / disable debugging output
+# Define BUILDTOOLS_DEBUG to enable debugging output
 
-    if test 1 = 1 ; then
+    if test "$BUILDTOOLS_DEBUG" = 1 ; then
       { $as_echo "$as_me:${as_lineno-$LINENO}: FIND_PRIM_LIB result for xpr: \"$coin_has_xpr\"" >&5
 $as_echo "$as_me: FIND_PRIM_LIB result for xpr: \"$coin_has_xpr\"" >&6;}
       { $as_echo "$as_me:${as_lineno-$LINENO}: Collected values for package 'xpr'" >&5
@@ -19267,9 +19327,9 @@ rm -f core conftest.err conftest.$ac_objext \
 # the link check failed. Yes means that we passed the link check, or no link
 # check was performed. Skipping means the user said `don't use.'
 
-# Change the test to enable / disable debugging output
+# Define BUILDTOOLS_DEBUG to enable debugging output
 
-    if test 1 = 1 ; then
+    if test "$BUILDTOOLS_DEBUG" = 1 ; then
       { $as_echo "$as_me:${as_lineno-$LINENO}: FIND_PRIM_LIB result for grb: \"$coin_has_grb\"" >&5
 $as_echo "$as_me: FIND_PRIM_LIB result for grb: \"$coin_has_grb\"" >&6;}
       { $as_echo "$as_me:${as_lineno-$LINENO}: Collected values for package 'grb'" >&5
@@ -19327,7 +19387,7 @@ $as_echo "#define COIN_HAS_GRB 1" >>confdefs.h
 
 
 
-   if test 1 = 1 ; then
+   if test "$BUILDTOOLS_DEBUG" = 1 ; then
         { $as_echo "$as_me:${as_lineno-$LINENO}: FINALIZE_FLAGS for OsiCpxLib:" >&5
 $as_echo "$as_me: FINALIZE_FLAGS for OsiCpxLib:" >&6;}
       fi
@@ -19342,9 +19402,24 @@ $as_echo "$as_me: FINALIZE_FLAGS for OsiCpxLib:" >&6;}
         OSICPXLIB_LFLAGS="$temp_LFLAGS ${OSICPXLIB_LFLAGS}"
       fi
 
-# Change the test to enable / disable debugging output
+      # setup XYZ_EXPORT symbol for library users
+      libexport_attribute=
+      if test "$enable_shared" = yes ; then
+        # TODO better check for this? we essentially want to know whether we're building DLLs
+        # or do we also need this for GCC on Windows?
+        case $CC in */compile\ cl | cl | */cl | */compile\ icl | icl | */icl )
+          libexport_attribute="__declspec(dllimport)"
+        esac
+      fi
 
-      if test 1 = 1 ; then
+cat >>confdefs.h <<_ACEOF
+#define OSICPXLIB_EXPORT $libexport_attribute
+_ACEOF
+
+
+# Define BUILDTOOLS_DEBUG to enable debugging output
+
+      if test "$BUILDTOOLS_DEBUG" = 1 ; then
         { $as_echo "$as_me:${as_lineno-$LINENO}: OSICPXLIB_LFLAGS_NOPC: \"${OSICPXLIB_LFLAGS_NOPC}\"" >&5
 $as_echo "$as_me: OSICPXLIB_LFLAGS_NOPC: \"${OSICPXLIB_LFLAGS_NOPC}\"" >&6;}
         { $as_echo "$as_me:${as_lineno-$LINENO}: OSICPXLIB_CFLAGS_NOPC: \"${OSICPXLIB_CFLAGS_NOPC}\"" >&5
@@ -19356,7 +19431,7 @@ $as_echo "$as_me: OSICPXLIB_LFLAGS: \"${OSICPXLIB_LFLAGS}\"" >&6;}
         { $as_echo "$as_me:${as_lineno-$LINENO}: OSICPXLIB_CFLAGS: \"${OSICPXLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSICPXLIB_CFLAGS: \"${OSICPXLIB_CFLAGS}\"" >&6;}
       fi
-     if test 1 = 1 ; then
+     if test "$BUILDTOOLS_DEBUG" = 1 ; then
         { $as_echo "$as_me:${as_lineno-$LINENO}: FINALIZE_FLAGS for OsiMskLib:" >&5
 $as_echo "$as_me: FINALIZE_FLAGS for OsiMskLib:" >&6;}
       fi
@@ -19371,9 +19446,24 @@ $as_echo "$as_me: FINALIZE_FLAGS for OsiMskLib:" >&6;}
         OSIMSKLIB_LFLAGS="$temp_LFLAGS ${OSIMSKLIB_LFLAGS}"
       fi
 
-# Change the test to enable / disable debugging output
+      # setup XYZ_EXPORT symbol for library users
+      libexport_attribute=
+      if test "$enable_shared" = yes ; then
+        # TODO better check for this? we essentially want to know whether we're building DLLs
+        # or do we also need this for GCC on Windows?
+        case $CC in */compile\ cl | cl | */cl | */compile\ icl | icl | */icl )
+          libexport_attribute="__declspec(dllimport)"
+        esac
+      fi
 
-      if test 1 = 1 ; then
+cat >>confdefs.h <<_ACEOF
+#define OSIMSKLIB_EXPORT $libexport_attribute
+_ACEOF
+
+
+# Define BUILDTOOLS_DEBUG to enable debugging output
+
+      if test "$BUILDTOOLS_DEBUG" = 1 ; then
         { $as_echo "$as_me:${as_lineno-$LINENO}: OSIMSKLIB_LFLAGS_NOPC: \"${OSIMSKLIB_LFLAGS_NOPC}\"" >&5
 $as_echo "$as_me: OSIMSKLIB_LFLAGS_NOPC: \"${OSIMSKLIB_LFLAGS_NOPC}\"" >&6;}
         { $as_echo "$as_me:${as_lineno-$LINENO}: OSIMSKLIB_CFLAGS_NOPC: \"${OSIMSKLIB_CFLAGS_NOPC}\"" >&5
@@ -19385,7 +19475,7 @@ $as_echo "$as_me: OSIMSKLIB_LFLAGS: \"${OSIMSKLIB_LFLAGS}\"" >&6;}
         { $as_echo "$as_me:${as_lineno-$LINENO}: OSIMSKLIB_CFLAGS: \"${OSIMSKLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSIMSKLIB_CFLAGS: \"${OSIMSKLIB_CFLAGS}\"" >&6;}
       fi
-     if test 1 = 1 ; then
+     if test "$BUILDTOOLS_DEBUG" = 1 ; then
         { $as_echo "$as_me:${as_lineno-$LINENO}: FINALIZE_FLAGS for OsiXprLib:" >&5
 $as_echo "$as_me: FINALIZE_FLAGS for OsiXprLib:" >&6;}
       fi
@@ -19400,9 +19490,24 @@ $as_echo "$as_me: FINALIZE_FLAGS for OsiXprLib:" >&6;}
         OSIXPRLIB_LFLAGS="$temp_LFLAGS ${OSIXPRLIB_LFLAGS}"
       fi
 
-# Change the test to enable / disable debugging output
+      # setup XYZ_EXPORT symbol for library users
+      libexport_attribute=
+      if test "$enable_shared" = yes ; then
+        # TODO better check for this? we essentially want to know whether we're building DLLs
+        # or do we also need this for GCC on Windows?
+        case $CC in */compile\ cl | cl | */cl | */compile\ icl | icl | */icl )
+          libexport_attribute="__declspec(dllimport)"
+        esac
+      fi
 
-      if test 1 = 1 ; then
+cat >>confdefs.h <<_ACEOF
+#define OSIXPRLIB_EXPORT $libexport_attribute
+_ACEOF
+
+
+# Define BUILDTOOLS_DEBUG to enable debugging output
+
+      if test "$BUILDTOOLS_DEBUG" = 1 ; then
         { $as_echo "$as_me:${as_lineno-$LINENO}: OSIXPRLIB_LFLAGS_NOPC: \"${OSIXPRLIB_LFLAGS_NOPC}\"" >&5
 $as_echo "$as_me: OSIXPRLIB_LFLAGS_NOPC: \"${OSIXPRLIB_LFLAGS_NOPC}\"" >&6;}
         { $as_echo "$as_me:${as_lineno-$LINENO}: OSIXPRLIB_CFLAGS_NOPC: \"${OSIXPRLIB_CFLAGS_NOPC}\"" >&5
@@ -19414,7 +19519,7 @@ $as_echo "$as_me: OSIXPRLIB_LFLAGS: \"${OSIXPRLIB_LFLAGS}\"" >&6;}
         { $as_echo "$as_me:${as_lineno-$LINENO}: OSIXPRLIB_CFLAGS: \"${OSIXPRLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSIXPRLIB_CFLAGS: \"${OSIXPRLIB_CFLAGS}\"" >&6;}
       fi
-     if test 1 = 1 ; then
+     if test "$BUILDTOOLS_DEBUG" = 1 ; then
         { $as_echo "$as_me:${as_lineno-$LINENO}: FINALIZE_FLAGS for OsiGrbLib:" >&5
 $as_echo "$as_me: FINALIZE_FLAGS for OsiGrbLib:" >&6;}
       fi
@@ -19429,9 +19534,24 @@ $as_echo "$as_me: FINALIZE_FLAGS for OsiGrbLib:" >&6;}
         OSIGRBLIB_LFLAGS="$temp_LFLAGS ${OSIGRBLIB_LFLAGS}"
       fi
 
-# Change the test to enable / disable debugging output
+      # setup XYZ_EXPORT symbol for library users
+      libexport_attribute=
+      if test "$enable_shared" = yes ; then
+        # TODO better check for this? we essentially want to know whether we're building DLLs
+        # or do we also need this for GCC on Windows?
+        case $CC in */compile\ cl | cl | */cl | */compile\ icl | icl | */icl )
+          libexport_attribute="__declspec(dllimport)"
+        esac
+      fi
 
-      if test 1 = 1 ; then
+cat >>confdefs.h <<_ACEOF
+#define OSIGRBLIB_EXPORT $libexport_attribute
+_ACEOF
+
+
+# Define BUILDTOOLS_DEBUG to enable debugging output
+
+      if test "$BUILDTOOLS_DEBUG" = 1 ; then
         { $as_echo "$as_me:${as_lineno-$LINENO}: OSIGRBLIB_LFLAGS_NOPC: \"${OSIGRBLIB_LFLAGS_NOPC}\"" >&5
 $as_echo "$as_me: OSIGRBLIB_LFLAGS_NOPC: \"${OSIGRBLIB_LFLAGS_NOPC}\"" >&6;}
         { $as_echo "$as_me:${as_lineno-$LINENO}: OSIGRBLIB_CFLAGS_NOPC: \"${OSIGRBLIB_CFLAGS_NOPC}\"" >&5
@@ -19469,9 +19589,9 @@ $as_echo "$as_me: OSIGRBLIB_CFLAGS: \"${OSIGRBLIB_CFLAGS}\"" >&6;}
        OSICPXLIB_LFLAGS="$OSICPXLIB_LFLAGS $OSILIB_LFLAGS"
        OSICPXLIB_CFLAGS="$OSICPXLIB_CFLAGS $OSILIB_CFLAGS"
 
-# Change the test to enable / disable debugging output
+# Define BUILDTOOLS_DEBUG to enable debugging output
 
-       if test 1 = 1 ; then
+       if test "$BUILDTOOLS_DEBUG" = 1 ; then
          { $as_echo "$as_me:${as_lineno-$LINENO}: CHK_HERE adding OsiLib to OsiCpxLib:" >&5
 $as_echo "$as_me: CHK_HERE adding OsiLib to OsiCpxLib:" >&6;}
          { $as_echo "$as_me:${as_lineno-$LINENO}: OSICPXLIB_PCFILES: \"${OSICPXLIB_PCFILES}\"" >&5
@@ -19485,9 +19605,9 @@ $as_echo "$as_me: OSICPXLIB_CFLAGS: \"${OSICPXLIB_CFLAGS}\"" >&6;}
        OSIMSKLIB_LFLAGS="$OSIMSKLIB_LFLAGS $OSILIB_LFLAGS"
        OSIMSKLIB_CFLAGS="$OSIMSKLIB_CFLAGS $OSILIB_CFLAGS"
 
-# Change the test to enable / disable debugging output
+# Define BUILDTOOLS_DEBUG to enable debugging output
 
-       if test 1 = 1 ; then
+       if test "$BUILDTOOLS_DEBUG" = 1 ; then
          { $as_echo "$as_me:${as_lineno-$LINENO}: CHK_HERE adding OsiLib to OsiMskLib:" >&5
 $as_echo "$as_me: CHK_HERE adding OsiLib to OsiMskLib:" >&6;}
          { $as_echo "$as_me:${as_lineno-$LINENO}: OSIMSKLIB_PCFILES: \"${OSIMSKLIB_PCFILES}\"" >&5
@@ -19501,9 +19621,9 @@ $as_echo "$as_me: OSIMSKLIB_CFLAGS: \"${OSIMSKLIB_CFLAGS}\"" >&6;}
        OSIXPRLIB_LFLAGS="$OSIXPRLIB_LFLAGS $OSILIB_LFLAGS"
        OSIXPRLIB_CFLAGS="$OSIXPRLIB_CFLAGS $OSILIB_CFLAGS"
 
-# Change the test to enable / disable debugging output
+# Define BUILDTOOLS_DEBUG to enable debugging output
 
-       if test 1 = 1 ; then
+       if test "$BUILDTOOLS_DEBUG" = 1 ; then
          { $as_echo "$as_me:${as_lineno-$LINENO}: CHK_HERE adding OsiLib to OsiXprLib:" >&5
 $as_echo "$as_me: CHK_HERE adding OsiLib to OsiXprLib:" >&6;}
          { $as_echo "$as_me:${as_lineno-$LINENO}: OSIXPRLIB_PCFILES: \"${OSIXPRLIB_PCFILES}\"" >&5
@@ -19517,9 +19637,9 @@ $as_echo "$as_me: OSIXPRLIB_CFLAGS: \"${OSIXPRLIB_CFLAGS}\"" >&6;}
        OSIGRBLIB_LFLAGS="$OSIGRBLIB_LFLAGS $OSILIB_LFLAGS"
        OSIGRBLIB_CFLAGS="$OSIGRBLIB_CFLAGS $OSILIB_CFLAGS"
 
-# Change the test to enable / disable debugging output
+# Define BUILDTOOLS_DEBUG to enable debugging output
 
-       if test 1 = 1 ; then
+       if test "$BUILDTOOLS_DEBUG" = 1 ; then
          { $as_echo "$as_me:${as_lineno-$LINENO}: CHK_HERE adding OsiLib to OsiGrbLib:" >&5
 $as_echo "$as_me: CHK_HERE adding OsiLib to OsiGrbLib:" >&6;}
          { $as_echo "$as_me:${as_lineno-$LINENO}: OSIGRBLIB_PCFILES: \"${OSIGRBLIB_PCFILES}\"" >&5
@@ -19829,7 +19949,7 @@ ac_config_files="$ac_config_files doxydoc/doxygen.conf"
 
 
 # Here put the location and name of the configuration header file
-ac_config_headers="$ac_config_headers src/Osi/config.h src/Osi/config_osi.h"
+ac_config_headers="$ac_config_headers src/Osi/config.h src/Osi/config_osi.h src/OsiCommonTest/config_osicommontest.h"
 
 
 # Finally, we let configure write all the output...
@@ -21028,6 +21148,7 @@ do
     "doxydoc/doxygen.conf") CONFIG_FILES="$CONFIG_FILES doxydoc/doxygen.conf" ;;
     "src/Osi/config.h") CONFIG_HEADERS="$CONFIG_HEADERS src/Osi/config.h" ;;
     "src/Osi/config_osi.h") CONFIG_HEADERS="$CONFIG_HEADERS src/Osi/config_osi.h" ;;
+    "src/OsiCommonTest/config_osicommontest.h") CONFIG_HEADERS="$CONFIG_HEADERS src/OsiCommonTest/config_osicommontest.h" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

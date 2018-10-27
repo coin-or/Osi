@@ -9,7 +9,7 @@
 
 #include "CoinPackedVector.hpp"
 
-#include "OsiExport.h"
+#include "OsiConfig.h"
 #include "OsiCollections.hpp"
 #include "OsiCut.hpp"
 

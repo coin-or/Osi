@@ -5,6 +5,7 @@
 #ifndef OsiCut_H
 #define OsiCut_H
 
+#include "OsiConfig.h"
 #include "OsiCollections.hpp"
 #include "OsiSolverInterface.hpp"
 

@@ -1243,7 +1243,7 @@ static inline double getTolerance(const OsiSolverInterface  *si, OsiDblParam key
   return (tol) ;
 }
 
-#if SV
+
 // Assumptions:
 // 1. nrows>=m.getNumRows()
 // 2. ncols>=m.getNumCols()
@@ -1254,83 +1254,80 @@ static inline double getTolerance(const OsiSolverInterface  *si, OsiDblParam key
 // ncols may be larger than si.getNumCols() in postsolve,
 // this at that point si will be the reduced problem,
 // but we need to reserve enough space for the original problem.
-
-CoinPrePostsolveMatrix::CoinPrePostsolveMatrix(const OsiSolverInterface * si,
+template <class CoinTsolveMatrix>
+CoinTsolveMatrix* construct_CoinPrePostsolveMatrix(const OsiSolverInterface * si,
 					     int ncols_in,
 					     int nrows_in,
-					     CoinBigIndex nelems_in) :
-  ncols_(si->getNumCols()),
-  nelems_(si->getNumElements()),
-  ncols0_(ncols_in),
-  nrows0_(nrows_in),
-  bulkRatio_(2.0),
-
-  mcstrt_(new CoinBigIndex[ncols_in+1]),
-  hincol_(new int[ncols_in+1]),
-
-  cost_(new double[ncols_in]),
-  clo_(new double[ncols_in]),
-  cup_(new double[ncols_in]),
-  rlo_(new double[nrows_in]),
-  rup_(new double[nrows_in]),
-  originalColumn_(new int[ncols_in]),
-  originalRow_(new int[nrows_in]),
-
-  ztolzb_(getTolerance(si, OsiPrimalTolerance)),
-  ztoldj_(getTolerance(si, OsiDualTolerance)),
-
-  maxmin_(si->getObjSense()),
-
-  handler_(0),
-  defaultHandler_(false),
-  messages_()
-
+					     CoinBigIndex nelems_in,
+                    CoinTsolveMatrix* dummy)
 {
-  bulk0_ = static_cast<CoinBigIndex>(bulkRatio_*nelems_in) ;
-  hrow_ = new int [bulk0_+ncols_in] ;
-  colels_ = new double[bulk0_+ncols_in] ;
+  CoinTsolveMatrix* cpm = new CoinTsolveMatrix(ncols_in,nrows_in,si->getNumElements());
 
-  si->getDblParam(OsiObjOffset,originalOffset_);
+  cpm->ncols_ = si->getNumCols();
+  cpm->nelems_  = si->getNumElements();
+
+  cpm->mcstrt_ = new CoinBigIndex[ncols_in+1];
+  cpm->hincol_ = new int[ncols_in+1];
+
+  cpm->cost_ = new double[ncols_in];
+  cpm->clo_ = new double[ncols_in];
+  cpm->cup_ = new double[ncols_in];
+  cpm->rlo_ = new double[nrows_in];
+  cpm->rup_ = new double[nrows_in];
+  cpm->originalColumn_ = new int[ncols_in];
+  cpm->originalRow_ = new int[nrows_in];
+
+  cpm->ztolzb_ = getTolerance(si, OsiPrimalTolerance);
+  cpm->ztoldj_ = getTolerance(si, OsiDualTolerance);
+
+  cpm->maxmin_ = si->getObjSense();
+
+  cpm->bulk0_ = static_cast<CoinBigIndex>(cpm->bulkRatio_*nelems_in) ;
+  cpm->hrow_ = new int [cpm->bulk0_+ncols_in] ;
+  cpm->colels_ = new double[cpm->bulk0_+ncols_in] ;
+
+  si->getDblParam(OsiObjOffset,cpm->originalOffset_);
   int ncols = si->getNumCols();
   int nrows = si->getNumRows();
 
-  setMessageHandler(si->messageHandler()) ;
+  cpm->setMessageHandler(si->messageHandler()) ;
 
-  CoinDisjointCopyN(si->getColLower(), ncols, clo_);
-  CoinDisjointCopyN(si->getColUpper(), ncols, cup_);
-  CoinDisjointCopyN(si->getObjCoefficients(), ncols, cost_);
-  CoinDisjointCopyN(si->getRowLower(), nrows,  rlo_);
-  CoinDisjointCopyN(si->getRowUpper(), nrows,  rup_);
+  CoinDisjointCopyN(si->getColLower(), ncols, cpm->clo_);
+  CoinDisjointCopyN(si->getColUpper(), ncols, cpm->cup_);
+  CoinDisjointCopyN(si->getObjCoefficients(), ncols, cpm->cost_);
+  CoinDisjointCopyN(si->getRowLower(), nrows,  cpm->rlo_);
+  CoinDisjointCopyN(si->getRowUpper(), nrows,  cpm->rup_);
   int i;
   // initialize and clean up bounds
   double infinity = si->getInfinity();
   if (infinity!=COIN_DBL_MAX) {
     for (i=0;i<ncols;i++) {
-      if (clo_[i]==-infinity)
-	clo_[i]=-COIN_DBL_MAX;
-      if (cup_[i]==infinity)
-	cup_[i]=COIN_DBL_MAX;
+      if (cpm->clo_[i]==-infinity)
+	cpm->clo_[i]=-COIN_DBL_MAX;
+      if (cpm->cup_[i]==infinity)
+	cpm->cup_[i]=COIN_DBL_MAX;
     }
     for (i=0;i<nrows;i++) {
-      if (rlo_[i]==-infinity)
-	rlo_[i]=-COIN_DBL_MAX;
-      if (rup_[i]==infinity)
-	rup_[i]=COIN_DBL_MAX;
+      if (cpm->rlo_[i]==-infinity)
+	cpm->rlo_[i]=-COIN_DBL_MAX;
+      if (cpm->rup_[i]==infinity)
+	cpm->rup_[i]=COIN_DBL_MAX;
     }
   }
   for (i=0;i<ncols_in;i++) 
-    originalColumn_[i]=i;
+    cpm->originalColumn_[i]=i;
   for (i=0;i<nrows_in;i++) 
-    originalRow_[i]=i;
-  sol_=NULL;
-  rowduals_=NULL;
-  acts_=NULL;
+    cpm->originalRow_[i]=i;
+  cpm->sol_=NULL;
+  cpm->rowduals_=NULL;
+  cpm->acts_=NULL;
 
-  rcosts_=NULL;
-  colstat_=NULL;
-  rowstat_=NULL;
+  cpm->rcosts_=NULL;
+  cpm->colstat_=NULL;
+  cpm->rowstat_=NULL;
+  
+  return cpm;
 }
-#endif
 
 // I am not familiar enough with CoinPackedMatrix to be confident
 // that I will implement a row-ordered version of toColumnOrderedGapFree
@@ -1360,8 +1357,7 @@ CoinPresolveMatrix* construct_CoinPresolveMatrix(int ncols0_in,
                                        const char * prohibited,
 				       const char * rowProhibited)
 {
-  CoinPresolveMatrix* cpm = new CoinPresolveMatrix(ncols0_in,nrows_in,nelems_in);
-  //CoinPrePostsolveMatrix(si,ncols0_in,nrows_in,nelems_in),
+  CoinPresolveMatrix* cpm = construct_CoinPrePostsolveMatrix(si,ncols0_in,nrows_in,nelems_in,(CoinPresolveMatrix*)NULL);
   cpm->clink_ = new presolvehlink[ncols0_in+1];
   cpm->rlink_ = new presolvehlink[nrows_in+1];
 
@@ -1613,8 +1609,7 @@ CoinPostsolveMatrix* construct_CoinPostsolveMatrix(OsiSolverInterface*  si,
 				       unsigned char *colstat_in,
 				       unsigned char *rowstat_in)
 {
-  CoinPostsolveMatrix* cpm = new CoinPostsolveMatrix(ncols0_in, nrows0_in, nelems0);
-  //CoinPrePostsolveMatrix(si, ncols0_in, nrows0_in, nelems0)
+  CoinPostsolveMatrix* cpm = construct_CoinPrePostsolveMatrix(si, ncols0_in, nrows0_in, nelems0, (CoinPostsolveMatrix*)NULL);
 /*
   Used only to mark processed columns and rows so that debugging routines know
   what to check.

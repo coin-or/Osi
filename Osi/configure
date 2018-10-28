@@ -3301,11 +3301,16 @@ fi
 
 
 
-# libtool has some magic for host_os=mingw, but doesn't know about msys
+# libtool has some magic for host_os and build_os being mingw, but doesn't know about msys
 
   if test $host_os = msys ; then
     host_os=mingw
     host=`echo $host | sed -e 's/msys/mingw/'`
+  fi
+
+  if test $build_os = msys ; then
+    build_os=mingw
+    build=`echo $build | sed -e 's/msys/mingw/'`
   fi
 
 # Make silent build rules the default (https://www.gnu.org/software/automake/

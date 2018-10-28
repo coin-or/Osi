@@ -3,29 +3,25 @@ platform:
 
 environment:
   matrix:
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      ARCH: win32-msvc14
+      CONFIGURE_ARGS: --enable-msvc
+      ADD_PATH: /mingw64/bin
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      ARCH: win32-msvc14
+      CONFIGURE_ARGS: --enable-msvc --disable-shared --enable-static
+      ADD_PATH: /mingw64/bin
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       ARCH: win32-msvc15
-      HOST_ARCH_ARG: --enable-msvc
+      CONFIGURE_ARGS: --enable-msvc
       ADD_PATH:
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-      ARCH: win32-msvc14
-      HOST_ARCH_ARG: --build=x86_64-w64-mingw32 --enable-msvc
-      ADD_PATH: /mingw64/bin
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-      ARCH: win32-msvc14
-      HOST_ARCH_ARG: --build=x86_64-w64-mingw32 --enable-msvc --disable-shared --enable-static
-      ADD_PATH: /mingw64/bin
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      ARCH: win32-msvc15
-      HOST_ARCH_ARG: --build=x86_64-w64-mingw32 --enable-msvc
-      ADD_PATH: /mingw64/bin
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       ARCH: x86_64-w64-mingw32
-      HOST_ARCH_ARG: --build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32
+      CONFIGURE_ARGS:
       ADD_PATH: /mingw64/bin
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       ARCH: i686-w64-mingw32
-      HOST_ARCH_ARG: --build=x86_64-w64-mingw32 --host=i686-w64-mingw32
+      CONFIGURE_ARGS:
       ADD_PATH: /mingw32/bin
 
 install:
@@ -35,6 +31,6 @@ install:
 
 build_script:
   - C:\msys64\usr\bin\bash -lc "cd $APPVEYOR_BUILD_FOLDER; Osi/get.dependencies.sh fetch --no-third-party"
-  - C:\msys64\usr\bin\bash -lc "cd $APPVEYOR_BUILD_FOLDER; export PATH=$ADD_PATH:$PATH; Osi/get.dependencies.sh build $HOST_ARCH_ARG --verbosity=4 --test"
+  - C:\msys64\usr\bin\bash -lc "cd $APPVEYOR_BUILD_FOLDER; export PATH=$ADD_PATH:$PATH; Osi/get.dependencies.sh build $CONFIGURE_ARGS --verbosity=4 --test"
 
 test: off

@@ -144,8 +144,8 @@ noinst_PROGRAMS = unitTest$(EXEEXT)
 @COIN_HAS_SOPLEX_TRUE@am__append_28 = ../src/OsiSpx/libOsiSpx.la
 @COIN_HAS_SOPLEX_TRUE@am__append_29 = ../src/OsiSpx/libOsiSpx.la
 @COIN_HAS_SOPLEX_TRUE@am__append_30 = $(SOPLEX_LIBS)
-@COIN_HAS_SAMPLE_TRUE@am__append_31 = -mpsDir=$(SAMPLE_DATA)
-@COIN_HAS_NETLIB_TRUE@am__append_32 = -netlibDir=$(NETLIB_DATA) -testOsiSolverInterface
+@COIN_HAS_SAMPLE_TRUE@am__append_31 = -mpsDir=`$(CYGPATH_W) $(SAMPLE_DATA)`
+@COIN_HAS_NETLIB_TRUE@am__append_32 = -netlibDir=`$(CYGPATH_W) $(NETLIB_DATA)` -testOsiSolverInterface
 subdir = test
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac

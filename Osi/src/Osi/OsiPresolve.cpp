@@ -1282,7 +1282,7 @@ CoinTsolveMatrix* construct_CoinPrePostsolveMatrix(const OsiSolverInterface * si
 
   cpm->maxmin_ = si->getObjSense();
 
-  cpm->bulk0_ = static_cast<CoinBigIndex>(cpm->bulkRatio_*nelems_in) ;
+  cpm->bulk0_ = static_cast<CoinBigIndex>(cpm->bulkRatio_*nelems_in+ncols_in) ;
   cpm->hrow_ = new int [cpm->bulk0_+ncols_in] ;
   cpm->colels_ = new double[cpm->bulk0_+ncols_in] ;
 
@@ -1372,9 +1372,8 @@ CoinPresolveMatrix* construct_CoinPresolveMatrix(int ncols0_in,
 
   cpm->rowels_ = new double [cpm->bulk0_] ;
   cpm->hcol_ = new int [cpm->bulk0_] ;
-
   cpm->nrows_ = si->getNumRows() ;
-  const CoinBigIndex bufsize = static_cast<CoinBigIndex>(cpm->bulkRatio_*nelems_in) ;
+  const CoinBigIndex bufsize = static_cast<CoinBigIndex>(cpm->bulk0_) ;
 
   // Set up change bits
   cpm->rowChanged_ = new unsigned char[cpm->nrows_];

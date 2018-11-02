@@ -19,16 +19,13 @@ lib_LTLIBRARIES = libOsiSpx.la
 libOsiSpx_la_SOURCES = OsiSpxSolverInterface.cpp OsiSpxSolverInterface.hpp
 
 # List all additionally required libraries
-libOsiSpx_la_LIBADD = $(OSILIB_LIBS) ../Osi/libOsi.la
+libOsiSpx_la_LIBADD = ../Osi/libOsi.la $(OSISPXLIB_LFLAGS)
 
 # This is for libtool
 libOsiSpx_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.
-AM_CPPFLAGS = -I$(srcdir)/../Osi $(COINUTILS_CFLAGS) $(SOPLEX_CFLAGS)
-
-# This line is necessary to allow VPATH compilation
-# DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/src/Osi
+AM_CPPFLAGS = -I$(srcdir)/../Osi $(OSISPXLIB_CFLAGS)
 
 ########################################################################
 #                Headers that need to be installed                     #

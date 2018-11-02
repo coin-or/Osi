@@ -147,7 +147,8 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includecoindir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libOsiSpx_la_DEPENDENCIES = ../Osi/libOsi.la
+am__DEPENDENCIES_1 =
+libOsiSpx_la_DEPENDENCIES = ../Osi/libOsi.la $(am__DEPENDENCIES_1)
 am_libOsiSpx_la_OBJECTS = OsiSpxSolverInterface.lo
 libOsiSpx_la_OBJECTS = $(am_libOsiSpx_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -481,16 +482,13 @@ lib_LTLIBRARIES = libOsiSpx.la
 libOsiSpx_la_SOURCES = OsiSpxSolverInterface.cpp OsiSpxSolverInterface.hpp
 
 # List all additionally required libraries
-libOsiSpx_la_LIBADD = $(OSILIB_LIBS) ../Osi/libOsi.la
+libOsiSpx_la_LIBADD = ../Osi/libOsi.la $(OSISPXLIB_LFLAGS)
 
 # This is for libtool
 libOsiSpx_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.
-AM_CPPFLAGS = -I$(srcdir)/../Osi $(COINUTILS_CFLAGS) $(SOPLEX_CFLAGS)
-
-# This line is necessary to allow VPATH compilation
-# DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/src/Osi
+AM_CPPFLAGS = -I$(srcdir)/../Osi $(OSISPXLIB_CFLAGS)
 
 ########################################################################
 #                Headers that need to be installed                     #

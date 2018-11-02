@@ -22,16 +22,13 @@ libOsiMsk_la_SOURCES = \
 	OsiMskSolverInterface.cpp OsiMskSolverInterface.hpp
 
 # List all additionally required libraries
-libOsiMsk_la_LIBADD = $(OSILIB_LIBS) ../Osi/libOsi.la $(MSKLIB)
+libOsiMsk_la_LIBADD = ../Osi/libOsi.la $(OSIMSKLIB_LFLAGS)
 
 # This is for libtool (on Windows)
 libOsiMsk_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.
-AM_CPPFLAGS = $(srcdir)/../Osi $(MSKINCDIR) $(COINUTILS_CFLAGS)
-
-# This line is necessary to allow VPATH compilation
-# DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/src/Osi
+AM_CPPFLAGS = -I$(srcdir)/../Osi $(OSIMSKLIB_CFLAGS)
 
 ########################################################################
 #                Headers that need to be installed                     #

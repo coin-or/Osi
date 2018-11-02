@@ -149,7 +149,8 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includecoindir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libOsiXpr_la_DEPENDENCIES = ../Osi/libOsi.la
+am__DEPENDENCIES_1 =
+libOsiXpr_la_DEPENDENCIES = ../Osi/libOsi.la $(am__DEPENDENCIES_1)
 am_libOsiXpr_la_OBJECTS = OsiXprSolverInterface.lo
 libOsiXpr_la_OBJECTS = $(am_libOsiXpr_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -485,18 +486,13 @@ libOsiXpr_la_SOURCES = \
 
 
 # List all additionally required libraries
-libOsiXpr_la_LIBADD = $(OSILIB_LIBS) ../Osi/libOsi.la $(XPRLIB)
+libOsiXpr_la_LIBADD = ../Osi/libOsi.la $(OSIXPRLIB_LFLAGS)
 
 # This is for libtool (on Windows)
 libOsiXpr_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.
-# "top_srcdir" refers to the basic directory for the main package that is
-# being compiled.
-AM_CPPFLAGS = $(srcdir)/../Osi $(XPRINCDIR) $(COINUTILS_CFLAGS)
-
-# This line is necessary to allow VPATH compilation
-# DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/src/Osi
+AM_CPPFLAGS = -I$(srcdir)/../Osi $(OSIXPRLIB_CFLAGS)
 
 ########################################################################
 #                Headers that need to be installed                     #

@@ -150,7 +150,7 @@ am__uninstall_files_from_dir = { \
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includecoindir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
-libOsiGlpk_la_DEPENDENCIES = $(am__DEPENDENCIES_1) ../Osi/libOsi.la
+libOsiGlpk_la_DEPENDENCIES = ../Osi/libOsi.la $(am__DEPENDENCIES_1)
 am_libOsiGlpk_la_OBJECTS = OsiGlpkSolverInterface.lo
 libOsiGlpk_la_OBJECTS = $(am_libOsiGlpk_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -487,7 +487,7 @@ libOsiGlpk_la_SOURCES = \
 
 
 # List all additionally required libraries
-libOsiGlpk_la_LIBADD = $(OSILIB_LFLAGS) ../Osi/libOsi.la
+libOsiGlpk_la_LIBADD = ../Osi/libOsi.la $(OSIGLPKLIB_LFLAGS)
 
 # This is for libtool
 libOsiGlpk_la_LDFLAGS = $(LT_LDFLAGS)

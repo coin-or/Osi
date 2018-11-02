@@ -150,8 +150,7 @@ am__uninstall_files_from_dir = { \
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includecoindir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
-libOsiCpx_la_DEPENDENCIES = $(am__DEPENDENCIES_1) ../Osi/libOsi.la \
-	$(am__DEPENDENCIES_1)
+libOsiCpx_la_DEPENDENCIES = ../Osi/libOsi.la $(am__DEPENDENCIES_1)
 am_libOsiCpx_la_OBJECTS = OsiCpxSolverInterface.lo
 libOsiCpx_la_OBJECTS = $(am_libOsiCpx_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -487,13 +486,13 @@ libOsiCpx_la_SOURCES = \
 
 
 # List all additionally required libraries
-libOsiCpx_la_LIBADD = $(OSILIB_LFLAGS) ../Osi/libOsi.la $(OSICPXLIB_LFLAGS)
+libOsiCpx_la_LIBADD = ../Osi/libOsi.la $(OSICPXLIB_LFLAGS)
 
 # This is for libtool (on Windows)
 libOsiCpx_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.
-AM_CPPFLAGS = $(OSICPXLIB_CFLAGS) -I$(srcdir)/../Osi
+AM_CPPFLAGS = -I$(srcdir)/../Osi $(OSICPXLIB_CFLAGS)
 
 ########################################################################
 #                Headers that need to be installed                     #

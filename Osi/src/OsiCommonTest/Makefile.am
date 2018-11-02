@@ -38,7 +38,8 @@ libOsiCommonTest_la_LIBADD = $(OSICOMMONTESTLIB_LFLAGS) ../Osi/libOsi.la
 libOsiCommonTest_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.
-AM_CPPFLAGS = -I$(srcdir)/../Osi $(OSICOMMONTESTLIB_CFLAGS) -DOSICOMMONTEST_BUILD
+AM_CPPFLAGS = -I$(srcdir)/../Osi \
+	      $(OSICOMMONTESTLIB_CFLAGS) -DOSICOMMONTEST_BUILD
 
 ########################################################################
 #                Headers that need to be installed                     #

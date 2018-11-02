@@ -147,7 +147,8 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includecoindir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libOsiGrb_la_DEPENDENCIES = ../Osi/libOsi.la
+am__DEPENDENCIES_1 =
+libOsiGrb_la_DEPENDENCIES = ../Osi/libOsi.la $(am__DEPENDENCIES_1)
 am_libOsiGrb_la_OBJECTS = OsiGrbSolverInterface.lo
 libOsiGrb_la_OBJECTS = $(am_libOsiGrb_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -481,16 +482,13 @@ lib_LTLIBRARIES = libOsiGrb.la
 libOsiGrb_la_SOURCES = OsiGrbSolverInterface.cpp OsiGrbSolverInterface.hpp
 
 # List all additionally required libraries
-libOsiGrb_la_LIBADD = $(OSILIB_LIBS) ../Osi/libOsi.la $(GRBLIB)
+libOsiGrb_la_LIBADD = ../Osi/libOsi.la $(OSIGRBLIB_LFLAGS)
 
 # This is for libtool (on Windows)
 libOsiGrb_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.
-AM_CPPFLAGS = $(srcdir)/../Osi $(GRBINCDIR) $(COINUTILS_CFLAGS)
-
-# This line is necessary to allow VPATH compilation
-# DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/src/Osi
+AM_CPPFLAGS = -I$(srcdir)/../Osi $(OSIGRBLIB_CFLAGS)
 
 ########################################################################
 #                Headers that need to be installed                     #

@@ -1,14 +1,14 @@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 libdir=@libdir@
-includedir=@includedir@/coin
+includedir=@includedir@/coin-or
 
 Name: OsiCplex
 Description: COIN-OR Open Solver Interface for CPLEX
 URL: https://projects.coin-or.org/Osi
 Version: @PACKAGE_VERSION@
-Libs: @OSICPXLIB_LFLAGS_PUB@
+Libs: -L${libdir} -lOsiCpx
 Libs.private: @OSICPXLIB_LFLAGS_NOPC@
-Cflags: @OSICPXLIB_CFLAGS_PUB@
-Requires: @OSICPXLIB_PCFILES_PUB@
+Cflags: -I${includedir}
+Requires:
 Requires.private: @OSICPXLIB_PCFILES@

@@ -56,10 +56,6 @@ AC_COIN_CHECK_MATH_HDRS
 #                              COIN-OR components                           #
 #############################################################################
 
-# Initialise variables for OsiLib
-
-AC_COIN_INIT_LIBVARS([OsiLib],[-L\${libdir} -lOsi],[-I\${includedir}])
-
 # Find components for OsiLib
 
 AC_COIN_CHK_PKG(CoinUtils,[OsiLib])
@@ -70,11 +66,6 @@ fi
 # Finalize libs and cflags for building OsiLib.
 
 AC_COIN_FINALIZE_FLAGS(OsiLib)
-
-# Initialise variables for OsiCommonTestLib
-
-AC_COIN_INIT_LIBVARS([OsiCommonTestLib],
-		     [-L\${libdir} -lOsiCommonTest],[-I\${includedir}])
 
 # We just need the COIN_HAS_XXX and XXX_DATA variables for the data projects.
 
@@ -96,9 +87,7 @@ AC_COIN_CHK_HERE([OsiLib],[OsiCommonTestLib],[osi])
 # library, add external components, finalize the flags, and add any components
 # being built here.
 
-AC_COIN_INIT_LIBVARS([OsiGlpkLib],[-L\${libdir} -lOsiGlpk],[-I\${includedir}])
 AC_COIN_CHK_PKG(Glpk,[OsiGlpkLib],,[build])
-AC_COIN_INIT_LIBVARS([OsiSpxLib],[-L\${libdir} -lOsiSpx],[-I\${includedir}])
 AC_COIN_CHK_PKG(SoPlex,[OsiSpxLib],[coinsoplex < 1.7],[build])
 AC_COIN_FINALIZE_FLAGS([OsiGlpkLib OskSpxLib])
 AC_COIN_CHK_HERE([OsiLib],[OsiGlpkLib OsiSpxLib],[osi])
@@ -116,19 +105,15 @@ AC_COIN_CHK_HERE([OsiLib],[OsiGlpkLib OsiSpxLib],[osi])
 # Use abbreviations for Cplex, Mosek, Xpress, and Gurobi to minimize
 # disruption of existing symbols.
 
-AC_COIN_INIT_LIBVARS([OsiCpxLib],[-L\${libdir} -lOsiCpx],[-I\${includedir}])
 AC_COIN_CHK_LIB(Cpx,[OsiCpxLib],[-lcplex],[-I/usr/include],[],
                 [CPXgetstat])
 
-AC_COIN_INIT_LIBVARS([OsiMskLib],[-L\${libdir} -lOsiMsk],[-I\${includedir}])
 AC_COIN_CHK_LIB(Msk,[OsiMskLib],[-lmosek],[-I/usr/include],[],
                 [MSK_makeenv])
 
-AC_COIN_INIT_LIBVARS([OsiXprLib],[-L\${libdir} -lOsiXpr],[-I\${includedir}])
 AC_COIN_CHK_LIB(Xpr,[OsiXprLib],[-lxpress],[-I/usr/include],[],
                 [XPRSinit])
 
-AC_COIN_INIT_LIBVARS([OsiGrbLib],[-L\${libdir} -lOsiGrb],[-I\${includedir}])
 AC_COIN_CHK_LIB(Grb,[OsiGrbLib],[-lgurobi],[-I/usr/include],[],
                 [GRBloadenv])
 

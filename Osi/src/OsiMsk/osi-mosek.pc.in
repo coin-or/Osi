@@ -1,14 +1,14 @@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 libdir=@libdir@
-includedir=@includedir@/coin
+includedir=@includedir@/coin-or
 
 Name: OsiMosek
 Description: COIN-OR Open Solver Interface for Mosek
 URL: https://projects.coin-or.org/Osi
 Version: @PACKAGE_VERSION@
-Libs: @OSIMSKLIB_LFLAGS_PUB@
+Libs: -L${libdir} -lOsiMsk
 Libs.private: @OSIMSKLIB_LFLAGS_NOPC@
-Cflags: @OSIMSKLIB_CFLAGS_PUB@
-Requires: @OSIMSKLIB_PCFILES_PUB@
+Cflags: -I${includedir}
+Requires:
 Requires.private: @OSIMSKLIB_PCFILES@

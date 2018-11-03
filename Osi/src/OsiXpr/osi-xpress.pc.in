@@ -1,14 +1,14 @@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 libdir=@libdir@
-includedir=@includedir@/coin
+includedir=@includedir@/coin-or
 
 Name: OsiXpress
 Description: COIN-OR Open Solver Interface for Xpress
 URL: https://projects.coin-or.org/Osi
 Version: @PACKAGE_VERSION@
-Libs: @OSIXPRLIB_LFLAGS_PUB@
+Libs: -L${libdir} -lOsiXpr
 Libs.private: @OSIXPRLIB_LFLAGS_NOPC@
-Cflags: @OSIXPRLIB_CFLAGS_PUB@
-Requires: @OSIXPRLIB_PCFILES_PUB@
+Cflags: -I${includedir}
+Requires:
 Requires.private: @OSIXPRLIB_PCFILES@

@@ -19,6 +19,7 @@ Osi/MSVisualStudio/v10alt/genDefForOsi.ps1 -text
 Osi/MSVisualStudio/v10alt/libOsi.vcxproj -text
 Osi/MSVisualStudio/v10alt/libOsiCommonTest.vcxproj -text
 Osi/MSVisualStudio/v10alt/osi.props -text
+Osi/MSVisualStudio/v14/OsiUnitTest/OsiUnitTest.vcxproj -text
 Osi/MSVisualStudio/v14/libOsi/libOsi.vcxproj -text
 Osi/MSVisualStudio/v14/libOsiCommonTest/libOsiCommonTest.vcxproj -text
 Osi/MSVisualStudio/v9/Osi.sln -text

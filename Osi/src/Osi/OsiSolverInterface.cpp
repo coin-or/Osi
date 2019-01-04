@@ -1538,7 +1538,7 @@ int OsiSolverInterface::readLp(const char * filename, const double epsilon) {
   }
 
   int nerr = readLp(fp, epsilon);
-  fclose(fp);
+  // already closed by readLP fclose(fp);
   return(nerr);
 }
 

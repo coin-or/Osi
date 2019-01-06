@@ -80,6 +80,7 @@ Osi/src/OsiGrb/Makefile.am -text
 Osi/src/OsiGrb/Makefile.in -text
 Osi/src/OsiGrb/OsiGrbSolverInterface.cpp -text
 Osi/src/OsiGrb/OsiGrbSolverInterface.hpp -text
+Osi/src/OsiGrb/format-source.sh -text
 Osi/src/OsiGrb/osi-gurobi-uninstalled.pc.in -text
 Osi/src/OsiGrb/osi-gurobi.pc.in -text
 Osi/src/OsiMsk/osi-mosek-uninstalled.pc.in -text

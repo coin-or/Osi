@@ -74,6 +74,7 @@ Osi/src/OsiCommonTest/OsiUnitTests.hpp -text
 Osi/src/OsiCpx/format-source.sh -text
 Osi/src/OsiCpx/osi-cplex-uninstalled.pc.in -text
 Osi/src/OsiCpx/osi-cplex.pc.in -text
+Osi/src/OsiGlpk/format-source.sh -text
 Osi/src/OsiGlpk/osi-glpk-uninstalled.pc.in -text
 Osi/src/OsiGlpk/osi-glpk.pc.in -text
 Osi/src/OsiGrb/Makefile.am -text

@@ -91,6 +91,7 @@ Osi/src/OsiSpx/OsiSpxSolverInterface.cpp -text
 Osi/src/OsiSpx/OsiSpxSolverInterface.hpp -text
 Osi/src/OsiSpx/osi-soplex-uninstalled.pc.in -text
 Osi/src/OsiSpx/osi-soplex.pc.in -text
+Osi/src/OsiXpr/format-source.sh -text
 Osi/src/OsiXpr/osi-xpress-uninstalled.pc.in -text
 Osi/src/OsiXpr/osi-xpress.pc.in -text
 Osi/test/OsiGrbSolverInterfaceTest.cpp -text

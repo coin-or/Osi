@@ -3777,6 +3777,7 @@ void OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface *emptySi,
   std::string solverName;
   {
     OsiSolverInterface *si = emptySi->clone();
+    assert(si != NULL);
     solverName = "Unknown Solver";
     OSIUNITTEST_ASSERT_ERROR(si->getStrParam(OsiSolverName, solverName), {}, solverName, "getStrParam(OsiSolverName) supported");
     OSIUNITTEST_ASSERT_ERROR(solverName != "Unknown Solver", {}, solverName, "solver knows its name");
@@ -3811,6 +3812,7 @@ void OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface *emptySi,
 */
   std::string fn = mpsDir + "exmip1";
   OsiSolverInterface *exmip1Si = emptySi->clone();
+  assert(exmip1Si != NULL);
   OSIUNITTEST_ASSERT_ERROR(exmip1Si->readMps(fn.c_str(), "mps") == 0, return, *exmip1Si, "read MPS file");
   /*
   Test that the solver correctly handles row and column names.

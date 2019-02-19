@@ -185,6 +185,7 @@ void OsiColCutUnitTest(const OsiSolverInterface *baseSiP, const std::string &mps
     OSIUNITTEST_ASSERT_ERROR(r.consistent(), {}, "osicolcut", "consistent");
 
     OsiSolverInterface *imP = baseSiP->clone();
+    assert(imP != NULL);
     std::string fn = mpsDir + "exmip1";
     imP->readMps(fn.c_str(), "mps");
     OSIUNITTEST_ASSERT_ERROR(!r.consistent(*imP), {}, "osicolcut", "consistent");
@@ -205,6 +206,7 @@ void OsiColCutUnitTest(const OsiSolverInterface *baseSiP, const std::string &mps
   {
     // Test consistent(IntegerModel) method.
     OsiSolverInterface *imP = baseSiP->clone();
+    assert(imP != NULL);
     std::string fn = mpsDir + "exmip1";
     imP->readMps(fn.c_str(), "mps");
 
@@ -244,6 +246,7 @@ void OsiColCutUnitTest(const OsiSolverInterface *baseSiP, const std::string &mps
     //Test infeasible(im) method
     // Test consistent(IntegerModel) method.
     OsiSolverInterface *imP = baseSiP->clone();
+    assert(imP != NULL);
     std::string fn = mpsDir + "exmip1";
     imP->readMps(fn.c_str(), "mps");
 

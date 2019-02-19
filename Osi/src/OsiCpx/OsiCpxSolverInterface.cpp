@@ -2254,7 +2254,7 @@ void OsiCpxSolverInterface::addRow(const CoinPackedVectorBase &vec,
 
   switch (rowsen) {
   case 'R':
-    assert(rowrng >= 0.0);
+    //assert(rowrng >= 0.0);
     rhs = rowrhs - rowrng;
     range = rowrng;
     break;

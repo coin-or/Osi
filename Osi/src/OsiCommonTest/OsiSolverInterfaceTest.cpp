@@ -3176,7 +3176,7 @@ void testAddToEmptySystem(const OsiSolverInterface *emptySi,
   /*
   Add rows to an empty system. Begin by creating empty columns, then add some
   rows.
-*/
+  */
   {
     OsiSolverInterface *si = emptySi->clone();
     int i;
@@ -3252,7 +3252,7 @@ void testAddToEmptySystem(const OsiSolverInterface *emptySi,
   /*
   Add columns to an empty system. Start by creating empty rows, then add
   some columns.
-*/
+  */
   {
     OsiSolverInterface *si = emptySi->clone();
     int i;
@@ -3327,6 +3327,93 @@ void testAddToEmptySystem(const OsiSolverInterface *emptySi,
         OSIUNITTEST_ASSERT_ERROR(eq(si->getObjValue(), 2.0), {}, solverName, "testAddToEmptySystem: getObjValue after adding empty rows and then columns (alternative format)");
       }
     }
+    delete si;
+  }
+  /*
+  Add contradicting columns to an empty system.
+  Either the OSI rejects these column via an exception or the LP is proven infeasible.
+  */
+  {
+    OsiSolverInterface *si = emptySi->clone();
+    int i;
+
+    //Matrix
+    int row[] = { 0, 1 };
+    double col1E[] = { 4.0, 7.0 };
+    double col2E[] = { 7.0, 4.0 };
+    double col3E[] = { 5.0, 5.0 };
+    CoinPackedVector col1(2, row, col1E);
+    CoinPackedVector col2(2, row, col2E);
+    CoinPackedVector col3(2, row, col3E);
+
+    double objective[] = { 5.0, 6.0, 5.5 };
+    {
+      // Add empty rows
+      for (i = 0; i < 2; i++) {
+        const CoinPackedVector reqdBySunCC;
+        si->addRow(reqdBySunCC, 100.0, 100.0);
+      }
+
+      // Add columns
+      try {
+    	si->addCol(col1, 10.0, -10.0, objective[0]);
+    	si->addCol(col2, si->getInfinity(), 0.0, objective[1]);
+    	si->addCol(col3, si->getInfinity(), si->getInfinity(), objective[2]);
+
+        // solve
+        si->initialSolve();
+
+        OSIUNITTEST_ASSERT_ERROR(si->isProvenPrimalInfeasible(), {}, solverName, "testAddToEmptySystem: isProvenPrimalInfeasible() after adding contradicting columns");
+      }
+      catch( CoinError& e )
+      {
+    	OSIUNITTEST_ADD_OUTCOME(solverName, "testAddToEmptySystem", "addCol adds contradicting columns threw CoinError", TestOutcome::PASSED, true);
+      }
+    }
+    delete si;
+  }
+  /*
+  Add rows with contradicting sides to an empty system. Begin by creating empty columns, then add some
+  rows.
+  */
+  {
+    OsiSolverInterface *si = emptySi->clone();
+    int i;
+
+    //Matrix
+    int column[] = { 0, 1, 2 };
+    double row1E[] = { 4.0, 7.0, 5.0 };
+    double row2E[] = { 7.0, 4.0, 5.0 };
+    CoinPackedVector row1(3, column, row1E);
+    CoinPackedVector row2(3, column, row2E);
+
+    double objective[] = { 5.0, 6.0, 5.5 };
+
+    {
+      // Add empty columns
+      for (i = 0; i < 3; i++) {
+        const CoinPackedVector reqdBySunCC;
+        si->addCol(reqdBySunCC, 0.0, 10.0, objective[i]);
+      }
+
+      try {
+    	// Add rows
+    	si->addRow(row1, -100.0, 100.0);
+    	si->addRow(row2, si->getInfinity(), -si->getInfinity());
+
+    	// Vol can not solve problem of this form
+    	if (!volSolverInterface) {
+    	  // solve
+    	  si->initialSolve();
+          OSIUNITTEST_ASSERT_ERROR(si->isProvenPrimalInfeasible(), {}, solverName, "testAddToEmptySystem: isProvenPrimalInfeasible() after adding rows with contradicting sides");
+    	}
+      }
+      catch( CoinError& e )
+      {
+    	OSIUNITTEST_ADD_OUTCOME(solverName, "testAddToEmptySystem", "addRow for rows with contradicting sides threw CoinError", TestOutcome::PASSED, true);
+      }
+    }
+
     delete si;
   }
 }

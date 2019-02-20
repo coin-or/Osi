@@ -215,7 +215,8 @@ void OsiSolverInterfaceMpsUnitTest(const std::vector< OsiSolverInterface * > &ve
 */
     for (i = 0; i < numSolvers; i++) {
       std::string fn = mpsDir + mpsName[m];
-      vecSiP[i]->readMps(fn.c_str(), "mps");
+      if (vecSiP[i]->readMps(fn.c_str(), "mps") != 0)
+        OSIUNITTEST_ADD_OUTCOME(*vecSiP[i], "netlib " + mpsName[m], "reading MPS file failed", OsiUnitTest::TestOutcome::ERROR, false);
       if (minObj[m])
         vecSiP[i]->setObjSense(1.0);
       else
@@ -226,6 +227,8 @@ void OsiSolverInterfaceMpsUnitTest(const std::vector< OsiSolverInterface * > &ve
         siStage[i] = 1;
         solversReadMpsFile++;
       }
+      else
+        OSIUNITTEST_ADD_OUTCOME(*vecSiP[i], "netlib " + mpsName[m], "number of rows and columns wrong", OsiUnitTest::TestOutcome::ERROR, false);
     }
     /*
   If more than one solver succeeded, compare representations.

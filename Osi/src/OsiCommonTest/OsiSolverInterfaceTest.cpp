@@ -3363,7 +3363,7 @@ void testAddToEmptySystem(const OsiSolverInterface *emptySi,
         // solve
         si->initialSolve();
 
-        OSIUNITTEST_ASSERT_ERROR(si->isProvenPrimalInfeasible(), {}, solverName, "testAddToEmptySystem: isProvenPrimalInfeasible() after adding contradicting columns");
+        OSIUNITTEST_ASSERT_ERROR(si->isAbandoned() || si->isProvenPrimalInfeasible(), {}, solverName, "testAddToEmptySystem: not infeasible or abandoned after adding contradicting columns");
       }
       catch( CoinError& e )
       {
@@ -3405,7 +3405,7 @@ void testAddToEmptySystem(const OsiSolverInterface *emptySi,
     	if (!volSolverInterface) {
     	  // solve
     	  si->initialSolve();
-          OSIUNITTEST_ASSERT_ERROR(si->isProvenPrimalInfeasible(), {}, solverName, "testAddToEmptySystem: isProvenPrimalInfeasible() after adding rows with contradicting sides");
+          OSIUNITTEST_ASSERT_ERROR(si->isAbandoned() || si->isProvenPrimalInfeasible(), {}, solverName, "testAddToEmptySystem: infeasible or abandoned after adding rows with contradicting sides");
     	}
       }
       catch( CoinError& e )

@@ -13,12 +13,6 @@ Osi/MSVisualStudio/v10/OsiExamplesSpecific/OsiExamplesSpecific.vcxproj -text
 Osi/MSVisualStudio/v10/OsiUnitTest/OsiUnitTest.vcxproj -text
 Osi/MSVisualStudio/v10/libOsi/libOsi.vcxproj -text
 Osi/MSVisualStudio/v10/libOsiCommonTest/libOsiCommonTest.vcxproj -text
-Osi/MSVisualStudio/v10alt/Osi.sln -text
-Osi/MSVisualStudio/v10alt/OsiUnitTest.vcxproj -text
-Osi/MSVisualStudio/v10alt/genDefForOsi.ps1 -text
-Osi/MSVisualStudio/v10alt/libOsi.vcxproj -text
-Osi/MSVisualStudio/v10alt/libOsiCommonTest.vcxproj -text
-Osi/MSVisualStudio/v10alt/osi.props -text
 Osi/MSVisualStudio/v14/OsiUnitTest/OsiUnitTest.vcxproj -text
 Osi/MSVisualStudio/v14/libOsi/libOsi.vcxproj -text
 Osi/MSVisualStudio/v14/libOsiCommonTest/libOsiCommonTest.vcxproj -text
@@ -31,12 +25,6 @@ Osi/MSVisualStudio/v9/OsiExamplesSpecific/OsiExamplesSpecific.vcproj -text
 Osi/MSVisualStudio/v9/OsiUnitTest/OsiUnitTest.vcproj -text
 Osi/MSVisualStudio/v9/libOsi/libOsi.vcproj -text
 Osi/MSVisualStudio/v9/libOsiCommonTest/libOsiCommonTest.vcproj -text
-Osi/MSVisualStudio/v9alt/Osi.sln -text
-Osi/MSVisualStudio/v9alt/OsiUnitTest.vcproj -text
-Osi/MSVisualStudio/v9alt/genDefForOsi.ps1 -text svneol=unset#application/octet-stream
-Osi/MSVisualStudio/v9alt/libOsi.vcproj -text
-Osi/MSVisualStudio/v9alt/libOsiCommonTest.vcproj -text
-Osi/MSVisualStudio/v9alt/osi.vsprops -text
 Osi/README -text
 Osi/config.guess -text
 Osi/config.sub -text

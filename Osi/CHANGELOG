@@ -1,3 +1,6 @@
+22/02/2019 OsiSolverInterfaceTest
+  - remove nonsense test for whether a column solution exists *before* solve
+
 23/01/2018 OsiMsk
   - add compatibility with Mosek 9.0 beta
 

@@ -53,6 +53,7 @@ The `coinbrew` script will fetch [these](Dependencies) additional projects.
 
 ## Getting Started without CoinBrew (Expert users)
 
+ 0. Install [CoinUtils](https://www.github.com/coin-or/CoinUtils)
  1. Obtain the source code, e.g., from https://github.com/coin-or/Osi
  2. Run `./configure -C` to generate makefiles
  3. Run `make` to build the CoinUtils library

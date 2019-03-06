@@ -15,19 +15,19 @@ Among others the following operations are supported:
 
 The following is a list of derived Osi classes:
 
-|Solver|Derived Class|
-|------|-------------|
-|[Cbc](https://www.github.com/coin-or/Cbc)|OsiCbc (unmaintained)| 
-|[Clp](https://www.github.com/coin-or/Clp)|OsiClp| 
-|[CPLEX](https://www.ibm.com/analytics/cplex-optimizer)|OsiCpx|
-|[DyLP](https://www.github.com/coin-or/DyLP)|OsiDylp|
-|[GLPK](http://www.gnu.org/software/glpk/glpk.html)|OsiGlpk|
-|[Gurobi](http://www.gurobi.com)|OsiGrb|
-|[MOSEK](http://www.mosek.com)|OsiMsk|
-|[SoPlex](http://soplex.zib.de)|OsiSpx|
-|[SYMPHONY](https://www.github.com/coin-or/SYMPHONY)|OsiSym|
-|[Vol](https://www.github.com/coin-or/Vol)|OsiVol| 
-|[XPRESS-MP](https://www.fico.com/en/products/fico-xpress-optimization)|OsiXpr|
+|Solver|Derived Class|Note|
+|------|-------------|----|
+|[Cbc](https://www.github.com/coin-or/Cbc)|OsiCbc| unmaintained | 
+|[Clp](https://www.github.com/coin-or/Clp)|OsiClp| |
+|[CPLEX](https://www.ibm.com/analytics/cplex-optimizer)|OsiCpx| |
+|[DyLP](https://www.github.com/coin-or/DyLP)|OsiDylp| |
+|[GLPK](http://www.gnu.org/software/glpk/glpk.html)|OsiGlpk| Glpk <= 4.48 |
+|[Gurobi](http://www.gurobi.com)|OsiGrb| |
+|[MOSEK](http://www.mosek.com)|OsiMsk| |
+|[SoPlex](http://soplex.zib.de)|OsiSpx| |
+|[SYMPHONY](https://www.github.com/coin-or/SYMPHONY)|OsiSym| |
+|[Vol](https://www.github.com/coin-or/Vol)|OsiVol| |
+|[XPRESS-MP](https://www.fico.com/en/products/fico-xpress-optimization)|OsiXpr| |
 
 Osi is written in C++ and is released as open source code under the [Eclipse Public License (EPL)](http://www.opensource.org/licenses/eclipse-1.0).
 It is available from the [COIN-OR initiative](http://www.coin-or.org/).

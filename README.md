@@ -24,7 +24,7 @@ The following is a list of derived Osi classes:
 |[GLPK](http://www.gnu.org/software/glpk/glpk.html)|OsiGlpk| Glpk <= 4.48 |
 |[Gurobi](http://www.gurobi.com)|OsiGrb| |
 |[MOSEK](http://www.mosek.com)|OsiMsk| |
-|[SoPlex](http://soplex.zib.de)|OsiSpx| |
+|[SoPlex](http://soplex.zib.de)|OsiSpx| SoPlex < 4.0 |
 |[SYMPHONY](https://www.github.com/coin-or/SYMPHONY)|OsiSym| |
 |[Vol](https://www.github.com/coin-or/Vol)|OsiVol| |
 |[XPRESS-MP](https://www.fico.com/en/products/fico-xpress-optimization)|OsiXpr| |

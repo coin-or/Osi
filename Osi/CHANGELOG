@@ -1,5 +1,6 @@
 10/03/2019 OsiMsk
   - fixed problem where no Mosek output was produced on cloned/copied OsiMsk instances
+  - eliminated additional newline printed in Mosek output (#105)
 
 10/03/2019 OsiCpx
   - fixed OsiCpx::setRowPrice(), see also #81

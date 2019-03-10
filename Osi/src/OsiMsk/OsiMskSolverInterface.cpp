@@ -99,11 +99,31 @@ static void MSKAPI printlog(void *ptr, char* s)
   printf("%s",s);
 } 
 
+static
+void handleMessage(CoinMessageHandler* handler, MSKCONST char* str)
+{
+	size_t len = strlen(str);
+	if( len == 0 )
+		return;
+
+	if( str[len-1] == '\n')
+	{
+		char* str_ = (char*)malloc(len);
+		memcpy(str_, str, len-1);
+		str_[len-1] = '\0';
+		handler->message(0, "MSK", str_, ' ') << CoinMessageEol;
+		free(str_);
+	}
+	else
+		handler->message(0, "MSK", str, ' ');
+}
+
 static 
 void MSKAPI OsiMskStreamFuncLog(MSKuserhandle_t handle, MSKCONST char* str) {
-	if (handle) {
-		if (((CoinMessageHandler*)handle)->logLevel() >= 1)
-			((CoinMessageHandler*)handle)->message(0, "MSK", str, ' ') << CoinMessageEol;
+	CoinMessageHandler* handler = (CoinMessageHandler*)handle;
+	if (handler != NULL) {
+		if (handler->logLevel() >= 1)
+			handleMessage(handler, str);
 	} else {
 		printf(str);
 		printf("\n");
@@ -112,9 +132,10 @@ void MSKAPI OsiMskStreamFuncLog(MSKuserhandle_t handle, MSKCONST char* str) {
 
 static 
 void MSKAPI OsiMskStreamFuncWarning(MSKuserhandle_t handle, MSKCONST char* str) {
-	if (handle) {
-		if (((CoinMessageHandler*)handle)->logLevel() >= 0)
-			((CoinMessageHandler*)handle)->message(0, "MSK", str, ' ') << CoinMessageEol;
+	CoinMessageHandler* handler = (CoinMessageHandler*)handle;
+	if (handler != NULL) {
+		if (handler->logLevel() >= 0)
+			handleMessage(handler, str);
 	} else {
 		printf(str);
 		printf("\n");
@@ -123,8 +144,9 @@ void MSKAPI OsiMskStreamFuncWarning(MSKuserhandle_t handle, MSKCONST char* str) 
 
 static 
 void MSKAPI OsiMskStreamFuncError(MSKuserhandle_t handle, MSKCONST char* str) {
-	if (handle) {
-		((CoinMessageHandler*)handle)->message(0, "MSK", str, ' ') << CoinMessageEol;
+	CoinMessageHandler* handler = (CoinMessageHandler*)handle;
+	if (handler != NULL) {
+		handleMessage(handler, str);
 	} else {
 		fprintf(stderr, str);
 		fprintf(stderr, "\n");

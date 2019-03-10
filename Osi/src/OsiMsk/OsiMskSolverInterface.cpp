@@ -427,17 +427,20 @@ void OsiMskSolverInterface::initialSolve()
     err = MSK_getintparam(getMutableLpPtr(), MSK_IPAR_OPTIMIZER, &MSKsolverused_);
     checkMSKerror(err,"MSK_getintparam","initialsolve");
 
-    #if MSK_DO_MOSEK_LOG > 0
+#if MSK_DO_MOSEK_LOG > 0
+    err = MSK_putintparam( getMutableLpPtr(),MSK_IPAR_LOG,MSK_DO_MOSEK_LOG);
+    checkMSKerror(err,"MSK_putintparam","initialsolve");
+
     err = MSK_putintparam( getMutableLpPtr(),MSK_IPAR_LOG_SIM,MSK_DO_MOSEK_LOG);
     checkMSKerror(err,"MSK_putintparam","initialsolve");
-    #endif
+#endif
 
     Mskerr = MSK_optimize(getLpPtr( OsiMskSolverInterface::FREECACHED_RESULTS ));
 
-    #if MSK_DO_MOSEK_LOG > 0
+#if MSK_DO_MOSEK_LOG > 0
     err = MSK_solutionsummary( getMutableLpPtr(),MSK_STREAM_LOG);
     checkMSKerror(err,"MSK_solutionsummary","initialsolve");
-    #endif
+#endif
 
     err = MSK_putintparam(getMutableLpPtr(), MSK_IPAR_OPTIMIZER, solver);
     checkMSKerror(err,"MSK_putintparam","initialsolve");
@@ -480,13 +483,13 @@ void OsiMskSolverInterface::resolve()
     err = MSK_getintparam(getMutableLpPtr(), MSK_IPAR_OPTIMIZER, &MSKsolverused_);
     checkMSKerror(err,"MSK_getintparam","resolve");
 
-    #if MSK_DO_MOSEK_LOG > 0
+#if MSK_DO_MOSEK_LOG > 0
     err = MSK_putintparam( getMutableLpPtr(),MSK_IPAR_LOG,MSK_DO_MOSEK_LOG);
     checkMSKerror(err,"MSK_putintparam","resolve");
 
     err = MSK_putintparam( getMutableLpPtr(),MSK_IPAR_LOG_SIM,MSK_DO_MOSEK_LOG);
     checkMSKerror(err,"MSK_putintparam","resolve");
-    #endif
+#endif
 
     Mskerr = MSK_optimize(getLpPtr( OsiMskSolverInterface::FREECACHED_RESULTS ));
 
@@ -5185,6 +5188,11 @@ void OsiMskSolverInterface::gutsOfCopy( const OsiMskSolverInterface & source )
   err = MSK_clonetask(source.getMutableLpPtr(),&task_);
 
   checkMSKerror( err, "MSK_clonetask", "gutsOfCopy" );
+
+  // reinitialize output streams to use message handler of copy, also not sure that MSK_clonetask copied these over
+  MSK_linkfunctotaskstream(task_, MSK_STREAM_LOG, messageHandler(), OsiMskStreamFuncLog);
+  MSK_linkfunctotaskstream(task_, MSK_STREAM_ERR, messageHandler(), OsiMskStreamFuncWarning);
+  MSK_linkfunctotaskstream(task_, MSK_STREAM_WRN, messageHandler(), OsiMskStreamFuncError);
 
   // Set MIP information
   resizeColType(source.coltypesize_);

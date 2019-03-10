@@ -1,3 +1,6 @@
+10/03/2019 OsiCpx
+  - fixed OsiCpx::setRowPrice(), see also #81
+
 22/02/2019 OsiSolverInterfaceTest
   - remove nonsense test for whether a column solution exists *before* solve
 

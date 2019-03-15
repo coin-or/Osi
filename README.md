@@ -39,7 +39,7 @@ Within COIN-OR, Osi is used by [Cgl](https://www.github.com/coin-or/Cgl), [Cbc](
 
 The Osi website is https://github.com/coin-or/Osi.
 
-The main project managers are Lou Hafer (@LouHafer) and Matt Saltzmann (mjsaltzman).
+The main project managers are Lou Hafer (@LouHafer) and Matt Saltzmann (@mjsaltzman).
 
 An incomplete list of recent changes to Osi are found in the [CHANGELOG](Osi/CHANGELOG)
 

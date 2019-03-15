@@ -30,11 +30,18 @@ The following is a list of derived Osi classes:
 |[Vol](https://www.github.com/coin-or/Vol)|OsiVol| |
 |[XPRESS-MP](https://www.fico.com/en/products/fico-xpress-optimization)|OsiXpr| |
 
+Each solver interface is in a separate directory of Osi or distributed
+with the solver itself.
+
 Osi is written in C++ and is released as open source code under the [Eclipse Public License (EPL)](http://www.opensource.org/licenses/eclipse-1.0).
 It is available from the [COIN-OR initiative](http://www.coin-or.org/).
 Within COIN-OR, Osi is used by [Cgl](https://www.github.com/coin-or/Cgl), [Cbc](https://www.github.com/coin-or/Cbc), and [Bcp](https://www.github.com/coin-or/Bcp), among others.
 
 The Osi website is https://github.com/coin-or/Osi.
+
+The main project managers are Lou Hafer (@LouHafer) and Matt Saltzmann (mjsaltzman).
+
+An incomplete list of recent changes to Osi are found in the [CHANGELOG](Osi/CHANGELOG)
 
 ## Getting Started using CoinBrew
 

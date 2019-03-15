@@ -2293,7 +2293,7 @@ void testArtifStatus(const OsiSolverInterface *emptySi)
         std::cout << "Incorrect status " << statCode[stati] << " for " << contype[i] << " constraint c" << i << " (" << sense[iter] << "), expected " << statCode[goodStatus[iter * rowCnt + i]] << "." << std::endl;
       }
     }
-    OSIUNITTEST_ASSERT_ERROR(ok == true, {}, *si, "testArtifStatus: artifical variable status");
+    OSIUNITTEST_ASSERT_ERROR(ok == true, {}, *si, "testArtifStatus: artificial variable status");
 
     delete ws;
   }

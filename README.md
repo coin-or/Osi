@@ -50,9 +50,9 @@ https://coin-or.github.io/coinbrew/
 and run
 
 
-    /path/to/coinbrew fetch --mainProj=Osi
-    /path/to/coinbrew build --mainProj=Osi --test
-    /path/to/coinbrew install --mainProj=Osi
+    /path/to/coinbrew fetch --main-proj=Osi
+    /path/to/coinbrew build --main-proj=Osi --test
+    /path/to/coinbrew install --main-proj=Osi
 
 
 The `coinbrew` script will fetch [these](Dependencies) additional projects.

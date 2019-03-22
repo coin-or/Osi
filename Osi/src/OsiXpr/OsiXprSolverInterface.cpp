@@ -2151,7 +2151,9 @@ void OsiXprSolverInterface::incrementInstanceCounter()
   if (numInstances_ == 0) {
 
     if (XPRSinit(NULL) != 0) {
-      throw CoinError("failed to init XPRESS, maybe no license", "incrementInstanceCounter", "OsiXprSolverInterface");
+      char longbuf[2048] = "failed to init XPRESS, maybe no license";
+      XPRSgetlicerrmsg(longbuf, sizeof(longbuf));
+      throw CoinError(longbuf, "incrementInstanceCounter", "OsiXprSolverInterface");
     }
   }
 

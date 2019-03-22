@@ -2444,12 +2444,9 @@ void OsiXprSolverInterface::applyRowCut(const OsiRowCut &rowCut)
 
   // In XPRESS XPRSaddrows(prob_) prototype, indices and elements should be const, but
   // they're not.
-  int rc;
-
-  rc = XPRSaddrows(prob_, 1, row.getNumElements(), &sense, &rhs, &r,
+  XPRS_CHECKED(XPRSaddrows, (prob_, 1, row.getNumElements(), &sense, &rhs, &r,
     start, const_cast< int * >(row.getIndices()),
-    const_cast< double * >(row.getElements()));
-  assert(rc == 0);
+    const_cast< double * >(row.getElements())));
 
   freeCachedResults();
 }

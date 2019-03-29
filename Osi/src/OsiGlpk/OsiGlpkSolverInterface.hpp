@@ -15,6 +15,10 @@
 #include "CoinPackedMatrix.hpp"
 #include "CoinWarmStartBasis.hpp"
 
+extern "C" {
+#include <glpk.h>
+}
+
 /** GPLK Solver Interface
 
     Instantiation of OsiGlpkSolverInterface for GPLK
@@ -22,15 +26,6 @@
 
 #ifndef LPX
 #define LPX glp_prob
-#endif
-
-#ifndef GLP_PROB_DEFINED
-#define GLP_PROB_DEFINED
-// Glpk < 4.48:
-typedef struct {
-  double _opaque_prob[100];
-} glp_prob;
-// Glpk 4.48: typedef struct glp_prob glp_prob;
 #endif
 
 class OsiGlpkSolverInterface : virtual public OsiSolverInterface {
@@ -767,6 +762,15 @@ private:
   //@{
   /// GPLK model represented by this class instance
   mutable LPX *lp_;
+
+  /// Parameters passed to the simplex solver
+  glp_smcp simplex_params_;
+
+  /// Parameters passed to the integer solver
+  glp_iocp integer_params_;
+
+  // The scale parameter
+  int scale_;
 
   /// number of GLPK instances currently in use (counts only those created by OsiGlpk)
   static unsigned int numInstances_;

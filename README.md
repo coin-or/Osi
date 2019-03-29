@@ -21,7 +21,7 @@ The following is a list of derived Osi classes:
 |[Clp](https://www.github.com/coin-or/Clp)|OsiClp| |
 |[CPLEX](https://www.ibm.com/analytics/cplex-optimizer)|OsiCpx| |
 |[DyLP](https://www.github.com/coin-or/DyLP)|OsiDylp| |
-|[GLPK](http://www.gnu.org/software/glpk/glpk.html)|OsiGlpk| Glpk <= 4.48 |
+|[GLPK](http://www.gnu.org/software/glpk/glpk.html)|OsiGlpk| Glpk >= 4.48 |
 |[Gurobi](http://www.gurobi.com)|OsiGrb| |
 |[HiGHS](https://www.github.com/coin-or/HiGHS)|OsiHiGHS| under development |
 |[MOSEK](http://www.mosek.com)|OsiMsk| |

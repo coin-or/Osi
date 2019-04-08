@@ -39,7 +39,7 @@ Within COIN-OR, Osi is used by [Cgl](https://www.github.com/coin-or/Cgl), [Cbc](
 
 The Osi website is https://github.com/coin-or/Osi.
 
-The main project managers are Lou Hafer (@LouHafer) and Matt Saltzmann (mjsaltzman).
+The main project managers are Lou Hafer (@LouHafer) and Matt Saltzmann (@mjsaltzman).
 
 An incomplete list of recent changes to Osi are found in the [CHANGELOG](Osi/CHANGELOG)
 
@@ -50,9 +50,9 @@ https://coin-or.github.io/coinbrew/
 and run
 
 
-    /path/to/coinbrew fetch --mainProj=Osi
-    /path/to/coinbrew build --mainProj=Osi --test
-    /path/to/coinbrew install --mainProj=Osi
+    /path/to/coinbrew fetch --main-proj=Osi
+    /path/to/coinbrew build --main-proj=Osi --test
+    /path/to/coinbrew install --main-proj=Osi
 
 
 The `coinbrew` script will fetch [these](Dependencies) additional projects.

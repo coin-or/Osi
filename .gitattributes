@@ -18,6 +18,9 @@ Osi/MSVisualStudio/v10alt/genDefForOsi.ps1 -text
 Osi/MSVisualStudio/v10alt/libOsi.vcxproj -text
 Osi/MSVisualStudio/v10alt/libOsiCommonTest.vcxproj -text
 Osi/MSVisualStudio/v10alt/osi.props -text
+Osi/MSVisualStudio/v14/OsiUnitTest/OsiUnitTest.vcxproj -text
+Osi/MSVisualStudio/v14/libOsi/libOsi.vcxproj -text
+Osi/MSVisualStudio/v14/libOsiCommonTest/libOsiCommonTest.vcxproj -text
 Osi/MSVisualStudio/v9/Osi.sln -text
 Osi/MSVisualStudio/v9/OsiExamplesBasic/OsiExamplesBasic.vcproj -text
 Osi/MSVisualStudio/v9/OsiExamplesBuild/OsiExamplesBuild.vcproj -text
@@ -59,6 +62,7 @@ Osi/src/Osi/config.h.in -text
 Osi/src/Osi/config_default.h -text
 Osi/src/Osi/config_osi.h.in -text
 Osi/src/Osi/config_osi_default.h -text
+Osi/src/Osi/format-source.sh -text
 Osi/src/OsiCommonTest/Makefile.am -text
 Osi/src/OsiCommonTest/Makefile.in -text
 Osi/src/OsiCommonTest/OsiNetlibTest.cpp -text
@@ -66,12 +70,15 @@ Osi/src/OsiCommonTest/OsiSimplexAPITest.cpp -text
 Osi/src/OsiCommonTest/OsiUnitTestUtils.cpp -text
 Osi/src/OsiCommonTest/OsiUnitTests.hpp -text
 Osi/src/OsiCommonTest/config_osicommontest.h.in -text
+Osi/src/OsiCpx/format-source.sh -text
 Osi/src/OsiCpx/osi-cplex.pc.in -text
+Osi/src/OsiGlpk/format-source.sh -text
 Osi/src/OsiGlpk/osi-glpk.pc.in -text
 Osi/src/OsiGrb/Makefile.am -text
 Osi/src/OsiGrb/Makefile.in -text
 Osi/src/OsiGrb/OsiGrbSolverInterface.cpp -text
 Osi/src/OsiGrb/OsiGrbSolverInterface.hpp -text
+Osi/src/OsiGrb/format-source.sh -text
 Osi/src/OsiGrb/osi-gurobi.pc.in -text
 Osi/src/OsiMsk/osi-mosek.pc.in -text
 Osi/src/OsiSpx/Makefile.am -text
@@ -79,6 +86,7 @@ Osi/src/OsiSpx/Makefile.in -text
 Osi/src/OsiSpx/OsiSpxSolverInterface.cpp -text
 Osi/src/OsiSpx/OsiSpxSolverInterface.hpp -text
 Osi/src/OsiSpx/osi-soplex.pc.in -text
+Osi/src/OsiXpr/format-source.sh -text
 Osi/src/OsiXpr/osi-xpress.pc.in -text
 Osi/test/OsiGrbSolverInterfaceTest.cpp -text
 Osi/test/OsiSpxSolverInterfaceTest.cpp -text

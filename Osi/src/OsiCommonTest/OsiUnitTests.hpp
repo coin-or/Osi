@@ -109,11 +109,11 @@ extern OSICOMMONTESTLIB_EXPORT TestOutcomes outcomes;
 */
 OSICOMMONTESTLIB_EXPORT
 void failureMessage(const std::string &solverName,
-		    const std::string &message) ;
+  const std::string &message);
 /// \overload
 OSICOMMONTESTLIB_EXPORT
 void failureMessage(const OsiSolverInterface &si,
-		    const std::string &message) ;
+  const std::string &message);
 
 /*! \brief Print an error message, specifying the test name and condition
 
@@ -123,12 +123,12 @@ void failureMessage(const OsiSolverInterface &si,
 */
 OSICOMMONTESTLIB_EXPORT
 void failureMessage(const std::string &solverName,
-		    const std::string &testname, const std::string &testcond) ;
+  const std::string &testname, const std::string &testcond);
 
 /// \overload
 OSICOMMONTESTLIB_EXPORT
 void failureMessage(const OsiSolverInterface &si,
-		    const std::string &testname, const std::string &testcond) ;
+  const std::string &testname, const std::string &testcond);
 
 /*! \brief Print a message.
 
@@ -181,40 +181,46 @@ bool processParameters (int argc, const char **argv,
 
 /// A single test outcome record.
 class OSICOMMONTESTLIB_EXPORT TestOutcome {
-  public:
-    /// Test result
-    typedef enum {
-	    NOTE     = 0,
-	    PASSED   = 1,
-	    WARNING  = 2,
-	    ERROR    = 3,
-	    LAST     = 4
-    } SeverityLevel;
-    /// Print strings for SeverityLevel
-    static std::string SeverityLevelName[LAST];
-    /// Name of component under test
-    std::string     component;
-    /// Name of test
-    std::string     testname;
-    /// Condition being tested
-    std::string     testcond;
-    /// Test result
-    SeverityLevel   severity;
-    /// Set to true if problem is expected
-    bool            expected;
-    /// Name of code file where test executed
-    std::string     filename;
-    /// Line number in code file where test executed
-    int             linenumber;
-    /// Standard constructor
-    TestOutcome(const std::string& comp, const std::string& tst,
-    		const char* cond, SeverityLevel sev,
-		const char* file, int line, bool exp = false)
-      : component(comp),testname(tst),testcond(cond),severity(sev),
-        expected(exp),filename(file),linenumber(line)
-    { }
-    /// Print the test outcome
-    void print() const;
+public:
+  /// Test result
+  typedef enum {
+    NOTE = 0,
+    PASSED = 1,
+    WARNING = 2,
+    ERROR = 3,
+    LAST = 4
+  } SeverityLevel;
+  /// Print strings for SeverityLevel
+  static std::string SeverityLevelName[LAST];
+  /// Name of component under test
+  std::string component;
+  /// Name of test
+  std::string testname;
+  /// Condition being tested
+  std::string testcond;
+  /// Test result
+  SeverityLevel severity;
+  /// Set to true if problem is expected
+  bool expected;
+  /// Name of code file where test executed
+  std::string filename;
+  /// Line number in code file where test executed
+  int linenumber;
+  /// Standard constructor
+  TestOutcome(const std::string &comp, const std::string &tst,
+    const char *cond, SeverityLevel sev,
+    const char *file, int line, bool exp = false)
+    : component(comp)
+    , testname(tst)
+    , testcond(cond)
+    , severity(sev)
+    , expected(exp)
+    , filename(file)
+    , linenumber(line)
+  {
+  }
+  /// Print the test outcome
+  void print() const;
 };
 
 /// Utility class to maintain a list of test outcomes.
@@ -228,22 +234,22 @@ class OSICOMMONTESTLIB_EXPORT TestOutcomes {
 	     bool exp = false)
     { outcomes.push_back(TestOutcome(comp,tst,cond,sev,file,line,exp)); }
 
-    /*! \brief Add an outcome to the list
+  /*! \brief Add an outcome to the list
 
       Get the component name from the solver interface.
     */
-    void add(const OsiSolverInterface& si, std::string tst, const char* cond,
-    	     TestOutcome::SeverityLevel sev, const char* file, int line,
-	     bool exp = false);
-    /// Print the list of outcomes
-    void print() const;
-    /*! \brief Count total and expected outcomes at given severity level
+  void add(const OsiSolverInterface &si, std::string tst, const char *cond,
+    TestOutcome::SeverityLevel sev, const char *file, int line,
+    bool exp = false);
+  /// Print the list of outcomes
+  void print() const;
+  /*! \brief Count total and expected outcomes at given severity level
     
       Given a severity level, walk the list of outcomes and count the total number
       of outcomes at this severity level and the number expected.
     */
-    void getCountBySeverity(TestOutcome::SeverityLevel sev,
-    			    int& total, int& expected) const;
+  void getCountBySeverity(TestOutcome::SeverityLevel sev,
+    int &total, int &expected) const;
 };
 
 /// Convert parameter to a string (stringification)
@@ -251,42 +257,47 @@ class OSICOMMONTESTLIB_EXPORT TestOutcomes {
 /// Convert to string with one level of expansion of the parameter
 #define OSIUNITTEST_QUOTEME(x) OSIUNITTEST_QUOTEME_(x)
 
-template <typename Component>
+template < typename Component >
 bool OsiUnitTestAssertSeverityExpected(
-    bool condition, const char * condition_str, const char *filename,
-    int line, const Component& component, const std::string& testname,
-    TestOutcome::SeverityLevel severity, bool expected)
+  bool condition, const char *condition_str, const char *filename,
+  int line, const Component &component, const std::string &testname,
+  TestOutcome::SeverityLevel severity, bool expected)
 {
   if (condition) {
     OsiUnitTest::outcomes.add(component, testname, condition_str,
-        OsiUnitTest::TestOutcome::PASSED, filename, line, false);
+      OsiUnitTest::TestOutcome::PASSED, filename, line, false);
     if (OsiUnitTest::verbosity >= 2) {
       std::ostringstream successmsg;
       successmsg << __FILE__ << ":" << __LINE__ << ": " << testname
-          << " (condition \'" << condition_str << "\') passed.\n";
+                 << " (condition \'" << condition_str << "\') passed.\n";
       OsiUnitTest::testingMessage(successmsg.str().c_str());
     }
     return true;
   }
   OsiUnitTest::outcomes.add(component, testname, condition_str,
-      severity, filename, line, expected);
+    severity, filename, line, expected);
   OsiUnitTest::failureMessage(component, testname, condition_str);
   switch (OsiUnitTest::haltonerror) {
-    case 2:
-    { if (severity >= OsiUnitTest::TestOutcome::ERROR ) std::abort(); break; }
-    case 1:
-    { std::cout << std::endl << "press any key to continue..." << std::endl;
-      std::getchar();
-      break ; }
-    default: ;
+  case 2: {
+    if (severity >= OsiUnitTest::TestOutcome::ERROR)
+      std::abort();
+    break;
+  }
+  case 1: {
+    std::cout << std::endl
+              << "press any key to continue..." << std::endl;
+    std::getchar();
+    break;
+  }
+  default:;
   }
   return false;
 }
 
 /// Add a test outcome to the list held in OsiUnitTest::outcomes
-#define OSIUNITTEST_ADD_OUTCOME(component,testname,testcondition,severity,expected) \
-    OsiUnitTest::outcomes.add(component,testname,testcondition,severity,\
-    __FILE__,__LINE__,expected)
+#define OSIUNITTEST_ADD_OUTCOME(component, testname, testcondition, severity, expected) \
+  OsiUnitTest::outcomes.add(component, testname, testcondition, severity,               \
+    __FILE__, __LINE__, expected)
 /*! \brief Test for a condition and record the result
 
   Test \p condition and record the result in OsiUnitTest::outcomes.
@@ -297,28 +308,28 @@ bool OsiUnitTestAssertSeverityExpected(
 
   \p failurecode is executed when failure is not fatal.
 */
-#define OSIUNITTEST_ASSERT_SEVERITY_EXPECTED(condition,failurecode,component,\
-					     testname, severity, expected) \
-{ \
-  if (!OsiUnitTestAssertSeverityExpected(condition, #condition, \
-      __FILE__, __LINE__, component, testname, severity, expected)) { \
-    failurecode; \
-  } \
-}
+#define OSIUNITTEST_ASSERT_SEVERITY_EXPECTED(condition, failurecode, component, \
+  testname, severity, expected)                                                 \
+  {                                                                             \
+    if (!OsiUnitTestAssertSeverityExpected(condition, #condition,               \
+          __FILE__, __LINE__, component, testname, severity, expected)) {       \
+      failurecode;                                                              \
+    }                                                                           \
+  }
 
 /*! \brief Perform a test with severity OsiUnitTest::TestOutcome::ERROR, failure not
  	   expected.
 */
-#define OSIUNITTEST_ASSERT_ERROR(condition, failurecode, component, testname) \
-  OSIUNITTEST_ASSERT_SEVERITY_EXPECTED(condition,failurecode,component,testname,\
-  				       OsiUnitTest::TestOutcome::ERROR,false)
+#define OSIUNITTEST_ASSERT_ERROR(condition, failurecode, component, testname)       \
+  OSIUNITTEST_ASSERT_SEVERITY_EXPECTED(condition, failurecode, component, testname, \
+    OsiUnitTest::TestOutcome::ERROR, false)
 
 /*! \brief Perform a test with severity OsiUnitTest::TestOutcome::WARNING, failure
 	   not expected.
 */
-#define OSIUNITTEST_ASSERT_WARNING(condition, failurecode, component, testname) \
-  OSIUNITTEST_ASSERT_SEVERITY_EXPECTED(condition,failurecode,component,testname,\
-  				       OsiUnitTest::TestOutcome::WARNING,false)
+#define OSIUNITTEST_ASSERT_WARNING(condition, failurecode, component, testname)     \
+  OSIUNITTEST_ASSERT_SEVERITY_EXPECTED(condition, failurecode, component, testname, \
+    OsiUnitTest::TestOutcome::WARNING, false)
 
 /*! \brief Perform a test surrounded by a try/catch block
 
@@ -330,64 +341,72 @@ bool OsiUnitTestAssertSeverityExpected(
   executed. If any other error is thrown, the failure is recorded as for a CoinError
   and \p catchcode is executed (haltonerror is not consulted).
 */
-#define OSIUNITTEST_CATCH_SEVERITY_EXPECTED(trycode, catchcode, component, testname,\
-					    severity, expected) \
-{ \
-  try { \
-    trycode; \
-    OSIUNITTEST_ADD_OUTCOME(component,testname,#trycode " did not throw exception",\
-			    OsiUnitTest::TestOutcome::PASSED,false); \
-    if (OsiUnitTest::verbosity >= 2) { \
-      std::string successmsg( __FILE__ ":" OSIUNITTEST_QUOTEME(__LINE__) ": "); \
-      successmsg = successmsg + testname; \
-      successmsg = successmsg + " (code \'" #trycode "\') did not throw exception"; \
-      successmsg = successmsg + ".\n" ; \
-      OsiUnitTest::testingMessage(successmsg.c_str()); \
-    } \
-  } catch (CoinError& e) { \
-    std::stringstream errmsg; \
-    errmsg << #trycode " threw CoinError: " << e.message(); \
-    if (e.className().length() > 0) \
-      errmsg << " in " << e.className(); \
-    if (e.methodName().length() > 0) \
-      errmsg << " in " << e.methodName(); \
-    if (e.lineNumber() >= 0) \
-      errmsg << " at " << e.fileName() << ":" << e.lineNumber(); \
-    OSIUNITTEST_ADD_OUTCOME(component,testname,errmsg.str().c_str(),\
-    			    severity,expected); \
-    OsiUnitTest::failureMessage(component,testname,errmsg.str().c_str()); \
-    switch(OsiUnitTest::haltonerror) { \
-      case 2: \
-      { if (severity >= OsiUnitTest::TestOutcome::ERROR) abort(); break; } \
-      case 1: \
-      { std::cout << std::endl << "press any key to continue..." << std::endl; \
-        getchar(); \
-	break ; } \
-      default: ; \
-    } \
-    catchcode; \
-  } catch (...) { \
-    std::string errmsg; \
-    errmsg = #trycode; \
-    errmsg = errmsg + " threw unknown exception"; \
-    OSIUNITTEST_ADD_OUTCOME(component,testname,errmsg.c_str(),severity,false); \
-    OsiUnitTest::failureMessage(component,testname,errmsg.c_str()); \
-    catchcode; \
-  } \
-}
+#define OSIUNITTEST_CATCH_SEVERITY_EXPECTED(trycode, catchcode, component, testname,    \
+  severity, expected)                                                                   \
+  {                                                                                     \
+    try {                                                                               \
+      trycode;                                                                          \
+      OSIUNITTEST_ADD_OUTCOME(component, testname, #trycode " did not throw exception", \
+        OsiUnitTest::TestOutcome::PASSED, false);                                       \
+      if (OsiUnitTest::verbosity >= 2) {                                                \
+        std::string successmsg(__FILE__ ":" OSIUNITTEST_QUOTEME(__LINE__) ": ");        \
+        successmsg = successmsg + testname;                                             \
+        successmsg = successmsg + " (code \'" #trycode "\') did not throw exception";   \
+        successmsg = successmsg + ".\n";                                                \
+        OsiUnitTest::testingMessage(successmsg.c_str());                                \
+      }                                                                                 \
+    } catch (CoinError & e) {                                                           \
+      std::stringstream errmsg;                                                         \
+      errmsg << #trycode " threw CoinError: " << e.message();                           \
+      if (e.className().length() > 0)                                                   \
+        errmsg << " in " << e.className();                                              \
+      if (e.methodName().length() > 0)                                                  \
+        errmsg << " in " << e.methodName();                                             \
+      if (e.lineNumber() >= 0)                                                          \
+        errmsg << " at " << e.fileName() << ":" << e.lineNumber();                      \
+      OSIUNITTEST_ADD_OUTCOME(component, testname, errmsg.str().c_str(),                \
+        severity, expected);                                                            \
+      OsiUnitTest::failureMessage(component, testname, errmsg.str().c_str());           \
+      switch (OsiUnitTest::haltonerror) {                                               \
+      case 2: {                                                                         \
+        if (severity >= OsiUnitTest::TestOutcome::ERROR)                                \
+          abort();                                                                      \
+        break;                                                                          \
+      }                                                                                 \
+      case 1: {                                                                         \
+        std::cout << std::endl                                                          \
+                  << "press any key to continue..." << std::endl;                       \
+        getchar();                                                                      \
+        break;                                                                          \
+      }                                                                                 \
+      default:;                                                                         \
+      }                                                                                 \
+      catchcode;                                                                        \
+    } catch (...) {                                                                     \
+      std::string errmsg;                                                               \
+      errmsg = #trycode;                                                                \
+      errmsg = errmsg + " threw unknown exception";                                     \
+      OSIUNITTEST_ADD_OUTCOME(component, testname, errmsg.c_str(), severity, false);    \
+      OsiUnitTest::failureMessage(component, testname, errmsg.c_str());                 \
+      catchcode;                                                                        \
+    }                                                                                   \
+  }
 
 /*! \brief Perform a try/catch test with severity OsiUnitTest::TestOutcome::ERROR,
 	   failure not expected.
 */
 #define OSIUNITTEST_CATCH_ERROR(trycode, catchcode, component, testname) \
-	OSIUNITTEST_CATCH_SEVERITY_EXPECTED(trycode, catchcode, component, testname, OsiUnitTest::TestOutcome::ERROR, false)
+  OSIUNITTEST_CATCH_SEVERITY_EXPECTED(trycode, catchcode, component, testname, OsiUnitTest::TestOutcome::ERROR, false)
 
 /*! \brief Perform a try/catch test with severity OsiUnitTest::TestOutcome::WARNING,
 	   failure not expected.
 */
 #define OSIUNITTEST_CATCH_WARNING(trycode, catchcode, component, testname) \
-	OSIUNITTEST_CATCH_SEVERITY_EXPECTED(trycode, catchcode, component, testname, OsiUnitTest::TestOutcome::WARNING, false)
+  OSIUNITTEST_CATCH_SEVERITY_EXPECTED(trycode, catchcode, component, testname, OsiUnitTest::TestOutcome::WARNING, false)
 
 } // end namespace OsiUnitTest
 
 #endif /*OSISOLVERINTERFACETEST_HPP_*/
+
+/* vi: softtabstop=2 shiftwidth=2 expandtab tabstop=2
+*/

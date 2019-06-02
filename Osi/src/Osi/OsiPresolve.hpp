@@ -91,8 +91,6 @@ CoinPostsolveMatrix* construct_CoinPostsolveMatrix(OsiSolverInterface*  si,
   \endcode
 */
 
-
-
 class OSILIB_EXPORT OsiPresolve {
 public:
   /// Default constructor (empty object)
@@ -121,13 +119,13 @@ public:
 
     In some sense, a wrapper for presolve(CoinPresolveMatrix*).
   */
-  virtual OsiSolverInterface *presolvedModel(OsiSolverInterface & origModel,
-					     double feasibilityTolerance=0.0,
-					     bool keepIntegers=true,
-					     int numberPasses=5,
-                                             const char * prohibited=NULL,
-					     bool doStatus=true,
-					     const char * rowProhibited=NULL);
+  virtual OsiSolverInterface *presolvedModel(OsiSolverInterface &origModel,
+    double feasibilityTolerance = 0.0,
+    bool keepIntegers = true,
+    int numberPasses = 5,
+    const char *prohibited = NULL,
+    bool doStatus = true,
+    const char *rowProhibited = NULL);
 
   /*! \brief Restate the solution to the presolved problem in terms of the
 	     original problem and load it into the original model.
@@ -146,39 +144,47 @@ public:
 
     In some sense, a wrapper for postsolve(CoinPostsolveMatrix&).
   */
-  virtual void postsolve(bool updateStatus=true);
+  virtual void postsolve(bool updateStatus = true);
 
   /*! \brief Return a pointer to the presolved model. */
-  OsiSolverInterface * model() const;
+  OsiSolverInterface *model() const;
 
   /// Return a pointer to the original model
-  OsiSolverInterface * originalModel() const;
+  OsiSolverInterface *originalModel() const;
 
   /// Set the pointer to the original model
   void setOriginalModel(OsiSolverInterface *model);
 
   /// Return a pointer to the original columns
-  const int * originalColumns() const;
+  const int *originalColumns() const;
 
   /// Return a pointer to the original rows
-  const int * originalRows() const;
+  const int *originalRows() const;
 
   /// Return number of rows in original model
   inline int getNumRows() const
-  { return nrows_;}
+  {
+    return nrows_;
+  }
 
   /// Return number of columns in original model
   inline int getNumCols() const
-  { return ncols_;}
+  {
+    return ncols_;
+  }
 
   /** "Magic" number. If this is non-zero then any elements with this value
       may change and so presolve is very limited in what can be done
       to the row and column.  This is for non-linear problems.
   */
   inline void setNonLinearValue(double value)
-  { nonLinearValue_ = value;}
+  {
+    nonLinearValue_ = value;
+  }
   inline double nonLinearValue() const
-    { return nonLinearValue_;}
+  {
+    return nonLinearValue_;
+  }
   /*! \brief Fine control over presolve actions
   
     Set/clear the following bits to allow or suppress actions:
@@ -198,26 +204,32 @@ public:
     -- lh, 110605 --
   */
   inline void setPresolveActions(int action)
-  { presolveActions_  = (presolveActions_&0xffff0000)|(action&0xffff);}
+  {
+    presolveActions_ = (presolveActions_ & 0xffff0000) | (action & 0xffff);
+  }
   /// Get presolved model
-  inline OsiSolverInterface * presolvedModel() const
-  { return presolvedModel_; }
+  inline OsiSolverInterface *presolvedModel() const
+  {
+    return presolvedModel_;
+  }
   /// Set presolved model
-  inline void setPresolvedModel(OsiSolverInterface * presolvedModel)
-  { presolvedModel_ = presolvedModel; }
+  inline void setPresolvedModel(OsiSolverInterface *presolvedModel)
+  {
+    presolvedModel_ = presolvedModel;
+  }
 
 private:
   /*! Original model (solver interface loaded with the original problem).
 
       Must not be destroyed until after postsolve().
   */
-  OsiSolverInterface * originalModel_;
+  OsiSolverInterface *originalModel_;
 
   /*! Presolved  model (solver interface loaded with the presolved problem)
   
     Must be destroyed by the client (using delete) after postsolve().
   */
-  OsiSolverInterface * presolvedModel_;
+  OsiSolverInterface *presolvedModel_;
 
   /*! "Magic" number. If this is non-zero then any elements with this value
       may change and so presolve is very limited in what can be done
@@ -227,10 +239,10 @@ private:
   double nonLinearValue_;
 
   /// Original column numbers
-  int * originalColumn_;
+  int *originalColumn_;
 
   /// Original row numbers
-  int * originalRow_;
+  int *originalRow_;
 
   /// The list of transformations applied.
   const CoinPresolveAction *paction_;
@@ -290,3 +302,6 @@ protected:
   void gutsOfDestroy();
 };
 #endif
+
+/* vi: softtabstop=2 shiftwidth=2 expandtab tabstop=2
+*/

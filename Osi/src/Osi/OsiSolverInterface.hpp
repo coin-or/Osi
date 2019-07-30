@@ -20,6 +20,8 @@
 #include "OsiCollections.hpp"
 #include "OsiSolverParameters.hpp"
 
+#include "cgraph.h"
+
 class CoinSnapshot;
 class CoinLpIO;
 class CoinMpsIO;
@@ -68,6 +70,9 @@ class OsiSolverInterface {
     const std::string &mpsDir);
 
 public:
+  void buildCGraph(int minClqRow = 1024);
+  inline const CGraph* getCGraph() const;
+
   /// Internal class for obtaining status from the applyCuts method
   class ApplyCutsReturnCode {
     friend class OsiSolverInterface;
@@ -2147,6 +2152,8 @@ private:
   std::string objName_;
 
   //@}
+
+  CGraph *cgraph_;
 };
 
 //#############################################################################
@@ -2213,6 +2220,10 @@ OsiSolverInterface::convertSenseToBound(const char sense, const double right,
     upper = inf;
     break;
   }
+}
+
+inline const CGraph* OsiSolverInterface::getCGraph() const {
+  return cgraph_;
 }
 
 #endif

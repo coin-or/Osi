@@ -70,9 +70,6 @@ class OsiSolverInterface {
     const std::string &mpsDir);
 
 public:
-  void buildCGraph(int minClqRow = 1024);
-  inline const CGraph* getCGraph() const;
-
   /// Internal class for obtaining status from the applyCuts method
   class ApplyCutsReturnCode {
     friend class OsiSolverInterface;
@@ -1772,6 +1769,28 @@ public:
     */
   double forceFeasible();
   //@}
+
+  //---------------------------------------------------------------------------
+  /**@name Conflict graph related methods
+
+     These methods allow building a conflict graph indicating relationship
+     between binary variables
+  */
+  //@{
+
+  /*! \brief created a conflict graph, acessible via getCGraph
+   *
+   *  @param minClqRow minimum number of elements where conflicts are not stored as pairwise conflicts
+   */
+  void buildCGraph(int minClqRow = 1024);
+
+  /*! \brief Returns a conflict graph
+   *
+   *  Returns a conflict graph indicating relationship between binary variables
+   */
+  inline const CGraph *getCGraph() const;
+  //@}
+
   //---------------------------------------------------------------------------
 
   /*! @name Methods related to testing generated cuts
@@ -2222,7 +2241,8 @@ OsiSolverInterface::convertSenseToBound(const char sense, const double right,
   }
 }
 
-inline const CGraph* OsiSolverInterface::getCGraph() const {
+inline const CGraph *OsiSolverInterface::getCGraph() const
+{
   return cgraph_;
 }
 

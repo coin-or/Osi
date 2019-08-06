@@ -3679,6 +3679,7 @@ void OsiGrbSolverInterface::freeAllMemory()
   delete[] auxcolind;
   auxcolind = NULL;
   auxcolindspace = 0;
+  nauxcols = 0;
 }
 
 /// converts a normal row into a ranged row by adding an auxiliary variable

@@ -61,6 +61,7 @@ Osi/osi-uninstalled.pc.in -text
 Osi/osi-unittests-uninstalled.pc.in -text
 Osi/osi-unittests.pc.in -text
 Osi/osi.pc.in -text
+Osi/src/Osi/.ycm_extra_conf.py -text
 Osi/src/Osi/Makefile.am -text
 Osi/src/Osi/Makefile.in -text
 Osi/src/Osi/config.h.in -text

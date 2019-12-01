@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include "CoinPragma.hpp"
+#include "CoinTime.hpp"
 #include "CoinHelperFunctions.hpp"
 #include "CoinMpsIO.hpp"
 #include "CoinMessage.hpp"
@@ -958,6 +959,7 @@ OsiSolverInterface::OsiSolverInterface()
   , columnType_(NULL)
   , appDataEtc_(NULL)
   , ws_(NULL)
+  , cgraph_(NULL)
 {
   setInitialData();
 }
@@ -1049,6 +1051,12 @@ OsiSolverInterface::OsiSolverInterface(const OsiSolverInterface &rhs)
   objName_ = rhs.objName_;
   // NULL as number of columns not known
   columnType_ = NULL;
+
+  if (rhs.cgraph_) {
+    cgraph_ = cgraph_clone(rhs.cgraph_);
+  } else {
+    cgraph_ = NULL;
+  }
 }
 
 //-------------------------------------------------------------------
@@ -1070,6 +1078,10 @@ OsiSolverInterface::~OsiSolverInterface()
     delete object_[i];
   delete[] object_;
   delete[] columnType_;
+
+  if (cgraph_) {
+    cgraph_free(&cgraph_);
+  }
 }
 
 //----------------------------------------------------------------
@@ -1124,6 +1136,16 @@ OsiSolverInterface::operator=(const OsiSolverInterface &rhs)
     delete[] columnType_;
     // NULL as number of columns not known
     columnType_ = NULL;
+
+    if (cgraph_) {
+      cgraph_free(&cgraph_);
+    }
+
+    if (rhs.cgraph_) {
+      cgraph_ = cgraph_clone(rhs.cgraph_);
+    } else {
+      cgraph_ = NULL;
+    }
   }
   return *this;
 }
@@ -1300,6 +1322,9 @@ int OsiSolverInterface::writeMpsNative(const char *filename,
     objective, hasInteger ? integrality : 0,
     getRowLower(), getRowUpper(),
     columnNames, rowNames);
+  std::string probName;
+  this->getStrParam(OsiProbName, probName);
+  writer.setProblemName(probName.c_str());
   double objOffset = 0.0;
   getDblParam(OsiObjOffset, objOffset);
   writer.setObjectiveOffset(objOffset);
@@ -1479,6 +1504,9 @@ int OsiSolverInterface::writeLpNative(FILE *fp,
   //writer.print();
   delete[] objective;
   delete[] integrality;
+  std::string probName;
+  this->getStrParam(OsiProbName, probName);
+  writer.setProblemName(probName.c_str());
   return writer.writeLp(fp, epsilon, numberAcross, decimals,
     useRowNames);
 
@@ -2789,6 +2817,353 @@ void OsiSolverInterface::statistics(double &minimumNegative, double &maximumNega
       printf("%d rows have more than %d entries\n", n, kMax);
   }
   delete[] number;
+}
+
+/*building conflict graph*/
+#define EPS 1e-6
+void cliqueDetection(CGraph *cgraph, const std::pair< size_t, double > *columns, size_t nz, const double rhs);
+size_t clique_start(const std::pair< size_t, double > *columns, size_t nz, double rhs);
+size_t binary_search(const std::pair< size_t, double > *columns, size_t pos, double rhs, size_t colStart, size_t colEnd);
+void processClique(CGraph *cgraph, const size_t *idxs, const size_t size);
+bool sort_columns(const std::pair< size_t, double > &left, const std::pair< size_t, double > &right);
+
+static void update_two_largest(double val, double v[2])
+{
+    if (val>v[0])
+    {
+        v[1] = v[0];
+        v[0] = val;
+    }
+    else
+    {
+        if (val>v[1])
+        {
+            v[1] = val;
+        }
+    }
+}
+
+void OsiSolverInterface::buildCGraph(int minClqRow)
+{
+  const size_t numCols = getNumCols();
+  size_t cgraphSize = numCols * 2;
+
+  if (cgraph_) {
+    const size_t oldSize = cgraph_size(cgraph_);
+
+    if (oldSize % 2) {
+      fprintf(stderr, "Invalid size of cgraph %zu (%s line %d)\n", oldSize, __FILE__, __LINE__);
+      exit(EXIT_FAILURE);
+    }
+
+    if (oldSize == cgraphSize) {
+      return;
+    } else {
+      cgraph_free(&cgraph_);
+    }
+  }
+
+  cgraph_ = cgraph_create(cgraphSize);
+  const CoinPackedMatrix *matrixByRow = getMatrixByRow();
+  const int *idxs = matrixByRow->getIndices();
+  const double *coefs = matrixByRow->getElements();
+  const int *start = matrixByRow->getVectorStarts();
+  const int *length = matrixByRow->getVectorLengths();
+  const double *colLB = getColLower();
+  const double *colUB = getColUpper();
+  const char *colType = getColType();
+  const char *sense = getRowSense();
+  const double *rowRHS = getRightHandSide();
+  const double *rowRange = getRowRange();
+  std::pair< size_t, double > *columns = new std::pair< size_t, double >[numCols];
+
+  cgraph_set_min_clq_row(cgraph_, minClqRow);
+
+  for (size_t i = 0; i < numCols; i++) {
+    /* inserting trivial conflicts: variable-complement */
+    const bool isBinary = ((colType[i] != 0) && (colLB[i] == 1.0 || colLB[i] == 0.0)
+      && (colUB[i] == 0.0 || colUB[i] == 1.0));
+    if (isBinary) { //consider only binary variables
+      cgraph_add_node_conflict(cgraph_, i, i + numCols);
+    }
+  }
+
+
+  for (size_t idxRow = 0; idxRow < matrixByRow->getNumRows(); idxRow++) {
+    const char rowSense = sense[idxRow];
+    const double mult = (rowSense == 'G') ? -1.0 : 1.0;
+    double rhs = mult * rowRHS[idxRow];
+    bool onlyBinaryVars = true;
+    double minCoef1 = (std::numeric_limits< double >::max() / 10.0);
+    double minCoef2 = (std::numeric_limits< double >::max() / 10.0);
+    double maxCoef = -(std::numeric_limits< double >::max() / 10.0);
+
+    if (length[idxRow] < 2) {
+      continue;
+    }
+
+    if (rowSense == 'N') {
+      continue;
+    }
+
+    //printf("row %s ", this->getColNames()[idxRow].c_str(), );
+    size_t nz = 0;
+    double twoLargest[2];
+    twoLargest[0] = twoLargest[1] = -DBL_MAX;
+    for (size_t j = start[idxRow]; j < start[idxRow] + length[idxRow]; j++) {
+      const size_t idxCol = idxs[j];
+      const double coefCol = coefs[j] * mult;
+      const bool isBinary = ((colType[idxCol] != 0) && (colLB[idxCol] == 1.0 || colLB[idxCol] == 0.0)
+        && (colUB[idxCol] == 0.0 || colUB[idxCol] == 1.0));
+
+      if (!isBinary) {
+        onlyBinaryVars = false;
+        break;
+      }
+
+      if (coefCol >= 0.0) {
+        columns[nz].first = idxCol;
+        columns[nz].second = coefCol;
+      } else {
+        columns[nz].first = idxCol + numCols;
+        columns[nz].second = -coefCol;
+        rhs += columns[nz].second;
+      }
+
+      if (columns[nz].second + EPS <= minCoef1) {
+        minCoef2 = minCoef1;
+        minCoef1 = columns[nz].second;
+      } else if (columns[nz].second + EPS <= minCoef2) {
+        minCoef2 = columns[nz].second;
+      }
+
+      maxCoef = std::max(maxCoef, columns[nz].second);
+      update_two_largest(columns[nz].second, twoLargest);
+
+#ifdef DEBUG
+      assert(columns[nz].second >= 0.0);
+#endif
+
+      nz++;
+    }
+
+    if (!onlyBinaryVars) {
+      continue;
+    }
+
+
+    // last test is important because if false the RHS may change
+    if ( twoLargest[0] + twoLargest[1] <= rhs && maxCoef <= rhs && (rowSense!='E' && rowSense!='R') )
+      continue;
+
+#ifdef DEBUG
+    assert(nz == length[idxRow]);
+    assert(rhs >= 0.0);
+#endif
+    //explicit clique
+    if ((maxCoef <= rhs) && ((minCoef1 + minCoef2) >= (rhs + EPS)) && (nz > 2)) {
+      size_t *clqIdxs = new size_t[nz];
+
+      for (size_t i = 0; i < nz; i++) {
+        clqIdxs[i] = columns[i].first;
+      }
+
+      processClique(cgraph_, clqIdxs, nz);
+      delete[] clqIdxs;
+    } else {
+      if (maxCoef!=minCoef1)
+        std::sort(columns, columns + nz, sort_columns);
+
+      //checking variables where aj > b
+      for (size_t j = nz; j-- > 0;) {
+        if (columns[j].second <= rhs) {
+          break;
+        }
+
+        if (columns[j].first < numCols) {
+          setColLower(columns[j].first, 0.0);
+          setColUpper(columns[j].first, 0.0);
+        } else {
+          setColLower(columns[j].first - numCols, 1.0);
+          setColUpper(columns[j].first - numCols, 1.0);
+          rhs = rhs - columns[j].second;
+        }
+
+        nz--;
+      }
+
+      if (nz < 2) {
+        continue;
+      }
+
+#ifdef DEBUG
+      assert(rhs >= 0.0);
+#endif
+
+      cliqueDetection(cgraph_, columns, nz, rhs);
+
+      if (rowSense == 'E' || rowSense == 'R') {
+        if (rowSense == 'E') {
+          rhs = -rowRHS[idxRow];
+        } else {
+          rhs = -(rowRHS[idxRow] - rowRange[idxRow]);
+        }
+
+        for (size_t j = 0; j < nz; j++) {
+          if (columns[j].first < numCols) {
+            columns[j].first = columns[j].first + numCols;
+            rhs += columns[j].second;
+          } else {
+            columns[j].first = columns[j].first - numCols;
+          }
+        }
+
+#ifdef DEBUG
+        assert(rhs >= 0.0);
+#endif
+
+        cliqueDetection(cgraph_, columns, nz, rhs);
+      }
+    }
+  }
+
+  cgraph_recompute_degree(cgraph_);
+
+  delete[] columns;
+}
+
+bool sort_columns(const std::pair< size_t, double > &left, const std::pair< size_t, double > &right)
+{
+  if (fabs(left.second - right.second) >= EPS) {
+    return (left.second + EPS <= right.second);
+  }
+  return left.first < right.first;
+}
+
+void processClique(CGraph *cgraph, const size_t *idxs, const size_t size)
+{
+  if (size >= cgraph_get_min_clq_row(cgraph)) {
+    cgraph_add_clique(cgraph, idxs, size);
+  } else {
+    cgraph_add_clique_as_normal_conflicts(cgraph, idxs, size);
+  }
+}
+
+/* Returns the first position of columns where the lower bound for LHS is greater than rhs, considering the activation of pos*/
+/* colStart=initial position for search in columns, colEnd=last position for search in columns */
+size_t binary_search(const std::pair< size_t, double > *columns, size_t pos, double rhs, size_t colStart, size_t colEnd)
+{
+  size_t left = colStart, right = colEnd;
+  const double prevLHS = columns[pos].second;
+
+#ifdef DEBUG
+  assert(pos >= 0);
+#endif
+
+  while (left <= right) {
+    const size_t mid = (left + right) / 2;
+    const double lhs = prevLHS + columns[mid].second;
+
+#ifdef DEBUG
+    assert(mid >= 0);
+    assert(mid <= colEnd);
+    assert(pos <= colEnd);
+#endif
+
+    if (lhs <= rhs) {
+      left = mid + 1;
+    } else {
+      if (mid > 0) {
+        right = mid - 1;
+      } else {
+        return 0;
+      }
+    }
+  }
+
+  return right + 1;
+}
+
+size_t clique_start(const std::pair< size_t, double > *columns, size_t nz, double rhs)
+{
+#ifdef DEBUG
+  assert(nz > 1);
+#endif
+
+  size_t left = 0, right = nz - 2;
+
+  while (left <= right) {
+    const size_t mid = (left + right) / 2;
+    assert(mid >= 0);
+    assert(mid + 1 < nz);
+    const double lhs = columns[mid].second + columns[mid + 1].second;
+
+    if (lhs <= rhs) {
+      left = mid + 1;
+    } else {
+      if (mid > 0) {
+        right = mid - 1;
+      } else {
+        return 0;
+      }
+    }
+  }
+
+  return right + 1;
+}
+
+void cliqueDetection(CGraph *cgraph, const std::pair< size_t, double > *columns, size_t nz, const double rhs)
+{
+#ifdef DEBUG
+  assert(nz > 1);
+#endif
+
+  if (columns[nz - 1].second + columns[nz - 2].second <= rhs) {
+    return; //there is no clique in this constraint
+  }
+
+  size_t cliqueSize = 0;
+  size_t *idxs = new size_t[nz];
+  const size_t cliqueStart = clique_start(columns, nz, rhs);
+
+#ifdef DEBUG
+  assert(cliqueStart >= 0);
+  assert(cliqueStart <= nz - 2);
+#endif
+
+  for (size_t j = cliqueStart; j < nz; j++) {
+    idxs[cliqueSize++] = columns[j].first;
+  }
+
+  //process the first clique found
+  processClique(cgraph, idxs, cliqueSize);
+
+  //now we have to check the variables that are outside of the clique found.
+  for (size_t j = cliqueStart; j-- > 0;) {
+    const size_t idx = columns[j].first;
+
+    if (columns[j].second + columns[nz - 1].second <= rhs) {
+      break;
+    }
+
+    size_t position = binary_search(columns, j, rhs, cliqueStart, nz - 1);
+
+#ifdef DEBUG
+    assert(position >= cliqueStart && position <= nz - 1);
+#endif
+
+    //new clique detected
+    cliqueSize = 0;
+    idxs[cliqueSize++] = idx;
+
+    for (size_t k = position; k < nz; k++) {
+      idxs[cliqueSize++] = columns[k].first;
+    }
+
+    processClique(cgraph, idxs, cliqueSize);
+  }
+
+  delete[] idxs;
 }
 
 /* vi: softtabstop=2 shiftwidth=2 expandtab tabstop=2

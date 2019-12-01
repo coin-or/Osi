@@ -22,6 +22,8 @@ Osi/MSVisualStudio/v10alt/osi.props -text
 Osi/MSVisualStudio/v14/OsiUnitTest/OsiUnitTest.vcxproj -text
 Osi/MSVisualStudio/v14/libOsi/libOsi.vcxproj -text
 Osi/MSVisualStudio/v14/libOsiCommonTest/libOsiCommonTest.vcxproj -text
+Osi/MSVisualStudio/v16/libOsi/libOsi.sln -text
+Osi/MSVisualStudio/v16/libOsi/libOsi.vcxproj -text
 Osi/MSVisualStudio/v9/Osi.sln -text
 Osi/MSVisualStudio/v9/OsiExamplesBasic/OsiExamplesBasic.vcproj -text
 Osi/MSVisualStudio/v9/OsiExamplesBuild/OsiExamplesBuild.vcproj -text
@@ -57,6 +59,7 @@ Osi/ltmain.sh -text
 Osi/missing -text
 Osi/osi-unittests.pc.in -text
 Osi/osi.pc.in -text
+Osi/src/Osi/.ycm_extra_conf.py -text
 Osi/src/Osi/Makefile.am -text
 Osi/src/Osi/Makefile.in -text
 Osi/src/Osi/config.h.in -text

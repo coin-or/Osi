@@ -105,9 +105,6 @@
 /* Library Visibility Attribute */
 #undef OSIXPRLIB_EXPORT
 
-/* SVN revision number of project */
-#undef OSI_SVN_REV
-
 /* Version number of project */
 #undef OSI_VERSION
 

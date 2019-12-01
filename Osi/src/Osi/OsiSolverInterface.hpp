@@ -16,6 +16,7 @@
 #include "CoinWarmStart.hpp"
 #include "CoinFinite.hpp"
 #include "CoinError.hpp"
+#include "cgraph.h"
 
 #include "OsiConfig.h"
 #include "OsiCollections.hpp"
@@ -1770,6 +1771,28 @@ public:
     */
   double forceFeasible();
   //@}
+
+  //---------------------------------------------------------------------------
+  /**@name Conflict graph related methods
+
+     These methods allow building a conflict graph indicating relationship
+     between binary variables
+  */
+  //@{
+
+  /*! \brief created a conflict graph, acessible via getCGraph
+   *
+   *  @param minClqRow minimum number of elements where conflicts are not stored as pairwise conflicts
+   */
+  void buildCGraph(int minClqRow = 1024);
+
+  /*! \brief Returns a conflict graph
+   *
+   *  Returns a conflict graph indicating relationship between binary variables
+   */
+  inline const CGraph *getCGraph() const;
+  //@}
+
   //---------------------------------------------------------------------------
 
   /*! @name Methods related to testing generated cuts
@@ -2150,6 +2173,8 @@ private:
   std::string objName_;
 
   //@}
+
+  CGraph *cgraph_;
 };
 
 //#############################################################################
@@ -2216,6 +2241,11 @@ OsiSolverInterface::convertSenseToBound(const char sense, const double right,
     upper = inf;
     break;
   }
+}
+
+inline const CGraph *OsiSolverInterface::getCGraph() const
+{
+  return cgraph_;
 }
 
 #endif

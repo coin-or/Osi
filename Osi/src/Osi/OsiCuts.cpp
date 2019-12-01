@@ -279,8 +279,9 @@ OsiCuts::const_iterator OsiCuts::const_iterator::operator++()
   return *this;
 }
 
-/* Insert a row cut unless it is a duplicate (CoinAbsFltEq)*/
-void OsiCuts::insertIfNotDuplicate(OsiRowCut &rc, CoinAbsFltEq treatAsSame)
+/* Insert a row cut unless it is a duplicate (CoinAbsFltEq)
+       returns true if inserted */
+bool OsiCuts::insertIfNotDuplicate(OsiRowCut &rc, CoinAbsFltEq treatAsSame)
 {
   double newLb = rc.lb();
   double newUb = rc.ub();
@@ -323,6 +324,7 @@ void OsiCuts::insertIfNotDuplicate(OsiRowCut &rc, CoinAbsFltEq treatAsSame)
     newCutPtr->setEffectiveness(rc.effectiveness());
     rowCutPtrs_.push_back(newCutPtr);
   }
+  return notDuplicate;
 }
 
 /* Insert a row cut unless it is a duplicate (CoinRelFltEq)*/

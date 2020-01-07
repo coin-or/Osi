@@ -87,15 +87,11 @@ AC_COIN_CHK_HERE([OsiLib],[OsiCommonTestLib],[osi])
 # library, add external components, finalize the flags, and add any components
 # being built here.
 
+# TODO just check for system glpk?
 AC_COIN_CHK_PKG(Glpk,[OsiGlpkLib],,[build])
-AC_COIN_CHK_PKG(SoPlex,[OsiSpxLib],[coinsoplex < 1.7],[build])
-AC_COIN_FINALIZE_FLAGS([OsiGlpkLib OskSpxLib])
-AC_COIN_CHK_HERE([OsiLib],[OsiGlpkLib OsiSpxLib],[osi])
 
-# AC_COIN_CHECK_USER_LIBRARY([Cplex], [CPX],[cplex.h],   [CPXgetstat])
-# AC_COIN_CHECK_USER_LIBRARY([Mosek], [MSK],[mosek.h],   [MSK_makeenv])
-# AC_COIN_CHECK_USER_LIBRARY([Xpress],[XPR],[xprs.h],    [XPRSinit])
-# AC_COIN_CHECK_USER_LIBRARY([Gurobi],[GRB],[gurobi_c.h],[GRBloadenv])
+# TODO drop?
+AC_COIN_CHK_PKG(SoPlex,[OsiSpxLib],[coinsoplex < 1.7],[build])
 
 AC_COIN_CHK_LIB(Cplex,[OsiCpxLib],[-lcplex -lpthread -lm -ldl],[],[],
                 [CPXgetstat])
@@ -109,8 +105,9 @@ AC_COIN_CHK_LIB(Xpress,[OsiXprLib],[-lxprs -lxprl],[],[],
 AC_COIN_CHK_LIB(Gurobi,[OsiGrbLib],[-lgurobi -lpthread -lm],[],[],
                 [GRBloadenv])
 
-AC_COIN_FINALIZE_FLAGS([OsiCpxLib OsiMskLib OsiXprLib OsiGrbLib])
-AC_COIN_CHK_HERE([OsiLib],[OsiCpxLib OsiMskLib OsiXprLib OsiGrbLib],[osi])
+AC_COIN_FINALIZE_FLAGS([OsiGlpkLib OskSpxLib OsiCpxLib OsiMskLib OsiXprLib OsiGrbLib])
+
+AC_COIN_CHK_HERE([OsiLib],[OsiGlpkLib OsiSpxLib OsiCpxLib OsiMskLib OsiXprLib OsiGrbLib],[osi])
 
 #############################################################################
 #                            Examples solver                                #
@@ -123,22 +120,22 @@ if test "$coin_has_glpk" = yes ; then
   OSI_EXAMPLES_SOLVER_CFLAGS="$OSIGLPKLIB_CFLAGS"
   OSI_EXAMPLES_SOLVER_LIBS="$OSIGLPKLIB_LFLAGS"
   OSI_EXAMPLES_SOLVER_PCNAME=osi-glpk
-elif test "$coin_has_cplex" = true ; then
+elif test "$coin_has_cplex" = yes ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiCpxSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="-I$CPXINCDIR"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiCpx $CPXLIB"
   OSI_EXAMPLES_SOLVER_PCNAME=osi-cplex
-elif test "$coin_has_gurobi" = true ; then
+elif test "$coin_has_gurobi" = yes ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiGrbSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="-I$GRBINCDIR"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiGrb $GRBLIB"
   OSI_EXAMPLES_SOLVER_PCNAME=osi-gurobi
-elif test "$coin_has_mosek" = true ; then
+elif test "$coin_has_mosek" = yes ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiMskSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="-I$MSKINCDIR"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiMsk $MSKLIB"
   OSI_EXAMPLES_SOLVER_PCNAME=osi-mosek
-elif test "$coin_has_xpress" = true ; then
+elif test "$coin_has_xpress" = yes ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiXprSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="-I$XPRINCDIR"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiXpr $XPRLIB"

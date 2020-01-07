@@ -55,7 +55,6 @@ using namespace OsiUnitTest;
 
 #ifdef COIN_HAS_CPLEX
 #include "OsiCpxSolverInterface.hpp"
-#undef USETESTSOLVER
 #ifdef USETESTSOLVER
 #undef USETESTSOLVER
 #endif

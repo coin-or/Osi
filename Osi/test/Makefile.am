@@ -28,52 +28,43 @@ unitTest_LDADD        = ../src/OsiCommonTest/libOsiCommonTest.la
 # Here list all include flags, relative to this "srcdir" directory.
 AM_CPPFLAGS = -I$(srcdir)/../src/Osi -I$(srcdir)/../src/OsiCommonTest $(OSICOMMONTESTLIB_CFLAGS)
 
-# This line is necessary to allow VPATH compilation
-# DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/src/Osi
-
 # Depending of what solvers are available, we add the corresponding files,
-# libraries and include dirs
+# libraries and compile flags
 
 if COIN_HAS_CPLEX
   unitTest_SOURCES += OsiCpxSolverInterfaceTest.cpp
-  AM_CPPFLAGS += -I$(CPXINCDIR) -I$(srcdir)/../src/OsiCpx
+  AM_CPPFLAGS += -DCOIN_HAS_CPLEX -I$(srcdir)/../src/OsiCpx $(OSICPXLIB_CFLAGS)
   unitTest_LDADD += ../src/OsiCpx/libOsiCpx.la
-  LIBS += $(CPXLIB)
 endif
 
 if COIN_HAS_GLPK
   unitTest_SOURCES += OsiGlpkSolverInterfaceTest.cpp
-  AM_CPPFLAGS += $(OSIGLPKLIB_CFLAGS) -DCOIN_HAS_GLPK -I$(srcdir)/../src/OsiGlpk
+  AM_CPPFLAGS += -DCOIN_HAS_GLPK -I$(srcdir)/../src/OsiGlpk $(OSIGRBLIB_CFLAGS)
   unitTest_LDADD += ../src/OsiGlpk/libOsiGlpk.la
-  LIBS += $(OSIGLPKLIB_LFLAGS)
 endif
 
 if COIN_HAS_MOSEK
   unitTest_SOURCES += OsiMskSolverInterfaceTest.cpp
-  AM_CPPFLAGS += -I$(MSKINCDIR) -I$(srcdir)/../src/OsiMsk
+  AM_CPPFLAGS += -DCOIN_HAS_MOSEK -I$(srcdir)/../src/OsiMsk $(OSIMSKLIB_CFLAGS)
   unitTest_LDADD += ../src/OsiMsk/libOsiMsk.la
-  LIBS += $(MSKLIB)
 endif
 
 if COIN_HAS_XPRESS
   unitTest_SOURCES += OsiXprSolverInterfaceTest.cpp
-  AM_CPPFLAGS += -I$(XPRINCDIR) -I$(srcdir)/../src/OsiXpr
+  AM_CPPFLAGS += -DCOIN_HAS_XPRESS -I$(srcdir)/../src/OsiXpr $(OSIXPRLIB_CFLAGS)
   unitTest_LDADD += ../src/OsiXpr/libOsiXpr.la
-  LIBS += $(XPRLIB)
 endif
 
 if COIN_HAS_GUROBI
   unitTest_SOURCES += OsiGrbSolverInterfaceTest.cpp
-  AM_CPPFLAGS += -I$(GRBINCDIR) -I$(srcdir)/../src/OsiGrb
+  AM_CPPFLAGS += -DCOIN_HAS_GUROBI -I$(srcdir)/../src/OsiGrb $(OSIGRBLIB_CFLAGS)
   unitTest_LDADD += ../src/OsiGrb/libOsiGrb.la
-  LIBS += $(GRBLIB)
 endif
 
 if COIN_HAS_SOPLEX
   unitTest_SOURCES += OsiSpxSolverInterfaceTest.cpp
-  AM_CPPFLAGS += $(SOPLEX_CFLAGS) -I$(srcdir)/../src/OsiSpx
+  AM_CPPFLAGS += -DCOIN_HAS_SOPLEX -I$(srcdir)/../src/OsiSpx $(OSISPXLIB_CFLAGS)
   unitTest_LDADD += ../src/OsiSpx/libOsiSpx.la
-  LIBS += $(SOPLEX_LIBS)
 endif
 
 unittestflags =

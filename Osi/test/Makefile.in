@@ -110,7 +110,7 @@ host_triplet = @host@
 noinst_PROGRAMS = unitTest$(EXEEXT)
 
 # Depending of what solvers are available, we add the corresponding files,
-# libraries and include dirs
+# libraries and compile flags
 @COIN_HAS_CPLEX_TRUE@am__append_1 = OsiCpxSolverInterfaceTest.cpp
 @COIN_HAS_CPLEX_TRUE@am__append_2 = -DCOIN_HAS_CPLEX -I$(srcdir)/../src/OsiCpx $(OSICPXLIB_CFLAGS)
 @COIN_HAS_CPLEX_TRUE@am__append_3 = ../src/OsiCpx/libOsiCpx.la
@@ -354,6 +354,7 @@ PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
+RPATH_FLAGS = @RPATH_FLAGS@
 SAMPLE_DATA = @SAMPLE_DATA@
 SED = @SED@
 SET_MAKE = @SET_MAKE@

@@ -44,6 +44,11 @@ AC_LANG_PUSH(C++)
 
 AC_COIN_PROG_LIBTOOL
 
+# set RPATH_FLAGS to the compiler link flags required to hardcode location
+# of the shared objects (expanded_libdir is set somewhere in configure before)
+# (use in examples Makefile)
+AC_COIN_RPATH_FLAGS([$expanded_libdir])
+
 #############################################################################
 #                   Math headers                                            #
 #############################################################################
@@ -147,12 +152,6 @@ elif test "$coin_has_soplex" = yes ; then
   OSI_EXAMPLES_SOLVER_PCNAME=osi-soplex
 else
   AC_MSG_WARN([No solver available, examples will not work.])
-fi
-
-# adjust linker flags for (i)cl compiler
-if test x$coin_cxx_is_cl = xtrue || test x$coin_cc_is_cl = xtrue ;
-then
-  [OSI_EXAMPLES_SOLVER_LIBS=`echo " $OSI_EXAMPLES_SOLVER_LIBS" | sed -e 's/ -l\([^ ]*\)/ lib\1.lib/g' -e 's/ -L\([^ ]*\)/ -libpath:\`$(CYGPATH_W) \1\`/g'`]
 fi
 
 AC_SUBST(OSI_EXAMPLES_SOLVER_NAME)

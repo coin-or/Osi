@@ -24,7 +24,6 @@ unitTest_SOURCES = unitTest.cpp \
 
 # List libraries of COIN projects
 unitTest_LDADD        = ../src/OsiCommonTest/libOsiCommonTest.la
-unitTest_DEPENDENCIES = ../src/OsiCommonTest/libOsiCommonTest.la
 
 # Here list all include flags, relative to this "srcdir" directory.
 AM_CPPFLAGS = -I$(srcdir)/../src/Osi -I$(srcdir)/../src/OsiCommonTest $(OSICOMMONTESTLIB_CFLAGS)
@@ -39,7 +38,6 @@ if COIN_HAS_CPX
   unitTest_SOURCES += OsiCpxSolverInterfaceTest.cpp
   AM_CPPFLAGS += -I$(CPXINCDIR) -I$(srcdir)/../src/OsiCpx
   unitTest_LDADD += ../src/OsiCpx/libOsiCpx.la
-  unitTest_DEPENDENCIES += ../src/OsiCpx/libOsiCpx.la
   LIBS += $(CPXLIB)
 endif
 
@@ -47,7 +45,6 @@ if COIN_HAS_GLPK
   unitTest_SOURCES += OsiGlpkSolverInterfaceTest.cpp
   AM_CPPFLAGS += $(OSIGLPKLIB_CFLAGS) -DCOIN_HAS_GLPK -I$(srcdir)/../src/OsiGlpk
   unitTest_LDADD += ../src/OsiGlpk/libOsiGlpk.la
-  unitTest_DEPENDENCIES += ../src/OsiGlpk/libOsiGlpk.la
   LIBS += $(OSIGLPKLIB_LFLAGS)
 endif
 
@@ -55,7 +52,6 @@ if COIN_HAS_MSK
   unitTest_SOURCES += OsiMskSolverInterfaceTest.cpp
   AM_CPPFLAGS += -I$(MSKINCDIR) -I$(srcdir)/../src/OsiMsk
   unitTest_LDADD += ../src/OsiMsk/libOsiMsk.la
-  unitTest_DEPENDENCIES += ../src/OsiMsk/libOsiMsk.la
   LIBS += $(MSKLIB)
 endif
 
@@ -63,7 +59,6 @@ if COIN_HAS_XPR
   unitTest_SOURCES += OsiXprSolverInterfaceTest.cpp
   AM_CPPFLAGS += -I$(XPRINCDIR) -I$(srcdir)/../src/OsiXpr
   unitTest_LDADD += ../src/OsiXpr/libOsiXpr.la
-  unitTest_DEPENDENCIES += ../src/OsiXpr/libOsiXpr.la
   LIBS += $(XPRLIB)
 endif
 
@@ -71,7 +66,6 @@ if COIN_HAS_GRB
   unitTest_SOURCES += OsiGrbSolverInterfaceTest.cpp
   AM_CPPFLAGS += -I$(GRBINCDIR) -I$(srcdir)/../src/OsiGrb
   unitTest_LDADD += ../src/OsiGrb/libOsiGrb.la
-  unitTest_DEPENDENCIES += ../src/OsiGrb/libOsiGrb.la
   LIBS += $(GRBLIB)
 endif
 
@@ -79,7 +73,6 @@ if COIN_HAS_SOPLEX
   unitTest_SOURCES += OsiSpxSolverInterfaceTest.cpp
   AM_CPPFLAGS += $(SOPLEX_CFLAGS) -I$(srcdir)/../src/OsiSpx
   unitTest_LDADD += ../src/OsiSpx/libOsiSpx.la
-  unitTest_DEPENDENCIES += ../src/OsiSpx/libOsiSpx.la
   LIBS += $(SOPLEX_LIBS)
 endif
 

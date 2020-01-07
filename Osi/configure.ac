@@ -92,29 +92,21 @@ AC_COIN_CHK_PKG(SoPlex,[OsiSpxLib],[coinsoplex < 1.7],[build])
 AC_COIN_FINALIZE_FLAGS([OsiGlpkLib OskSpxLib])
 AC_COIN_CHK_HERE([OsiLib],[OsiGlpkLib OsiSpxLib],[osi])
 
-# These are proprietary third-party solvers. Cplex detection has been
-# tested on a semi-regular basis, and Mosek detection most likely works. For
-# the rest, it's anyone's guess.  -- lh, 080529 --
-# fixed detection of Mosek and Xpress -- stefan, 091003 (linux32, gcc) --
-
 # AC_COIN_CHECK_USER_LIBRARY([Cplex], [CPX],[cplex.h],   [CPXgetstat])
 # AC_COIN_CHECK_USER_LIBRARY([Mosek], [MSK],[mosek.h],   [MSK_makeenv])
 # AC_COIN_CHECK_USER_LIBRARY([Xpress],[XPR],[xprs.h],    [XPRSinit])
 # AC_COIN_CHECK_USER_LIBRARY([Gurobi],[GRB],[gurobi_c.h],[GRBloadenv])
 
-# Use abbreviations for Cplex, Mosek, Xpress, and Gurobi to minimize
-# disruption of existing symbols.
-
-AC_COIN_CHK_LIB(Cpx,[OsiCpxLib],[-lcplex],[-I/usr/include],[],
+AC_COIN_CHK_LIB(Cplex,[OsiCpxLib],[-lcplex -lpthread -lm -ldl],[],[],
                 [CPXgetstat])
 
-AC_COIN_CHK_LIB(Msk,[OsiMskLib],[-lmosek],[-I/usr/include],[],
+AC_COIN_CHK_LIB(Mosek,[OsiMskLib],[-lmosek64 -lpthread],[],[],
                 [MSK_makeenv])
 
-AC_COIN_CHK_LIB(Xpr,[OsiXprLib],[-lxpress],[-I/usr/include],[],
+AC_COIN_CHK_LIB(Xpress,[OsiXprLib],[-lxprs -lxprl],[],[],
                 [XPRSinit])
 
-AC_COIN_CHK_LIB(Grb,[OsiGrbLib],[-lgurobi],[-I/usr/include],[],
+AC_COIN_CHK_LIB(Gurobi,[OsiGrbLib],[-lgurobi -lpthread -lm],[],[],
                 [GRBloadenv])
 
 AC_COIN_FINALIZE_FLAGS([OsiCpxLib OsiMskLib OsiXprLib OsiGrbLib])
@@ -131,22 +123,22 @@ if test "$coin_has_glpk" = yes ; then
   OSI_EXAMPLES_SOLVER_CFLAGS="$OSIGLPKLIB_CFLAGS"
   OSI_EXAMPLES_SOLVER_LIBS="$OSIGLPKLIB_LFLAGS"
   OSI_EXAMPLES_SOLVER_PCNAME=osi-glpk
-elif test "$coin_has_cpx" = true ; then
+elif test "$coin_has_cplex" = true ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiCpxSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="-I$CPXINCDIR"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiCpx $CPXLIB"
   OSI_EXAMPLES_SOLVER_PCNAME=osi-cplex
-elif test "$coin_has_grb" = true ; then
+elif test "$coin_has_gurobi" = true ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiGrbSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="-I$GRBINCDIR"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiGrb $GRBLIB"
   OSI_EXAMPLES_SOLVER_PCNAME=osi-gurobi
-elif test "$coin_has_msk" = true ; then
+elif test "$coin_has_mosek" = true ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiMskSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="-I$MSKINCDIR"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiMsk $MSKLIB"
   OSI_EXAMPLES_SOLVER_PCNAME=osi-mosek
-elif test "$coin_has_xpr" = true ; then
+elif test "$coin_has_xpress" = true ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiXprSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="-I$XPRINCDIR"
   OSI_EXAMPLES_SOLVER_LIBS="-lOsiXpr $XPRLIB"
@@ -210,7 +202,7 @@ AC_CONFIG_FILES([Makefile
                  osi.pc
                  osi-unittests.pc])
 
-if test "$coin_has_cpx" = true ; then
+if test "$coin_has_cplex" = true ; then
   AC_CONFIG_FILES([osi-cplex.pc:src/OsiCpx/osi-cplex.pc.in])
 fi
 
@@ -218,15 +210,15 @@ if test "$coin_has_glpk" = yes ; then
   AC_CONFIG_FILES([osi-glpk.pc:src/OsiGlpk/osi-glpk.pc.in])
 fi
 
-if test "$coin_has_grb" = yes ; then
+if test "$coin_has_gurobi" = yes ; then
   AC_CONFIG_FILES([osi-gurobi.pc:src/OsiGrb/osi-gurobi.pc.in])
 fi
 
-if test "$coin_has_msk" = yes ; then
+if test "$coin_has_mosek" = yes ; then
   AC_CONFIG_FILES([osi-mosek.pc:src/OsiMsk/osi-mosek.pc.in])
 fi
 
-if test "$coin_has_xpr" = yes ; then
+if test "$coin_has_xpress" = yes ; then
   AC_CONFIG_FILES([osi-xpress.pc:src/OsiXpr/osi-xpress.pc.in])
 fi
 
@@ -241,4 +233,3 @@ AC_CONFIG_HEADER([src/Osi/config.h src/Osi/config_osi.h src/OsiCommonTest/config
 
 # Finally, we let configure write all the output...
 AC_COIN_FINALIZE
-

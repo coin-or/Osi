@@ -32,19 +32,19 @@
 #define COIN_HAS_COINUTILS 1
 
 /* Define to 1 if the Cplex package is used */
-/* #define COIN_HAS_CPX 1 */
+/* #define COIN_HAS_CPLEX 1 */
 
 /* Define to 1 if the Glpk package is used */
 /* #define COIN_HAS_GLPK 1 */
 
 /* Define to 1 if the Gurobi package is used */
-/* #define COIN_HAS_GRB 1 */
+/* #define COIN_HAS_GUROBI 1 */
 
 /* Define to 1 if the Mosek package is used */
-/* #define COIN_HAS_MSK 1 */
+/* #define COIN_HAS_MOSEK 1 */
 
 /* Define to 1 if the SoPlex package is used */
-/* #define COIN_HAS_SPX 1 */
+/* #define COIN_HAS_SOPLEX 1 */
 
 /* Define to 1 if the Xpress package is used */
-/* #define COIN_HAS_XPR 1 */
+/* #define COIN_HAS_XPRESS 1 */

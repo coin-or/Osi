@@ -114,26 +114,26 @@ noinst_PROGRAMS = unitTest$(EXEEXT)
 
 # Depending of what solvers are available, we add the corresponding files,
 # libraries and include dirs
-@COIN_HAS_CPX_TRUE@am__append_1 = OsiCpxSolverInterfaceTest.cpp
-@COIN_HAS_CPX_TRUE@am__append_2 = -I$(CPXINCDIR) -I$(srcdir)/../src/OsiCpx
-@COIN_HAS_CPX_TRUE@am__append_3 = ../src/OsiCpx/libOsiCpx.la
-@COIN_HAS_CPX_TRUE@am__append_4 = $(CPXLIB)
+@COIN_HAS_CPLEX_TRUE@am__append_1 = OsiCpxSolverInterfaceTest.cpp
+@COIN_HAS_CPLEX_TRUE@am__append_2 = -I$(CPXINCDIR) -I$(srcdir)/../src/OsiCpx
+@COIN_HAS_CPLEX_TRUE@am__append_3 = ../src/OsiCpx/libOsiCpx.la
+@COIN_HAS_CPLEX_TRUE@am__append_4 = $(CPXLIB)
 @COIN_HAS_GLPK_TRUE@am__append_5 = OsiGlpkSolverInterfaceTest.cpp
 @COIN_HAS_GLPK_TRUE@am__append_6 = $(OSIGLPKLIB_CFLAGS) -DCOIN_HAS_GLPK -I$(srcdir)/../src/OsiGlpk
 @COIN_HAS_GLPK_TRUE@am__append_7 = ../src/OsiGlpk/libOsiGlpk.la
 @COIN_HAS_GLPK_TRUE@am__append_8 = $(OSIGLPKLIB_LFLAGS)
-@COIN_HAS_MSK_TRUE@am__append_9 = OsiMskSolverInterfaceTest.cpp
-@COIN_HAS_MSK_TRUE@am__append_10 = -I$(MSKINCDIR) -I$(srcdir)/../src/OsiMsk
-@COIN_HAS_MSK_TRUE@am__append_11 = ../src/OsiMsk/libOsiMsk.la
-@COIN_HAS_MSK_TRUE@am__append_12 = $(MSKLIB)
-@COIN_HAS_XPR_TRUE@am__append_13 = OsiXprSolverInterfaceTest.cpp
-@COIN_HAS_XPR_TRUE@am__append_14 = -I$(XPRINCDIR) -I$(srcdir)/../src/OsiXpr
-@COIN_HAS_XPR_TRUE@am__append_15 = ../src/OsiXpr/libOsiXpr.la
-@COIN_HAS_XPR_TRUE@am__append_16 = $(XPRLIB)
-@COIN_HAS_GRB_TRUE@am__append_17 = OsiGrbSolverInterfaceTest.cpp
-@COIN_HAS_GRB_TRUE@am__append_18 = -I$(GRBINCDIR) -I$(srcdir)/../src/OsiGrb
-@COIN_HAS_GRB_TRUE@am__append_19 = ../src/OsiGrb/libOsiGrb.la
-@COIN_HAS_GRB_TRUE@am__append_20 = $(GRBLIB)
+@COIN_HAS_MOSEK_TRUE@am__append_9 = OsiMskSolverInterfaceTest.cpp
+@COIN_HAS_MOSEK_TRUE@am__append_10 = -I$(MSKINCDIR) -I$(srcdir)/../src/OsiMsk
+@COIN_HAS_MOSEK_TRUE@am__append_11 = ../src/OsiMsk/libOsiMsk.la
+@COIN_HAS_MOSEK_TRUE@am__append_12 = $(MSKLIB)
+@COIN_HAS_XPRESS_TRUE@am__append_13 = OsiXprSolverInterfaceTest.cpp
+@COIN_HAS_XPRESS_TRUE@am__append_14 = -I$(XPRINCDIR) -I$(srcdir)/../src/OsiXpr
+@COIN_HAS_XPRESS_TRUE@am__append_15 = ../src/OsiXpr/libOsiXpr.la
+@COIN_HAS_XPRESS_TRUE@am__append_16 = $(XPRLIB)
+@COIN_HAS_GUROBI_TRUE@am__append_17 = OsiGrbSolverInterfaceTest.cpp
+@COIN_HAS_GUROBI_TRUE@am__append_18 = -I$(GRBINCDIR) -I$(srcdir)/../src/OsiGrb
+@COIN_HAS_GUROBI_TRUE@am__append_19 = ../src/OsiGrb/libOsiGrb.la
+@COIN_HAS_GUROBI_TRUE@am__append_20 = $(GRBLIB)
 @COIN_HAS_SOPLEX_TRUE@am__append_21 = OsiSpxSolverInterfaceTest.cpp
 @COIN_HAS_SOPLEX_TRUE@am__append_22 = $(SOPLEX_CFLAGS) -I$(srcdir)/../src/OsiSpx
 @COIN_HAS_SOPLEX_TRUE@am__append_23 = ../src/OsiSpx/libOsiSpx.la
@@ -153,16 +153,16 @@ CONFIG_HEADER = $(top_builddir)/src/Osi/config.h \
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 PROGRAMS = $(noinst_PROGRAMS)
-@COIN_HAS_CPX_TRUE@am__objects_1 =  \
-@COIN_HAS_CPX_TRUE@	OsiCpxSolverInterfaceTest.$(OBJEXT)
+@COIN_HAS_CPLEX_TRUE@am__objects_1 =  \
+@COIN_HAS_CPLEX_TRUE@	OsiCpxSolverInterfaceTest.$(OBJEXT)
 @COIN_HAS_GLPK_TRUE@am__objects_2 =  \
 @COIN_HAS_GLPK_TRUE@	OsiGlpkSolverInterfaceTest.$(OBJEXT)
-@COIN_HAS_MSK_TRUE@am__objects_3 =  \
-@COIN_HAS_MSK_TRUE@	OsiMskSolverInterfaceTest.$(OBJEXT)
-@COIN_HAS_XPR_TRUE@am__objects_4 =  \
-@COIN_HAS_XPR_TRUE@	OsiXprSolverInterfaceTest.$(OBJEXT)
-@COIN_HAS_GRB_TRUE@am__objects_5 =  \
-@COIN_HAS_GRB_TRUE@	OsiGrbSolverInterfaceTest.$(OBJEXT)
+@COIN_HAS_MOSEK_TRUE@am__objects_3 =  \
+@COIN_HAS_MOSEK_TRUE@	OsiMskSolverInterfaceTest.$(OBJEXT)
+@COIN_HAS_XPRESS_TRUE@am__objects_4 =  \
+@COIN_HAS_XPRESS_TRUE@	OsiXprSolverInterfaceTest.$(OBJEXT)
+@COIN_HAS_GUROBI_TRUE@am__objects_5 =  \
+@COIN_HAS_GUROBI_TRUE@	OsiGrbSolverInterfaceTest.$(OBJEXT)
 @COIN_HAS_SOPLEX_TRUE@am__objects_6 =  \
 @COIN_HAS_SOPLEX_TRUE@	OsiSpxSolverInterfaceTest.$(OBJEXT)
 am_unitTest_OBJECTS = unitTest.$(OBJEXT) OsiTestSolver.$(OBJEXT) \

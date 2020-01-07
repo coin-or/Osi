@@ -34,7 +34,7 @@ AM_CPPFLAGS = -I$(srcdir)/../src/Osi -I$(srcdir)/../src/OsiCommonTest $(OSICOMMO
 # Depending of what solvers are available, we add the corresponding files,
 # libraries and include dirs
 
-if COIN_HAS_CPX
+if COIN_HAS_CPLEX
   unitTest_SOURCES += OsiCpxSolverInterfaceTest.cpp
   AM_CPPFLAGS += -I$(CPXINCDIR) -I$(srcdir)/../src/OsiCpx
   unitTest_LDADD += ../src/OsiCpx/libOsiCpx.la
@@ -48,21 +48,21 @@ if COIN_HAS_GLPK
   LIBS += $(OSIGLPKLIB_LFLAGS)
 endif
 
-if COIN_HAS_MSK
+if COIN_HAS_MOSEK
   unitTest_SOURCES += OsiMskSolverInterfaceTest.cpp
   AM_CPPFLAGS += -I$(MSKINCDIR) -I$(srcdir)/../src/OsiMsk
   unitTest_LDADD += ../src/OsiMsk/libOsiMsk.la
   LIBS += $(MSKLIB)
 endif
 
-if COIN_HAS_XPR
+if COIN_HAS_XPRESS
   unitTest_SOURCES += OsiXprSolverInterfaceTest.cpp
   AM_CPPFLAGS += -I$(XPRINCDIR) -I$(srcdir)/../src/OsiXpr
   unitTest_LDADD += ../src/OsiXpr/libOsiXpr.la
   LIBS += $(XPRLIB)
 endif
 
-if COIN_HAS_GRB
+if COIN_HAS_GUROBI
   unitTest_SOURCES += OsiGrbSolverInterfaceTest.cpp
   AM_CPPFLAGS += -I$(GRBINCDIR) -I$(srcdir)/../src/OsiGrb
   unitTest_LDADD += ../src/OsiGrb/libOsiGrb.la

@@ -19,7 +19,7 @@ SUBDIRS = src/Osi src/OsiCommonTest
 pkgconfiglibdir = $(libdir)/pkgconfig
 pkgconfiglib_DATA = osi.pc osi-unittests.pc
 
-if COIN_HAS_CPX
+if COIN_HAS_CPLEX
   SUBDIRS += src/OsiCpx
   pkgconfiglib_DATA += osi-cplex.pc
 endif
@@ -27,15 +27,15 @@ if COIN_HAS_GLPK
   SUBDIRS += src/OsiGlpk
   pkgconfiglib_DATA += osi-glpk.pc
 endif
-if COIN_HAS_MSK
+if COIN_HAS_MOSEK
   SUBDIRS += src/OsiMsk
   pkgconfiglib_DATA += osi-mosek.pc
 endif
-if COIN_HAS_XPR
+if COIN_HAS_XPRESS
   SUBDIRS += src/OsiXpr
   pkgconfiglib_DATA += osi-xpress.pc
 endif
-if COIN_HAS_GRB
+if COIN_HAS_GUROBI
   SUBDIRS += src/OsiGrb
   pkgconfiglib_DATA += osi-gurobi.pc
 endif

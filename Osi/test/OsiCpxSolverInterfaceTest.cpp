@@ -24,7 +24,7 @@
 
 // Added so build windows build with dsp files works,
 // when not building with cplex.
-#ifdef COIN_HAS_CPX
+#ifdef COIN_HAS_CPLEX
 #include "cplex.h"
 
 void OsiCpxSolverInterfaceUnitTest( const std::string & mpsDir, const std::string & netlibDir )

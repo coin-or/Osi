@@ -54,7 +54,8 @@ class OsiBranchingInformation;
   solutions, pseudo-shadow prices etc etc.
   May be easier just to throw in here - as I keep doing
 */
-class OsiObject {
+
+class OSILIB_EXPORT OsiObject {
 
 public:
   /// Default Constructor
@@ -229,7 +230,7 @@ protected:
 /// Define a class to add a bit of complexity to OsiObject
 /// This assumes 2 way branching
 
-class OsiObject2 : public OsiObject {
+class OSILIB_EXPORT OsiObject2 : public OsiObject {
 
 public:
   /// Default Constructor
@@ -280,7 +281,7 @@ protected:
   model.
 */
 
-class OsiBranchingObject {
+class OSILIB_EXPORT OsiBranchingObject {
 
 public:
   /// Default Constructor
@@ -412,7 +413,7 @@ protected:
    This could also contain pseudo shadow prices
    or information for dealing with computing and trusting pseudo-costs
 */
-class OsiBranchingInformation {
+class OSILIB_EXPORT OsiBranchingInformation {
 
 public:
   /// Default Constructor
@@ -511,7 +512,7 @@ public:
 
 /// This just adds two-wayness to a branching object
 
-class OsiTwoWayBranchingObject : public OsiBranchingObject {
+class OSILIB_EXPORT OsiTwoWayBranchingObject : public OsiBranchingObject {
 
 public:
   /// Default constructor
@@ -556,7 +557,7 @@ protected:
 };
 /// Define a single integer class
 
-class OsiSimpleInteger : public OsiObject2 {
+class OSILIB_EXPORT OsiSimpleInteger : public OsiObject2 {
 
 public:
   /// Default Constructor
@@ -662,7 +663,7 @@ protected:
   independently specified. 0 -> down, 1-> up.
 */
 
-class OsiIntegerBranchingObject : public OsiTwoWayBranchingObject {
+class OSILIB_EXPORT OsiIntegerBranchingObject : public OsiTwoWayBranchingObject {
 
 public:
   /// Default constructor
@@ -726,7 +727,7 @@ protected:
     which_ points columns of matrix
 */
 
-class OsiSOS : public OsiObject2 {
+class OSILIB_EXPORT OsiSOS : public OsiObject2 {
 
 public:
   // Default Constructor
@@ -865,7 +866,7 @@ protected:
 /** Branching object for Special ordered sets
 
  */
-class OsiSOSBranchingObject : public OsiTwoWayBranchingObject {
+class OSILIB_EXPORT OsiSOSBranchingObject : public OsiTwoWayBranchingObject {
 
 public:
   // Default Constructor
@@ -902,7 +903,7 @@ private:
 };
 /** Lotsize class */
 
-class OsiLotsize : public OsiObject2 {
+class OSILIB_EXPORT OsiLotsize : public OsiObject2 {
 
 public:
   // Default Constructor
@@ -1045,7 +1046,7 @@ private:
   array of the model.
 */
 
-class OsiLotsizeBranchingObject : public OsiTwoWayBranchingObject {
+class OSILIB_EXPORT OsiLotsizeBranchingObject : public OsiTwoWayBranchingObject {
 
 public:
   /// Default constructor

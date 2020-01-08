@@ -57,16 +57,12 @@ VPATH = @srcdir@
 #  package.                                                              #
 ##########################################################################
 
-COIN_HAS_PKGCONFIG = @COIN_HAS_PKGCONFIG_TRUE@TRUE
-COIN_HAS_SAMPLE = @COIN_HAS_SAMPLE_TRUE@TRUE
-COIN_HAS_NETLIB = @COIN_HAS_NETLIB_TRUE@TRUE
-
 # C++ Compiler command
 CXX = @CXX@
 
 # C++ Compiler options
-CXXFLAGS = @CXXFLAGS@ @OSI_EXAMPLES_SOLVER_CFLAGS@ \
-  -DOSIXXXhpp=\"@OSI_EXAMPLES_SOLVER_NAME@.hpp\" -DOSIXXX=@OSI_EXAMPLES_SOLVER_NAME@
+CXXFLAGS = @CXXFLAGS@
+CXXFLAGS += -DOSIXXXhpp=\"@OSI_EXAMPLES_SOLVER_NAME@.hpp\" -DOSIXXX=@OSI_EXAMPLES_SOLVER_NAME@
 
 # Sample data directory
 @COIN_HAS_SAMPLE_TRUE@CXXFLAGS += -DSAMPLEDIR=\"`$(CYGPATH_W) @SAMPLE_DATA@`\"
@@ -77,14 +73,14 @@ CXXFLAGS = @CXXFLAGS@ @OSI_EXAMPLES_SOLVER_CFLAGS@ \
 # additional C++ Compiler options for linking
 CXXLINKFLAGS = @RPATH_FLAGS@
 
-# Include directories (we use the CYGPATH_W variables to allow compilation with Windows compilers)
+# Include directories
 @COIN_HAS_PKGCONFIG_TRUE@INCL = `PKG_CONFIG_PATH=@COIN_PKG_CONFIG_PATH@ @PKG_CONFIG@ --cflags @OSI_EXAMPLES_SOLVER_PCNAME@ osi`
-@COIN_HAS_PKGCONFIG_FALSE@INCL = -I@includedir@/coin-or
+@COIN_HAS_PKGCONFIG_FALSE@INCL = -I@includedir@/coin-or @OSI_EXAMPLES_SOLVER_CFLAGS@
 INCL += $(ADDINCFLAGS)
 
 # Linker flags
-@COIN_HAS_PKGCONFIG_TRUE@LIBS = `PKG_CONFIG_PATH=@COIN_PKG_CONFIG_PATH@ @PKG_CONFIG@ --libs @OSI_EXAMPLES_SOLVER_PCNAME@ osi`
-@COIN_HAS_PKGCONFIG_FALSE@LIBS = -L@libdir@ -lOsi @OSI_EXAMPLES_SOLVER_LIBS@
+@COIN_HAS_PKGCONFIG_TRUE@LIBS = `PKG_CONFIG_PATH=@COIN_PKG_CONFIG_PATH@ @PKG_CONFIG@ --libs @OSI_EXAMPLES_SOLVER_PCNAME@ osi coinutils`
+@COIN_HAS_PKGCONFIG_FALSE@LIBS = -L@libdir@ @OSI_EXAMPLES_SOLVER_LFLAGS@ -lOsi -lCoinUtils
 LIBS += $(ADDLIBS)
 
 # The following is necessary under cygwin, if native compilers are used
@@ -99,7 +95,7 @@ all: $(EXE)
 .SUFFIXES: .cpp .@OBJEXT@
 
 $(EXE): $(OBJS)
-	$(CXX) $(CXXLINKFLAGS) $(CXXFLAGS) -o $@ $@ $(LIBS)
+	$(CXX) $(CXXLINKFLAGS) $(CXXFLAGS) -o $@ $< $(LIBS)
 
 clean:
 	rm -rf $(EXE) $(OBJS)

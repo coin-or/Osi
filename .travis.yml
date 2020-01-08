@@ -42,4 +42,4 @@ script:
   - make
   - make test
   - make install
-  - pushd examples && make DRIVER=build && ./build && popd
+  #- pushd examples && make DRIVER=build && ./build && popd

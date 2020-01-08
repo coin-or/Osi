@@ -16,7 +16,7 @@
 
 DRIVER = basic
 
-# CHANGME
+# CHANGEME
 # This should be the name of your executable; change if you want a name
 # that's different from the file name.
 
@@ -30,14 +30,14 @@ EXE = $(DRIVER)@EXEEXT@
 OBJS =  $(DRIVER).@OBJEXT@
 
 # CHANGEME
-# Additional libraries. The examples require only the COIN libraries specified
+# Additional libraries. The examples require only the COIN-OR libraries specified
 # as LIBS below. You may need more.
 
 ADDLIBS =
 
 # CHANGEME
 # Additional flags for compilation (e.g., include flags). As for libraries,
-# the examples require only COIN include files, specified as part of CXXFLAGS
+# the examples require only COIN-OR include files, specified as part of CXXFLAGS
 # below.
 
 ADDINCFLAGS =

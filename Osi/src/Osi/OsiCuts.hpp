@@ -10,6 +10,7 @@
 #include <cmath>
 #include <cfloat>
 #include "OsiConfig.h"
+#include "OsiUnitTestsConfig.h"
 #include "OsiCollections.hpp"
 #include "OsiRowCut.hpp"
 #include "OsiColCut.hpp"
@@ -18,7 +19,7 @@
 /** Collections of row cuts and column cuts
 */
 class OSILIB_EXPORT OsiCuts {
-  friend void OsiCutsUnitTest();
+  friend OSICOMMONTESTLIB_EXPORT void OsiCutsUnitTest();
 
 public:
   /**@name Iterator classes

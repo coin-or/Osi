@@ -8,6 +8,7 @@
 #include "CoinPackedVector.hpp"
 
 #include "OsiConfig.h"
+#include "OsiUnitTestsConfig.h"
 #include "OsiCollections.hpp"
 #include "OsiCut.hpp"
 
@@ -28,7 +29,7 @@ A row cut has:
   </ul>
 */
 class OSILIB_EXPORT OsiRowCut : public OsiCut {
-  friend void OsiRowCutUnitTest(const OsiSolverInterface *baseSiP,
+  friend OSICOMMONTESTLIB_EXPORT void OsiRowCutUnitTest(const OsiSolverInterface *baseSiP,
     const std::string &mpsDir);
 
 public:

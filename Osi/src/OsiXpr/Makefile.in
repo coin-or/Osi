@@ -117,7 +117,12 @@ DIST_COMMON = $(srcdir)/Makefile.am $(includecoin_HEADERS)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/src/Osi/config.h \
 	$(top_builddir)/src/Osi/config_osi.h \
-	$(top_builddir)/src/OsiCommonTest/config_osicommontest.h
+	$(top_builddir)/src/OsiCommonTest/config_osicommontest.h \
+	$(top_builddir)/src/OsiCpx/config_osicpx.h \
+	$(top_builddir)/src/OsiGlpk/config_osiglpk.h \
+	$(top_builddir)/src/OsiGrb/config_osigrb.h \
+	$(top_builddir)/src/OsiMsk/config_osimsk.h config_osixpr.h \
+	$(top_builddir)/src/OsiSpx/config_osispx.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
@@ -172,7 +177,7 @@ AM_V_at = $(am__v_at_@AM_V@)
 am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
 am__v_at_0 = @
 am__v_at_1 = 
-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/src/Osi -I$(top_builddir)/src/OsiCommonTest
+DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/src/Osi -I$(top_builddir)/src/OsiCommonTest -I$(top_builddir)/src/OsiCpx -I$(top_builddir)/src/OsiGlpk -I$(top_builddir)/src/OsiGrb -I$(top_builddir)/src/OsiMsk -I$(top_builddir)/src/OsiSpx
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/OsiXprSolverInterface.Plo
@@ -220,7 +225,8 @@ am__can_run_installinfo = \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
 HEADERS = $(includecoin_HEADERS)
-am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
+am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) \
+	$(LISP)config_osixpr.h.in
 # Read a list of newline-separated strings from the standard input,
 # and print each of them once, without duplicates.  Input order is
 # *not* preserved.
@@ -460,17 +466,18 @@ libOsiXpr_la_LIBADD = ../Osi/libOsi.la $(OSIXPRLIB_LFLAGS)
 libOsiXpr_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.
-AM_CPPFLAGS = -I$(srcdir)/../Osi -I$(srcdir)/../OsiCommonTest $(OSIXPRLIB_CFLAGS)
+AM_CPPFLAGS = -I$(srcdir)/../Osi -I$(srcdir)/../OsiCommonTest $(OSIXPRLIB_CFLAGS) -DOSIXPRLIB_BUILD
 
 ########################################################################
 #                Headers that need to be installed                     #
 ########################################################################
 
 # Here list all the header files that are required by a user of the library,
-# and that therefore should be installed in 'include/coin'
+# and that therefore should be installed in 'include/coin-or'
 includecoindir = $(pkgincludedir)
 includecoin_HEADERS = OsiXprSolverInterface.hpp
-all: all-am
+all: config_osixpr.h
+	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
 .SUFFIXES: .cpp .lo .o .obj
@@ -504,6 +511,17 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
+
+config_osixpr.h: stamp-h8
+	@test -f $@ || rm -f stamp-h8
+	@test -f $@ || $(MAKE) $(AM_MAKEFLAGS) stamp-h8
+
+stamp-h8: $(srcdir)/config_osixpr.h.in $(top_builddir)/config.status
+	@rm -f stamp-h8
+	cd $(top_builddir) && $(SHELL) ./config.status src/OsiXpr/config_osixpr.h
+
+distclean-hdr:
+	-rm -f config_osixpr.h stamp-h8
 
 install-libLTLIBRARIES: $(lib_LTLIBRARIES)
 	@$(NORMAL_INSTALL)
@@ -658,7 +676,7 @@ distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 check-am: all-am
 check: check-am
-all-am: Makefile $(LTLIBRARIES) $(HEADERS)
+all-am: Makefile $(LTLIBRARIES) $(HEADERS) config_osixpr.h
 installdirs:
 	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includecoindir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
@@ -702,7 +720,7 @@ distclean: distclean-am
 		-rm -f ./$(DEPDIR)/OsiXprSolverInterface.Plo
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
-	distclean-tags
+	distclean-hdr distclean-tags
 
 dvi: dvi-am
 
@@ -722,7 +740,7 @@ install-dvi: install-dvi-am
 
 install-dvi-am:
 
-install-exec-am: install-libLTLIBRARIES
+install-exec-am: install-exec-local install-libLTLIBRARIES
 
 install-html: install-html-am
 
@@ -762,25 +780,27 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-includecoinHEADERS uninstall-libLTLIBRARIES
+uninstall-am: uninstall-includecoinHEADERS uninstall-libLTLIBRARIES \
+	uninstall-local
 
-.MAKE: install-am install-strip
+.MAKE: all install-am install-strip
 
 .PHONY: CTAGS GTAGS TAGS all all-am am--depfiles check check-am clean \
 	clean-generic clean-libLTLIBRARIES clean-libtool cscopelist-am \
 	ctags ctags-am distclean distclean-compile distclean-generic \
-	distclean-libtool distclean-tags dvi dvi-am html html-am info \
-	info-am install install-am install-data install-data-am \
-	install-dvi install-dvi-am install-exec install-exec-am \
-	install-html install-html-am install-includecoinHEADERS \
-	install-info install-info-am install-libLTLIBRARIES \
-	install-man install-pdf install-pdf-am install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-compile mostlyclean-generic \
-	mostlyclean-libtool pdf pdf-am ps ps-am tags tags-am uninstall \
-	uninstall-am uninstall-includecoinHEADERS \
-	uninstall-libLTLIBRARIES
+	distclean-hdr distclean-libtool distclean-tags dvi dvi-am html \
+	html-am info info-am install install-am install-data \
+	install-data-am install-dvi install-dvi-am install-exec \
+	install-exec-am install-exec-local install-html \
+	install-html-am install-includecoinHEADERS install-info \
+	install-info-am install-libLTLIBRARIES install-man install-pdf \
+	install-pdf-am install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	tags tags-am uninstall uninstall-am \
+	uninstall-includecoinHEADERS uninstall-libLTLIBRARIES \
+	uninstall-local
 
 .PRECIOUS: Makefile
 
@@ -891,6 +911,12 @@ uninstall-doc:
 .PHONY: install-doc uninstall-doc \
 	doxygen-docs pdf-doxygen-docs clean-doxygen-docs \
 	install-doxygen-docs uninstall-doxygen-docs
+
+install-exec-local:
+	$(install_sh_DATA) config_osixpr.h $(DESTDIR)$(includecoindir)/OsiXprConfig.h
+
+uninstall-local:
+	rm -f $(DESTDIR)$(includecoindir)/OsiXprConfig.h
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

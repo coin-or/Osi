@@ -17,6 +17,7 @@
 #include "CoinWarmStartBasis.hpp"
 #include "OsiColCut.hpp"
 #include "OsiRowCut.hpp"
+#include "OsiCpxConfig.h"
 
 typedef struct cpxlp *CPXLPptr;
 typedef struct cpxenv *CPXENVptr;
@@ -26,8 +27,8 @@ typedef struct cpxenv *CPXENVptr;
     Instantiation of OsiCpxSolverInterface for CPLEX
 */
 
-class OsiCpxSolverInterface : virtual public OsiSolverInterface {
-  friend void OsiCpxSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
+class OSICPXLIB_EXPORT OsiCpxSolverInterface : virtual public OsiSolverInterface {
+  friend OSICPXLIB_EXPORT void OsiCpxSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
 
 public:
   //---------------------------------------------------------------------------
@@ -888,6 +889,7 @@ private:
 
 //#############################################################################
 /** A function that tests the methods in the OsiCpxSolverInterface class. */
+OSICPXLIB_EXPORT
 void OsiCpxSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
 
 #endif

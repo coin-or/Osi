@@ -1,0 +1,9 @@
+/* src/Osi/config_osigrb.h.in. */
+
+#ifndef __CONFIG_OSIGRB_H__
+#define __CONFIG_OSIGRB_H__
+
+/* Library Visibility Attribute */
+#undef OSIGRBLIB_EXPORT
+
+#endif

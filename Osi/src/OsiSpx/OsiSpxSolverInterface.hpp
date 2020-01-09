@@ -18,6 +18,7 @@
 #include <string>
 #include "OsiSolverInterface.hpp"
 #include "CoinWarmStartBasis.hpp"
+#include "OsiSpxConfig.h"
 
 #ifndef _SOPLEX_H_
 /* forward declarations so the header can be compiled without having to include soplex.h
@@ -34,8 +35,8 @@ class SoPlex;
 /** SoPlex Solver Interface
     Instantiation of OsiSpxSolverInterface for SoPlex
 */
-class OsiSpxSolverInterface : virtual public OsiSolverInterface {
-  friend void OsiSpxSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
+class OSISPXLIB_EXPORT OsiSpxSolverInterface : virtual public OsiSolverInterface {
+  friend OSISPXLIB_EXPORT void OsiSpxSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
 
 public:
   //---------------------------------------------------------------------------
@@ -735,6 +736,7 @@ private:
 
 //#############################################################################
 /** A function that tests the methods in the OsiSpxSolverInterface class. */
+OSISPXLIB_EXPORT
 void OsiSpxSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
 
 #endif

@@ -95,7 +95,6 @@ AC_COIN_CHK_HERE([OsiLib],[OsiCommonTestLib],[osi])
 # TODO just check for system glpk?
 AC_COIN_CHK_PKG(Glpk,[OsiGlpkLib],,[build])
 
-# TODO drop?
 AC_COIN_CHK_PKG(SoPlex,[OsiSpxLib],[coinsoplex < 1.7],[build])
 
 AC_COIN_CHK_LIB(Cplex,[OsiCpxLib],[-lcplex -lpthread -lm -ldl],[],[],
@@ -198,34 +197,40 @@ AC_CONFIG_FILES([Makefile
                  osi.pc
                  osi-unittests.pc])
 
+# Here put the location and name of the configuration header file
+AC_CONFIG_HEADER([src/Osi/config.h src/Osi/config_osi.h src/OsiCommonTest/config_osicommontest.h])
+
 if test "$coin_has_cplex" = true ; then
   AC_CONFIG_FILES([osi-cplex.pc:src/OsiCpx/osi-cplex.pc.in])
+  AC_CONFIG_HEADER([src/OsiCpx/config_osicpx.h])
 fi
 
 if test "$coin_has_glpk" = yes ; then
   AC_CONFIG_FILES([osi-glpk.pc:src/OsiGlpk/osi-glpk.pc.in])
+  AC_CONFIG_HEADER([src/OsiGlpk/config_osiglpk.h])
 fi
 
 if test "$coin_has_gurobi" = yes ; then
   AC_CONFIG_FILES([osi-gurobi.pc:src/OsiGrb/osi-gurobi.pc.in])
+  AC_CONFIG_HEADER([src/OsiGrb/config_osigrb.h])
 fi
 
 if test "$coin_has_mosek" = yes ; then
   AC_CONFIG_FILES([osi-mosek.pc:src/OsiMsk/osi-mosek.pc.in])
+  AC_CONFIG_HEADER([src/OsiMsk/config_osimsk.h])
 fi
 
 if test "$coin_has_xpress" = yes ; then
   AC_CONFIG_FILES([osi-xpress.pc:src/OsiXpr/osi-xpress.pc.in])
+  AC_CONFIG_HEADER([src/OsiXpr/config_osixpr.h])
 fi
 
 if test "$coin_has_soplex" = yes ; then
   AC_CONFIG_FILES([osi-soplex.pc:src/OsiSpx/osi-soplex.pc.in])
+  AC_CONFIG_HEADER([src/OsiSpx/config_osispx.h])
 fi
 
 AC_CONFIG_FILES([doxydoc/doxygen.conf])
-
-# Here put the location and name of the configuration header file
-AC_CONFIG_HEADER([src/Osi/config.h src/Osi/config_osi.h src/OsiCommonTest/config_osicommontest.h])
 
 # Finally, we let configure write all the output...
 AC_COIN_FINALIZE

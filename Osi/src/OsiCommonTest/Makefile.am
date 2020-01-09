@@ -46,6 +46,7 @@ AM_CPPFLAGS = -I$(srcdir)/../Osi \
 ########################################################################
 
 # Here list all the header files that are required by a user of the library,
+# and that therefore should be installed in pkgincludedir
 
 includecoindir = $(pkgincludedir)
 includecoin_HEADERS = OsiUnitTests.hpp

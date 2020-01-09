@@ -1,0 +1,9 @@
+/* src/Osi/config_osimsk.h.in. */
+
+#ifndef __CONFIG_OSIMSK_H__
+#define __CONFIG_OSIMSK_H__
+
+/* Library Visibility Attribute */
+#undef OSIMSKLIB_EXPORT
+
+#endif

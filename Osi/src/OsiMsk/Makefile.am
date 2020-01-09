@@ -28,13 +28,19 @@ libOsiMsk_la_LIBADD = ../Osi/libOsi.la $(OSIMSKLIB_LFLAGS)
 libOsiMsk_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.
-AM_CPPFLAGS = -I$(srcdir)/../Osi -I$(srcdir)/../OsiCommonTest $(OSIMSKLIB_CFLAGS)
+AM_CPPFLAGS = -I$(srcdir)/../Osi -I$(srcdir)/../OsiCommonTest $(OSIMSKLIB_CFLAGS) -DOSIMSKLIB_BUILD
 
 ########################################################################
 #                Headers that need to be installed                     #
 ########################################################################
 
 # Here list all the header files that are required by a user of the library,
-# and that therefore should be installed in 'include/coin'
+# and that therefore should be installed in 'include/coin-or'
 includecoindir = $(pkgincludedir)
 includecoin_HEADERS = OsiMskSolverInterface.hpp
+
+install-exec-local:
+	$(install_sh_DATA) config_osimsk.h $(DESTDIR)$(includecoindir)/OsiMskConfig.h
+
+uninstall-local:
+	rm -f $(DESTDIR)$(includecoindir)/OsiMskConfig.h

@@ -9,6 +9,7 @@
 #include <cstdio>
 
 #include "OsiSolverInterface.hpp"
+#include "OsiXprConfig.h"
 
 typedef struct xo_prob_struct *XPRSprob;
 
@@ -18,8 +19,8 @@ typedef struct xo_prob_struct *XPRSprob;
 
     Instantiation of OsiSolverInterface for XPRESS-MP
  */
-class OsiXprSolverInterface : virtual public OsiSolverInterface {
-  friend void OsiXprSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
+class OSIXPRLIB_EXPORT OsiXprSolverInterface : virtual public OsiSolverInterface {
+  friend OSIXPRLIB_EXPORT void OsiXprSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
 
 public:
   /**@name Solve methods */
@@ -801,6 +802,7 @@ private:
 
 //#############################################################################
 /** A function that tests the methods in the OsiXprSolverInterface class. */
+OSIXPRLIB_EXPORT
 void OsiXprSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
 
 #endif

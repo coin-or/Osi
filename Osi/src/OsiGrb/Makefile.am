@@ -25,13 +25,19 @@ libOsiGrb_la_LIBADD = ../Osi/libOsi.la $(OSIGRBLIB_LFLAGS)
 libOsiGrb_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.
-AM_CPPFLAGS = -I$(srcdir)/../Osi -I$(srcdir)/../OsiCommonTest $(OSIGRBLIB_CFLAGS)
+AM_CPPFLAGS = -I$(srcdir)/../Osi -I$(srcdir)/../OsiCommonTest $(OSIGRBLIB_CFLAGS) -DOSIGRBLIB_BUILD
 
 ########################################################################
 #                Headers that need to be installed                     #
 ########################################################################
 
 # Here list all the header files that are required by a user of the library,
-# and that therefore should be installed in 'include/coin'
+# and that therefore should be installed in 'include/coin-or'
 includecoindir = $(pkgincludedir)
 includecoin_HEADERS = OsiGrbSolverInterface.hpp
+
+install-exec-local:
+	$(install_sh_DATA) config_osigrb.h $(DESTDIR)$(includecoindir)/OsiGrbConfig.h
+
+uninstall-local:
+	rm -f $(DESTDIR)$(includecoindir)/OsiGrbConfig.h

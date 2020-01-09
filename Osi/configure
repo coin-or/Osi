@@ -17990,7 +17990,6 @@ $as_echo "#define COIN_HAS_GLPK 1" >>confdefs.h
   fi
 
 
-# TODO drop?
 
 
 
@@ -19958,41 +19957,53 @@ done
 ac_config_files="$ac_config_files Makefile examples/Makefile src/Osi/Makefile src/OsiCpx/Makefile src/OsiGlpk/Makefile src/OsiMsk/Makefile src/OsiXpr/Makefile src/OsiGrb/Makefile src/OsiSpx/Makefile src/OsiCommonTest/Makefile test/Makefile osi.pc osi-unittests.pc"
 
 
+# Here put the location and name of the configuration header file
+ac_config_headers="$ac_config_headers src/Osi/config.h src/Osi/config_osi.h src/OsiCommonTest/config_osicommontest.h"
+
+
 if test "$coin_has_cplex" = true ; then
   ac_config_files="$ac_config_files osi-cplex.pc:src/OsiCpx/osi-cplex.pc.in"
+
+  ac_config_headers="$ac_config_headers src/OsiCpx/config_osicpx.h"
 
 fi
 
 if test "$coin_has_glpk" = yes ; then
   ac_config_files="$ac_config_files osi-glpk.pc:src/OsiGlpk/osi-glpk.pc.in"
 
+  ac_config_headers="$ac_config_headers src/OsiGlpk/config_osiglpk.h"
+
 fi
 
 if test "$coin_has_gurobi" = yes ; then
   ac_config_files="$ac_config_files osi-gurobi.pc:src/OsiGrb/osi-gurobi.pc.in"
+
+  ac_config_headers="$ac_config_headers src/OsiGrb/config_osigrb.h"
 
 fi
 
 if test "$coin_has_mosek" = yes ; then
   ac_config_files="$ac_config_files osi-mosek.pc:src/OsiMsk/osi-mosek.pc.in"
 
+  ac_config_headers="$ac_config_headers src/OsiMsk/config_osimsk.h"
+
 fi
 
 if test "$coin_has_xpress" = yes ; then
   ac_config_files="$ac_config_files osi-xpress.pc:src/OsiXpr/osi-xpress.pc.in"
+
+  ac_config_headers="$ac_config_headers src/OsiXpr/config_osixpr.h"
 
 fi
 
 if test "$coin_has_soplex" = yes ; then
   ac_config_files="$ac_config_files osi-soplex.pc:src/OsiSpx/osi-soplex.pc.in"
 
+  ac_config_headers="$ac_config_headers src/OsiSpx/config_osispx.h"
+
 fi
 
 ac_config_files="$ac_config_files doxydoc/doxygen.conf"
-
-
-# Here put the location and name of the configuration header file
-ac_config_headers="$ac_config_headers src/Osi/config.h src/Osi/config_osi.h src/OsiCommonTest/config_osicommontest.h"
 
 
 # Finally, we let configure write all the output...
@@ -21183,16 +21194,22 @@ do
     "test/Makefile") CONFIG_FILES="$CONFIG_FILES test/Makefile" ;;
     "osi.pc") CONFIG_FILES="$CONFIG_FILES osi.pc" ;;
     "osi-unittests.pc") CONFIG_FILES="$CONFIG_FILES osi-unittests.pc" ;;
-    "osi-cplex.pc") CONFIG_FILES="$CONFIG_FILES osi-cplex.pc:src/OsiCpx/osi-cplex.pc.in" ;;
-    "osi-glpk.pc") CONFIG_FILES="$CONFIG_FILES osi-glpk.pc:src/OsiGlpk/osi-glpk.pc.in" ;;
-    "osi-gurobi.pc") CONFIG_FILES="$CONFIG_FILES osi-gurobi.pc:src/OsiGrb/osi-gurobi.pc.in" ;;
-    "osi-mosek.pc") CONFIG_FILES="$CONFIG_FILES osi-mosek.pc:src/OsiMsk/osi-mosek.pc.in" ;;
-    "osi-xpress.pc") CONFIG_FILES="$CONFIG_FILES osi-xpress.pc:src/OsiXpr/osi-xpress.pc.in" ;;
-    "osi-soplex.pc") CONFIG_FILES="$CONFIG_FILES osi-soplex.pc:src/OsiSpx/osi-soplex.pc.in" ;;
-    "doxydoc/doxygen.conf") CONFIG_FILES="$CONFIG_FILES doxydoc/doxygen.conf" ;;
     "src/Osi/config.h") CONFIG_HEADERS="$CONFIG_HEADERS src/Osi/config.h" ;;
     "src/Osi/config_osi.h") CONFIG_HEADERS="$CONFIG_HEADERS src/Osi/config_osi.h" ;;
     "src/OsiCommonTest/config_osicommontest.h") CONFIG_HEADERS="$CONFIG_HEADERS src/OsiCommonTest/config_osicommontest.h" ;;
+    "osi-cplex.pc") CONFIG_FILES="$CONFIG_FILES osi-cplex.pc:src/OsiCpx/osi-cplex.pc.in" ;;
+    "src/OsiCpx/config_osicpx.h") CONFIG_HEADERS="$CONFIG_HEADERS src/OsiCpx/config_osicpx.h" ;;
+    "osi-glpk.pc") CONFIG_FILES="$CONFIG_FILES osi-glpk.pc:src/OsiGlpk/osi-glpk.pc.in" ;;
+    "src/OsiGlpk/config_osiglpk.h") CONFIG_HEADERS="$CONFIG_HEADERS src/OsiGlpk/config_osiglpk.h" ;;
+    "osi-gurobi.pc") CONFIG_FILES="$CONFIG_FILES osi-gurobi.pc:src/OsiGrb/osi-gurobi.pc.in" ;;
+    "src/OsiGrb/config_osigrb.h") CONFIG_HEADERS="$CONFIG_HEADERS src/OsiGrb/config_osigrb.h" ;;
+    "osi-mosek.pc") CONFIG_FILES="$CONFIG_FILES osi-mosek.pc:src/OsiMsk/osi-mosek.pc.in" ;;
+    "src/OsiMsk/config_osimsk.h") CONFIG_HEADERS="$CONFIG_HEADERS src/OsiMsk/config_osimsk.h" ;;
+    "osi-xpress.pc") CONFIG_FILES="$CONFIG_FILES osi-xpress.pc:src/OsiXpr/osi-xpress.pc.in" ;;
+    "src/OsiXpr/config_osixpr.h") CONFIG_HEADERS="$CONFIG_HEADERS src/OsiXpr/config_osixpr.h" ;;
+    "osi-soplex.pc") CONFIG_FILES="$CONFIG_FILES osi-soplex.pc:src/OsiSpx/osi-soplex.pc.in" ;;
+    "src/OsiSpx/config_osispx.h") CONFIG_HEADERS="$CONFIG_HEADERS src/OsiSpx/config_osispx.h" ;;
+    "doxydoc/doxygen.conf") CONFIG_FILES="$CONFIG_FILES doxydoc/doxygen.conf" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

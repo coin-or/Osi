@@ -14,6 +14,7 @@
 #include "OsiSolverInterface.hpp"
 #include "CoinPackedMatrix.hpp"
 #include "CoinWarmStartBasis.hpp"
+#include "OsiGlpkConfig.h"
 
 /** GPLK Solver Interface
 
@@ -36,8 +37,8 @@
 typedef struct glp_prob glp_prob;
 #endif
 
-class OsiGlpkSolverInterface : virtual public OsiSolverInterface {
-  friend void OsiGlpkSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
+class OSIGLPKLIB_EXPORT OsiGlpkSolverInterface : virtual public OsiSolverInterface {
+  friend OSIGLPKLIB_EXPORT void OsiGlpkSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
 
 public:
   //---------------------------------------------------------------------------
@@ -907,6 +908,7 @@ private:
 
 //#############################################################################
 /** A function that tests the methods in the OsiGlpkSolverInterface class. */
+OSIGLPKLIB_EXPORT
 void OsiGlpkSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
 
 #endif // OsiGlpkSolverInterface_H

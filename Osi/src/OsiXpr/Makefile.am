@@ -28,13 +28,19 @@ libOsiXpr_la_LIBADD = ../Osi/libOsi.la $(OSIXPRLIB_LFLAGS)
 libOsiXpr_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.
-AM_CPPFLAGS = -I$(srcdir)/../Osi -I$(srcdir)/../OsiCommonTest $(OSIXPRLIB_CFLAGS)
+AM_CPPFLAGS = -I$(srcdir)/../Osi -I$(srcdir)/../OsiCommonTest $(OSIXPRLIB_CFLAGS) -DOSIXPRLIB_BUILD
 
 ########################################################################
 #                Headers that need to be installed                     #
 ########################################################################
 
 # Here list all the header files that are required by a user of the library,
-# and that therefore should be installed in 'include/coin'
+# and that therefore should be installed in 'include/coin-or'
 includecoindir = $(pkgincludedir)
 includecoin_HEADERS = OsiXprSolverInterface.hpp
+
+install-exec-local:
+	$(install_sh_DATA) config_osixpr.h $(DESTDIR)$(includecoindir)/OsiXprConfig.h
+
+uninstall-local:
+	rm -f $(DESTDIR)$(includecoindir)/OsiXprConfig.h

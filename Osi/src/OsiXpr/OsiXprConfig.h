@@ -19,18 +19,18 @@
  * files.
  */
 
-#ifndef __OSIUNITTESTSCONFIG_H__
-#define __OSIUNITTESTSCONFIG_H__
+#ifndef __OSIXPRCONFIG_H__
+#define __OSIXPRCONFIG_H__
 
 #ifdef HAVE_CONFIG_H
-#ifdef OSICOMMONTEST_BUILD
+#ifdef OSIXPRLIB_BUILD
 
 #ifdef DLL_EXPORT
-#undef OSICOMMONTESTLIB_EXPORT
-#define OSICOMMONTESTLIB_EXPORT __declspec(dllexport)
+#undef OSIXPRLIB_EXPORT
+#define OSIXPRLIB_EXPORT __declspec(dllexport)
 #elif defined(__GNUC__) && __GNUC__ >= 4
-#undef OSICOMMONTESTLIB_EXPORT
-#define OSICOMMONTESTLIB_EXPORT __attribute__((__visibility__("default")))
+#undef OSIXPRLIB_EXPORT
+#define OSIXPRLIB_EXPORT __attribute__((__visibility__("default")))
 #endif
 
 #else
@@ -40,23 +40,23 @@
 #else /* HAVE_CONFIG_H */
 
 
-#ifndef OSICOMMONTESTLIB_EXPORT
+#ifndef OSIXPRLIB_EXPORT
 # ifdef _WIN32
-#  ifdef OSICOMMONTEST_BUILD
-#   define OSICOMMONTESTLIB_EXPORT __declspec(dllexport)
+#  ifdef OSIXPRLIB_BUILD
+#   define OSIXPRLIB_EXPORT __declspec(dllexport)
 #  else
-#   define OSICOMMONTESTLIB_EXPORT __declspec(dllimport)
+#   define OSIXPRLIB_EXPORT __declspec(dllimport)
 #  endif
 # elif defined(__GNUC__) && __GNUC__ >= 4
-#  define OSICOMMONTESTLIB_EXPORT __attribute__((__visibility__("default")))
+#  define OSIXPRLIB_EXPORT __attribute__((__visibility__("default")))
 # endif
 #endif
 
 
 #endif /* HAVE_CONFIG_H */
 
-#ifndef OSICOMMONTESTLIB_EXPORT
-#define OSICOMMONTESTLIB_EXPORT
+#ifndef OSIXPRLIB_EXPORT
+#define OSIXPRLIB_EXPORT
 #endif
 
-#endif /*__OSIUNITTESTSCONFIG_H__*/
+#endif /*__OSIXPRCONFIG_H__*/

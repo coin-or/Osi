@@ -136,7 +136,13 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/src/Osi/config.h \
 	$(top_builddir)/src/Osi/config_osi.h \
-	$(top_builddir)/src/OsiCommonTest/config_osicommontest.h
+	$(top_builddir)/src/OsiCommonTest/config_osicommontest.h \
+	$(top_builddir)/src/OsiCpx/config_osicpx.h \
+	$(top_builddir)/src/OsiGlpk/config_osiglpk.h \
+	$(top_builddir)/src/OsiGrb/config_osigrb.h \
+	$(top_builddir)/src/OsiMsk/config_osimsk.h \
+	$(top_builddir)/src/OsiXpr/config_osixpr.h \
+	$(top_builddir)/src/OsiSpx/config_osispx.h
 CONFIG_CLEAN_FILES = examples/Makefile osi.pc osi-unittests.pc \
 	osi-cplex.pc osi-glpk.pc osi-gurobi.pc osi-mosek.pc \
 	osi-xpress.pc osi-soplex.pc doxydoc/doxygen.conf

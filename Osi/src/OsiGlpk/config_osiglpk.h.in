@@ -1,0 +1,9 @@
+/* src/Osi/config_osiglpk.h.in. */
+
+#ifndef __CONFIG_OSIGLPK_H__
+#define __CONFIG_OSIGLPK_H__
+
+/* Library Visibility Attribute */
+#undef OSIGLPKLIB_EXPORT
+
+#endif

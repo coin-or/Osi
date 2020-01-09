@@ -17,6 +17,7 @@
 
 #include <string>
 #include "OsiSolverInterface.hpp"
+#include "OsiGrbConfig.h"
 
 typedef struct _GRBmodel GRBmodel;
 typedef struct _GRBenv GRBenv;
@@ -26,8 +27,8 @@ typedef struct _GRBenv GRBenv;
  Instantiation of OsiGrbSolverInterface for Gurobi
  */
 
-class OsiGrbSolverInterface : virtual public OsiSolverInterface {
-  friend void OsiGrbSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
+class OSIGRBLIB_EXPORT OsiGrbSolverInterface : virtual public OsiSolverInterface {
+  friend OSIGRBLIB_EXPORT void OsiGrbSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
 
 public:
   //---------------------------------------------------------------------------
@@ -922,6 +923,7 @@ private:
 
 //#############################################################################
 /** A function that tests the methods in the OsiGrbSolverInterface class. */
+OSIGRBLIB_EXPORT
 void OsiGrbSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
 
 #endif

@@ -116,7 +116,13 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 DIST_COMMON = $(srcdir)/Makefile.am $(includecoin_HEADERS)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = config.h config_osi.h \
-	$(top_builddir)/src/OsiCommonTest/config_osicommontest.h
+	$(top_builddir)/src/OsiCommonTest/config_osicommontest.h \
+	$(top_builddir)/src/OsiCpx/config_osicpx.h \
+	$(top_builddir)/src/OsiGlpk/config_osiglpk.h \
+	$(top_builddir)/src/OsiGrb/config_osigrb.h \
+	$(top_builddir)/src/OsiMsk/config_osimsk.h \
+	$(top_builddir)/src/OsiXpr/config_osixpr.h \
+	$(top_builddir)/src/OsiSpx/config_osispx.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
@@ -174,7 +180,7 @@ AM_V_at = $(am__v_at_@AM_V@)
 am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
 am__v_at_0 = @
 am__v_at_1 = 
-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/src/OsiCommonTest
+DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/src/OsiCommonTest -I$(top_builddir)/src/OsiCpx -I$(top_builddir)/src/OsiGlpk -I$(top_builddir)/src/OsiGrb -I$(top_builddir)/src/OsiMsk -I$(top_builddir)/src/OsiXpr -I$(top_builddir)/src/OsiSpx
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/OsiAuxInfo.Plo \

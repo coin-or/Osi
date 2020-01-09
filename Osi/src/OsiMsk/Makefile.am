@@ -28,7 +28,7 @@ libOsiMsk_la_LIBADD = ../Osi/libOsi.la $(OSIMSKLIB_LFLAGS)
 libOsiMsk_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.
-AM_CPPFLAGS = -I$(srcdir)/../Osi $(OSIMSKLIB_CFLAGS)
+AM_CPPFLAGS = -I$(srcdir)/../Osi -I$(srcdir)/../OsiCommonTest $(OSIMSKLIB_CFLAGS)
 
 ########################################################################
 #                Headers that need to be installed                     #

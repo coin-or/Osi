@@ -299,7 +299,7 @@ bool OsiRowCut::infeasible(const OsiSolverInterface &im) const
     to OsiRowCut does that.
 
 */
-class OsiRowCut2 : public OsiRowCut {
+class OSILIB_EXPORT OsiRowCut2 : public OsiRowCut {
 
 public:
   /**@name Which row */

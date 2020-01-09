@@ -52,3 +52,6 @@ includecoin_HEADERS = OsiUnitTests.hpp
 
 install-exec-local:
 	$(install_sh_DATA) config_osicommontest.h $(DESTDIR)$(includecoindir)/OsiUnitTestsConfig.h
+
+uninstall-local:
+	rm -f $(DESTDIR)$(includecoindir)/OsiUnitTestsConfig.h

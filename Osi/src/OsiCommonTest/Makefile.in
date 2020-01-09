@@ -815,7 +815,8 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-includecoinHEADERS uninstall-libLTLIBRARIES
+uninstall-am: uninstall-includecoinHEADERS uninstall-libLTLIBRARIES \
+	uninstall-local
 
 .MAKE: all install-am install-strip
 
@@ -833,7 +834,8 @@ uninstall-am: uninstall-includecoinHEADERS uninstall-libLTLIBRARIES
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags tags-am uninstall uninstall-am \
-	uninstall-includecoinHEADERS uninstall-libLTLIBRARIES
+	uninstall-includecoinHEADERS uninstall-libLTLIBRARIES \
+	uninstall-local
 
 .PRECIOUS: Makefile
 
@@ -947,6 +949,9 @@ uninstall-doc:
 
 install-exec-local:
 	$(install_sh_DATA) config_osicommontest.h $(DESTDIR)$(includecoindir)/OsiUnitTestsConfig.h
+
+uninstall-local:
+	rm -f $(DESTDIR)$(includecoindir)/OsiUnitTestsConfig.h
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

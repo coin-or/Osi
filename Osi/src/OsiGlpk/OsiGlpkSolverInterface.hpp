@@ -16,6 +16,20 @@
 #include "CoinWarmStartBasis.hpp"
 #include "OsiGlpkConfig.h"
 
+/*
+  Set up proper export / import for building DLLs. If we're not building DLLs,
+  there's no need to say anything. If we're building OsiGlpk, we need to
+  override the definition of OSIGLPKLIB_EXPORT in config_osi.h.
+*/
+
+#ifdef DLL_EXPORT
+#  ifdef OSIGLPKLIB_BUILD
+#    undef OSIGLPKLIB_EXPORT
+#    define OSIGLPKLIB_EXPORT __declspec(dllexport)
+#  endif
+#endif
+
+
 /** GPLK Solver Interface
 
     Instantiation of OsiGlpkSolverInterface for GPLK
@@ -25,20 +39,14 @@
 #define LPX glp_prob
 #endif
 
-#ifndef GLP_PROB_DEFINED
-#define GLP_PROB_DEFINED
-/*
-  // Glpk < 4.48:
-  typedef struct {
-    double _opaque_prob[100];
-  } glp_prob;
-*/
-// Glpk 4.48:
 typedef struct glp_prob glp_prob;
-#endif
 
-class OSIGLPKLIB_EXPORT OsiGlpkSolverInterface : virtual public OsiSolverInterface {
-  friend OSIGLPKLIB_EXPORT void OsiGlpkSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
+class OSIGLPKLIB_EXPORT
+OsiGlpkSolverInterface : virtual public OsiSolverInterface {
+
+  friend OSIGLPKLIB_EXPORT
+  void OsiGlpkSolverInterfaceUnitTest(const std::string &mpsDir,
+                                      const std::string &netlibDir);
 
 public:
   //---------------------------------------------------------------------------
@@ -670,6 +678,7 @@ public:
   //@}
 
   /**@name Static instance counter methods */
+  //@{
   /** GLPK has a context which must be freed after all GLPK LPs (or MIPs) are freed.
    * It is automatically created when the first LP is created.   
       This method:
@@ -769,8 +778,14 @@ private:
 
   /**@name Private member data */
   //@{
-  /// GPLK model represented by this class instance
+  /// GLPK model represented by this class instance
   mutable LPX *lp_;
+
+  /// GLPK simplex solver control parameters. Opaque to the client.
+  void *smcp_ ;
+
+  /// GLPK branch-and-cut control parameters. Opaque to the client.
+  void *iocp_ ;
 
   /// number of GLPK instances currently in use (counts only those created by OsiGlpk)
   static unsigned int numInstances_;
@@ -786,6 +801,8 @@ private:
   int hotStartMaxIteration_;
   /// OSI name discipline
   int nameDisc_;
+  /// Scaling setting
+  int scaleFlags_ ;
 
   // Double parameters.
   /// dual objective limit (measure of badness; stop if we're worse)

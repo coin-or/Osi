@@ -16,19 +16,6 @@
 #include "CoinWarmStartBasis.hpp"
 #include "OsiGlpkConfig.h"
 
-/*
-  Set up proper export / import for building DLLs. If we're not building DLLs,
-  there's no need to say anything. If we're building OsiGlpk, we need to
-  override the definition of OSIGLPKLIB_EXPORT in config_osi.h.
-*/
-
-#ifdef DLL_EXPORT
-#  ifdef OSIGLPKLIB_BUILD
-#    undef OSIGLPKLIB_EXPORT
-#    define OSIGLPKLIB_EXPORT __declspec(dllexport)
-#  endif
-#endif
-
 
 /** GPLK Solver Interface
 
@@ -41,12 +28,8 @@
 
 typedef struct glp_prob glp_prob;
 
-class OSIGLPKLIB_EXPORT
-OsiGlpkSolverInterface : virtual public OsiSolverInterface {
-
-  friend OSIGLPKLIB_EXPORT
-  void OsiGlpkSolverInterfaceUnitTest(const std::string &mpsDir,
-                                      const std::string &netlibDir);
+class OSIGLPKLIB_EXPORT OsiGlpkSolverInterface : virtual public OsiSolverInterface {
+  friend OSIGLPKLIB_EXPORT void OsiGlpkSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
 
 public:
   //---------------------------------------------------------------------------

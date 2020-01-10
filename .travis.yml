@@ -33,8 +33,10 @@ script:
   - if $ENABLEDEBUG ; then CFGFLAGS="$CFGFLAGS --enable-debug" ; fi
   - if $ENABLESTATIC ; then CFGFLAGS="$CFGFLAGS --enable-static --disable-shared" ; fi
   - git clone --depth 1 --branch autotools-update https://github.com/coin-or-tools/Data-Sample
+  - git clone --depth 1 --branch autotools-update https://github.com/coin-or-tools/ThirdParty-Glpk
   - git clone --depth 1 --branch autotools-update https://github.com/coin-or/CoinUtils
   - pushd Data-Sample && ./configure $CFGFLAGS && make install && popd
+  - pushd ThirdParty-Glpk && ./get.Glpk && ./configure $CFGFLAGS && make install && popd
   - pushd CoinUtils/CoinUtils && ./configure $CFGFLAGS && make install && popd
   - mkdir build
   - pushd build

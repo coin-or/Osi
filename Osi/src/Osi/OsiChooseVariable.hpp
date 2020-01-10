@@ -31,7 +31,7 @@ class OsiHotInfo;
        again (after fixing a variable).
 */
 
-class OsiChooseVariable {
+class OSILIB_EXPORT OsiChooseVariable {
 
 public:
   /// Default Constructor
@@ -288,7 +288,7 @@ protected:
     algorithm.
 */
 
-class OsiPseudoCosts {
+class OSILIB_EXPORT OsiPseudoCosts {
 protected:
   // Data
   /// Total of all changes up
@@ -372,7 +372,7 @@ public:
        again (after fixing a variable).
 */
 
-class OsiChooseStrong : public OsiChooseVariable {
+class OSILIB_EXPORT OsiChooseStrong : public OsiChooseVariable {
 
 public:
   /// Default Constructor
@@ -498,7 +498,7 @@ protected:
     When created it stores enough information for strong branching
 */
 
-class OsiHotInfo {
+class OSILIB_EXPORT OsiHotInfo {
 
 public:
   /// Default Constructor

@@ -2698,8 +2698,7 @@ fi
 
 
 
-# We want --enable-msvc setup and checked.
-
+  # We want --enable-msvc setup and checked
 
 
   # Check whether --enable-debug was given.
@@ -2720,8 +2719,7 @@ fi
 
 # change default compiler flags
 # - debugging enabled: enable debug symbols (-g/-Z7)
-# - debugging disabled: disable debug code (-DNDEBUG); enable (more)
-#   optimization (-O2)
+# - debugging disabled: disable debug code (-DNDEBUG); enable (more) optimization (-O2)
 # - enable exceptions for (i)cl
 
   if test "$enable_debug" = yes ; then
@@ -3568,13 +3566,10 @@ fi
 
 
   # If enable-msvc, then test for Intel (on Windows) and MS C compiler
-  # explicitly and add the compile wrapper before AC_PROG_CC. The compile
-  # wrapper works around issues related to finding MS link.exe. (Unix link.exe
-  # occurs first in PATH, which causes compile and link checks to fail.) For
-  # the same reason, set LD to use the compile wrapper. If CC remains unset
-  # (neither icl or cl was found, and CC was not set by the user), stop with
-  # an error.
-
+  # explicitly and add compile-wrapper before AC_PROG_CC, because
+  # the compile-wrapper work around issues when having the wrong link.exe
+  # in the PATH first, which would upset tests in AC_PROG_CC.
+  # Further, if CC unset and not set by user, then stop with error.
   if test $enable_msvc = yes ; then
     for ac_prog in icl cl
 do
@@ -3620,18 +3615,14 @@ done
 
     if test -n "$CC" ; then
       CC="$am_aux_dir/compile $CC"
-      ac_cv_prog_CC="$CC"
-      LD="$CC"
     else
       as_fn_error $? "Neither MS nor Intel C compiler found in PATH and CC is unset." "$LINENO" 5
     fi
   fi
 
-  # Look for some C compiler and check that it works. If the user has set CC
-  # or we found icl/cl above, this shouldn't overwrite CC. Unlike the macros
-  # that establish C++ or Fortran compilers, PROG_CC also takes care of adding
-  # the compile wrapper if needed.
-
+  # look for some C compiler and check whether it works
+  # if user has set CC or we found icl/cl above, this shouldn't overwrite CC
+  # other than CXX of F77, this macro also takes care of adding the compile-wrapper
   ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -4421,14 +4412,11 @@ fi
 
 
 
-  # If enable-msvc, then test for Intel (on Windows) and MS C compiler
-  # explicitly and add the compile wrapper before AC_PROG_CXX. The compile
-  # wrapper works around issues related to finding MS link.exe. (Unix link.exe
-  # occurs first in PATH, which causes compile and link checks to fail.) For
-  # the same reason, set LD to use the compile wrapper. If CC remains unset
-  # (neither icl or cl was found, and CC was not set by the user), stop with
-  # an error.
-
+  # If enable-msvc, then test for Intel (on Windows) and MS C++ compiler
+  # explicitly and add compile-wrapper before AC_PROG_CXX, because
+  # the compile-wrapper work around issues when having the wrong link.exe
+  # in the PATH first, which would upset tests in AC_PROG_CXX.
+  # Further, if CXX unset and not set by user, then stop with error.
   if test $enable_msvc = yes ; then
     for ac_prog in icl cl
 do
@@ -4474,16 +4462,13 @@ done
 
     if test -n "$CXX" ; then
       CXX="$am_aux_dir/compile $CXX"
-      ac_cv_prog_CXX="$CXX"
-      LD="$CXX"
     else
       as_fn_error $? "Neither MS nor Intel C++ compiler found in PATH and CXX is unset." "$LINENO" 5
     fi
   fi
 
-  # Look for some C++ compiler and check that it works. If the user has set
-  # CXX or we found icl/cl above, this shouldn't overwrite CXX.
-
+  # look for some C++ compiler and check whether it works
+  # if user has set CXX or we found icl/cl above, this shouldn't overwrite CXX
   ac_ext=cpp
 ac_cpp='$CXXCPP $CPPFLAGS'
 ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -4870,8 +4855,7 @@ fi
 
 
 
-  # If the compiler does not support -c -o, wrap it with the compile script.
-
+  # If the compiler does not support -c -o, then wrap the compile script around it.
   ac_ext=cpp
 ac_cpp='$CXXCPP $CPPFLAGS'
 ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -5700,7 +5684,7 @@ else
     lt_cv_sys_max_cmd_len=-1;
     ;;
 
-  cygwin* | msys* | mingw* | cegcc*)
+  cygwin* | mingw* | cegcc*)
     # On Win9x/ME, this test blows up -- it succeeds, but takes
     # about 5 minutes as the teststring grows exponentially.
     # Worse, since 9x/ME are not pre-emptively multitasking,
@@ -5866,7 +5850,7 @@ else
       *-*-mingw* ) # actually msys
         lt_cv_to_host_file_cmd=func_convert_file_msys_to_w32
         ;;
-      *-*-cygwin* | *-*-msys* )
+      *-*-cygwin* )
         lt_cv_to_host_file_cmd=func_convert_file_cygwin_to_w32
         ;;
       * ) # otherwise, assume *nix
@@ -5874,12 +5858,12 @@ else
         ;;
     esac
     ;;
-  *-*-cygwin* | *-*-msys* )
+  *-*-cygwin* )
     case $build in
       *-*-mingw* ) # actually msys
         lt_cv_to_host_file_cmd=func_convert_file_msys_to_cygwin
         ;;
-      *-*-cygwin* | *-*-msys* )
+      *-*-cygwin* )
         lt_cv_to_host_file_cmd=func_convert_file_noop
         ;;
       * ) # otherwise, assume *nix
@@ -5945,7 +5929,7 @@ case $reload_flag in
 esac
 reload_cmds='$LD$reload_flag -o $output$reload_objs'
 case $host_os in
-  cygwin* | msys* | mingw* | pw32* | cegcc*)
+  cygwin* | mingw* | pw32* | cegcc*)
     if test yes != "$GCC"; then
       reload_cmds=false
     fi
@@ -6100,7 +6084,7 @@ bsdi[45]*)
   lt_cv_file_magic_test_file=/shlib/libc.so
   ;;
 
-cygwin* | msys*)
+cygwin*)
   # func_win32_libid is a shell function defined in ltmain.sh
   lt_cv_deplibs_check_method='file_magic ^x86 archive import|^x86 DLL'
   lt_cv_file_magic_cmd='func_win32_libid'
@@ -6416,7 +6400,7 @@ else
   lt_cv_sharedlib_from_linklib_cmd='unknown'
 
 case $host_os in
-cygwin* | msys* | mingw* | pw32* | cegcc*)
+cygwin* | mingw* | pw32* | cegcc*)
   # two different shell functions defined in ltmain.sh;
   # decide which one to use based on capabilities of $DLLTOOL
   case `$DLLTOOL --help 2>&1` in
@@ -6909,7 +6893,7 @@ case $host_os in
 aix*)
   symcode='[BCDT]'
   ;;
-cygwin* | msys* | mingw* | pw32* | cegcc*)
+cygwin* | mingw* | pw32* | cegcc*)
   symcode='[ABCDGISTW]'
   ;;
 hpux*)
@@ -8724,7 +8708,7 @@ fi
 enable_win32_dll=yes
 
 case $host in
-*-*-cygwin* | *-*-msys* | *-*-mingw* | *-*-pw32* | *-*-cegcc*)
+*-*-cygwin* | *-*-mingw* | *-*-pw32* | *-*-cegcc*)
   if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}as", so it can be a program name with args.
 set dummy ${ac_tool_prefix}as; ac_word=$2
@@ -9564,7 +9548,7 @@ lt_prog_compiler_static=
       # PIC is the default for these OSes.
       ;;
 
-    mingw* | cygwin* | msys* | pw32* | os2* | cegcc*)
+    mingw* | cygwin* | pw32* | os2* | cegcc*)
       # This hack is so that the source file can tell whether it is being
       # built for inclusion in a dll (and should export symbols for example).
       # Although the cygwin gcc ignores -fPIC, still need this for old-style
@@ -9667,7 +9651,7 @@ lt_prog_compiler_static=
       esac
       ;;
 
-    mingw* | cygwin* | msys* | pw32* | os2* | cegcc*)
+    mingw* | cygwin* | pw32* | os2* | cegcc*)
       # This hack is so that the source file can tell whether it is being
       # built for inclusion in a dll (and should export symbols for example).
       lt_prog_compiler_pic='-DDLL_EXPORT'
@@ -10169,7 +10153,7 @@ $as_echo_n "checking whether the $compiler linker ($LD) supports shared librarie
   extract_expsyms_cmds=
 
   case $host_os in
-  cygwin* | msys* | mingw* | pw32* | cegcc*)
+  cygwin* | mingw* | pw32* | cegcc*)
     # FIXME: the MSVC++ port hasn't been tested in a loooong time
     # When not using gcc, we currently assume that we are using
     # Microsoft Visual C++.
@@ -10284,7 +10268,7 @@ _LT_EOF
       fi
       ;;
 
-    cygwin* | msys* | mingw* | pw32* | cegcc*)
+    cygwin* | mingw* | pw32* | cegcc*)
       # _LT_TAGVAR(hardcode_libdir_flag_spec, ) is actually meaningless,
       # as there is no search path for DLLs.
       hardcode_libdir_flag_spec='-L$libdir'
@@ -10294,7 +10278,6 @@ _LT_EOF
       enable_shared_with_static_runtimes=yes
       export_symbols_cmds='$NM $libobjs $convenience | $global_symbol_pipe | $SED -e '\''/^[BCDGRS][ ]/s/.*[ ]\([^ ]*\)/\1 DATA/;s/^.*[ ]__nm__\([^ ]*\)[ ][^ ]*/\1 DATA/;/^I[ ]/d;/^[AITW][ ]/s/.* //'\'' | sort | uniq > $export_symbols'
       exclude_expsyms='[_]+GLOBAL_OFFSET_TABLE_|[_]+GLOBAL__[FID]_.*|[_]+head_[A-Za-z0-9_]+_dll|[A-Za-z0-9_]+_dll_iname'
-      file_list_spec='@'
 
       if $LD --help 2>&1 | $GREP 'auto-import' > /dev/null; then
         archive_cmds='$CC -shared $libobjs $deplibs $compiler_flags -o $output_objdir/$soname $wl--enable-auto-image-base -Xlinker --out-implib -Xlinker $lib'
@@ -10825,7 +10808,7 @@ fi
       export_dynamic_flag_spec=-rdynamic
       ;;
 
-    cygwin* | msys* | mingw* | pw32* | cegcc*)
+    cygwin* | mingw* | pw32* | cegcc*)
       # When not using gcc, we currently assume that we are using
       # Microsoft Visual C++ or Intel C++/Fortran Compiler.
       # hardcode_libdir_flag_spec is actually meaningless, as there is
@@ -11860,7 +11843,7 @@ bsdi[45]*)
   # libtool to hard-code these into programs
   ;;
 
-cygwin* | msys* | mingw* | pw32* | cegcc*)
+cygwin* | mingw* | pw32* | cegcc*)
   version_type=windows
   shrext_cmds=.dll
   need_version=no
@@ -11889,12 +11872,6 @@ cygwin* | msys* | mingw* | pw32* | cegcc*)
     cygwin*)
       # Cygwin DLLs use 'cyg' prefix rather than 'lib'
       soname_spec='`echo $libname | sed -e 's/^lib/cyg/'``echo $release | $SED -e 's/[.]/-/g'`$versuffix$shared_ext'
-
-      sys_lib_search_path_spec="$sys_lib_search_path_spec /usr/lib/w32api"
-      ;;
-    msys*)
-      # MSYS DLLs use 'msys-' prefix rather than 'lib'
-      soname_spec='`echo $libname | sed -e 's/^lib/msys-/'``echo $release | $SED -e 's/[.]/-/g'`$versuffix$shared_ext'
 
       sys_lib_search_path_spec="$sys_lib_search_path_spec /usr/lib/w32api"
       ;;
@@ -11932,7 +11909,7 @@ cygwin* | msys* | mingw* | pw32* | cegcc*)
       # Convert to MSYS style.
       sys_lib_search_path_spec=`$ECHO "$sys_lib_search_path_spec" | sed -e 's|\\\\|/|g' -e 's| \\([a-zA-Z]\\):| /\\1|g' -e 's|^ ||'`
       ;;
-    cygwin* | msys*)
+    cygwin*)
       # Convert to unix form, then to dos form, then back to unix form
       # but this time dos style (no spaces!) so that the unix form looks
       # like /cygdrive/c/PROGRA~1:/cygdr...
@@ -12634,7 +12611,7 @@ else
     lt_cv_dlopen_libs=
     ;;
 
-  cygwin* | msys*)
+  cygwin*)
     lt_cv_dlopen=dlopen
     lt_cv_dlopen_libs=
     ;;
@@ -13935,7 +13912,7 @@ fi
         esac
         ;;
 
-      cygwin* | msys* | mingw* | pw32* | cegcc*)
+      cygwin* | mingw* | pw32* | cegcc*)
 	case $GXX,$cc_basename in
 	,cl* | no,cl* | ,icl* | no,icl* | ,ifort* | no,ifort*)
 	  # Native MSVC or ICC or IFORT
@@ -13988,7 +13965,6 @@ fi
 	  allow_undefined_flag_CXX=unsupported
 	  always_export_symbols_CXX=no
 	  enable_shared_with_static_runtimes_CXX=yes
-	  file_list_spec_CXX='@'
 
 	  if $LD --help 2>&1 | $GREP 'auto-import' > /dev/null; then
 	    archive_cmds_CXX='$CC -shared -nostdlib $predep_objects $libobjs $deplibs $postdep_objects $compiler_flags -o $output_objdir/$soname $wl--enable-auto-image-base -Xlinker --out-implib -Xlinker $lib'
@@ -14775,7 +14751,7 @@ if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
   for p in `eval "$output_verbose_link_cmd"`; do
     case $prev$p in
 
-    -L* | -R* | -l* | */libclang_rt.*.a)
+    -L* | -R* | -l*)
        # Some compilers place space between "-{L,R}" and the path.
        # Remove the space.
        if test x-L = "$p" ||
@@ -14946,7 +14922,7 @@ lt_prog_compiler_static_CXX=
     beos* | irix5* | irix6* | nonstopux* | osf3* | osf4* | osf5*)
       # PIC is the default for these OSes.
       ;;
-    mingw* | cygwin* | msys* | os2* | pw32* | cegcc*)
+    mingw* | cygwin* | os2* | pw32* | cegcc*)
       # This hack is so that the source file can tell whether it is being
       # built for inclusion in a dll (and should export symbols for example).
       # Although the cygwin gcc ignores -fPIC, still need this for old-style
@@ -15021,7 +14997,7 @@ lt_prog_compiler_static_CXX=
 	  ;;
 	esac
 	;;
-      mingw* | cygwin* | msys* | os2* | pw32* | cegcc*)
+      mingw* | cygwin* | os2* | pw32* | cegcc*)
 	# This hack is so that the source file can tell whether it is being
 	# built for inclusion in a dll (and should export symbols for example).
 	lt_prog_compiler_pic_CXX='-DDLL_EXPORT'
@@ -15510,7 +15486,7 @@ $as_echo_n "checking whether the $compiler linker ($LD) supports shared librarie
   pw32*)
     export_symbols_cmds_CXX=$ltdll_cmds
     ;;
-  cygwin* | msys* | mingw* | cegcc*)
+  cygwin* | mingw* | cegcc*)
     case $cc_basename in
     cl* | icl* | ifort*)
       exclude_expsyms_CXX='_NULL_IMPORT_DESCRIPTOR|_IMPORT_DESCRIPTOR_.*'
@@ -15831,7 +15807,7 @@ bsdi[45]*)
   # libtool to hard-code these into programs
   ;;
 
-cygwin* | msys* | mingw* | pw32* | cegcc*)
+cygwin* | mingw* | pw32* | cegcc*)
   version_type=windows
   shrext_cmds=.dll
   need_version=no
@@ -15860,11 +15836,6 @@ cygwin* | msys* | mingw* | pw32* | cegcc*)
     cygwin*)
       # Cygwin DLLs use 'cyg' prefix rather than 'lib'
       soname_spec='`echo $libname | sed -e 's/^lib/cyg/'``echo $release | $SED -e 's/[.]/-/g'`$versuffix$shared_ext'
-
-      ;;
-    msys*)
-      # MSYS DLLs use 'msys-' prefix rather than 'lib'
-      soname_spec='`echo $libname | sed -e 's/^lib/msys-/'``echo $release | $SED -e 's/[.]/-/g'`$versuffix$shared_ext'
 
       ;;
     mingw* | cegcc*)
@@ -15901,7 +15872,7 @@ cygwin* | msys* | mingw* | pw32* | cegcc*)
       # Convert to MSYS style.
       sys_lib_search_path_spec=`$ECHO "$sys_lib_search_path_spec" | sed -e 's|\\\\|/|g' -e 's| \\([a-zA-Z]\\):| /\\1|g' -e 's|^ ||'`
       ;;
-    cygwin* | msys*)
+    cygwin*)
       # Convert to unix form, then to dos form, then back to unix form
       # but this time dos style (no spaces!) so that the unix form looks
       # like /cygdrive/c/PROGRA~1:/cygdr...
@@ -16590,7 +16561,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 #    and explicitly dll-exporting them, leading to warnings about duplicates
 #    regarding those that are properly marked for dll-export in the source.
 #
-# Patch libtool also to circumvent some issues when using MinGW (Msys+GCC).
+# Patch libtool also to circumbent some issues when using MinGW (Msys+GCC).
 # 1. Relax check which libraries can be used when linking a DLL.
 #    libtool's func_mode_link() would reject linking MinGW system libraries,
 #    e.g., -lmingw32, when building a DLL, because it does not find this
@@ -18425,7 +18396,7 @@ fi
 
   case $coin_has_cplex in
     build | requested)
-      cplex_lflags=-lcplex -lpthread -lm -ldl
+      cplex_lflags="-lcplex -lpthread -lm -ldl"
          if test "$coin_has_cplex" = build ; then
               cplex_cflags="-I\$(pkgincludedir)/ThirdParty"
             fi
@@ -18686,7 +18657,7 @@ fi
 
   case $coin_has_mosek in
     build | requested)
-      mosek_lflags=-lmosek64 -lpthread
+      mosek_lflags="-lmosek64 -lpthread"
          if test "$coin_has_mosek" = build ; then
               mosek_cflags="-I\$(pkgincludedir)/ThirdParty"
             fi
@@ -18947,7 +18918,7 @@ fi
 
   case $coin_has_xpress in
     build | requested)
-      xpress_lflags=-lxprs -lxprl
+      xpress_lflags="-lxprs -lxprl"
          if test "$coin_has_xpress" = build ; then
               xpress_cflags="-I\$(pkgincludedir)/ThirdParty"
             fi
@@ -19208,7 +19179,7 @@ fi
 
   case $coin_has_gurobi in
     build | requested)
-      gurobi_lflags=-lgurobi -lpthread -lm
+      gurobi_lflags="-lgurobi -lpthread -lm"
          if test "$coin_has_gurobi" = build ; then
               gurobi_cflags="-I\$(pkgincludedir)/ThirdParty"
             fi

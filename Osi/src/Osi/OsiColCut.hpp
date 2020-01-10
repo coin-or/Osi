@@ -10,7 +10,6 @@
 #include "CoinPackedVector.hpp"
 
 #include "OsiConfig.h"
-#include "OsiUnitTestsConfig.h"
 #include "OsiCollections.hpp"
 #include "OsiCut.hpp"
 
@@ -23,8 +22,10 @@ Column Cut Class has:
   </ul>
 */
 class OSILIB_EXPORT OsiColCut : public OsiCut {
+#ifdef OSICOMMONTESTLIB_EXPORT
   friend OSICOMMONTESTLIB_EXPORT void OsiColCutUnitTest(const OsiSolverInterface *baseSiP,
     const std::string &mpsDir);
+#endif
 
 public:
   //----------------------------------------------------------------

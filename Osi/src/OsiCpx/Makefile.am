@@ -28,7 +28,7 @@ libOsiCpx_la_LIBADD = ../Osi/libOsi.la $(OSICPXLIB_LFLAGS)
 libOsiCpx_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.
-AM_CPPFLAGS = -I$(srcdir)/../Osi -I$(srcdir)/../OsiCommonTest $(OSICPXLIB_CFLAGS) -DOSICPXLIB_BUILD
+AM_CPPFLAGS = -I$(srcdir)/../Osi $(OSICPXLIB_CFLAGS) -DOSICPXLIB_BUILD
 
 ########################################################################
 #                Headers that need to be installed                     #

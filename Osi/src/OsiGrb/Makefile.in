@@ -462,7 +462,7 @@ libOsiGrb_la_LIBADD = ../Osi/libOsi.la $(OSIGRBLIB_LFLAGS)
 libOsiGrb_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.
-AM_CPPFLAGS = -I$(srcdir)/../Osi -I$(srcdir)/../OsiCommonTest $(OSIGRBLIB_CFLAGS) -DOSIGRBLIB_BUILD
+AM_CPPFLAGS = -I$(srcdir)/../Osi $(OSIGRBLIB_CFLAGS) -DOSIGRBLIB_BUILD
 
 ########################################################################
 #                Headers that need to be installed                     #

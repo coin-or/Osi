@@ -3504,9 +3504,9 @@ void OGSI::gutsOfDestructor()
   if (lp_ != NULL) {
     glp_delete_prob(lp_);
     lp_ = NULL;
-    delete smcp_ ;
+    delete static_cast<glp_smcp*>(smcp_) ;
     smcp_ = NULL ;
-    delete iocp_ ;
+    delete static_cast<glp_iocp*>(iocp_) ;
     iocp_ = NULL ;
     freeAllMemory();
   }

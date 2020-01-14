@@ -17744,7 +17744,6 @@ $as_echo "$as_me: OSICOMMONTESTLIB_CFLAGS: \"${OSICOMMONTESTLIB_CFLAGS}\"" >&6;}
 # library, add external components, finalize the flags, and add any components
 # being built here.
 
-# TODO just check for system glpk?
 
 
 

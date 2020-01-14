@@ -92,7 +92,6 @@ AC_COIN_CHK_HERE([OsiLib],[OsiCommonTestLib],[osi])
 # library, add external components, finalize the flags, and add any components
 # being built here.
 
-# TODO just check for system glpk?
 AC_COIN_CHK_PKG(Glpk,[OsiGlpkLib],,[build])
 
 AC_COIN_CHK_PKG(SoPlex,[OsiSpxLib],[coinsoplex < 1.7],[build])

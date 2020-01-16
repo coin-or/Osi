@@ -29,7 +29,7 @@
 typedef struct glp_prob glp_prob;
 
 class OSIGLPKLIB_EXPORT OsiGlpkSolverInterface : virtual public OsiSolverInterface {
-  friend OSIGLPKLIB_EXPORT void OsiGlpkSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
+  friend void OsiGlpkSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
 
 public:
   //---------------------------------------------------------------------------
@@ -905,11 +905,6 @@ private:
   //@}
   //@}
 };
-
-//#############################################################################
-/** A function that tests the methods in the OsiGlpkSolverInterface class. */
-OSIGLPKLIB_EXPORT
-void OsiGlpkSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
 
 #endif // OsiGlpkSolverInterface_H
 

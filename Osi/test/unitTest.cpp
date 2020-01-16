@@ -62,6 +62,12 @@ using namespace OsiUnitTest;
 
 #ifdef COIN_HAS_GLPK
 #include "OsiGlpkSolverInterface.hpp"
+
+/** A function that tests the methods in the OsiGlpkSolverInterface class.
+ * Implemented in OsiGlpkSolverInterfaceTest.cpp
+ */
+void OsiGlpkSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
+
 #ifdef USETESTSOLVER
 #undef USETESTSOLVER
 #endif

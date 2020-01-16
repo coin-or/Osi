@@ -26,7 +26,7 @@ unitTest_SOURCES = unitTest.cpp \
 unitTest_LDADD        = ../src/OsiCommonTest/libOsiCommonTest.la
 
 # Here list all include flags, relative to this "srcdir" directory.
-AM_CPPFLAGS = -I$(srcdir)/../src/Osi -I$(srcdir)/../src/OsiCommonTest $(OSICOMMONTESTLIB_CFLAGS)
+AM_CPPFLAGS = -I$(srcdir)/../src/Osi -I$(srcdir)/../src/OsiCommonTest
 
 # Depending of what solvers are available, we add the corresponding files,
 # libraries and compile flags
@@ -66,6 +66,9 @@ if COIN_HAS_SOPLEX
   AM_CPPFLAGS += -DCOIN_HAS_SOPLEX -I$(srcdir)/../src/OsiSpx $(OSISPXLIB_CFLAGS)
   unitTest_LDADD += ../src/OsiSpx/libOsiSpx.la
 endif
+
+# put this one after the -I$(srcdir)/../src/OsiXyz from above
+AM_CPPFLAGS += $(OSICOMMONTESTLIB_CFLAGS)
 
 unittestflags =
 if COIN_HAS_SAMPLE

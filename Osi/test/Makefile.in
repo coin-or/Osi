@@ -459,10 +459,12 @@ unitTest_LDADD = ../src/OsiCommonTest/libOsiCommonTest.la \
 	$(am__append_12) $(am__append_15) $(am__append_18)
 
 # Here list all include flags, relative to this "srcdir" directory.
+
+# put this one after the -I$(srcdir)/../src/OsiXyz from above
 AM_CPPFLAGS = -I$(srcdir)/../src/Osi -I$(srcdir)/../src/OsiCommonTest \
-	$(OSICOMMONTESTLIB_CFLAGS) $(am__append_2) $(am__append_5) \
-	$(am__append_8) $(am__append_11) $(am__append_14) \
-	$(am__append_17)
+	$(am__append_2) $(am__append_5) $(am__append_8) \
+	$(am__append_11) $(am__append_14) $(am__append_17) \
+	$(OSICOMMONTESTLIB_CFLAGS)
 unittestflags = $(am__append_19) $(am__append_20)
 
 ########################################################################

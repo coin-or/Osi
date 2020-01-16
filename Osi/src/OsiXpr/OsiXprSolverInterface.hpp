@@ -20,7 +20,7 @@ typedef struct xo_prob_struct *XPRSprob;
     Instantiation of OsiSolverInterface for XPRESS-MP
  */
 class OSIXPRLIB_EXPORT OsiXprSolverInterface : virtual public OsiSolverInterface {
-  friend OSIXPRLIB_EXPORT void OsiXprSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
+  friend void OsiXprSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
 
 public:
   /**@name Solve methods */
@@ -799,11 +799,6 @@ private:
   /// Whether to pass a column solution to XPRESS before starting MIP solve (loadmipsol)
   bool domipstart;
 };
-
-//#############################################################################
-/** A function that tests the methods in the OsiXprSolverInterface class. */
-OSIXPRLIB_EXPORT
-void OsiXprSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
 
 #endif
 

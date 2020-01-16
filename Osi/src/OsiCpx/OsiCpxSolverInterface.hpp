@@ -28,7 +28,7 @@ typedef struct cpxenv *CPXENVptr;
 */
 
 class OSICPXLIB_EXPORT OsiCpxSolverInterface : virtual public OsiSolverInterface {
-  friend OSICPXLIB_EXPORT void OsiCpxSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
+  friend void OsiCpxSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
 
 public:
   //---------------------------------------------------------------------------
@@ -886,11 +886,6 @@ private:
 
   //@}
 };
-
-//#############################################################################
-/** A function that tests the methods in the OsiCpxSolverInterface class. */
-OSICPXLIB_EXPORT
-void OsiCpxSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
 
 #endif
 

@@ -28,7 +28,7 @@ typedef struct _GRBenv GRBenv;
  */
 
 class OSIGRBLIB_EXPORT OsiGrbSolverInterface : virtual public OsiSolverInterface {
-  friend OSIGRBLIB_EXPORT void OsiGrbSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
+  friend void OsiGrbSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
 
 public:
   //---------------------------------------------------------------------------
@@ -920,11 +920,6 @@ private:
   int *auxcolind;
   //@}
 };
-
-//#############################################################################
-/** A function that tests the methods in the OsiGrbSolverInterface class. */
-OSIGRBLIB_EXPORT
-void OsiGrbSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
 
 #endif
 

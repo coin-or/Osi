@@ -48,6 +48,12 @@ using namespace OsiUnitTest;
 
 #ifdef COIN_HAS_XPRESS
 #include "OsiXprSolverInterface.hpp"
+
+/** A function that tests the methods in the OsiXprSolverInterface class.
+ * Implemented in OsiXprSolverInterfaceTest.cpp
+ */
+void OsiXprSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
+
 #ifdef USETESTSOLVER
 #undef USETESTSOLVER
 #endif
@@ -58,6 +64,12 @@ using namespace OsiUnitTest;
 #ifdef USETESTSOLVER
 #undef USETESTSOLVER
 #endif
+
+/** A function that tests the methods in the OsiCpxSolverInterface class.
+ * Implemented in OsiCpxSolverInterfaceTest.cpp
+ */
+void OsiCpxSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
+
 #endif
 
 #ifdef COIN_HAS_GLPK
@@ -75,6 +87,12 @@ void OsiGlpkSolverInterfaceUnitTest(const std::string &mpsDir, const std::string
 
 #ifdef COIN_HAS_MOSEK
 #include "OsiMskSolverInterface.hpp"
+
+/** A function that tests the methods in the OsiMskSolverInterface class.
+ * Implemented in OsiMskSolverInterfaceTest.cpp
+ */
+void OsiMskSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
+
 #ifdef USETESTSOLVER
 #undef USETESTSOLVER
 #endif
@@ -82,6 +100,12 @@ void OsiGlpkSolverInterfaceUnitTest(const std::string &mpsDir, const std::string
 
 #ifdef COIN_HAS_GUROBI
 #include "OsiGrbSolverInterface.hpp"
+
+/** A function that tests the methods in the OsiGrbSolverInterface class.
+ * Implemented in OsiGrbSolverInterfaceTest.cpp
+ */
+void OsiGrbSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
+
 #ifdef USETESTSOLVER
 #undef USETESTSOLVER
 #endif
@@ -89,6 +113,12 @@ void OsiGlpkSolverInterfaceUnitTest(const std::string &mpsDir, const std::string
 
 #ifdef COIN_HAS_SOPLEX
 #include "OsiSpxSolverInterface.hpp"
+
+/** A function that tests the methods in the OsiSpxSolverInterface class.
+ * Implemented in OsiSpxSolverInterfaceTest.cpp
+ */
+void OsiSpxSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
+
 #ifdef USETESTSOLVER
 #undef USETESTSOLVER
 #endif

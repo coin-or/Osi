@@ -21,9 +21,8 @@ typedef void* MSKenv_t;
    Instantiation of OsiMskSolverInterface for MOSEK
 */
 
-class OSIMSKLIB_EXPORT OsiMskSolverInterface : 
-  virtual public OsiSolverInterface {
-  friend OSIMSKLIB_EXPORT void OsiMskSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
+class OSIMSKLIB_EXPORT OsiMskSolverInterface : virtual public OsiSolverInterface {
+  friend void OsiMskSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 public:
   
   //---------------------------------------------------------------------------
@@ -831,10 +830,5 @@ private:
 
   //@}
 };
-
-//#############################################################################
-/** A function that tests the methods in the OsiMskSolverInterface class */
-OSIMSKLIB_EXPORT
-void OsiMskSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
 
 #endif

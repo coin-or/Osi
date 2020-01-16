@@ -36,7 +36,7 @@ class SoPlex;
     Instantiation of OsiSpxSolverInterface for SoPlex
 */
 class OSISPXLIB_EXPORT OsiSpxSolverInterface : virtual public OsiSolverInterface {
-  friend OSISPXLIB_EXPORT void OsiSpxSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
+  friend void OsiSpxSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
 
 public:
   //---------------------------------------------------------------------------
@@ -733,11 +733,6 @@ private:
   //@}
   //@}
 };
-
-//#############################################################################
-/** A function that tests the methods in the OsiSpxSolverInterface class. */
-OSISPXLIB_EXPORT
-void OsiSpxSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
 
 #endif
 

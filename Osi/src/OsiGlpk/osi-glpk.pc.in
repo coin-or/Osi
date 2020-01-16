@@ -1,12 +1,14 @@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 libdir=@libdir@
-includedir=@includedir@/coin
+includedir=@includedir@/coin-or
 
 Name: OsiGlpk
 Description: COIN-OR Open Solver Interface for GLPK
 URL: https://projects.coin-or.org/Osi
 Version: @PACKAGE_VERSION@
-Libs: -L${libdir} -lOsiGlpk @OSIGLPKLIB_PCLIBS@
+Libs: -L${libdir} -lOsiGlpk
+Libs.private: @OSIGLPKLIB_LFLAGS_NOPC@
 Cflags: -I${includedir}
-Requires: osi @OSIGLPKLIB_PCREQUIRES@
+Requires:
+Requires.private: @OSIGLPKLIB_PCFILES@

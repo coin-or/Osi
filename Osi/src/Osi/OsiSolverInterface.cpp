@@ -1515,22 +1515,43 @@ int OsiSolverInterface::writeLpNative(FILE *fp,
 /*************************************************************************/
 int OsiSolverInterface::readLp(const char *filename, const double epsilon)
 {
-  FILE *fp = fopen(filename, "r");
+  CoinLpIO m;
+  m.readLp(filename, epsilon);
 
-  if (!fp) {
-    printf("### ERROR: OsiSolverInterface::readLp():  Unable to open file %s for reading\n",
-      filename);
-    return (1);
+  // set objective function offest
+  setDblParam(OsiObjOffset, 0);
+
+  // set problem name
+  setStrParam(OsiProbName, m.getProblemName());
+
+  // no errors --- load problem, set names and integrality
+  loadProblem(*m.getMatrixByRow(), m.getColLower(), m.getColUpper(),
+	      m.getObjCoefficients(), m.getRowLower(), m.getRowUpper());
+  setRowColNames(m) ;
+  const char *integer = m.integerColumns();
+  if (integer) {
+    int i, n = 0;
+    int nCols = m.getNumCols();
+    int *index = new int [nCols];
+    for (i=0; i<nCols; i++) {
+      if (integer[i]) {
+        index[n++] = i;
+      }
+    }
+    setInteger(index, n);
+    delete [] index;
   }
+  setObjSense(1);
 
-  int nerr = readLp(fp, epsilon);
-  // closed by readLP fclose(fp);
-  return (nerr);
+  return 0;
 }
 
 /*************************************************************************/
 int OsiSolverInterface::readLp(FILE *fp, const double epsilon)
 {
+#ifdef DLL_EXPORT
+  throw CoinError("Passing a filepointer to CoinUtils is likely going to crash with Windows DLLs", "readLp", "OsiSolverInterface");
+#endif
   CoinLpIO m;
   m.readLp(fp, epsilon);
 

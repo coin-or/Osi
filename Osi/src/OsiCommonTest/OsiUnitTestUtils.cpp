@@ -536,9 +536,9 @@ void TestOutcome::print() const
 
 void TestOutcomes::add(const OsiSolverInterface &si, std::string tst, const char *cond, TestOutcome::SeverityLevel sev, const char *file, int line, bool exp)
 {
-  std::string solverName;
-  si.getStrParam(OsiSolverName, solverName);
-  push_back(TestOutcome(solverName, tst, cond, sev, file, line, exp));
+    std::string solverName;
+    si.getStrParam(OsiSolverName, solverName);
+    outcomes.push_back(TestOutcome(solverName, tst, cond, sev, file, line, exp));
 }
 
 void TestOutcomes::print() const
@@ -553,17 +553,18 @@ void TestOutcomes::print() const
       Walk the list, counting entries at each severity level. Print if verbosity
       level is high enough.
     */
-  for (const_iterator it(begin()); it != end(); ++it) {
-    ++count[it->severity];
-    if (it->expected)
-      ++expected[it->severity];
-    if ((it->severity != TestOutcome::PASSED || OsiUnitTest::verbosity >= 2) && (it->severity != TestOutcome::NOTE || OsiUnitTest::verbosity >= 1))
-      it->print();
-  }
-  /// Print summary counts
-  for (int i = 0; i < TestOutcome::LAST; ++i)
-    printf("Severity %-10s: %4d  thereof expected: %4d\n",
-      TestOutcome::SeverityLevelName[i].c_str(), count[i], expected[i]);
+    for (std::list<TestOutcome>::const_iterator it(outcomes.begin()); it != outcomes.end(); ++it) {
+        ++count[it->severity];
+        if (it->expected) ++expected[it->severity];
+        if ((it->severity != TestOutcome::PASSED || OsiUnitTest::verbosity >= 2) &&
+                (it->severity != TestOutcome::NOTE || OsiUnitTest::verbosity >= 1))
+            it->print();
+    }
+    /// Print summary counts
+    for (int i = 0; i < TestOutcome::LAST; ++i)
+        printf("Severity %-10s: %4d  thereof expected: %4d\n",
+               TestOutcome::SeverityLevelName[i].c_str(),
+               count[i], expected[i]);
 }
 
 void TestOutcomes::getCountBySeverity(TestOutcome::SeverityLevel sev,
@@ -575,13 +576,11 @@ void TestOutcomes::getCountBySeverity(TestOutcome::SeverityLevel sev,
   total = 0;
   expected = 0;
 
-  for (const_iterator it(begin()); it != end(); ++it) {
-    if (it->severity != sev)
-      continue;
-    ++total;
-    if (it->expected)
-      ++expected;
-  }
+    for (std::list<TestOutcome>::const_iterator it(outcomes.begin()); it != outcomes.end(); ++it) {
+        if( it->severity != sev ) continue;
+        ++total;
+        if( it->expected ) ++expected;
+    }
 }
 
 } // end OsiUnitTest namespace

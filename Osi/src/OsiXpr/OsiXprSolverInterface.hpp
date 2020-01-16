@@ -9,6 +9,7 @@
 #include <cstdio>
 
 #include "OsiSolverInterface.hpp"
+#include "OsiXprConfig.h"
 
 typedef struct xo_prob_struct *XPRSprob;
 
@@ -18,7 +19,7 @@ typedef struct xo_prob_struct *XPRSprob;
 
     Instantiation of OsiSolverInterface for XPRESS-MP
  */
-class OsiXprSolverInterface : virtual public OsiSolverInterface {
+class OSIXPRLIB_EXPORT OsiXprSolverInterface : virtual public OsiSolverInterface {
   friend void OsiXprSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
 
 public:
@@ -798,10 +799,6 @@ private:
   /// Whether to pass a column solution to XPRESS before starting MIP solve (loadmipsol)
   bool domipstart;
 };
-
-//#############################################################################
-/** A function that tests the methods in the OsiXprSolverInterface class. */
-void OsiXprSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
 
 #endif
 

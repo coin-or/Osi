@@ -7,6 +7,7 @@
 
 #include "CoinPackedVector.hpp"
 
+#include "OsiConfig.h"
 #include "OsiCollections.hpp"
 #include "OsiCut.hpp"
 
@@ -26,9 +27,11 @@ A row cut has:
   <li>a vector of row elements
   </ul>
 */
-class OsiRowCut : public OsiCut {
-  friend void OsiRowCutUnitTest(const OsiSolverInterface *baseSiP,
+class OSILIB_EXPORT OsiRowCut : public OsiCut {
+#ifdef OSICOMMONTESTLIB_EXPORT
+  friend OSICOMMONTESTLIB_EXPORT void OsiRowCutUnitTest(const OsiSolverInterface *baseSiP,
     const std::string &mpsDir);
+#endif
 
 public:
   /**@name Row bounds */
@@ -297,7 +300,7 @@ bool OsiRowCut::infeasible(const OsiSolverInterface &im) const
     to OsiRowCut does that.
 
 */
-class OsiRowCut2 : public OsiRowCut {
+class OSILIB_EXPORT OsiRowCut2 : public OsiRowCut {
 
 public:
   /**@name Which row */

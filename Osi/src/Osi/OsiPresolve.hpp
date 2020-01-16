@@ -4,10 +4,45 @@
 
 #ifndef OsiPresolve_H
 #define OsiPresolve_H
+
+#include "OsiConfig.h"
 #include "OsiSolverInterface.hpp"
 
 class CoinPresolveAction;
 #include "CoinPresolveMatrix.hpp"
+
+OSILIB_EXPORT
+CoinPresolveMatrix* construct_CoinPresolveMatrix(int ncols0_in,
+				       double maxmin,
+				       // end prepost members
+				       OsiSolverInterface * si,
+				       // rowrep
+				       int nrows_in,
+				       CoinBigIndex nelems_in,
+				       bool doStatus,
+				       double nonLinearValue,
+                                       const char * prohibited,
+				       const char * rowProhibited);
+
+OSILIB_EXPORT
+void update_model_CoinPresolveMatrix(CoinPresolveMatrix& cpm, OsiSolverInterface * si,
+				      int nrows0, int ncols0,
+				      CoinBigIndex nelems0);
+
+OSILIB_EXPORT
+CoinPostsolveMatrix* construct_CoinPostsolveMatrix(OsiSolverInterface*  si,
+				       int ncols0_in,
+				       int nrows0_in,
+				       CoinBigIndex nelems0,
+				   
+				       double maxmin,
+				       // end prepost members
+
+				       double *sol_in,
+				       double *acts_in,
+
+				       unsigned char *colstat_in,
+				       unsigned char *rowstat_in);
 
 /*! \class OsiPresolve
     \brief OSI interface to COIN problem simplification capabilities
@@ -56,7 +91,7 @@ class CoinPresolveAction;
   \endcode
 */
 
-class OsiPresolve {
+class OSILIB_EXPORT OsiPresolve {
 public:
   /// Default constructor (empty object)
   OsiPresolve();

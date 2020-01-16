@@ -8,6 +8,8 @@
 
 AUTOMAKE_OPTIONS = foreign
 
+include $(top_srcdir)/BuildTools/Makemain.inc
+
 ########################################################################
 #                               libOsi                                 #
 ########################################################################
@@ -35,28 +37,22 @@ libOsi_la_SOURCES = \
 	OsiSolverParameters.hpp
 
 # List all additionally required libraries
-if DEPENDENCY_LINKING
-libOsi_la_LIBADD = $(OSILIB_LIBS)
-endif
+libOsi_la_LIBADD = $(OSILIB_LFLAGS)
 
 # This is for libtool
 libOsi_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags.
-AM_CPPFLAGS = $(COINUTILS_CFLAGS)
-
-# This line is necessary to allow VPATH compilation.
-# This "cygpath" stuff is necessary to compile with native compilers on Windows.
-DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)`
+AM_CPPFLAGS = $(OSILIB_CFLAGS) -DOSILIB_BUILD
 
 ########################################################################
 #                Headers that need to be installed                     #
 ########################################################################
 
 # Here list all the header files that are required by a user of the library,
-# and that therefore should be installed in 'includedir/coin'
+# and that therefore should be installed in pkgincludedir
 
-includecoindir = $(includedir)/coin
+includecoindir = $(pkgincludedir)
 includecoin_HEADERS = \
 	OsiAuxInfo.hpp \
 	OsiBranchingObject.hpp \

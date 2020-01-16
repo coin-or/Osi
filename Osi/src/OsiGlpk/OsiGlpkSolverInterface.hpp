@@ -14,6 +14,8 @@
 #include "OsiSolverInterface.hpp"
 #include "CoinPackedMatrix.hpp"
 #include "CoinWarmStartBasis.hpp"
+#include "OsiGlpkConfig.h"
+
 
 /** GPLK Solver Interface
 
@@ -24,16 +26,9 @@
 #define LPX glp_prob
 #endif
 
-#ifndef GLP_PROB_DEFINED
-#define GLP_PROB_DEFINED
-// Glpk < 4.48:
-typedef struct {
-  double _opaque_prob[100];
-} glp_prob;
-// Glpk 4.48: typedef struct glp_prob glp_prob;
-#endif
+typedef struct glp_prob glp_prob;
 
-class OsiGlpkSolverInterface : virtual public OsiSolverInterface {
+class OSIGLPKLIB_EXPORT OsiGlpkSolverInterface : virtual public OsiSolverInterface {
   friend void OsiGlpkSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
 
 public:
@@ -666,6 +661,7 @@ public:
   //@}
 
   /**@name Static instance counter methods */
+  //@{
   /** GLPK has a context which must be freed after all GLPK LPs (or MIPs) are freed.
    * It is automatically created when the first LP is created.   
       This method:
@@ -765,8 +761,14 @@ private:
 
   /**@name Private member data */
   //@{
-  /// GPLK model represented by this class instance
+  /// GLPK model represented by this class instance
   mutable LPX *lp_;
+
+  /// GLPK simplex solver control parameters. Opaque to the client.
+  void *smcp_ ;
+
+  /// GLPK branch-and-cut control parameters. Opaque to the client.
+  void *iocp_ ;
 
   /// number of GLPK instances currently in use (counts only those created by OsiGlpk)
   static unsigned int numInstances_;
@@ -782,6 +784,8 @@ private:
   int hotStartMaxIteration_;
   /// OSI name discipline
   int nameDisc_;
+  /// Scaling setting
+  int scaleFlags_ ;
 
   // Double parameters.
   /// dual objective limit (measure of badness; stop if we're worse)
@@ -901,10 +905,6 @@ private:
   //@}
   //@}
 };
-
-//#############################################################################
-/** A function that tests the methods in the OsiGlpkSolverInterface class. */
-void OsiGlpkSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
 
 #endif // OsiGlpkSolverInterface_H
 

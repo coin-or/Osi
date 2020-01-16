@@ -39,44 +39,73 @@ using namespace OsiUnitTest;
   commented if you're happy with running the unitTest for all solvers in
   the build.
 */
-// #undef COIN_HAS_XPR
-// #undef COIN_HAS_CPX
+// #undef COIN_HAS_XPRESS
+// #undef COIN_HAS_CPLEX
 // #undef COIN_HAS_GLPK
-// #undef COIN_HAS_MSK
-// #undef COIN_HAS_GRB
+// #undef COIN_HAS_MOSEK
+// #undef COIN_HAS_GUROBI
 // #undef COIN_HAS_SOPLEX
 
-#ifdef COIN_HAS_XPR
+#ifdef COIN_HAS_XPRESS
 #include "OsiXprSolverInterface.hpp"
+
+/** A function that tests the methods in the OsiXprSolverInterface class.
+ * Implemented in OsiXprSolverInterfaceTest.cpp
+ */
+void OsiXprSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
+
 #ifdef USETESTSOLVER
 #undef USETESTSOLVER
 #endif
 #endif
 
-#ifdef COIN_HAS_CPX
+#ifdef COIN_HAS_CPLEX
 #include "OsiCpxSolverInterface.hpp"
-#undef USETESTSOLVER
 #ifdef USETESTSOLVER
 #undef USETESTSOLVER
 #endif
+
+/** A function that tests the methods in the OsiCpxSolverInterface class.
+ * Implemented in OsiCpxSolverInterfaceTest.cpp
+ */
+void OsiCpxSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
+
 #endif
 
 #ifdef COIN_HAS_GLPK
 #include "OsiGlpkSolverInterface.hpp"
+
+/** A function that tests the methods in the OsiGlpkSolverInterface class.
+ * Implemented in OsiGlpkSolverInterfaceTest.cpp
+ */
+void OsiGlpkSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
+
 #ifdef USETESTSOLVER
 #undef USETESTSOLVER
 #endif
 #endif
 
-#ifdef COIN_HAS_MSK
+#ifdef COIN_HAS_MOSEK
 #include "OsiMskSolverInterface.hpp"
+
+/** A function that tests the methods in the OsiMskSolverInterface class.
+ * Implemented in OsiMskSolverInterfaceTest.cpp
+ */
+void OsiMskSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir);
+
 #ifdef USETESTSOLVER
 #undef USETESTSOLVER
 #endif
 #endif
 
-#ifdef COIN_HAS_GRB
+#ifdef COIN_HAS_GUROBI
 #include "OsiGrbSolverInterface.hpp"
+
+/** A function that tests the methods in the OsiGrbSolverInterface class.
+ * Implemented in OsiGrbSolverInterfaceTest.cpp
+ */
+void OsiGrbSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
+
 #ifdef USETESTSOLVER
 #undef USETESTSOLVER
 #endif
@@ -84,6 +113,12 @@ using namespace OsiUnitTest;
 
 #ifdef COIN_HAS_SOPLEX
 #include "OsiSpxSolverInterface.hpp"
+
+/** A function that tests the methods in the OsiSpxSolverInterface class.
+ * Implemented in OsiSpxSolverInterfaceTest.cpp
+ */
+void OsiSpxSolverInterfaceUnitTest(const std::string &mpsDir, const std::string &netlibDir);
+
 #ifdef USETESTSOLVER
 #undef USETESTSOLVER
 #endif
@@ -117,7 +152,7 @@ int main (int argc, const char *argv[])
 /*
   Might as well make use of this convenient Xpress feature.
 */
-#ifdef COIN_HAS_XPR
+#ifdef COIN_HAS_XPRESS
   OsiXprSolverInterface::setLogFileName("xprCallTrace.txt");
 #endif
 
@@ -134,7 +169,7 @@ int main (int argc, const char *argv[])
 /*
   Test Osi{Row,Col}Cut routines.
 */
-#ifdef COIN_HAS_XPR  
+#ifdef COIN_HAS_XPRESS  
   {
     OsiXprSolverInterface xprSi;
     testingMessage( "Testing OsiRowCut with OsiXprSolverInterface\n" );
@@ -152,7 +187,7 @@ int main (int argc, const char *argv[])
   }
 #endif
 
-#ifdef COIN_HAS_CPX
+#ifdef COIN_HAS_CPLEX
   {
     OsiCpxSolverInterface cpxSi;
     testingMessage( "Testing OsiRowCut with OsiCpxSolverInterface\n" );
@@ -201,7 +236,7 @@ int main (int argc, const char *argv[])
   }
 #endif
 
-#ifdef COIN_HAS_MSK  
+#ifdef COIN_HAS_MOSEK  
   {
     OsiMskSolverInterface MskSi;
     testingMessage( "Testing OsiRowCut with OsiMskSolverInterface\n" );
@@ -219,7 +254,7 @@ int main (int argc, const char *argv[])
   }
 #endif
 
-#ifdef COIN_HAS_GRB
+#ifdef COIN_HAS_GUROBI
   {
     OsiGrbSolverInterface grbSi;
     testingMessage( "Testing OsiRowCut with OsiGrbSolverInterface\n" );
@@ -272,12 +307,12 @@ int main (int argc, const char *argv[])
   to decide whether or not to run OsiSolverInterfaceCommonUnitTest. Arguably
   this should be required.
 */
-#ifdef COIN_HAS_XPR
+#ifdef COIN_HAS_XPRESS
   testingMessage( "Testing OsiXprSolverInterface\n" );
   OSIUNITTEST_CATCH_ERROR(OsiXprSolverInterfaceUnitTest(mpsDir,netlibDir), {}, "xpress", "osixpr unittest");
 #endif
 
-#ifdef COIN_HAS_CPX
+#ifdef COIN_HAS_CPLEX
   testingMessage( "Testing OsiCpxSolverInterface\n" );
   OSIUNITTEST_CATCH_ERROR(OsiCpxSolverInterfaceUnitTest(mpsDir,netlibDir), {}, "cplex", "osicpx unittest");
 #endif
@@ -292,12 +327,12 @@ int main (int argc, const char *argv[])
   OSIUNITTEST_CATCH_ERROR(OsiGlpkSolverInterfaceUnitTest(mpsDir,netlibDir), {}, "glpk", "osiglpk unittest");
 #endif
   
-#ifdef COIN_HAS_MSK
+#ifdef COIN_HAS_MOSEK
   testingMessage( "Testing OsiMskSolverInterface\n" );
   OSIUNITTEST_CATCH_ERROR(OsiMskSolverInterfaceUnitTest(mpsDir,netlibDir), {}, "mosek", "osimsk unittest");
 #endif
 
-#ifdef COIN_HAS_GRB
+#ifdef COIN_HAS_GUROBI
   testingMessage( "Testing OsiGrbSolverInterface\n" );
   OSIUNITTEST_CATCH_ERROR(OsiGrbSolverInterfaceUnitTest(mpsDir,netlibDir), {}, "gurobi", "osigrb unittest");
 #endif
@@ -315,11 +350,11 @@ int main (int argc, const char *argv[])
   {
     // Create vector of solver interfaces
     std::vector<OsiSolverInterface*> vecSi;
-#   if COIN_HAS_XPR
+#   if COIN_HAS_XPRESS
     OsiSolverInterface * xprSi = new OsiXprSolverInterface;
     vecSi.push_back(xprSi);
 #   endif
-#   if COIN_HAS_CPX
+#   if COIN_HAS_CPLEX
     OsiSolverInterface * cpxSi = new OsiCpxSolverInterface;
     vecSi.push_back(cpxSi);
 #   endif
@@ -329,11 +364,11 @@ int main (int argc, const char *argv[])
     glpkSi->setHintParam(OsiDoReducePrint,true,OsiHintDo) ;
     vecSi.push_back(glpkSi);
 #   endif
-#   if COIN_HAS_MSK
+#   if COIN_HAS_MOSEK
     OsiSolverInterface * MskSi = new OsiMskSolverInterface;
     vecSi.push_back(MskSi);
 #   endif
-#   if COIN_HAS_GRB
+#   if COIN_HAS_GUROBI
     OsiSolverInterface * grbSi = new OsiGrbSolverInterface;
     vecSi.push_back(grbSi);
 #   endif

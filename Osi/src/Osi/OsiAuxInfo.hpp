@@ -5,6 +5,8 @@
 #ifndef OsiAuxInfo_H
 #define OsiAuxInfo_H
 
+#include "OsiConfig.h"
+
 class OsiSolverInterface;
 
 //#############################################################################
@@ -18,7 +20,7 @@ class OsiSolverInterface;
 
 */
 
-class OsiAuxInfo {
+class OSILIB_EXPORT OsiAuxInfo {
 public:
   // Default Constructor
   OsiAuxInfo(void *appData = NULL);
@@ -49,7 +51,7 @@ protected:
     You can derive from this although at present I can't see the need.
 */
 
-class OsiBabSolver : public OsiAuxInfo {
+class OSILIB_EXPORT OsiBabSolver : public OsiAuxInfo {
 public:
   // Default Constructor
   OsiBabSolver(int solverType = 0);

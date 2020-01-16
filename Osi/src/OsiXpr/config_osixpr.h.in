@@ -1,0 +1,9 @@
+/* src/Osi/config_osixpr.h.in. */
+
+#ifndef __CONFIG_OSIXPR_H__
+#define __CONFIG_OSIXPR_H__
+
+/* Library Visibility Attribute */
+#undef OSIXPRLIB_EXPORT
+
+#endif

@@ -8,18 +8,20 @@
 
 AUTOMAKE_OPTIONS = foreign
 
+include $(top_srcdir)/BuildTools/Makemain.inc
+
 ########################################################################
 #                    Common Test library for Osi                       #
 ########################################################################
 
 # Name of the library compiled in this directory.  We want it to be installed
 # in $libdir
-lib_LTLIBRARIES = libOsiCommonTests.la
+lib_LTLIBRARIES = libOsiCommonTest.la
 
 # List all source files for this library, including headers
 
-libOsiCommonTests_la_SOURCES = \
-    OsiCommonTests.hpp \
+libOsiCommonTest_la_SOURCES = \
+    OsiCommonTest.hpp \
 	OsiColCutTest.cpp \
 	OsiCutsTest.cpp \
 	OsiRowCutDebuggerTest.cpp \
@@ -30,25 +32,26 @@ libOsiCommonTests_la_SOURCES = \
 	OsiSolverInterfaceTest.cpp
 
 # List all additionally required libraries
-if DEPENDENCY_LINKING
-libOsiCommonTests_la_LIBADD = $(OSILIB_LIBS) ../Osi/libOsi.la
-endif
+libOsiCommonTest_la_LIBADD = $(OSICOMMONTESTLIB_LFLAGS) ../Osi/libOsi.la
 
 # Libtool flags
-libOsiCommonTests_la_LDFLAGS = $(LT_LDFLAGS)
+libOsiCommonTest_la_LDFLAGS = $(LT_LDFLAGS)
 
-# Here list all include flags, relative to this "srcdir" directory.  This
-# "cygpath" stuff is necessary to compile with native compilers on Windows
-AM_CPPFLAGS = -I`$(CYGPATH_W) $(srcdir)/../Osi` $(COINUTILS_CFLAGS)
-
-# This line is necessary to allow VPATH compilation
-DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/src/Osi
+# Here list all include flags, relative to this "srcdir" directory.
+AM_CPPFLAGS = -I$(srcdir)/../Osi $(OSICOMMONTESTLIB_CFLAGS) -DOSICOMMONTEST_BUILD
 
 ########################################################################
 #                Headers that need to be installed                     #
 ########################################################################
 
 # Here list all the header files that are required by a user of the library,
+# and that therefore should be installed in pkgincludedir
 
-includecoindir = $(includedir)/coin
+includecoindir = $(pkgincludedir)
 includecoin_HEADERS = OsiUnitTests.hpp
+
+install-exec-local:
+	$(install_sh_DATA) config_osicommontest.h $(DESTDIR)$(includecoindir)/OsiUnitTestsConfig.h
+
+uninstall-local:
+	rm -f $(DESTDIR)$(includecoindir)/OsiUnitTestsConfig.h

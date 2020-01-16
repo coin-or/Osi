@@ -9,6 +9,7 @@
 
 #include "CoinPackedVector.hpp"
 
+#include "OsiConfig.h"
 #include "OsiCollections.hpp"
 #include "OsiCut.hpp"
 
@@ -20,9 +21,11 @@ Column Cut Class has:
   <li>a sparse vector of column upper bounds
   </ul>
 */
-class OsiColCut : public OsiCut {
-  friend void OsiColCutUnitTest(const OsiSolverInterface *baseSiP,
+class OSILIB_EXPORT OsiColCut : public OsiCut {
+#ifdef OSICOMMONTESTLIB_EXPORT
+  friend OSICOMMONTESTLIB_EXPORT void OsiColCutUnitTest(const OsiSolverInterface *baseSiP,
     const std::string &mpsDir);
+#endif
 
 public:
   //----------------------------------------------------------------

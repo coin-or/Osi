@@ -16,11 +16,11 @@
 #include "CoinWarmStart.hpp"
 #include "CoinFinite.hpp"
 #include "CoinError.hpp"
+#include "cgraph.h"
 
+#include "OsiConfig.h"
 #include "OsiCollections.hpp"
 #include "OsiSolverParameters.hpp"
-
-#include "cgraph.h"
 
 class CoinSnapshot;
 class CoinLpIO;
@@ -60,14 +60,16 @@ class OsiObject;
   the methods that return vectors.
 */
 
-class OsiSolverInterface {
-  friend void OsiSolverInterfaceCommonUnitTest(
-    const OsiSolverInterface *emptySi,
-    const std::string &mpsDir,
-    const std::string &netlibDir);
-  friend void OsiSolverInterfaceMpsUnitTest(
-    const std::vector< OsiSolverInterface * > &vecSiP,
-    const std::string &mpsDir);
+class OSILIB_EXPORT OsiSolverInterface  {
+/*
+   friend void OsiSolverInterfaceCommonUnitTest(
+      const OsiSolverInterface* emptySi,
+      const std::string & mpsDir,
+      const std::string & netlibDir);
+   friend void OsiSolverInterfaceMpsUnitTest(
+      const std::vector<OsiSolverInterface*> & vecSiP,
+      const std::string & mpsDir);
+*/
 
 public:
   /// Internal class for obtaining status from the applyCuts method

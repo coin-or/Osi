@@ -5,6 +5,8 @@
 #ifndef OsiSolverBranch_H
 #define OsiSolverBranch_H
 
+#include "OsiConfig.h"
+
 class OsiSolverInterface;
 #include "CoinWarmStartBasis.hpp"
 
@@ -15,7 +17,7 @@ class OsiSolverInterface;
     This provides information on a branch as a set of tighter bounds on both ways
 */
 
-class OsiSolverBranch {
+class OSILIB_EXPORT OsiSolverBranch {
 
 public:
   ///@name Add and Get methods

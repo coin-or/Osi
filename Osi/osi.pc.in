@@ -1,12 +1,14 @@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 libdir=@libdir@
-includedir=@includedir@/coin
+includedir=@includedir@/coin-or
 
 Name: Osi
 Description: COIN-OR Open Solver Interface
 URL: https://projects.coin-or.org/Osi
 Version: @PACKAGE_VERSION@
-Libs: -L${libdir} -lOsi @OSILIB_PCLIBS@
+Libs: -L${libdir} -lOsi
+Libs.private: @OSILIB_LFLAGS_NOPC@
 Cflags: -I${includedir}
-Requires: @OSILIB_PCREQUIRES@
+Requires:
+Requires.private: @OSILIB_PCFILES@

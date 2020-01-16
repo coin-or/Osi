@@ -1,37 +1,34 @@
 /* src/Osi/config.h.in.  Generated from configure.ac by autoheader.  */
 
-/* Define to 1 if the CoinUtils package is available */
+/* Define to 1 if CoinUtils is available. */
 #undef COIN_HAS_COINUTILS
 
 /* Define to 1 if the Cplex package is available */
-#undef COIN_HAS_CPX
+#undef COIN_HAS_CPLEX
 
-/* Define to 1 if the Glpk package is available */
+/* Define to 1 if Glpk is available. */
 #undef COIN_HAS_GLPK
 
 /* Define to 1 if the Gurobi package is available */
-#undef COIN_HAS_GRB
+#undef COIN_HAS_GUROBI
 
 /* Define to 1 if the Mosek package is available */
-#undef COIN_HAS_MSK
+#undef COIN_HAS_MOSEK
 
-/* Define to 1 if the Netlib package is available */
+/* Define to 1 if Netlib is available. */
 #undef COIN_HAS_NETLIB
 
-/* Define to 1 if the Sample package is available */
+/* Define to 1 if Sample is available. */
 #undef COIN_HAS_SAMPLE
 
-/* Define to 1 if the SoPlex package is available */
+/* Define to 1 if SoPlex is available. */
 #undef COIN_HAS_SOPLEX
 
 /* Define to 1 if the Xpress package is available */
-#undef COIN_HAS_XPR
+#undef COIN_HAS_XPRESS
 
-/* Define to the debug sanity check level (0 is no test) */
-#undef COIN_OSI_CHECKLEVEL
-
-/* Define to the debug verbosity level (0 is no output) */
-#undef COIN_OSI_VERBOSITY
+/* Define to 1 if your C++ compiler doesn't accept -c and -o together. */
+#undef CXX_NO_MINUS_C_MINUS_O
 
 /* Define to 1 if GLPK has the advanced B&B solver lpx_intopt */
 #undef GLPK_HAS_INTOPT
@@ -84,23 +81,44 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
-/* SVN revision number of project */
-#undef OSI_SVN_REV
+/* Define to the sub-directory where libtool stores uninstalled libraries. */
+#undef LT_OBJDIR
+
+/* Library Visibility Attribute */
+#undef OSICOMMONTESTLIB_EXPORT
+
+/* Library Visibility Attribute */
+#undef OSICPXLIB_EXPORT
+
+/* Library Visibility Attribute */
+#undef OSIGLPKLIB_EXPORT
+
+/* Library Visibility Attribute */
+#undef OSIGRBLIB_EXPORT
+
+/* Library Visibility Attribute */
+#undef OSILIB_EXPORT
+
+/* Library Visibility Attribute */
+#undef OSIMSKLIB_EXPORT
+
+/* Library Visibility Attribute */
+#undef OSIXPRLIB_EXPORT
 
 /* Version number of project */
 #undef OSI_VERSION
 
-/* Major Version number of project */
+/* Major version number of project. */
 #undef OSI_VERSION_MAJOR
 
-/* Minor Version number of project */
+/* Minor version number of project. */
 #undef OSI_VERSION_MINOR
 
-/* Release Version number of project */
+/* Release version number of project. */
 #undef OSI_VERSION_RELEASE
 
-/* Name of package */
-#undef PACKAGE
+/* Library Visibility Attribute */
+#undef OSKSPXLIB_EXPORT
 
 /* Define to the address where bug reports for this package should be sent. */
 #undef PACKAGE_BUGREPORT
@@ -114,11 +132,11 @@
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
 
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
+
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
-
-/* Version number of package */
-#undef VERSION

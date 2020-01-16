@@ -8,6 +8,8 @@
 
 AUTOMAKE_OPTIONS = foreign
 
+include $(top_srcdir)/BuildTools/Makemain.inc
+
 ########################################################################
 #                            libOsiGlpk                                #
 ########################################################################
@@ -20,25 +22,25 @@ libOsiGlpk_la_SOURCES = \
 	OsiGlpkSolverInterface.cpp OsiGlpkSolverInterface.hpp
 
 # List all additionally required libraries
-if DEPENDENCY_LINKING
-libOsiGlpk_la_LIBADD = $(OSILIB_LIBS) ../Osi/libOsi.la
-endif
+libOsiGlpk_la_LIBADD = ../Osi/libOsi.la $(OSIGLPKLIB_LFLAGS)
 
 # This is for libtool
 libOsiGlpk_la_LDFLAGS = $(LT_LDFLAGS)
 
-# Here list all include flags, relative to this "srcdir" directory.  This
-# "cygpath" stuff is necessary to compile with native compilers on Windows.
-AM_CPPFLAGS = -I`$(CYGPATH_W) $(srcdir)/../Osi` $(COINUTILS_CFLAGS) $(GLPK_CFLAGS)
-
-# This line is necessary to allow VPATH compilation
-DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)` -I$(top_builddir)/src/Osi
+# Here list all include flags, relative to this "srcdir" directory.
+AM_CPPFLAGS = -I$(srcdir)/../Osi $(OSIGLPKLIB_CFLAGS) -DOSIGLPKLIB_BUILD
 
 ########################################################################
 #                Headers that need to be installed                     #
 ########################################################################
 
 # Here list all the header files that are required by a user of the library,
-# and that therefore should be installed in 'include/coin'
-includecoindir = $(includedir)/coin
+# and that therefore should be installed in 'include/coin-or'
+includecoindir = $(pkgincludedir)
 includecoin_HEADERS = OsiGlpkSolverInterface.hpp
+
+install-exec-local:
+	$(install_sh_DATA) config_osiglpk.h $(DESTDIR)$(includecoindir)/OsiGlpkConfig.h
+
+uninstall-local:
+	rm -f $(DESTDIR)$(includecoindir)/OsiGlpkConfig.h

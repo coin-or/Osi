@@ -1,0 +1,9 @@
+/* src/Osi/config_osicommontest.h.in. */
+
+#ifndef __CONFIG_OSICOMMONTEST_H__
+#define __CONFIG_OSICOMMONTEST_H__
+
+/* Library Visibility Attribute */
+#undef OSICOMMONTESTLIB_EXPORT
+
+#endif

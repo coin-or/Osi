@@ -13,6 +13,7 @@
 
 #include <string>
 
+#include "OsiConfig.h"
 #include "OsiCuts.hpp"
 #include "OsiSolverInterface.hpp"
 
@@ -39,7 +40,7 @@
   transformations, your solution must match the presolved problem. (But see
   #redoSolution().)
 */
-class OsiRowCutDebugger {
+class OSILIB_EXPORT OsiRowCutDebugger {
   friend void OsiRowCutDebuggerUnitTest(const OsiSolverInterface *siP,
     const std::string &mpsDir);
 

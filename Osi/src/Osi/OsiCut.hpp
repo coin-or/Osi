@@ -5,6 +5,7 @@
 #ifndef OsiCut_H
 #define OsiCut_H
 
+#include "OsiConfig.h"
 #include "OsiCollections.hpp"
 #include "OsiSolverInterface.hpp"
 
@@ -32,7 +33,7 @@ The Base cut class contains:
 #define COIN_DEFAULT_VALUE_FOR_DUPLICATE false
 #endif
 
-class OsiCut {
+class OSILIB_EXPORT OsiCut {
 
 public:
   //-------------------------------------------------------------------

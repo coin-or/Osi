@@ -1,10 +1,10 @@
 * text=auto !eol
 .ci/.travis.pre -text
 .ci/appveyor.pre -text
+.coin-or/Dependencies -text
 .coin-or/projDesc.xml -text
 /.travis.yml -text
 /CHANGELOG -text
-/Dependencies -text
 /LICENSE -text
 MSVisualStudio/v10/Osi.sln -text
 MSVisualStudio/v10/OsiExamplesBasic/OsiExamplesBasic.vcxproj -text

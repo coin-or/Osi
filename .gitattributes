@@ -42,7 +42,6 @@ MSVisualStudio/v9alt/genDefForOsi.ps1 -text svneol=unset#application/octet-strea
 MSVisualStudio/v9alt/libOsi.vcproj -text
 MSVisualStudio/v9alt/libOsiCommonTest.vcproj -text
 MSVisualStudio/v9alt/osi.vsprops -text
-/README -text
 /appveyor.yml -text
 /compile -text
 /config.guess -text

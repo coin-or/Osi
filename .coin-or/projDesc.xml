@@ -87,20 +87,20 @@
     </developmentStatus>
     <testedPlatforms>
       <platform>
-        <operatingSystem>Microsoft Windows, CYGWIN, MinGW, Msys</operatingSystem>
-        <compiler>gcc, cl</compiler>
-      </platform>
-      <platform>
-        <operatingSystem>Microsoft Windows</operatingSystem>
-        <compiler>Visual Studio, cl</compiler>
-      </platform>
-      <platform>
         <operatingSystem>GNU/Linux</operatingSystem>
         <compiler>gcc</compiler>
       </platform>
       <platform>
         <operatingSystem>Mac OS X</operatingSystem>
         <compiler>gcc</compiler>
+      </platform>
+      <platform>
+        <operatingSystem>Microsoft Windows with MSys2</operatingSystem>
+        <compiler>gcc, cl, icl</compiler>
+      </platform>
+      <platform>
+        <operatingSystem>Microsoft Windows</operatingSystem>
+        <compiler>Visual Studio, cl</compiler>
       </platform>
     </testedPlatforms>
     <projectCategories>
@@ -117,8 +117,8 @@
   </projectBasics>
   <leftMenuLinks>
     <documentation>http://www.coin-or.org/Doxygen/Osi/</documentation>
-    <sourceCodeDownload>http://www.coin-or.org/download/source/Osi/</sourceCodeDownload>
+    <sourceCodeDownload>https://github.com/coin-or/Osi/</sourceCodeDownload>
     <binaryDownload></binaryDownload>
-    <mailingList>http://list.coin-or.org/mailman/listinfo/coin-osi-devel</mailingList>
+    <mailingList>http://list.coin-or.org/mailman/listinfo/osi</mailingList>
   </leftMenuLinks>
 </projectData>

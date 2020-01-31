@@ -6,7 +6,7 @@ includedir=@includedir@/coin-or
 
 Name: OsiXpress
 Description: COIN-OR Open Solver Interface for Xpress
-URL: https://projects.coin-or.org/Osi
+URL: https://github.com/coin-or/Osi
 Version: @PACKAGE_VERSION@
 Libs: -L${libdir} -lOsiXpr
 Libs.private: @OSIXPRLIB_LFLAGS_NOPC@

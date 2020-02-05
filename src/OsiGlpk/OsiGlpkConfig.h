@@ -26,22 +26,22 @@
 #ifdef OSIGLPKLIB_BUILD
 
 #ifdef DLL_EXPORT
-#undef OSIGLPKLIB_EXPORT
-#define OSIGLPKLIB_EXPORT __declspec(dllexport)
+# define OSIGLPKLIB_EXPORT __declspec(dllexport)
 #elif defined(__GNUC__) && __GNUC__ >= 4
-#undef OSIGLPKLIB_EXPORT
-#define OSIGLPKLIB_EXPORT __attribute__((__visibility__("default")))
+# define OSIGLPKLIB_EXPORT __attribute__((__visibility__("default")))
+#else
+# define OSIGLPKLIB_EXPORT
 #endif
 
 #else
-#include "config_osicommontest.h"
+#include "config_osiglpk.h"
 #endif
 
 #else /* HAVE_CONFIG_H */
 
 
 #ifndef OSIGLPKLIB_EXPORT
-# ifdef _WIN32
+# if defined(_WIN32) && defined(DLL_EXPORT)
 #  ifdef OSIGLPKLIB_BUILD
 #   define OSIGLPKLIB_EXPORT __declspec(dllexport)
 #  else
@@ -54,9 +54,5 @@
 
 
 #endif /* HAVE_CONFIG_H */
-
-#ifndef OSIGLPKLIB_EXPORT
-#define OSIGLPKLIB_EXPORT
-#endif
 
 #endif /*__OSIGLPKCONFIG_H__*/

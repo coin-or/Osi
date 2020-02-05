@@ -26,11 +26,11 @@
 #ifdef OSIMSKLIB_BUILD
 
 #ifdef DLL_EXPORT
-#undef OSIMSKLIB_EXPORT
-#define OSIMSKLIB_EXPORT __declspec(dllexport)
+# define OSIMSKLIB_EXPORT __declspec(dllexport)
 #elif defined(__GNUC__) && __GNUC__ >= 4
-#undef OSIMSKLIB_EXPORT
-#define OSIMSKLIB_EXPORT __attribute__((__visibility__("default")))
+# define OSIMSKLIB_EXPORT __attribute__((__visibility__("default")))
+#else
+# define OSIMSKLIB_EXPORT
 #endif
 
 #else
@@ -41,7 +41,7 @@
 
 
 #ifndef OSIMSKLIB_EXPORT
-# ifdef _WIN32
+# if defined(_WIN32) && defined(DLL_EXPORT)
 #  ifdef OSIMSKLIB_BUILD
 #   define OSIMSKLIB_EXPORT __declspec(dllexport)
 #  else
@@ -49,14 +49,12 @@
 #  endif
 # elif defined(__GNUC__) && __GNUC__ >= 4
 #  define OSIMSKLIB_EXPORT __attribute__((__visibility__("default")))
+# else
+#  define OSIMSKLIB_EXPORT
 # endif
 #endif
 
 
 #endif /* HAVE_CONFIG_H */
-
-#ifndef OSIMSKLIB_EXPORT
-#define OSIMSKLIB_EXPORT
-#endif
 
 #endif /*__OSIMSKCONFIG_H__*/

@@ -26,22 +26,22 @@
 #ifdef OSIGRBLIB_BUILD
 
 #ifdef DLL_EXPORT
-#undef OSIGRBLIB_EXPORT
-#define OSIGRBLIB_EXPORT __declspec(dllexport)
+# define OSIGRBLIB_EXPORT __declspec(dllexport)
 #elif defined(__GNUC__) && __GNUC__ >= 4
-#undef OSIGRBLIB_EXPORT
-#define OSIGRBLIB_EXPORT __attribute__((__visibility__("default")))
+# define OSIGRBLIB_EXPORT __attribute__((__visibility__("default")))
+#else
+# define OSIGRBLIB_EXPORT
 #endif
 
 #else
-#include "config_osicommontest.h"
+#include "config_osigrb.h"
 #endif
 
 #else /* HAVE_CONFIG_H */
 
 
 #ifndef OSIGRBLIB_EXPORT
-# ifdef _WIN32
+# if defined(_WIN32) && defined(DLL_EXPORT)
 #  ifdef OSIGRBLIB_BUILD
 #   define OSIGRBLIB_EXPORT __declspec(dllexport)
 #  else
@@ -49,14 +49,12 @@
 #  endif
 # elif defined(__GNUC__) && __GNUC__ >= 4
 #  define OSIGRBLIB_EXPORT __attribute__((__visibility__("default")))
+# else
+#  define OSIGRBLIB_EXPORT
 # endif
 #endif
 
 
 #endif /* HAVE_CONFIG_H */
-
-#ifndef OSIGRBLIB_EXPORT
-#define OSIGRBLIB_EXPORT
-#endif
 
 #endif /*__OSIGRBCONFIG_H__*/

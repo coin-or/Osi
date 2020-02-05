@@ -106,7 +106,7 @@ devel: $(targets)
 $(targets): devel_%: cache/%/docker_devel.tar
 cache/%/docker_devel.tar: docker/%/Dockerfile \
  ../CMakeLists.txt ../cmake \
- ../Osi
+ ../src
 	@docker image rm -f ${IMAGE}_$*:devel 2>/dev/null
 	${DOCKER_BUILD_CMD} --target=devel --tag ${IMAGE}_$*:devel -f $< ..
 	@rm -f $@

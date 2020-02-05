@@ -4,7 +4,7 @@ FROM alpine:edge AS env
 LABEL maintainer="corentinl@google.com"
 # Install system build dependencies
 ENV PATH=$PATH:/usr/local/bin
-RUN apk add --no-cache git build-base linux-headers cmake
+RUN apk add --no-cache git build-base linux-headers libexecinfo-dev cmake
 
 RUN cd /tmp \
 && git clone https://github.com/Mizux/CoinUtils.git \

@@ -13,34 +13,34 @@ configure_file(config.h.cmake.in config.h)
 configure_file(config_osi.h.cmake.in config_osi.h)
 
 set(_SRCS
-  src/Osi/OsiAuxInfo.cpp
-  src/Osi/OsiBranchingObject.cpp
-  src/Osi/OsiChooseVariable.cpp
-  src/Osi/OsiColCut.cpp
-  src/Osi/OsiCut.cpp
-  src/Osi/OsiCuts.cpp
-  src/Osi/OsiNames.cpp
-  src/Osi/OsiPresolve.cpp
-  src/Osi/OsiRowCut.cpp
-  src/Osi/OsiRowCutDebugger.cpp
-  src/Osi/OsiSolverBranch.cpp
-  src/Osi/OsiSolverInterface.cpp)
+  Osi/OsiAuxInfo.cpp
+  Osi/OsiBranchingObject.cpp
+  Osi/OsiChooseVariable.cpp
+  Osi/OsiColCut.cpp
+  Osi/OsiCut.cpp
+  Osi/OsiCuts.cpp
+  Osi/OsiNames.cpp
+  Osi/OsiPresolve.cpp
+  Osi/OsiRowCut.cpp
+  Osi/OsiRowCutDebugger.cpp
+  Osi/OsiSolverBranch.cpp
+  Osi/OsiSolverInterface.cpp)
 
 set(_HDRS
-  src/Osi/OsiConfig.h
-  src/Osi/OsiAuxInfo.hpp
-  src/Osi/OsiBranchingObject.hpp
-  src/Osi/OsiChooseVariable.hpp
-  src/Osi/OsiColCut.hpp
-  src/Osi/OsiCollections.hpp
-  src/Osi/OsiCut.hpp
-  src/Osi/OsiCuts.hpp
-  src/Osi/OsiPresolve.hpp
-  src/Osi/OsiRowCut.hpp
-  src/Osi/OsiRowCutDebugger.hpp
-  src/Osi/OsiSolverBranch.hpp
-  src/Osi/OsiSolverInterface.hpp
-  src/Osi/OsiSolverParameters.hpp)
+  Osi/OsiConfig.h
+  Osi/OsiAuxInfo.hpp
+  Osi/OsiBranchingObject.hpp
+  Osi/OsiChooseVariable.hpp
+  Osi/OsiColCut.hpp
+  Osi/OsiCollections.hpp
+  Osi/OsiCut.hpp
+  Osi/OsiCuts.hpp
+  Osi/OsiPresolve.hpp
+  Osi/OsiRowCut.hpp
+  Osi/OsiRowCutDebugger.hpp
+  Osi/OsiSolverBranch.hpp
+  Osi/OsiSolverInterface.hpp
+  Osi/OsiSolverParameters.hpp)
 
 add_library(Osi ${_SRCS} ${_HDRS})
 target_include_directories(Osi PUBLIC

@@ -66,7 +66,7 @@ find_package(CoinUtils REQUIRED CONFIG)
 include(CheckEnv)
 include(CTest)
 
-add_subdirectory(Osi)
+add_subdirectory(src)
 
 include(GNUInstallDirs)
 install(EXPORT ${PROJECT_NAME}Targets

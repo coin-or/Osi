@@ -2,6 +2,9 @@
 
 #define COIN_HAS_COINUTILS 1
 
+/* Library Visibility Attribute */
+#define ${NAME}LIB_EXPORT
+
 /* VERSION */
 #define VERSION "${VERSION}"
 /* ${NAME}_VERSION */
@@ -110,3 +113,5 @@
 /* PACKAGE_BUGREPORT */
 #cmakedefine PACKAGE_BUGREPORT
 
+/* STDC_HEADERS */
+#cmakedefine STDC_HEADERS ${STDC_HEADERS}

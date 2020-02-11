@@ -33,21 +33,20 @@
     <ClCompile Include="..\..\..\src\Osi\OsiSolverInterface.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\src\OsiAuxInfo.hpp" />
-    <ClInclude Include="..\..\..\src\OsiBranchingObject.hpp" />
-    <ClInclude Include="..\..\..\src\OsiChooseVariable.hpp" />
-    <ClInclude Include="..\..\..\src\OsiColCut.hpp" />
-    <ClInclude Include="..\..\..\src\OsiCollections.hpp" />
-    <ClInclude Include="..\..\..\src\OsiConfig.h" />
-    <ClInclude Include="..\..\..\src\OsiCut.hpp" />
-    <ClInclude Include="..\..\..\src\OsiCuts.hpp" />
-    <ClInclude Include="..\..\..\src\OsiOpbdpSolve.hpp" />
-    <ClInclude Include="..\..\..\src\OsiPresolve.hpp" />
-    <ClInclude Include="..\..\..\src\OsiRowCut.hpp" />
-    <ClInclude Include="..\..\..\src\OsiRowCutDebugger.hpp" />
-    <ClInclude Include="..\..\..\src\OsiSolverBranch.hpp" />
-    <ClInclude Include="..\..\..\src\OsiSolverInterface.hpp" />
-    <ClInclude Include="..\..\..\src\OsiSolverParameters.hpp" />
+    <ClInclude Include="..\..\..\src\Osi\OsiAuxInfo.hpp" />
+    <ClInclude Include="..\..\..\src\Osi\OsiBranchingObject.hpp" />
+    <ClInclude Include="..\..\..\src\Osi\OsiChooseVariable.hpp" />
+    <ClInclude Include="..\..\..\src\Osi\OsiColCut.hpp" />
+    <ClInclude Include="..\..\..\src\Osi\OsiCollections.hpp" />
+    <ClInclude Include="..\..\..\src\Osi\OsiConfig.h" />
+    <ClInclude Include="..\..\..\src\Osi\OsiCut.hpp" />
+    <ClInclude Include="..\..\..\src\Osi\OsiCuts.hpp" />
+    <ClInclude Include="..\..\..\src\Osi\OsiPresolve.hpp" />
+    <ClInclude Include="..\..\..\src\Osi\OsiRowCut.hpp" />
+    <ClInclude Include="..\..\..\src\Osi\OsiRowCutDebugger.hpp" />
+    <ClInclude Include="..\..\..\src\Osi\OsiSolverBranch.hpp" />
+    <ClInclude Include="..\..\..\src\Osi\OsiSolverInterface.hpp" />
+    <ClInclude Include="..\..\..\src\Osi\OsiSolverParameters.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

@@ -27,6 +27,7 @@ MSVisualStudio/v14/libOsiCommonTest/libOsiCommonTest.vcxproj -text
 MSVisualStudio/v16/libOsi/libOsi.sln -text
 MSVisualStudio/v16/libOsi/libOsi.vcxproj -text
 MSVisualStudio/v16/libOsi/libOsiCommonTest.vcxproj -text
+MSVisualStudio/v16/libOsiCommonTest/libOsiCommonTest.vcxproj -text
 MSVisualStudio/v9/Osi.sln -text
 MSVisualStudio/v9/OsiExamplesBasic/OsiExamplesBasic.vcproj -text
 MSVisualStudio/v9/OsiExamplesBuild/OsiExamplesBuild.vcproj -text

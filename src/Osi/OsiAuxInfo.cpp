@@ -184,5 +184,11 @@ bool OsiBabSolver::mipFeasible() const
     return mipBound_ < 1.0e50;
 }
 
+void OsiBabSolver::setSolverType(int value)
+{
+    solverType_ = value;
+}
+
+
 /* vi: softtabstop=2 shiftwidth=2 expandtab tabstop=2
 */

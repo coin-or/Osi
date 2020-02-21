@@ -108,10 +108,8 @@ public:
           - may also return heuristic solution
       4 - normal solver but cuts are needed for integral solution    
   */
-  inline void setSolverType(int value)
-  {
-    solverType_ = value;
-  }
+  void setSolverType(int value);
+
   /** gets solver type
       0 - normal LP solver
       1 - DW - may also return heuristic solutions

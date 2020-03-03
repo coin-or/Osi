@@ -16,7 +16,7 @@
 #include "CoinWarmStart.hpp"
 #include "CoinFinite.hpp"
 #include "CoinError.hpp"
-#include "cgraph.h"
+#include "CoinStaticConflictGraph.hpp"
 
 #include "OsiConfig.h"
 #include "OsiCollections.hpp"
@@ -1780,17 +1780,18 @@ public:
   */
   //@{
 
-  /*! \brief created a conflict graph, acessible via getCGraph
-   *
-   *  @param minClqRow minimum number of elements where conflicts are not stored as pairwise conflicts
-   */
-  void buildCGraph(int minClqRow = 1024);
-
   /*! \brief Returns a conflict graph
    *
    *  Returns a conflict graph indicating relationship between binary variables
    */
-  inline const CGraph *getCGraph() const;
+  inline const CoinStaticConflictGraph *getCGraph() const;
+
+  /*! \brief Sets a conflict graph
+   *
+   *  Sets a conflict graph indicating relationship between binary variables
+   */
+  inline void setCGraph(CoinStaticConflictGraph *cgraph);
+  
   //@}
 
   //---------------------------------------------------------------------------
@@ -2174,7 +2175,7 @@ private:
 
   //@}
 
-  CGraph *cgraph_;
+  CoinStaticConflictGraph *cgraph_;
 };
 
 //#############################################################################
@@ -2243,9 +2244,14 @@ OsiSolverInterface::convertSenseToBound(const char sense, const double right,
   }
 }
 
-inline const CGraph *OsiSolverInterface::getCGraph() const
+inline const CoinStaticConflictGraph *OsiSolverInterface::getCGraph() const
 {
   return cgraph_;
+}
+
+inline void OsiSolverInterface::setCGraph(CoinStaticConflictGraph *cgraph)
+{
+	cgraph_ = cgraph;
 }
 
 #endif

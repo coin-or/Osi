@@ -67,7 +67,8 @@ includecoin_HEADERS = \
 	OsiRowCutDebugger.hpp \
 	OsiSolverBranch.hpp \
 	OsiSolverInterface.hpp \
-	OsiSolverParameters.hpp
+	OsiSolverParameters.hpp \
+	OsiFeatures.hpp
 
 install-exec-local:
 	$(install_sh_DATA) config_osi.h $(DESTDIR)$(includecoindir)/OsiConfig.h

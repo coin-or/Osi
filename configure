@@ -3344,9 +3344,11 @@ AM_BACKSLASH='\'
 
 
 # Initialize automake
+# - do not be as strict as for GNU projects
 # - don't AC_DEFINE PACKAGE or VERSION (but there're still defined as shell
 #   variables in configure, and as make variables).
 # - disable dist target
+# - place objects from sources in subdirs into corresponding subdirs
 # - enable all automake warnings
 
   if test "`cd $srcdir && pwd`" != "`pwd`"; then

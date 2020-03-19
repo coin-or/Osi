@@ -171,24 +171,25 @@ const static char feat_names[OsiFeature::OFCount][STR_SIZE] = {
     "colNzAvg",
     "colNzStdDev",
 
-    "rowsLessE4Nz",
-    "rowsLessE8Nz",
-    "rowsLessE16Nz",
-    "rowsLessE32Nz",
-    "rowsLessE64Nz",
-    "rowsLessE128Nz",
-    "rowsLessE256Nz",
-    "rowsLessE512Nz",
-    "rowsLessE1024Nz",
-    "percRowsLessE4Nz",
-    "percRowsLessE8Nz",
-    "percRowsLessE16Nz",
-    "percRowsLessE32Nz",
-    "percRowsLessE64Nz",
-    "percRowsLessE128Nz",
-    "percRowsLessE256Nz",
-    "percRowsLessE512Nz",
-    "percRowsLessE1024Nz",
+    "rowsLess4Nz",
+    "rowsLess8Nz",
+    "rowsLess16Nz",
+    "rowsLess32Nz",
+    "rowsLess64Nz",
+    "rowsLess128Nz",
+    "rowsLess256Nz",
+    "rowsLess512Nz",
+    "rowsLess1024Nz",
+
+    "percRowsLess4Nz",
+    "percRowsLess8Nz",
+    "percRowsLess16Nz",
+    "percRowsLess32Nz",
+    "percRowsLess64Nz",
+    "percRowsLess128Nz",
+    "percRowsLess256Nz",
+    "percRowsLess512Nz",
+    "percRowsLess1024Nz",
 
     "rowsLeast4Nz",
     "rowsLeast8Nz",
@@ -201,6 +202,7 @@ const static char feat_names[OsiFeature::OFCount][STR_SIZE] = {
     "rowsLeast1024Nz",
     "rowsLeast2048Nz",
     "rowsLeast4096Nz",
+
     "percRowsLeast4Nz",
     "percRowsLeast8Nz",
     "percRowsLeast16Nz",
@@ -213,24 +215,25 @@ const static char feat_names[OsiFeature::OFCount][STR_SIZE] = {
     "percRowsLeast2048Nz",
     "percRowsLeast4096Nz",
 
-    "colsLessE4Nz",
-    "colsLessE8Nz",
-    "colsLessE16Nz",
-    "colsLessE32Nz",
-    "colsLessE64Nz",
-    "colsLessE128Nz",
-    "colsLessE256Nz",
-    "colsLessE512Nz",
-    "colsLessE1024Nz",
-    "percColsLessE4Nz",
-    "percColsLessE8Nz",
-    "percColsLessE16Nz",
-    "percColsLessE32Nz",
-    "percColsLessE64Nz",
-    "percColsLessE128Nz",
-    "percColsLessE256Nz",
-    "percColsLessE512Nz",
-    "percColsLessE1024Nz",
+    "colsLess4Nz",
+    "colsLess8Nz",
+    "colsLess16Nz",
+    "colsLess32Nz",
+    "colsLess64Nz",
+    "colsLess128Nz",
+    "colsLess256Nz",
+    "colsLess512Nz",
+    "colsLess1024Nz",
+
+    "percColsLess4Nz",
+    "percColsLess8Nz",
+    "percColsLess16Nz",
+    "percColsLess32Nz",
+    "percColsLess64Nz",
+    "percColsLess128Nz",
+    "percColsLess256Nz",
+    "percColsLess512Nz",
+    "percColsLess1024Nz",
 
     "colsLeast4Nz",
     "colsLeast8Nz",
@@ -242,18 +245,19 @@ const static char feat_names[OsiFeature::OFCount][STR_SIZE] = {
     "colsLeast512Nz",
     "colsLeast1024Nz",
     "colsLeast2048Nz",
-    "colsLeast4096Nz"
+    "colsLeast4096Nz",
+
     "percColsLeast4Nz",
     "percColsLeast8Nz",
-    "colsLeast16Nz",
-    "colsLeast32Nz",
-    "colsLeast64Nz",
-    "colsLeast128Nz",
-    "colsLeast256Nz",
-    "colsLeast512Nz",
-    "colsLeast1024Nz",
-    "colsLeast2048Nz",
-    "colsLeast4096Nz",
+    "perccolsLeast16Nz",
+    "perccolsLeast32Nz",
+    "perccolsLeast64Nz",
+    "perccolsLeast128Nz",
+    "perccolsLeast256Nz",
+    "perccolsLeast512Nz",
+    "perccolsLeast1024Nz",
+    "perccolsLeast2048Nz",
+    "perccolsLeast4096Nz"
 };
 
 const char *OsiFeatures::name( int i ) {
@@ -632,7 +636,7 @@ void OsiFeatures::compute(double *features, OsiSolverInterface *solver) {
     features[OFcolNzMin] = colNzSumm.minV;
     features[OFcolNzMax] = colNzSumm.maxV;
     features[OFcolNzAvg] = colNzSumm.avg;
-    features[OFcolNzStdDev] = std_dev(cpmRow->getVectorLengths(), colNzSumm.avg, solver->getNumCols() );
+    features[OFcolNzStdDev] = std_dev(cpmCol->getVectorLengths(), colNzSumm.avg, solver->getNumCols() );
 
     double dnRows = solver->getNumRows();
     features[OFpercRowsLess4Nz] = (features[OFrowsLess4Nz] / dnRows)*100.0;
@@ -678,5 +682,7 @@ void OsiFeatures::compute(double *features, OsiSolverInterface *solver) {
     features[OFpercColsLeast512Nz] = (features[OFcolsLeast512Nz] / dnCols)*100.0;
     features[OFpercColsLeast1024Nz] = (features[OFcolsLeast1024Nz] / dnCols)*100.0;
     features[OFpercColsLeast2048Nz] = (features[OFcolsLeast2048Nz] / dnCols)*100.0;
+    printf("\nI1: %d I2: %d COUNT: %d\n", OFpercColsLeast4096Nz, OFcolsLeast4096Nz, OFCount);
+    fflush(stdout);
     features[OFpercColsLeast4096Nz] = (features[OFcolsLeast4096Nz] / dnCols)*100.0;
 }

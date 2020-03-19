@@ -1,0 +1,104 @@
+# Copyright (C) 2006 International Business Machines and others.
+# All Rights Reserved.
+# This file is distributed under the Eclipse Public License.
+
+# $Id$
+
+##########################################################################
+#    You can modify this example makefile to fit for your own program.   #
+#    Usually, you only need to change CHANGEME entries below.            #
+##########################################################################
+
+# CHANGEME
+# To compile other examples, either change the following line, or add the
+# argument DRIVER=filename_without_extension to make, e.g.,
+# `make DRIVER=parameters'
+
+DRIVER = basic
+
+# CHANGEME
+# This should be the name of your executable; change if you want a name
+# that's different from the file name.
+
+EXE = $(DRIVER)@EXEEXT@
+
+# CHANGEME
+# OBJS should include all object files necessary to build your program. For
+# the examples, only one file is needed for each example. You will probably
+# have more as your code grows.
+
+OBJS =  $(DRIVER).@OBJEXT@
+
+# CHANGEME
+# Additional libraries. The examples require only the COIN-OR libraries specified
+# as LIBS below. You may need more.
+
+ADDLIBS =
+
+# CHANGEME
+# Additional flags for compilation (e.g., include flags). As for libraries,
+# the examples require only COIN-OR include files, specified as part of CXXFLAGS
+# below.
+
+ADDINCFLAGS =
+
+# CHANGEME
+# Directory to the sources for the (example) problem definition files. VPATH
+# is used if you are building in a different directory than the source. This
+# can be handy for various reasons; if none occur to you, don't worry about
+# it.
+
+SRCDIR = @srcdir@
+VPATH = @srcdir@
+
+##########################################################################
+#  Usually, you don't have to change anything below.  Note that if you   #
+#  change certain compiler options, you might have to recompile the      #
+#  package.                                                              #
+##########################################################################
+
+# C++ Compiler command
+CXX = @CXX@
+
+# C++ Compiler options
+CXXFLAGS = @CXXFLAGS@
+CXXFLAGS += -DOSIXXXhpp=\"@OSI_EXAMPLES_SOLVER_NAME@.hpp\" -DOSIXXX=@OSI_EXAMPLES_SOLVER_NAME@
+
+# Sample data directory
+@COIN_HAS_SAMPLE_TRUE@CXXFLAGS += -DSAMPLEDIR=\"`$(CYGPATH_W) @SAMPLE_DATA@`\"
+
+# Netlib data directory
+@COIN_HAS_NETLIB_TRUE@CXXFLAGS += -DNETLIBDIR=\"`$(CYGPATH_W) @NETLIB_DATA@`\"
+
+# additional C++ Compiler options for linking
+CXXLINKFLAGS = @RPATH_FLAGS@
+
+# Include directories
+@COIN_HAS_PKGCONFIG_TRUE@INCL = `PKG_CONFIG_PATH=@COIN_PKG_CONFIG_PATH@ @PKG_CONFIG@ --cflags @OSI_EXAMPLES_SOLVER_PCNAME@ osi`
+@COIN_HAS_PKGCONFIG_FALSE@INCL = -I@includedir@/coin-or @OSI_EXAMPLES_SOLVER_CFLAGS@
+INCL += $(ADDINCFLAGS)
+
+# Linker flags
+@COIN_HAS_PKGCONFIG_TRUE@LIBS = `PKG_CONFIG_PATH=@COIN_PKG_CONFIG_PATH@ @PKG_CONFIG@ --libs @OSI_EXAMPLES_SOLVER_PCNAME@ osi --static`
+@COIN_HAS_PKGCONFIG_FALSE@LIBS = -L@libdir@ @OSI_EXAMPLES_SOLVER_LFLAGS@ -lOsi -lCoinUtils
+LIBS += $(ADDLIBS)
+
+# The following is necessary under cygwin, if native compilers are used
+CYGPATH_W = @CYGPATH_W@
+
+# get some directories, so we can expand @libdir@ and @includedir@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+
+all: $(EXE)
+
+.SUFFIXES: .cpp .@OBJEXT@
+
+$(EXE): $(OBJS)
+	$(CXX) $(CXXLINKFLAGS) $(CXXFLAGS) -o $@ $< $(LIBS)
+
+clean:
+	rm -rf $(EXE) $(OBJS)
+
+.cpp.@OBJEXT@:
+	$(CXX) $(CXXFLAGS) $(INCL) -c -o $@ `test -f '$<' || echo '$(SRCDIR)/'`$<

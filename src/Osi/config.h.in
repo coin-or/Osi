@@ -1,0 +1,142 @@
+/* src/Osi/config.h.in.  Generated from configure.ac by autoheader.  */
+
+/* Define to 1 if CoinUtils is available. */
+#undef COIN_HAS_COINUTILS
+
+/* Define to 1 if the Cplex package is available */
+#undef COIN_HAS_CPLEX
+
+/* Define to 1 if Glpk is available. */
+#undef COIN_HAS_GLPK
+
+/* Define to 1 if the Gurobi package is available */
+#undef COIN_HAS_GUROBI
+
+/* Define to 1 if the Mosek package is available */
+#undef COIN_HAS_MOSEK
+
+/* Define to 1 if Netlib is available. */
+#undef COIN_HAS_NETLIB
+
+/* Define to 1 if Sample is available. */
+#undef COIN_HAS_SAMPLE
+
+/* Define to 1 if SoPlex is available. */
+#undef COIN_HAS_SOPLEX
+
+/* Define to 1 if the Xpress package is available */
+#undef COIN_HAS_XPRESS
+
+/* Define to 1 if your C++ compiler doesn't accept -c and -o together. */
+#undef CXX_NO_MINUS_C_MINUS_O
+
+/* Define to 1 if GLPK has the advanced B&B solver lpx_intopt */
+#undef GLPK_HAS_INTOPT
+
+/* Define to 1 if you have the <cfloat> header file. */
+#undef HAVE_CFLOAT
+
+/* Define to 1 if you have the <cieeefp> header file. */
+#undef HAVE_CIEEEFP
+
+/* Define to 1 if you have the <cmath> header file. */
+#undef HAVE_CMATH
+
+/* Define to 1 if you have the <dlfcn.h> header file. */
+#undef HAVE_DLFCN_H
+
+/* Define to 1 if you have the <float.h> header file. */
+#undef HAVE_FLOAT_H
+
+/* Define to 1 if you have the <ieeefp.h> header file. */
+#undef HAVE_IEEEFP_H
+
+/* Define to 1 if you have the <inttypes.h> header file. */
+#undef HAVE_INTTYPES_H
+
+/* Define to 1 if you have the <math.h> header file. */
+#undef HAVE_MATH_H
+
+/* Define to 1 if you have the <memory.h> header file. */
+#undef HAVE_MEMORY_H
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+#undef HAVE_STDLIB_H
+
+/* Define to 1 if you have the <strings.h> header file. */
+#undef HAVE_STRINGS_H
+
+/* Define to 1 if you have the <string.h> header file. */
+#undef HAVE_STRING_H
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#undef HAVE_SYS_STAT_H
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+#undef HAVE_SYS_TYPES_H
+
+/* Define to 1 if you have the <unistd.h> header file. */
+#undef HAVE_UNISTD_H
+
+/* Define to the sub-directory where libtool stores uninstalled libraries. */
+#undef LT_OBJDIR
+
+/* Library Visibility Attribute */
+#undef OSICOMMONTESTLIB_EXPORT
+
+/* Library Visibility Attribute */
+#undef OSICPXLIB_EXPORT
+
+/* Library Visibility Attribute */
+#undef OSIGLPKLIB_EXPORT
+
+/* Library Visibility Attribute */
+#undef OSIGRBLIB_EXPORT
+
+/* Library Visibility Attribute */
+#undef OSILIB_EXPORT
+
+/* Library Visibility Attribute */
+#undef OSIMSKLIB_EXPORT
+
+/* Library Visibility Attribute */
+#undef OSIXPRLIB_EXPORT
+
+/* Version number of project */
+#undef OSI_VERSION
+
+/* Major version number of project. */
+#undef OSI_VERSION_MAJOR
+
+/* Minor version number of project. */
+#undef OSI_VERSION_MINOR
+
+/* Release version number of project. */
+#undef OSI_VERSION_RELEASE
+
+/* Library Visibility Attribute */
+#undef OSKSPXLIB_EXPORT
+
+/* Define to the address where bug reports for this package should be sent. */
+#undef PACKAGE_BUGREPORT
+
+/* Define to the full name of this package. */
+#undef PACKAGE_NAME
+
+/* Define to the full name and version of this package. */
+#undef PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#undef PACKAGE_TARNAME
+
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
+
+/* Define to the version of this package. */
+#undef PACKAGE_VERSION
+
+/* Define to 1 if you have the ANSI C header files. */
+#undef STDC_HEADERS

@@ -1,0 +1,15 @@
+@COIN_RELOCATABLE_FALSE@prefix=@prefix@
+@COIN_RELOCATABLE_TRUE@prefix=${pcfiledir}/../..
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@/coin-or
+
+Name: OsiSoplex
+Description: COIN-OR Open Solver Interface for SoPlex
+URL: https://github.com/coin-or/Osi
+Version: @PACKAGE_VERSION@
+Libs: -L${libdir} -lOsiSpx
+Libs.private: @OSISPXLIB_LFLAGS_NOPC@
+Cflags: -I${includedir}
+Requires:
+Requires.private: @OSISPXLIB_PCFILES@

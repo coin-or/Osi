@@ -1,0 +1,21 @@
+/* src/Osi/config_osi.h.in. */
+
+#ifndef __CONFIG_OSI_H__
+#define __CONFIG_OSI_H__
+
+/* Library Visibility Attribute */
+#undef OSILIB_EXPORT
+
+/* Version number of project */
+#undef OSI_VERSION
+
+/* Major Version number of project */
+#undef OSI_VERSION_MAJOR
+
+/* Minor Version number of project */
+#undef OSI_VERSION_MINOR
+
+/* Release Version number of project */
+#undef OSI_VERSION_RELEASE
+
+#endif

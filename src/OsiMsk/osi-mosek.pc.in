@@ -1,0 +1,15 @@
+@COIN_RELOCATABLE_FALSE@prefix=@prefix@
+@COIN_RELOCATABLE_TRUE@prefix=${pcfiledir}/../..
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@/coin-or
+
+Name: OsiMosek
+Description: COIN-OR Open Solver Interface for Mosek
+URL: https://github.com/coin-or/Osi
+Version: @PACKAGE_VERSION@
+Libs: -L${libdir} -lOsiMsk
+Libs.private: @OSIMSKLIB_LFLAGS_NOPC@
+Cflags: -I${includedir}
+Requires:
+Requires.private: @OSIMSKLIB_PCFILES@

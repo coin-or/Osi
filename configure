@@ -16613,6 +16613,10 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 #    This leads to a nm call that collects ALL C-functions from a library
 #    and explicitly dll-exporting them, leading to warnings about duplicates
 #    regarding those that are properly marked for dll-export in the source.
+# 5. Do not add mkl_*.lib to old_deplibs, which can result in trying to unpack and repack
+#    the MKL libraries (which are pretty big). Instead, treat them like other -l<...> libs.
+# 6. Add MKL libraries to dependency_libs in .la file, which I guess should be
+#    the case due to point 5.
 #
 # Patch libtool also to circumvent some issues when using MinGW (Msys+GCC).
 # 1. Relax check which libraries can be used when linking a DLL.
@@ -16981,7 +16985,7 @@ fi
 # --with-prim is always present. If the client specified dataonly, its value
 # is assigned to prim_data.
 
-  withval=$with_coinutils
+  withval="$with_coinutils"
   if test -n "$withval" ; then
     case "$withval" in
       no )
@@ -16995,7 +16999,7 @@ fi
         ;;
       * )
         coin_has_coinutils=yes
-        coinutils_lflags=$withval
+        coinutils_lflags="$withval"
         ;;
     esac
   fi
@@ -17005,7 +17009,7 @@ fi
 # options for libs and cflags.
 
   if test "$coin_has_coinutils" != skipping ; then
-       withval=$with_coinutils_lflags
+       withval="$with_coinutils_lflags"
        if test -n "$withval" ; then
          case "$withval" in
            build | no | yes )
@@ -17013,12 +17017,12 @@ fi
              ;;
            * )
              coin_has_coinutils=yes
-             coinutils_lflags=$withval
+             coinutils_lflags="$withval"
              ;;
          esac
        fi
 
-       withval=$with_coinutils_cflags
+       withval="$with_coinutils_cflags"
        if test -n "$withval" ; then
          case "$withval" in
            build | no | yes )
@@ -17111,20 +17115,20 @@ $as_echo "$as_me: WARNING: Unexpected status \"$coin_has_coinutils\" in COIN_FIN
 
 # Define BUILDTOOLS_DEBUG to enable debugging output
 
-    if test "$BUILDTOOLS_DEBUG" = 1 ; then
-      { $as_echo "$as_me:${as_lineno-$LINENO}: FIND_PRIM_PKG result for coinutils: \"$coin_has_coinutils\"" >&5
+  if test "$BUILDTOOLS_DEBUG" = 1 ; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: FIND_PRIM_PKG result for coinutils: \"$coin_has_coinutils\"" >&5
 $as_echo "$as_me: FIND_PRIM_PKG result for coinutils: \"$coin_has_coinutils\"" >&6;}
-      { $as_echo "$as_me:${as_lineno-$LINENO}: Collected values for package 'coinutils'" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: Collected values for package 'coinutils'" >&5
 $as_echo "$as_me: Collected values for package 'coinutils'" >&6;}
-      { $as_echo "$as_me:${as_lineno-$LINENO}: coinutils_lflags is \"$coinutils_lflags\"" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: coinutils_lflags is \"$coinutils_lflags\"" >&5
 $as_echo "$as_me: coinutils_lflags is \"$coinutils_lflags\"" >&6;}
-      { $as_echo "$as_me:${as_lineno-$LINENO}: coinutils_cflags is \"$coinutils_cflags\"" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: coinutils_cflags is \"$coinutils_cflags\"" >&5
 $as_echo "$as_me: coinutils_cflags is \"$coinutils_cflags\"" >&6;}
-      { $as_echo "$as_me:${as_lineno-$LINENO}: coinutils_data is \"$coinutils_data\"" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: coinutils_data is \"$coinutils_data\"" >&5
 $as_echo "$as_me: coinutils_data is \"$coinutils_data\"" >&6;}
-      { $as_echo "$as_me:${as_lineno-$LINENO}: coinutils_pcfiles is \"$coinutils_pcfiles\"" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: coinutils_pcfiles is \"$coinutils_pcfiles\"" >&5
 $as_echo "$as_me: coinutils_pcfiles is \"$coinutils_pcfiles\"" >&6;}
-    fi
+  fi
 
 
     { $as_echo "$as_me:${as_lineno-$LINENO}: result: $coin_has_coinutils" >&5
@@ -17290,7 +17294,7 @@ fi
 # --with-prim is always present. If the client specified dataonly, its value
 # is assigned to prim_data.
 
-  withval=$with_sample
+  withval="$with_sample"
   if test -n "$withval" ; then
     case "$withval" in
       no )
@@ -17304,7 +17308,7 @@ fi
         ;;
       * )
         coin_has_sample=yes
-        sample_data=$withval
+        sample_data="$withval"
         ;;
     esac
   fi
@@ -17319,7 +17323,7 @@ fi
 # Specifying --with-prim=no overrides the individual option for data.
 
   if test "$coin_has_sample" != skipping ; then
-       withval=$with_sample_data
+       withval="$with_sample_data"
        if test -n "$withval" ; then
          case "$withval" in
            build | no | yes )
@@ -17403,20 +17407,20 @@ $as_echo "$as_me: WARNING: Unexpected status \"$coin_has_sample\" in COIN_FIND_P
 
 # Define BUILDTOOLS_DEBUG to enable debugging output
 
-    if test "$BUILDTOOLS_DEBUG" = 1 ; then
-      { $as_echo "$as_me:${as_lineno-$LINENO}: FIND_PRIM_PKG result for sample: \"$coin_has_sample\"" >&5
+  if test "$BUILDTOOLS_DEBUG" = 1 ; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: FIND_PRIM_PKG result for sample: \"$coin_has_sample\"" >&5
 $as_echo "$as_me: FIND_PRIM_PKG result for sample: \"$coin_has_sample\"" >&6;}
-      { $as_echo "$as_me:${as_lineno-$LINENO}: Collected values for package 'sample'" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: Collected values for package 'sample'" >&5
 $as_echo "$as_me: Collected values for package 'sample'" >&6;}
-      { $as_echo "$as_me:${as_lineno-$LINENO}: sample_lflags is \"$sample_lflags\"" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: sample_lflags is \"$sample_lflags\"" >&5
 $as_echo "$as_me: sample_lflags is \"$sample_lflags\"" >&6;}
-      { $as_echo "$as_me:${as_lineno-$LINENO}: sample_cflags is \"$sample_cflags\"" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: sample_cflags is \"$sample_cflags\"" >&5
 $as_echo "$as_me: sample_cflags is \"$sample_cflags\"" >&6;}
-      { $as_echo "$as_me:${as_lineno-$LINENO}: sample_data is \"$sample_data\"" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: sample_data is \"$sample_data\"" >&5
 $as_echo "$as_me: sample_data is \"$sample_data\"" >&6;}
-      { $as_echo "$as_me:${as_lineno-$LINENO}: sample_pcfiles is \"$sample_pcfiles\"" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: sample_pcfiles is \"$sample_pcfiles\"" >&5
 $as_echo "$as_me: sample_pcfiles is \"$sample_pcfiles\"" >&6;}
-    fi
+  fi
 
 
     { $as_echo "$as_me:${as_lineno-$LINENO}: result: $coin_has_sample" >&5
@@ -17521,7 +17525,7 @@ fi
 # --with-prim is always present. If the client specified dataonly, its value
 # is assigned to prim_data.
 
-  withval=$with_netlib
+  withval="$with_netlib"
   if test -n "$withval" ; then
     case "$withval" in
       no )
@@ -17535,7 +17539,7 @@ fi
         ;;
       * )
         coin_has_netlib=yes
-        netlib_data=$withval
+        netlib_data="$withval"
         ;;
     esac
   fi
@@ -17550,7 +17554,7 @@ fi
 # Specifying --with-prim=no overrides the individual option for data.
 
   if test "$coin_has_netlib" != skipping ; then
-       withval=$with_netlib_data
+       withval="$with_netlib_data"
        if test -n "$withval" ; then
          case "$withval" in
            build | no | yes )
@@ -17634,20 +17638,20 @@ $as_echo "$as_me: WARNING: Unexpected status \"$coin_has_netlib\" in COIN_FIND_P
 
 # Define BUILDTOOLS_DEBUG to enable debugging output
 
-    if test "$BUILDTOOLS_DEBUG" = 1 ; then
-      { $as_echo "$as_me:${as_lineno-$LINENO}: FIND_PRIM_PKG result for netlib: \"$coin_has_netlib\"" >&5
+  if test "$BUILDTOOLS_DEBUG" = 1 ; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: FIND_PRIM_PKG result for netlib: \"$coin_has_netlib\"" >&5
 $as_echo "$as_me: FIND_PRIM_PKG result for netlib: \"$coin_has_netlib\"" >&6;}
-      { $as_echo "$as_me:${as_lineno-$LINENO}: Collected values for package 'netlib'" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: Collected values for package 'netlib'" >&5
 $as_echo "$as_me: Collected values for package 'netlib'" >&6;}
-      { $as_echo "$as_me:${as_lineno-$LINENO}: netlib_lflags is \"$netlib_lflags\"" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: netlib_lflags is \"$netlib_lflags\"" >&5
 $as_echo "$as_me: netlib_lflags is \"$netlib_lflags\"" >&6;}
-      { $as_echo "$as_me:${as_lineno-$LINENO}: netlib_cflags is \"$netlib_cflags\"" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: netlib_cflags is \"$netlib_cflags\"" >&5
 $as_echo "$as_me: netlib_cflags is \"$netlib_cflags\"" >&6;}
-      { $as_echo "$as_me:${as_lineno-$LINENO}: netlib_data is \"$netlib_data\"" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: netlib_data is \"$netlib_data\"" >&5
 $as_echo "$as_me: netlib_data is \"$netlib_data\"" >&6;}
-      { $as_echo "$as_me:${as_lineno-$LINENO}: netlib_pcfiles is \"$netlib_pcfiles\"" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: netlib_pcfiles is \"$netlib_pcfiles\"" >&5
 $as_echo "$as_me: netlib_pcfiles is \"$netlib_pcfiles\"" >&6;}
-    fi
+  fi
 
 
     { $as_echo "$as_me:${as_lineno-$LINENO}: result: $coin_has_netlib" >&5
@@ -17854,7 +17858,7 @@ fi
 # --with-prim is always present. If the client specified dataonly, its value
 # is assigned to prim_data.
 
-  withval=$with_glpk
+  withval="$with_glpk"
   if test -n "$withval" ; then
     case "$withval" in
       no )
@@ -17868,7 +17872,7 @@ fi
         ;;
       * )
         coin_has_glpk=yes
-        glpk_lflags=$withval
+        glpk_lflags="$withval"
         ;;
     esac
   fi
@@ -17878,7 +17882,7 @@ fi
 # options for libs and cflags.
 
   if test "$coin_has_glpk" != skipping ; then
-       withval=$with_glpk_lflags
+       withval="$with_glpk_lflags"
        if test -n "$withval" ; then
          case "$withval" in
            build | no | yes )
@@ -17886,12 +17890,12 @@ fi
              ;;
            * )
              coin_has_glpk=yes
-             glpk_lflags=$withval
+             glpk_lflags="$withval"
              ;;
          esac
        fi
 
-       withval=$with_glpk_cflags
+       withval="$with_glpk_cflags"
        if test -n "$withval" ; then
          case "$withval" in
            build | no | yes )
@@ -17984,20 +17988,20 @@ $as_echo "$as_me: WARNING: Unexpected status \"$coin_has_glpk\" in COIN_FIND_PRI
 
 # Define BUILDTOOLS_DEBUG to enable debugging output
 
-    if test "$BUILDTOOLS_DEBUG" = 1 ; then
-      { $as_echo "$as_me:${as_lineno-$LINENO}: FIND_PRIM_PKG result for glpk: \"$coin_has_glpk\"" >&5
+  if test "$BUILDTOOLS_DEBUG" = 1 ; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: FIND_PRIM_PKG result for glpk: \"$coin_has_glpk\"" >&5
 $as_echo "$as_me: FIND_PRIM_PKG result for glpk: \"$coin_has_glpk\"" >&6;}
-      { $as_echo "$as_me:${as_lineno-$LINENO}: Collected values for package 'glpk'" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: Collected values for package 'glpk'" >&5
 $as_echo "$as_me: Collected values for package 'glpk'" >&6;}
-      { $as_echo "$as_me:${as_lineno-$LINENO}: glpk_lflags is \"$glpk_lflags\"" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: glpk_lflags is \"$glpk_lflags\"" >&5
 $as_echo "$as_me: glpk_lflags is \"$glpk_lflags\"" >&6;}
-      { $as_echo "$as_me:${as_lineno-$LINENO}: glpk_cflags is \"$glpk_cflags\"" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: glpk_cflags is \"$glpk_cflags\"" >&5
 $as_echo "$as_me: glpk_cflags is \"$glpk_cflags\"" >&6;}
-      { $as_echo "$as_me:${as_lineno-$LINENO}: glpk_data is \"$glpk_data\"" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: glpk_data is \"$glpk_data\"" >&5
 $as_echo "$as_me: glpk_data is \"$glpk_data\"" >&6;}
-      { $as_echo "$as_me:${as_lineno-$LINENO}: glpk_pcfiles is \"$glpk_pcfiles\"" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: glpk_pcfiles is \"$glpk_pcfiles\"" >&5
 $as_echo "$as_me: glpk_pcfiles is \"$glpk_pcfiles\"" >&6;}
-    fi
+  fi
 
 
     { $as_echo "$as_me:${as_lineno-$LINENO}: result: $coin_has_glpk" >&5
@@ -18113,7 +18117,7 @@ fi
 # --with-prim is always present. If the client specified dataonly, its value
 # is assigned to prim_data.
 
-  withval=$with_soplex
+  withval="$with_soplex"
   if test -n "$withval" ; then
     case "$withval" in
       no )
@@ -18127,7 +18131,7 @@ fi
         ;;
       * )
         coin_has_soplex=yes
-        soplex_lflags=$withval
+        soplex_lflags="$withval"
         ;;
     esac
   fi
@@ -18137,7 +18141,7 @@ fi
 # options for libs and cflags.
 
   if test "$coin_has_soplex" != skipping ; then
-       withval=$with_soplex_lflags
+       withval="$with_soplex_lflags"
        if test -n "$withval" ; then
          case "$withval" in
            build | no | yes )
@@ -18145,12 +18149,12 @@ fi
              ;;
            * )
              coin_has_soplex=yes
-             soplex_lflags=$withval
+             soplex_lflags="$withval"
              ;;
          esac
        fi
 
-       withval=$with_soplex_cflags
+       withval="$with_soplex_cflags"
        if test -n "$withval" ; then
          case "$withval" in
            build | no | yes )
@@ -18239,20 +18243,20 @@ $as_echo "$as_me: WARNING: Unexpected status \"$coin_has_soplex\" in COIN_FIND_P
 
 # Define BUILDTOOLS_DEBUG to enable debugging output
 
-    if test "$BUILDTOOLS_DEBUG" = 1 ; then
-      { $as_echo "$as_me:${as_lineno-$LINENO}: FIND_PRIM_PKG result for soplex: \"$coin_has_soplex\"" >&5
+  if test "$BUILDTOOLS_DEBUG" = 1 ; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: FIND_PRIM_PKG result for soplex: \"$coin_has_soplex\"" >&5
 $as_echo "$as_me: FIND_PRIM_PKG result for soplex: \"$coin_has_soplex\"" >&6;}
-      { $as_echo "$as_me:${as_lineno-$LINENO}: Collected values for package 'soplex'" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: Collected values for package 'soplex'" >&5
 $as_echo "$as_me: Collected values for package 'soplex'" >&6;}
-      { $as_echo "$as_me:${as_lineno-$LINENO}: soplex_lflags is \"$soplex_lflags\"" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: soplex_lflags is \"$soplex_lflags\"" >&5
 $as_echo "$as_me: soplex_lflags is \"$soplex_lflags\"" >&6;}
-      { $as_echo "$as_me:${as_lineno-$LINENO}: soplex_cflags is \"$soplex_cflags\"" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: soplex_cflags is \"$soplex_cflags\"" >&5
 $as_echo "$as_me: soplex_cflags is \"$soplex_cflags\"" >&6;}
-      { $as_echo "$as_me:${as_lineno-$LINENO}: soplex_data is \"$soplex_data\"" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: soplex_data is \"$soplex_data\"" >&5
 $as_echo "$as_me: soplex_data is \"$soplex_data\"" >&6;}
-      { $as_echo "$as_me:${as_lineno-$LINENO}: soplex_pcfiles is \"$soplex_pcfiles\"" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: soplex_pcfiles is \"$soplex_pcfiles\"" >&5
 $as_echo "$as_me: soplex_pcfiles is \"$soplex_pcfiles\"" >&6;}
-    fi
+  fi
 
 
     { $as_echo "$as_me:${as_lineno-$LINENO}: result: $coin_has_soplex" >&5
@@ -22672,6 +22676,8 @@ _LT_EOF
              -e '/$AR x/s/.*/( cd $f_ex_an_ar_dir ; for f in `$AR -nologo -list "$f_ex_an_ar_oldlib" | tr "\\r" " "` ; do lib -nologo -extract:$f "$f_ex_an_ar_oldlib"; done ); : \\/g' \
              -e '/^deplibs_check_method/s/.*/deplibs_check_method="pass_all"/g' \
              -e 's|always_export_symbols=yes|always_export_symbols=no|g' \
+             -e '/func_append old_deplibs/s/\(.*\)/case $arg in *mkl_*.lib) ;; *) \1 ;; esac/g' \
+             -e '/static library .deplib is not portable/a case $deplib in *mkl_*.lib) newdependency_libs="$deplib $newdependency_libs" ;; esac' \
          libtool > libtool.tmp
          mv libtool.tmp libtool
          chmod 755 libtool ;;

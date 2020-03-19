@@ -44,6 +44,7 @@ MSVisualStudio/v9alt/libOsi.vcproj -text
 MSVisualStudio/v9alt/libOsiCommonTest.vcproj -text
 MSVisualStudio/v9alt/osi.vsprops -text
 /appveyor.yml -text
+/ar-lib -text
 /compile -text
 /config.guess -text
 /config.sub -text

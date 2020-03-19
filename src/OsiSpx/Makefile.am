@@ -4,8 +4,6 @@
 
 ## $Id$
 
-AUTOMAKE_OPTIONS = foreign
-
 include $(top_srcdir)/BuildTools/Makemain.inc
 
 ########################################################################

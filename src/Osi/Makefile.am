@@ -6,8 +6,6 @@
 
 # Author:  Lou Hafer        SFU        2010-07-29
 
-AUTOMAKE_OPTIONS = foreign
-
 include $(top_srcdir)/BuildTools/Makemain.inc
 
 ########################################################################

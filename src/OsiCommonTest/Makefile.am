@@ -6,8 +6,6 @@
 
 # Author:  Lou Hafer	SFU	2010-11-20
 
-AUTOMAKE_OPTIONS = foreign
-
 include $(top_srcdir)/BuildTools/Makemain.inc
 
 ########################################################################
@@ -21,7 +19,7 @@ lib_LTLIBRARIES = libOsiCommonTest.la
 # List all source files for this library, including headers
 
 libOsiCommonTest_la_SOURCES = \
-    OsiCommonTest.hpp \
+	OsiCommonTest.hpp \
 	OsiColCutTest.cpp \
 	OsiCutsTest.cpp \
 	OsiRowCutDebuggerTest.cpp \

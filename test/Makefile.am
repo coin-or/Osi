@@ -6,8 +6,6 @@
 
 # Author:  Andreas Waechter           IBM    2006-04-13
 
-AUTOMAKE_OPTIONS = foreign
-
 include $(top_srcdir)/BuildTools/Makemain.inc
 
 ########################################################################
@@ -23,7 +21,7 @@ unitTest_SOURCES = unitTest.cpp \
   OsiTestSolverInterfaceTest.cpp
 
 # List libraries of COIN projects
-unitTest_LDADD        = ../src/OsiCommonTest/libOsiCommonTest.la
+unitTest_LDADD = ../src/OsiCommonTest/libOsiCommonTest.la
 
 # Here list all include flags, relative to this "srcdir" directory.
 AM_CPPFLAGS = -I$(srcdir)/../src/Osi -I$(srcdir)/../src/OsiCommonTest

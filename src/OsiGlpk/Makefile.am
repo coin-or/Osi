@@ -6,8 +6,6 @@
 
 # Author:  Andreas Waechter           IBM    2006-04-13
 
-AUTOMAKE_OPTIONS = foreign
-
 include $(top_srcdir)/BuildTools/Makemain.inc
 
 ########################################################################
@@ -18,8 +16,7 @@ include $(top_srcdir)/BuildTools/Makemain.inc
 lib_LTLIBRARIES = libOsiGlpk.la
 
 # List all source files for this library, including headers
-libOsiGlpk_la_SOURCES = \
-	OsiGlpkSolverInterface.cpp OsiGlpkSolverInterface.hpp
+libOsiGlpk_la_SOURCES = OsiGlpkSolverInterface.cpp OsiGlpkSolverInterface.hpp
 
 # List all additionally required libraries
 libOsiGlpk_la_LIBADD = ../Osi/libOsi.la $(OSIGLPKLIB_LFLAGS)

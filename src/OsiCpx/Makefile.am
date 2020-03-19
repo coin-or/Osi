@@ -6,8 +6,6 @@
 
 # Author:  Andreas Waechter           IBM    2006-04-13
 
-AUTOMAKE_OPTIONS = foreign
-
 include $(top_srcdir)/BuildTools/Makemain.inc
 
 ########################################################################
@@ -18,8 +16,7 @@ include $(top_srcdir)/BuildTools/Makemain.inc
 lib_LTLIBRARIES = libOsiCpx.la
 
 # List all source files for this library, including headers
-libOsiCpx_la_SOURCES = \
-	OsiCpxSolverInterface.cpp OsiCpxSolverInterface.hpp
+libOsiCpx_la_SOURCES = OsiCpxSolverInterface.cpp OsiCpxSolverInterface.hpp
 
 # List all additionally required libraries
 libOsiCpx_la_LIBADD = ../Osi/libOsi.la $(OSICPXLIB_LFLAGS)

@@ -6,8 +6,6 @@
 
 # Author:  Andreas Waechter           IBM    2006-04-13
 
-AUTOMAKE_OPTIONS = foreign
-
 include $(top_srcdir)/BuildTools/Makemain.inc
 
 ########################################################################
@@ -18,8 +16,7 @@ include $(top_srcdir)/BuildTools/Makemain.inc
 lib_LTLIBRARIES = libOsiXpr.la
 
 # List all source files for this library, including headers
-libOsiXpr_la_SOURCES = \
-	OsiXprSolverInterface.cpp OsiXprSolverInterface.hpp
+libOsiXpr_la_SOURCES = OsiXprSolverInterface.cpp OsiXprSolverInterface.hpp
 
 # List all additionally required libraries
 libOsiXpr_la_LIBADD = ../Osi/libOsi.la $(OSIXPRLIB_LFLAGS)

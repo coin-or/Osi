@@ -287,6 +287,8 @@ bool OsiColCut::feasible(const OsiSolverInterface &im) const
 
 bool OsiColCut::infeasible(const OsiSolverInterface &im) const
 {
+  if (im.getColLower()==NULL)
+    return false;
   const double *oldColLb = im.getColLower();
   const double *oldColUb = im.getColUpper();
   const CoinPackedVector &cutLbs = lbs();

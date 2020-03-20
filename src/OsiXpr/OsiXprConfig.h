@@ -34,7 +34,7 @@
 #endif
 
 #else
-#include "config_osicommontest.h"
+#include "config_osixpr.h"
 #endif
 
 #else /* HAVE_CONFIG_H */

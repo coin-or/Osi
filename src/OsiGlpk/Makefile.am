@@ -25,7 +25,7 @@ libOsiGlpk_la_LIBADD = ../Osi/libOsi.la $(OSIGLPKLIB_LFLAGS)
 libOsiGlpk_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.
-AM_CPPFLAGS = -I$(srcdir)/../Osi $(OSIGLPKLIB_CFLAGS) -DOSIGLPKLIB_BUILD
+AM_CPPFLAGS = -I$(srcdir)/../Osi $(OSIGLPKLIB_CFLAGS)
 
 ########################################################################
 #                Headers that need to be installed                     #

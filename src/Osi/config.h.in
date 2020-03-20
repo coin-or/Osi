@@ -103,6 +103,9 @@
 #undef OSIMSKLIB_EXPORT
 
 /* Library Visibility Attribute */
+#undef OSITEST_EXPORT
+
+/* Library Visibility Attribute */
 #undef OSIXPRLIB_EXPORT
 
 /* Version number of project */

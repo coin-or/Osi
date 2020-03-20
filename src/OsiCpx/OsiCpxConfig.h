@@ -2,7 +2,7 @@
  * All Rights Reserved.
  * This code is published under the Eclipse Public License.
  *
- * Include file for the configuration of OsiCommonTest.
+ * Include file for the configuration of OsiCpx.
  *
  * On systems where the code is configured with the configure script
  * (i.e., compilation is always done with HAVE_CONFIG_H defined), this

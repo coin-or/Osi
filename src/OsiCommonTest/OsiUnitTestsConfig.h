@@ -23,7 +23,7 @@
 #define __OSIUNITTESTSCONFIG_H__
 
 #ifdef HAVE_CONFIG_H
-#ifdef OSICOMMONTEST_BUILD
+#ifdef OSICOMMONTESTLIB_BUILD
 
 #ifdef DLL_EXPORT
 # define OSICOMMONTESTLIB_EXPORT __declspec(dllexport)
@@ -42,7 +42,7 @@
 
 #ifndef OSICOMMONTESTLIB_EXPORT
 # if defined(_WIN32) && defined(DLL_EXPORT)
-#  ifdef OSICOMMONTEST_BUILD
+#  ifdef OSICOMMONTESTLIB_BUILD
 #   define OSICOMMONTESTLIB_EXPORT __declspec(dllexport)
 #  else
 #   define OSICOMMONTESTLIB_EXPORT __declspec(dllimport)

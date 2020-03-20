@@ -41,7 +41,7 @@ libOsi_la_LIBADD = $(OSILIB_LFLAGS)
 libOsi_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags.
-AM_CPPFLAGS = $(OSILIB_CFLAGS) -DOSILIB_BUILD
+AM_CPPFLAGS = $(OSILIB_CFLAGS)
 
 ########################################################################
 #                Headers that need to be installed                     #

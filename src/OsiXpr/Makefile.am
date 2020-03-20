@@ -25,7 +25,7 @@ libOsiXpr_la_LIBADD = ../Osi/libOsi.la $(OSIXPRLIB_LFLAGS)
 libOsiXpr_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.
-AM_CPPFLAGS = -I$(srcdir)/../Osi $(OSIXPRLIB_CFLAGS) -DOSIXPRLIB_BUILD
+AM_CPPFLAGS = -I$(srcdir)/../Osi $(OSIXPRLIB_CFLAGS)
 
 ########################################################################
 #                Headers that need to be installed                     #

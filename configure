@@ -660,6 +660,8 @@ OSIGRBLIB_PCFILES
 OSIXPRLIB_PCFILES
 OSIMSKLIB_PCFILES
 OSICPXLIB_PCFILES
+OSITEST_CFLAGS_NOPC
+OSITEST_LFLAGS_NOPC
 OSIGRBLIB_CFLAGS_NOPC
 OSIGRBLIB_LFLAGS_NOPC
 OSIXPRLIB_CFLAGS_NOPC
@@ -713,6 +715,9 @@ OSILIB_CFLAGS_NOPC
 OSILIB_LFLAGS_NOPC
 COIN_HAS_COINUTILS_FALSE
 COIN_HAS_COINUTILS_TRUE
+OSITEST_PCFILES
+OSITEST_CFLAGS
+OSITEST_LFLAGS
 OSILIB_PCFILES
 OSILIB_CFLAGS
 OSILIB_LFLAGS
@@ -17091,6 +17096,9 @@ $as_echo_n "checking for package CoinUtils... " >&6; }
 
 
 
+
+
+
 # Check to see if the user has set an override to skip this primary.
 
   coin_has_coinutils=noInfo
@@ -17329,6 +17337,9 @@ $as_echo "#define COIN_HAS_COINUTILS 1" >>confdefs.h
     if test -n "$coinutils_pcfiles" ; then OSILIB_PCFILES="$coinutils_pcfiles $OSILIB_PCFILES" ; fi
        OSILIB_LFLAGS="$coinutils_lflags $OSILIB_LFLAGS"
        OSILIB_CFLAGS="$coinutils_cflags $OSILIB_CFLAGS"
+      if test -n "$coinutils_pcfiles" ; then OSITEST_PCFILES="$coinutils_pcfiles $OSITEST_PCFILES" ; fi
+       OSITEST_LFLAGS="$coinutils_lflags $OSITEST_LFLAGS"
+       OSITEST_CFLAGS="$coinutils_cflags $OSITEST_CFLAGS"
 
 
 # Finally, set up PRIM_DATA, unless the user specified nodata.
@@ -17375,6 +17386,9 @@ cat >>confdefs.h <<_ACEOF
 #define OSILIB_EXPORT $libexport_attribute
 _ACEOF
 
+
+      # add -DXYZ_BUILD to CFLAGS
+      OSILIB_CFLAGS="${OSILIB_CFLAGS} -DOSILIB_BUILD"
 
 # Define BUILDTOOLS_DEBUG to enable debugging output
 
@@ -17895,6 +17909,9 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
+      # add -DXYZ_BUILD to CFLAGS
+      OSICOMMONTESTLIB_CFLAGS="${OSICOMMONTESTLIB_CFLAGS} -DOSICOMMONTESTLIB_BUILD"
+
 # Define BUILDTOOLS_DEBUG to enable debugging output
 
       if test "$BUILDTOOLS_DEBUG" = 1 ; then
@@ -17921,10 +17938,11 @@ $as_echo "$as_me: OSICOMMONTESTLIB_CFLAGS: \"${OSICOMMONTESTLIB_CFLAGS}\"" >&6;}
 
 
 # Add the .pc file and augment LFLAGS and CFLAGS.
+# From the CFLAGS of OsiLib, remove the -DOsiLib_BUILD, though.
 
     if test -n "$OSICOMMONTESTLIB_PCFILES" ; then OSICOMMONTESTLIB_PCFILES="$OSICOMMONTESTLIB_PCFILES osi" ; fi
        OSICOMMONTESTLIB_LFLAGS="$OSICOMMONTESTLIB_LFLAGS $OSILIB_LFLAGS"
-       OSICOMMONTESTLIB_CFLAGS="$OSICOMMONTESTLIB_CFLAGS $OSILIB_CFLAGS"
+       OSICOMMONTESTLIB_CFLAGS="$OSICOMMONTESTLIB_CFLAGS `echo $OSILIB_CFLAGS | sed -e s/-DOSILIB_BUILD//`"
 
 # Define BUILDTOOLS_DEBUG to enable debugging output
 
@@ -17958,6 +17976,9 @@ $as_echo "$as_me: OSICOMMONTESTLIB_CFLAGS: \"${OSICOMMONTESTLIB_CFLAGS}\"" >&6;}
 $as_echo_n "checking for package Glpk... " >&6; }
 
 # Make sure the necessary variables exist for each client package.
+
+
+
 
 
 
@@ -18202,6 +18223,9 @@ $as_echo "#define COIN_HAS_GLPK 1" >>confdefs.h
     if test -n "$glpk_pcfiles" ; then OSIGLPKLIB_PCFILES="$glpk_pcfiles $OSIGLPKLIB_PCFILES" ; fi
        OSIGLPKLIB_LFLAGS="$glpk_lflags $OSIGLPKLIB_LFLAGS"
        OSIGLPKLIB_CFLAGS="$glpk_cflags $OSIGLPKLIB_CFLAGS"
+      if test -n "$glpk_pcfiles" ; then OSITEST_PCFILES="$glpk_pcfiles $OSITEST_PCFILES" ; fi
+       OSITEST_LFLAGS="$glpk_lflags $OSITEST_LFLAGS"
+       OSITEST_CFLAGS="$glpk_cflags $OSITEST_CFLAGS"
 
 
 # Finally, set up PRIM_DATA, unless the user specified nodata.
@@ -18217,6 +18241,9 @@ $as_echo "#define COIN_HAS_GLPK 1" >>confdefs.h
 $as_echo_n "checking for package SoPlex... " >&6; }
 
 # Make sure the necessary variables exist for each client package.
+
+
+
 
 
 
@@ -18457,6 +18484,9 @@ $as_echo "#define COIN_HAS_SOPLEX 1" >>confdefs.h
     if test -n "$soplex_pcfiles" ; then OSISPXLIB_PCFILES="$soplex_pcfiles $OSISPXLIB_PCFILES" ; fi
        OSISPXLIB_LFLAGS="$soplex_lflags $OSISPXLIB_LFLAGS"
        OSISPXLIB_CFLAGS="$soplex_cflags $OSISPXLIB_CFLAGS"
+      if test -n "$soplex_pcfiles" ; then OSITEST_PCFILES="$soplex_pcfiles $OSITEST_PCFILES" ; fi
+       OSITEST_LFLAGS="$soplex_lflags $OSITEST_LFLAGS"
+       OSITEST_CFLAGS="$soplex_cflags $OSITEST_CFLAGS"
 
 
 # Finally, set up PRIM_DATA, unless the user specified nodata.
@@ -18470,6 +18500,8 @@ $as_echo "#define COIN_HAS_SOPLEX 1" >>confdefs.h
 $as_echo_n "checking for package Cplex... " >&6; }
 
 # Make sure the necessary variables exist for each client package.
+
+
 
 
 
@@ -18718,6 +18750,8 @@ $as_echo "#define COIN_HAS_CPLEX 1" >>confdefs.h
 
     OSICPXLIB_LFLAGS="$cplex_lflags $OSICPXLIB_LFLAGS"
        OSICPXLIB_CFLAGS="$cplex_cflags $OSICPXLIB_CFLAGS"
+      OSITEST_LFLAGS="$cplex_lflags $OSITEST_LFLAGS"
+       OSITEST_CFLAGS="$cplex_cflags $OSITEST_CFLAGS"
 
 
 # Finally, set up PRIM_DATA, unless the user specified nodata.
@@ -18731,6 +18765,8 @@ $as_echo "#define COIN_HAS_CPLEX 1" >>confdefs.h
 $as_echo_n "checking for package Mosek... " >&6; }
 
 # Make sure the necessary variables exist for each client package.
+
+
 
 
 
@@ -18979,6 +19015,8 @@ $as_echo "#define COIN_HAS_MOSEK 1" >>confdefs.h
 
     OSIMSKLIB_LFLAGS="$mosek_lflags $OSIMSKLIB_LFLAGS"
        OSIMSKLIB_CFLAGS="$mosek_cflags $OSIMSKLIB_CFLAGS"
+      OSITEST_LFLAGS="$mosek_lflags $OSITEST_LFLAGS"
+       OSITEST_CFLAGS="$mosek_cflags $OSITEST_CFLAGS"
 
 
 # Finally, set up PRIM_DATA, unless the user specified nodata.
@@ -18992,6 +19030,8 @@ $as_echo "#define COIN_HAS_MOSEK 1" >>confdefs.h
 $as_echo_n "checking for package Xpress... " >&6; }
 
 # Make sure the necessary variables exist for each client package.
+
+
 
 
 
@@ -19240,6 +19280,8 @@ $as_echo "#define COIN_HAS_XPRESS 1" >>confdefs.h
 
     OSIXPRLIB_LFLAGS="$xpress_lflags $OSIXPRLIB_LFLAGS"
        OSIXPRLIB_CFLAGS="$xpress_cflags $OSIXPRLIB_CFLAGS"
+      OSITEST_LFLAGS="$xpress_lflags $OSITEST_LFLAGS"
+       OSITEST_CFLAGS="$xpress_cflags $OSITEST_CFLAGS"
 
 
 # Finally, set up PRIM_DATA, unless the user specified nodata.
@@ -19253,6 +19295,8 @@ $as_echo "#define COIN_HAS_XPRESS 1" >>confdefs.h
 $as_echo_n "checking for package Gurobi... " >&6; }
 
 # Make sure the necessary variables exist for each client package.
+
+
 
 
 
@@ -19501,6 +19545,8 @@ $as_echo "#define COIN_HAS_GUROBI 1" >>confdefs.h
 
     OSIGRBLIB_LFLAGS="$gurobi_lflags $OSIGRBLIB_LFLAGS"
        OSIGRBLIB_CFLAGS="$gurobi_cflags $OSIGRBLIB_CFLAGS"
+      OSITEST_LFLAGS="$gurobi_lflags $OSITEST_LFLAGS"
+       OSITEST_CFLAGS="$gurobi_cflags $OSITEST_CFLAGS"
 
 
 # Finally, set up PRIM_DATA, unless the user specified nodata.
@@ -19542,6 +19588,9 @@ cat >>confdefs.h <<_ACEOF
 #define OSIGLPKLIB_EXPORT $libexport_attribute
 _ACEOF
 
+
+      # add -DXYZ_BUILD to CFLAGS
+      OSIGLPKLIB_CFLAGS="${OSIGLPKLIB_CFLAGS} -DOSIGLPKLIB_BUILD"
 
 # Define BUILDTOOLS_DEBUG to enable debugging output
 
@@ -19590,6 +19639,9 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
+      # add -DXYZ_BUILD to CFLAGS
+      OSKSPXLIB_CFLAGS="${OSKSPXLIB_CFLAGS} -DOSKSPXLIB_BUILD"
+
 # Define BUILDTOOLS_DEBUG to enable debugging output
 
       if test "$BUILDTOOLS_DEBUG" = 1 ; then
@@ -19636,6 +19688,9 @@ cat >>confdefs.h <<_ACEOF
 #define OSICPXLIB_EXPORT $libexport_attribute
 _ACEOF
 
+
+      # add -DXYZ_BUILD to CFLAGS
+      OSICPXLIB_CFLAGS="${OSICPXLIB_CFLAGS} -DOSICPXLIB_BUILD"
 
 # Define BUILDTOOLS_DEBUG to enable debugging output
 
@@ -19684,6 +19739,9 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
+      # add -DXYZ_BUILD to CFLAGS
+      OSIMSKLIB_CFLAGS="${OSIMSKLIB_CFLAGS} -DOSIMSKLIB_BUILD"
+
 # Define BUILDTOOLS_DEBUG to enable debugging output
 
       if test "$BUILDTOOLS_DEBUG" = 1 ; then
@@ -19730,6 +19788,9 @@ cat >>confdefs.h <<_ACEOF
 #define OSIXPRLIB_EXPORT $libexport_attribute
 _ACEOF
 
+
+      # add -DXYZ_BUILD to CFLAGS
+      OSIXPRLIB_CFLAGS="${OSIXPRLIB_CFLAGS} -DOSIXPRLIB_BUILD"
 
 # Define BUILDTOOLS_DEBUG to enable debugging output
 
@@ -19778,6 +19839,9 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
+      # add -DXYZ_BUILD to CFLAGS
+      OSIGRBLIB_CFLAGS="${OSIGRBLIB_CFLAGS} -DOSIGRBLIB_BUILD"
+
 # Define BUILDTOOLS_DEBUG to enable debugging output
 
       if test "$BUILDTOOLS_DEBUG" = 1 ; then
@@ -19791,6 +19855,56 @@ $as_echo "$as_me: adding \"${OSIGRBLIB_PCFILES}\"" >&6;}
 $as_echo "$as_me: OSIGRBLIB_LFLAGS: \"${OSIGRBLIB_LFLAGS}\"" >&6;}
         { $as_echo "$as_me:${as_lineno-$LINENO}: OSIGRBLIB_CFLAGS: \"${OSIGRBLIB_CFLAGS}\"" >&5
 $as_echo "$as_me: OSIGRBLIB_CFLAGS: \"${OSIGRBLIB_CFLAGS}\"" >&6;}
+      fi
+     if test "$BUILDTOOLS_DEBUG" = 1 ; then
+        { $as_echo "$as_me:${as_lineno-$LINENO}: FINALIZE_FLAGS for OsiTest:" >&5
+$as_echo "$as_me: FINALIZE_FLAGS for OsiTest:" >&6;}
+      fi
+      OSITEST_LFLAGS_NOPC=$OSITEST_LFLAGS
+
+      OSITEST_CFLAGS_NOPC=$OSITEST_CFLAGS
+
+      if test -n "${OSITEST_PCFILES}" ; then
+        temp_CFLAGS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --cflags ${OSITEST_PCFILES}`
+        temp_LFLAGS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --libs ${OSITEST_PCFILES}`
+        OSITEST_CFLAGS="$temp_CFLAGS ${OSITEST_CFLAGS}"
+        OSITEST_LFLAGS="$temp_LFLAGS ${OSITEST_LFLAGS}"
+      fi
+
+      # setup XYZ_EXPORT symbol for library users
+      libexport_attribute=
+      if test "$enable_shared" = yes ; then
+        case $build_os in
+          cygwin* | mingw* | msys* | cegcc* )
+            libexport_attribute="__declspec(dllimport)"
+            if test "$enable_static" = yes ; then
+              as_fn_error $? "Cannot do DLL and static LIB builds simultaneously. Do not add --enable-static without --disable-shared." "$LINENO" 5
+            fi
+          ;;
+        esac
+      fi
+
+cat >>confdefs.h <<_ACEOF
+#define OSITEST_EXPORT $libexport_attribute
+_ACEOF
+
+
+      # add -DXYZ_BUILD to CFLAGS
+      OSITEST_CFLAGS="${OSITEST_CFLAGS} -DOSITEST_BUILD"
+
+# Define BUILDTOOLS_DEBUG to enable debugging output
+
+      if test "$BUILDTOOLS_DEBUG" = 1 ; then
+        { $as_echo "$as_me:${as_lineno-$LINENO}: OSITEST_LFLAGS_NOPC: \"${OSITEST_LFLAGS_NOPC}\"" >&5
+$as_echo "$as_me: OSITEST_LFLAGS_NOPC: \"${OSITEST_LFLAGS_NOPC}\"" >&6;}
+        { $as_echo "$as_me:${as_lineno-$LINENO}: OSITEST_CFLAGS_NOPC: \"${OSITEST_CFLAGS_NOPC}\"" >&5
+$as_echo "$as_me: OSITEST_CFLAGS_NOPC: \"${OSITEST_CFLAGS_NOPC}\"" >&6;}
+        { $as_echo "$as_me:${as_lineno-$LINENO}: adding \"${OSITEST_PCFILES}\"" >&5
+$as_echo "$as_me: adding \"${OSITEST_PCFILES}\"" >&6;}
+        { $as_echo "$as_me:${as_lineno-$LINENO}: OSITEST_LFLAGS: \"${OSITEST_LFLAGS}\"" >&5
+$as_echo "$as_me: OSITEST_LFLAGS: \"${OSITEST_LFLAGS}\"" >&6;}
+        { $as_echo "$as_me:${as_lineno-$LINENO}: OSITEST_CFLAGS: \"${OSITEST_CFLAGS}\"" >&5
+$as_echo "$as_me: OSITEST_CFLAGS: \"${OSITEST_CFLAGS}\"" >&6;}
       fi
 
 
@@ -19820,10 +19934,11 @@ $as_echo "$as_me: OSIGRBLIB_CFLAGS: \"${OSIGRBLIB_CFLAGS}\"" >&6;}
 
 
 # Add the .pc file and augment LFLAGS and CFLAGS.
+# From the CFLAGS of OsiLib, remove the -DOsiLib_BUILD, though.
 
     if test -n "$OSIGLPKLIB_PCFILES" ; then OSIGLPKLIB_PCFILES="$OSIGLPKLIB_PCFILES osi" ; fi
        OSIGLPKLIB_LFLAGS="$OSIGLPKLIB_LFLAGS $OSILIB_LFLAGS"
-       OSIGLPKLIB_CFLAGS="$OSIGLPKLIB_CFLAGS $OSILIB_CFLAGS"
+       OSIGLPKLIB_CFLAGS="$OSIGLPKLIB_CFLAGS `echo $OSILIB_CFLAGS | sed -e s/-DOSILIB_BUILD//`"
 
 # Define BUILDTOOLS_DEBUG to enable debugging output
 
@@ -19839,7 +19954,7 @@ $as_echo "$as_me: OSIGLPKLIB_CFLAGS: \"${OSIGLPKLIB_CFLAGS}\"" >&6;}
        fi
       if test -n "$OSISPXLIB_PCFILES" ; then OSISPXLIB_PCFILES="$OSISPXLIB_PCFILES osi" ; fi
        OSISPXLIB_LFLAGS="$OSISPXLIB_LFLAGS $OSILIB_LFLAGS"
-       OSISPXLIB_CFLAGS="$OSISPXLIB_CFLAGS $OSILIB_CFLAGS"
+       OSISPXLIB_CFLAGS="$OSISPXLIB_CFLAGS `echo $OSILIB_CFLAGS | sed -e s/-DOSILIB_BUILD//`"
 
 # Define BUILDTOOLS_DEBUG to enable debugging output
 
@@ -19855,7 +19970,7 @@ $as_echo "$as_me: OSISPXLIB_CFLAGS: \"${OSISPXLIB_CFLAGS}\"" >&6;}
        fi
       if test -n "$OSICPXLIB_PCFILES" ; then OSICPXLIB_PCFILES="$OSICPXLIB_PCFILES osi" ; fi
        OSICPXLIB_LFLAGS="$OSICPXLIB_LFLAGS $OSILIB_LFLAGS"
-       OSICPXLIB_CFLAGS="$OSICPXLIB_CFLAGS $OSILIB_CFLAGS"
+       OSICPXLIB_CFLAGS="$OSICPXLIB_CFLAGS `echo $OSILIB_CFLAGS | sed -e s/-DOSILIB_BUILD//`"
 
 # Define BUILDTOOLS_DEBUG to enable debugging output
 
@@ -19871,7 +19986,7 @@ $as_echo "$as_me: OSICPXLIB_CFLAGS: \"${OSICPXLIB_CFLAGS}\"" >&6;}
        fi
       if test -n "$OSIMSKLIB_PCFILES" ; then OSIMSKLIB_PCFILES="$OSIMSKLIB_PCFILES osi" ; fi
        OSIMSKLIB_LFLAGS="$OSIMSKLIB_LFLAGS $OSILIB_LFLAGS"
-       OSIMSKLIB_CFLAGS="$OSIMSKLIB_CFLAGS $OSILIB_CFLAGS"
+       OSIMSKLIB_CFLAGS="$OSIMSKLIB_CFLAGS `echo $OSILIB_CFLAGS | sed -e s/-DOSILIB_BUILD//`"
 
 # Define BUILDTOOLS_DEBUG to enable debugging output
 
@@ -19887,7 +20002,7 @@ $as_echo "$as_me: OSIMSKLIB_CFLAGS: \"${OSIMSKLIB_CFLAGS}\"" >&6;}
        fi
       if test -n "$OSIXPRLIB_PCFILES" ; then OSIXPRLIB_PCFILES="$OSIXPRLIB_PCFILES osi" ; fi
        OSIXPRLIB_LFLAGS="$OSIXPRLIB_LFLAGS $OSILIB_LFLAGS"
-       OSIXPRLIB_CFLAGS="$OSIXPRLIB_CFLAGS $OSILIB_CFLAGS"
+       OSIXPRLIB_CFLAGS="$OSIXPRLIB_CFLAGS `echo $OSILIB_CFLAGS | sed -e s/-DOSILIB_BUILD//`"
 
 # Define BUILDTOOLS_DEBUG to enable debugging output
 
@@ -19903,7 +20018,7 @@ $as_echo "$as_me: OSIXPRLIB_CFLAGS: \"${OSIXPRLIB_CFLAGS}\"" >&6;}
        fi
       if test -n "$OSIGRBLIB_PCFILES" ; then OSIGRBLIB_PCFILES="$OSIGRBLIB_PCFILES osi" ; fi
        OSIGRBLIB_LFLAGS="$OSIGRBLIB_LFLAGS $OSILIB_LFLAGS"
-       OSIGRBLIB_CFLAGS="$OSIGRBLIB_CFLAGS $OSILIB_CFLAGS"
+       OSIGRBLIB_CFLAGS="$OSIGRBLIB_CFLAGS `echo $OSILIB_CFLAGS | sed -e s/-DOSILIB_BUILD//`"
 
 # Define BUILDTOOLS_DEBUG to enable debugging output
 

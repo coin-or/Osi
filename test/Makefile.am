@@ -31,42 +31,42 @@ AM_CPPFLAGS = -I$(srcdir)/../src/Osi -I$(srcdir)/../src/OsiCommonTest
 
 if COIN_HAS_CPLEX
   unitTest_SOURCES += OsiCpxSolverInterfaceTest.cpp
-  AM_CPPFLAGS += -DCOIN_HAS_CPLEX -I$(srcdir)/../src/OsiCpx $(OSICPXLIB_CFLAGS)
+  AM_CPPFLAGS += -DCOIN_HAS_CPLEX -I$(srcdir)/../src/OsiCpx
   unitTest_LDADD += ../src/OsiCpx/libOsiCpx.la
 endif
 
 if COIN_HAS_GLPK
   unitTest_SOURCES += OsiGlpkSolverInterfaceTest.cpp
-  AM_CPPFLAGS += -DCOIN_HAS_GLPK -I$(srcdir)/../src/OsiGlpk $(OSIGRBLIB_CFLAGS)
+  AM_CPPFLAGS += -DCOIN_HAS_GLPK -I$(srcdir)/../src/OsiGlpk
   unitTest_LDADD += ../src/OsiGlpk/libOsiGlpk.la
 endif
 
 if COIN_HAS_MOSEK
   unitTest_SOURCES += OsiMskSolverInterfaceTest.cpp
-  AM_CPPFLAGS += -DCOIN_HAS_MOSEK -I$(srcdir)/../src/OsiMsk $(OSIMSKLIB_CFLAGS)
+  AM_CPPFLAGS += -DCOIN_HAS_MOSEK -I$(srcdir)/../src/OsiMsk
   unitTest_LDADD += ../src/OsiMsk/libOsiMsk.la
 endif
 
 if COIN_HAS_XPRESS
   unitTest_SOURCES += OsiXprSolverInterfaceTest.cpp
-  AM_CPPFLAGS += -DCOIN_HAS_XPRESS -I$(srcdir)/../src/OsiXpr $(OSIXPRLIB_CFLAGS)
+  AM_CPPFLAGS += -DCOIN_HAS_XPRESS -I$(srcdir)/../src/OsiXpr
   unitTest_LDADD += ../src/OsiXpr/libOsiXpr.la
 endif
 
 if COIN_HAS_GUROBI
   unitTest_SOURCES += OsiGrbSolverInterfaceTest.cpp
-  AM_CPPFLAGS += -DCOIN_HAS_GUROBI -I$(srcdir)/../src/OsiGrb $(OSIGRBLIB_CFLAGS)
+  AM_CPPFLAGS += -DCOIN_HAS_GUROBI -I$(srcdir)/../src/OsiGrb
   unitTest_LDADD += ../src/OsiGrb/libOsiGrb.la
 endif
 
 if COIN_HAS_SOPLEX
   unitTest_SOURCES += OsiSpxSolverInterfaceTest.cpp
-  AM_CPPFLAGS += -DCOIN_HAS_SOPLEX -I$(srcdir)/../src/OsiSpx $(OSISPXLIB_CFLAGS)
+  AM_CPPFLAGS += -DCOIN_HAS_SOPLEX -I$(srcdir)/../src/OsiSpx
   unitTest_LDADD += ../src/OsiSpx/libOsiSpx.la
 endif
 
 # put this one after the -I$(srcdir)/../src/OsiXyz from above
-AM_CPPFLAGS += $(OSICOMMONTESTLIB_CFLAGS)
+AM_CPPFLAGS += $(OSITEST_CFLAGS)
 
 unittestflags =
 if COIN_HAS_SAMPLE

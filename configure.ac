@@ -63,7 +63,7 @@ AC_COIN_CHECK_MATH_HDRS
 
 # Find components for OsiLib
 
-AC_COIN_CHK_PKG(CoinUtils,[OsiLib])
+AC_COIN_CHK_PKG(CoinUtils,[OsiLib OsiTest])
 if test "$coin_has_coinutils" != yes ; then
   AC_MSG_ERROR([Required package CoinUtils not available.])
 fi
@@ -92,23 +92,23 @@ AC_COIN_CHK_HERE([OsiLib],[OsiCommonTestLib],[osi])
 # library, add external components, finalize the flags, and add any components
 # being built here.
 
-AC_COIN_CHK_PKG(Glpk,[OsiGlpkLib],,[build])
+AC_COIN_CHK_PKG(Glpk,[OsiGlpkLib OsiTest],,[build])
 
-AC_COIN_CHK_PKG(SoPlex,[OsiSpxLib],[coinsoplex < 1.7],[build])
+AC_COIN_CHK_PKG(SoPlex,[OsiSpxLib OsiTest],[coinsoplex < 1.7],[build])
 
-AC_COIN_CHK_LIB(Cplex,[OsiCpxLib],[-lcplex -lpthread -lm -ldl],[],[],
+AC_COIN_CHK_LIB(Cplex,[OsiCpxLib OsiTest],[-lcplex -lpthread -lm -ldl],[],[],
                 [CPXgetstat])
 
-AC_COIN_CHK_LIB(Mosek,[OsiMskLib],[-lmosek64 -lpthread],[],[],
+AC_COIN_CHK_LIB(Mosek,[OsiMskLib OsiTest],[-lmosek64 -lpthread],[],[],
                 [MSK_makeenv])
 
-AC_COIN_CHK_LIB(Xpress,[OsiXprLib],[-lxprs -lxprl],[],[],
+AC_COIN_CHK_LIB(Xpress,[OsiXprLib OsiTest],[-lxprs -lxprl],[],[],
                 [XPRSinit])
 
-AC_COIN_CHK_LIB(Gurobi,[OsiGrbLib],[-lgurobi -lpthread -lm],[],[],
+AC_COIN_CHK_LIB(Gurobi,[OsiGrbLib OsiTest],[-lgurobi -lpthread -lm],[],[],
                 [GRBloadenv])
 
-AC_COIN_FINALIZE_FLAGS([OsiGlpkLib OskSpxLib OsiCpxLib OsiMskLib OsiXprLib OsiGrbLib])
+AC_COIN_FINALIZE_FLAGS([OsiGlpkLib OskSpxLib OsiCpxLib OsiMskLib OsiXprLib OsiGrbLib OsiTest])
 
 AC_COIN_CHK_HERE([OsiLib],[OsiGlpkLib OsiSpxLib OsiCpxLib OsiMskLib OsiXprLib OsiGrbLib],[osi])
 

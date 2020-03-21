@@ -2251,6 +2251,11 @@ inline const CoinStaticConflictGraph *OsiSolverInterface::getCGraph() const
 
 inline void OsiSolverInterface::setCGraph(CoinStaticConflictGraph *cgraph)
 {
+  if (cgraph_) {
+    delete cgraph_;
+    cgraph_ = NULL;
+  }
+  
 	cgraph_ = cgraph;
 }
 

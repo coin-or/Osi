@@ -1011,6 +1011,11 @@ void OsiSolverInterface::setInitialData()
   rowNames_ = OsiNameVec(0);
   colNames_ = OsiNameVec(0);
   objName_ = "";
+
+  if (cgraph_) {
+  	delete cgraph_;
+  	cgraph_ = NULL;
+  }
 }
 
 //-------------------------------------------------------------------
@@ -1081,6 +1086,7 @@ OsiSolverInterface::~OsiSolverInterface()
 
   if (cgraph_) {
     delete cgraph_;
+    cgraph_ = NULL;
   }
 }
 
@@ -1139,6 +1145,7 @@ OsiSolverInterface::operator=(const OsiSolverInterface &rhs)
 
     if (cgraph_) {
       delete cgraph_;
+      cgraph_ = NULL;
     }
 
     if (rhs.cgraph_) {

@@ -17387,7 +17387,7 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
-      # add -DXYZ_BUILD to CFLAGS
+      # add -DXYZ_BUILD to XYZ_CFLAGS
       OSILIB_CFLAGS="${OSILIB_CFLAGS} -DOSILIB_BUILD"
 
 # Define BUILDTOOLS_DEBUG to enable debugging output
@@ -17909,7 +17909,7 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
-      # add -DXYZ_BUILD to CFLAGS
+      # add -DXYZ_BUILD to XYZ_CFLAGS
       OSICOMMONTESTLIB_CFLAGS="${OSICOMMONTESTLIB_CFLAGS} -DOSICOMMONTESTLIB_BUILD"
 
 # Define BUILDTOOLS_DEBUG to enable debugging output
@@ -19589,7 +19589,7 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
-      # add -DXYZ_BUILD to CFLAGS
+      # add -DXYZ_BUILD to XYZ_CFLAGS
       OSIGLPKLIB_CFLAGS="${OSIGLPKLIB_CFLAGS} -DOSIGLPKLIB_BUILD"
 
 # Define BUILDTOOLS_DEBUG to enable debugging output
@@ -19639,7 +19639,7 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
-      # add -DXYZ_BUILD to CFLAGS
+      # add -DXYZ_BUILD to XYZ_CFLAGS
       OSKSPXLIB_CFLAGS="${OSKSPXLIB_CFLAGS} -DOSKSPXLIB_BUILD"
 
 # Define BUILDTOOLS_DEBUG to enable debugging output
@@ -19689,7 +19689,7 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
-      # add -DXYZ_BUILD to CFLAGS
+      # add -DXYZ_BUILD to XYZ_CFLAGS
       OSICPXLIB_CFLAGS="${OSICPXLIB_CFLAGS} -DOSICPXLIB_BUILD"
 
 # Define BUILDTOOLS_DEBUG to enable debugging output
@@ -19739,7 +19739,7 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
-      # add -DXYZ_BUILD to CFLAGS
+      # add -DXYZ_BUILD to XYZ_CFLAGS
       OSIMSKLIB_CFLAGS="${OSIMSKLIB_CFLAGS} -DOSIMSKLIB_BUILD"
 
 # Define BUILDTOOLS_DEBUG to enable debugging output
@@ -19789,7 +19789,7 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
-      # add -DXYZ_BUILD to CFLAGS
+      # add -DXYZ_BUILD to XYZ_CFLAGS
       OSIXPRLIB_CFLAGS="${OSIXPRLIB_CFLAGS} -DOSIXPRLIB_BUILD"
 
 # Define BUILDTOOLS_DEBUG to enable debugging output
@@ -19839,7 +19839,7 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
-      # add -DXYZ_BUILD to CFLAGS
+      # add -DXYZ_BUILD to XYZ_CFLAGS
       OSIGRBLIB_CFLAGS="${OSIGRBLIB_CFLAGS} -DOSIGRBLIB_BUILD"
 
 # Define BUILDTOOLS_DEBUG to enable debugging output
@@ -19889,7 +19889,7 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
-      # add -DXYZ_BUILD to CFLAGS
+      # add -DXYZ_BUILD to XYZ_CFLAGS
       OSITEST_CFLAGS="${OSITEST_CFLAGS} -DOSITEST_BUILD"
 
 # Define BUILDTOOLS_DEBUG to enable debugging output

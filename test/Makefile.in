@@ -463,6 +463,7 @@ unitTest_SOURCES = unitTest.cpp OsiTestSolver.cpp \
 unitTest_LDADD = ../src/OsiCommonTest/libOsiCommonTest.la \
 	$(am__append_3) $(am__append_6) $(am__append_9) \
 	$(am__append_12) $(am__append_15) $(am__append_18)
+AM_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.
 

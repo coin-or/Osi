@@ -23,6 +23,8 @@ unitTest_SOURCES = unitTest.cpp \
 # List libraries of COIN projects
 unitTest_LDADD = ../src/OsiCommonTest/libOsiCommonTest.la
 
+AM_LDFLAGS = $(LT_LDFLAGS)
+
 # Here list all include flags, relative to this "srcdir" directory.
 AM_CPPFLAGS = -I$(srcdir)/../src/Osi -I$(srcdir)/../src/OsiCommonTest
 

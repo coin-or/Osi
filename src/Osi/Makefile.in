@@ -159,7 +159,7 @@ libOsi_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am_libOsi_la_OBJECTS = OsiAuxInfo.lo OsiBranchingObject.lo \
 	OsiChooseVariable.lo OsiColCut.lo OsiCut.lo OsiCuts.lo \
 	OsiNames.lo OsiPresolve.lo OsiRowCut.lo OsiRowCutDebugger.lo \
-	OsiSolverBranch.lo OsiSolverInterface.lo
+	OsiSolverBranch.lo OsiSolverInterface.lo OsiFeatures.lo
 libOsi_la_OBJECTS = $(am_libOsi_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -187,8 +187,9 @@ am__depfiles_remade = ./$(DEPDIR)/OsiAuxInfo.Plo \
 	./$(DEPDIR)/OsiBranchingObject.Plo \
 	./$(DEPDIR)/OsiChooseVariable.Plo ./$(DEPDIR)/OsiColCut.Plo \
 	./$(DEPDIR)/OsiCut.Plo ./$(DEPDIR)/OsiCuts.Plo \
-	./$(DEPDIR)/OsiNames.Plo ./$(DEPDIR)/OsiPresolve.Plo \
-	./$(DEPDIR)/OsiRowCut.Plo ./$(DEPDIR)/OsiRowCutDebugger.Plo \
+	./$(DEPDIR)/OsiFeatures.Plo ./$(DEPDIR)/OsiNames.Plo \
+	./$(DEPDIR)/OsiPresolve.Plo ./$(DEPDIR)/OsiRowCut.Plo \
+	./$(DEPDIR)/OsiRowCutDebugger.Plo \
 	./$(DEPDIR)/OsiSolverBranch.Plo \
 	./$(DEPDIR)/OsiSolverInterface.Plo
 am__mv = mv -f
@@ -487,7 +488,8 @@ libOsi_la_SOURCES = \
 	OsiRowCutDebugger.cpp OsiRowCutDebugger.hpp \
 	OsiSolverBranch.cpp OsiSolverBranch.hpp \
 	OsiSolverInterface.cpp OsiSolverInterface.hpp \
-	OsiSolverParameters.hpp
+	OsiSolverParameters.hpp \
+	OsiFeatures.cpp OsiFeatures.hpp
 
 
 # List all additionally required libraries
@@ -519,7 +521,8 @@ includecoin_HEADERS = \
 	OsiRowCutDebugger.hpp \
 	OsiSolverBranch.hpp \
 	OsiSolverInterface.hpp \
-	OsiSolverParameters.hpp
+	OsiSolverParameters.hpp \
+	OsiFeatures.hpp
 
 all: config.h config_osi.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
@@ -630,6 +633,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiColCut.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiCut.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiCuts.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiFeatures.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiNames.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiPresolve.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/OsiRowCut.Plo@am__quote@ # am--include-marker
@@ -794,6 +798,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/OsiColCut.Plo
 	-rm -f ./$(DEPDIR)/OsiCut.Plo
 	-rm -f ./$(DEPDIR)/OsiCuts.Plo
+	-rm -f ./$(DEPDIR)/OsiFeatures.Plo
 	-rm -f ./$(DEPDIR)/OsiNames.Plo
 	-rm -f ./$(DEPDIR)/OsiPresolve.Plo
 	-rm -f ./$(DEPDIR)/OsiRowCut.Plo
@@ -851,6 +856,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/OsiColCut.Plo
 	-rm -f ./$(DEPDIR)/OsiCut.Plo
 	-rm -f ./$(DEPDIR)/OsiCuts.Plo
+	-rm -f ./$(DEPDIR)/OsiFeatures.Plo
 	-rm -f ./$(DEPDIR)/OsiNames.Plo
 	-rm -f ./$(DEPDIR)/OsiPresolve.Plo
 	-rm -f ./$(DEPDIR)/OsiRowCut.Plo

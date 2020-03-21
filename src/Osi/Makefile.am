@@ -32,7 +32,8 @@ libOsi_la_SOURCES = \
 	OsiRowCutDebugger.cpp OsiRowCutDebugger.hpp \
 	OsiSolverBranch.cpp OsiSolverBranch.hpp \
 	OsiSolverInterface.cpp OsiSolverInterface.hpp \
-	OsiSolverParameters.hpp
+	OsiSolverParameters.hpp \
+	OsiFeatures.cpp OsiFeatures.hpp
 
 # List all additionally required libraries
 libOsi_la_LIBADD = $(OSILIB_LFLAGS)
@@ -64,7 +65,8 @@ includecoin_HEADERS = \
 	OsiRowCutDebugger.hpp \
 	OsiSolverBranch.hpp \
 	OsiSolverInterface.hpp \
-	OsiSolverParameters.hpp
+	OsiSolverParameters.hpp \
+	OsiFeatures.hpp
 
 install-exec-local:
 	$(install_sh_DATA) config_osi.h $(DESTDIR)$(includecoindir)/OsiConfig.h

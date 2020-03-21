@@ -67,6 +67,8 @@ examples/readconic.cpp -text
 src/Osi/.ycm_extra_conf.py -text
 src/Osi/Makefile.am -text
 src/Osi/Makefile.in -text
+src/Osi/OsiFeatures.cpp -text
+src/Osi/OsiFeatures.hpp -text
 src/Osi/config.h.in -text
 src/Osi/config_default.h -text
 src/Osi/config_osi.h.in -text

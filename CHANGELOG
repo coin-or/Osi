@@ -1,3 +1,6 @@
+Mar/2020 OsiSolverInterface
+ - added the new conflict graph structure: attribute cgraph_ and methods getCGraph and setCGraph.
+
 Jan/2020 Buildsystem
  - Larger renovation of the build system and elimination of root directory.
    As a consequence, a monolithic build of Osi, which builds Osi with

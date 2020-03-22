@@ -87,7 +87,7 @@ class Summary {
         unsigned int nNegVal;
 };
 
-const static char feat_names[OsiFeature::OFCount][STR_SIZE] = {
+const static char feat_names[OFCount][STR_SIZE] = {
     "cols",
     "rows",
     "colsPerRow",

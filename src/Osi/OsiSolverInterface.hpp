@@ -10,12 +10,14 @@
 #include <vector>
 
 #include "CoinTypes.hpp"
+#include "CoinMessage.hpp"
 #include "CoinMessageHandler.hpp"
 #include "CoinPackedVectorBase.hpp"
 #include "CoinPackedMatrix.hpp"
 #include "CoinWarmStart.hpp"
 #include "CoinFinite.hpp"
 #include "CoinError.hpp"
+#include "CoinTime.hpp"
 #include "CoinStaticConflictGraph.hpp"
 
 #include "OsiConfig.h"
@@ -1788,9 +1790,9 @@ public:
 
   /*! \brief Sets a conflict graph
    *
-   *  Sets a conflict graph indicating relationship between binary variables
+   *  Builds a conflict graph indicating relationship between binary variables
    */
-  inline void setCGraph(CoinStaticConflictGraph *cgraph);
+  inline void checkCGraph();
   
   //@}
 
@@ -2249,14 +2251,35 @@ inline const CoinStaticConflictGraph *OsiSolverInterface::getCGraph() const
   return cgraph_;
 }
 
-inline void OsiSolverInterface::setCGraph(CoinStaticConflictGraph *cgraph)
+inline void OsiSolverInterface::checkCGraph()
 {
+  if (getNumCols() == 0 || getNumRows() == 0) {
+    return;
+  }
+  
   if (cgraph_) {
+    if (cgraph_->size() == getNumCols() * 2) { //cgraph has not changed
+      return;
+    }
+
     delete cgraph_;
     cgraph_ = NULL;
   }
   
-	cgraph_ = cgraph;
+  const double stCG = CoinGetTimeOfDay();
+	cgraph_ = new CoinStaticConflictGraph(getNumCols(), getColType(),
+                                        getColLower(), getColUpper(),
+	                                      getMatrixByRow(), getRowSense(),
+                                        getRightHandSide(), getRowRange());
+  const double etCG = CoinGetTimeOfDay();
+  messageHandler()->message(COIN_CGRAPH_INFO, messages()) << etCG-stCG << cgraph_->density()*100.0 << CoinMessageEol;
+
+  //fixing variables discovered during the construction of conflict graph
+  const std::vector< std::pair< size_t, std::pair< double, double > > > newBounds = cgraph_->updatedBounds();
+  for (size_t i = 0 ; i < newBounds.size(); i++) {
+    setColLower(newBounds[i].first, newBounds[i].second.first);
+    setColUpper(newBounds[i].first, newBounds[i].second.second);
+  }
 }
 
 #endif

@@ -22,22 +22,22 @@
 /* Define to 1 if the CoinUtils package is used.
  * Don't undef this unless you really know what you're doing.
  */
-#define COIN_HAS_COINUTILS 1
+#define OSI_HAS_COINUTILS 1
 
 /* Define to 1 if the Cplex package is used */
-/* #define COIN_HAS_CPLEX 1 */
+/* #define OSI_HAS_CPLEX 1 */
 
 /* Define to 1 if the Glpk package is used */
-/* #define COIN_HAS_GLPK 1 */
+/* #define OSI_HAS_GLPK 1 */
 
 /* Define to 1 if the Gurobi package is used */
-/* #define COIN_HAS_GUROBI 1 */
+/* #define OSI_HAS_GUROBI 1 */
 
 /* Define to 1 if the Mosek package is used */
-/* #define COIN_HAS_MOSEK 1 */
+/* #define OSI_HAS_MOSEK 1 */
 
 /* Define to 1 if the SoPlex package is used */
-/* #define COIN_HAS_SOPLEX 1 */
+/* #define OSI_HAS_SOPLEX 1 */
 
 /* Define to 1 if the Xpress package is used */
-/* #define COIN_HAS_XPRESS 1 */
+/* #define OSI_HAS_XPRESS 1 */

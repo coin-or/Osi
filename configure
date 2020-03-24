@@ -3265,8 +3265,6 @@ _ACEOF
 
 
 
-
-
 # A useful makefile conditional that is always false
 
    if false; then
@@ -17332,7 +17330,7 @@ fi
 
   if test $coin_has_coinutils = yes ; then
 
-$as_echo "#define COIN_HAS_COINUTILS 1" >>confdefs.h
+$as_echo "#define OSI_HAS_COINUTILS 1" >>confdefs.h
 
     if test -n "$coinutils_pcfiles" ; then OSILIB_PCFILES="$coinutils_pcfiles $OSILIB_PCFILES" ; fi
        OSILIB_LFLAGS="$coinutils_lflags $OSILIB_LFLAGS"
@@ -17630,7 +17628,7 @@ fi
 
   if test $coin_has_sample = yes ; then
 
-$as_echo "#define COIN_HAS_SAMPLE 1" >>confdefs.h
+$as_echo "#define OSI_HAS_SAMPLE 1" >>confdefs.h
 
 
 
@@ -17861,7 +17859,7 @@ fi
 
   if test $coin_has_netlib = yes ; then
 
-$as_echo "#define COIN_HAS_NETLIB 1" >>confdefs.h
+$as_echo "#define OSI_HAS_NETLIB 1" >>confdefs.h
 
 
 
@@ -18218,7 +18216,7 @@ fi
 
   if test $coin_has_glpk = yes ; then
 
-$as_echo "#define COIN_HAS_GLPK 1" >>confdefs.h
+$as_echo "#define OSI_HAS_GLPK 1" >>confdefs.h
 
     if test -n "$glpk_pcfiles" ; then OSIGLPKLIB_PCFILES="$glpk_pcfiles $OSIGLPKLIB_PCFILES" ; fi
        OSIGLPKLIB_LFLAGS="$glpk_lflags $OSIGLPKLIB_LFLAGS"
@@ -18479,7 +18477,7 @@ fi
 
   if test $coin_has_soplex = yes ; then
 
-$as_echo "#define COIN_HAS_SOPLEX 1" >>confdefs.h
+$as_echo "#define OSI_HAS_SOPLEX 1" >>confdefs.h
 
     if test -n "$soplex_pcfiles" ; then OSISPXLIB_PCFILES="$soplex_pcfiles $OSISPXLIB_PCFILES" ; fi
        OSISPXLIB_LFLAGS="$soplex_lflags $OSISPXLIB_LFLAGS"
@@ -18746,7 +18744,7 @@ fi
 
   if test $coin_has_cplex = yes ; then
 
-$as_echo "#define COIN_HAS_CPLEX 1" >>confdefs.h
+$as_echo "#define OSI_HAS_CPLEX 1" >>confdefs.h
 
     OSICPXLIB_LFLAGS="$cplex_lflags $OSICPXLIB_LFLAGS"
        OSICPXLIB_CFLAGS="$cplex_cflags $OSICPXLIB_CFLAGS"
@@ -19011,7 +19009,7 @@ fi
 
   if test $coin_has_mosek = yes ; then
 
-$as_echo "#define COIN_HAS_MOSEK 1" >>confdefs.h
+$as_echo "#define OSI_HAS_MOSEK 1" >>confdefs.h
 
     OSIMSKLIB_LFLAGS="$mosek_lflags $OSIMSKLIB_LFLAGS"
        OSIMSKLIB_CFLAGS="$mosek_cflags $OSIMSKLIB_CFLAGS"
@@ -19276,7 +19274,7 @@ fi
 
   if test $coin_has_xpress = yes ; then
 
-$as_echo "#define COIN_HAS_XPRESS 1" >>confdefs.h
+$as_echo "#define OSI_HAS_XPRESS 1" >>confdefs.h
 
     OSIXPRLIB_LFLAGS="$xpress_lflags $OSIXPRLIB_LFLAGS"
        OSIXPRLIB_CFLAGS="$xpress_cflags $OSIXPRLIB_CFLAGS"
@@ -19541,7 +19539,7 @@ fi
 
   if test $coin_has_gurobi = yes ; then
 
-$as_echo "#define COIN_HAS_GUROBI 1" >>confdefs.h
+$as_echo "#define OSI_HAS_GUROBI 1" >>confdefs.h
 
     OSIGRBLIB_LFLAGS="$gurobi_lflags $OSIGRBLIB_LFLAGS"
        OSIGRBLIB_CFLAGS="$gurobi_cflags $OSIGRBLIB_CFLAGS"

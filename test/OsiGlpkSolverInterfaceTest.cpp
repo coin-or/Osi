@@ -26,7 +26,7 @@
 
 // Added so windows build with dsp files works,
 // when not building with glpk.
-#ifdef COIN_HAS_GLPK
+#ifdef OSI_HAS_GLPK
 
 void OsiGlpkSolverInterfaceUnitTest(const std::string & mpsDir, const std::string & netlibDir)
 {

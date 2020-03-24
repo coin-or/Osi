@@ -39,14 +39,14 @@ using namespace OsiUnitTest;
   commented if you're happy with running the unitTest for all solvers in
   the build.
 */
-// #undef COIN_HAS_XPRESS
-// #undef COIN_HAS_CPLEX
-// #undef COIN_HAS_GLPK
-// #undef COIN_HAS_MOSEK
-// #undef COIN_HAS_GUROBI
-// #undef COIN_HAS_SOPLEX
+// #undef OSI_HAS_XPRESS
+// #undef OSI_HAS_CPLEX
+// #undef OSI_HAS_GLPK
+// #undef OSI_HAS_MOSEK
+// #undef OSI_HAS_GUROBI
+// #undef OSI_HAS_SOPLEX
 
-#ifdef COIN_HAS_XPRESS
+#ifdef OSI_HAS_XPRESS
 #include "OsiXprSolverInterface.hpp"
 
 /** A function that tests the methods in the OsiXprSolverInterface class.
@@ -59,7 +59,7 @@ void OsiXprSolverInterfaceUnitTest(const std::string &mpsDir, const std::string 
 #endif
 #endif
 
-#ifdef COIN_HAS_CPLEX
+#ifdef OSI_HAS_CPLEX
 #include "OsiCpxSolverInterface.hpp"
 #ifdef USETESTSOLVER
 #undef USETESTSOLVER
@@ -72,7 +72,7 @@ void OsiCpxSolverInterfaceUnitTest(const std::string &mpsDir, const std::string 
 
 #endif
 
-#ifdef COIN_HAS_GLPK
+#ifdef OSI_HAS_GLPK
 #include "OsiGlpkSolverInterface.hpp"
 
 /** A function that tests the methods in the OsiGlpkSolverInterface class.
@@ -85,7 +85,7 @@ void OsiGlpkSolverInterfaceUnitTest(const std::string &mpsDir, const std::string
 #endif
 #endif
 
-#ifdef COIN_HAS_MOSEK
+#ifdef OSI_HAS_MOSEK
 #include "OsiMskSolverInterface.hpp"
 
 /** A function that tests the methods in the OsiMskSolverInterface class.
@@ -98,7 +98,7 @@ void OsiMskSolverInterfaceUnitTest(const std::string & mpsDir, const std::string
 #endif
 #endif
 
-#ifdef COIN_HAS_GUROBI
+#ifdef OSI_HAS_GUROBI
 #include "OsiGrbSolverInterface.hpp"
 
 /** A function that tests the methods in the OsiGrbSolverInterface class.
@@ -111,7 +111,7 @@ void OsiGrbSolverInterfaceUnitTest(const std::string &mpsDir, const std::string 
 #endif
 #endif
 
-#ifdef COIN_HAS_SOPLEX
+#ifdef OSI_HAS_SOPLEX
 #include "OsiSpxSolverInterface.hpp"
 
 /** A function that tests the methods in the OsiSpxSolverInterface class.
@@ -152,7 +152,7 @@ int main (int argc, const char *argv[])
 /*
   Might as well make use of this convenient Xpress feature.
 */
-#ifdef COIN_HAS_XPRESS
+#ifdef OSI_HAS_XPRESS
   OsiXprSolverInterface::setLogFileName("xprCallTrace.txt");
 #endif
 
@@ -169,7 +169,7 @@ int main (int argc, const char *argv[])
 /*
   Test Osi{Row,Col}Cut routines.
 */
-#ifdef COIN_HAS_XPRESS  
+#ifdef OSI_HAS_XPRESS  
   {
     OsiXprSolverInterface xprSi;
     testingMessage( "Testing OsiRowCut with OsiXprSolverInterface\n" );
@@ -187,7 +187,7 @@ int main (int argc, const char *argv[])
   }
 #endif
 
-#ifdef COIN_HAS_CPLEX
+#ifdef OSI_HAS_CPLEX
   {
     OsiCpxSolverInterface cpxSi;
     testingMessage( "Testing OsiRowCut with OsiCpxSolverInterface\n" );
@@ -218,7 +218,7 @@ int main (int argc, const char *argv[])
   }
 #endif
 
-#ifdef COIN_HAS_GLPK
+#ifdef OSI_HAS_GLPK
   {
     OsiGlpkSolverInterface glpkSi;
     testingMessage( "Testing OsiRowCut with OsiGlpkSolverInterface\n" );
@@ -236,7 +236,7 @@ int main (int argc, const char *argv[])
   }
 #endif
 
-#ifdef COIN_HAS_MOSEK  
+#ifdef OSI_HAS_MOSEK  
   {
     OsiMskSolverInterface MskSi;
     testingMessage( "Testing OsiRowCut with OsiMskSolverInterface\n" );
@@ -254,7 +254,7 @@ int main (int argc, const char *argv[])
   }
 #endif
 
-#ifdef COIN_HAS_GUROBI
+#ifdef OSI_HAS_GUROBI
   {
     OsiGrbSolverInterface grbSi;
     testingMessage( "Testing OsiRowCut with OsiGrbSolverInterface\n" );
@@ -272,7 +272,7 @@ int main (int argc, const char *argv[])
   }
 #endif
 
-#ifdef COIN_HAS_SOPLEX
+#ifdef OSI_HAS_SOPLEX
   {
     OsiSpxSolverInterface spxSi;
     testingMessage( "Testing OsiRowCut with OsiSpxSolverInterface\n" );
@@ -307,12 +307,12 @@ int main (int argc, const char *argv[])
   to decide whether or not to run OsiSolverInterfaceCommonUnitTest. Arguably
   this should be required.
 */
-#ifdef COIN_HAS_XPRESS
+#ifdef OSI_HAS_XPRESS
   testingMessage( "Testing OsiXprSolverInterface\n" );
   OSIUNITTEST_CATCH_ERROR(OsiXprSolverInterfaceUnitTest(mpsDir,netlibDir), {}, "xpress", "osixpr unittest");
 #endif
 
-#ifdef COIN_HAS_CPLEX
+#ifdef OSI_HAS_CPLEX
   testingMessage( "Testing OsiCpxSolverInterface\n" );
   OSIUNITTEST_CATCH_ERROR(OsiCpxSolverInterfaceUnitTest(mpsDir,netlibDir), {}, "cplex", "osicpx unittest");
 #endif
@@ -322,22 +322,22 @@ int main (int argc, const char *argv[])
   OSIUNITTEST_CATCH_ERROR(OsiTestSolverInterfaceUnitTest(mpsDir,netlibDir), {}, "vol", "ositestsolver unittest");
 #endif
   
-#ifdef COIN_HAS_GLPK
+#ifdef OSI_HAS_GLPK
   testingMessage( "Testing OsiGlpkSolverInterface\n" );
   OSIUNITTEST_CATCH_ERROR(OsiGlpkSolverInterfaceUnitTest(mpsDir,netlibDir), {}, "glpk", "osiglpk unittest");
 #endif
   
-#ifdef COIN_HAS_MOSEK
+#ifdef OSI_HAS_MOSEK
   testingMessage( "Testing OsiMskSolverInterface\n" );
   OSIUNITTEST_CATCH_ERROR(OsiMskSolverInterfaceUnitTest(mpsDir,netlibDir), {}, "mosek", "osimsk unittest");
 #endif
 
-#ifdef COIN_HAS_GUROBI
+#ifdef OSI_HAS_GUROBI
   testingMessage( "Testing OsiGrbSolverInterface\n" );
   OSIUNITTEST_CATCH_ERROR(OsiGrbSolverInterfaceUnitTest(mpsDir,netlibDir), {}, "gurobi", "osigrb unittest");
 #endif
 
-#ifdef COIN_HAS_SOPLEX
+#ifdef OSI_HAS_SOPLEX
   testingMessage( "Testing OsiSpxSolverInterface\n" );
   OSIUNITTEST_CATCH_ERROR(OsiSpxSolverInterfaceUnitTest(mpsDir,netlibDir), {}, "soplex", "osispx unittest");
 #endif
@@ -350,29 +350,29 @@ int main (int argc, const char *argv[])
   {
     // Create vector of solver interfaces
     std::vector<OsiSolverInterface*> vecSi;
-#   if COIN_HAS_XPRESS
+#   if OSI_HAS_XPRESS
     OsiSolverInterface * xprSi = new OsiXprSolverInterface;
     vecSi.push_back(xprSi);
 #   endif
-#   if COIN_HAS_CPLEX
+#   if OSI_HAS_CPLEX
     OsiSolverInterface * cpxSi = new OsiCpxSolverInterface;
     vecSi.push_back(cpxSi);
 #   endif
-#   if COIN_HAS_GLPK
+#   if OSI_HAS_GLPK
     OsiSolverInterface * glpkSi = new OsiGlpkSolverInterface;
     glpkSi->setHintParam(OsiDoPresolveInInitial,true,OsiHintTry) ;
     glpkSi->setHintParam(OsiDoReducePrint,true,OsiHintDo) ;
     vecSi.push_back(glpkSi);
 #   endif
-#   if COIN_HAS_MOSEK
+#   if OSI_HAS_MOSEK
     OsiSolverInterface * MskSi = new OsiMskSolverInterface;
     vecSi.push_back(MskSi);
 #   endif
-#   if COIN_HAS_GUROBI
+#   if OSI_HAS_GUROBI
     OsiSolverInterface * grbSi = new OsiGrbSolverInterface;
     vecSi.push_back(grbSi);
 #   endif
-#   if COIN_HAS_SOPLEX
+#   if OSI_HAS_SOPLEX
     OsiSolverInterface * spxSi = new OsiSpxSolverInterface;
     vecSi.push_back(spxSi);
 #   endif

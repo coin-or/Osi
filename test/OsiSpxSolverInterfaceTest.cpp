@@ -15,7 +15,7 @@
 
 // Added so windows build with dsp files works,
 // when not building with soplex.
-#ifdef COIN_HAS_SOPLEX
+#ifdef OSI_HAS_SOPLEX
 
 #include "OsiUnitTests.hpp"
 #include "OsiRowCut.hpp"

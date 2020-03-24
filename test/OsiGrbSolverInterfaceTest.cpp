@@ -24,7 +24,7 @@
 
 // Added so build windows build with dsp files works,
 // when not building with gurobi.
-#ifdef COIN_HAS_GUROBI
+#ifdef OSI_HAS_GUROBI
 #include "gurobi_c.h"
 
 //--------------------------------------------------------------------------

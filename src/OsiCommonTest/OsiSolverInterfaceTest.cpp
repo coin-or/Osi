@@ -3455,7 +3455,7 @@ int testOsiPresolve(const OsiSolverInterface *emptySi,
 
   sampleProbs.push_back(probPair("brandy", 1.5185098965e+03));
   sampleProbs.push_back(probPair("e226", (-18.751929066 + 7.113)));
-  //#ifdef COIN_HAS_GUROBI
+  //#ifdef OSI_HAS_GUROBI
   //  // for the demo license of Gurobi, model "finnis" is too large, so we skip it in this case
   //  if( dynamic_cast<const OsiGrbSolverInterface*>(emptySi) && dynamic_cast<const OsiGrbSolverInterface*>(emptySi)->isDemoLicense() )
   //    std::cout << "Skip model finnis in test of OsiPresolve with Gurobi, since we seem to have only a demo license of Gurobi." << std::endl;

@@ -26,7 +26,7 @@ AC_CONFIG_SRCDIR(src/Osi/OsiSolverInterface.cpp)
 
 # Do some initialization work (version numbers, change prefix default, ...)
 
-AC_COIN_INITIALIZE(Osi)
+AC_COIN_INITIALIZE
 
 #############################################################################
 #                         Standard build tool stuff                         #
@@ -168,7 +168,7 @@ AC_SUBST(OSI_EXAMPLES_SOLVER_PCNAME)
 # We assume that GLPK is not too old
 
 AC_DEFINE(GLPK_HAS_INTOPT, [1],
-	  [Define to 1 if GLPK has the advanced B&B solver lpx_intopt])
+  [Define to 1 if GLPK has the advanced B&B solver lpx_intopt])
 
 #############################################################################
 #                  Check for doxygen                                        #

@@ -19,7 +19,7 @@
 
 // Added so build windows build with dsp files works,
 // when not building with gurobi.
-#ifdef COIN_HAS_MOSEK
+#ifdef OSI_HAS_MOSEK
 #include "mosek.h"
 
 //--------------------------------------------------------------------------

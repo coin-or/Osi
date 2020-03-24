@@ -16,7 +16,7 @@
 
 // Added so build windows build with dsp files works,
 // when not building with xpress.
-#ifdef COIN_HAS_XPRESS
+#ifdef OSI_HAS_XPRESS
 #define __ANSIC_
 #include <xprs.h>
 #undef  __ANSIC_

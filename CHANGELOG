@@ -1,3 +1,7 @@
+24/03/2020 OsiCpx
+  - fixed coltype not being allocated when loading a problem via matrix
+    that has no rows, see #129
+
 Mar/2020 OsiSolverInterface
  - added the new conflict graph structure: attribute cgraph_ and methods getCGraph and setCGraph.
 

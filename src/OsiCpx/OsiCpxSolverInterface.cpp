@@ -2452,6 +2452,9 @@ void OsiCpxSolverInterface::loadProblem(const CoinPackedMatrix &matrix,
 
     CPXchgobjsen(env_, getLpPtr(), objDirection);
 
+    resizeColType(nc);
+    CoinFillN(coltype_, nc, 'C');
+
     return;
   }
 

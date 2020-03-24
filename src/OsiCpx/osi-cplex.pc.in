@@ -11,5 +11,5 @@ Version: @PACKAGE_VERSION@
 Libs: -L${libdir} -lOsiCpx
 Libs.private: @OSICPXLIB_LFLAGS_NOPC@
 Cflags: -I${includedir}
-Requires:
+Requires: osi
 Requires.private: @OSICPXLIB_PCFILES@

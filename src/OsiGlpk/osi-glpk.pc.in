@@ -11,5 +11,5 @@ Version: @PACKAGE_VERSION@
 Libs: -L${libdir} -lOsiGlpk
 Libs.private: @OSIGLPKLIB_LFLAGS_NOPC@
 Cflags: -I${includedir}
-Requires:
+Requires: osi
 Requires.private: @OSIGLPKLIB_PCFILES@

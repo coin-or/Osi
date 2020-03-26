@@ -682,7 +682,5 @@ void OsiFeatures::compute(double *features, OsiSolverInterface *solver) {
     features[OFpercColsLeast512Nz] = (features[OFcolsLeast512Nz] / dnCols)*100.0;
     features[OFpercColsLeast1024Nz] = (features[OFcolsLeast1024Nz] / dnCols)*100.0;
     features[OFpercColsLeast2048Nz] = (features[OFcolsLeast2048Nz] / dnCols)*100.0;
-    printf("\nI1: %d I2: %d COUNT: %d\n", OFpercColsLeast4096Nz, OFcolsLeast4096Nz, OFCount);
-    fflush(stdout);
     features[OFpercColsLeast4096Nz] = (features[OFcolsLeast4096Nz] / dnCols)*100.0;
 }

@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-#include "CoinTypes.hpp"
+#include "CoinTypes.h"
 #include "CoinMessage.hpp"
 #include "CoinMessageHandler.hpp"
 #include "CoinPackedVectorBase.hpp"

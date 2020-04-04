@@ -11,7 +11,7 @@
 
 #include "OsiConfig.h"
 #include "CoinError.hpp"
-#include "CoinTypes.hpp"
+#include "CoinTypes.h"
 
 class OsiSolverInterface;
 class OsiSolverBranch;

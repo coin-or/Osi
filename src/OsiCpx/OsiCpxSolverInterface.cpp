@@ -1031,7 +1031,7 @@ int OsiCpxSolverInterface::getNumRows() const
 
   return CPXgetnumrows(env_, getMutableLpPtr());
 }
-int OsiCpxSolverInterface::getNumElements() const
+CoinBigIndex OsiCpxSolverInterface::getNumElements() const
 {
   debugMessage("OsiCpxSolverInterface::getNumElements()\n");
 
@@ -2598,7 +2598,7 @@ void OsiCpxSolverInterface::assignProblem(CoinPackedMatrix *&matrix,
 //-----------------------------------------------------------------------------
 
 void OsiCpxSolverInterface::loadProblem(const int numcols, const int numrows,
-  const int *start, const int *index,
+  const CoinBigIndex *start, const int *index,
   const double *value,
   const double *collb, const double *colub,
   const double *obj,
@@ -2628,7 +2628,7 @@ void OsiCpxSolverInterface::loadProblem(const int numcols, const int numrows,
 //-----------------------------------------------------------------------------
 
 void OsiCpxSolverInterface::loadProblem(const int numcols, const int numrows,
-  const int *start, const int *index,
+  const CoinBigIndex *start, const int *index,
   const double *value,
   const double *collb, const double *colub,
   const double *obj,

@@ -153,7 +153,7 @@ public:
   virtual int getNumRows() const;
 
   /// Get number of nonzero elements
-  virtual int getNumElements() const;
+  virtual CoinBigIndex getNumElements() const;
 
   /// Get pointer to array[getNumCols()] of column lower bounds
   virtual const double *getColLower() const;
@@ -563,7 +563,7 @@ public:
   /** Just like the other loadProblem() methods except that the matrix is
 	given in a standard column major ordered format (without gaps). */
   virtual void loadProblem(const int numcols, const int numrows,
-    const int *start, const int *index,
+    const CoinBigIndex *start, const int *index,
     const double *value,
     const double *collb, const double *colub,
     const double *obj,
@@ -572,7 +572,7 @@ public:
   /** Just like the other loadProblem() methods except that the matrix is
 	given in a standard column major ordered format (without gaps). */
   virtual void loadProblem(const int numcols, const int numrows,
-    const int *start, const int *index,
+    const CoinBigIndex *start, const int *index,
     const double *value,
     const double *collb, const double *colub,
     const double *obj,

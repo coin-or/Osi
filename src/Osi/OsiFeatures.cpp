@@ -20,6 +20,17 @@ bool intVal( const double val ) {
 // max size for features
 #define STR_SIZE 64
 
+#if __cplusplus <= 199711L  // no C++ 11
+#include <set>
+typedef set<double> uSetD;
+#else
+#include <unordered_set>
+typedef unordered_set<double> uSetD;
+#endif
+
+// store at most this number of different values
+#define MAX_DIFF_VALUES 4096 
+
 class Summary {
     public:
         Summary() :
@@ -35,7 +46,10 @@ class Summary {
             intEl(0),
             allIntEl(0),
             nPosVal(0),
-            nNegVal(0)
+            nNegVal(0),
+            nShortInt(0),
+            lastV(COIN_DBL_MAX),
+            nDiffValues(0)
     { }
 
         void add( double val ) {
@@ -47,13 +61,22 @@ class Summary {
                 this->maxAbsV = max(absv, maxAbsV);
             }
             this->summV += val;
-            if (intVal(val))
+            if (intVal(val)) {
                 this->intEl++;
+                if (absv < 65535)
+                    nShortInt++;
+            }
             if (val >= 1e-16)
                 this->nPosVal++;
             else {
                 if (val <= -1e-16)
                     this->nNegVal++;
+            }
+
+            if (val != lastV) {
+                lastV = val;
+                if (values.size()<MAX_DIFF_VALUES)
+                    values.insert(val);
             }
 
             this->nEl++;
@@ -68,6 +91,8 @@ class Summary {
                 this->allIntEl = 1;
             else
                 this->allIntEl = 0;
+
+            this->nDiffValues = this->values.size();
 
             this->percIntEl = (((double)this->intEl) / ((double) this->nEl)) * 100.0;
         }
@@ -85,6 +110,10 @@ class Summary {
         unsigned int allIntEl;
         unsigned int nPosVal;
         unsigned int nNegVal;
+        unsigned int nShortInt;
+        uSetD values;
+        double lastV;
+        unsigned int nDiffValues;
 };
 
 const static char feat_names[OFCount][STR_SIZE] = {
@@ -92,8 +121,11 @@ const static char feat_names[OFCount][STR_SIZE] = {
     "rows",
     "colsPerRow",
     "equalities",
+    "nzEqualities",
     "percEqualities",
+    "percNzEqualities",
     "inequalities",
+    "nzInequalities",
     "nz",
     "density",
 
@@ -103,11 +135,17 @@ const static char feat_names[OFCount][STR_SIZE] = {
     "continuous",
     "percInteger",
     "percBin",
+    "nUnbounded1",
+    "percUnbounded1",
+    "nUnbounded2",
+    "percUnbounded2",
 
     "rPartitioning",
     "rPercPartitioning",
     "rPacking",
     "rPercPacking",
+    "rPartPacking",
+    "rPercRowsPartPacking",
     "rCovering",
     "rPercCovering",
     "rCardinality",
@@ -136,6 +174,41 @@ const static char feat_names[OFCount][STR_SIZE] = {
     "rPercFlowBin",
     "rFlowMx",
     "rPercFlowMx",
+    
+    "rNzRowsPartitioning", 
+    "rNzPercRowsPartitioning", 
+    "rNzRowsPacking", 
+    "rNzPercRowsPacking", 
+    "rNzrowsPartPacking",  
+    "rNzpercRowsPartPacking", 
+    "rNzRowsCovering", 
+    "rNzPercRowsCovering", 
+    "rNzRowsCardinality", 
+    "rNzPercRowsCardinality", 
+    "rNzRowsKnapsack", 
+    "rNzPercRowsKnapsack", 
+    "rNzRowsIntegerKnapsack", 
+    "rNzPercRowsIntegerKnapsack", 
+    "rNzRowsInvKnapsack", 
+    "rNzPercRowsInvKnapsack", 
+    "rNzRowsSingleton", 
+    "rNzPercRowsSingleton", 
+    "rNzRowsAggr", 
+    "rNzPercRowsAggr", 
+    "rNzRowsPrec", 
+    "rNzPercRowsPrec", 
+    "rNzRowsVarBnd", 
+    "rNzPercRowsVarBnd", 
+    "rNzRowsBinPacking", 
+    "rNzPercRowsBinPacking", 
+    "rNzRowsMixedBin", 
+    "rNzPercRowsMixedBin", 
+    "rNzRowsGenInt", 
+    "rNzPercRowsGenInt", 
+    "rNzRowsFlowBin", 
+    "rNzPercRowsFlowBin", 
+    "rNzRowsFlowMx", 
+    "rNzPercRowsFlowMx", 
 
     "aMin",
     "aMax",
@@ -144,6 +217,9 @@ const static char feat_names[OFCount][STR_SIZE] = {
     "aRatioLSA",
     "aAllInt",
     "aPercInt",
+    "aDiffVal",
+    "anShortInts",
+    "apercShortInts",
 
     "objMin",  
     "objMax",
@@ -152,6 +228,9 @@ const static char feat_names[OFCount][STR_SIZE] = {
     "objRatioLSA",
     "objAllInt",
     "objPercInt",
+    "objDiffVal",
+    "objnShortInts",
+    "objpercShortInts",
 
     "rhsMin",
     "rhsMax",
@@ -160,6 +239,9 @@ const static char feat_names[OFCount][STR_SIZE] = {
     "rhsRatioLSA",
     "rhsAllInt",
     "rhsPercInt",
+    "rhsDiffVal",
+    "rhsnShortInts",
+    "rhspercShortInts",
 
     "rowNzMin",
     "rowNzMax",
@@ -180,7 +262,6 @@ const static char feat_names[OFCount][STR_SIZE] = {
     "rowsLess256Nz",
     "rowsLess512Nz",
     "rowsLess1024Nz",
-
     "percRowsLess4Nz",
     "percRowsLess8Nz",
     "percRowsLess16Nz",
@@ -190,7 +271,6 @@ const static char feat_names[OFCount][STR_SIZE] = {
     "percRowsLess256Nz",
     "percRowsLess512Nz",
     "percRowsLess1024Nz",
-
     "rowsLeast4Nz",
     "rowsLeast8Nz",
     "rowsLeast16Nz",
@@ -202,7 +282,6 @@ const static char feat_names[OFCount][STR_SIZE] = {
     "rowsLeast1024Nz",
     "rowsLeast2048Nz",
     "rowsLeast4096Nz",
-
     "percRowsLeast4Nz",
     "percRowsLeast8Nz",
     "percRowsLeast16Nz",
@@ -224,7 +303,6 @@ const static char feat_names[OFCount][STR_SIZE] = {
     "colsLess256Nz",
     "colsLess512Nz",
     "colsLess1024Nz",
-
     "percColsLess4Nz",
     "percColsLess8Nz",
     "percColsLess16Nz",
@@ -257,7 +335,7 @@ const static char feat_names[OFCount][STR_SIZE] = {
     "perccolsLeast512Nz",
     "perccolsLeast1024Nz",
     "perccolsLeast2048Nz",
-    "perccolsLeast4096Nz"
+    "perccolsLeast4096Nz",
 };
 
 const char *OsiFeatures::name( int i ) {
@@ -344,18 +422,25 @@ void OsiFeatures::compute(double *features, OsiSolverInterface *solver) {
         switch (nzRow) {
             case 1:
                 features[OFrowsSingleton]++;
+                features[OFnzRowsSingleton]++;
                 break;
             case 2:
-                if (sense[row] == 'E')
+                if (sense[row] == 'E') {
                     features[OFrowsAggr]++;
+                    features[OFnzRowsAggr] += nzRow;
+                }
 
-                if (nBinRow == 1)
+                if (nBinRow == 1) {
                     features[OFrowsVarBnd]++;
+                    features[OFnzRowsVarBnd] += nzRow;
+                }
 
                 if ( nBinRow%2 == 0 && nContRow%2 == 0) // vars of the same type
                     if ( summRow.nNegVal == 1 && summRow.nPosVal == 1
-                            && dbl_equal(summRow.minV, summRow.maxV) )
+                            && dbl_equal(summRow.minV, summRow.maxV) ) {
                         features[OFrowsPrec]++;
+                        features[OFnzRowsPrec] += nzRow;
+                    }
                 break;
         }
 
@@ -370,12 +455,17 @@ void OsiFeatures::compute(double *features, OsiSolverInterface *solver) {
                     switch (sense[row]) {
                         case 'E':
                             features[OFrowsPartitioning]++;
+                            features[OFnzRowsPartitioning] += nzRow;
+                            features[OFnzrowsPartPacking] += nzRow;
                             break;
                         case 'G':
                             features[OFrowsCovering]++;
+                            features[OFnzRowsCovering] += nzRow;
                             break;
                         case 'L':
                             features[OFrowsPacking]++;
+                            features[OFnzRowsPacking] += nzRow;
+                            features[OFnzrowsPartPacking] += nzRow;
                             break;
                     }
                 } // rhs 1.0
@@ -384,9 +474,11 @@ void OsiFeatures::compute(double *features, OsiSolverInterface *solver) {
                         switch (sense[row]) {
                             case 'E':
                                 features[OFrowsCardinality]++;
+                                features[OFnzRowsCardinality] += nzRow;
                                 break;
                             case 'L':
                                 features[OFrowsInvKnapsack]++;
+                                features[OFnzRowsInvKnapsack] += nzRow;
                                 break;
                         }
                     } // rhs >= 2
@@ -396,36 +488,50 @@ void OsiFeatures::compute(double *features, OsiSolverInterface *solver) {
                 if (rhs[row] >= 1.1 ) {
                     if ( (maxaRow - minaRow >= 0.1) && (summRow.nNegVal == 0) ) { // different weights
                         features[OFrowsKnapsack]++;
+                        features[OFnzRowsKnapsack] += nzRow;
                         if (intCoefs) {
                             features[OFrowsIntegerKnapsack]++;
+                            features[OFnzRowsIntegerKnapsack] += nzRow;
                         }
                     }
                     if (summRow.nNegVal == 1 && nzRow >= 2) {
                         features[OFrowsBinPacking]++;
+                        features[OFnzRowsBinPacking] += nzRow;
                     }
                 }
             }
 
-            if (summRow.nNegVal >= 2 && summRow.nPosVal >= 2 && sense[row]=='E')
+            if (summRow.nNegVal >= 2 && summRow.nPosVal >= 2 && sense[row]=='E') {
                 features[OFrowsFlowBin]++;
+                features[OFnzRowsFlowBin] += nzRow;
+            }
         } // only binary vars
         else
         {
-            if (summRow.nNegVal >= 2 && summRow.nPosVal >= 2 && sense[row]=='E')
+            if (summRow.nNegVal >= 2 && summRow.nPosVal >= 2 && sense[row]=='E') {
                 features[OFrowsFlowMx]++;
-            if (nContRow>0)
+                features[OFnzRowsFlowMx] += nzRow;
+            }
+            if (nContRow>0) {
                 features[OFrowsMixedBin]++;
-            if (nIntRow)
+                features[OFnzRowsMixedBin] += nzRow;
+            }
+            if (nIntRow) {
                 features[OFrowsGenInt]++;
+                features[OFnzRowsGenInt] += nzRow;
+            }
         }
 
         switch (sense[row]) {
             case 'E':
                 features[OFequalities]++;
+                features[OFNzEqualities] += nzRow;
+
                 break;
             default:
                 // inequalities
                 features[OFinequalities]++;
+                features[OFNzInequalities] += nzRow;
                 break;
         }
 
@@ -496,6 +602,7 @@ void OsiFeatures::compute(double *features, OsiSolverInterface *solver) {
     
     features[OFpercRowsPartitioning] = (features[OFrowsPartitioning] / (double)solver->getNumRows())*100.0;
     features[OFpercRowsPacking] = (features[OFrowsPacking] / (double)solver->getNumRows())*100.0;
+    features[OFpercRowsPartPacking] = (features[OFrowsPartPacking] / (double)solver->getNumRows())*100.0;
     features[OFpercRowsCovering] = (features[OFrowsCovering] / (double)solver->getNumRows())*100.0;
     features[OFpercRowsCardinality] = (features[OFrowsCardinality] / (double)solver->getNumRows())*100.0;
     features[OFpercRowsIntegerKnapsack] = (features[OFrowsIntegerKnapsack] / (double)solver->getNumRows())*100.0;
@@ -509,6 +616,27 @@ void OsiFeatures::compute(double *features, OsiSolverInterface *solver) {
     features[OFpercRowsGenInt] = (features[OFrowsGenInt] / (double)solver->getNumRows())*100.0;
     features[OFpercRowsFlowBin] = (features[OFpercRowsFlowBin] / (double)solver->getNumRows())*100.0;
     features[OFpercRowsFlowMx] = (features[OFpercRowsFlowMx] / (double)solver->getNumRows())*100.0;
+
+    features[OFnzPercRowsPartitioning] = (features[OFnzRowsPartitioning] / features[OFnz])*100.0;
+    features[OFnzpercRowsPartPacking] = (features[OFnzrowsPartPacking] / features[OFnz])*100.0;
+    features[OFnzPercRowsPacking] = (features[OFnzRowsPacking] / features[OFnz])*100.0;
+    features[OFnzPercRowsCovering] = (features[OFnzRowsCovering] / features[OFnz])*100.0;
+    features[OFnzPercRowsCardinality] = (features[OFnzRowsCardinality] / features[OFnz])*100.0;
+    features[OFnzPercRowsKnapsack] = (features[OFnzRowsKnapsack] / features[OFnz])*100.0;
+    features[OFnzPercRowsIntegerKnapsack] = (features[OFnzRowsIntegerKnapsack] / features[OFnz])*100.0;
+    features[OFnzPercRowsInvKnapsack] = (features[OFnzRowsInvKnapsack] / features[OFnz])*100.0;
+    features[OFnzPercRowsSingleton] = (features[OFnzRowsSingleton] / features[OFnz])*100.0;
+    features[OFnzPercRowsAggr] = (features[OFnzRowsAggr] / features[OFnz])*100.0;
+    features[OFnzPercRowsPrec] = (features[OFnzRowsPrec] / features[OFnz])*100.0;
+    features[OFnzPercRowsVarBnd] = (features[OFnzRowsVarBnd] / features[OFnz])*100.0;
+    features[OFnzPercRowsBinPacking] = (features[OFnzRowsBinPacking] / features[OFnz])*100.0;
+    features[OFnzPercRowsMixedBin] = (features[OFnzRowsMixedBin] / features[OFnz])*100.0;
+    features[OFnzPercRowsGenInt] = (features[OFnzRowsGenInt] / features[OFnz])*100.0;
+    features[OFnzPercRowsFlowBin] = (features[OFnzRowsFlowBin] / features[OFnz])*100.0;
+    features[OFnzPercRowsFlowMx] = (features[OFnzRowsFlowMx] / features[OFnz])*100.0;
+
+    features[OFpercNzEqualities] = (features[OFNzEqualities] / features[OFnz])*100.0;
+
     aSumm.finish();
     rhsSumm.finish();
     rowNzSumm.finish();
@@ -516,6 +644,8 @@ void OsiFeatures::compute(double *features, OsiSolverInterface *solver) {
     // cols
     const CoinPackedMatrix *cpmCol =  solver->getMatrixByCol();
     const double *obj = solver->getObjCoefficients();
+    const double *colLB = solver->getColLower();
+    const double *colUB = solver->getColUpper();
     for ( int j=0 ; (j<solver->getNumCols()) ; ++j ) {
         objSumm.add(obj[j]);
 
@@ -529,6 +659,14 @@ void OsiFeatures::compute(double *features, OsiSolverInterface *solver) {
         }
         else
             features[OFcontinuous]++;
+
+        if (colUB[j] == COIN_DBL_MAX && colLB[j] == -COIN_DBL_MAX) {
+            features[OFnUnbounded2]++;
+        } else {
+            if (colUB[j] == COIN_DBL_MAX || colLB[j] == -COIN_DBL_MAX) {
+                features[OFnUnbounded1]++;
+            }
+        }
 
         const int nzCol = cpmCol->getVectorLengths()[j];
 
@@ -603,6 +741,8 @@ void OsiFeatures::compute(double *features, OsiSolverInterface *solver) {
     objSumm.finish();
     features[OFpercInteger] = (features[OFinteger] / ((double) solver->getNumCols())) * 100.0;
     features[OFpercBin] = (features[OFbin] / ((double) solver->getNumCols())) * 100.0;
+    features[OFpercUnbounded1] = (features[OFnUnbounded1] / ((double) solver->getNumCols())) * 100.0;
+    features[OFpercUnbounded2] = (features[OFnUnbounded2] / ((double) solver->getNumCols())) * 100.0;
 
     features[OFaMin] = aSumm.minV;
     features[OFaMax] = aSumm.maxV;
@@ -611,6 +751,9 @@ void OsiFeatures::compute(double *features, OsiSolverInterface *solver) {
     features[OFaRatioLSA] = aSumm.ratioLSA;
     features[OFaAllInt] = aSumm.allIntEl;
     features[OFaPercInt] = aSumm.percIntEl;
+    features[OFaDiffVal] = aSumm.nDiffValues;
+    features[OFanShortInts] = aSumm.nShortInt;
+    features[OFapercShortInts] = (features[OFanShortInts] / ((double) solver->getNumElements()))*100.0;
 
     features[OFobjMin] = objSumm.minV;
     features[OFobjMax] = objSumm.maxV;
@@ -619,6 +762,9 @@ void OsiFeatures::compute(double *features, OsiSolverInterface *solver) {
     features[OFobjRatioLSA] = objSumm.ratioLSA;
     features[OFobjAllInt] = objSumm.allIntEl;
     features[OFobjPercInt] = objSumm.percIntEl;
+    features[OFobjDiffVal] = objSumm.nDiffValues;
+    features[OFobjnShortInts] = objSumm.nShortInt;
+    features[OFobjpercShortInts] = (features[OFobjnShortInts] / ((double)objSumm.nEl))*100.0;
 
     features[OFrhsMin] = rhsSumm.minV;
     features[OFrhsMax] = rhsSumm.maxV;
@@ -627,6 +773,9 @@ void OsiFeatures::compute(double *features, OsiSolverInterface *solver) {
     features[OFrhsRatioLSA] = rhsSumm.ratioLSA;
     features[OFrhsAllInt] = rhsSumm.allIntEl;
     features[OFrhsPercInt] = rhsSumm.percIntEl;
+    features[OFrhsDiffVal] = rhsSumm.nDiffValues;
+    features[OFrhsnShortInts] = rhsSumm.nShortInt;
+    features[OFrhspercShortInts] = (features[OFrhsnShortInts] / ((double)rhsSumm.nEl))*100.0;
 
     features[OFrowNzMin] = rowNzSumm.minV;
     features[OFrowNzMax] = rowNzSumm.maxV;

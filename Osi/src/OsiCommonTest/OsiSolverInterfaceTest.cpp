@@ -4032,7 +4032,6 @@ void OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface *emptySi,
     int ad = 13579;
     {
       OsiSolverInterface *si1 = exmip1Si->clone();
-      int ad = 13579;
       si1->setApplicationData(&ad);
       OSIUNITTEST_ASSERT_ERROR(*(static_cast< int * >(si1->getApplicationData())) == ad, {}, solverName, "storing application data");
       si2 = si1->clone();

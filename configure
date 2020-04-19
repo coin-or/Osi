@@ -18494,8 +18494,8 @@ $as_echo "#define OSI_HAS_SOPLEX 1" >>confdefs.h
 
 
 
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for package Cplex" >&5
-$as_echo_n "checking for package Cplex... " >&6; }
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for package Cplex with function CPXgetstat" >&5
+$as_echo_n "checking for package Cplex with function CPXgetstat... " >&6; }
 
 # Make sure the necessary variables exist for each client package.
 
@@ -18561,7 +18561,7 @@ fi
 # --with-prim is always present. If the client specified dataonly, its value
 # is assigned to prim_data.
 
-  withval=$with_cplex
+  withval="$with_cplex"
   if test -n "$withval" ; then
     case "$withval" in
       no )
@@ -18575,7 +18575,7 @@ fi
         ;;
       * )
         coin_has_cplex=yes
-        cplex_lflags=$withval
+        cplex_lflags="$withval"
         ;;
     esac
   fi
@@ -18585,7 +18585,7 @@ fi
 # options for lflags and cflags.
 
   if test "$coin_has_cplex" != skipping ; then
-       withval=$with_cplex_lflags
+       withval="$with_cplex_lflags"
        if test -n "$withval" ; then
          case "$withval" in
            build | no | yes )
@@ -18593,12 +18593,12 @@ fi
              ;;
            * )
              coin_has_cplex=yes
-             cplex_lflags=$withval
+             cplex_lflags="$withval"
              ;;
          esac
        fi
 
-       withval=$with_cplex_cflags
+       withval="$with_cplex_cflags"
        if test -n "$withval" ; then
          case "$withval" in
            build | no | yes )
@@ -18671,14 +18671,18 @@ $as_echo "$as_me: WARNING: Unexpected status \"$coin_has_cplex\" in COIN_FIND_PR
        LIBS="$cplex_lflags "
        cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
 #ifdef __cplusplus
-             extern "C"
-           #endif
-           void CPXgetstat();
+extern "C"
+#endif
+char CPXgetstat ();
 int
 main ()
 {
-CPXgetstat()
+return CPXgetstat ();
   ;
   return 0;
 }
@@ -18759,8 +18763,8 @@ $as_echo "#define OSI_HAS_CPLEX 1" >>confdefs.h
 
 
 
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for package Mosek" >&5
-$as_echo_n "checking for package Mosek... " >&6; }
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for package Mosek with function MSK_makeenv" >&5
+$as_echo_n "checking for package Mosek with function MSK_makeenv... " >&6; }
 
 # Make sure the necessary variables exist for each client package.
 
@@ -18826,7 +18830,7 @@ fi
 # --with-prim is always present. If the client specified dataonly, its value
 # is assigned to prim_data.
 
-  withval=$with_mosek
+  withval="$with_mosek"
   if test -n "$withval" ; then
     case "$withval" in
       no )
@@ -18840,7 +18844,7 @@ fi
         ;;
       * )
         coin_has_mosek=yes
-        mosek_lflags=$withval
+        mosek_lflags="$withval"
         ;;
     esac
   fi
@@ -18850,7 +18854,7 @@ fi
 # options for lflags and cflags.
 
   if test "$coin_has_mosek" != skipping ; then
-       withval=$with_mosek_lflags
+       withval="$with_mosek_lflags"
        if test -n "$withval" ; then
          case "$withval" in
            build | no | yes )
@@ -18858,12 +18862,12 @@ fi
              ;;
            * )
              coin_has_mosek=yes
-             mosek_lflags=$withval
+             mosek_lflags="$withval"
              ;;
          esac
        fi
 
-       withval=$with_mosek_cflags
+       withval="$with_mosek_cflags"
        if test -n "$withval" ; then
          case "$withval" in
            build | no | yes )
@@ -18936,14 +18940,18 @@ $as_echo "$as_me: WARNING: Unexpected status \"$coin_has_mosek\" in COIN_FIND_PR
        LIBS="$mosek_lflags "
        cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
 #ifdef __cplusplus
-             extern "C"
-           #endif
-           void MSK_makeenv();
+extern "C"
+#endif
+char MSK_makeenv ();
 int
 main ()
 {
-MSK_makeenv()
+return MSK_makeenv ();
   ;
   return 0;
 }
@@ -19024,8 +19032,8 @@ $as_echo "#define OSI_HAS_MOSEK 1" >>confdefs.h
 
 
 
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for package Xpress" >&5
-$as_echo_n "checking for package Xpress... " >&6; }
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for package Xpress with function XPRSinit" >&5
+$as_echo_n "checking for package Xpress with function XPRSinit... " >&6; }
 
 # Make sure the necessary variables exist for each client package.
 
@@ -19091,7 +19099,7 @@ fi
 # --with-prim is always present. If the client specified dataonly, its value
 # is assigned to prim_data.
 
-  withval=$with_xpress
+  withval="$with_xpress"
   if test -n "$withval" ; then
     case "$withval" in
       no )
@@ -19105,7 +19113,7 @@ fi
         ;;
       * )
         coin_has_xpress=yes
-        xpress_lflags=$withval
+        xpress_lflags="$withval"
         ;;
     esac
   fi
@@ -19115,7 +19123,7 @@ fi
 # options for lflags and cflags.
 
   if test "$coin_has_xpress" != skipping ; then
-       withval=$with_xpress_lflags
+       withval="$with_xpress_lflags"
        if test -n "$withval" ; then
          case "$withval" in
            build | no | yes )
@@ -19123,12 +19131,12 @@ fi
              ;;
            * )
              coin_has_xpress=yes
-             xpress_lflags=$withval
+             xpress_lflags="$withval"
              ;;
          esac
        fi
 
-       withval=$with_xpress_cflags
+       withval="$with_xpress_cflags"
        if test -n "$withval" ; then
          case "$withval" in
            build | no | yes )
@@ -19201,14 +19209,18 @@ $as_echo "$as_me: WARNING: Unexpected status \"$coin_has_xpress\" in COIN_FIND_P
        LIBS="$xpress_lflags "
        cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
 #ifdef __cplusplus
-             extern "C"
-           #endif
-           void XPRSinit();
+extern "C"
+#endif
+char XPRSinit ();
 int
 main ()
 {
-XPRSinit()
+return XPRSinit ();
   ;
   return 0;
 }
@@ -19289,8 +19301,8 @@ $as_echo "#define OSI_HAS_XPRESS 1" >>confdefs.h
 
 
 
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for package Gurobi" >&5
-$as_echo_n "checking for package Gurobi... " >&6; }
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for package Gurobi with function GRBloadenv" >&5
+$as_echo_n "checking for package Gurobi with function GRBloadenv... " >&6; }
 
 # Make sure the necessary variables exist for each client package.
 
@@ -19356,7 +19368,7 @@ fi
 # --with-prim is always present. If the client specified dataonly, its value
 # is assigned to prim_data.
 
-  withval=$with_gurobi
+  withval="$with_gurobi"
   if test -n "$withval" ; then
     case "$withval" in
       no )
@@ -19370,7 +19382,7 @@ fi
         ;;
       * )
         coin_has_gurobi=yes
-        gurobi_lflags=$withval
+        gurobi_lflags="$withval"
         ;;
     esac
   fi
@@ -19380,7 +19392,7 @@ fi
 # options for lflags and cflags.
 
   if test "$coin_has_gurobi" != skipping ; then
-       withval=$with_gurobi_lflags
+       withval="$with_gurobi_lflags"
        if test -n "$withval" ; then
          case "$withval" in
            build | no | yes )
@@ -19388,12 +19400,12 @@ fi
              ;;
            * )
              coin_has_gurobi=yes
-             gurobi_lflags=$withval
+             gurobi_lflags="$withval"
              ;;
          esac
        fi
 
-       withval=$with_gurobi_cflags
+       withval="$with_gurobi_cflags"
        if test -n "$withval" ; then
          case "$withval" in
            build | no | yes )
@@ -19466,14 +19478,18 @@ $as_echo "$as_me: WARNING: Unexpected status \"$coin_has_gurobi\" in COIN_FIND_P
        LIBS="$gurobi_lflags "
        cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
 #ifdef __cplusplus
-             extern "C"
-           #endif
-           void GRBloadenv();
+extern "C"
+#endif
+char GRBloadenv ();
 int
 main ()
 {
-GRBloadenv()
+return GRBloadenv ();
   ;
   return 0;
 }

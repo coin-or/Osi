@@ -8,8 +8,8 @@ Name: OsiGlpk
 Description: COIN-OR Open Solver Interface for GLPK
 URL: https://github.com/coin-or/Osi
 Version: @PACKAGE_VERSION@
-Libs: -L${libdir} -lOsiGlpk
-Libs.private: @OSIGLPKLIB_LFLAGS_NOPC@
 Cflags: -I${includedir}
-Requires: osi
-Requires.private: @OSIGLPKLIB_PCFILES@
+@COIN_STATIC_BUILD_FALSE@Libs: -L${libdir} -lOsiGlpk
+@COIN_STATIC_BUILD_FALSE@Requires.private: @OSIGLPKLIB_PCFILES@
+@COIN_STATIC_BUILD_TRUE@Libs: -L${libdir} -lOsiGlpk @OSIGLPKLIB_LFLAGS_NOPC@
+@COIN_STATIC_BUILD_TRUE@Requires: @OSIGLPKLIB_PCFILES@

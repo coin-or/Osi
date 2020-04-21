@@ -8,8 +8,8 @@ Name: OsiCplex
 Description: COIN-OR Open Solver Interface for CPLEX
 URL: https://github.com/coin-or/Osi
 Version: @PACKAGE_VERSION@
-Libs: -L${libdir} -lOsiCpx
-Libs.private: @OSICPXLIB_LFLAGS_NOPC@
 Cflags: -I${includedir}
-Requires: osi
-Requires.private: @OSICPXLIB_PCFILES@
+@COIN_STATIC_BUILD_FALSE@Libs: -L${libdir} -lOsiCpx
+@COIN_STATIC_BUILD_FALSE@Requires.private: @OSICPXLIB_PCFILES@
+@COIN_STATIC_BUILD_TRUE@Libs: -L${libdir} -lOsiCpx @OSICPXLIB_LFLAGS_NOPC@
+@COIN_STATIC_BUILD_TRUE@Requires: @OSICPXLIB_PCFILES@

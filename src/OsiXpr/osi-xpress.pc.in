@@ -8,8 +8,8 @@ Name: OsiXpress
 Description: COIN-OR Open Solver Interface for Xpress
 URL: https://github.com/coin-or/Osi
 Version: @PACKAGE_VERSION@
-Libs: -L${libdir} -lOsiXpr
-Libs.private: @OSIXPRLIB_LFLAGS_NOPC@
 Cflags: -I${includedir}
-Requires: osi
-Requires.private: @OSIXPRLIB_PCFILES@
+@COIN_STATIC_BUILD_FALSE@Libs: -L${libdir} -lOsiXpr
+@COIN_STATIC_BUILD_FALSE@Requires.private: @OSIXPRLIB_PCFILES@
+@COIN_STATIC_BUILD_TRUE@Libs: -L${libdir} -lOsiXpr @OSIXPRLIB_LFLAGS_NOPC@
+@COIN_STATIC_BUILD_TRUE@Requires: @OSIXPRLIB_PCFILES@

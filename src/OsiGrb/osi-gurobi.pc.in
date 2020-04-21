@@ -8,8 +8,8 @@ Name: OsiGurobi
 Description: COIN-OR Open Solver Interface for Gurobi
 URL: https://github.com/coin-or/Osi
 Version: @PACKAGE_VERSION@
-Libs: -L${libdir} -lOsiGrb
-Libs.private: @OSIGRBLIB_LFLAGS_NOPC@
 Cflags: -I${includedir}
-Requires: osi
-Requires.private: @OSIGRBLIB_PCFILES@
+@COIN_STATIC_BUILD_FALSE@Libs: -L${libdir} -lOsiGrb
+@COIN_STATIC_BUILD_FALSE@Requires.private: @OSIGRBLIB_PCFILES@
+@COIN_STATIC_BUILD_TRUE@Libs: -L${libdir} -lOsiGrb @OSIGRBLIB_LFLAGS_NOPC@
+@COIN_STATIC_BUILD_TRUE@Requires: @OSIGRBLIB_PCFILES@

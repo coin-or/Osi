@@ -8,8 +8,8 @@ Name: OsiUnitTests
 Description: COIN-OR Open Solver Interface Common Unit Tests
 URL: https://github.com/coin-or/Osi
 Version: @PACKAGE_VERSION@
-Libs: -L${libdir} -lOsiCommonTest
-Libs.private: @OSICOMMONTESTLIB_LFLAGS_NOPC@
 Cflags: -I${includedir}
-Requires:
-Requires.private: @OSICOMMONTESTLIB_PCFILES@
+@COIN_STATIC_BUILD_FALSE@Libs: -L${libdir} -lOsiCommonTest
+@COIN_STATIC_BUILD_FALSE@Requires.private: osi @OSICOMMONTESTLIB_PCFILES@
+@COIN_STATIC_BUILD_TRUE@Libs: -L${libdir} -lOsiCommonTest @OSICOMMONTESTLIB_LFLAGS_NOPC@
+@COIN_STATIC_BUILD_TRUE@Requires: osi @OSICOMMONTESTLIB_PCFILES@

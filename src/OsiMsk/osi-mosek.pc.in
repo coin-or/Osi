@@ -8,8 +8,8 @@ Name: OsiMosek
 Description: COIN-OR Open Solver Interface for Mosek
 URL: https://github.com/coin-or/Osi
 Version: @PACKAGE_VERSION@
-Libs: -L${libdir} -lOsiMsk
-Libs.private: @OSIMSKLIB_LFLAGS_NOPC@
 Cflags: -I${includedir}
-Requires: osi
-Requires.private: @OSIMSKLIB_PCFILES@
+@COIN_STATIC_BUILD_FALSE@Libs: -L${libdir} -lOsiMsk
+@COIN_STATIC_BUILD_FALSE@Requires.private: @OSIMSKLIB_PCFILES@
+@COIN_STATIC_BUILD_TRUE@Libs: -L${libdir} -lOsiMsk @OSIMSKLIB_LFLAGS_NOPC@
+@COIN_STATIC_BUILD_TRUE@Requires: @OSIMSKLIB_PCFILES@

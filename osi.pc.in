@@ -8,8 +8,8 @@ Name: Osi
 Description: COIN-OR Open Solver Interface
 URL: https://github.com/coin-or/Osi
 Version: @PACKAGE_VERSION@
-Libs: -L${libdir} -lOsi
-Libs.private: @OSILIB_LFLAGS_NOPC@
 Cflags: -I${includedir}
-Requires:
-Requires.private: @OSILIB_PCFILES@
+@COIN_STATIC_BUILD_FALSE@Libs: -L${libdir} -lOsi
+@COIN_STATIC_BUILD_FALSE@Requires.private: @OSILIB_PCFILES@
+@COIN_STATIC_BUILD_TRUE@Libs: -L${libdir} -lOsi @OSILIB_LFLAGS_NOPC@
+@COIN_STATIC_BUILD_TRUE@Requires: @OSILIB_PCFILES@

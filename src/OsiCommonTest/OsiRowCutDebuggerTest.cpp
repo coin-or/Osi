@@ -43,7 +43,7 @@ void OsiRowCutDebuggerUnitTest(const OsiSolverInterface *baseSiP, const std::str
     // return debugger
     const OsiRowCutDebugger *debugger = imP->getRowCutDebugger();
     OSIUNITTEST_ASSERT_ERROR(debugger != NULL, {}, "osirowcutdebugger", "return debugger");
-    OSIUNITTEST_ASSERT_ERROR(debugger->numberColumns_ == 8, {}, "osirowcutdebugger", "return debugger");
+    OSIUNITTEST_ASSERT_ERROR(((debugger != NULL) && (debugger->numberColumns_ == 8)), {}, "osirowcutdebugger", "return debugger");
 
     const bool type[] = { 0, 0, 1, 1, 0, 0, 0, 0 };
     const double values[] = { 2.5, 0, 1, 1, 0.5, 3, 0, 0.26315789473684253 };

@@ -3950,8 +3950,7 @@ OsiMskSolverInterface::addCol(const CoinPackedVectorBase& vec,
 //-----------------------------------------------------------------------------
 // Adds a list of columns to the MOSEK task
 
-void 
-OsiMskSolverInterface::addCols(const int numcols,
+void OsiMskSolverInterface::addCols(const int numcols,
                                const CoinPackedVectorBase * const * cols,
                                const double* collb, const double* colub,   
                                const double* obj)
@@ -3960,21 +3959,28 @@ OsiMskSolverInterface::addCols(const int numcols,
   debugMessage("Begin OsiMskSolverInterface::addCols(%d, %p, %p, %p, %p)\n", numcols, (void *)cols, (void *)collb, (void *)colub, (void *)obj);
   #endif
 
-  int i, nz = 0, err = MSK_RES_OK;
-  
-  // For efficiency we put hints on the total future size
-  err = MSK_getmaxnumanz(getLpPtr(),
-                         &nz);
-                     
+  int i,maxnz = 0,nz=0, err = MSK_RES_OK;
+
+  err = MSK_getmaxnumanz(
+                     getLpPtr(),
+                     &maxnz);
   checkMSKerror( err, "MSK_getmaxanz", "addCols" );
 
+  err = MSK_getnumanz(
+                     getLpPtr(),
+                     &nz);
+
+  checkMSKerror( err, "MSK_getnumanz", "addCols" );
+
+  int nzfactor = (nz/maxnz);
+
   for( i = 0; i < numcols; ++i)
-    nz += cols[i]->getNumElements();
-  
+    nz += cols[i]->getNumElements()*nzfactor;
+
   err = MSK_putmaxnumanz(getLpPtr(),
                          nz);
-                     
-  checkMSKerror( err, "MSK_putmaxanz", "addCols" );
+
+  checkMSKerror( err, "MSK_putmaxnumanz", "addCols" );
           
   err = MSK_putmaxnumvar(getLpPtr(),
                          numcols+getNumCols());
@@ -3988,7 +3994,6 @@ OsiMskSolverInterface::addCols(const int numcols,
   debugMessage("End OsiMskSolverInterface::addCols(%d, %p, %p, %p, %p)\n", numcols, (void *)cols, (void *)collb, (void *)colub, (void *)obj);
   #endif
 }
-
 //-----------------------------------------------------------------------------
 // Deletes a list of columns from the MOSEK task 
 
@@ -4113,8 +4118,7 @@ OsiMskSolverInterface::addRow(const CoinPackedVectorBase& vec,
 //-----------------------------------------------------------------------------
 // Adds a serie of rows in bound form to the MOSEK task
 
-void 
-OsiMskSolverInterface::addRows(const int numrows,
+void OsiMskSolverInterface::addRows(const int numrows,
                                  const CoinPackedVectorBase * const * rows,
                                  const double* rowlb, const double* rowub)
 {
@@ -4122,19 +4126,27 @@ OsiMskSolverInterface::addRows(const int numrows,
   debugMessage("Begin OsiMskSolverInterface::addRows(%d, %p, %p, %p)\n", numrows, (void *)rows, (void *)rowlb, (void *)rowub);
   #endif
 
-  int i,nz = 0, err = MSK_RES_OK;
-  
-  // For efficiency we put hints on the total future size
+  int i,maxnz = 0,nz=0, err = MSK_RES_OK;
+
   err = MSK_getmaxnumanz(
                      getLpPtr(),
-                     &nz);
-                     
+                     &maxnz);
   checkMSKerror( err, "MSK_getmaxanz", "addRows" );
-  
+
+  err = MSK_getnumanz(
+                     getLpPtr(),
+                     &nz);
+
+  checkMSKerror( err, "MSK_getnumanz", "addRows" );
+
+  int nzfactor = (nz/maxnz);
+
+
+  // For efficiency we put hints on the total future size
   
   for( i = 0; i < numrows; ++i)
-    nz += rows[i]->getNumElements();
-  
+    nz += rows[i]->getNumElements()*nzfactor;
+
   err = MSK_putmaxnumanz(getLpPtr(),
                          nz);
                      
@@ -4152,7 +4164,6 @@ OsiMskSolverInterface::addRows(const int numrows,
   debugMessage("End OsiMskSolverInterface::addRows(%d, %p, %p, %p)\n", numrows, (void *)rows, (void *)rowlb, (void *)rowub);
   #endif
 }
-
 //-----------------------------------------------------------------------------
 // Adds a list of rows in triplet form to the MOSEK task
 

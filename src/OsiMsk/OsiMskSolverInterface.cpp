@@ -3972,7 +3972,11 @@ void OsiMskSolverInterface::addCols(const int numcols,
 
   checkMSKerror( err, "MSK_getnumanz", "addCols" );
 
-  int nzfactor = (nz/maxnz);
+  int nzfactor = 1;
+  if (maxnz>0&&nz>0)
+	  {
+	  nzfactor = (nz/maxnz);
+	  }
 
   for( i = 0; i < numcols; ++i)
     nz += cols[i]->getNumElements()*nzfactor;
@@ -4138,10 +4142,11 @@ void OsiMskSolverInterface::addRows(const int numrows,
                      &nz);
 
   checkMSKerror( err, "MSK_getnumanz", "addRows" );
-
-  int nzfactor = (nz/maxnz);
-
-
+  int nzfactor = 1;
+  if (maxnz>0&&nz>0)
+	  {
+	  nzfactor = (nz/maxnz);
+	  }
   // For efficiency we put hints on the total future size
   
   for( i = 0; i < numrows; ++i)

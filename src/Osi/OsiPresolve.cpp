@@ -694,6 +694,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
   Fix variables before we get into the main transform loop.
 */
   paction_ = make_fixed(prob, paction_);
+  paction_ = testRedundant(prob, paction_);
 
 #if PRESOLVE_DEBUG > 0
   check_and_tell(prob, paction_, pactiond);
@@ -782,6 +783,12 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
     // allow duplicate column processing for integer columns
     if ((presolveActions_ & 0x01) != 0)
       prob->setPresolveOptions(prob->presolveOptions() | 0x01);
+    // allow extra duplicate column processing 
+    if ((presolveActions_ & 0x40) != 0)
+      prob->setPresolveOptions(prob->presolveOptions() | 0x80000);
+    // allow extra doubleton column processing 
+    if ((presolveActions_ & 0x80) != 0)
+      prob->setPresolveOptions(prob->presolveOptions() | 0x100000);
     /*
   Set [rows,cols]ToDo to process all rows & cols unless there are
   specific prohibitions.
@@ -794,6 +801,10 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
     if (dupcol) {
       possibleSkip;
       paction_ = dupcol_action::presolve(prob, paction_);
+      possibleSkip;
+#ifdef CBC_PREPROCESS_EXPERIMENT
+      paction_ = twoxtwo_action::presolve(prob, paction_);
+#endif
 #if PRESOLVE_DEBUG > 0
       if (monitor)
         monitor->checkAndTell(prob);
@@ -1155,6 +1166,9 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
         break;
 
     } // End of major pass loop
+  }
+  if (!prob->status_) {
+    paction_ = duprow3_action::presolve(prob, paction_);
   }
   /*
   Final cleanup: drop zero coefficients from the matrix, then drop empty rows

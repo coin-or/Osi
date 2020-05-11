@@ -197,6 +197,8 @@ public:
       - 0x08 do not allow x+y+z=1 transform
       - 0x10 allow actions that don't easily unroll
       - 0x20 allow dubious gub element reduction
+      - 0x40 more for dupcol
+      - 0x80 more work in doubletons
 
     GUB element reduction is only partially implemented in CoinPresolve (see
     gubrow_action) and willl cause an abort at postsolve. It's not clear

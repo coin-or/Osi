@@ -105,7 +105,7 @@ bool OsiSolverInterface::isBinary(int colIndex) const
 // Method for getting a column solution that is guaranteed to be
 // between the column lower and upper bounds.
 //
-// This method is was introduced for Cgl. Osi developers can
+// This method was introduced for Cgl. Osi developers can
 // improve performance for their favorite solvers by
 // overriding this method and providing an implementation that caches
 // strictColSolution_.
@@ -2281,6 +2281,645 @@ void OsiSolverInterface::deleteBranchingInfo(int numberDeleted, const int *which
   } else {
     findIntegers(false);
   }
+}
+/* Get tight bounds. 
+   Returns number of bounds (row and column) tightened. 
+   If infeasible returns number of infeasibilities. */
+int
+OsiSolverInterface::tightPrimalBounds(double * newRowLower,
+				      double * newRowUpper,
+				      double * newColumnLower,
+				      double * newColumnUpper,
+				      int & columnsTightened,
+				      int & rowsTightened,
+				      int & elementsChanged,
+				      CoinPackedMatrix & rowCopy) const
+{
+  // get matrix data pointers
+  const int *column = rowCopy.getIndices();
+  const CoinBigIndex *rowStart = rowCopy.getVectorStarts();
+  const int *rowLength = rowCopy.getVectorLengths();
+  double *element = rowCopy.getMutableElements();
+  int numberChanged = 1, iPass = 0;
+  double large = getInfinity() * 0.1; // treat bounds > this as infinite
+  int numberInfeasible = 0;
+  int totalTightened = 0;
+  columnsTightened = 0;
+  rowsTightened = 0;
+  elementsChanged = 0;
+  double tolerance;
+  getDblParam(OsiPrimalTolerance, tolerance);
+
+  int numberColumns = getNumCols();
+  const double *colLower = getColLower();
+  const double *colUpper = getColUpper();
+  // New and saved column bounds
+  double *newLower = new double[numberColumns];
+  memcpy(newLower, colLower, numberColumns * sizeof(double));
+  double *newUpper = new double[numberColumns];
+  memcpy(newUpper, colUpper, numberColumns * sizeof(double));
+  double *columnLower = new double[numberColumns];
+  memcpy(columnLower, colLower, numberColumns * sizeof(double));
+  memcpy(newColumnLower, colLower, numberColumns * sizeof(double));
+  double *columnUpper = new double[numberColumns];
+  memcpy(columnUpper, colUpper, numberColumns * sizeof(double));
+  memcpy(newColumnUpper, colUpper, numberColumns * sizeof(double));
+  int numberRows = getNumRows();
+  memcpy(newRowLower,getRowLower(),numberRows*sizeof(double));
+  memcpy(newRowUpper,getRowUpper(),numberRows*sizeof(double));
+#ifdef CBC_PREPROCESS_EXPERIMENT
+  const double *objective = getObjCoefficients();
+#endif
+  double direction = getObjSense();
+  const int *columnLength = getMatrixByCol()->getVectorLengths();
+
+  int iRow, iColumn;
+
+  const double *rowLower = getRowLower();
+  const double *rowUpper = getRowUpper();
+#ifndef NDEBUG
+  double large2 = 1.0e10 * large;
+#endif
+#define MAXPASS 10
+  // Loop round seeing if we can tighten bounds
+  // Would be faster to have a stack of possible rows
+  // and we put altered rows back on stack
+  int numberCheck = -1;
+  while (numberChanged > numberCheck) {
+
+    numberChanged = 0; // Bounds tightened this pass
+
+    if (iPass == MAXPASS)
+      break;
+    iPass++;
+
+    for (iRow = 0; iRow < numberRows; iRow++) {
+
+      if (rowLower[iRow] > -large || rowUpper[iRow] < large) {
+
+        // possible row
+        int infiniteUpper = 0;
+        int infiniteLower = 0;
+        double maximumUp = 0.0;
+        double maximumDown = 0.0;
+        double newBound;
+        CoinBigIndex rStart = rowStart[iRow];
+        CoinBigIndex rEnd = rowStart[iRow] + rowLength[iRow];
+        CoinBigIndex j;
+#ifdef CBC_PREPROCESS_EXPERIMENT
+	bool allInteger = true;
+#endif
+        // Compute possible lower and upper ranges
+
+        for (j = rStart; j < rEnd; ++j) {
+          double value = element[j];
+          iColumn = column[j];
+#ifdef CBC_PREPROCESS_EXPERIMENT
+	  if (!isInteger(iColumn) || value != floor(value+0.5))
+	    allInteger = false;
+#endif
+          if (value > 0.0) {
+            if (newUpper[iColumn] >= large) {
+              ++infiniteUpper;
+            } else {
+              maximumUp += newUpper[iColumn] * value;
+            }
+            if (newLower[iColumn] <= -large) {
+              ++infiniteLower;
+            } else {
+              maximumDown += newLower[iColumn] * value;
+            }
+          } else if (value < 0.0) {
+            if (newUpper[iColumn] >= large) {
+              ++infiniteLower;
+            } else {
+              maximumDown += newUpper[iColumn] * value;
+            }
+            if (newLower[iColumn] <= -large) {
+              ++infiniteUpper;
+            } else {
+              maximumUp += newLower[iColumn] * value;
+            }
+          }
+        }
+        // Build in a margin of error
+        maximumUp += 1.0e-8 * fabs(maximumUp);
+        maximumDown -= 1.0e-8 * fabs(maximumDown);
+        double maxUp = maximumUp + infiniteUpper * 1.0e31;
+        double maxDown = maximumDown - infiniteLower * 1.0e31;
+        if (maxUp <= rowUpper[iRow] + tolerance && maxDown >= rowLower[iRow] - tolerance) {
+
+          // Row is redundant - make totally free
+        } else {
+          if (maxUp < rowLower[iRow] - 100.0 * tolerance || maxDown > rowUpper[iRow] + 100.0 * tolerance) {
+            // problem is infeasible - exit at once
+            numberInfeasible++;
+            break;
+          }
+          double lower = rowLower[iRow];
+          double upper = rowUpper[iRow];
+#ifdef CBC_PREPROCESS_EXPERIMENT
+	  if (upper>lower) {
+	    double lowerNew = lower;
+	    double upperNew = upper;
+	    maxUp = CoinMax(maxUp,lower);
+	    maxDown = CoinMin(maxDown,upper);
+	    if (!infiniteLower && maxDown > lower + 1.0e-6) 
+	      lowerNew = CoinMax(maxDown-1.0e-6,lower);
+	    if (!infiniteUpper && maxUp < upper - 1.0e-6)
+	      upperNew = CoinMin(maxUp+1.0e-6,upper);
+	    if (lowerNew > upperNew) {
+	      printf("BAD bounds of %g (%g) and %g (%g) on row %d\n",
+		     lowerNew,lower,upperNew,upper,iRow);
+	      lowerNew = upperNew;
+	    }
+	    if (lower!=lowerNew||upper!=upperNew) {
+	      if (allInteger) {
+		lower = floor(lower + 0.5);
+		upper = floor(upper + 0.5);
+	      } else {
+		lower = lowerNew;
+		upper = upperNew;
+	      }
+	      if (lower!=rowLower[iRow]||upper!=rowUpper[iRow])
+		printf("On row %d bounds %g,%g -> %g,%g\n",
+		       iRow,rowLower[iRow],rowUpper[iRow],
+		       lower,upper);
+	      newRowLower[iRow] = lower;
+	      newRowUpper[iRow] = upper;
+	    }
+	  }
+#endif
+          for (j = rStart; j < rEnd; ++j) {
+            double value = element[j];
+            iColumn = column[j];
+            double nowLower = newLower[iColumn];
+            double nowUpper = newUpper[iColumn];
+	    bool anyChange = false;
+            if (value > 0.0) {
+              // positive value
+              if (lower > -large) {
+                if (!infiniteUpper) {
+                  assert(nowUpper < large2);
+                  newBound = nowUpper + (lower - maximumUp) / value;
+                  // relax if original was large
+                  if (fabs(maximumUp) > 1.0e8)
+                    newBound -= 1.0e-12 * fabs(maximumUp);
+                } else if (infiniteUpper == 1 && nowUpper > large) {
+                  newBound = (lower - maximumUp) / value;
+                  // relax if original was large
+                  if (fabs(maximumUp) > 1.0e8)
+                    newBound -= 1.0e-12 * fabs(maximumUp);
+                } else {
+                  newBound = -COIN_DBL_MAX;
+                }
+                if (newBound > nowLower + 1.0e-12 && newBound > -large) {
+                  // Tighten the lower bound
+                  newLower[iColumn] = newBound;
+		  anyChange = true;
+                  // check infeasible (relaxed)
+                  if (nowUpper - newBound < -100.0 * tolerance) {
+                    numberInfeasible++;
+                  }
+                  // adjust
+                  double now;
+                  if (nowLower < -large) {
+                    now = 0.0;
+                    infiniteLower--;
+                  } else {
+                    now = nowLower;
+                  }
+                  maximumDown += (newBound - now) * value;
+                  nowLower = newBound;
+                }
+              }
+              if (upper < large) {
+                if (!infiniteLower) {
+                  assert(nowLower > -large2);
+                  newBound = nowLower + (upper - maximumDown) / value;
+                  // relax if original was large
+                  if (fabs(maximumDown) > 1.0e8)
+                    newBound += 1.0e-12 * fabs(maximumDown);
+                } else if (infiniteLower == 1 && nowLower < -large) {
+                  newBound = (upper - maximumDown) / value;
+                  // relax if original was large
+                  if (fabs(maximumDown) > 1.0e8)
+                    newBound += 1.0e-12 * fabs(maximumDown);
+                } else {
+                  newBound = COIN_DBL_MAX;
+                }
+                if (newBound < nowUpper - 1.0e-12 && newBound < large) {
+                  // Tighten the upper bound
+                  newUpper[iColumn] = newBound;
+		  anyChange = true;
+                  // check infeasible (relaxed)
+                  if (newBound - nowLower < -100.0 * tolerance) {
+                    numberInfeasible++;
+                  }
+                  // adjust
+                  double now;
+                  if (nowUpper > large) {
+                    now = 0.0;
+                    infiniteUpper--;
+                  } else {
+                    now = nowUpper;
+                  }
+                  maximumUp += (newBound - now) * value;
+                  nowUpper = newBound;
+                }
+              }
+            } else {
+              // negative value
+              if (lower > -large) {
+                if (!infiniteUpper) {
+                  assert(nowLower < large2);
+                  newBound = nowLower + (lower - maximumUp) / value;
+                  // relax if original was large
+                  if (fabs(maximumUp) > 1.0e8)
+                    newBound += 1.0e-12 * fabs(maximumUp);
+                } else if (infiniteUpper == 1 && nowLower < -large) {
+                  newBound = (lower - maximumUp) / value;
+                  // relax if original was large
+                  if (fabs(maximumUp) > 1.0e8)
+                    newBound += 1.0e-12 * fabs(maximumUp);
+                } else {
+                  newBound = COIN_DBL_MAX;
+                }
+                if (newBound < nowUpper - 1.0e-12 && newBound < large) {
+                  // Tighten the upper bound
+                  newUpper[iColumn] = newBound;
+		  anyChange = true;
+                  // check infeasible (relaxed)
+                  if (newBound - nowLower < -100.0 * tolerance) {
+                    numberInfeasible++;
+                  }
+                  // adjust
+                  double now;
+                  if (nowUpper > large) {
+                    now = 0.0;
+                    infiniteLower--;
+                  } else {
+                    now = nowUpper;
+                  }
+                  maximumDown += (newBound - now) * value;
+                  nowUpper = newBound;
+                }
+              }
+              if (upper < large) {
+                if (!infiniteLower) {
+                  assert(nowUpper < large2);
+                  newBound = nowUpper + (upper - maximumDown) / value;
+                  // relax if original was large
+                  if (fabs(maximumDown) > 1.0e8)
+                    newBound -= 1.0e-12 * fabs(maximumDown);
+                } else if (infiniteLower == 1 && nowUpper > large) {
+                  newBound = (upper - maximumDown) / value;
+                  // relax if original was large
+                  if (fabs(maximumDown) > 1.0e8)
+                    newBound -= 1.0e-12 * fabs(maximumDown);
+                } else {
+                  newBound = -COIN_DBL_MAX;
+                }
+                if (newBound > nowLower + 1.0e-12 && newBound > -large) {
+                  // Tighten the lower bound
+                  newLower[iColumn] = newBound;
+		  anyChange = true;
+                  // check infeasible (relaxed)
+                  if (nowUpper - newBound < -100.0 * tolerance) {
+                    numberInfeasible++;
+                  }
+                  // adjust
+                  double now;
+                  if (nowLower < -large) {
+                    now = 0.0;
+                    infiniteUpper--;
+                  } else {
+                    now = nowLower;
+                  }
+                  maximumUp += (newBound - now) * value;
+                  nowLower = newBound;
+                }
+              }
+            }
+	    if (anyChange) {
+	      numberChanged++;
+	    } else if (columnLength[iColumn] == 1) {
+#ifdef CBC_PREPROCESS_EXPERIMENT
+	      // may be able to do better
+	      // should be picked up elsewhere if no objective
+	      if (objective[iColumn]) {
+		double newBound;
+		if (direction*objective[iColumn]>0.0) {
+		  // want objective as low as possible so reduce upper bound
+		  if (value < 0.0) {
+		    double gap = maxUp-upper;
+		    newBound = - gap/value;
+		  } else {
+		    double gap = lower-maxDown;
+		    newBound = gap/value;
+		  }
+		  if (newBound<newUpper[iColumn]-1.0e-7) {
+		    if (isInteger(iColumn)) {
+		      newBound = ceil(newBound);
+		      newBound = CoinMax(newLower[iColumn],newBound);
+		    } else {
+		      newBound = CoinMax(newLower[iColumn],newBound+1.0e-7);
+		    }
+		  }
+		  if (newBound<newUpper[iColumn]-1.0e-7) {
+		    numberChanged++;
+		    printf("singleton %d obj %g %g <= %g rlo %g rup %g maxd %g maxu %g el %g\n",
+			   iColumn,objective[iColumn],newLower[iColumn],newUpper[iColumn],
+			   lower,upper,maxDown,maxUp,value);
+		    printf("upperbound changed to %g\n",newBound);
+		    newUpper[iColumn] = newBound;
+		    anyChange = true;
+		    // check infeasible (relaxed)
+		    if (newBound - nowLower < -100.0 * tolerance) {
+		      numberInfeasible++;
+		    }
+		    // adjust
+		    double now;
+		    if (nowUpper > large) {
+		      now = 0.0;
+		      infiniteUpper--;
+		    } else {
+		      now = nowUpper;
+		    }
+		    maximumUp += (newBound - now) * value;
+		    maxUp += (newBound - now) * value;
+		    nowUpper = newBound;
+		  }
+		} else {
+		  // want objective as low as possible so increase lower bound
+		  if (value > 0.0) { // ?
+		    double gap = maxUp-upper;
+		    newBound = - gap/value;
+		  } else {
+		    double gap = lower-maxDown;
+		    newBound = gap/value;
+		  }
+		  if (newBound>newLower[iColumn]+1.0e-7) {
+		    if (isInteger(iColumn)) {
+		      newBound = ceil(newBound);
+		      newBound = CoinMin(newUpper[iColumn],newBound);
+		    } else {
+		      newBound = CoinMin(newUpper[iColumn],newBound+1.0e-7);
+		    }
+		  }
+		  if (newBound>newLower[iColumn]+1.0e-7) {
+		    numberChanged++;
+		    printf("singleton %d obj %g %g <= %g rlo %g rup %g maxd %g maxu %g el %g\n",
+			   iColumn,objective[iColumn],newLower[iColumn],newUpper[iColumn],
+			   lower,upper,maxDown,maxUp,value);
+		    printf("lowerbound changed to %g\n",newBound);
+		    newLower[iColumn] = newBound;
+		    anyChange = true;
+		    // check infeasible (relaxed)
+		    if (nowUpper - newBound < -100.0 * tolerance) {
+		      numberInfeasible++;
+		    }
+		    // adjust
+		    double now;
+		    if (nowLower < -large) {
+		      now = 0.0;
+		      infiniteLower--;
+		    } else {
+		      now = nowLower;
+		    }
+		    maximumDown += (newBound - now) * value;
+		    maxDown += (newBound - now) * value;
+		    nowLower = newBound;
+		  }
+		}
+	      }
+#endif
+	    }
+          }
+        }
+      }
+    }
+    totalTightened += numberChanged;
+    if (iPass == 1)
+      numberCheck = numberChanged >> 4;
+    if (numberInfeasible)
+      break;
+  }
+  if (!numberInfeasible) {
+    // Set bounds slightly loose unless integral - now tighter
+    double useTolerance = 1.0e-5;
+    for (iColumn = 0; iColumn < numberColumns; iColumn++) {
+      if (columnUpper[iColumn] > columnLower[iColumn]) {
+        double lower = newLower[iColumn];
+        double upper = newUpper[iColumn];
+        if (isInteger(iColumn)) {
+          if (fabs(lower - floor(lower + 0.5)) < 1.0e-5)
+            lower = floor(lower + 0.5);
+          else
+            lower = ceil(lower);
+          if (fabs(upper - floor(upper + 0.5)) < 1.0e-5)
+            upper = floor(upper + 0.5);
+          else
+            upper = floor(upper);
+          if (lower > upper)
+            numberInfeasible++;
+        } else {
+          if (fabs(upper) < 1.0e-8 && fabs(lower) < 1.0e-8) {
+            lower = 0.0;
+            upper = 0.0;
+          } else {
+            // Relax unless integral
+            if (fabs(lower - floor(lower + 0.5)) > 1.0e-9)
+              lower -= useTolerance;
+            else
+              lower = floor(lower + 0.5);
+            lower = CoinMax(columnLower[iColumn], lower);
+            if (fabs(upper - floor(upper + 0.5)) > 1.0e-9)
+              upper += useTolerance;
+            else
+              upper = floor(upper + 0.5);
+            upper = CoinMin(columnUpper[iColumn], upper);
+          }
+        }
+        newColumnLower[iColumn] = lower;
+        newColumnUpper[iColumn] = upper;
+        newLower[iColumn] = lower;
+        newUpper[iColumn] = upper;
+      }
+    }
+    if (!numberInfeasible) {
+      // check common bad formulations
+      int numberChanges = 0;
+      for (iRow = 0; iRow < numberRows; iRow++) {
+        if (rowLower[iRow] > -large || rowUpper[iRow] < large) {
+          // possible row
+          double sumFixed = 0.0;
+          int infiniteUpper = 0;
+          int infiniteLower = 0;
+          double maximumUp = 0.0;
+          double maximumDown = 0.0;
+          double largest = 0.0;
+          CoinBigIndex rStart = rowStart[iRow];
+          CoinBigIndex rEnd = rowStart[iRow] + rowLength[iRow];
+          CoinBigIndex j;
+          int numberInteger = 0;
+          //int whichInteger=-1;
+          // Compute possible lower and upper ranges
+          for (j = rStart; j < rEnd; ++j) {
+            double value = element[j];
+            iColumn = column[j];
+            if (newUpper[iColumn] > newLower[iColumn]) {
+              if (isInteger(iColumn)) {
+                numberInteger++;
+                //whichInteger=iColumn;
+              }
+              largest = CoinMax(largest, fabs(value));
+              if (value > 0.0) {
+                if (newUpper[iColumn] >= large) {
+                  ++infiniteUpper;
+                } else {
+                  maximumUp += newUpper[iColumn] * value;
+                }
+                if (newLower[iColumn] <= -large) {
+                  ++infiniteLower;
+                } else {
+                  maximumDown += newLower[iColumn] * value;
+                }
+              } else if (value < 0.0) {
+                if (newUpper[iColumn] >= large) {
+                  ++infiniteLower;
+                } else {
+                  maximumDown += newUpper[iColumn] * value;
+                }
+                if (newLower[iColumn] <= -large) {
+                  ++infiniteUpper;
+                } else {
+                  maximumUp += newLower[iColumn] * value;
+                }
+              }
+            } else {
+              // fixed
+              sumFixed += newLower[iColumn] * value;
+            }
+          }
+          // Adjust
+          maximumUp += sumFixed;
+          maximumDown += sumFixed;
+          // For moment just when all one sign and ints
+          //maximumUp += 1.0e-8*fabs(maximumUp);
+          //maximumDown -= 1.0e-8*fabs(maximumDown);
+          double gap = 0.0;
+          if ((rowLower[iRow] > maximumDown && largest > rowLower[iRow] - maximumDown) && ((maximumUp <= rowUpper[iRow] && !infiniteUpper) || rowUpper[iRow] >= 1.0e30)) {
+            gap = rowLower[iRow] - maximumDown;
+            if (infiniteLower)
+              gap = 0.0; // switch off
+          } else if ((maximumUp > rowUpper[iRow] && largest > maximumUp - rowUpper[iRow]) && ((maximumDown >= rowLower[iRow] && !infiniteLower) || rowLower[iRow] <= -1.0e30)) {
+            gap = -(maximumUp - rowUpper[iRow]);
+            if (infiniteUpper)
+              gap = 0.0; // switch off
+          }
+          if (fabs(gap) > 1.0e-8) {
+            for (j = rStart; j < rEnd; ++j) {
+              double value = element[j];
+              iColumn = column[j];
+              double difference = newUpper[iColumn] - newLower[iColumn];
+              if (difference > 0.0 && difference <= 1.0) {
+                double newValue = value;
+                if (value * gap > 0.0 && isInteger(iColumn)) {
+                  if (fabs(value * difference) > fabs(gap)) {
+                    // No need for it to be larger than
+                    newValue = gap / difference;
+                  }
+                  if (fabs(value - newValue) > 1.0e-12) {
+                    numberChanges++;
+                    // BUT variable may have bound
+                    double rhsAdjust = 0.0;
+                    if (gap > 0.0) {
+                      // rowLower
+                      if (value > 0.0) {
+                        // new value is based on going up from lower bound
+                        if (colLower[iColumn])
+                          rhsAdjust = colLower[iColumn] * (value - newValue);
+                      } else {
+                        // new value is based on going down from upper bound
+                        if (colUpper[iColumn])
+                          rhsAdjust = colUpper[iColumn] * (value - newValue);
+                      }
+                    } else {
+                      // rowUpper
+                      if (value < 0.0) {
+                        // new value is based on going up from lower bound
+                        if (colLower[iColumn])
+                          rhsAdjust = colLower[iColumn] * (value - newValue);
+                      } else {
+                        // new value is based on going down from upper bound
+                        if (colUpper[iColumn])
+                          rhsAdjust = colUpper[iColumn] * (value - newValue);
+                      }
+                    }
+                    if (rhsAdjust) {
+#if CBC_USEFUL_PRINTING > 1
+                      printf("FFor column %d bounds %g, %g on row %d bounds %g, %g coefficient was changed from %g to %g with rhs adjustment of %g\n",
+                        iColumn, colLower[iColumn], colUpper[iColumn],
+                        iRow, rowLower[iRow], rowUpper[iRow],
+                        value, newValue, rhsAdjust);
+#endif
+                      if (rowLower[iRow] > -1.0e20)
+                        newRowLower[iRow] = rowLower[iRow] - rhsAdjust;
+                      if (rowUpper[iRow] < 1.0e20)
+                        newRowUpper[iRow] = rowUpper[iRow] - rhsAdjust;
+#if CBC_USEFUL_PRINTING > 1
+                      printf("FFor column %d bounds %g, %g on row %d bounds %g, %g coefficient was changed from %g to %g with rhs adjustment of %g\n",
+                        iColumn, colLower[iColumn], colUpper[iColumn],
+                        iRow, rowLower[iRow], rowUpper[iRow],
+                        value, newValue, rhsAdjust);
+#endif
+                    }
+                    element[j] = newValue;
+                    //handler_->message(CGL_ELEMENTS_CHANGED2, messages_)
+		    //<< iRow << iColumn << value << newValue
+		    //<< CoinMessageEol;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      if (elementsChanged) {
+	printf("%d elements changed tighterPrimalBounds\n",elementsChanged);
+	printf("what to do?\n"); //abort();
+        //handler_->message(CGL_ELEMENTS_CHANGED1, messages_)
+	//<< numberChanges << CoinMessageEol;
+        //replaceMatrixOptional(copy);
+      }
+    }
+  }
+  if (!numberInfeasible) {
+    // check bounds
+    const double * oldColumnLower = getColLower();
+    const double * oldColumnUpper = getColUpper();
+    const double * oldRowLower = getRowLower();
+    const double * oldRowUpper = getRowUpper();
+    columnsTightened = 0;
+    for (int iColumn = 0; iColumn < numberColumns; iColumn++) {
+      if (newColumnLower[iColumn]>oldColumnLower[iColumn])
+	columnsTightened++;
+      if (newColumnUpper[iColumn]<oldColumnUpper[iColumn])
+	columnsTightened++;
+    }
+    rowsTightened = 0;
+    for (int iRow = 0; iRow < numberRows; iRow++) {
+      if (newRowLower[iRow]>oldRowLower[iRow])
+	rowsTightened++;
+      if (newRowUpper[iRow]<oldRowUpper[iRow])
+	rowsTightened++;
+    }
+    if (columnsTightened || rowsTightened)
+      printf("tighten changed %d column bounds and %d row bounds\n",
+	     columnsTightened,rowsTightened);
+  }
+  return (numberInfeasible);
 }
 /* Use current solution to set bounds so current integer feasible solution will stay feasible.
    Only feasible bounds will be used, even if current solution outside bounds.  The amount of

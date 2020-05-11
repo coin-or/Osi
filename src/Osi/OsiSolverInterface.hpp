@@ -1345,6 +1345,15 @@ public:
   /// Deletes branching information before columns deleted
   void deleteBranchingInfo(int numberDeleted, const int *which);
 
+  /** fill existing arrays with tight bounds. 
+      Returns number of bounds (row and column) tightened. 
+      If infeasible returns minus number of infeasibilities. */
+  int tightPrimalBounds(double * rowLower,double * rowUpper,
+			double * columnLower, double * columnUpper,
+			int & columnsTightened,
+			int & rowsTightened,
+			int & elementsChanged,
+			CoinPackedMatrix & copy) const;
   //@}
 
   //---------------------------------------------------------------------------

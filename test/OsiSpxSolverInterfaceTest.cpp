@@ -8,7 +8,6 @@
 // Copyright (C) 2002, Tobias Pfender, International Business Machines
 // Corporation and others.  All Rights Reserved.
 //
-// Last edit: $Id$
 
 #include "CoinPragma.hpp"
 #include "OsiConfig.h"

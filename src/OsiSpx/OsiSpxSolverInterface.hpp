@@ -10,7 +10,6 @@
 //-----------------------------------------------------------------------------
 // Copyright (C) 2002, Tobias Pfender, International Business Machines
 // Corporation and others.  All Rights Reserved.
-// Last edit: $Id$
 
 #ifndef OsiSpxSolverInterface_H
 #define OsiSpxSolverInterface_H

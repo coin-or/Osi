@@ -9,7 +9,6 @@
 // Copyright (C) 2009 Humboldt University Berlin and others.
 // All Rights Reserved.
 
-// $Id$
 
 #include <iostream>
 #include <cassert>

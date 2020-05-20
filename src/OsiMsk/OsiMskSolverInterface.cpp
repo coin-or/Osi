@@ -12,6 +12,9 @@
 #include <iostream>
 #include <cassert>
 #include <string>
+#if __cplusplus >= 201103L
+#include <mutex>
+#endif
 #include <numeric>
 #include "OsiConfig.h"
 #include "CoinPragma.hpp"
@@ -4823,11 +4826,19 @@ const char * OsiMskSolverInterface::getCtype() const
 // Static instance counter methods
 //#############################################################################
 
+#if __cplusplus >= 201103L
+std::mutex instanceCounterMutex;
+#endif
+
 //-----------------------------------------------------------------------------
 // Increment the instance count, so we know when to close and open MOSEK.
 
 void OsiMskSolverInterface::incrementInstanceCounter()
 {
+#if __cplusplus >= 201103L
+  std::lock_guard<std::mutex> guard(instanceCounterMutex);
+#endif
+
   #if MSK_OSI_DEBUG_LEVEL > 3
   debugMessage("Begin OsiMskSolverInterface::incrementInstanceCounter()\n");
   #endif
@@ -4869,6 +4880,10 @@ void OsiMskSolverInterface::incrementInstanceCounter()
 
 void OsiMskSolverInterface::decrementInstanceCounter()
 {
+#if __cplusplus >= 201103L
+  std::lock_guard<std::mutex> guard(instanceCounterMutex);
+#endif
+
   #if MSK_OSI_DEBUG_LEVEL > 3
   debugMessage("Begin OsiMskSolverInterface::decrementInstanceCounter()\n");
   #endif

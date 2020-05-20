@@ -1,3 +1,6 @@
+20/05/2020 OsiMsk
+  - protect change in numInstances_ global variable by mutex if C++ 11 or higher, see #135
+
 11/05/2020 OsiMsk
   - increase maximal number of nonzeros in addCols and addRows only if necessary, see #134
 

@@ -45,18 +45,13 @@ An incomplete list of recent changes to Osi are found in the [CHANGELOG](Osi/CHA
 
 ## Getting Started using CoinBrew
 
-To build CoinUtils from source, obtain the `coinbrew` script from
-https://coin-or.github.io/coinbrew/
-and run
-
-
-    /path/to/coinbrew fetch --main-proj=Osi
-    /path/to/coinbrew build --main-proj=Osi --test
-    /path/to/coinbrew install --main-proj=Osi
-
-
+To build CoinUtils from source, obtain the `coinbrew` script.
+```
+wget https://raw.githubusercontent.com/coin-or/coinbrew/master/coinbrew
+./coinbrew fetch Osi@stable/0.108
+./coinbrew build Osi --tests=main
+```
 The `coinbrew` script will fetch [these](Dependencies) additional projects.
-
 
 ## Getting Started without CoinBrew (Expert users)
 
@@ -66,7 +61,6 @@ The `coinbrew` script will fetch [these](Dependencies) additional projects.
  3. Run `make` to build the CoinUtils library
  4. Run `make test` to build and run the CoinUtils unit test program
  5. Run `make install` to install library and header files.
-
 
 ## Doxygen Documentation
 

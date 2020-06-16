@@ -69,12 +69,12 @@ static void reporterror(const char *fname, int iline, int ierr)
 
 void OsiXprSolverInterface::initialSolve()
 {
-  const char * args = "l";
+  const char * args = "";
   bool takeHint;
   OsiHintStrength strength;
   getHintParam(OsiDoDualInInitial, takeHint, strength);
   if (strength != OsiHintIgnore) {
-    args = takeHint ? "dl" : "pl";
+    args = takeHint ? "d" : "p";
   }
 
   freeSolution();
@@ -86,7 +86,7 @@ void OsiXprSolverInterface::initialSolve()
     XPRS_CHECKED(XPRSmaxim, (prob_, args));
   }
 #else
-  XPRS_CHECKED(XPRSmipoptimize, (prob_, args));
+  XPRS_CHECKED(XPRSlpoptimize, (prob_, args));
 #endif
 
   lastsolvewasmip = false;
@@ -96,12 +96,12 @@ void OsiXprSolverInterface::initialSolve()
 
 void OsiXprSolverInterface::resolve()
 {
-  const char * args = "l";
+  const char * args = "";
   bool takeHint;
   OsiHintStrength strength;
   getHintParam(OsiDoDualInResolve, takeHint, strength);
   if (strength != OsiHintIgnore) {
-    args = takeHint ? "dl" : "pl";
+    args = takeHint ? "d" : "p";
   }
 
   freeSolution();
@@ -113,7 +113,7 @@ void OsiXprSolverInterface::resolve()
     XPRS_CHECKED(XPRSmaxim, (prob_, args));
   }
 #else
-  XPRS_CHECKED(XPRSmipoptimize, (prob_, args));
+  XPRS_CHECKED(XPRSlpoptimize, (prob_, args));
 #endif
 
   lastsolvewasmip = false;

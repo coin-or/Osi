@@ -152,7 +152,7 @@ void OsiXprSolverInterface::branchAndBound()
   const char * args = "";
   bool takeHint;
   OsiHintStrength strength;
-  getHintParam(OsiDoDualInResolve, takeHint, strength);
+  getHintParam(OsiDoDualInInitial, takeHint, strength);
   if (strength != OsiHintIgnore) {
     args = takeHint ? "d" : "p";
   }

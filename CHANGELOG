@@ -1,4 +1,4 @@
-16/06/202 OsiXpr
+16/06/2020 OsiXpr
   - added functionality for switching between dual and primal simplex with hints
   - implemented getDualRays
   - implemented getBasisStatus

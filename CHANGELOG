@@ -1,3 +1,8 @@
+16/06/202 OsiXpr
+  - added functionality for switching between dual and primal simplex with hints
+  - implemented getDualRays
+  - implemented getBasisStatus
+
 20/05/2020 OsiMsk
   - protect change in numInstances_ global variable by mutex if C++ 11 or higher, see #135
 

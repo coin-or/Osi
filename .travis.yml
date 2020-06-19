@@ -1,41 +1,83 @@
 language: cpp
 
+
 matrix:
   include:
     - os: linux
+      dist: bionic
+      env: BUILD_STATIC=true DEBUG=false ASAN=false
       addons:
         apt:
           packages:
             - gfortran
             - liblapack-dev
+            - libmetis-dev
+            - libnauty2-dev
     - os: linux
       dist: bionic
+      env: BUILD_STATIC=false DEBUG=false ASAN=false
       addons:
         apt:
           packages:
             - gfortran
             - liblapack-dev
+            - libmetis-dev
+            - libnauty2-dev
+    - os: linux
+      dist: xenial
+      env: BUILD_STATIC=true DEBUG=false ASAN=false
+      addons:
+        apt:
+          packages:
+            - gfortran
+            - libgfortran-5-dev
+            - liblapack-dev
+            - libmetis-dev
+            - libnauty2-dev
     - os: osx
       osx_image: xcode11
-      env: OSX=10.14 CC=gcc CXX=g++ 
+      env: OSX=10.14 CC=gcc CXX=g++ BUILD_STATIC=false DEBUG=false ASAN=false
       compiler: clang
     - os: osx
       osx_image: xcode11
-      env: OSX=10.14 
+      env: OSX=10.14  BUILD_STATIC=false DEBUG=false ASAN=false
       compiler: clang
     - os: osx
       osx_image: xcode10
-      env: OSX=10.13 
+      env: OSX=10.13  BUILD_STATIC=false DEBUG=false ASAN=false
       compiler: clang
 
+  allow_failures:
+    - os: windows
+
+before_install:
+- |-
+    ############## Installing Additional Packages #################
+    export PROJECT=$(basename $PWD)
+    cd ..                      
+    git clone https://github.com/coin-or/coinbrew
+    bash coinbrew/.ci/install_packages.sh
+    case $TRAVIS_OS_NAME in
+      windows)
+        BASH=bash
+        alias make=mingw32-make  # so that Autotools can find it
+        ;;
+      osx)
+        BASH=/usr/local/bin/bash
+        ;;
+      linux)
+        BASH=bash
+        ;;
+    esac
+    export BASH
+
 before_script:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; brew install bash gcc; clang --version; gfortran --version; fi
-  - if [[ "$TRAVIS_OS_NAME $CC" == "osx gcc" ]]; then export CC=gcc-9 ; export CXX=g++-9 ; $CC --version; $CXX --version; fi
-  - cd ..
-  - wget https://raw.githubusercontent.com/coin-or/coinbrew/master/coinbrew
-  - export PROJECT_URL=https://github.com/$TRAVIS_REPO_SLUG
-  - export PROJECT=`echo $TRAVIS_REPO_SLUG | cut -d "/" -f 2`
-  - bash ./coinbrew fetch $PROJECT_URL:$TRAVIS_BRANCH --no-prompt --skip-update  > /dev/null 
+- |-
+    ############# Fetching Dependencies ##############
+    $BASH coinbrew/coinbrew fetch $PROJECT --no-prompt --skip-update
 
 script:
-  - bash ./coinbrew build $PROJECT --no-prompt --verbosity=2 --test
+- |-
+    ############### Building Project ####################
+    source coinbrew/.ci/setup_environment.sh
+    $BASH coinbrew/coinbrew build $PROJECT "${COMMON_ARGS[@]}" "${ADD_ARGS[@]}" "${DBG_ARGS[@]}"

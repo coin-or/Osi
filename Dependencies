@@ -3,6 +3,6 @@ ThirdParty/Blas   https://github.com/coin-or-tools/ThirdParty-Blas stable/1.4
 ThirdParty/Lapack https://github.com/coin-or-tools/ThirdParty-Lapack stable/1.6
 ThirdParty/Glpk   https://github.com/coin-or-tools/ThirdParty-Glpk stable/1.10
 ThirdParty/SoPlex https://github.com/coin-or-tools/ThirdParty-SoPlex stable/1.6
-Data/Netlib       https://github.com/coin-or/Data/Netlib stable/1.2
-Data/Sample       https://github.com/coin-or/Data/Sample stable/1.2
+Data/Netlib       https://github.com/coin-or-tools/Data-Netlib stable/1.2
+Data/Sample       https://github.com/coin-or-tools/Data-Sample stable/1.2
 CoinUtils         https://github.com/coin-or/CoinUtils stable/2.11

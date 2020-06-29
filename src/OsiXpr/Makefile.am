@@ -1,8 +1,7 @@
 # Copyright (C) 2006 International Business Machines and others.
 # All Rights Reserved.
 # This file is distributed under the Eclipse Public License.
-
-
+#
 # Author:  Andreas Waechter           IBM    2006-04-13
 
 include $(top_srcdir)/BuildTools/Makemain.inc
@@ -21,7 +20,7 @@ libOsiXpr_la_SOURCES = OsiXprSolverInterface.cpp OsiXprSolverInterface.hpp
 libOsiXpr_la_LIBADD = ../Osi/libOsi.la $(OSIXPRLIB_LFLAGS)
 
 # This is for libtool (on Windows)
-libOsiXpr_la_LDFLAGS = $(LT_LDFLAGS)
+AM_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.
 AM_CPPFLAGS = -I$(srcdir)/../Osi $(OSIXPRLIB_CFLAGS)

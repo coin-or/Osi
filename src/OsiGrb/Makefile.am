@@ -19,7 +19,7 @@ libOsiGrb_la_SOURCES = OsiGrbSolverInterface.cpp OsiGrbSolverInterface.hpp
 libOsiGrb_la_LIBADD = ../Osi/libOsi.la $(OSIGRBLIB_LFLAGS)
 
 # This is for libtool (on Windows)
-libOsiGrb_la_LDFLAGS = $(LT_LDFLAGS)
+AM_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.
 AM_CPPFLAGS = -I$(srcdir)/../Osi $(OSIGRBLIB_CFLAGS)

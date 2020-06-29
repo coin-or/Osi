@@ -19,7 +19,7 @@ libOsiSpx_la_SOURCES = OsiSpxSolverInterface.cpp OsiSpxSolverInterface.hpp
 libOsiSpx_la_LIBADD = ../Osi/libOsi.la $(OSISPXLIB_LFLAGS)
 
 # This is for libtool
-libOsiSpx_la_LDFLAGS = $(LT_LDFLAGS)
+AM_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.
 AM_CPPFLAGS = -I$(srcdir)/../Osi $(OSISPXLIB_CFLAGS)

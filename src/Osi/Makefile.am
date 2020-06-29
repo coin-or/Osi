@@ -1,8 +1,7 @@
 # Copyright (C) 2010 Lou Hafer
 # All Rights Reserved.
 # This file is distributed under the Eclipse Public License.
-
-
+#
 # Author:  Lou Hafer        SFU        2010-07-29
 
 include $(top_srcdir)/BuildTools/Makemain.inc
@@ -38,7 +37,7 @@ libOsi_la_SOURCES = \
 libOsi_la_LIBADD = $(OSILIB_LFLAGS)
 
 # This is for libtool
-libOsi_la_LDFLAGS = $(LT_LDFLAGS)
+AM_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags.
 AM_CPPFLAGS = $(OSILIB_CFLAGS)
@@ -49,7 +48,6 @@ AM_CPPFLAGS = $(OSILIB_CFLAGS)
 
 # Here list all the header files that are required by a user of the library,
 # and that therefore should be installed in pkgincludedir
-
 includecoindir = $(pkgincludedir)
 includecoin_HEADERS = \
 	OsiAuxInfo.hpp \

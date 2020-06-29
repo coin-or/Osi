@@ -1,16 +1,14 @@
 # Copyright (C) 2006 International Business Machines.
 # All Rights Reserved.
 # This file is distributed under the Eclipse Public License.
-
-
+#
 # Author:  Andreas Waechter            IBM    2006-04-13
 
 #############################################################################
 #                       Names and other basic things                        #
 #############################################################################
 
-AC_INIT([Osi],[trunk],[https://github.com/coin-or/Osi/issues/new],[coin-or-osi],
-	[https://github.com/coin-or/Osi])
+AC_INIT([Osi],[devel],[https://github.com/coin-or/Osi/issues/new],[coin-or-osi],[https://github.com/coin-or/Osi])
 
 AC_COPYRIGHT([
 Copyright 2006 International Business Machines and others.
@@ -20,11 +18,9 @@ under the Eclipse Public License.])
 
 # List one file in the package so that the configure script can test whether
 # the package is actually there.
-
 AC_CONFIG_SRCDIR(src/Osi/OsiSolverInterface.cpp)
 
 # Do some initialization work (version numbers, change prefix default, ...)
-
 AC_COIN_INITIALIZE
 
 #############################################################################
@@ -32,15 +28,12 @@ AC_COIN_INITIALIZE
 #############################################################################
 
 # Get the name of the C++ compiler and appropriate compiler options.
-
 AC_COIN_PROG_CXX
 
 # This is a C++ package, set the language accordingly.
-
 AC_LANG_PUSH(C++)
 
 # Initialize libtool.
-
 AC_COIN_PROG_LIBTOOL
 
 # set RPATH_FLAGS to the compiler link flags required to hardcode location
@@ -53,7 +46,6 @@ AC_COIN_RPATH_FLAGS([$expanded_libdir])
 #############################################################################
 
 # Check for cmath/math.h, cfloat/float.h, cieeefp/ieeefp.h
-
 AC_COIN_CHECK_MATH_HDRS
 
 #############################################################################
@@ -61,24 +53,20 @@ AC_COIN_CHECK_MATH_HDRS
 #############################################################################
 
 # Find components for OsiLib
-
 AC_COIN_CHK_PKG(CoinUtils,[OsiLib OsiTest])
 if test "$coin_has_coinutils" != yes ; then
   AC_MSG_ERROR([Required package CoinUtils not available.])
 fi
 
 # Finalize libs and cflags for building OsiLib.
-
 AC_COIN_FINALIZE_FLAGS(OsiLib)
 
 # We just need the COIN_HAS_XXX and XXX_DATA variables for the data projects.
-
 AC_COIN_CHK_PKG(Sample,,[coindatasample],[],dataonly)
 AC_COIN_CHK_PKG(Netlib,,[coindatanetlib],[],dataonly)
 
 # Finalise lflags and cflags, then tack on information from OsiLib, which is
 # not yet installed.
-
 AC_COIN_FINALIZE_FLAGS(OsiCommonTestLib)
 AC_COIN_CHK_HERE([OsiLib],[OsiCommonTestLib],[osi])
 
@@ -90,7 +78,6 @@ AC_COIN_CHK_HERE([OsiLib],[OsiCommonTestLib],[osi])
 # downloaded and built. The general flow here is as above: Initialise the
 # library, add external components, finalize the flags, and add any components
 # being built here.
-
 AC_COIN_CHK_PKG(Glpk,[OsiGlpkLib OsiTest],,[build])
 
 AC_COIN_CHK_PKG(SoPlex,[OsiSpxLib OsiTest],[coinsoplex < 1.7],[build])
@@ -116,7 +103,6 @@ AC_COIN_CHK_HERE([OsiLib],[OsiGlpkLib OsiSpxLib OsiCpxLib OsiMskLib OsiXprLib Os
 #############################################################################
 
 # Choose a solver interface that can be used in the examples
-
 if test "$coin_has_glpk" = yes ; then
   OSI_EXAMPLES_SOLVER_NAME=OsiGlpkSolverInterface
   OSI_EXAMPLES_SOLVER_CFLAGS="$OSIGLPKLIB_CFLAGS"
@@ -165,7 +151,6 @@ AC_SUBST(OSI_EXAMPLES_SOLVER_PCNAME)
 # of the solver (file presence, link checks, etc.) be sure to guard the call.
 
 # We assume that GLPK is not too old
-
 AC_DEFINE(GLPK_HAS_INTOPT, [1],
   [Define to 1 if GLPK has the advanced B&B solver lpx_intopt])
 

@@ -6,7 +6,7 @@ includedir=@includedir@/coin-or
 
 Name: OsiSoplex
 Description: COIN-OR Open Solver Interface for SoPlex
-URL: https://github.com/coin-or/Osi
+URL: @PACKAGE_URL@
 Version: @PACKAGE_VERSION@
 Cflags: -I${includedir}
 @COIN_STATIC_BUILD_FALSE@Libs: -L${libdir} -lOsiSpx

@@ -1,8 +1,7 @@
 # Copyright (C) 2006 International Business Machines and others.
 # All Rights Reserved.
 # This file is distributed under the Eclipse Public License.
-
-
+#
 # Author:  Andreas Waechter           IBM    2006-04-13
 
 include $(top_srcdir)/BuildTools/Makemain.inc
@@ -21,7 +20,7 @@ libOsiMsk_la_SOURCES = OsiMskSolverInterface.cpp OsiMskSolverInterface.hpp
 libOsiMsk_la_LIBADD = ../Osi/libOsi.la $(OSIMSKLIB_LFLAGS)
 
 # This is for libtool (on Windows)
-libOsiMsk_la_LDFLAGS = $(LT_LDFLAGS)
+AM_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.
 AM_CPPFLAGS = -I$(srcdir)/../Osi $(OSIMSKLIB_CFLAGS)

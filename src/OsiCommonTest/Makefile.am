@@ -1,9 +1,8 @@
 # Copyright (C) 2006 International Business Machines and others.
 # All Rights Reserved.
 # This file is distributed under the Eclipse Public License.
-
-
-# Author:  Lou Hafer	SFU	2010-11-20
+#
+# Author:  Lou Hafer  SFU   2010-11-20
 
 include $(top_srcdir)/BuildTools/Makemain.inc
 
@@ -16,7 +15,6 @@ include $(top_srcdir)/BuildTools/Makemain.inc
 lib_LTLIBRARIES = libOsiCommonTest.la
 
 # List all source files for this library, including headers
-
 libOsiCommonTest_la_SOURCES = \
 	OsiCommonTest.hpp \
 	OsiColCutTest.cpp \
@@ -32,7 +30,7 @@ libOsiCommonTest_la_SOURCES = \
 libOsiCommonTest_la_LIBADD = $(OSICOMMONTESTLIB_LFLAGS) ../Osi/libOsi.la
 
 # Libtool flags
-libOsiCommonTest_la_LDFLAGS = $(LT_LDFLAGS)
+AM_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.
 AM_CPPFLAGS = -I$(srcdir)/../Osi $(OSICOMMONTESTLIB_CFLAGS)
@@ -43,7 +41,6 @@ AM_CPPFLAGS = -I$(srcdir)/../Osi $(OSICOMMONTESTLIB_CFLAGS)
 
 # Here list all the header files that are required by a user of the library,
 # and that therefore should be installed in pkgincludedir
-
 includecoindir = $(pkgincludedir)
 includecoin_HEADERS = OsiUnitTests.hpp
 

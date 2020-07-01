@@ -45,6 +45,7 @@ set(_HDRS
 add_library(Osi ${_SRCS} ${_HDRS})
 target_include_directories(Osi PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/Osi>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
   $<INSTALL_INTERFACE:include/coin>)
 target_compile_definitions(Osi

@@ -3465,7 +3465,7 @@ void OsiSolverInterface::statistics(double &minimumNegative, double &maximumNega
   delete[] number;
 }
 
-void OsiSolverInterface::checkCGraph()
+void OsiSolverInterface::checkCGraph(CoinMessageHandler *msgh)
 {
   if (getNumCols() == 0 || getNumRows() == 0) {
     return;
@@ -3486,8 +3486,9 @@ void OsiSolverInterface::checkCGraph()
 	                                      getMatrixByRow(), getRowSense(),
                                         getRightHandSide(), getRowRange());
   const double etCG = CoinGetTimeOfDay();
-  if (messageHandler()->logLevel())
-    messageHandler()->message(COIN_CGRAPH_INFO, messages()) << etCG-stCG << cgraph_->density()*100.0 << CoinMessageEol;
+
+  if (msgh && msgh->logLevel())
+    msgh->message(COIN_CGRAPH_INFO, messages()) << etCG-stCG << cgraph_->density()*100.0 << CoinMessageEol;
 
   // fixing variables discovered during the construction of conflict graph
   const std::vector< std::pair< size_t, std::pair< double, double > > > newBounds = cgraph_->updatedBounds();

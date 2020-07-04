@@ -1801,7 +1801,7 @@ public:
    *
    *  Builds a conflict graph indicating relationship between binary variables
    */
-  void checkCGraph();
+  void checkCGraph(CoinMessageHandler *msgh = NULL);
   
   //@}
 

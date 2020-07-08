@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.5)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
+# option() honors normal variables.
+if(POLICY CMP0077)
+	cmake_policy(SET CMP0077 NEW)
+endif()
+
 include(ParseAc)
 parse_ac(VERSION MAJOR MINOR PATCH)
 

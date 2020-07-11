@@ -1,0 +1,6 @@
+<map id="OsiCuts" name="OsiCuts">
+<area shape="rect" id="node3" href="$classOsiRowCut.html" title="Row Cut Class. " alt="" coords="5,95,93,121"/>
+<area shape="rect" id="node4" href="$classOsiCut.html" title="OsiCut" alt="" coords="65,5,127,32"/>
+<area shape="rect" id="node8" href="$classOsiColCut.html" title="Column Cut Class. " alt="" coords="118,95,199,121"/>
+<area shape="rect" id="node5" title="STL class. " alt="" coords="265,95,377,121"/>
+</map>

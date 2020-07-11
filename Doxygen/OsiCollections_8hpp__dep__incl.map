@@ -1,0 +1,15 @@
+<map id="src/Osi/OsiCollections.hpp" name="src/Osi/OsiCollections.hpp">
+<area shape="rect" id="node2" href="$OsiColCut_8hpp.html" title="src/Osi/OsiColCut.hpp" alt="" coords="1408,244,1558,271"/>
+<area shape="rect" id="node3" href="$OsiCuts_8hpp.html" title="src/Osi/OsiCuts.hpp" alt="" coords="1592,319,1731,345"/>
+<area shape="rect" id="node6" href="$OsiCut_8hpp.html" title="src/Osi/OsiCut.hpp" alt="" coords="1558,162,1690,189"/>
+<area shape="rect" id="node7" href="$OsiRowCut_8hpp.html" title="src/Osi/OsiRowCut.hpp" alt="" coords="1582,244,1741,271"/>
+<area shape="rect" id="node8" href="$OsiSolverInterface_8hpp.html" title="src/Osi/OsiSolverInterface.hpp" alt="" coords="655,80,855,107"/>
+<area shape="rect" id="node5" href="$OsiCpxSolverInterface_8hpp.html" title="src/OsiCpx/OsiCpxSolverInterface.hpp" alt="" coords="1324,319,1568,345"/>
+<area shape="rect" id="node4" href="$OsiRowCutDebugger_8hpp.html" title="Provides a facility to validate cut constraints to ensure that they do not cut off a given solution..." alt="" coords="702,393,915,420"/>
+<area shape="rect" id="node9" href="$OsiPresolve_8hpp.html" title="src/Osi/OsiPresolve.hpp" alt="" coords="576,162,739,189"/>
+<area shape="rect" id="node10" href="$OsiGlpkSolverInterface_8hpp.html" title="src/OsiGlpk/OsiGlpkSolver\lInterface.hpp" alt="" coords="763,155,942,196"/>
+<area shape="rect" id="node11" href="$OsiGrbSolverInterface_8hpp.html" title="src/OsiGrb/OsiGrbSolverInterface.hpp" alt="" coords="966,162,1208,189"/>
+<area shape="rect" id="node12" href="$OsiMskSolverInterface_8hpp.html" title="src/OsiMsk/OsiMskSolverInterface.hpp" alt="" coords="1232,162,1483,189"/>
+<area shape="rect" id="node13" href="$OsiSpxSolverInterface_8hpp.html" title="src/OsiSpx/OsiSpxSolverInterface.hpp" alt="" coords="44,162,288,189"/>
+<area shape="rect" id="node14" href="$OsiXprSolverInterface_8hpp.html" title="src/OsiXpr/OsiXprSolverInterface.hpp" alt="" coords="312,162,552,189"/>
+</map>

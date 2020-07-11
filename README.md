@@ -1,5 +1,9 @@
 # OSI
 
+[![A COIN-OR Project](https://coin-or.github.io/coin-or-badge.png)](https://www.coin-or.org)
+
+[![Latest Release](https://img.shields.io/github/v/release/coin-or/CoinUtils?sort=semver)](https://github.com/coin-or/Osi/releases)
+
 Osi (*O*pen *S*olver *I*nterface) provides an abstract base class to a generic linear programming (LP) solver, along with derived classes for specific solvers.
 Many applications may be able to use the Osi to insulate themselves from a specific LP solver.
 That is, programs written to the OSI standard may be linked to any solver with an OSI interface and should produce correct results.
@@ -33,8 +37,10 @@ The following is a list of derived Osi classes:
 Each solver interface is in a separate directory of Osi or distributed
 with the solver itself.
 
-Osi is written in C++ and is released as open source code under the [Eclipse Public License (EPL)](http://www.opensource.org/licenses/eclipse-1.0).
-It is available from the [COIN-OR initiative](http://www.coin-or.org/).
+Osi is written in C++ and is released as open source under the [Eclipse Public License 2.0](http://www.opensource.org/licenses/eclipse-2.0).
+
+It is distributed under the auspices of the [COIN-OR Foundation](https://www.coin-or.org)
+
 Within COIN-OR, Osi is used by [Cgl](https://www.github.com/coin-or/Cgl), [Cbc](https://www.github.com/coin-or/Cbc), and [Bcp](https://www.github.com/coin-or/Bcp), among others.
 
 The Osi website is https://github.com/coin-or/Osi.
@@ -43,37 +49,82 @@ The main project managers are Lou Hafer (@LouHafer) and Matt Saltzmann (@mjsaltz
 
 An incomplete list of recent changes to Osi are found in the [CHANGELOG](Osi/CHANGELOG)
 
-## Getting Started using CoinBrew
+## CITE
 
-To build CoinUtils from source, obtain the `coinbrew` script.
+[![DOI](https://zenodo.org/badge/173476455.svg)](https://zenodo.org/badge/latestdoi/173476455)
+
+## CURRENT BUILD STATUS
+
+[![Build Status](https://travis-ci.org/coin-or/Osi.svg?branch=master)](https://travis-ci.org/coin-or/Osi)
+
+[![Build status](https://ci.appveyor.com/api/projects/status/frpvf6totmchmjmv/branch/master?svg=true)](https://ci.appveyor.com/project/tkralphs/osi-x2d8y/branch/master)
+
+## DOWNLOAD
+
+Binaries for most platforms are available as part of [Cbc](https://bintray.com/coin-or/download/Cbc). 
+
+ * *Linux*: On Debian/Ubuntu, CoinUtils is available in the package `coinor-osi` and can be installed with apt. On Fedora, Osi is available in the package `coin-or-Osi`.
+ * *Windows*: The easiest way to get Osi on Windows is to download from *[Bintray](https://bintray.com/coin-or/download/Cbc)*.
+ * *Mac OS X*: The easiest way to get Cbc on Mac OS X is through [Homebrew](https://brew.sh).
+   * `brew tap coin-or-tools/coinor`
+   * `brew install osi`
+
+Due to license incompatibilities, pre-compiled binaries lack some functionality.
+If binaries are not available for your platform for the latest version and you would like to request them to be built and posted, feel free to let us know on the mailing list.
+
+*Source code* can be obtained either by
+
+ * Downloading a snapshot of the source code for the latest release version of Osi from the
+ [releases](https://github.com/coin-or/Osi/releases) page.
+ * Cloning the repository from [Github](https://github.com/coin-or/Osi) or using the 
+`coinbrew` script (recommended).  
+
+Below is a quick start guide for building on common platforms. More detailed
+build instructions are
+[here](https://coin-or.github.io/user_introduction.html).
+
+## BUILDING from source
+
+The quick start assumes you are in a bash shell. 
+
+### Using `coinbrew`
+
+To build CoinUtils from source, obtain the `coinbrew` script, do
 ```
 wget https://raw.githubusercontent.com/coin-or/coinbrew/master/coinbrew
-./coinbrew fetch Osi@stable/0.108
-./coinbrew build Osi --tests=main
+chmod u+x coinbrew
+./coinbrew fetch Osi@master
+./coinbrew build Osi
 ```
-The `coinbrew` script will fetch [these](Dependencies) additional projects.
+For more detailed instructions on coinbrew, see https://coin-or.github.io/coinbrew.
+The `coinbrew` script will fetch the additional projects specified in the Dependencies section of [config.yml](.coin-or/config.yml).
 
-## Getting Started without CoinBrew (Expert users)
+### Without `coinbrew` (Expert users)
 
- 0. Install [CoinUtils](https://www.github.com/coin-or/CoinUtils)
- 1. Obtain the source code, e.g., from https://github.com/coin-or/Osi
- 2. Run `./configure -C` to generate makefiles
- 3. Run `make` to build the CoinUtils library
- 4. Run `make test` to build and run the CoinUtils unit test program
- 5. Run `make install` to install library and header files.
+ * Download the source code, e.g., by cloning the git repo https://github.com/coin-or/$Description_Slug
+ * Download and install the source code for the dependencies listed in [config.yml](.coin-or/config.yml
+ * Build the code as follows (make sure to set $PKG_CONFIG_PTH to install directory for dependencies).
+
+Obtain the source code, e.g., by cloning the git repo https://github.com/coin-or/Osi
+```
+./configure -C
+make
+make test
+make install
+```
 
 ## Doxygen Documentation
 
 If you have `Doxygen` available, you can build a HTML documentation by typing
 
- `make doxydoc` 
+`make doxygen-docs` 
 
-in the build directory.
-If CoinUtils was build via `coinbrew`, then the build directory is `./build/CoinUtils`.
-The doxygen documentation main file is found at `./doxydoc/html/index.html` in the build directory.
+in the build directory. If Osi was built via `coinbrew`, then the build
+directory will be `./build/Osi/version` by default. The doxygen documentation main file
+is found at `<build-dir>/doxydoc/html/index.html`.
 
-If `Doxygen` is not available, you can use also use [this link](http://www.coin-or.org/Doxygen/CoinUtils).
-
+If you don't have `doxygen` installed locally, you can use also find the
+documentation [here](http://coin-or.github.io/Osi/Doxygen).
 
 ## Project Links
 

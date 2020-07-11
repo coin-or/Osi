@@ -8,11 +8,11 @@ _This file is auto-generated from [config.yml](.coin-or/config.yml) using the
 [generate_readme](https://github.com/coin-or/coinbrew/tree/master/scripts/generate_readme).
 To make changes, please edit [config.yml](.coin-or/config.yml) or the generation script._
 
-"The COIN-OR Open Solver Interface is a uniform API for interacting
+The COIN-OR Open Solver Interface is a uniform API for interacting
 with callable solver libraries.
 It supports linear programming solvers as well as the ability to \"finish off\"
 a mixed-integer problem calling the solver library\'s MIP solver.
-A list of supported solvers appears at the bottom of the page."
+A list of supported solvers appears at the bottom of the page.
 
 Osi is written in C++ and is released as open source under the [Eclipse Public License 2.0](http://www.opensource.org/licenses/eclipse-2.0).
 

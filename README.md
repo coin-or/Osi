@@ -119,7 +119,7 @@ If you have `Doxygen` available, you can build a HTML documentation by typing
 `make doxygen-docs` 
 
 in the build directory. If Osi was built via `coinbrew`, then the build
-directory will be `./build/Osi/version` by default. The doxygen documentation main file
+directory will be `./build/Osi/master` by default. The doxygen documentation main file
 is found at `<build-dir>/doxydoc/html/index.html`.
 
 If you don't have `doxygen` installed locally, you can use also find the

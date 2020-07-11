@@ -1,0 +1,66 @@
+Description:
+  Slug: Osi
+  ShortName: Osi
+  LongName: Open Solver Interface
+  ShortDescription: A uniform API for calling embedded linear and mixed-integer programming solvers.
+  LongDescription: |2
+    "The COIN-OR Open Solver Interface is a uniform API for interacting
+    with callable solver libraries.
+    It supports linear programming solvers as well as the ability to \"finish off\"
+    a mixed-integer problem calling the solver library\'s MIP solver.
+    A list of supported solvers appears at the bottom of the page."
+  Manager: Matthew Saltzman, Lou Hafer
+  Homepage: https://github.com/coin-or/Osi
+  License: Eclipse Public License 2.0
+  LicenseURL: http://www.opensource.org/licenses/eclipse-2.0
+  Zenodo: 173476455
+  Appveyor: 
+    Status: frpvf6totmchmjmv
+    Slug: osi-x2d8y
+  Bintray:
+    Package: Cbc
+  Language:
+    - C++
+  Categories:
+    - Interfaces 
+
+Dependencies:
+  - Description: ThirdParty wrapper for building Glpk
+    URL: https://github.com/coin-or-tools/ThirdParty-Glpk
+    Version: master
+    Required: Optional
+  - Description: Netlib data files
+    URL: https://github.com/coin-or-tools/Data-Netlib
+    Version: master
+    Required: Required
+  - Description: Sample data files
+    URL: https://github.com/coin-or-tools/Data-Sample
+    Version: master
+    Required: Required
+  - Description: COIN-OR Utilities
+    URL: https://github.com/coin-or/CoinUtils
+    Version: master
+    Required: Required
+
+DevelopmentStatus: 
+  activityStatus: Active
+  maturityLevel: 5
+  testedPlatforms: 
+  - operatingSystem: Linux
+    compiler: gcc
+  - operatingSystem: Mac OS X
+    compiler:
+    - gcc
+    - clang
+  - operatingSystem: Microsoft Windows
+    compiler: cl
+  - operatingSystem: Microsoft Windows with MSys2
+    compiler:
+    - gcc
+    - cl
+    - icl
+  - operatingSystem: Microsoft Windows Subsystem for Linux
+    compiler:
+    - gcc
+    - cl
+    - icl

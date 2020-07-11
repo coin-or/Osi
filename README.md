@@ -101,11 +101,10 @@ The `coinbrew` script will fetch the additional projects specified in the Depend
 
 ### Without `coinbrew` (Expert users)
 
- * Download the source code, e.g., by cloning the git repo https://github.com/coin-or/$Description_Slug
- * Download and install the source code for the dependencies listed in [config.yml](.coin-or/config.yml
+ * Download the source code, e.g., by cloning the git repo https://github.com/coin-or/Osi
+ * Download and install the source code for the dependencies listed in [config.yml](.coin-or/config.yml)
  * Build the code as follows (make sure to set $PKG_CONFIG_PTH to install directory for dependencies).
 
-Obtain the source code, e.g., by cloning the git repo https://github.com/coin-or/Osi
 ```
 ./configure -C
 make

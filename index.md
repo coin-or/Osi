@@ -1,1 +1,1 @@
-[Doxygen Documentation](Doxygen/index.html)
+[Doxygen Documentation](Doxygen)

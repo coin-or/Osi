@@ -1,8 +1,85 @@
-# Osi
+#!/usr/bin/env bash
 
+function get_version_git {
+
+    current_rev=$(git rev-parse HEAD)
+    if [[ "$(git show-ref --tags | fgrep $current_rev)" == *releases* ]]; then
+	git show-ref --tags | fgrep $current_rev | fgrep releases | cut -d '/' -f 3-4
+    elif [[ "$(git show-ref --heads | fgrep $current_rev)" == *stable* ]]; then
+	git show-ref --heads | fgrep $current_rev | fgrep stable | cut -d '/' -f 3-4
+    elif [ "$(git show-ref --heads | fgrep $current_rev)" != "" ]; then
+	git show-ref --heads | fgrep $current_rev | cut -d '/' -f 3
+    else
+        echo $current_rev
+    fi
+
+}
+
+parse_yaml() {
+    local yaml_file=$1
+    local prefix=
+    local s
+    local w
+    local fs
+
+    s='[[:space:]]*'
+    w='[a-zA-Z0-9_.-]*'
+    fs="$(echo @|tr @ '\034')"
+
+    (
+        sed -e '/- [^\“]'"[^\']"'.*: /s|\([ ]*\)- \([[:space:]]*\)|\1-\'$'\n''  \1\2|g' |
+
+        sed -ne '/^--/s|--||g; s|\"|\\\"|g; s/[[:space:]]*$//g;' \
+            -e "/#.*[\"\']/!s| #.*||g; /^#/s|#.*||g;" \
+            -e "s|^\($s\)\($w\)$s:$s\"\(.*\)\"$s\$|\1$fs\2$fs\3|p" \
+            -e "s|^\($s\)\($w\)${s}[:-]$s\(.*\)$s\$|\1$fs\2$fs\3|p" |
+
+        awk -F"$fs" '{
+            indent = length($1)/2;
+            if (length($2) == 0) { conj[indent]="+";} else {conj[indent]="";}
+            vname[indent] = $2;
+            for (i in vname) {if (i > indent) {delete vname[i]}}
+                if (length($3) > 0) {
+                    vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
+                    printf("%s%s%s%s=(\"%s\")\n", "'"$prefix"'",vn, $2, conj[indent-1],$3);
+                }
+            }' |
+
+        sed -e 's/_=/+=/g' |
+
+        awk 'BEGIN {
+                FS="=";
+                OFS="="
+            }
+            /(-|\.).*=/ {
+                gsub("-|\\.", "_", $1)
+            }
+            { print }'
+    ) < "$yaml_file"
+}
+
+create_variables() {
+    local yaml_file="$1"
+    eval "$(parse_yaml "$yaml_file")"
+}
+
+create_variables $1
+
+lower_case=$(echo $Description_Slug | tr '[:upper:]' '[:lower:]')
+
+version=$(get_version_git)
+version_num=$(echo $version | cut -d '/' -f 2)
+
+if [ $version = master ]; then
+   echo "# $Description_ShortName"
+else
+   echo "# $Description_ShortName $version_num"
+fi
+   
+echo "
 [![A COIN-OR Project](https://coin-or.github.io/coin-or-badge.png)](https://www.coin-or.org)
 
-[![Latest Release](https://img.shields.io/github/v/release/coin-or/Osi?sort=semver)](https://github.com/coin-or/Osi/releases)
+[![Latest Release](https://img.shields.io/github/v/release/coin-or/$Description_Slug?sort=semver)](https://github.com/coin-or/$Description_Slug/releases)
 
 _This file is auto-generated from [config.yml](.coin-or/config.yml) using the 
 [generate_readme](.coin-or/generate_readme).
@@ -55,33 +132,33 @@ An incomplete list of recent changes to Osi are found in the [CHANGELOG](Osi/CHA
 
 ## CITE
 
-[![DOI](https://zenodo.org/badge/173476455.svg)](https://zenodo.org/badge/latestdoi/173476455)
+[![DOI](https://zenodo.org/badge/$Description_Zenodo.svg)](https://zenodo.org/badge/latestdoi/$Description_Zenodo)
 
 ## CURRENT BUILD STATUS
 
-[![Build Status](https://travis-ci.org/coin-or/Osi.svg?branch=master)](https://travis-ci.org/coin-or/Osi)
+[![Build Status](https://travis-ci.org/coin-or/$Description_Slug.svg?branch=$version)](https://travis-ci.org/coin-or/$Description_Slug)
 
-[![Build status](https://ci.appveyor.com/api/projects/status/frpvf6totmchmjmv/branch/master?svg=true)](https://ci.appveyor.com/project/tkralphs/osi-x2d8y/branch/master)
+[![Build status](https://ci.appveyor.com/api/projects/status/$Description_Appveyor_Status/branch/$version?svg=true)](https://ci.appveyor.com/project/tkralphs/$Description_Appveyor_Slug/branch/$version)
 
 ## DOWNLOAD
 
-Binaries for most platforms are available as part of [Cbc](https://bintray.com/coin-or/download/Cbc). 
+Binaries for most platforms are available as part of [$Description_Bintray_Package](https://bintray.com/coin-or/download/$Description_Bintray_Package). 
 
- * *Linux*: On Debian/Ubuntu, Osi is available in the package `coinor-osi` and can be installed with apt. On Fedora, Osi is available in the package `coin-or-Osi`.
- * *Windows*: The easiest way to get Osi on Windows is to download from *[Bintray](https://bintray.com/coin-or/download/Cbc)*.
+ * *Linux*: On Debian/Ubuntu, $Description_ShortName is available in the package \`coinor-$lower_case\` and can be installed with apt. On Fedora, $Description_ShortName is available in the package \`coin-or-$Description_Slug\`.
+ * *Windows*: The easiest way to get $Description_ShortName on Windows is to download from *[Bintray](https://bintray.com/coin-or/download/$Description_Bintray_Package)*.
  * *Mac OS X*: The easiest way to get Cbc on Mac OS X is through [Homebrew](https://brew.sh).
-   * `brew tap coin-or-tools/coinor`
-   * `brew install coin-or-tools/coinor/osi`
+   * \`brew tap coin-or-tools/coinor\`
+   * \`brew install coin-or-tools/coinor/$lower_case\`
 
 Due to license incompatibilities, pre-compiled binaries lack some functionality.
 If binaries are not available for your platform for the latest version and you would like to request them to be built and posted, feel free to let us know on the mailing list.
 
 *Source code* can be obtained either by
 
- * Downloading a snapshot of the source code for the latest release version of Osi from the
- [releases](https://github.com/coin-or/Osi/releases) page.
- * Cloning the repository from [Github](https://github.com/coin-or/Osi) or using the 
-`coinbrew` script (recommended).  
+ * Downloading a snapshot of the source code for the latest release version of $Description_ShortName from the
+ [releases](https://github.com/coin-or/$Description_Slug/releases) page.
+ * Cloning the repository from [Github](https://github.com/coin-or/$Description_Slug) or using the 
+\`coinbrew\` script (recommended).  
 
 Below is a quick start guide for building on common platforms. More detailed
 build instructions are
@@ -91,43 +168,43 @@ build instructions are
 
 The quick start assumes you are in a bash shell. 
 
-### Using `coinbrew`
+### Using \`coinbrew\`
 
-To build CoinUtils from source, obtain the `coinbrew` script, do
-```
+To build CoinUtils from source, obtain the \`coinbrew\` script, do
+\`\`\`
 wget https://raw.githubusercontent.com/coin-or/coinbrew/master/coinbrew
 chmod u+x coinbrew
-./coinbrew fetch Osi@master
-./coinbrew build Osi
-```
+./coinbrew fetch $Description_Slug@$version
+./coinbrew build $Description_Slug
+\`\`\`
 For more detailed instructions on coinbrew, see https://coin-or.github.io/coinbrew.
-The `coinbrew` script will fetch the additional projects specified in the Dependencies section of [config.yml](.coin-or/config.yml).
+The \`coinbrew\` script will fetch the additional projects specified in the Dependencies section of [config.yml](.coin-or/config.yml).
 
-### Without `coinbrew` (Expert users)
+### Without \`coinbrew\` (Expert users)
 
- * Download the source code, e.g., by cloning the git repo https://github.com/coin-or/Osi
+ * Download the source code, e.g., by cloning the git repo https://github.com/coin-or/$Description_Slug
  * Download and install the source code for the dependencies listed in [config.yml](.coin-or/config.yml)
  * Build the code as follows (make sure to set PKG_CONFIG_PTH to install directory for dependencies).
 
-```
+\`\`\`
 ./configure -C
 make
 make test
 make install
-```
+\`\`\`
 
 ## Doxygen Documentation
 
-If you have `Doxygen` available, you can build a HTML documentation by typing
+If you have \`Doxygen\` available, you can build a HTML documentation by typing
 
-`make doxygen-docs` 
+\`make doxygen-docs\` 
 
-in the build directory. If Osi was built via `coinbrew`, then the build
-directory will be `./build/Osi/master` by default. The doxygen documentation main file
-is found at `<build-dir>/doxydoc/html/index.html`.
+in the build directory. If $Description_ShortName was built via \`coinbrew\`, then the build
+directory will be \`./build/$Description_Slug/$version_num\` by default. The doxygen documentation main file
+is found at \`<build-dir>/doxydoc/html/index.html\`.
 
-If you don't have `doxygen` installed locally, you can use also find the
-documentation [here](http://coin-or.github.io/Osi/Doxygen).
+If you don't have \`doxygen\` installed locally, you can use also find the
+documentation [here](http://coin-or.github.io/$Description_Slug/Doxygen).
 
 ## Project Links
 
@@ -149,14 +226,14 @@ It is possible to create an osi build that supports cplex, gurobi and xpress eve
 
  1. Install lazylpsolverlibs (follow the instructions of the [lazylpsolverlibs wiki](https://code.google.com/p/lazylpsolverlibs/wiki/HowToSetup))
  2. Use the following command line to configure Osi:
-```
-./configure --with-cplex-incdir="$(pkg-config --variable=includedir lazycplex)/lazylpsolverlibs/ilcplex" \
-            --with-cplex-lib="$(pkg-config --libs lazycplex)" \ 
-            --with-gurobi-incdir="$(pkg-config --variable=includedir lazygurobi)/lazylpsolverlibs" \
-            --with-gurobi-lib="$(pkg-config --libs lazygurobi)" \
-            --with-xpress-incdir="$(pkg-config --variable=includedir lazyxprs)/lazylpsolverlibs" \
-            --with-xpress-lib="$(pkg-config --libs lazyxprs)"
-```
+\`\`\`
+./configure --with-cplex-incdir=\"\$(pkg-config --variable=includedir lazycplex)/lazylpsolverlibs/ilcplex\" \\
+            --with-cplex-lib=\"\$(pkg-config --libs lazycplex)\" \\ 
+            --with-gurobi-incdir=\"\$(pkg-config --variable=includedir lazygurobi)/lazylpsolverlibs\" \\
+            --with-gurobi-lib=\"\$(pkg-config --libs lazygurobi)\" \\
+            --with-xpress-incdir=\"\$(pkg-config --variable=includedir lazyxprs)/lazylpsolverlibs\" \\
+            --with-xpress-lib=\"\$(pkg-config --libs lazyxprs)\"
+\`\`\`
  3. Then follow the normal installation process (make, make install)
 
 ### At run time
@@ -164,14 +241,14 @@ It is possible to create an osi build that supports cplex, gurobi and xpress eve
 Your build should now support cplex, gurobi and xpress, which means that if you install one of these solvers, osi will be able to use it.
 At run time, you just need to point one of the environment variables LAZYLPSOLVERLIBS_GUROBI_LIB, LAZYLPSOLVERLIBS_CPLEX_LIB or LAZYLPSOLVERLIBS_XPRS_LIB to the full path of the corresponding solver library.
 For example:
-```
+\`\`\`
 export LAZYLPSOLVERLIBS_CPLEX_LIB=/usr/ilog/cplex121/bin/x86_debian4.0_4.1/libcplex121.so
-```
+\`\`\`
 
 ### Troubleshooting
 
 If pkg-config reports errors during the configure step, try modifying the PKG_CONFIG_PATH variable. Most likely, you need to do:
-```
+\`\`\`
 export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
-```
-
+\`\`\`
+"

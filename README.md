@@ -41,17 +41,18 @@ The following is a list of derived Osi classes:
 Each solver interface is in a separate directory of Osi or distributed
 with the solver itself.
 
-Osi is written in C++ and is released as open source under the [Eclipse Public License 2.0](http://www.opensource.org/licenses/eclipse-2.0).
-
-It is distributed under the auspices of the [COIN-OR Foundation](https://www.coin-or.org)
-
 Within COIN-OR, Osi is used by [Cgl](https://www.github.com/coin-or/Cgl), [Cbc](https://www.github.com/coin-or/Cbc), and [Bcp](https://www.github.com/coin-or/Bcp), among others.
-
-The Osi website is https://github.com/coin-or/Osi.
 
 The main project managers are Lou Hafer (@LouHafer) and Matt Saltzmann (@mjsaltzman).
 
 An incomplete list of recent changes to Osi are found in the [CHANGELOG](Osi/CHANGELOG)
+
+
+Osi is written in C++ and is released as open source under the [Eclipse Public License 2.0](http://www.opensource.org/licenses/eclipse-2.0).
+
+It is distributed under the auspices of the [COIN-OR Foundation](https://www.coin-or.org)
+
+The Osi website is https://github.com/coin-or/Osi.
 
 ## CITE
 

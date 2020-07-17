@@ -48,7 +48,7 @@ The main project managers are Lou Hafer (@LouHafer) and Matt Saltzmann (@mjsaltz
 An incomplete list of recent changes to Osi are found in the [CHANGELOG](Osi/CHANGELOG)
 
 
-Osi is written in C++ and is released as open source under the [Eclipse Public License 2.0](http://www.opensource.org/licenses/eclipse-2.0).
+Osi is written in C++ and is released as open source under the [Eclipse Public License 2.0](http://www.opensource.org/licenses/EPL-2.0).
 
 It is distributed under the auspices of the [COIN-OR Foundation](https://www.coin-or.org)
 
@@ -81,8 +81,8 @@ If binaries are not available for your platform for the latest version and you w
 
  * Downloading a snapshot of the source code for the latest release version of Osi from the
  [releases](https://github.com/coin-or/Osi/releases) page.
- * Cloning the repository from [Github](https://github.com/coin-or/Osi) or using the 
-`coinbrew` script (recommended).  
+ * Cloning this repository from [Github](https://github.com/coin-or/Osi) or 
+ * Using the [coinbrew](https://github.com/coin-or/coinbrew) script to get the project and all dependencies (recommended, see below).   
 
 Below is a quick start guide for building on common platforms. More detailed
 build instructions are

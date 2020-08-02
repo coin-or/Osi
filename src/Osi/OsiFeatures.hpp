@@ -9,14 +9,14 @@
     This source contains a list of problem features that can be extracted from a Mixed-Integer Linear 
     Program (MIP) from an OsiSolverInterface object. All features are numeric and stored as double.
     All features are extracted in at most O(nz) time, where nz is the number of non-zeros in the 
-    constraint matrix. Currently 194 features are extracted.
+    constraint matrix. Currently 207 features are extracted.
 
     Some details on algorithm recommendation for CLP can be found in:
 
-    Vilas Boas, Matheus G.; Santos, Haroldo G.; Merschmann, Luiz H.C. and Vanden
-      Berghe, Greet. Optimal Decision Trees for the Algorithm Selection Problem:
-      Integer Programming Based Approaches. International Transactions in Operational
-      Research, DOI 10.1111/itor.12724. 2019.
+    Vilas Boas, M. G.; Santos, H.G.; Merschmann, L.H.C. and Vanden Berghe, G. 
+    Optimal Decision Trees for the Algorithm Selection Problem:
+    Integer Programming Based Approaches. International Transactions in Operational
+    Research, DOI 10.1111/itor.12724. 2019.
 
 */
 
@@ -269,7 +269,7 @@ public:
   /** @brief name of the i-th feature */
   static const char *name(int i);
 
-  /** @brief name of an specific feature feature */
+  /** @brief name of an specific feature */
   static const char *name( const OsiFeature of );
 
   /** @brief computes all feature values, the size of this vector should be at least OFCount */

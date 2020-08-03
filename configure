@@ -18509,6 +18509,18 @@ $as_echo "#define OSI_HAS_CPLEX 1" >>confdefs.h
 
   fi
 
+if test "$coin_has_cplex" = yes ; then
+  coin_save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$cplex_cflags $CPPFLAGS"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "cplex.h" "ac_cv_header_cplex_h" "$ac_includes_default"
+if test "x$ac_cv_header_cplex_h" = xyes; then :
+  CPPFLAGS="$coin_save_CPPFLAGS"
+else
+  as_fn_error $? "CPLEX library available, but CPLEX header cplex.h cannot be compiled. Consider using --without-cplex." "$LINENO" 5
+fi
+
+
+fi
 
 
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for package Mosek with function MSK_makeenv" >&5
@@ -18754,6 +18766,18 @@ $as_echo "#define OSI_HAS_MOSEK 1" >>confdefs.h
 
   fi
 
+if test "$coin_has_mosek" = yes ; then
+  coin_save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$mosek_cflags $CPPFLAGS"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "mosek.h" "ac_cv_header_mosek_h" "$ac_includes_default"
+if test "x$ac_cv_header_mosek_h" = xyes; then :
+  CPPFLAGS="$coin_save_CPPFLAGS"
+else
+  as_fn_error $? "MOSEK library available, but MOSEK header mosek.h cannot be compiled. Consider using --without-mosek." "$LINENO" 5
+fi
+
+
+fi
 
 
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for package Xpress with function XPRSinit" >&5
@@ -18999,6 +19023,18 @@ $as_echo "#define OSI_HAS_XPRESS 1" >>confdefs.h
 
   fi
 
+if test "$coin_has_xpress" = yes ; then
+  coin_save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$xpress_cflags $CPPFLAGS"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "xprs.h" "ac_cv_header_xprs_h" "$ac_includes_default"
+if test "x$ac_cv_header_xprs_h" = xyes; then :
+  CPPFLAGS="$coin_save_CPPFLAGS"
+else
+  as_fn_error $? "XPRESS library available, but XPRESS header xprs.h cannot be compiled. Consider using --without-xpress." "$LINENO" 5
+fi
+
+
+fi
 
 
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for package Gurobi with function GRBloadenv" >&5
@@ -19244,6 +19280,18 @@ $as_echo "#define OSI_HAS_GUROBI 1" >>confdefs.h
 
   fi
 
+if test "$coin_has_gurobi" = yes ; then
+  coin_save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$gurobi_cflags $CPPFLAGS"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "gurobi_c.h" "ac_cv_header_gurobi_c_h" "$ac_includes_default"
+if test "x$ac_cv_header_gurobi_c_h" = xyes; then :
+  CPPFLAGS="$coin_save_CPPFLAGS"
+else
+  as_fn_error $? "Gurobi library available, but Gurobi header gurobi_c.h cannot be compiled. Consider using --without-gurobi." "$LINENO" 5
+fi
+
+
+fi
 
 
    if test "$BUILDTOOLS_DEBUG" = 1 ; then

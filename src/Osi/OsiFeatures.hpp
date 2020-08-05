@@ -20,6 +20,8 @@
 
 */
 
+#include "OsiConfig.h"
+
 class OsiSolverInterface;
 
 /*! List of all features that are extracted */
@@ -261,7 +263,7 @@ enum OsiFeature
   OFCount
 };
 
-class OsiFeatures {
+class OSILIB_EXPORT OsiFeatures {
 public:
   /** @brief number of features */
   static int n; 

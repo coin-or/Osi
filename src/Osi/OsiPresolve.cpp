@@ -1596,7 +1596,7 @@ CoinPresolveMatrix* construct_CoinPresolveMatrix(int ncols0_in,
   cpm->initializeStuff();
 
 #if PRESOLVE_CONSISTENCY > 0
-  presolve_consistent(this);
+  presolve_consistent(cpm);
 #endif
 
   return cpm;
@@ -1750,9 +1750,9 @@ CoinPostsolveMatrix* construct_CoinPostsolveMatrix(OsiSolverInterface*  si,
   {
     int i;
     for (i = 0; i < ncols1; i++)
-      if (columnIsBasic(i)) assert (fabs(cpm->rcosts_[i])<1.0e-5);
+      if (cpm->columnIsBasic(i)) assert (fabs(cpm->rcosts_[i])<1.0e-5);
     for (i=0;i<nrows1;i++)
-      if (rowIsBasic(i)) assert (fabs(cpm->rowduals_[i])<1.0e-5);
+      if (cpm->rowIsBasic(i)) assert (fabs(cpm->rowduals_[i])<1.0e-5);
   }
 #endif
   /*

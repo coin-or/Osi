@@ -12,7 +12,7 @@ Description:
   Manager: Matthew Saltzman, Lou Hafer
   Homepage: https://github.com/coin-or/Osi
   License: Eclipse Public License 2.0
-  LicenseURL: http://www.opensource.org/licenses/eclipse-2.0
+  LicenseURL: http://www.opensource.org/licenses/EPL-2.0
   Zenodo: 173476455
   Appveyor: 
     Status: frpvf6totmchmjmv

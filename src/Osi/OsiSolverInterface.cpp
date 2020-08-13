@@ -917,7 +917,8 @@ void OsiSolverInterface::activateRowCutDebugger(const double *solution,
 {
   delete rowCutDebugger_;
   rowCutDebugger_ = NULL; // so won't use in new
-  rowCutDebugger_ = new OsiRowCutDebugger(*this, solution, keepContinuous);
+  if (solution)
+    rowCutDebugger_ = new OsiRowCutDebugger(*this, solution, keepContinuous);
 }
 //-------------------------------------------------------------------
 // Get Row Cut Debugger<br>

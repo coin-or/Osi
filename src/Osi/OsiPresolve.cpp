@@ -1517,6 +1517,8 @@ CoinPresolveMatrix* construct_CoinPresolveMatrix(int ncols0_in,
     for (icol=0;icol<cpm->ncols_;icol++) {
       if (prohibited[icol])
         cpm->setColProhibited(icol);
+      if (prohibited[icol]==2)
+        cpm->setColLeaveTotallyAlone(icol);
     }
   } else {
     cpm->anyProhibited_ = false;

@@ -84,15 +84,43 @@ AC_COIN_CHK_PKG(SoPlex,[OsiSpxLib OsiTest],[coinsoplex < 1.7],[build])
 
 AC_COIN_CHK_LIB(Cplex,[OsiCpxLib OsiTest],[-lcplex -lpthread -lm -ldl],[],[],
                 [CPXgetstat])
+if test "$coin_has_cplex" = yes ; then
+  coin_save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$cplex_cflags $CPPFLAGS"
+  AC_CHECK_HEADER([cplex.h],
+    [CPPFLAGS="$coin_save_CPPFLAGS"],
+    [AC_MSG_ERROR([CPLEX library available, but CPLEX header cplex.h cannot be compiled. Consider using --without-cplex.])])
+fi
 
 AC_COIN_CHK_LIB(Mosek,[OsiMskLib OsiTest],[-lmosek64 -lpthread],[],[],
                 [MSK_makeenv])
+if test "$coin_has_mosek" = yes ; then
+  coin_save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$mosek_cflags $CPPFLAGS"
+  AC_CHECK_HEADER([mosek.h],
+    [CPPFLAGS="$coin_save_CPPFLAGS"],
+    [AC_MSG_ERROR([MOSEK library available, but MOSEK header mosek.h cannot be compiled. Consider using --without-mosek.])])
+fi
 
 AC_COIN_CHK_LIB(Xpress,[OsiXprLib OsiTest],[-lxprs -lxprl],[],[],
                 [XPRSinit])
+if test "$coin_has_xpress" = yes ; then
+  coin_save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$xpress_cflags $CPPFLAGS"
+  AC_CHECK_HEADER([xprs.h],
+    [CPPFLAGS="$coin_save_CPPFLAGS"],
+    [AC_MSG_ERROR([XPRESS library available, but XPRESS header xprs.h cannot be compiled. Consider using --without-xpress.])])
+fi
 
 AC_COIN_CHK_LIB(Gurobi,[OsiGrbLib OsiTest],[-lgurobi -lpthread -lm],[],[],
                 [GRBloadenv])
+if test "$coin_has_gurobi" = yes ; then
+  coin_save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="$gurobi_cflags $CPPFLAGS"
+  AC_CHECK_HEADER([gurobi_c.h],
+    [CPPFLAGS="$coin_save_CPPFLAGS"],
+    [AC_MSG_ERROR([Gurobi library available, but Gurobi header gurobi_c.h cannot be compiled. Consider using --without-gurobi.])])
+fi
 
 AC_COIN_FINALIZE_FLAGS([OsiGlpkLib OskSpxLib OsiCpxLib OsiMskLib OsiXprLib OsiGrbLib OsiTest])
 

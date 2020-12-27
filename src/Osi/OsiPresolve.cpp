@@ -81,7 +81,14 @@ void OsiPresolve::gutsOfDestroy()
   originalColumn_ = NULL;
   originalRow_ = NULL;
 }
-
+#if DEBUG_PREPROCESS > 1
+/*
+  This code is intended to allow a known solution to be checked
+  against presolve progress. debugSolution is set in CbcSolver
+*/
+double *debugSolution = NULL;
+int debugNumberColumns = -1;
+#endif 
 /* This version of presolve returns a pointer to a new presolved 
    model.  NULL if infeasible
 
@@ -387,6 +394,15 @@ OsiPresolve::presolvedModel(OsiSolverInterface &si,
       << nrowsAfter << -(nrows_ - nrowsAfter)
       << ncolsAfter << -(ncols_ - ncolsAfter)
       << nelsAfter << -(nelems_ - nelsAfter) << CoinMessageEol;
+#if DEBUG_PREPROCESS > 1
+    if (debugSolution) {
+      for (int i=0;i<ncolsAfter;i++) {
+	int iColumn = originalColumn_[i];
+	debugSolution[i] = debugSolution[iColumn];
+      }
+      debugNumberColumns = ncolsAfter;
+    }
+#endif
   } else {
     gutsOfDestroy();
     delete presolvedModel_;
@@ -614,16 +630,6 @@ void check_and_tell(const CoinPresolveMatrix *const prob,
 
   return;
 }
-
-/*
-  At a guess, this code is intended to allow a known solution to be checked
-  against presolve progress. Pulled it into the local debug namespace, but
-  really should be integrated with CoinPresolvePsdebug.  At the least, needs
-  a method to conveniently set debugSolution.
-  -- lh, 110605 --
-*/
-double *debugSolution = NULL;
-int debugNumberColumns = -1;
 int counter = 1000000;
 
 bool break2(CoinPresolveMatrix *prob)

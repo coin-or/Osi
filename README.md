@@ -141,7 +141,7 @@ documentation [here](http://coin-or.github.io/Osi/Doxygen).
 ## Project Links
 
  * [COIN-OR Initiative](http://www.coin-or.org/)
- * [mailing list](http://list.coin-or.org/mailman/listinfo/osi)
+ * [Discussion forum](https://github.com/coin-or/Osi/discussions)
  * [Report a bug](https://github.com/coin-or/Osi/issues/new)
  * [Doxygen-generated html documentation](http://www.coin-or.org/Doxygen/Osi/hierarchy.html)
  * [OSI2 Discussion](https://projects.coin-or.org/Osi2/wiki/Osi2Discussion)

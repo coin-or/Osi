@@ -5,7 +5,7 @@ matrix:
   include:
     - os: linux
       dist: bionic
-      env: BUILD_STATIC=true DEBUG=false ASAN=false ADD_CXXFLAGS=-fvisibility=hidden
+      env: BUILD_STATIC=true DEBUG=false ASAN=false
       addons:
         apt:
           packages:
@@ -15,7 +15,7 @@ matrix:
             - libnauty2-dev
     - os: linux
       dist: bionic
-      env: BUILD_STATIC=false DEBUG=false ASAN=false ADD_CXXFLAGS=-fvisibility=hidden
+      env: BUILD_STATIC=false DEBUG=false ASAN=false
       addons:
         apt:
           packages:
@@ -25,7 +25,7 @@ matrix:
             - libnauty2-dev
     - os: linux
       dist: xenial
-      env: BUILD_STATIC=true DEBUG=false ASAN=false ADD_CXXFLAGS=-fvisibility=hidden
+      env: BUILD_STATIC=true DEBUG=false ASAN=false
       addons:
         apt:
           packages:

@@ -78,9 +78,9 @@ AC_COIN_CHK_HERE([OsiLib],[OsiCommonTestLib],[osi])
 # downloaded and built. The general flow here is as above: Initialise the
 # library, add external components, finalize the flags, and add any components
 # being built here.
-AC_COIN_CHK_PKG(Glpk,[OsiGlpkLib OsiTest],,[build])
+AC_COIN_CHK_PKG(Glpk,[OsiGlpkLib OsiTest],[coinglpk])
 
-AC_COIN_CHK_PKG(SoPlex,[OsiSpxLib OsiTest],[coinsoplex < 1.7],[build])
+AC_COIN_CHK_PKG(SoPlex,[OsiSpxLib OsiTest],[coinsoplex < 1.7])
 
 AC_COIN_CHK_LIB(Cplex,[OsiCpxLib OsiTest],[-lcplex -lpthread -lm -ldl],[],[],
                 [CPXgetstat])

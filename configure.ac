@@ -122,7 +122,7 @@ if test "$coin_has_gurobi" = yes ; then
     [AC_MSG_ERROR([Gurobi library available, but Gurobi header gurobi_c.h cannot be compiled. Consider using --without-gurobi.])])
 fi
 
-AC_COIN_FINALIZE_FLAGS([OsiGlpkLib OskSpxLib OsiCpxLib OsiMskLib OsiXprLib OsiGrbLib OsiTest])
+AC_COIN_FINALIZE_FLAGS([OsiGlpkLib OsiSpxLib OsiCpxLib OsiMskLib OsiXprLib OsiGrbLib OsiTest])
 
 AC_COIN_CHK_HERE([OsiLib],[OsiGlpkLib OsiSpxLib OsiCpxLib OsiMskLib OsiXprLib OsiGrbLib],[osi])
 

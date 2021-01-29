@@ -91,45 +91,35 @@ AC_COIN_CHK_LIBHDR(SoPlex,[OsiSpxLib OsiTest],[],[],[],
   [default_skip])
 AC_LANG_POP(C++)
 
-AC_COIN_CHK_LIB(Cplex,[OsiCpxLib OsiTest],[-lcplex -lpthread -lm -ldl],[],[],
-                [CPXgetstat])
-if test "$coin_has_cplex" = yes ; then
-  coin_save_CPPFLAGS="$CPPFLAGS"
-  CPPFLAGS="$cplex_cflags $CPPFLAGS"
-  AC_CHECK_HEADER([cplex.h],
-    [CPPFLAGS="$coin_save_CPPFLAGS"],
-    [AC_MSG_ERROR([CPLEX library available, but CPLEX header cplex.h cannot be compiled. Consider using --without-cplex.])])
-fi
+AC_COIN_CHK_LIBHDR(Cplex,[OsiCpxLib OsiTest],[-lcplex -lpthread -lm -ldl],[],[],
+  [int err;
+   #if CPX_VERSION >= 800
+     CPXopenCPLEX(&err);
+   #else
+     CPXopenCPLEXdevelop(&err);
+   #endif],
+  [#include "cplex.h"])
 
-AC_COIN_CHK_LIB(Mosek,[OsiMskLib OsiTest],[-lmosek64 -lpthread],[],[],
-                [MSK_makeenv])
-if test "$coin_has_mosek" = yes ; then
-  coin_save_CPPFLAGS="$CPPFLAGS"
-  CPPFLAGS="$mosek_cflags $CPPFLAGS"
-  AC_CHECK_HEADER([mosek.h],
-    [CPPFLAGS="$coin_save_CPPFLAGS"],
-    [AC_MSG_ERROR([MOSEK library available, but MOSEK header mosek.h cannot be compiled. Consider using --without-mosek.])])
-fi
+AC_COIN_CHK_LIBHDR(Mosek,[OsiMskLib OsiTest],[-lmosek64 -lpthread],[],[],
+  [MSKenv_t env_;
+   #if MSK_VERSION_MAJOR >= 7
+     MSK_makeenv(&env_,NULL);
+   #else
+     MSK_makeenv(&env_,NULL,NULL,NULL,NULL);
+   #endif],
+  [#include "mosek.h"
+   #include <stdlib.h>])
 
-AC_COIN_CHK_LIB(Xpress,[OsiXprLib OsiTest],[-lxprs -lxprl],[],[],
-                [XPRSinit])
-if test "$coin_has_xpress" = yes ; then
-  coin_save_CPPFLAGS="$CPPFLAGS"
-  CPPFLAGS="$xpress_cflags $CPPFLAGS"
-  AC_CHECK_HEADER([xprs.h],
-    [CPPFLAGS="$coin_save_CPPFLAGS"],
-    [AC_MSG_ERROR([XPRESS library available, but XPRESS header xprs.h cannot be compiled. Consider using --without-xpress.])])
-fi
+AC_COIN_CHK_LIBHDR(Xpress,[OsiXprLib OsiTest],[-lxprs -lxprl],[],[],
+  [XPRSinit(NULL)],
+  [#include "xprs.h"
+   #include <stdlib.h>])
 
-AC_COIN_CHK_LIB(Gurobi,[OsiGrbLib OsiTest],[-lgurobi -lpthread -lm],[],[],
-                [GRBloadenv])
-if test "$coin_has_gurobi" = yes ; then
-  coin_save_CPPFLAGS="$CPPFLAGS"
-  CPPFLAGS="$gurobi_cflags $CPPFLAGS"
-  AC_CHECK_HEADER([gurobi_c.h],
-    [CPPFLAGS="$coin_save_CPPFLAGS"],
-    [AC_MSG_ERROR([Gurobi library available, but Gurobi header gurobi_c.h cannot be compiled. Consider using --without-gurobi.])])
-fi
+AC_COIN_CHK_LIBHDR(Gurobi,[OsiGrbLib OsiTest],[-lgurobi -lpthread -lm],[],[],
+  [GRBenv* env_;
+   GRBloadenv(&env_, NULL)],
+  [#include "gurobi_c.h"
+   #include <stdlib.h>])
 
 AC_COIN_FINALIZE_FLAGS([OsiGlpkLib OsiSpxLib OsiCpxLib OsiMskLib OsiXprLib OsiGrbLib OsiTest])
 

@@ -76,6 +76,9 @@
 #undef OSIMSKLIB_EXPORT
 
 /* Library Visibility Attribute */
+#undef OSISPXLIB_EXPORT
+
+/* Library Visibility Attribute */
 #undef OSITEST_EXPORT
 
 /* Library Visibility Attribute */
@@ -102,7 +105,7 @@
 /* Define to 1 if Sample is available. */
 #undef OSI_HAS_SAMPLE
 
-/* Define to 1 if SoPlex is available. */
+/* Define to 1 if the SoPlex package is available */
 #undef OSI_HAS_SOPLEX
 
 /* Define to 1 if the Xpress package is available */
@@ -119,9 +122,6 @@
 
 /* Release version number of project. */
 #undef OSI_VERSION_RELEASE
-
-/* Library Visibility Attribute */
-#undef OSKSPXLIB_EXPORT
 
 /* Define to the address where bug reports for this package should be sent. */
 #undef PACKAGE_BUGREPORT

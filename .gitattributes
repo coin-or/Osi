@@ -1,111 +1,13 @@
 * text=auto !eol
-.ci/.travis.pre -text
-.ci/appveyor.pre -text
-.coin-or/Dependencies -text
-.coin-or/projDesc.xml -text
-/.travis.yml -text
-/CHANGELOG -text
-/LICENSE -text
-MSVisualStudio/v10/Osi.sln -text
-MSVisualStudio/v10/OsiExamplesBasic/OsiExamplesBasic.vcxproj -text
-MSVisualStudio/v10/OsiExamplesBuild/OsiExamplesBuild.vcxproj -text
-MSVisualStudio/v10/OsiExamplesParameters/OsiExamplesParameters.vcxproj -text
-MSVisualStudio/v10/OsiExamplesQuery/OsiExamplesQuery.vcxproj -text
-MSVisualStudio/v10/OsiExamplesSpecific/OsiExamplesSpecific.vcxproj -text
-MSVisualStudio/v10/OsiUnitTest/OsiUnitTest.vcxproj -text
-MSVisualStudio/v10/libOsi/libOsi.vcxproj -text
-MSVisualStudio/v10/libOsiCommonTest/libOsiCommonTest.vcxproj -text
-MSVisualStudio/v10alt/Osi.sln -text
-MSVisualStudio/v10alt/OsiUnitTest.vcxproj -text
-MSVisualStudio/v10alt/genDefForOsi.ps1 -text
-MSVisualStudio/v10alt/libOsi.vcxproj -text
-MSVisualStudio/v10alt/libOsiCommonTest.vcxproj -text
-MSVisualStudio/v10alt/osi.props -text
-MSVisualStudio/v14/OsiUnitTest/OsiUnitTest.vcxproj -text
-MSVisualStudio/v14/libOsi/libOsi.vcxproj -text
-MSVisualStudio/v14/libOsiCommonTest/libOsiCommonTest.vcxproj -text
-MSVisualStudio/v16/libOsi/libOsi.sln -text
-MSVisualStudio/v16/libOsi/libOsi.vcxproj -text
-MSVisualStudio/v16/libOsi/libOsiCommonTest.vcxproj -text
-MSVisualStudio/v16/libOsiCommonTest/libOsiCommonTest.vcxproj -text
-MSVisualStudio/v9/Osi.sln -text
-MSVisualStudio/v9/OsiExamplesBasic/OsiExamplesBasic.vcproj -text
-MSVisualStudio/v9/OsiExamplesBuild/OsiExamplesBuild.vcproj -text
-MSVisualStudio/v9/OsiExamplesParameters/OsiExamplesParameters.vcproj -text
-MSVisualStudio/v9/OsiExamplesQuery/OsiExamplesQuery.vcproj -text
-MSVisualStudio/v9/OsiExamplesSpecific/OsiExamplesSpecific.vcproj -text
-MSVisualStudio/v9/OsiUnitTest/OsiUnitTest.vcproj -text
-MSVisualStudio/v9/libOsi/libOsi.vcproj -text
-MSVisualStudio/v9/libOsiCommonTest/libOsiCommonTest.vcproj -text
-MSVisualStudio/v9alt/Osi.sln -text
-MSVisualStudio/v9alt/OsiUnitTest.vcproj -text
-MSVisualStudio/v9alt/genDefForOsi.ps1 -text svneol=unset#application/octet-stream
-MSVisualStudio/v9alt/libOsi.vcproj -text
-MSVisualStudio/v9alt/libOsiCommonTest.vcproj -text
-MSVisualStudio/v9alt/osi.vsprops -text
-/appveyor.yml -text
-/ar-lib -text
-/compile -text
-/config.guess -text
-/config.sub -text
-/configure -text
-/configure.ac -text
-/depcomp -text
-doxydoc/doxygen.conf.in -text
-examples/Makefile.in -text
-examples/README -text
-examples/basic.cpp -text
-examples/build.cpp -text
-examples/parameters.cpp -text
-examples/query.cpp -text
-examples/readconic.cpp -text
-/install-sh -text
-/ltmain.sh -text
-/missing -text
-/osi-unittests.pc.in -text
-/osi.pc.in -text
-src/Osi/.ycm_extra_conf.py -text
-src/Osi/Makefile.am -text
-src/Osi/Makefile.in -text
-src/Osi/OsiFeatures.cpp -text
-src/Osi/OsiFeatures.hpp -text
-src/Osi/config.h.in -text
-src/Osi/config_default.h -text
-src/Osi/config_osi.h.in -text
-src/Osi/config_osi_default.h -text
-src/Osi/format-source.sh -text
-src/OsiCommonTest/Makefile.am -text
-src/OsiCommonTest/Makefile.in -text
-src/OsiCommonTest/OsiNetlibTest.cpp -text
-src/OsiCommonTest/OsiSimplexAPITest.cpp -text
-src/OsiCommonTest/OsiUnitTestUtils.cpp -text
-src/OsiCommonTest/OsiUnitTests.hpp -text
-src/OsiCommonTest/config_osicommontest.h.in -text
-src/OsiCpx/config_osicpx.h.in -text
-src/OsiCpx/format-source.sh -text
-src/OsiCpx/osi-cplex.pc.in -text
-src/OsiGlpk/config_osiglpk.h.in -text
-src/OsiGlpk/format-source.sh -text
-src/OsiGlpk/osi-glpk.pc.in -text
-src/OsiGrb/Makefile.am -text
-src/OsiGrb/Makefile.in -text
-src/OsiGrb/OsiGrbSolverInterface.cpp -text
-src/OsiGrb/OsiGrbSolverInterface.hpp -text
-src/OsiGrb/config_osigrb.h.in -text
-src/OsiGrb/format-source.sh -text
-src/OsiGrb/osi-gurobi.pc.in -text
-src/OsiMsk/config_osimsk.h.in -text
-src/OsiMsk/osi-mosek.pc.in -text
-src/OsiSpx/Makefile.am -text
-src/OsiSpx/Makefile.in -text
-src/OsiSpx/OsiSpxSolverInterface.cpp -text
-src/OsiSpx/OsiSpxSolverInterface.hpp -text
-src/OsiSpx/config_osispx.h.in -text
-src/OsiSpx/osi-soplex.pc.in -text
-src/OsiXpr/config_osixpr.h.in -text
-src/OsiXpr/format-source.sh -text
-src/OsiXpr/osi-xpress.pc.in -text
-test/OsiGrbSolverInterfaceTest.cpp -text
-test/OsiSpxSolverInterfaceTest.cpp -text
-test/OsiTestSolver.cpp -text
-test/OsiTestSolver.hpp -text
+*.sh text eol=lf
+install-sh text eol=lf
+config.sub text eol=lf
+config.guess text eol=lf
+missing text eol=lf
+decomp text eol=lf
+configure text eol=lf
+*.ac text eol=lf
+*.am text eol=lf
+*.in text eol=lf
+Makefile text eol=lf
+*.bat eol=crlf

@@ -25,6 +25,7 @@
     <ClCompile Include="..\..\..\src\Osi\OsiColCut.cpp" />
     <ClCompile Include="..\..\..\src\Osi\OsiCut.cpp" />
     <ClCompile Include="..\..\..\src\Osi\OsiCuts.cpp" />
+    <ClCompile Include="..\..\..\src\Osi\OsiFeatures.cpp" />
     <ClCompile Include="..\..\..\src\Osi\OsiNames.cpp" />
     <ClCompile Include="..\..\..\src\Osi\OsiPresolve.cpp" />
     <ClCompile Include="..\..\..\src\Osi\OsiRowCut.cpp" />
@@ -41,6 +42,7 @@
     <ClInclude Include="..\..\..\src\Osi\OsiConfig.h" />
     <ClInclude Include="..\..\..\src\Osi\OsiCut.hpp" />
     <ClInclude Include="..\..\..\src\Osi\OsiCuts.hpp" />
+    <ClInclude Include="..\..\..\src\Osi\OsiFeatures.hpp" />
     <ClInclude Include="..\..\..\src\Osi\OsiPresolve.hpp" />
     <ClInclude Include="..\..\..\src\Osi\OsiRowCut.hpp" />
     <ClInclude Include="..\..\..\src\Osi\OsiRowCutDebugger.hpp" />

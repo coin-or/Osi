@@ -1,4 +1,4 @@
-#include <OsiSolverInterface.hpp>
+#include "OsiSolverInterface.hpp"
 #include <limits>
 #include <algorithm>
 #include <cmath>

@@ -637,6 +637,7 @@ bool break2(CoinPresolveMatrix *prob)
   if (counter > 0)
     printf("break2: counter %d\n", counter);
   counter--;
+#if DEBUG_PREPROCESS > 1
   if (debugSolution && prob->ncols_ == debugNumberColumns) {
     for (int i = 0; i < prob->ncols_; i++) {
       double value = debugSolution[i];
@@ -647,6 +648,7 @@ bool break2(CoinPresolveMatrix *prob)
       }
     }
   }
+#endif
   if (!counter) {
     printf("skipping next and all\n");
   }

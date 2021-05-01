@@ -70,7 +70,7 @@ The Osi development site is https://github.com/coin-or/Osi.
 
 There is a Docker image that provides Osi, as well as other projects
 in the [COIN-OR Optimization
-Suite](https://github.com/coin-or/COIN-OR-OptimizationSuite)[here](https://hub.docker.com/repository/docker/coinor/coin-or-optimization-suite)
+Suite](https://github.com/coin-or/COIN-OR-OptimizationSuite) [here](https://hub.docker.com/repository/docker/coinor/coin-or-optimization-suite)
 
 ### Binaries
 
@@ -81,7 +81,7 @@ are archived as part of Cbc
 [here](https://www.coin-or.org/download/binary/Cbc).
 
  * *Linux*: On Debian/Ubuntu, Osi is available in the package `coinor-osi` and can be installed with apt. On Fedora, Osi is available in the package `coin-or-Osi`.
- * *Windows*: The easiest way to get Osi on Windows is to download from *[Bintray](https://bintray.com/coin-or/download/Cbc)*.
+ * *Windows*: The easiest way to get Osi on Windows is to download an archive as described above.
  * *Mac OS X*: The easiest way to get Cbc on Mac OS X is through [Homebrew](https://brew.sh).
    * `brew tap coin-or-tools/coinor`
    * `brew install coin-or-tools/coinor/osi`

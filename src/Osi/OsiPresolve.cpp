@@ -863,8 +863,11 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 #endif
 #endif
 #else
-      // look for substitutions with no fill
+      // look for substitutions with little fill
       int fill_level = 2;
+      if ((presolveActions_&0x300) != 0) {
+	fill_level += (presolveActions_&0x300)>>8;
+      }
 #endif
       int whichPass = 0;
       /*

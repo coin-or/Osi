@@ -18872,11 +18872,10 @@ fi
 
 
 
-  soplex_lflags=""
+  soplex_lflags="-lsoplex"
   soplex_cflags=""
   soplex_data=""
-  coin_has_soplex=skipping
-     soplex_failmode='default'
+  coin_has_soplex=requested
   soplex_userflags='no'
 
 
@@ -19034,31 +19033,12 @@ printf "%s\n" "$coin_has_soplex (COIN_SKIP_PROJECTS)" >&6; }
 
   if test "$coin_has_soplex" = 'no' ; then
     if expr "$soplex_failmode" : '.*header.*' &>/dev/null ; then
-      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING:
-Compiler flags are \"$soplex_cflags\". If you expected this test to
-succeed, check that they are correct. You can supply correct values using
---with-soplex-cflags." >&5
-printf "%s\n" "$as_me: WARNING:
-Compiler flags are \"$soplex_cflags\". If you expected this test to
-succeed, check that they are correct. You can supply correct values using
---with-soplex-cflags." >&2;}
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Compiler flags were \"$soplex_cflags\". Use --with-soplex-cflags to overwrite. Check config.log for details of failed compile attempt." >&5
+printf "%s\n" "$as_me: Compiler flags were \"$soplex_cflags\". Use --with-soplex-cflags to overwrite. Check config.log for details of failed compile attempt." >&6;}
     fi
     if expr "$soplex_failmode" : '.*link.*' &>/dev/null ; then
-      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING:
-Linker flags are \"$soplex_lflags\". If you expected this test to
-succeed, check that they are correct. You can supply correct values using
---with-soplex-lflags." >&5
-printf "%s\n" "$as_me: WARNING:
-Linker flags are \"$soplex_lflags\". If you expected this test to
-succeed, check that they are correct. You can supply correct values using
---with-soplex-lflags." >&2;}
-    fi
-    if expr "$soplex_failmode" : '.*header.*' &>/dev/null ||
-       expr "$soplex_failmode" : '.*link.*' &>/dev/null ; then
-      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING:
-Check config.log for details of failed compile or link attempts." >&5
-printf "%s\n" "$as_me: WARNING:
-Check config.log for details of failed compile or link attempts." >&2;}
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Linker flags are \"$soplex_lflags\". Use --with-soplex-lflags to overwrite. Check config.log for details of failed link attempt." >&5
+printf "%s\n" "$as_me: Linker flags are \"$soplex_lflags\". Use --with-soplex-lflags to overwrite. Check config.log for details of failed link attempt." >&6;}
     fi
     if test "$soplex_userflags" = 'yes' ; then
       as_fn_error $? "user-specified flags for SoPlex do not work." "$LINENO" 5
@@ -19323,31 +19303,12 @@ printf "%s\n" "$coin_has_cplex (COIN_SKIP_PROJECTS)" >&6; }
 
   if test "$coin_has_cplex" = 'no' ; then
     if expr "$cplex_failmode" : '.*header.*' &>/dev/null ; then
-      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING:
-Compiler flags are \"$cplex_cflags\". If you expected this test to
-succeed, check that they are correct. You can supply correct values using
---with-cplex-cflags." >&5
-printf "%s\n" "$as_me: WARNING:
-Compiler flags are \"$cplex_cflags\". If you expected this test to
-succeed, check that they are correct. You can supply correct values using
---with-cplex-cflags." >&2;}
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Compiler flags were \"$cplex_cflags\". Use --with-cplex-cflags to overwrite. Check config.log for details of failed compile attempt." >&5
+printf "%s\n" "$as_me: Compiler flags were \"$cplex_cflags\". Use --with-cplex-cflags to overwrite. Check config.log for details of failed compile attempt." >&6;}
     fi
     if expr "$cplex_failmode" : '.*link.*' &>/dev/null ; then
-      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING:
-Linker flags are \"$cplex_lflags\". If you expected this test to
-succeed, check that they are correct. You can supply correct values using
---with-cplex-lflags." >&5
-printf "%s\n" "$as_me: WARNING:
-Linker flags are \"$cplex_lflags\". If you expected this test to
-succeed, check that they are correct. You can supply correct values using
---with-cplex-lflags." >&2;}
-    fi
-    if expr "$cplex_failmode" : '.*header.*' &>/dev/null ||
-       expr "$cplex_failmode" : '.*link.*' &>/dev/null ; then
-      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING:
-Check config.log for details of failed compile or link attempts." >&5
-printf "%s\n" "$as_me: WARNING:
-Check config.log for details of failed compile or link attempts." >&2;}
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Linker flags are \"$cplex_lflags\". Use --with-cplex-lflags to overwrite. Check config.log for details of failed link attempt." >&5
+printf "%s\n" "$as_me: Linker flags are \"$cplex_lflags\". Use --with-cplex-lflags to overwrite. Check config.log for details of failed link attempt." >&6;}
     fi
     if test "$cplex_userflags" = 'yes' ; then
       as_fn_error $? "user-specified flags for Cplex do not work." "$LINENO" 5
@@ -19608,31 +19569,12 @@ printf "%s\n" "$coin_has_mosek (COIN_SKIP_PROJECTS)" >&6; }
 
   if test "$coin_has_mosek" = 'no' ; then
     if expr "$mosek_failmode" : '.*header.*' &>/dev/null ; then
-      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING:
-Compiler flags are \"$mosek_cflags\". If you expected this test to
-succeed, check that they are correct. You can supply correct values using
---with-mosek-cflags." >&5
-printf "%s\n" "$as_me: WARNING:
-Compiler flags are \"$mosek_cflags\". If you expected this test to
-succeed, check that they are correct. You can supply correct values using
---with-mosek-cflags." >&2;}
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Compiler flags were \"$mosek_cflags\". Use --with-mosek-cflags to overwrite. Check config.log for details of failed compile attempt." >&5
+printf "%s\n" "$as_me: Compiler flags were \"$mosek_cflags\". Use --with-mosek-cflags to overwrite. Check config.log for details of failed compile attempt." >&6;}
     fi
     if expr "$mosek_failmode" : '.*link.*' &>/dev/null ; then
-      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING:
-Linker flags are \"$mosek_lflags\". If you expected this test to
-succeed, check that they are correct. You can supply correct values using
---with-mosek-lflags." >&5
-printf "%s\n" "$as_me: WARNING:
-Linker flags are \"$mosek_lflags\". If you expected this test to
-succeed, check that they are correct. You can supply correct values using
---with-mosek-lflags." >&2;}
-    fi
-    if expr "$mosek_failmode" : '.*header.*' &>/dev/null ||
-       expr "$mosek_failmode" : '.*link.*' &>/dev/null ; then
-      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING:
-Check config.log for details of failed compile or link attempts." >&5
-printf "%s\n" "$as_me: WARNING:
-Check config.log for details of failed compile or link attempts." >&2;}
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Linker flags are \"$mosek_lflags\". Use --with-mosek-lflags to overwrite. Check config.log for details of failed link attempt." >&5
+printf "%s\n" "$as_me: Linker flags are \"$mosek_lflags\". Use --with-mosek-lflags to overwrite. Check config.log for details of failed link attempt." >&6;}
     fi
     if test "$mosek_userflags" = 'yes' ; then
       as_fn_error $? "user-specified flags for Mosek do not work." "$LINENO" 5
@@ -19888,31 +19830,12 @@ printf "%s\n" "$coin_has_xpress (COIN_SKIP_PROJECTS)" >&6; }
 
   if test "$coin_has_xpress" = 'no' ; then
     if expr "$xpress_failmode" : '.*header.*' &>/dev/null ; then
-      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING:
-Compiler flags are \"$xpress_cflags\". If you expected this test to
-succeed, check that they are correct. You can supply correct values using
---with-xpress-cflags." >&5
-printf "%s\n" "$as_me: WARNING:
-Compiler flags are \"$xpress_cflags\". If you expected this test to
-succeed, check that they are correct. You can supply correct values using
---with-xpress-cflags." >&2;}
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Compiler flags were \"$xpress_cflags\". Use --with-xpress-cflags to overwrite. Check config.log for details of failed compile attempt." >&5
+printf "%s\n" "$as_me: Compiler flags were \"$xpress_cflags\". Use --with-xpress-cflags to overwrite. Check config.log for details of failed compile attempt." >&6;}
     fi
     if expr "$xpress_failmode" : '.*link.*' &>/dev/null ; then
-      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING:
-Linker flags are \"$xpress_lflags\". If you expected this test to
-succeed, check that they are correct. You can supply correct values using
---with-xpress-lflags." >&5
-printf "%s\n" "$as_me: WARNING:
-Linker flags are \"$xpress_lflags\". If you expected this test to
-succeed, check that they are correct. You can supply correct values using
---with-xpress-lflags." >&2;}
-    fi
-    if expr "$xpress_failmode" : '.*header.*' &>/dev/null ||
-       expr "$xpress_failmode" : '.*link.*' &>/dev/null ; then
-      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING:
-Check config.log for details of failed compile or link attempts." >&5
-printf "%s\n" "$as_me: WARNING:
-Check config.log for details of failed compile or link attempts." >&2;}
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Linker flags are \"$xpress_lflags\". Use --with-xpress-lflags to overwrite. Check config.log for details of failed link attempt." >&5
+printf "%s\n" "$as_me: Linker flags are \"$xpress_lflags\". Use --with-xpress-lflags to overwrite. Check config.log for details of failed link attempt." >&6;}
     fi
     if test "$xpress_userflags" = 'yes' ; then
       as_fn_error $? "user-specified flags for Xpress do not work." "$LINENO" 5
@@ -20169,31 +20092,12 @@ printf "%s\n" "$coin_has_gurobi (COIN_SKIP_PROJECTS)" >&6; }
 
   if test "$coin_has_gurobi" = 'no' ; then
     if expr "$gurobi_failmode" : '.*header.*' &>/dev/null ; then
-      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING:
-Compiler flags are \"$gurobi_cflags\". If you expected this test to
-succeed, check that they are correct. You can supply correct values using
---with-gurobi-cflags." >&5
-printf "%s\n" "$as_me: WARNING:
-Compiler flags are \"$gurobi_cflags\". If you expected this test to
-succeed, check that they are correct. You can supply correct values using
---with-gurobi-cflags." >&2;}
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Compiler flags were \"$gurobi_cflags\". Use --with-gurobi-cflags to overwrite. Check config.log for details of failed compile attempt." >&5
+printf "%s\n" "$as_me: Compiler flags were \"$gurobi_cflags\". Use --with-gurobi-cflags to overwrite. Check config.log for details of failed compile attempt." >&6;}
     fi
     if expr "$gurobi_failmode" : '.*link.*' &>/dev/null ; then
-      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING:
-Linker flags are \"$gurobi_lflags\". If you expected this test to
-succeed, check that they are correct. You can supply correct values using
---with-gurobi-lflags." >&5
-printf "%s\n" "$as_me: WARNING:
-Linker flags are \"$gurobi_lflags\". If you expected this test to
-succeed, check that they are correct. You can supply correct values using
---with-gurobi-lflags." >&2;}
-    fi
-    if expr "$gurobi_failmode" : '.*header.*' &>/dev/null ||
-       expr "$gurobi_failmode" : '.*link.*' &>/dev/null ; then
-      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING:
-Check config.log for details of failed compile or link attempts." >&5
-printf "%s\n" "$as_me: WARNING:
-Check config.log for details of failed compile or link attempts." >&2;}
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Linker flags are \"$gurobi_lflags\". Use --with-gurobi-lflags to overwrite. Check config.log for details of failed link attempt." >&5
+printf "%s\n" "$as_me: Linker flags are \"$gurobi_lflags\". Use --with-gurobi-lflags to overwrite. Check config.log for details of failed link attempt." >&6;}
     fi
     if test "$gurobi_userflags" = 'yes' ; then
       as_fn_error $? "user-specified flags for Gurobi do not work." "$LINENO" 5

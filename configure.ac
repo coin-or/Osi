@@ -81,14 +81,13 @@ AC_COIN_CHK_HERE([OsiLib],[OsiCommonTestLib],[osi])
 AC_COIN_CHK_PKG(Glpk,[OsiGlpkLib OsiTest],[coinglpk])
 
 AC_LANG_PUSH(C++)
-AC_COIN_CHK_LIBHDR(SoPlex,[OsiSpxLib OsiTest],[],[],[],
+AC_COIN_CHK_LIBHDR(SoPlex,[OsiSpxLib OsiTest],[-lsoplex],[],[],
   [new soplex::DIdxSet()],
   [#include "soplex.h"
    #if SOPLEX_VERSION >= 400
    #error "OsiSpx requires SoPlex < 4.0"
    #endif
-  ],
-  [default_skip])
+  ])
 AC_LANG_POP(C++)
 
 AC_COIN_CHK_LIBHDR(Cplex,[OsiCpxLib OsiTest],[-lcplex -lpthread -lm -ldl],[],[],

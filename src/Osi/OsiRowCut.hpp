@@ -206,6 +206,10 @@ private:
   //@}
 };
 
+int hashCut(const OsiRowCut & x, int size);
+
+bool same(const OsiRowCut &x, const OsiRowCut &y);
+
 #ifdef OSI_INLINE_ROWCUT_METHODS
 
 //-------------------------------------------------------------------

@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <iostream>
+#include <cmath>
 
 #include "CoinPragma.hpp"
 #include "CoinFinite.hpp"
@@ -320,6 +321,68 @@ OsiRowCut2::operator=(const OsiRowCut2 &rhs)
     whichRow_ = rhs.whichRow_;
   }
   return *this;
+}
+
+static const double multiplier[] = {1.23456789e2,-9.87654321};
+int hashCut (const OsiRowCut &x, int size)
+{
+    int xN =x.row().getNumElements();
+    double xLb = x.lb();
+    double xUb = x.ub();
+    const int * xIndices = x.row().getIndices();
+    const double * xElements = x.row().getElements();
+    unsigned int hashValue;
+    double value=1.0;
+    if (xLb>-1.0e10)
+        value += xLb*multiplier[0];
+    if (xUb<1.0e10)
+        value += xUb*multiplier[1];
+    for( int j=0;j<xN;j++) {
+        int xColumn = xIndices[j];
+        double xValue = xElements[j];
+        int k=(j&1);
+        value += (j+1)*multiplier[k]*(xColumn+1)*xValue;
+    }
+    // should be compile time but too lazy for now
+    union { double d; unsigned int i[2]; } xx;
+    if (sizeof(value)>sizeof(hashValue)) {
+        assert (sizeof(value)==2*sizeof(hashValue));
+        xx.d = value;
+        hashValue = (xx.i[0] + xx.i[1]);
+    } else {
+        assert (sizeof(value)==sizeof(hashValue));
+        xx.d = value;
+        hashValue = xx.i[0];
+    }
+    return hashValue%(size);
+}
+
+bool same(const OsiRowCut &x, const OsiRowCut &y)
+{
+    int xN = x.row().getNumElements();
+    int yN = y.row().getNumElements();
+    bool identical = false;
+    if (xN == yN) {
+        double xLb = x.lb();
+        double xUb = x.ub();
+        double yLb = y.lb();
+        double yUb = y.ub();
+        if (std::fabs(xLb - yLb) < 1.0e-8 && fabs(xUb - yUb) < 1.0e-8) {
+            const int *xIndices = x.row().getIndices();
+            const double *xElements = x.row().getElements();
+            const int *yIndices = y.row().getIndices();
+            const double *yElements = y.row().getElements();
+            int j;
+            for (j = 0; j < xN; j++) {
+                if (xIndices[j] != yIndices[j])
+                    break;
+                if (fabs(xElements[j] - yElements[j]) > 1.0e-12)
+                    break;
+            }
+            identical = (j == xN);
+        }
+    }
+    return identical;
 }
 
 /* vi: softtabstop=2 shiftwidth=2 expandtab tabstop=2

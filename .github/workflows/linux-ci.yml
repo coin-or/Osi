@@ -54,7 +54,7 @@ jobs:
           bash coinbrew/coinbrew fetch ${{ github.event.repository.name }} \
           --no-prompt --skip-update \
           --skip='ThirdParty/Metis ThirdParty/Mumps ThirdParty/Blas ThirdParty/Lapack'
-          bash coinbrew/coinbrew build ${{ github.event.repository.name }} \
+          bash coinbrew/coinbrew build ${{ github.event.repository.name }} --disable-mysql \
           --skip='ThirdParty/Metis ThirdParty/Mumps ThirdParty/Blas ThirdParty/Lapack' \
           "${COMMON_ARGS[@]}" "${ADD_ARGS[@]}" "${DBG_ARGS[@]}" \
           ADD_CXXFLAGS="${ADD_CXXFLAGS}" CC=${CC} CXX=${CXX}

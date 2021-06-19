@@ -6,7 +6,8 @@
 
 _This file is auto-generated from [config.yml](.coin-or/config.yml) using the 
 [generate_readme](.coin-or/generate_readme) script.
-To make changes, please edit [config.yml](.coin-or/config.yml) or the generation script._
+To make changes, please edit [config.yml](.coin-or/config.yml) or the generation scripts
+[here](.coin-or/generate_readme) and [here](https://github.com/coin-or/coinbrew/blob/master/scripts/generate_readme)._
 
 Osi (*O*pen *S*olver *I*nterface) provides an abstract base class to a generic linear programming (LP) solver, along with derived classes for specific solvers.
 Many applications may be able to use the Osi to insulate themselves from a specific LP solver.
@@ -60,9 +61,9 @@ The Osi development site is https://github.com/coin-or/Osi.
 
 ## CURRENT BUILD STATUS
 
-[![Build Status](https://travis-ci.com/coin-or/Osi.svg?branch=stable/0.108)](https://travis-ci.com/coin-or/Osi)
+[![Windows Builds](https://github.com/coin-or/Osi/actions/workflows/windows-ci.yml/badge.svg?branch=stable/0.108)](https://github.com/coin-or/Osi/actions/workflows/windows-ci.yml?query=branch%3Astable/0.108)
 
-[![Build status](https://ci.appveyor.com/api/projects/status/frpvf6totmchmjmv/branch/stable/0.108?svg=true)](https://ci.appveyor.com/project/coin-or/Osi/branch/stable/0.108)
+[![Linux and MacOS Builds](https://github.com/coin-or/Osi/actions/workflows/linux-ci.yml/badge.svg?branch=stable/0.108)](https://github.com/coin-or/Osi/actions/workflows/linux-ci.yml?query=branch%3Astable/0.108)
 
 ## DOWNLOAD
 
@@ -82,7 +83,7 @@ are archived as part of Cbc
 
  * *Linux*: On Debian/Ubuntu, Osi is available in the package `coinor-osi` and can be installed with apt. On Fedora, Osi is available in the package `coin-or-Osi`.
  * *Windows*: The easiest way to get Osi on Windows is to download an archive as described above.
- * *Mac OS X*: The easiest way to get Cbc on Mac OS X is through [Homebrew](https://brew.sh).
+ * *Mac OS X*: The easiest way to get Osi on Mac OS X is through [Homebrew](https://brew.sh).
    * `brew tap coin-or-tools/coinor`
    * `brew install coin-or-tools/coinor/osi`
 
@@ -108,7 +109,7 @@ The quick start assumes you are in a bash shell.
 
 ### Using `coinbrew`
 
-To build CoinUtils from source, obtain the `coinbrew` script, do
+To build Osi from source, obtain the `coinbrew` script, do
 ```
 wget https://raw.githubusercontent.com/coin-or/coinbrew/master/coinbrew
 chmod u+x coinbrew

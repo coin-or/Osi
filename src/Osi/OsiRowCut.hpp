@@ -206,6 +206,12 @@ private:
   //@}
 };
 
+OSILIB_EXPORT
+int hashCut(const OsiRowCut & x, int size);
+
+OSILIB_EXPORT 
+bool same(const OsiRowCut &x, const OsiRowCut &y);
+
 #ifdef OSI_INLINE_ROWCUT_METHODS
 
 //-------------------------------------------------------------------

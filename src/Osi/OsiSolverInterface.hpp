@@ -1535,7 +1535,8 @@ public:
     int formatType = 0, int numberAcross = 2,
     double objSense = 0.0, int numberSOS = 0,
     const CoinSet *setInfo = NULL) const;
-
+  /// Write basis
+  virtual int writeBasisNative(const char *filename) const { return 0;}
   /***********************************************************************/
   // Lp files
 

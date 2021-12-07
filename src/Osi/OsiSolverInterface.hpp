@@ -522,6 +522,13 @@ public:
   virtual void solveFromHotStart();
   /// Delete the hot start snapshot.
   virtual void unmarkHotStart();
+  /** Do series of solves from hot start
+      - with options - initially 1 - just go to first re-factorization.
+      Returns number that can be fixed (negative if whole problem infeasible)
+  */
+  virtual int solvesFromHotStart(int numberLook, const int *which,
+			       int options)
+  { return 0;};
   //@}
 
   //---------------------------------------------------------------------------

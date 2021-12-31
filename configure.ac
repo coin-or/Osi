@@ -78,23 +78,49 @@ AC_COIN_CHK_HERE([OsiLib],[OsiCommonTestLib],[osi])
 # downloaded and built. The general flow here is as above: Initialise the
 # library, add external components, finalize the flags, and add any components
 # being built here.
-AC_COIN_CHK_PKG(Glpk,[OsiGlpkLib OsiTest],,[build])
+AC_COIN_CHK_PKG(Glpk,[OsiGlpkLib OsiTest],[coinglpk])
 
-AC_COIN_CHK_PKG(SoPlex,[OsiSpxLib OsiTest],[coinsoplex < 1.7],[build])
+AC_LANG_PUSH(C++)
+AC_COIN_CHK_LIBHDR(SoPlex,[OsiSpxLib OsiTest],[-lsoplex],[],[],
+  [new soplex::DIdxSet()],
+  [#include "soplex.h"
+   #if SOPLEX_VERSION >= 400
+   #error "OsiSpx requires SoPlex < 4.0"
+   #endif
+  ])
+AC_LANG_POP(C++)
 
-AC_COIN_CHK_LIB(Cplex,[OsiCpxLib OsiTest],[-lcplex -lpthread -lm -ldl],[],[],
-                [CPXgetstat])
+AC_COIN_CHK_LIBHDR(Cplex,[OsiCpxLib OsiTest],[-lcplex -lpthread -lm -ldl],[],[],
+  [int err;
+   #if CPX_VERSION >= 800
+     CPXopenCPLEX(&err);
+   #else
+     CPXopenCPLEXdevelop(&err);
+   #endif],
+  [#include "cplex.h"])
 
-AC_COIN_CHK_LIB(Mosek,[OsiMskLib OsiTest],[-lmosek64 -lpthread],[],[],
-                [MSK_makeenv])
+AC_COIN_CHK_LIBHDR(Mosek,[OsiMskLib OsiTest],[-lmosek64 -lpthread],[],[],
+  [MSKenv_t env_;
+   #if MSK_VERSION_MAJOR >= 7
+     MSK_makeenv(&env_,NULL);
+   #else
+     MSK_makeenv(&env_,NULL,NULL,NULL,NULL);
+   #endif],
+  [#include "mosek.h"
+   #include <stdlib.h>])
 
-AC_COIN_CHK_LIB(Xpress,[OsiXprLib OsiTest],[-lxprs -lxprl],[],[],
-                [XPRSinit])
+AC_COIN_CHK_LIBHDR(Xpress,[OsiXprLib OsiTest],[-lxprs -lxprl],[],[],
+  [XPRSinit(NULL)],
+  [#include "xprs.h"
+   #include <stdlib.h>])
 
-AC_COIN_CHK_LIB(Gurobi,[OsiGrbLib OsiTest],[-lgurobi -lpthread -lm],[],[],
-                [GRBloadenv])
+AC_COIN_CHK_LIBHDR(Gurobi,[OsiGrbLib OsiTest],[-lgurobi -lpthread -lm],[],[],
+  [GRBenv* env_;
+   GRBloadenv(&env_, NULL)],
+  [#include "gurobi_c.h"
+   #include <stdlib.h>])
 
-AC_COIN_FINALIZE_FLAGS([OsiGlpkLib OskSpxLib OsiCpxLib OsiMskLib OsiXprLib OsiGrbLib OsiTest])
+AC_COIN_FINALIZE_FLAGS([OsiGlpkLib OsiSpxLib OsiCpxLib OsiMskLib OsiXprLib OsiGrbLib OsiTest])
 
 AC_COIN_CHK_HERE([OsiLib],[OsiGlpkLib OsiSpxLib OsiCpxLib OsiMskLib OsiXprLib OsiGrbLib],[osi])
 
@@ -181,36 +207,36 @@ AC_CONFIG_FILES([Makefile
                  osi-unittests.pc])
 
 # Here put the location and name of the configuration header file
-AC_CONFIG_HEADER([src/Osi/config.h src/Osi/config_osi.h src/OsiCommonTest/config_osicommontest.h])
+AC_CONFIG_HEADERS([src/Osi/config.h src/Osi/config_osi.h src/OsiCommonTest/config_osicommontest.h])
 
 if test "$coin_has_cplex" = true ; then
   AC_CONFIG_FILES([osi-cplex.pc:src/OsiCpx/osi-cplex.pc.in])
-  AC_CONFIG_HEADER([src/OsiCpx/config_osicpx.h])
+  AC_CONFIG_HEADERS([src/OsiCpx/config_osicpx.h])
 fi
 
 if test "$coin_has_glpk" = yes ; then
   AC_CONFIG_FILES([osi-glpk.pc:src/OsiGlpk/osi-glpk.pc.in])
-  AC_CONFIG_HEADER([src/OsiGlpk/config_osiglpk.h])
+  AC_CONFIG_HEADERS([src/OsiGlpk/config_osiglpk.h])
 fi
 
 if test "$coin_has_gurobi" = yes ; then
   AC_CONFIG_FILES([osi-gurobi.pc:src/OsiGrb/osi-gurobi.pc.in])
-  AC_CONFIG_HEADER([src/OsiGrb/config_osigrb.h])
+  AC_CONFIG_HEADERS([src/OsiGrb/config_osigrb.h])
 fi
 
 if test "$coin_has_mosek" = yes ; then
   AC_CONFIG_FILES([osi-mosek.pc:src/OsiMsk/osi-mosek.pc.in])
-  AC_CONFIG_HEADER([src/OsiMsk/config_osimsk.h])
+  AC_CONFIG_HEADERS([src/OsiMsk/config_osimsk.h])
 fi
 
 if test "$coin_has_xpress" = yes ; then
   AC_CONFIG_FILES([osi-xpress.pc:src/OsiXpr/osi-xpress.pc.in])
-  AC_CONFIG_HEADER([src/OsiXpr/config_osixpr.h])
+  AC_CONFIG_HEADERS([src/OsiXpr/config_osixpr.h])
 fi
 
 if test "$coin_has_soplex" = yes ; then
   AC_CONFIG_FILES([osi-soplex.pc:src/OsiSpx/osi-soplex.pc.in])
-  AC_CONFIG_HEADER([src/OsiSpx/config_osispx.h])
+  AC_CONFIG_HEADERS([src/OsiSpx/config_osispx.h])
 fi
 
 AC_CONFIG_FILES([doxydoc/doxygen.conf])

@@ -1367,7 +1367,7 @@ void OsiSolverInterface::writeLp(const char *filename,
   int nameDiscipline;
   if (!getIntParam(OsiNameDiscipline, nameDiscipline))
     nameDiscipline = 0;
-  if (useRowNames && nameDiscipline == 2) {
+  if (useRowNames && nameDiscipline >= 1) {
     colnames = new char *[getNumCols()];
     rownames = new char *[getNumRows() + 1];
     for (int i = 0; i < getNumCols(); ++i)
@@ -1385,7 +1385,7 @@ void OsiSolverInterface::writeLp(const char *filename,
     rownames, colnames, epsilon, numberAcross,
     decimals, objSense, useRowNames);
 
-  if (useRowNames && nameDiscipline == 2) {
+  if (useRowNames && nameDiscipline >= 1) {
     for (int i = 0; i < getNumCols(); ++i)
       free(colnames[i]);
     for (int i = 0; i < getNumRows() + 1; ++i)
@@ -1407,7 +1407,7 @@ void OsiSolverInterface::writeLp(FILE *fp,
   char **rownames;
   int nameDiscipline;
   getIntParam(OsiNameDiscipline, nameDiscipline);
-  if (useRowNames && nameDiscipline == 2) {
+  if (useRowNames && nameDiscipline >= 1) {
     colnames = new char *[getNumCols()];
     rownames = new char *[getNumRows() + 1];
     for (int i = 0; i < getNumCols(); ++i)
@@ -1425,7 +1425,7 @@ void OsiSolverInterface::writeLp(FILE *fp,
     rownames, colnames, epsilon, numberAcross,
     decimals, objSense, useRowNames);
 
-  if (useRowNames && nameDiscipline == 2) {
+  if (useRowNames && nameDiscipline >= 1) {
     for (int i = 0; i < getNumCols(); ++i)
       free(colnames[i]);
     for (int i = 0; i < getNumRows() + 1; ++i)

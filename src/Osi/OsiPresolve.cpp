@@ -81,7 +81,14 @@ void OsiPresolve::gutsOfDestroy()
   originalColumn_ = NULL;
   originalRow_ = NULL;
 }
-
+#if DEBUG_PREPROCESS > 1
+/*
+  This code is intended to allow a known solution to be checked
+  against presolve progress. debugSolution is set in CbcSolver
+*/
+double *debugSolution = NULL;
+int debugNumberColumns = -1;
+#endif 
 /* This version of presolve returns a pointer to a new presolved 
    model.  NULL if infeasible
 
@@ -387,6 +394,15 @@ OsiPresolve::presolvedModel(OsiSolverInterface &si,
       << nrowsAfter << -(nrows_ - nrowsAfter)
       << ncolsAfter << -(ncols_ - ncolsAfter)
       << nelsAfter << -(nelems_ - nelsAfter) << CoinMessageEol;
+#if DEBUG_PREPROCESS > 1
+    if (debugSolution) {
+      for (int i=0;i<ncolsAfter;i++) {
+	int iColumn = originalColumn_[i];
+	debugSolution[i] = debugSolution[iColumn];
+      }
+      debugNumberColumns = ncolsAfter;
+    }
+#endif
   } else {
     gutsOfDestroy();
     delete presolvedModel_;
@@ -616,16 +632,6 @@ void check_and_tell(const CoinPresolveMatrix *const prob,
 
   return;
 }
-
-/*
-  At a guess, this code is intended to allow a known solution to be checked
-  against presolve progress. Pulled it into the local debug namespace, but
-  really should be integrated with CoinPresolvePsdebug.  At the least, needs
-  a method to conveniently set debugSolution.
-  -- lh, 110605 --
-*/
-double *debugSolution = NULL;
-int debugNumberColumns = -1;
 int counter = 1000000;
 
 bool break2(CoinPresolveMatrix *prob)
@@ -633,6 +639,7 @@ bool break2(CoinPresolveMatrix *prob)
   if (counter > 0)
     printf("break2: counter %d\n", counter);
   counter--;
+#if DEBUG_PREPROCESS > 1
   if (debugSolution && prob->ncols_ == debugNumberColumns) {
     for (int i = 0; i < prob->ncols_; i++) {
       double value = debugSolution[i];
@@ -643,6 +650,7 @@ bool break2(CoinPresolveMatrix *prob)
       }
     }
   }
+#endif
   if (!counter) {
     printf("skipping next and all\n");
   }
@@ -857,8 +865,11 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
 #endif
 #endif
 #else
-      // look for substitutions with no fill
+      // look for substitutions with little fill
       int fill_level = 2;
+      if ((presolveActions_&0x300) != 0) {
+	fill_level += (presolveActions_&0x300)>>8;
+      }
 #endif
       int whichPass = 0;
       /*
@@ -1519,6 +1530,8 @@ CoinPresolveMatrix* construct_CoinPresolveMatrix(int ncols0_in,
     for (icol=0;icol<cpm->ncols_;icol++) {
       if (prohibited[icol])
         cpm->setColProhibited(icol);
+      if (prohibited[icol]==2)
+        cpm->setColLeaveTotallyAlone(icol);
     }
   } else {
     cpm->anyProhibited_ = false;

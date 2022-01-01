@@ -25,10 +25,6 @@
 #include "OsiCollections.hpp"
 #include "OsiSolverParameters.hpp"
 
-#ifdef COINUTILS_HAS_GLPK
-#include "glpk.h"
-#endif
-
 class CoinSnapshot;
 class CoinLpIO;
 class CoinMpsIO;

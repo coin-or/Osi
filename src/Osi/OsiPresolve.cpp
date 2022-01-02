@@ -497,6 +497,8 @@ void OsiPresolve::postsolve(bool updateStatus)
                                     presolvedModel_->getObjSense(),
                                     sol,acts,colstat,rowstat) ;
   CoinPostsolveMatrix& prob(*probptr);
+  probptr->originalRowLower_ = originalModel_->getRowLower();
+  probptr->originalRowUpper_ = originalModel_->getRowUpper();
   postsolve(prob) ;
 
 #if PRESOLVE_CONSISTENCY > 0

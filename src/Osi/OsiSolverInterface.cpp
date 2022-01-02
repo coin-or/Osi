@@ -917,7 +917,8 @@ void OsiSolverInterface::activateRowCutDebugger(const double *solution,
 {
   delete rowCutDebugger_;
   rowCutDebugger_ = NULL; // so won't use in new
-  rowCutDebugger_ = new OsiRowCutDebugger(*this, solution, keepContinuous);
+  if (solution)
+    rowCutDebugger_ = new OsiRowCutDebugger(*this, solution, keepContinuous);
 }
 //-------------------------------------------------------------------
 // Get Row Cut Debugger<br>
@@ -1210,6 +1211,7 @@ int OsiSolverInterface::readMps(const char *filename,
    
   Will only work if glpk installed
 */
+#ifdef COINUTILS_HAS_GLPK
 int OsiSolverInterface::readGMPL(const char *filename, const char *dataname)
 {
   CoinMpsIO m;
@@ -1248,6 +1250,7 @@ int OsiSolverInterface::readGMPL(const char *filename, const char *dataname)
   }
   return numberErrors;
 }
+#endif
 /* Read a problem in MPS format from the given full filename.
    
 This uses CoinMpsIO::readMps() to read

@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "CoinUtilsConfig.h"
 #include "CoinTypes.h"
 #include "CoinMessage.hpp"
 #include "CoinMessageHandler.hpp"
@@ -517,6 +518,13 @@ public:
   virtual void solveFromHotStart();
   /// Delete the hot start snapshot.
   virtual void unmarkHotStart();
+  /** Do series of solves from hot start
+      - with options - initially 1 - just go to first re-factorization.
+      Returns number that can be fixed (negative if whole problem infeasible)
+  */
+  virtual int solvesFromHotStart(int numberLook, const int *which,
+			       int options)
+  { return 0;};
   //@}
 
   //---------------------------------------------------------------------------
@@ -1505,8 +1513,10 @@ public:
       The default implementation uses CoinMpsIO::readGMPL(). This capability
       is available only if the third-party package Glpk is installed.
     */
+#ifdef COINUTILS_HAS_GLPK
   virtual int readGMPL(const char *filename, const char *dataname = NULL);
-
+#endif
+  
   /*! \brief Write the problem in MPS format to the specified file.
 
       If objSense is non-zero, a value of -1.0 causes the problem to be

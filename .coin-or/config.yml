@@ -36,7 +36,7 @@ Dependencies:
     Required: Required
   - Description: COIN-OR Utilities
     URL: https://github.com/coin-or/CoinUtils
-    Version: refactor
+    Version: master
     Required: Required
 
 DevelopmentStatus: 

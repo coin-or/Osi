@@ -57,7 +57,8 @@ The Osi development site is https://github.com/coin-or/Osi.
 
 ## CITE
 
-[![DOI](https://zenodo.org/badge/173476455.svg)](https://zenodo.org/badge/latestdoi/173476455)
+Code: [![DOI](https://zenodo.org/badge/173476455.svg)](https://zenodo.org/badge/latestdoi/173476455)
+
 
 ## CURRENT BUILD STATUS
 
@@ -66,6 +67,10 @@ The Osi development site is https://github.com/coin-or/Osi.
 [![Linux and MacOS Builds](https://github.com/coin-or/Osi/actions/workflows/linux-ci.yml/badge.svg?branch=master)](https://github.com/coin-or/Osi/actions/workflows/linux-ci.yml?query=branch%3Amaster)
 
 ## DOWNLOAD
+
+What follows is a quick start guide for obtaining or building
+Osi on common platforms. More detailed information is
+available [here](https://coin-or.github.io/user_introduction.html).
 
 ### Docker image
 
@@ -99,9 +104,16 @@ Source code can be obtained either by
  * Cloning this repository from [Github](https://github.com/coin-or/Osi) or 
  * Using the [coinbrew](https://github.com/coin-or/coinbrew) script to get the project and all dependencies (recommended, see below).   
 
-Below is a quick start guide for building on common platforms. More detailed
-build instructions are
-[here](https://coin-or.github.io/user_introduction.html).
+### Dependencies
+
+Osi has a number of dependencies, which are detailed in
+[config.yml](.coin-or/config.yml). Dependencies on other COIN-OR projects are
+automatically downloaded when obtaining the source with `coinbrew`. For some
+of the remaining third-party dependencies, automatic download scripts and
+build wrappers are provided (and will also be automatically run for required
+and recommended dependencies), while other libraries that are aeasy to obtain
+must be installed using an appropriate package manager (or may come with your
+OS by default). 
 
 ## BUILDING from source
 
@@ -109,7 +121,8 @@ The quick start assumes you are in a bash shell.
 
 ### Using `coinbrew`
 
-To build Osi from source, obtain the `coinbrew` script, do
+To download and build Osi from source, execute the 
+following on the command line. 
 ```
 wget https://raw.githubusercontent.com/coin-or/coinbrew/master/coinbrew
 chmod u+x coinbrew
@@ -147,11 +160,12 @@ documentation [here](http://coin-or.github.io/Osi/Doxygen).
 
 ## Project Links
 
- * [COIN-OR Initiative](http://www.coin-or.org/)
+ * [Code of Conduct](https://www.coin-or.org/code-of-conduct/)
+ * [COIN-OR Web Site](http://www.coin-or.org/)
  * [Discussion forum](https://github.com/coin-or/Osi/discussions)
  * [Report a bug](https://github.com/coin-or/Osi/issues/new)
- * [Doxygen-generated html documentation](http://www.coin-or.org/Doxygen/Osi/hierarchy.html)
- * [OSI2 Discussion](https://projects.coin-or.org/Osi2/wiki/Osi2Discussion)
+ * [Doxygen-generated html documentation](https://coin-or.github.io/Osi/Doxygen)
+ * [OSI2 Discussion](https://github.com/coin-or/Osi2/discussions)
  * The most recent tutorial on OSI can be accessed from the [page on presentations from the 2004 CORS/INFORMS Joint Meeting in Banff](http://www.coin-or.org/Presentations/CORSINFORMSWorkshop04/index.html).
  * [The COIN-OR Open Solver Interface: Technology Overview](http://www.coin-or.org/Presentations/CORS2004-OSI.pdf): An overview of the COIN-OR OSI and design issues for a next-generation version given at CORS/INFORMS 2004 by Matthew Saltzman.
 

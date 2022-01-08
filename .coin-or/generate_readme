@@ -66,11 +66,12 @@ make_doxygen_info
 
 echo "## Project Links
 
- * [COIN-OR Initiative](http://www.coin-or.org/)
+ * [Code of Conduct](https://www.coin-or.org/code-of-conduct/)
+ * [COIN-OR Web Site](http://www.coin-or.org/)
  * [Discussion forum](https://github.com/coin-or/Osi/discussions)
  * [Report a bug](https://github.com/coin-or/Osi/issues/new)
- * [Doxygen-generated html documentation](http://www.coin-or.org/Doxygen/Osi/hierarchy.html)
- * [OSI2 Discussion](https://projects.coin-or.org/Osi2/wiki/Osi2Discussion)
+ * [Doxygen-generated html documentation](https://coin-or.github.io/Osi/Doxygen)
+ * [OSI2 Discussion](https://github.com/coin-or/Osi2/discussions)
  * The most recent tutorial on OSI can be accessed from the [page on presentations from the 2004 CORS/INFORMS Joint Meeting in Banff](http://www.coin-or.org/Presentations/CORSINFORMSWorkshop04/index.html).
  * [The COIN-OR Open Solver Interface: Technology Overview](http://www.coin-or.org/Presentations/CORS2004-OSI.pdf): An overview of the COIN-OR OSI and design issues for a next-generation version given at CORS/INFORMS 2004 by Matthew Saltzman.
 

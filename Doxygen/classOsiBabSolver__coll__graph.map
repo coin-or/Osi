@@ -1,0 +1,9 @@
+<map id="OsiBabSolver" name="OsiBabSolver">
+<area shape="rect" id="node2" href="$classOsiAuxInfo.html" title="This class allows for a more structured use of algorithmic tweaking to an OsiSolverInterface. " alt="" coords="513,5,599,32"/>
+<area shape="rect" id="node3" href="$classOsiSolverInterface.html" title="Abstract Base Class for describing an interface to a solver. " alt="" coords="791,127,921,153"/>
+<area shape="rect" id="node4" href="$classOsiRowCutDebugger.html" title="Validate cuts against a known solution. " alt="" coords="485,60,627,87"/>
+<area shape="rect" id="node5" title="STL class. " alt="" coords="251,175,330,201"/>
+<area shape="rect" id="node6" title="STL class. " alt="" coords="5,167,129,209"/>
+<area shape="rect" id="node7" href="$classOsiObject.html" title="Abstract base class for `objects&#39;. " alt="" coords="516,188,596,215"/>
+<area shape="rect" id="node9" title="STL class. " alt="" coords="235,249,347,276"/>
+</map>

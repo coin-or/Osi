@@ -1,0 +1,13 @@
+<map id="OsiChooseStrong" name="OsiChooseStrong">
+<area shape="rect" id="node2" href="$classOsiChooseVariable.html" title="This class chooses a variable to branch on. " alt="" coords="1083,213,1216,240"/>
+<area shape="rect" id="node3" href="$classOsiSolverInterface.html" title="Abstract Base Class for describing an interface to a solver. " alt="" coords="795,176,925,203"/>
+<area shape="rect" id="node4" href="$classOsiRowCutDebugger.html" title="Validate cuts against a known solution. " alt="" coords="485,131,627,157"/>
+<area shape="rect" id="node5" href="$classOsiAuxInfo.html" title="This class allows for a more structured use of algorithmic tweaking to an OsiSolverInterface. " alt="" coords="513,181,599,208"/>
+<area shape="rect" id="node6" title="STL class. " alt="" coords="251,41,330,68"/>
+<area shape="rect" id="node7" title="STL class. " alt="" coords="5,34,129,75"/>
+<area shape="rect" id="node8" href="$classOsiObject.html" title="Abstract base class for `objects&#39;. " alt="" coords="516,304,596,331"/>
+<area shape="rect" id="node14" href="$classOsiBranchingObject.html" title="Abstract branching object base class. " alt="" coords="791,276,929,303"/>
+<area shape="rect" id="node10" title="STL class. " alt="" coords="235,204,347,231"/>
+<area shape="rect" id="node13" href="$classOsiHotInfo.html" title="This class contains the result of strong branching on a variable When created it stores enough inform..." alt="" coords="1107,264,1192,291"/>
+<area shape="rect" id="node15" href="$classOsiPseudoCosts.html" title="This class is the placeholder for the pseudocosts used by OsiChooseStrong. " alt="" coords="1089,315,1209,341"/>
+</map>

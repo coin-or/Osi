@@ -1,0 +1,6 @@
+<map id="OsiObject" name="OsiObject">
+<area shape="rect" id="node2" href="$classOsiObject2.html" title="Define a class to add a bit of complexity to OsiObject This assumes 2 way branching. " alt="" coords="132,80,219,107"/>
+<area shape="rect" id="node3" href="$classOsiLotsize.html" title="Lotsize class. " alt="" coords="5,155,89,181"/>
+<area shape="rect" id="node4" href="$classOsiSimpleInteger.html" title="Define a single integer class. " alt="" coords="114,155,237,181"/>
+<area shape="rect" id="node5" href="$classOsiSOS.html" title="Define Special Ordered Sets of type 1 and 2. " alt="" coords="261,155,332,181"/>
+</map>

@@ -1,0 +1,14 @@
+<map id="OsiTestSolverInterface" name="OsiTestSolverInterface">
+<area shape="rect" id="node2" href="$classOsiSolverInterface.html" title="Abstract Base Class for describing an interface to a solver. " alt="" coords="821,153,952,180"/>
+<area shape="rect" id="node3" href="$classOsiRowCutDebugger.html" title="Validate cuts against a known solution. " alt="" coords="485,112,627,139"/>
+<area shape="rect" id="node4" href="$classOsiAuxInfo.html" title="This class allows for a more structured use of algorithmic tweaking to an OsiSolverInterface. " alt="" coords="513,163,599,189"/>
+<area shape="rect" id="node5" title="STL class. " alt="" coords="251,52,330,79"/>
+<area shape="rect" id="node6" title="STL class. " alt="" coords="5,45,129,86"/>
+<area shape="rect" id="node7" href="$classOsiObject.html" title="Abstract base class for `objects&#39;. " alt="" coords="516,61,596,88"/>
+<area shape="rect" id="node9" title="STL class. " alt="" coords="235,247,347,273"/>
+<area shape="rect" id="node12" href="$classVOL__user__hooks.html" title="The user hooks should be overridden by the user to provide the problem specific routines for the volu..." alt="" coords="825,204,948,231"/>
+<area shape="rect" id="node13" href="$classOsiTestSolverInterface_1_1OsiVolMatrixOneMinusOne__.html" title="OsiTestSolverInterface\l::OsiVolMatrixOneMinusOne_" alt="" coords="791,261,983,302"/>
+<area shape="rect" id="node14" href="$classVOL__problem.html" title="This class holds every data for the Volume Algorithm and its solve method must be invoked to solve th..." alt="" coords="835,327,938,353"/>
+<area shape="rect" id="node15" href="$structVOL__parms.html" title="This class contains the parameters controlling the Volume Algorithm. " alt="" coords="510,323,602,349"/>
+<area shape="rect" id="node16" href="$classVOL__dvector.html" title="vector of doubles. " alt="" coords="507,427,605,453"/>
+</map>

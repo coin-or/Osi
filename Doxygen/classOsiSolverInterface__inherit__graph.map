@@ -1,8 +1,0 @@
-<map id="OsiSolverInterface" name="OsiSolverInterface">
-<area shape="rect" id="node2" href="$classOsiCpxSolverInterface.html" title="CPLEX Solver Interface. " alt="" coords="187,5,339,32"/>
-<area shape="rect" id="node3" href="$classOsiGlpkSolverInterface.html" title="OsiGlpkSolverInterface" alt="" coords="184,56,341,83"/>
-<area shape="rect" id="node4" href="$classOsiGrbSolverInterface.html" title="Gurobi Solver Interface. " alt="" coords="187,107,338,133"/>
-<area shape="rect" id="node5" href="$classOsiMskSolverInterface.html" title="OsiMskSolverInterface" alt="" coords="185,157,340,184"/>
-<area shape="rect" id="node6" href="$classOsiSpxSolverInterface.html" title="SoPlex Solver Interface Instantiation of OsiSpxSolverInterface for SoPlex. " alt="" coords="187,208,339,235"/>
-<area shape="rect" id="node7" href="$classOsiXprSolverInterface.html" title="XPRESS&#45;MP Solver Interface. " alt="" coords="187,259,338,285"/>
-</map>

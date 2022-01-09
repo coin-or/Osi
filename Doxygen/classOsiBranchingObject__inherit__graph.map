@@ -1,6 +1,0 @@
-<map id="OsiBranchingObject" name="OsiBranchingObject">
-<area shape="rect" id="node2" href="$classOsiTwoWayBranchingObject.html" title="This just adds two&#45;wayness to a branching object. " alt="" coords="205,80,393,107"/>
-<area shape="rect" id="node3" href="$classOsiIntegerBranchingObject.html" title="Simple branching object for an integer variable. " alt="" coords="5,155,184,181"/>
-<area shape="rect" id="node4" href="$classOsiLotsizeBranchingObject.html" title="Lotsize branching object. " alt="" coords="209,155,389,181"/>
-<area shape="rect" id="node5" href="$classOsiSOSBranchingObject.html" title="Branching object for Special ordered sets. " alt="" coords="413,155,579,181"/>
-</map>

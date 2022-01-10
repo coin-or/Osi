@@ -1,4 +1,3 @@
-BuildTools        https://github.com/coin-or-tools/BuildTools stable/0.8
 ThirdParty/Blas   https://github.com/coin-or-tools/ThirdParty-Blas stable/1.4
 ThirdParty/Lapack https://github.com/coin-or-tools/ThirdParty-Lapack stable/1.6
 ThirdParty/Glpk   https://github.com/coin-or-tools/ThirdParty-Glpk stable/1.10

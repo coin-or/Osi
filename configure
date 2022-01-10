@@ -1605,76 +1605,85 @@ Optional Packages:
   --with-gnu-ld           assume the C compiler uses GNU ld [default=no]
   --with-sysroot[=DIR]    Search for dependent libraries within DIR (or the
                           compiler's sysroot if not specified).
-  --with-coinutils        Use CoinUtils. If an argument is given, 'yes' is
+  --without-coinutils     Do not use CoinUtils. If an argument is given to
+                          --with-coinutils, then 'yes' is
                           equivalent to --with-coinutils, 'no' is
-                          equivalent to --without-coinutils. Any other
-                          argument is applied as for --with-coinutils-lflags
+                          equivalent to --without-coinutils and any other
+                          argument is applied as for --with-coinutils-lflags.
   --with-coinutils-lflags Linker flags for CoinUtils appropriate for your
                           environment. (Most often, -l specs for libraries.)
   --with-coinutils-cflags Compiler flags for CoinUtils appropriate for your
                           environment. (Most often, -I specs for header file
                           directories.)
-  --with-sample           Use Sample. If an argument is given, 'yes' is
-                          equivalent to --with-sample, 'no' is
-                          equivalent to --without-sample. Any other argument
-                          is applied as for --with-sample-data
+  --without-sample        Do not use Sample. If an argument is given to
+                          --with-sample, then 'yes' is equivalent
+                          to --with-sample, 'no' is equivalent to
+                          --without-sample and any other argument is applied
+                          as for --with-sample-data.
   --with-sample-data      A data directory specification for Sample
                           appropriate for your environment.
-  --with-netlib           Use Netlib. If an argument is given, 'yes' is
-                          equivalent to --with-netlib, 'no' is
-                          equivalent to --without-netlib. Any other argument
-                          is applied as for --with-netlib-data
+  --without-netlib        Do not use Netlib. If an argument is given to
+                          --with-netlib, then 'yes' is equivalent
+                          to --with-netlib, 'no' is equivalent to
+                          --without-netlib and any other argument is applied
+                          as for --with-netlib-data.
   --with-netlib-data      A data directory specification for Netlib
                           appropriate for your environment.
-  --with-glpk             Use Glpk. If an argument is given, 'yes' is
-                          equivalent to --with-glpk, 'no' is
-                          equivalent to --without-glpk. Any other argument is
-                          applied as for --with-glpk-lflags
+  --without-glpk          Do not use Glpk. If an argument is given to
+                          --with-glpk, then 'yes' is equivalent to
+                          --with-glpk, 'no' is equivalent to
+                          --without-glpk and any other argument is applied as
+                          for --with-glpk-lflags.
   --with-glpk-lflags      Linker flags for Glpk appropriate for your
                           environment. (Most often, -l specs for libraries.)
   --with-glpk-cflags      Compiler flags for Glpk appropriate for your
                           environment. (Most often, -I specs for header file
                           directories.)
-  --with-soplex           Use SoPlex. If an argument is given, 'yes' is
-                          equivalent to --with-soplex, 'no' is
-                          equivalent to --without-soplex. Any other argument
-                          is applied as for --with-soplex-lflags
+  --without-soplex        Do not use SoPlex. If an argument is given to
+                          --with-soplex, then 'yes' is equivalent
+                          to --with-soplex, 'no' is equivalent to
+                          --without-soplex and any other argument is applied
+                          as for --with-soplex-lflags.
   --with-soplex-lflags    Linker flags for SoPlex appropriate for your
                           environment. (Most often, -l specs for libraries.)
   --with-soplex-cflags    Compiler flags for SoPlex appropriate for your
                           environment. (Most often, -I specs for header file
                           directories.)
-  --with-cplex            Use Cplex. If an argument is given, 'yes' is
-                          equivalent to --with-cplex, 'no' is
-                          equivalent to --without-cplex. Any other argument is
-                          applied as for --with-cplex-lflags
+  --without-cplex         Do not use Cplex. If an argument is given to
+                          --with-cplex, then 'yes' is equivalent
+                          to --with-cplex, 'no' is equivalent to
+                          --without-cplex and any other argument is applied as
+                          for --with-cplex-lflags.
   --with-cplex-lflags     Linker flags for Cplex appropriate for your
                           environment. (Most often, -l specs for libraries.)
   --with-cplex-cflags     Compiler flags for Cplex appropriate for your
                           environment. (Most often, -I specs for header file
                           directories.)
-  --with-mosek            Use Mosek. If an argument is given, 'yes' is
-                          equivalent to --with-mosek, 'no' is
-                          equivalent to --without-mosek. Any other argument is
-                          applied as for --with-mosek-lflags
+  --without-mosek         Do not use Mosek. If an argument is given to
+                          --with-mosek, then 'yes' is equivalent
+                          to --with-mosek, 'no' is equivalent to
+                          --without-mosek and any other argument is applied as
+                          for --with-mosek-lflags.
   --with-mosek-lflags     Linker flags for Mosek appropriate for your
                           environment. (Most often, -l specs for libraries.)
   --with-mosek-cflags     Compiler flags for Mosek appropriate for your
                           environment. (Most often, -I specs for header file
                           directories.)
-  --with-xpress           Use Xpress. If an argument is given, 'yes' is
-                          equivalent to --with-xpress, 'no' is
-                          equivalent to --without-xpress. Any other argument
-                          is applied as for --with-xpress-lflags
+  --without-xpress        Do not use Xpress. If an argument is given to
+                          --with-xpress, then 'yes' is equivalent
+                          to --with-xpress, 'no' is equivalent to
+                          --without-xpress and any other argument is applied
+                          as for --with-xpress-lflags.
   --with-xpress-lflags    Linker flags for Xpress appropriate for your
                           environment. (Most often, -l specs for libraries.)
   --with-xpress-cflags    Compiler flags for Xpress appropriate for your
                           environment. (Most often, -I specs for header file
                           directories.)
-  --with-gurobi           Use Gurobi. If an argument is given, 'yes' is
-                          equivalent to --with-gurobi, 'no' is
-                          equivalent to --without-gurobi. Any other argument
-                          is applied as for --with-gurobi-lflags
+  --without-gurobi        Do not use Gurobi. If an argument is given to
+                          --with-gurobi, then 'yes' is equivalent
+                          to --with-gurobi, 'no' is equivalent to
+                          --without-gurobi and any other argument is applied
+                          as for --with-gurobi-lflags.
   --with-gurobi-lflags    Linker flags for Gurobi appropriate for your
                           environment. (Most often, -l specs for libraries.)
   --with-gurobi-cflags    Compiler flags for Gurobi appropriate for your
@@ -3259,7 +3268,7 @@ fi
       : ${FFLAGS:="-nologo -fpp -Z7 -MDd $ADD_FFLAGS"}
       : ${FCFLAGS:="-nologo -fpp -Z7 -MDd $ADD_FCFLAGS"}
       : ${CFLAGS:="-nologo -Z7 -MDd $ADD_CFLAGS"}
-      : ${CXXFLAGS:="-nologo -EHs -Z7 -MDd $ADD_CXXFLAGS"}
+      : ${CXXFLAGS:="-nologo -EHs -Z7 -MDd -Zc:__cplusplus $ADD_CXXFLAGS"}
     else
       : ${FFLAGS:="-g $ADD_FFLAGS"}
       : ${FCFLAGS:="-g $ADD_FCFLAGS"}
@@ -3271,7 +3280,7 @@ fi
       : ${FFLAGS:="-nologo -fpp -O2 -MD $ADD_FFLAGS"}
       : ${FCFLAGS:="-nologo -fpp -O2 -MD $ADD_FCFLAGS"}
       : ${CFLAGS:="-nologo -DNDEBUG -O2 -MD $ADD_CFLAGS"}
-      : ${CXXFLAGS:="-nologo -EHs -DNDEBUG -O2 -MD $ADD_CXXFLAGS"}
+      : ${CXXFLAGS:="-nologo -EHs -DNDEBUG -O2 -MD -Zc:__cplusplus $ADD_CXXFLAGS"}
     else
       : ${FFLAGS:="-O2 $ADD_FFLAGS"}
       : ${FCFLAGS:="-O2 $ADD_FCFLAGS"}

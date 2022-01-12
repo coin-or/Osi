@@ -2161,9 +2161,16 @@ void OsiXprSolverInterface::writeMps(const char *filename,
 //-----------------------------------------------------------------------------
 void OsiXprSolverInterface::passInMessageHandler(CoinMessageHandler *handler)
 {
+#if XPVERSION > 38
+   XPRS_CHECKED(XPRSremovecbmessage, (prob_, OsiXprMessageCallback, messageHandler()));
+#endif
   OsiSolverInterface::passInMessageHandler(handler);
 
+#if XPVERSION <= 38
   XPRS_CHECKED(XPRSsetcbmessage, (prob_, OsiXprMessageCallback, messageHandler()));
+#else
+  XPRS_CHECKED(XPRSaddcbmessage, (prob_, OsiXprMessageCallback, messageHandler(), 0));
+#endif
 }
 
 //#############################################################################
@@ -2514,7 +2521,11 @@ void OsiXprSolverInterface::gutsOfConstructor()
 
   XPRS_CHECKED(XPRScreateprob, (&prob_));
 
+#if XPVERSION <= 38
   XPRS_CHECKED(XPRSsetcbmessage, (prob_, OsiXprMessageCallback, messageHandler()));
+#else
+  XPRS_CHECKED(XPRSaddcbmessage, (prob_, OsiXprMessageCallback, messageHandler(), 0));
+#endif
 
   /* always create an empty problem to initialize all data structures
      * since the user had no chance to pass in his own message handler, we turn off the output for the following operation

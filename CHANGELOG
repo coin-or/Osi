@@ -1,3 +1,6 @@
+12/01/2021 OsiXpr
+  - use new XPRESS message callback functions from XPRESS 39
+
 16/06/2020 OsiXpr
   - added functionality for switching between dual and primal simplex with hints
   - implemented getDualRays

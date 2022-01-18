@@ -541,8 +541,14 @@ const CoinPresolveAction *OsiPresolve::miniPresolve(CoinPresolveMatrix *prob,
       }
       paction = paction->next;
     }
-    if (nTotalFix)
-      printf("Mini-presolve fixed %d variables\n",nTotalFix);
+    if (nTotalFix) {
+      CoinMessageHandler *hdlr = prob->messageHandler();
+      CoinMessages msgs = CoinMessage(prob->messages().language());
+      char line[80];
+      sprintf(line,"Mini-presolve fixed %d variables",nTotalFix);
+      hdlr->message(COIN_GENERAL_INFO, msgs)
+        << line << CoinMessageEol;
+    }
     return (NULL);
 }
 

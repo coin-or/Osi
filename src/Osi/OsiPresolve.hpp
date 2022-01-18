@@ -126,6 +126,13 @@ public:
     const char *prohibited = NULL,
     bool doStatus = true,
     const char *rowProhibited = NULL);
+  virtual OsiSolverInterface *miniPresolvedModel(OsiSolverInterface &origModel,
+    double feasibilityTolerance = 0.0,
+    bool keepIntegers = true,
+    int numberPasses = 1,
+    const char *prohibited = NULL,
+    bool doStatus = true,
+    const char *rowProhibited = NULL);
 
   /*! \brief Restate the solution to the presolved problem in terms of the
 	     original problem and load it into the original model.
@@ -284,6 +291,8 @@ protected:
     this method
   */
   virtual const CoinPresolveAction *presolve(CoinPresolveMatrix *prob);
+  virtual const CoinPresolveAction *miniPresolve(CoinPresolveMatrix *prob,
+					       OsiSolverInterface * solver);
 
   /*! \brief Reverse presolve transformations to recover the solution
 	     to the original problem.

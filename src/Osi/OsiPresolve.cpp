@@ -411,6 +411,140 @@ OsiPresolve::presolvedModel(OsiSolverInterface &si,
   
   return presolvedModel_;
 }
+OsiSolverInterface *
+OsiPresolve::miniPresolvedModel(OsiSolverInterface &si,
+  double feasibilityTolerance,
+  bool keepIntegers,
+  int numberPasses,
+  const char *prohibited,
+  bool doStatus,
+  const char *rowProhibited)
+{
+  ncols_ = si.getNumCols();
+  nrows_ = si.getNumRows();
+  nelems_ = si.getNumElements();
+  numberPasses_ = numberPasses;
+
+  double maxmin = si.getObjSense();
+  originalModel_ = &si;
+  delete[] originalColumn_;
+  originalColumn_ = new int[ncols_];
+  delete[] originalRow_;
+  originalRow_ = new int[nrows_];
+  int i;
+  for (i = 0; i < ncols_; i++)
+    originalColumn_[i] = i;
+  for (i = 0; i < nrows_; i++)
+    originalRow_[i] = i;
+
+  // result is 0 - okay, 1 infeasible, -1 go round again
+  int result = -1;
+
+  // User may have deleted - its their responsibility
+  presolvedModel_ = NULL;
+  // Messages
+  CoinMessages msgs = CoinMessage(si.messages().language());
+  
+  // make new copy
+  delete presolvedModel_;
+  presolvedModel_ = si.clone();
+  
+
+  CoinPresolveMatrix* probptr = construct_CoinPresolveMatrix(ncols_,
+							     maxmin,
+							     presolvedModel_,
+							     nrows_, nelems_, doStatus, nonLinearValue_, prohibited,
+							     rowProhibited);
+  CoinPresolveMatrix& prob(*probptr);
+  // make sure row solution correct
+  if (doStatus) {
+    double *colels = prob.colels_;
+    int *hrow = prob.hrow_;
+    CoinBigIndex *mcstrt = prob.mcstrt_;
+    int *hincol = prob.hincol_;
+    int ncols = prob.ncols_;
+    
+    double *csol = prob.sol_;
+    double *acts = prob.acts_;
+    int nrows = prob.nrows_;
+    
+    int colx;
+    
+    memset(acts, 0, nrows * sizeof(double));
+    
+    for (colx = 0; colx < ncols; ++colx) {
+      double solutionValue = csol[colx];
+      for (CoinBigIndex i = mcstrt[colx]; i < mcstrt[colx] + hincol[colx]; ++i) {
+	int row = hrow[i];
+	double coeff = colels[i];
+	acts[row] += solutionValue * coeff;
+      }
+    }
+  }
+  
+  // move across feasibility tolerance
+  prob.feasibilityTolerance_ = feasibilityTolerance;
+  
+  /*
+    Do presolve. Allow for the possibility that presolve might be ineffective
+    (i.e., we're feasible but no postsolve actions are queued.
+  */
+  paction_ = miniPresolve(&prob, &si);
+  result = 0;
+  // Get rid of useful arrays
+  prob.deleteStuff();
+  return presolvedModel_;
+}
+const CoinPresolveAction *OsiPresolve::miniPresolve(CoinPresolveMatrix *prob,
+						    OsiSolverInterface * solver)
+{
+  const CoinPresolveAction * paction = NULL;
+
+  prob->status_ = 0; // say feasible
+
+  /*
+  Fix variables before we get into the main transform loop.
+*/
+  paction = make_fixed(prob, paction);
+  paction = testRedundant(prob, paction);
+
+
+    /*
+  Set [rows,cols]ToDo to process all rows & cols unless there are
+  specific prohibitions.
+*/
+    prob->initColsToDo();
+    prob->initRowsToDo();
+    const CoinPresolveAction *const paction0 = paction;
+    // this can also make E rows so do one bit here
+    paction = remove_dual_action::presolve(prob, paction);
+    const double * lower = solver->getColLower();
+    const double * upper = solver->getColUpper();
+    int nTotalFix = 0;
+    while (paction) {
+      const make_fixed_action * fix = dynamic_cast<const make_fixed_action *>(paction);
+      if (fix) {
+	int nActions = fix->nActions();
+	nTotalFix += nActions;
+	bool fixToLower = fix->fixToLower();
+	if (fixToLower) {
+	  for (int i=0;i<nActions;i++) {
+	    int iColumn = fix->fixVariable(i);
+	    solver->setColUpper(iColumn,lower[iColumn]);
+	  }
+	} else {
+	  for (int i=0;i<nActions;i++) {
+	    int iColumn = fix->fixVariable(i);
+	    solver->setColLower(iColumn,upper[iColumn]);
+	  }
+	}
+      }
+      paction = paction->next;
+    }
+    if (nTotalFix)
+      printf("Mini-presolve fixed %d variables\n",nTotalFix);
+    return (NULL);
+}
 
 // Return pointer to presolved model
 OsiSolverInterface *

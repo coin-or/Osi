@@ -97,22 +97,22 @@ noinst_PROGRAMS = unitTest$(EXEEXT)
 # Depending of what solvers are available, we add the corresponding files,
 # libraries and compile flags
 @COIN_HAS_CPLEX_TRUE@am__append_1 = OsiCpxSolverInterfaceTest.cpp
-@COIN_HAS_CPLEX_TRUE@am__append_2 = -DCOIN_HAS_CPLEX -I$(srcdir)/../src/OsiCpx
+@COIN_HAS_CPLEX_TRUE@am__append_2 = -DOSI_HAS_CPLEX -I$(srcdir)/../src/OsiCpx
 @COIN_HAS_CPLEX_TRUE@am__append_3 = ../src/OsiCpx/libOsiCpx.la
 @COIN_HAS_GLPK_TRUE@am__append_4 = OsiGlpkSolverInterfaceTest.cpp
-@COIN_HAS_GLPK_TRUE@am__append_5 = -DCOIN_HAS_GLPK -I$(srcdir)/../src/OsiGlpk
+@COIN_HAS_GLPK_TRUE@am__append_5 = -DOSI_HAS_GLPK -I$(srcdir)/../src/OsiGlpk
 @COIN_HAS_GLPK_TRUE@am__append_6 = ../src/OsiGlpk/libOsiGlpk.la
 @COIN_HAS_MOSEK_TRUE@am__append_7 = OsiMskSolverInterfaceTest.cpp
-@COIN_HAS_MOSEK_TRUE@am__append_8 = -DCOIN_HAS_MOSEK -I$(srcdir)/../src/OsiMsk
+@COIN_HAS_MOSEK_TRUE@am__append_8 = -DOSI_HAS_MOSEK -I$(srcdir)/../src/OsiMsk
 @COIN_HAS_MOSEK_TRUE@am__append_9 = ../src/OsiMsk/libOsiMsk.la
 @COIN_HAS_XPRESS_TRUE@am__append_10 = OsiXprSolverInterfaceTest.cpp
-@COIN_HAS_XPRESS_TRUE@am__append_11 = -DCOIN_HAS_XPRESS -I$(srcdir)/../src/OsiXpr
+@COIN_HAS_XPRESS_TRUE@am__append_11 = -DOSI_HAS_XPRESS -I$(srcdir)/../src/OsiXpr
 @COIN_HAS_XPRESS_TRUE@am__append_12 = ../src/OsiXpr/libOsiXpr.la
 @COIN_HAS_GUROBI_TRUE@am__append_13 = OsiGrbSolverInterfaceTest.cpp
-@COIN_HAS_GUROBI_TRUE@am__append_14 = -DCOIN_HAS_GUROBI -I$(srcdir)/../src/OsiGrb
+@COIN_HAS_GUROBI_TRUE@am__append_14 = -DOSI_HAS_GUROBI -I$(srcdir)/../src/OsiGrb
 @COIN_HAS_GUROBI_TRUE@am__append_15 = ../src/OsiGrb/libOsiGrb.la
 @COIN_HAS_SOPLEX_TRUE@am__append_16 = OsiSpxSolverInterfaceTest.cpp
-@COIN_HAS_SOPLEX_TRUE@am__append_17 = -DCOIN_HAS_SOPLEX -I$(srcdir)/../src/OsiSpx
+@COIN_HAS_SOPLEX_TRUE@am__append_17 = -DOSI_HAS_SOPLEX -I$(srcdir)/../src/OsiSpx
 @COIN_HAS_SOPLEX_TRUE@am__append_18 = ../src/OsiSpx/libOsiSpx.la
 @COIN_HAS_SAMPLE_TRUE@am__append_19 = -mpsDir=`$(CYGPATH_W) $(SAMPLE_DATA)`
 @COIN_HAS_NETLIB_TRUE@am__append_20 = -netlibDir=`$(CYGPATH_W) $(NETLIB_DATA)` -testOsiSolverInterface

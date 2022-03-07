@@ -493,6 +493,7 @@ OsiPresolve::miniPresolvedModel(OsiSolverInterface &si,
   result = 0;
   // Get rid of useful arrays
   prob.deleteStuff();
+  delete probptr;
   return presolvedModel_;
 }
 const CoinPresolveAction *OsiPresolve::miniPresolve(CoinPresolveMatrix *prob,

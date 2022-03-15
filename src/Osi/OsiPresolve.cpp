@@ -523,6 +523,7 @@ const CoinPresolveAction *OsiPresolve::miniPresolve(CoinPresolveMatrix *prob,
     const double * upper = solver->getColUpper();
     int nTotalFix = 0;
     while (paction) {
+      const CoinPresolveAction *const pactionNext = paction->next;
       const make_fixed_action * fix = dynamic_cast<const make_fixed_action *>(paction);
       if (fix) {
 	int nActions = fix->nActions();
@@ -540,7 +541,8 @@ const CoinPresolveAction *OsiPresolve::miniPresolve(CoinPresolveMatrix *prob,
 	  }
 	}
       }
-      paction = paction->next;
+      delete paction;
+      paction = pactionNext;
     }
     if (nTotalFix) {
       CoinMessageHandler *hdlr = prob->messageHandler();

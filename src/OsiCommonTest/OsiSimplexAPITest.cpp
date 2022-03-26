@@ -699,6 +699,7 @@ void testSimplexMode1(const OsiSolverInterface *emptySi, std::string sampleDir)
   Disable simplex mode 1.
 */
     si->disableFactorization();
+    std::cout << std::endl ;
   }
   /*
   Trash this solver and we're finished.

@@ -5,26 +5,30 @@
 /*
 		!!  MAINTAINERS  PLEASE  READ  !!
 
-The OSI unit test is gradually undergoing a conversion. Over time, the goal is
-to factor the original monolith into separate files and routines. Individual
-routines should collect test outcomes in the global OsiUnitTest::outcomes
-object using the OSIUNITTEST_* macros defined in OsiUnitTests.hpp.
-Ideally, the implementor of an OsiXXX could
-indicated expected failures, to avoid the current practice of modifying the
-unit test to avoid attempting the test for a particular OsiXXX.
+The OSI unit test is gradually undergoing a conversion. Over time,
+the goal is to factor the original monolith into separate files and
+routines. Individual routines should collect test outcomes in the global
+OsiUnitTest::outcomes object using the OSIUNITTEST_* macros defined in
+OsiUnitTests.hpp.  Ideally, the implementor of an OsiXXX could indicated
+expected failures, to avoid the current practice of modifying the unit
+test to avoid attempting the test for a particular OsiXXX.
 
-The original approach was to use asserts in tests; the net effect is that the
-unit test chokes and dies as soon as something goes wrong. The current
-approach is to soldier on until something has gone wrong which makes further
-testing pointless if OsiUnitTest::haltonerror is set to 0, to hold and ask the
-user for pressing a key if OsiUnitTest::haltonerror is set to 1, and to stop
-immediately if OsiUnitTest::haltonerror is set to 2 (but only in case of an error,
-not for warnings). The general idea is to return the maximum amount of useful
-information with each run. The OsiUnitTest::verbosity variable should be used
-to decide on the amount of information to be printed. At level 0, only minimal
-output should be printed, at level 1, more information about failed tests
-should be printed, while at level 2, also information on passed tests and other
-details should be printed.
+The original approach was to use asserts in tests; the net effect was that the
+unit test choked and died soon as something went wrong.  The current approach
+provides flexibility:
+  * if OsiUnitTest::haltonerror is set to 0, to soldier on until something
+    has gone wrong which makes further testing pointless;
+  * if OsiUnitTest::haltonerror is set to 1, hold and ask the user to press a
+    key;
+  * if OsiUnitTest::haltonerror is set to 2, stop immediately (but only in
+    case of an error, not for warnings).
+The general idea is to return the maximum amount of useful information with
+each run. The OsiUnitTest::verbosity variable should be used to decide on
+the amount of information to be printed:
+  * at level 0, only minimal output should be printed;
+  * at level 1, more information about failed tests should be printed,
+  * at level 2, information on passed tests and other details should also
+    be printed.
 
 If you work on this code, please keep these conventions in mind:
 
@@ -1431,7 +1435,7 @@ void testNames(const OsiSolverInterface *emptySi, std::string fn)
   exmip1ColNames.push_back("COL07");
   exmip1ColNames.push_back("COL08");
 
-  testingMessage("Testing row/column name handling ...");
+  testingMessage("Testing row/column name handling ...\n");
   /*
   Try to get the solver name, but don't immediately abort.
 */
@@ -2321,7 +2325,7 @@ void testReducedCosts(const OsiSolverInterface *emptySi,
   si->getStrParam(OsiSolverName, solverName);
   si->setHintParam(OsiDoReducePrint, true, OsiHintDo);
 
-  std::cout << "Testing duals and reduced costs ... ";
+  std::cout << "Testing duals and reduced costs ... " << std::endl ;
   /*
   Read p0033 and solve to optimality (minimisation).
 */

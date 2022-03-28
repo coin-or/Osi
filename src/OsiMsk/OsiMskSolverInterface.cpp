@@ -2517,7 +2517,8 @@ const double * OsiMskSolverInterface::getColSolution() const
   int nc = getNumCols();
   if( nc > 0 )
   {
-    MSKsoltypee solution = MSK_SOL_END;
+    MSKsoltypee solution;
+    bool havesolution = false;
 
     if(colsol_ == NULL)
       colsol_ = new double[nc];
@@ -2525,14 +2526,23 @@ const double * OsiMskSolverInterface::getColSolution() const
     if( probtypemip_ == false)
     {
       if( definedSolution( MSK_SOL_BAS ) == true )
+      {
+        havesolution = true;
         solution = MSK_SOL_BAS;
+      }
       else if( definedSolution( MSK_SOL_ITR) == true )
+      {
+        havesolution = true;
         solution = MSK_SOL_ITR;
+      }
     }
     else if( definedSolution( MSK_SOL_ITG ) == true )
-      solution = MSK_SOL_ITG;  
+    {
+      havesolution = true;
+      solution = MSK_SOL_ITG;
+    }
 
-    if ( solution == MSK_SOL_END )
+    if ( !havesolution )
     {
       double const *cl=getColLower(),*cu=getColLower();
 
@@ -2604,15 +2614,14 @@ const double * OsiMskSolverInterface::getRowPrice() const
 
     if( nr > 0 )
     {
-      MSKsoltypee solution = MSK_SOL_END;
+      MSKsoltypee solution;
       rowsol_      = new double[nr];
 
       if( definedSolution( MSK_SOL_BAS ) == true )
         solution = MSK_SOL_BAS;
       else if( definedSolution( MSK_SOL_ITR) == true )
         solution = MSK_SOL_ITR;
-     
-      if ( solution == MSK_SOL_END )
+      else
       {
         for( i = 0; i < nr; ++i )
            rowsol_[i] = 0.0;
@@ -2663,13 +2672,12 @@ const double * OsiMskSolverInterface::getReducedCost() const
 
     if( ncols > 0 )
     {
-      MSKsoltypee solution = MSK_SOL_END;
+      MSKsoltypee solution;
       if( definedSolution( MSK_SOL_BAS ) == true )
         solution = MSK_SOL_BAS;
       else if( definedSolution( MSK_SOL_ITR) == true )
         solution = MSK_SOL_ITR;
-
-      if ( solution == MSK_SOL_END )
+      else
         return NULL;
 
       redcost_    = new double[ncols];

@@ -3979,7 +3979,7 @@ OsiMskSolverInterface::addCols(const int numcols,
   
   if( nz > maxnz ) {
      err = MSK_putmaxnumanz(getLpPtr(), nz);
-     checkMSKerror( err, "MSK_putmaxanz", "addRows" );
+     checkMSKerror( err, "MSK_putmaxanz", "addCols" );
   }
 
   err = MSK_putmaxnumvar(getLpPtr(),

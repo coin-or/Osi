@@ -123,6 +123,8 @@ CoinPackedMatrix *buildBasisMatrix(const OsiSolverInterface *si)
     }
   }
 
+  delete[] basicIndices ;
+
   return (basisMtx);
 }
 

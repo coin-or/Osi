@@ -14,8 +14,12 @@
 #include "OsiSolverInterface.hpp"
 #include "OsiMskConfig.h"
 
+#ifndef MOSEK_H
+// declare MSKtask_t, MSKenv_t to avoid including mosek.h, unless mosek.h has been included already
+// note that Mosek 10.0.15 has changed the types of MSKtask_t, MSKenv_t
 typedef void* MSKtask_t;
 typedef void* MSKenv_t;
+#endif
 
 /* MOSEK Solver Interface
    Instantiation of OsiMskSolverInterface for MOSEK

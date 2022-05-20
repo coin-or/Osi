@@ -16,6 +16,10 @@
 #include <mutex>
 #endif
 #include <numeric>
+
+// need to come before including OsiMskSolverInterface.hpp
+#include "mosek.h"
+
 #include "OsiConfig.h"
 #include "CoinPragma.hpp"
 #include "CoinError.hpp"
@@ -25,8 +29,6 @@
 #include "OsiColCut.hpp"
 #include "CoinPackedMatrix.hpp"
 #include "CoinWarmStartBasis.hpp"
-
-#include "mosek.h"
 
 #define MSK_OSI_DEBUG_LEVEL          0
 #ifndef NDEBUG

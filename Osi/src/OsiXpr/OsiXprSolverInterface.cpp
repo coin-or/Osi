@@ -1092,7 +1092,7 @@ std::vector< double * > OsiXprSolverInterface::getDualRays(int maxNumRays,
     return std::vector< double * >(1, dualRay);
   }
 
-  delete dualRay;
+  delete[] dualRay;
   return std::vector<double *>(0, (double *) NULL); 
 }
 

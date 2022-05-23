@@ -1817,8 +1817,9 @@ int OsiSolverInterface::differentModel(OsiSolverInterface &other,
   bool takeHint;
   OsiHintStrength strength;
   // Switch off printing if asked to
-  bool gotHint = (getHintParam(OsiDoReducePrint, takeHint, strength));
+  bool gotHint = getHintParam(OsiDoReducePrint, takeHint, strength);
   assert(gotHint);
+  (void)gotHint;
   bool printStuff = true;
   if (strength != OsiHintIgnore && takeHint)
     printStuff = false;

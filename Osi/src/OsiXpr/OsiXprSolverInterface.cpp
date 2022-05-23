@@ -1087,7 +1087,6 @@ std::vector< double * > OsiXprSolverInterface::getDualRays(int maxNumRays,
   double *dualRay = new double[nrows];
   int hasRay;
 
-  int status;
   XPRS_CHECKED(XPRSgetdualray, (prob_, dualRay, &hasRay));
   if(hasRay){
     return std::vector< double * >(1, dualRay);

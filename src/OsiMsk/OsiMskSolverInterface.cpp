@@ -2367,12 +2367,23 @@ const CoinPackedMatrix * OsiMskSolverInterface::getMatrixByRow() const
                             val); 
 
     checkMSKerror(err, "MSK_getaslice", "getMatrixByRow");
-#else
+#elif MSK_VERSION_MAJOR == 9
     int err = MSK_getarowslice(getMutableLpPtr(),
                             0,
                             nr,
                             nz,
                             &surp,
+                            ptrb,
+                            ptre,
+                            sub,
+                            val);
+
+    checkMSKerror(err, "MSK_getarowslice", "getMatrixByRow");
+#else
+    int err = MSK_getarowslice(getMutableLpPtr(),
+                            0,
+                            nr,
+                            nz,
                             ptrb,
                             ptre,
                             sub,
@@ -2442,12 +2453,23 @@ const CoinPackedMatrix * OsiMskSolverInterface::getMatrixByCol() const
                             val); 
 
     checkMSKerror(err, "MSK_getaslice", "getMatrixByCol");
-#else
+#elif MSK_VERSION_MAJOR == 9
     int err = MSK_getacolslice(getMutableLpPtr(),
                             0,
                             nc,
                             nz,
                             &surp,
+                            ptrb,
+                            ptre,
+                            sub,
+                            val);
+
+    checkMSKerror(err, "MSK_getacolslice", "getMatrixByCol");
+#else
+    int err = MSK_getacolslice(getMutableLpPtr(),
+                            0,
+                            nc,
+                            nz,
                             ptrb,
                             ptre,
                             sub,

@@ -1,8 +1,11 @@
-20/05/3022
-  - add compatibility with Mosek 10.0.0.15 (beta)
+26/08/2022
+  - add compatibility with Mosek 10.0.18
 
-28/03/3022
-  - add compatibility with Mosek 10.0.0.12 (beta)
+20/05/2022
+  - add compatibility with Mosek 10.0.15 (beta)
+
+28/03/2022
+  - add compatibility with Mosek 10.0.12 (beta)
 
 12/01/2021 OsiXpr
   - use new XPRESS message callback functions from XPRESS 39

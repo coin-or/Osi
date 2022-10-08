@@ -930,6 +930,9 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
     // switch on stuff which can't be unrolled easily
     if ((presolveActions_ & 0x10) != 0)
       prob->setPresolveOptions(prob->presolveOptions() | 0x10);
+    // switch on testing stuff for dual
+    if ((presolveActions_ & 0x4000) != 0)
+      prob->setPresolveOptions(prob->presolveOptions() | 0x200000);
     // switch on gub stuff (unimplemented as of 110605 -- lh --)
     if ((presolveActions_ & 0x20) != 0)
       prob->setPresolveOptions(prob->presolveOptions() | 0x20);

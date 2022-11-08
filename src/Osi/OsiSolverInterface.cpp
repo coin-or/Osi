@@ -1529,7 +1529,7 @@ int OsiSolverInterface::readLp(const char *filename, const double epsilon)
   m.readLp(filename, epsilon);
 
   // set objective function offset
-  setDblParam(OsiObjOffset, m.ObjectiveOffset());
+  setDblParam(OsiObjOffset, m.objectiveOffset());
 
   // set problem name
   setStrParam(OsiProbName, m.getProblemName());

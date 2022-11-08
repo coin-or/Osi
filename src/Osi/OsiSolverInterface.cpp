@@ -1528,7 +1528,7 @@ int OsiSolverInterface::readLp(const char *filename, const double epsilon)
   CoinLpIO m;
   m.readLp(filename, epsilon);
 
-  // set objective function offest
+  // set objective function offset
   setDblParam(OsiObjOffset, m.ObjectiveOffset());
 
   // set problem name
@@ -1565,7 +1565,7 @@ int OsiSolverInterface::readLp(FILE *fp, const double epsilon)
   CoinLpIO m;
   m.readLp(fp, epsilon);
 
-  // set objective function offtest
+  // set objective function offset
   setDblParam(OsiObjOffset, m.ObjectiveOffset());
 
   // set problem name

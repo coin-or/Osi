@@ -1,3 +1,6 @@
+08/11/2022
+  - fixed that objective offset was ignored when reading from .lp file, see #248
+
 26/08/2022
   - add compatibility with Mosek 10.0.18
 

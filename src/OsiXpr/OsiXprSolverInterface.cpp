@@ -2639,7 +2639,11 @@ int OsiXprSolverInterface::getNumIntVars() const
 
   if (isDataLoaded()) {
 
+#if XPVERSION <= 40
     XPRS_CHECKED(XPRSgetglobal, (prob_, &nintvars, &nsets, NULL, NULL, NULL, NULL, NULL, NULL, NULL));
+#else
+    XPRS_CHECKED(XPRSgetmipentities, (prob_, &nintvars, &nsets, NULL, NULL, NULL, NULL, NULL, NULL, NULL));
+#endif
   }
 
   return nintvars;
@@ -2665,7 +2669,11 @@ void OsiXprSolverInterface::getVarTypes() const
     ivartype_ = new char[nintvars];
     ivarind_ = new int[nintvars];
 
+#if XPVERSION <= 40
     XPRS_CHECKED(XPRSgetglobal, (prob_, &nintvars, &nsets, ivartype_, ivarind_, NULL, NULL, NULL, NULL, NULL));
+#else
+    XPRS_CHECKED(XPRSgetmipentities, (prob_, &nintvars, &nsets, ivartype_, ivarind_, NULL, NULL, NULL, NULL, NULL));
+#endif
     // Currently, only binary and integer vars are supported.
 
     vartype_ = new char[ncols];

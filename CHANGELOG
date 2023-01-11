@@ -1,3 +1,6 @@
+11/01/2023
+  - use new XPRSgetmipentities() function from XPRESS 41
+
 08/11/2022
   - fixed that objective offset was ignored when reading from .lp file, see #248
 

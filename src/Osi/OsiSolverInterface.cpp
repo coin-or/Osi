@@ -3500,6 +3500,18 @@ void OsiSolverInterface::checkCGraph(CoinMessageHandler *msgh)
     setColUpper(newBounds[i].first, newBounds[i].second.second);
   }
 }
+/* Modify model to deal with indicators.
+   startBigM are values in input.
+   If bigM > 0.0 then use that,
+   if < 0.0 use but try and improve */
+void OsiSolverInterface::modifyByIndicators(double startBigM,
+					    double bigM)
+{
+  // dummy - needs coding - OsiClp version will normally be called 
+  //OsiClpSolverInterface * thisModel =
+  //dynamic_cast<OsiClpSolverInterface *>(this);
+  //if (thisModel)
+  //thisModel->modifyByIndicators(startBigM,bigM);
+  abort();
+}
 
-/* vi: softtabstop=2 shiftwidth=2 expandtab tabstop=2
-*/

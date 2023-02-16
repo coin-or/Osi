@@ -940,7 +940,7 @@ public:
       If bigM > 0.0 then use that,
       if < 0.0 use but try and improve */
   virtual void modifyByIndicators(double startBigM=COIN_DBL_MAX,
-			  double bigM=1.0e7);
+			  double bigM=-1.0e7);
   //@}
   //-------------------------------------------------------------------------
 

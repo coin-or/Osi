@@ -125,7 +125,8 @@ public:
     int numberPasses = 5,
     const char *prohibited = NULL,
     bool doStatus = true,
-    const char *rowProhibited = NULL);
+    const char *rowProhibited = NULL,
+    const double * scLower = NULL);
   virtual OsiSolverInterface *miniPresolvedModel(OsiSolverInterface &origModel,
     double feasibilityTolerance = 0.0,
     bool keepIntegers = true,

@@ -107,7 +107,8 @@ OsiPresolve::presolvedModel(OsiSolverInterface &si,
   int numberPasses,
   const char *prohibited,
   bool doStatus,
-  const char *rowProhibited)
+  const char *rowProhibited,
+  const double * scLower)
 {
   ncols_ = si.getNumCols();
   nrows_ = si.getNumRows();
@@ -336,31 +337,50 @@ OsiPresolve::presolvedModel(OsiSolverInterface &si,
         const double *lower = presolvedModel_->getColLower();
         const double *upper = presolvedModel_->getColUpper();
         for (i = 0; i < ncolsNow; i++) {
-          if (!presolvedModel_->isInteger(i))
-            continue;
-          int iOriginal = originalColumn_[i];
-          double lowerValue0 = lower0[iOriginal];
-          double upperValue0 = upper0[iOriginal];
-          double lowerValue = ceil(lower[i] - 1.0e-5);
-          double upperValue = floor(upper[i] + 1.0e-5);
-          presolvedModel_->setColBounds(i, lowerValue, upperValue);
-          // need to be careful if dupcols
-          if (lowerValue > upperValue) {
-            numberChanges++;
-            CoinMessageHandler *hdlr = presolvedModel_->messageHandler();
-            hdlr->message(COIN_PRESOLVE_COLINFEAS, msgs)
-              << iOriginal << lowerValue << upperValue << CoinMessageEol;
-            result = 1;
-          } else if ((prob.presolveOptions_ & 0x80000000) == 0) {
-            if (lowerValue > lowerValue0 + 1.0e-8) {
-              originalModel_->setColLower(iOriginal, lowerValue);
-              numberChanges++;
-            }
-            if (upperValue < upperValue0 - 1.0e-8) {
-              originalModel_->setColUpper(iOriginal, upperValue);
-              numberChanges++;
-            }
-          }
+          if (presolvedModel_->isInteger(i)) {
+	    int iOriginal = originalColumn_[i];
+	    double lowerValue0 = lower0[iOriginal];
+	    double upperValue0 = upper0[iOriginal];
+	    double lowerValue = ceil(lower[i] - 1.0e-5);
+	    double upperValue = floor(upper[i] + 1.0e-5);
+	    presolvedModel_->setColBounds(i, lowerValue, upperValue);
+	    // need to be careful if dupcols
+	    if (lowerValue > upperValue) {
+	      numberChanges++;
+	      CoinMessageHandler *hdlr = presolvedModel_->messageHandler();
+	      hdlr->message(COIN_PRESOLVE_COLINFEAS, msgs)
+		<< iOriginal << lowerValue << upperValue << CoinMessageEol;
+	      result = 1;
+	    } else if ((prob.presolveOptions_ & 0x80000000) == 0) {
+	      if (lowerValue > lowerValue0 + 1.0e-8) {
+		originalModel_->setColLower(iOriginal, lowerValue);
+		numberChanges++;
+	      }
+	      if (upperValue < upperValue0 - 1.0e-8) {
+		originalModel_->setColUpper(iOriginal, upperValue);
+		numberChanges++;
+	      }
+	    }
+	  } else if (scLower) {
+	    int iOriginal = originalColumn_[i];
+	    if (scLower[iOriginal]!= -COIN_DBL_MAX) {
+	      double lowerSC = scLower[iOriginal];
+	      double lowerValue = lower[i];
+	      double upperValue = upper[i];
+	      double lowerValue0 = lower0[iOriginal];
+	      double upperValue0 = upper0[iOriginal];
+	      //printf("SC %d %g <= %g orig %d %g <= %g sclo %g\n",
+	      //     i,lowerValue,upperValue,iOriginal,lowerValue0,
+	      //     upperValue0,lowerSC);
+	      if (upperValue<lowerSC-1.0e-5) {
+		lowerValue = 0.0;
+		upperValue = 0.0;
+	      } else if (lowerValue >1.0e-5) {
+		lowerValue = CoinMax(lowerValue,lowerSC);
+	      }
+	      presolvedModel_->setColBounds(i, lowerValue, upperValue);
+	    }
+	  }
         }
         if (numberChanges) {
           CoinMessageHandler *hdlr = presolvedModel_->messageHandler();

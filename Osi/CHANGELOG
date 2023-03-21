@@ -1,3 +1,6 @@
+21/03/2023
+  - remove use of std::bind2nd to improve compatibility with C++17, see #177
+
 16/06/2020 OsiXpr
   - added functionality for switching between dual and primal simplex with hints
   - implemented getDualRays

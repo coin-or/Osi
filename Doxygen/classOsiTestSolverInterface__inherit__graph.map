@@ -1,4 +1,0 @@
-<map id="OsiTestSolverInterface" name="OsiTestSolverInterface">
-<area shape="rect" id="node2" href="$classOsiSolverInterface.html" title="Abstract Base Class for describing an interface to a solver. " alt="" coords="5,5,136,32"/>
-<area shape="rect" id="node3" href="$classVOL__user__hooks.html" title="The user hooks should be overridden by the user to provide the problem specific routines for the volu..." alt="" coords="160,5,283,32"/>
-</map>

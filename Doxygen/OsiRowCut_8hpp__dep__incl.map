@@ -1,0 +1,6 @@
+<map id="/home/ted/tmp/tmp/Osi/Osi/src/Osi/OsiRowCut.hpp" name="/home/ted/tmp/tmp/Osi/Osi/src/Osi/OsiRowCut.hpp">
+<area shape="rect" id="node1" title=" " alt="" coords="135,5,322,47"/>
+<area shape="rect" id="node2" href="$OsiCuts_8hpp.html" title=" " alt="" coords="43,102,209,143"/>
+<area shape="rect" id="node4" href="$OsiCpxSolverInterface_8hpp.html" title=" " alt="" coords="234,95,431,151"/>
+<area shape="rect" id="node3" href="$OsiRowCutDebugger_8hpp.html" title="Provides a facility to validate cut constraints to ensure that they do not cut off a given solution." alt="" coords="5,199,247,240"/>
+</map>

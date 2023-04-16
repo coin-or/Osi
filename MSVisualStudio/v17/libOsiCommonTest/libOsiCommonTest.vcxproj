@@ -152,12 +152,10 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\CoinUtils\MSVisualStudio\v17\libCoinUtils\libCoinUtils.vcxproj">
-      <Project>{6D2EF92A-D693-47E3-A325-A686E78C5FFD}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <Project>{6d2ef92a-d693-47e3-a325-a686e78c5ffd}</Project>
     </ProjectReference>
     <ProjectReference Include="..\libOsi\libOsi.vcxproj">
-      <Project>{BF5C7532-EE0A-479B-9993-72134087D530}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <Project>{bf5c7532-ee0a-479b-9993-72134087d530}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

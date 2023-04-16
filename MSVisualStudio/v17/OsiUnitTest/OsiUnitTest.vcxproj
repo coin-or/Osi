@@ -147,17 +147,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\CoinUtils\MSVisualStudio\v17\libCoinUtils\libCoinUtils.vcxproj">
-      <Project>{6d2ef92a-d693-47e3-a325-a686e78c5ffd}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\..\Osi\MSVisualStudio\v17\libOsi\libOsi.vcxproj">
-      <Project>{bf5c7532-ee0a-479b-9993-72134087d530}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\libOsiCommonTest\libOsiCommonTest.vcxproj">
-      <Project>{109d6e6f-6d91-460f-86ae-df27400e09a9}</Project>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="..\..\..\test\OsiTestSolver.cpp" />
     <ClCompile Include="..\..\..\test\OsiTestSolverInterface.cpp" />
     <ClCompile Include="..\..\..\test\OsiTestSolverInterfaceIO.cpp" />
@@ -167,6 +156,17 @@
   <ItemGroup>
     <ClInclude Include="..\..\..\test\OsiTestSolver.hpp" />
     <ClInclude Include="..\..\..\test\OsiTestSolverInterface.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\CoinUtils\MSVisualStudio\v17\libCoinUtils\libCoinUtils.vcxproj">
+      <Project>{6d2ef92a-d693-47e3-a325-a686e78c5ffd}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libOsiCommonTest\libOsiCommonTest.vcxproj">
+      <Project>{109d6e6f-6d91-460f-86ae-df27400e09a9}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libOsi\libOsi.vcxproj">
+      <Project>{bf5c7532-ee0a-479b-9993-72134087d530}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

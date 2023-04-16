@@ -26,6 +26,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 		..\..\.github\workflows\windows-ci.yml = ..\..\.github\workflows\windows-ci.yml
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{19F0A284-FF77-4B8D-BEF9-31775B580170}"
+	ProjectSection(SolutionItems) = preProject
+		OsiTest.cmd = OsiTest.cmd
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -71,7 +76,9 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{FCF90EF8-93AE-482A-9B55-018B8338B99D} = {19F0A284-FF77-4B8D-BEF9-31775B580170}
 		{A0209C59-3B68-4EB6-8AB2-B16831D6C759} = {F8AFDCAA-7845-4221-8F63-45BE825B678A}
+		{19F0A284-FF77-4B8D-BEF9-31775B580170} = {F8AFDCAA-7845-4221-8F63-45BE825B678A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8D3882F5-D354-4362-9A7F-A5393F116053}

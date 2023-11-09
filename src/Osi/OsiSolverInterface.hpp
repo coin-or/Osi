@@ -611,6 +611,10 @@ public:
       - -1 for maximisation
     */
   virtual double getObjSense() const = 0;
+  /// For getting rid of many getObjSense()'s
+  /// When known to be minimization
+  inline double getObjSenseInCbc() const
+  { assert (getObjSense()==1.0);return 1.0;}
 
   /// Return true if the variable is continuous
   virtual bool isContinuous(int colIndex) const = 0;

@@ -613,8 +613,18 @@ public:
   virtual double getObjSense() const = 0;
   /// For getting rid of many getObjSense()'s
   /// When known to be minimization
+  // Put back until errors fixed
   inline double getObjSenseInCbc() const
+#if 0
+  /// Looks like weird error as compiler does not like assert
+#if defined(_MSC_VER)
+  { return 1.0;}
+#else
   { assert (getObjSense()==1.0);return 1.0;}
+#endif
+#else
+  { return getObjSense();}
+#endif
 
   /// Return true if the variable is continuous
   virtual bool isContinuous(int colIndex) const = 0;

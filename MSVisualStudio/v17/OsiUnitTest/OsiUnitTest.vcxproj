@@ -88,7 +88,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CONSOLE;_DEBUG;WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\..\..\..\BuildTools\headers;..\..\..\src\Osi;..\..\..\src\OsiCommonTest;..\..\..\..\CoinUtils\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\src\Osi;..\..\..\src\OsiCommonTest;..\..\..\..\CoinUtils\src</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -104,7 +104,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CONSOLE;NDEBUG;WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\..\..\..\BuildTools\headers;..\..\..\src\Osi;..\..\..\src\OsiCommonTest;..\..\..\..\CoinUtils\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\src\Osi;..\..\..\src\OsiCommonTest;..\..\..\..\CoinUtils\src</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -120,7 +120,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CONSOLE;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\..\..\..\BuildTools\headers;..\..\..\src\Osi;..\..\..\src\OsiCommonTest;..\..\..\..\CoinUtils\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\src\Osi;..\..\..\src\OsiCommonTest;..\..\..\..\CoinUtils\src</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -136,7 +136,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CONSOLE;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\..\..\..\BuildTools\headers;..\..\..\src\Osi;..\..\..\src\OsiCommonTest;..\..\..\..\CoinUtils\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\src\Osi;..\..\..\src\OsiCommonTest;..\..\..\..\CoinUtils\src</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
     </ClCompile>
     <Link>

@@ -3483,15 +3483,15 @@ void OsiSolverInterface::checkCGraph(CoinMessageHandler *msgh)
     cgraph_ = NULL;
   }
   
-  const double stCG = CoinGetTimeOfDay();
-	cgraph_ = new CoinStaticConflictGraph(getNumCols(), getColType(),
+  double timeCG = CoinCpuTime();
+  cgraph_ = new CoinStaticConflictGraph(getNumCols(), getColType(),
                                         getColLower(), getColUpper(),
-	                                      getMatrixByRow(), getRowSense(),
+					getMatrixByRow(), getRowSense(),
                                         getRightHandSide(), getRowRange());
-  const double etCG = CoinGetTimeOfDay();
+  timeCG = CoinCpuTime()-timeCG;
 
-  if (msgh && msgh->logLevel())
-    msgh->message(COIN_CGRAPH_INFO, messages()) << etCG-stCG << cgraph_->density()*100.0 << CoinMessageEol;
+  if (msgh && msgh->logLevel()) 
+    msgh->message(COIN_CGRAPH_INFO, messages()) << timeCG << cgraph_->density()*100.0 << ((timeCG>1.0) ? "!!" : "") << CoinMessageEol;
 
   // fixing variables discovered during the construction of conflict graph
   const std::vector< std::pair< size_t, std::pair< double, double > > > newBounds = cgraph_->updatedBounds();

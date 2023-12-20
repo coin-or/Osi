@@ -1450,7 +1450,7 @@ int OsiSolverInterface::writeLpNative(const char *filename,
   if (!fp) {
     printf("### ERROR: in OsiSolverInterface::writeLpNative(): unable to open file %s\n",
       filename);
-    exit(1);
+    return (1);
   }
   int nerr = writeLpNative(fp, rowNames, columnNames,
     epsilon, numberAcross, decimals,

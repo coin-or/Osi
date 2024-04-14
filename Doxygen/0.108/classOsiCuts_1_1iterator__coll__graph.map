@@ -1,0 +1,11 @@
+<map id="OsiCuts::iterator" name="OsiCuts::iterator">
+<area shape="rect" id="node1" title="Iterator." alt="" coords="321,363,435,389"/>
+<area shape="rect" id="node2" href="$classOsiCuts.html" title="Collections of row cuts and column cuts." alt="" coords="277,273,346,300"/>
+<area shape="rect" id="node3" title=" " alt="" coords="23,184,202,211"/>
+<area shape="rect" id="node4" href="$classOsiRowCut.html" title="Row Cut Class." alt="" coords="213,95,301,121"/>
+<area shape="rect" id="node5" href="$classOsiCut.html" title=" " alt="" coords="335,5,397,32"/>
+<area shape="rect" id="node9" href="$classOsiColCut.html" title="Column Cut Class." alt="" coords="325,95,407,121"/>
+<area shape="rect" id="node6" title="STL class." alt="" coords="17,95,129,121"/>
+<area shape="rect" id="node8" title=" " alt="" coords="226,184,397,211"/>
+<area shape="rect" id="node7" title=" " alt="" coords="53,5,92,32"/>
+</map>

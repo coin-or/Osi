@@ -1,0 +1,7 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classOsiBranchingObject.html" title="Abstract branching object base class." alt="" coords="5,56,144,83"/>
+<area shape="rect" id="node2" href="$classOsiTwoWayBranchingObject.html" title="This just adds two&#45;wayness to a branching object." alt="" coords="192,56,380,83"/>
+<area shape="rect" id="node3" href="$classOsiIntegerBranchingObject.html" title="Simple branching object for an integer variable." alt="" coords="429,5,607,32"/>
+<area shape="rect" id="node4" href="$classOsiLotsizeBranchingObject.html" title="Lotsize branching object." alt="" coords="428,56,608,83"/>
+<area shape="rect" id="node5" href="$classOsiSOSBranchingObject.html" title="Branching object for Special ordered sets." alt="" coords="435,107,601,133"/>
+</map>

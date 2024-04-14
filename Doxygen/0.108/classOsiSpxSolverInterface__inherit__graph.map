@@ -1,4 +1,0 @@
-<map id="OsiSpxSolverInterface" name="OsiSpxSolverInterface">
-<area shape="rect" id="node1" title="SoPlex Solver Interface Instantiation of OsiSpxSolverInterface for SoPlex." alt="" coords="5,80,157,107"/>
-<area shape="rect" id="node2" href="$classOsiSolverInterface.html" title="Abstract Base Class for describing an interface to a solver." alt="" coords="16,5,147,32"/>
-</map>

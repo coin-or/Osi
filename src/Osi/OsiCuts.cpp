@@ -11,6 +11,7 @@
 #include <cassert>
 
 #include "OsiCuts.hpp"
+#include "CoinHelperFunctions.hpp"
 
 //-------------------------------------------------------------------
 // Default Constructor
@@ -278,7 +279,8 @@ OsiCuts::const_iterator OsiCuts::const_iterator::operator++()
   }
   return *this;
 }
-
+static bool scaleCutIntegral(double* cutElem, int* cutIndex, int cutNz,
+			     double& cutRhs, double maxdelta);
 /* Insert a row cut unless it is a duplicate (CoinAbsFltEq)
        returns true if inserted */
 bool OsiCuts::insertIfNotDuplicate(OsiRowCut &rc, CoinAbsFltEq treatAsSame)
@@ -317,9 +319,9 @@ bool OsiCuts::insertIfNotDuplicate(OsiRowCut &rc, CoinAbsFltEq treatAsSame)
   }
   if (notDuplicate) {
     OsiRowCut *newCutPtr = new OsiRowCut();
+    newCutPtr->setRow(vector);
     newCutPtr->setLb(newLb);
     newCutPtr->setUb(newUb);
-    newCutPtr->setRow(vector);
     newCutPtr->setGloballyValid(rc.globallyValid());
     newCutPtr->setEffectiveness(rc.effectiveness());
     rowCutPtrs_.push_back(newCutPtr);
@@ -372,6 +374,174 @@ void OsiCuts::insertIfNotDuplicate(OsiRowCut &rc, CoinRelFltEq treatAsSame)
     rowCutPtrs_.push_back(newCutPtr);
   }
 }
+#define USE__RATIONAL 60
+#include "CoinRational.hpp"
+#define SMALL_VALUE1 1.0e-14
+static long computeGcd(long a, long b) {
+  // This is the standard Euclidean algorithm for gcd
+  long remainder = 1;
+  // Make sure a<=b (will always remain so)
+  if (a > b) {
+    // Swap a and b
+    long temp = a;
+    a = b;
+    b = temp;
+  }
+  // If zero then gcd is nonzero
+  if (!a) {
+    if (b) {
+      return b;
+    } 
+    else {
+      return 0;
+    }
+  }
+  while (remainder) {
+    remainder = b % a;
+    b = a;
+    a = remainder;
+  }
+  return b;
+} /* computeGcd */
+static bool scaleCutIntegral(double* cutElem, int* cutIndex, int cutNz,
+			     double& cutRhs, double maxdelta) {
+  long gcd, lcm;
+  double maxscale = 1000; 
+  long maxdnom = USE__RATIONAL;
+  //long numerator = 0, denominator = 0;
+  // Initialize gcd and lcm
+  CoinRational r = CoinRational(cutRhs, maxdelta, maxdnom);
+  if (r.getNumerator() != 0){
+     gcd = labs(r.getNumerator());
+     lcm = r.getDenominator();
+  }
+  else{
+    return false;
+  }
+  for (int i = 0; i < cutNz; ++i) {
+    CoinRational r = CoinRational(cutElem[i], maxdelta, maxdnom);
+    if (r.getNumerator() != 0){
+       gcd = computeGcd(gcd, r.getNumerator());
+       lcm *= r.getDenominator()/(computeGcd(lcm,r.getDenominator()));
+    }
+    else{
+      return false;
+    } 
+  }
+  double scale = ((double)lcm)/((double)gcd);
+  if (fabs(scale) > maxscale) {
+      return false;
+  }
+  scale = fabs(scale);
+  // Looks like we have a good scaling factor; scale and return;
+  for (int i = 0; i < cutNz; ++i) {
+    double value = cutElem[i]*scale;
+    cutElem[i] = floor(value+0.5);
+    assert (fabs(cutElem[i]-value)<1.0e-9);
+  }
+  {
+    double value = cutRhs*scale;
+    cutRhs = floor(value+0.5);
+    assert (fabs(cutRhs-value)<1.0e-9);
+  }
+  return true;
+} /* scaleCutIntegral */
+// Returns value - floor but allowing for small errors
+inline double above_integer(double value) {
+  double value2=floor(value);
+  double value3=floor(value+0.5);
+  if (fabs(value3-value)<1.0e-9*(fabs(value3)+1.0))
+    return 0.0;
+  return value-value2;
+}
+/* Insert a row cut unless it is a duplicate - cut may get sorted.
+   Duplicate is defined as CoinAbsFltEq says same
+   returns true if inserted.
+   Also tries to "integerize" cut and checks for accuracy */
+bool OsiCuts::insertIfNotDuplicateAndClean(OsiRowCut &rc,
+					   int typeCut ,
+					   CoinAbsFltEq treatAsSame)
+{
+  double newLb = rc.lb();
+  double newUb = rc.ub();
+  CoinPackedVector vector = rc.row();
+  int numberElements = vector.getNumElements();
+  int *newIndices = vector.getIndices();
+  double *newElements = vector.getElements();
+  CoinSort_2(newIndices, newIndices + numberElements, newElements);
+  bool notDuplicate = true;
+  int numberRowCuts = sizeRowCuts();
+  for (int i = 0; i < numberRowCuts; i++) {
+    const OsiRowCut *cutPtr = rowCutPtr(i);
+    if (cutPtr->row().getNumElements() != numberElements)
+      continue;
+    if (!treatAsSame(cutPtr->lb(), newLb))
+      continue;
+    if (!treatAsSame(cutPtr->ub(), newUb))
+      continue;
+    const CoinPackedVector *thisVector = &(cutPtr->row());
+    const int *indices = thisVector->getIndices();
+    const double *elements = thisVector->getElements();
+    int j;
+    for (j = 0; j < numberElements; j++) {
+      if (indices[j] != newIndices[j])
+        break;
+      if (!treatAsSame(elements[j], newElements[j]))
+        break;
+    }
+    if (j == numberElements) {
+      notDuplicate = false;
+      break;
+    }
+  }
+  if (notDuplicate) {
+    OsiRowCut *newCutPtr = new OsiRowCut();
+    // scale
+    if (newLb<-1.0e30 || newUb > 1.0e30) {
+      double maxdelta = 1.0e-12; //param.getEPS();
+      double rhs = newLb<-1.0e30 ? newUb : newLb;
+      bool goodScale = scaleCutIntegral(newElements,newIndices,numberElements,
+					rhs,maxdelta);
+      if (false) {
+	// relax rhs a tiny bit
+	rhs += (newLb<-1.0e30) ? 1.0e-7 : -1.0e-7;
+	//if (numberCoefficients>=10||true) {
+	//rhs  += 1.0e-7*sumCoefficients+1.0e-8*numberCoefficients;
+	//}
+      }
+      if (goodScale) {
+	if (newLb<-1.0e30) 
+	  newUb = rhs;
+	else
+	  newLb = rhs;
+      } else {
+	// scale
+	double rhs = fabs((newLb<-1.0e30) ? newUb : newLb);
+	double largest = 1.0e-100;
+	double smallest = 1.0e100;
+	for (int i=0;i<numberElements;i++) {
+	  double value = fabs(newElements[i]);
+	  largest = CoinMax(largest,value);
+	  smallest = CoinMin(smallest,value);
+	}
+	if (largest>smallest*1.0e8||rhs>smallest*1.0e8) {
+	  //printf ("badly scaled cut - rhs %g els %g -> %g - type %d\n",rhs,smallest,largest,
+	  //	  typeCut);
+	  //if (rhs>1.0e5 && smallest < 1.0e-4)
+	  if (typeCut==61) // CglTwoMir
+	    return false;
+	}
+      }
+      newCutPtr->setRow(numberElements,newIndices,newElements);
+    } else {
+      newCutPtr->setRow(vector);
+    }
+    newCutPtr->setLb(newLb);
+    newCutPtr->setUb(newUb);
+    newCutPtr->setGloballyValid(rc.globallyValid());
+    newCutPtr->setEffectiveness(rc.effectiveness());
+    rowCutPtrs_.push_back(newCutPtr);
+  }
+  return notDuplicate;
+}
 
-/* vi: softtabstop=2 shiftwidth=2 expandtab tabstop=2
-*/

@@ -148,6 +148,12 @@ public:
   /** \brief Insert a row cut unless it is a duplicate - cut may get sorted.
        Duplicate is defined as CoinRelFltEq says same*/
   void insertIfNotDuplicate(OsiRowCut &rc, CoinRelFltEq treatAsSame);
+  /** \brief Insert a row cut unless it is a duplicate - cut may get sorted.
+       Duplicate is defined as CoinAbsFltEq says same
+       returns true if inserted.
+       Also tries to "integerize" cut and checks for accuracy */
+  bool insertIfNotDuplicateAndClean(OsiRowCut &rc,
+				    int cutType, CoinAbsFltEq treatAsSame = CoinAbsFltEq(1.0e-12));
   /** \brief Insert a column cut */
   inline void insert(const OsiColCut &cc);
 

@@ -4,8 +4,6 @@
 #include <cmath>
 #include "OsiFeatures.hpp"
 
-using namespace std;
-
 int OsiFeatures::n = OFCount;
 
 bool dbl_equal( const double v1, const double v2 ) {
@@ -22,10 +20,10 @@ bool intVal( const double val ) {
 
 #if __cplusplus <= 199711L  // no C++ 11
 #include <set>
-typedef set<double> uSetD;
+typedef std::set<double> uSetD;
 #else
 #include <unordered_set>
-typedef unordered_set<double> uSetD;
+typedef std::unordered_set<double> uSetD;
 #endif
 
 // store at most this number of different values
@@ -34,10 +32,10 @@ typedef unordered_set<double> uSetD;
 class Summary {
     public:
         Summary() :
-            minV( numeric_limits<double>::max() ),
-            maxV( numeric_limits<double>::min() ),
-            minAbsV( numeric_limits<double>::max() ),
-            maxAbsV( numeric_limits<double>::min() ),
+            minV( std::numeric_limits<double>::max() ),
+            maxV( std::numeric_limits<double>::min() ),
+            minAbsV( std::numeric_limits<double>::max() ),
+            maxAbsV(std:: numeric_limits<double>::min() ),
             avg(0.0),
             ratioLSA(0.0),
             percIntEl(0.0),
@@ -53,12 +51,12 @@ class Summary {
     { }
 
         void add( double val ) {
-            this->minV = min(val, minV);
-            this->maxV = max(val, maxV);
-            double absv = abs(val);
+            this->minV = std::min(val, minV);
+            this->maxV = std::max(val, maxV);
+            double absv = std::abs(val);
             if (absv >= 1e-16) {
-                this->minAbsV = min(absv, minAbsV);
-                this->maxAbsV = max(absv, maxAbsV);
+                this->minAbsV = std::min(absv, minAbsV);
+                this->maxAbsV = std::max(absv, maxAbsV);
             }
             this->summV += val;
             if (intVal(val)) {

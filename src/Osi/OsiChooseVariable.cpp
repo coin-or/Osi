@@ -16,7 +16,6 @@
 #include "CoinSort.hpp"
 #include "CoinFinite.hpp"
 #include "OsiChooseVariable.hpp"
-using namespace std;
 
 OsiChooseVariable::OsiChooseVariable()
   : goodObjectiveValue_(COIN_DBL_MAX)

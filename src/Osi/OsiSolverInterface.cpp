@@ -383,7 +383,7 @@ void OsiSolverInterface::addCols(const int numcols, const CoinBigIndex *columnSt
 // Add columns from a build object
 void OsiSolverInterface::addCols(const CoinBuild &buildObject)
 {
-  assert(buildObject.type() == 1); // check correct
+  assert(buildObject.type() == CoinBuild::Type::Column); // check correct
   int number = buildObject.numberColumns();
   if (number) {
     CoinPackedVectorBase **columns = new CoinPackedVectorBase *[number];

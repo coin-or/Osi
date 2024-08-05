@@ -123,7 +123,7 @@ static int solve(const OsiSolverInterface * model,PBCS & pbcs, OrdInt & sol)
   // objective not too important
   double maximumObjElement = 0.0 ;
   for (i = 0 ; i < numberColumns ; i++) 
-    maximumObjElement = CoinMax(maximumObjElement,fabs(objective[i])) ;
+    maximumObjElement = std::max(maximumObjElement,fabs(objective[i])) ;
   int objGood = 0 ;
   double objMultiplier = 2520.0 ;
   bool good=true;
@@ -162,11 +162,11 @@ static int solve(const OsiSolverInterface * model,PBCS & pbcs, OrdInt & sol)
   // now real stuff
   for (i=0;i<numberRows;i++) {
     if (rowLower[i]!=-infinity)
-      maximumElement = CoinMax(maximumElement,fabs(rowLower[i])) ;
+      maximumElement = std::max(maximumElement,fabs(rowLower[i])) ;
     if (rowUpper[i]!=infinity)
-      maximumElement = CoinMax(maximumElement,fabs(rowUpper[i])) ;
+      maximumElement = std::max(maximumElement,fabs(rowUpper[i])) ;
     for (CoinBigIndex j=rowStart[i];j<rowStart[i]+rowLength[i];j++) 
-      maximumElement = CoinMax(maximumElement,fabs(elementByRow[j])) ;
+      maximumElement = std::max(maximumElement,fabs(elementByRow[j])) ;
   }
   assert (maximumElement);
   int elGood = 0 ;

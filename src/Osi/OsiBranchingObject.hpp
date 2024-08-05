@@ -492,7 +492,7 @@ public:
   const int *columnLength_;
   /// Row indices
   const int *row_;
-  /** Useful region of length CoinMax(numberColumns,2*numberRows)
+  /** Useful region of length std::max(numberColumns,2*numberRows)
       This is allocated and deleted before OsiObject::infeasibility
       It is zeroed on entry and should be so on exit
       It only exists if defaultDual_>=0.0

@@ -3776,8 +3776,8 @@ void OsiMskSolverInterface::setRowPrice(const double * rs)
     {    
       redcost[j] = getObjCoefficients()[j]-redcost[j];
     
-      tslx[j] = CoinMax(0.0,redcost[j]);
-      tsux[j] = CoinMax(0.0,-redcost[j]);    
+      tslx[j] = std::max(0.0,redcost[j]);
+      tsux[j] = std::max(0.0,-redcost[j]);    
     }
 
     if( definedSolution( MSK_SOL_BAS ) == true )
@@ -3809,8 +3809,8 @@ void OsiMskSolverInterface::setRowPrice(const double * rs)
         checkMSKerror(err,"MSK_getsucslice","setRowPrice");
 #endif
 
-        tslc[i] = CoinMax(0.0,rowsol_[i]);
-        tsuc[i] = CoinMax(0.0,-rowsol_[i]);
+        tslc[i] = std::max(0.0,rowsol_[i]);
+        tsuc[i] = std::max(0.0,-rowsol_[i]);
       }
 
       err = MSK_getsolution(getMutableLpPtr(),
@@ -3852,8 +3852,8 @@ void OsiMskSolverInterface::setRowPrice(const double * rs)
     {
       for( int i = 0; i < nr; ++i )
       {    
-        tslc[i] = CoinMax(0.0,rowsol_[i]);
-        tsuc[i] = CoinMax(0.0,-rowsol_[i]);
+        tslc[i] = std::max(0.0,rowsol_[i]);
+        tsuc[i] = std::max(0.0,-rowsol_[i]);
         tskc[i] = MSK_SK_UNK;
       }
 

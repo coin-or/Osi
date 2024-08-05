@@ -503,8 +503,8 @@ double
 OsiSimpleInteger::infeasibility(const OsiBranchingInformation *info, int &whichWay) const
 {
   double value = info->solution_[columnNumber_];
-  value = CoinMax(value, info->lower_[columnNumber_]);
-  value = CoinMin(value, info->upper_[columnNumber_]);
+  value = std::max(value, info->lower_[columnNumber_]);
+  value = std::min(value, info->upper_[columnNumber_]);
   double nearest = floor(value + (1.0 - 0.5));
   if (nearest > value) {
     whichWay = 1;
@@ -558,21 +558,21 @@ OsiSimpleInteger::infeasibility(const OsiBranchingInformation *info, int &whichW
       // if up makes infeasible then make at least default
       double newUp = activity[iRow] + upMovement * el2;
       if (newUp > upper[iRow] + tolerance || newUp < lower[iRow] - tolerance)
-        u = CoinMax(u, info->defaultDual_);
+        u = std::max(u, info->defaultDual_);
       upEstimate += u * upMovement;
       // if down makes infeasible then make at least default
       double newDown = activity[iRow] - downMovement * el2;
       if (newDown > upper[iRow] + tolerance || newDown < lower[iRow] - tolerance)
-        d = CoinMax(d, info->defaultDual_);
+        d = std::max(d, info->defaultDual_);
       downEstimate += d * downMovement;
     }
     if (downEstimate >= upEstimate) {
-      infeasibility_ = CoinMax(1.0e-12, upEstimate);
-      otherInfeasibility_ = CoinMax(1.0e-12, downEstimate);
+      infeasibility_ = std::max(1.0e-12, upEstimate);
+      otherInfeasibility_ = std::max(1.0e-12, downEstimate);
       whichWay = 1;
     } else {
-      infeasibility_ = CoinMax(1.0e-12, downEstimate);
-      otherInfeasibility_ = CoinMax(1.0e-12, upEstimate);
+      infeasibility_ = std::max(1.0e-12, downEstimate);
+      otherInfeasibility_ = std::max(1.0e-12, upEstimate);
       whichWay = 0;
     }
     returnValue = infeasibility_;
@@ -593,8 +593,8 @@ OsiSimpleInteger::feasibleRegion(OsiSolverInterface *solver,
   const OsiBranchingInformation *info) const
 {
   double value = info->solution_[columnNumber_];
-  double newValue = CoinMax(value, info->lower_[columnNumber_]);
-  newValue = CoinMin(newValue, info->upper_[columnNumber_]);
+  double newValue = std::max(value, info->lower_[columnNumber_]);
+  newValue = std::min(newValue, info->upper_[columnNumber_]);
   newValue = floor(newValue + 0.5);
   solver->setColLower(columnNumber_, newValue);
   solver->setColUpper(columnNumber_, newValue);
@@ -613,8 +613,8 @@ OsiBranchingObject *
 OsiSimpleInteger::createBranch(OsiSolverInterface *solver, const OsiBranchingInformation *info, int way) const
 {
   double value = info->solution_[columnNumber_];
-  value = CoinMax(value, info->lower_[columnNumber_]);
-  value = CoinMin(value, info->upper_[columnNumber_]);
+  value = std::max(value, info->lower_[columnNumber_]);
+  value = std::min(value, info->upper_[columnNumber_]);
   assert(info->upper_[columnNumber_] > info->lower_[columnNumber_]);
 #ifndef NDEBUG
   double nearest = floor(value + 0.5);
@@ -853,7 +853,7 @@ OsiSOS::OsiSOS(const OsiSolverInterface *, int numberMembers,
     double last = -COIN_DBL_MAX;
     int i;
     for (i = 0; i < numberMembers_; i++) {
-      double possible = CoinMax(last + 1.0e-10, weights_[i]);
+      double possible = std::max(last + 1.0e-10, weights_[i]);
       weights_[i] = possible;
       last = possible;
     }
@@ -946,7 +946,7 @@ OsiSOS::infeasibility(const OsiBranchingInformation *info, int &whichWay) const
       throw CoinError("Weights too close together in SOS", "infeasibility", "OsiSOS");
     lastWeight = weights_[j];
     if (upper[iColumn]) {
-      double value = CoinMax(0.0, solution[iColumn]);
+      double value = std::max(0.0, solution[iColumn]);
       if (value > integerTolerance) {
         // Possibly due to scaling a fixed variable might slip through
 #ifdef COIN_DEVELOP
@@ -1111,7 +1111,7 @@ OsiSOS::infeasibility(const OsiBranchingInformation *info, int &whichWay) const
           // if makes infeasible then make at least default
           double newValue = activity[iRow] + movement;
           if (newValue > upper[iRow] + primalTolerance || newValue < lower[iRow] - primalTolerance)
-            thisEstimate = CoinMax(thisEstimate, info->defaultDual_);
+            thisEstimate = std::max(thisEstimate, info->defaultDual_);
           estimate += thisEstimate;
         }
         for (j = 0; j < n2; j++) {
@@ -1131,7 +1131,7 @@ OsiSOS::infeasibility(const OsiBranchingInformation *info, int &whichWay) const
             // if makes infeasible then make at least default
             double newValue = activity[iRow] + movement;
             if (newValue > upper[iRow] + primalTolerance || newValue < lower[iRow] - primalTolerance)
-              thisEstimate = CoinMax(thisEstimate, info->defaultDual_);
+              thisEstimate = std::max(thisEstimate, info->defaultDual_);
             estimate += thisEstimate;
           }
         }
@@ -1141,12 +1141,12 @@ OsiSOS::infeasibility(const OsiBranchingInformation *info, int &whichWay) const
       double downEstimate = fakeSolution[0];
       double upEstimate = fakeSolution[1];
       if (downEstimate >= upEstimate) {
-        infeasibility_ = CoinMax(1.0e-12, upEstimate);
-        otherInfeasibility_ = CoinMax(1.0e-12, downEstimate);
+        infeasibility_ = std::max(1.0e-12, upEstimate);
+        otherInfeasibility_ = std::max(1.0e-12, downEstimate);
         whichWay = 1;
       } else {
-        infeasibility_ = CoinMax(1.0e-12, downEstimate);
-        otherInfeasibility_ = CoinMax(1.0e-12, upEstimate);
+        infeasibility_ = std::max(1.0e-12, downEstimate);
+        otherInfeasibility_ = std::max(1.0e-12, upEstimate);
         whichWay = 0;
       }
       whichWay_ = static_cast< short >(whichWay);
@@ -1176,7 +1176,7 @@ OsiSOS::feasibleRegion(OsiSolverInterface *solver, const OsiBranchingInformation
   if (sosType_ == 1) {
     for (j = 0; j < numberMembers_; j++) {
       int iColumn = members_[j];
-      double value = CoinMax(0.0, solution[iColumn]);
+      double value = std::max(0.0, solution[iColumn]);
       if (value > sum && upper[iColumn]) {
         firstNonZero = j;
         sum = value;
@@ -1188,8 +1188,8 @@ OsiSOS::feasibleRegion(OsiSolverInterface *solver, const OsiBranchingInformation
     for (j = 1; j < numberMembers_; j++) {
       int iColumn = members_[j];
       int jColumn = members_[j - 1];
-      double value1 = CoinMax(0.0, solution[iColumn]);
-      double value0 = CoinMax(0.0, solution[jColumn]);
+      double value1 = std::max(0.0, solution[iColumn]);
+      double value0 = std::max(0.0, solution[jColumn]);
       double value = value0 + value1;
       if (value > sum) {
         if (upper[iColumn] || upper[jColumn]) {
@@ -1203,7 +1203,7 @@ OsiSOS::feasibleRegion(OsiSolverInterface *solver, const OsiBranchingInformation
   for (j = 0; j < numberMembers_; j++) {
     if (j < firstNonZero || j > lastNonZero) {
       int iColumn = members_[j];
-      double value = CoinMax(0.0, solution[iColumn]);
+      double value = std::max(0.0, solution[iColumn]);
       movement += value;
       solver->setColUpper(iColumn, 0.0);
     }
@@ -1267,7 +1267,7 @@ OsiSOS::createBranch(OsiSolverInterface *solver, const OsiBranchingInformation *
   for (j = 0; j < numberMembers_; j++) {
     int iColumn = members_[j];
     if (upper[iColumn]) {
-      double value = CoinMax(0.0, solution[iColumn]);
+      double value = std::max(0.0, solution[iColumn]);
       sum += value;
       if (firstNonFixed < 0)
         firstNonFixed = j;
@@ -1396,8 +1396,8 @@ void OsiSOSBranchingObject::print(const OsiSolverInterface *solver)
   for (i = 0; i < numberMembers; i++) {
     double bound = upper[which[i]];
     if (bound) {
-      first = CoinMin(first, i);
-      last = CoinMax(last, i);
+      first = std::min(first, i);
+      last = std::max(last, i);
     }
   }
   // *** for way - up means fix all those in down section
@@ -1486,7 +1486,7 @@ OsiLotsize::OsiLotsize(const OsiSolverInterface *,
     // and for safety
     bound_[numberRanges_] = bound_[numberRanges_ - 1];
     for (i = 1; i < numberRanges_; i++) {
-      largestGap_ = CoinMax(largestGap_, bound_[i] - bound_[i - 1]);
+      largestGap_ = std::max(largestGap_, bound_[i] - bound_[i - 1]);
     }
   } else {
     bound_ = new double[2 * numberPoints + 2];
@@ -1505,7 +1505,7 @@ OsiLotsize::OsiLotsize(const OsiSolverInterface *,
         hi = thisHi;
       } else {
         //overlap
-        hi = CoinMax(hi, thisHi);
+        hi = std::max(hi, thisHi);
         bound_[2 * numberRanges_ - 1] = hi;
       }
     }
@@ -1513,7 +1513,7 @@ OsiLotsize::OsiLotsize(const OsiSolverInterface *,
     bound_[2 * numberRanges_] = bound_[2 * numberRanges_ - 2];
     bound_[2 * numberRanges_ + 1] = bound_[2 * numberRanges_ - 1];
     for (i = 1; i < numberRanges_; i++) {
-      largestGap_ = CoinMax(largestGap_, bound_[2 * i] - bound_[2 * i - 1]);
+      largestGap_ = std::max(largestGap_, bound_[2 * i] - bound_[2 * i - 1]);
     }
   }
   delete[] sort;
@@ -1719,8 +1719,8 @@ OsiLotsize::infeasibility(const OsiBranchingInformation *info, int &preferredWay
   const double *lower = info->lower_;
   const double *upper = info->upper_;
   double value = solution[columnNumber_];
-  value = CoinMax(value, lower[columnNumber_]);
-  value = CoinMin(value, upper[columnNumber_]);
+  value = std::max(value, lower[columnNumber_]);
+  value = std::min(value, upper[columnNumber_]);
   double integerTolerance = info->integerTolerance_;
   /*printf("%d %g %g %g %g\n",columnNumber_,value,lower[columnNumber_],
     solution[columnNumber_],upper[columnNumber_]);*/
@@ -1783,8 +1783,8 @@ OsiLotsize::feasibleRegion(OsiSolverInterface *solver, const OsiBranchingInforma
   const double *upper = solver->getColUpper();
   const double *solution = info->solution_;
   double value = solution[columnNumber_];
-  value = CoinMax(value, lower[columnNumber_]);
-  value = CoinMin(value, upper[columnNumber_]);
+  value = std::max(value, lower[columnNumber_]);
+  value = std::min(value, upper[columnNumber_]);
   findRange(value, info->integerTolerance_);
   double nearest;
   if (rangeType_ == 1) {
@@ -1819,8 +1819,8 @@ OsiLotsize::createBranch(OsiSolverInterface *solver, const OsiBranchingInformati
   const double *lower = solver->getColLower();
   const double *upper = solver->getColUpper();
   double value = solution[columnNumber_];
-  value = CoinMax(value, lower[columnNumber_]);
-  value = CoinMin(value, upper[columnNumber_]);
+  value = std::max(value, lower[columnNumber_]);
+  value = std::min(value, upper[columnNumber_]);
   assert(!findRange(value, info->integerTolerance_));
   return new OsiLotsizeBranchingObject(solver, this, way,
     value);

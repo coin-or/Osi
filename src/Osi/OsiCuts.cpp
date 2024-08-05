@@ -521,8 +521,8 @@ bool OsiCuts::insertIfNotDuplicateAndClean(OsiRowCut &rc,
 	double smallest = 1.0e100;
 	for (int i=0;i<numberElements;i++) {
 	  double value = fabs(newElements[i]);
-	  largest = CoinMax(largest,value);
-	  smallest = CoinMin(smallest,value);
+	  largest = std::max(largest,value);
+	  smallest = std::min(smallest,value);
 	}
 	if (largest>smallest*1.0e8||rhs>smallest*1.0e8) {
 	  //printf ("badly scaled cut - rhs %g els %g -> %g - type %d\n",rhs,smallest,largest,

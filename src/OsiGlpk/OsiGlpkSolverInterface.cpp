@@ -2737,7 +2737,7 @@ void OGSI::loadProblem(const CoinPackedMatrix &matrix,
 
   if (colub_parm == 0 || rowub_parm == 0) {
     if (colub_parm == 0 && rowub_parm == 0) {
-      j = CoinMax(m, n);
+      j = std::max(m, n);
     } else if (colub_parm == 0) {
       j = n;
     } else {

@@ -125,7 +125,7 @@ int OsiBabSolver::solution(double &solutionValue,
   //       this,bestSolution_,bestObjectiveValue_);
   if (bestObjectiveValue_ < solutionValue && bestSolution_) {
     // new solution
-    memcpy(betterSolution, bestSolution_, CoinMin(numberColumns, sizeSolution_) * sizeof(double));
+    memcpy(betterSolution, bestSolution_, std::min(numberColumns, sizeSolution_) * sizeof(double));
     if (sizeSolution_ < numberColumns)
       CoinZeroN(betterSolution + sizeSolution_, numberColumns - sizeSolution_);
     solutionValue = bestObjectiveValue_;
@@ -156,10 +156,10 @@ void OsiBabSolver::setSolution(const double *solution, int numberColumns, double
   assert(solver_);
   // just in case size has changed
   delete[] bestSolution_;
-  sizeSolution_ = CoinMin(solver_->getNumCols(), numberColumns);
+  sizeSolution_ = std::min(solver_->getNumCols(), numberColumns);
   bestSolution_ = new double[sizeSolution_];
   CoinZeroN(bestSolution_, sizeSolution_);
-  CoinMemcpyN(solution, CoinMin(sizeSolution_, numberColumns), bestSolution_);
+  CoinMemcpyN(solution, std::min(sizeSolution_, numberColumns), bestSolution_);
   bestObjectiveValue_ = objectiveValue * solver_->getObjSense();
 }
 // Get objective  (well mip bound)

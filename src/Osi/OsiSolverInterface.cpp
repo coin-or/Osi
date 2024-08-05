@@ -2425,12 +2425,12 @@ OsiSolverInterface::tightPrimalBounds(double * newRowLower,
 	  if (upper>lower) {
 	    double lowerNew = lower;
 	    double upperNew = upper;
-	    maxUp = CoinMax(maxUp,lower);
-	    maxDown = CoinMin(maxDown,upper);
+	    maxUp = std::max(maxUp,lower);
+	    maxDown = std::min(maxDown,upper);
 	    if (!infiniteLower && maxDown > lower + 1.0e-6) 
-	      lowerNew = CoinMax(maxDown-1.0e-6,lower);
+	      lowerNew = std::max(maxDown-1.0e-6,lower);
 	    if (!infiniteUpper && maxUp < upper - 1.0e-6)
-	      upperNew = CoinMin(maxUp+1.0e-6,upper);
+	      upperNew = std::min(maxUp+1.0e-6,upper);
 	    if (lowerNew > upperNew) {
 	      printf("BAD bounds of %g (%g) and %g (%g) on row %d\n",
 		     lowerNew,lower,upperNew,upper,iRow);
@@ -2624,9 +2624,9 @@ OsiSolverInterface::tightPrimalBounds(double * newRowLower,
 		  if (newBound<newUpper[iColumn]-1.0e-7) {
 		    if (isInteger(iColumn)) {
 		      newBound = ceil(newBound);
-		      newBound = CoinMax(newLower[iColumn],newBound);
+		      newBound = std::max(newLower[iColumn],newBound);
 		    } else {
-		      newBound = CoinMax(newLower[iColumn],newBound+1.0e-7);
+		      newBound = std::max(newLower[iColumn],newBound+1.0e-7);
 		    }
 		  }
 		  if (newBound<newUpper[iColumn]-1.0e-7) {
@@ -2665,9 +2665,9 @@ OsiSolverInterface::tightPrimalBounds(double * newRowLower,
 		  if (newBound>newLower[iColumn]+1.0e-7) {
 		    if (isInteger(iColumn)) {
 		      newBound = ceil(newBound);
-		      newBound = CoinMin(newUpper[iColumn],newBound);
+		      newBound = std::min(newUpper[iColumn],newBound);
 		    } else {
-		      newBound = CoinMin(newUpper[iColumn],newBound+1.0e-7);
+		      newBound = std::min(newUpper[iColumn],newBound+1.0e-7);
 		    }
 		  }
 		  if (newBound>newLower[iColumn]+1.0e-7) {
@@ -2736,12 +2736,12 @@ OsiSolverInterface::tightPrimalBounds(double * newRowLower,
               lower -= useTolerance;
             else
               lower = floor(lower + 0.5);
-            lower = CoinMax(columnLower[iColumn], lower);
+            lower = std::max(columnLower[iColumn], lower);
             if (fabs(upper - floor(upper + 0.5)) > 1.0e-9)
               upper += useTolerance;
             else
               upper = floor(upper + 0.5);
-            upper = CoinMin(columnUpper[iColumn], upper);
+            upper = std::min(columnUpper[iColumn], upper);
           }
         }
         newColumnLower[iColumn] = lower;
@@ -2776,7 +2776,7 @@ OsiSolverInterface::tightPrimalBounds(double * newRowLower,
                 numberInteger++;
                 //whichInteger=iColumn;
               }
-              largest = CoinMax(largest, fabs(value));
+              largest = std::max(largest, fabs(value));
               if (value > 0.0) {
                 if (newUpper[iColumn] >= large) {
                   ++infiniteUpper;
@@ -3203,11 +3203,11 @@ void OsiSolverInterface::statistics(double &minimumNegative, double &maximumNega
     for (j = columnStart[i]; j < columnStart[i] + columnLength[i]; j++) {
       double value = elementByColumn[j];
       if (value > 0.0) {
-        minimumPositive = CoinMin(minimumPositive, value);
-        maximumPositive = CoinMax(maximumPositive, value);
+        minimumPositive = std::min(minimumPositive, value);
+        maximumPositive = std::max(maximumPositive, value);
       } else if (value < 0.0) {
-        minimumNegative = CoinMax(minimumNegative, value);
-        maximumNegative = CoinMin(maximumNegative, value);
+        minimumNegative = std::max(minimumNegative, value);
+        maximumNegative = std::min(maximumNegative, value);
       }
     }
   }
@@ -3287,9 +3287,9 @@ void OsiSolverInterface::statistics(double &minimumNegative, double &maximumNega
   printf("\n");
   const double *rowLower = getRowLower();
   const double *rowUpper = getRowUpper();
-  int *number = new int[2 * CoinMax(numberRows, numberColumns)];
-  memset(number, 0, 2 * CoinMax(numberRows, numberColumns) * sizeof(int));
-  int *rowCount = number + CoinMax(numberRows, numberColumns);
+  int *number = new int[2 * std::max(numberRows, numberColumns)];
+  memset(number, 0, 2 * std::max(numberRows, numberColumns) * sizeof(int));
+  int *rowCount = number + std::max(numberRows, numberColumns);
   int numberObjSingletons = 0;
   /* cType
      0 0/inf, 1 0/up, 2 lo/inf, 3 lo/up, 4 free, 5 fix, 6 -inf/0, 7 -inf/up,

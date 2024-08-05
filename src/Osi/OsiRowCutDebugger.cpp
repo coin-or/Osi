@@ -30,7 +30,7 @@ int OsiRowCutDebugger::validateCuts(const OsiCuts &cs,
   int nbad = 0;
   int i;
   const double epsilon = 1.0e-8;
-  const int nRowCuts = CoinMin(cs.sizeRowCuts(), last);
+  const int nRowCuts = std::min(cs.sizeRowCuts(), last);
 
   for (i = first; i < nRowCuts; i++) {
 
@@ -51,7 +51,7 @@ int OsiRowCutDebugger::validateCuts(const OsiCuts &cs,
     }
     // is it violated
     if (sum > ub + epsilon || sum < lb - epsilon) {
-      double violation = CoinMax(sum - ub, lb - sum);
+      double violation = std::max(sum - ub, lb - sum);
       std::cout << "Cut " << i << " with " << n
                 << " coefficients, cuts off known solution by " << violation
                 << ", lo=" << lb << ", ub=" << ub << std::endl;
@@ -107,7 +107,7 @@ bool OsiRowCutDebugger::invalidCut(const OsiRowCut &rcut) const
   }
   // is it violated
   if (sum > ub + epsilon || sum < lb - epsilon) {
-    double violation = CoinMax(sum - ub, lb - sum);
+    double violation = std::max(sum - ub, lb - sum);
     std::cout << "Cut with " << n
               << " coefficients, cuts off known solutions by " << violation
               << ", lo=" << lb << ", ub=" << ub << std::endl;

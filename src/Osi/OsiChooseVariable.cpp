@@ -192,7 +192,7 @@ int OsiChooseVariable::setupList(OsiBranchingInformation *info, bool initialize)
   int checkIndex = 0;
   int bestPriority = COIN_INT_MAX;
   // pretend one strong even if none
-  int maximumStrong = numberStrong_ ? CoinMin(numberStrong_, numberObjects) : 1;
+  int maximumStrong = numberStrong_ ? std::min(numberStrong_, numberObjects) : 1;
   int putOther = numberObjects;
   int i;
   for (i = 0; i < maximumStrong; i++) {
@@ -683,7 +683,7 @@ int OsiChooseStrong::setupList(OsiBranchingInformation *info, bool initialize)
   double check = -COIN_DBL_MAX;
   int checkIndex = 0;
   int bestPriority = COIN_INT_MAX;
-  int maximumStrong = CoinMin(numberStrong_, numberObjects);
+  int maximumStrong = std::min(numberStrong_, numberObjects);
   int putOther = numberObjects;
   int i;
   for (i = 0; i < numberObjects; i++) {
@@ -711,7 +711,7 @@ int OsiChooseStrong::setupList(OsiBranchingInformation *info, bool initialize)
       sumPi *= 0.01;
       info->defaultDual_ = sumPi; // switch on
       int numberColumns = solver_->getNumCols();
-      int size = CoinMax(numberColumns, 2 * numberRows);
+      int size = std::max(numberColumns, 2 * numberRows);
       info->usefulRegion_ = new double[size];
       CoinZeroN(info->usefulRegion_, size);
       info->indexRegion_ = new int[size];
@@ -767,7 +767,7 @@ int OsiChooseStrong::setupList(OsiBranchingInformation *info, bool initialize)
             list_[--putOther] = iObject;
           }
         }
-        maximumStrong = CoinMin(maximumStrong, putOther);
+        maximumStrong = std::min(maximumStrong, putOther);
         bestPriority = priorityLevel;
         check = -COIN_DBL_MAX;
         checkIndex = 0;
@@ -790,7 +790,7 @@ int OsiChooseStrong::setupList(OsiBranchingInformation *info, bool initialize)
         } else {
           // use shadow prices always
         }
-        value = MAXMIN_CRITERION * CoinMin(upEstimate, downEstimate) + (1.0 - MAXMIN_CRITERION) * CoinMax(upEstimate, downEstimate);
+        value = MAXMIN_CRITERION * std::min(upEstimate, downEstimate) + (1.0 - MAXMIN_CRITERION) * std::max(upEstimate, downEstimate);
         if (value > check) {
           //add to list
           int iObject = list_[checkIndex];
@@ -803,7 +803,7 @@ int OsiChooseStrong::setupList(OsiBranchingInformation *info, bool initialize)
           useful_[checkIndex] = value;
           // find worst
           check = COIN_DBL_MAX;
-          maximumStrong = CoinMin(maximumStrong, putOther);
+          maximumStrong = std::min(maximumStrong, putOther);
           for (int j = 0; j < maximumStrong; j++) {
             if (list_[j] >= 0) {
               if (useful_[j] < check) {
@@ -820,14 +820,14 @@ int OsiChooseStrong::setupList(OsiBranchingInformation *info, bool initialize)
           // to end
           assert(list_[putOther - 1] < 0);
           list_[--putOther] = i;
-          maximumStrong = CoinMin(maximumStrong, putOther);
+          maximumStrong = std::min(maximumStrong, putOther);
         }
       } else {
         // worse priority
         // to end
         assert(list_[putOther - 1] < 0);
         list_[--putOther] = i;
-        maximumStrong = CoinMin(maximumStrong, putOther);
+        maximumStrong = std::min(maximumStrong, putOther);
       }
     }
   }
@@ -838,7 +838,7 @@ int OsiChooseStrong::setupList(OsiBranchingInformation *info, bool initialize)
   // Get list
   numberOnList_ = 0;
   if (feasible) {
-    for (i = 0; i < CoinMin(maximumStrong, putOther); i++) {
+    for (i = 0; i < std::min(maximumStrong, putOther); i++) {
       if (list_[i] >= 0) {
         list_[numberOnList_] = list_[i];
         useful_[numberOnList_++] = -useful_[i];
@@ -899,7 +899,7 @@ int OsiChooseStrong::chooseVariable(OsiSolverInterface *solver, OsiBranchingInfo
       pseudoCosts_.setNumberBeforeTrusted(numberBeforeTrusted);
     }
 
-    int numberLeft = CoinMin(numberStrong_ - numberStrongDone_, numberUnsatisfied_);
+    int numberLeft = std::min(numberStrong_ - numberStrongDone_, numberUnsatisfied_);
     int numberToDo = 0;
     resetResults(numberLeft);
     int returnCode = 0;
@@ -917,7 +917,7 @@ int OsiChooseStrong::chooseVariable(OsiSolverInterface *solver, OsiBranchingInfo
         const OsiObject *obj = solver->object(iObject);
         double upEstimate = (upTotalChange[iObject] * obj->upEstimate()) / upNumber[iObject];
         double downEstimate = (downTotalChange[iObject] * obj->downEstimate()) / downNumber[iObject];
-        double value = MAXMIN_CRITERION * CoinMin(upEstimate, downEstimate) + (1.0 - MAXMIN_CRITERION) * CoinMax(upEstimate, downEstimate);
+        double value = MAXMIN_CRITERION * std::min(upEstimate, downEstimate) + (1.0 - MAXMIN_CRITERION) * std::max(upEstimate, downEstimate);
         if (value > bestTrusted) {
           bestObjectIndex_ = iObject;
           bestWhichWay_ = upEstimate > downEstimate ? 0 : 1;
@@ -980,7 +980,7 @@ int OsiChooseStrong::chooseVariable(OsiSolverInterface *solver, OsiBranchingInfo
               delete branch;
             }
           }
-          double value = MAXMIN_CRITERION * CoinMin(upEstimate, downEstimate) + (1.0 - MAXMIN_CRITERION) * CoinMax(upEstimate, downEstimate);
+          double value = MAXMIN_CRITERION * std::min(upEstimate, downEstimate) + (1.0 - MAXMIN_CRITERION) * std::max(upEstimate, downEstimate);
           if (value > bestTrusted) {
             bestTrusted = value;
             bestObjectIndex_ = iObject;
@@ -1186,7 +1186,7 @@ int OsiHotInfo::updateInformation(const OsiSolverInterface *solver, const OsiBra
     status = 1; // infeasible
   // Could do something different if we can't trust
   double newObjectiveValue = solver->getObjSense() * solver->getObjValue();
-  changes_[iBranch] = CoinMax(0.0, newObjectiveValue - originalObjectiveValue_);
+  changes_[iBranch] = std::max(0.0, newObjectiveValue - originalObjectiveValue_);
   // we might have got here by primal
   if (choose->trustStrongForBound()) {
     if (!status && newObjectiveValue >= info->cutoff_) {

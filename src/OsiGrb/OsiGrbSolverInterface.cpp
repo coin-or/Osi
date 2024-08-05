@@ -1538,12 +1538,12 @@ std::vector< double * > OsiGrbSolverInterface::getDualRays(int maxNumRays,
 
   const int numcols = getNumCols();
   const int numrows = getNumRows();
-  int *index = new int[CoinMax(numcols, numrows)];
+  int *index = new int[std::max(numcols, numrows)];
   int i;
-  for (i = CoinMax(numcols, numrows) - 1; i >= 0; --i) {
+  for (i = std::max(numcols, numrows) - 1; i >= 0; --i) {
     index[i] = i;
   }
-  double *obj = new double[CoinMax(numcols, 2 * numrows)];
+  double *obj = new double[std::max(numcols, 2 * numrows)];
   CoinFillN(obj, numcols, 0.0);
   solver.setObjCoeffSet(index, index + numcols, obj);
 

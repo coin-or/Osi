@@ -219,12 +219,12 @@ void OsiSolverBranch::applyBounds(OsiSolverInterface &solver, int way) const
   for (i = start_[base]; i < start_[base + 1]; i++) {
     int iColumn = indices_[i];
     if (iColumn < numberColumns) {
-      double value = CoinMax(bound_[i], columnLower[iColumn]);
+      double value = std::max(bound_[i], columnLower[iColumn]);
       solver.setColLower(iColumn, value);
     } else {
       int iRow = iColumn - numberColumns;
       const double *rowLower = solver.getRowLower();
-      double value = CoinMax(bound_[i], rowLower[iRow]);
+      double value = std::max(bound_[i], rowLower[iRow]);
       solver.setRowLower(iRow, value);
     }
   }
@@ -232,12 +232,12 @@ void OsiSolverBranch::applyBounds(OsiSolverInterface &solver, int way) const
   for (i = start_[base + 1]; i < start_[base + 2]; i++) {
     int iColumn = indices_[i];
     if (iColumn < numberColumns) {
-      double value = CoinMin(bound_[i], columnUpper[iColumn]);
+      double value = std::min(bound_[i], columnUpper[iColumn]);
       solver.setColUpper(iColumn, value);
     } else {
       int iRow = iColumn - numberColumns;
       const double *rowUpper = solver.getRowUpper();
-      double value = CoinMin(bound_[i], rowUpper[iRow]);
+      double value = std::min(bound_[i], rowUpper[iRow]);
       solver.setRowUpper(iRow, value);
     }
   }
@@ -258,7 +258,7 @@ bool OsiSolverBranch::feasibleOneWay(const OsiSolverInterface &solver) const
     for (i = start_[base]; i < start_[base + 1]; i++) {
       int iColumn = indices_[i];
       if (iColumn < numberColumns) {
-        double value = CoinMax(bound_[i], columnLower[iColumn]);
+        double value = std::max(bound_[i], columnLower[iColumn]);
         if (columnSolution[iColumn] < value - primalTolerance) {
           feasible = false;
           break;
@@ -272,7 +272,7 @@ bool OsiSolverBranch::feasibleOneWay(const OsiSolverInterface &solver) const
     for (i = start_[base + 1]; i < start_[base + 2]; i++) {
       int iColumn = indices_[i];
       if (iColumn < numberColumns) {
-        double value = CoinMin(bound_[i], columnUpper[iColumn]);
+        double value = std::min(bound_[i], columnUpper[iColumn]);
         if (columnSolution[iColumn] > value + primalTolerance) {
           feasible = false;
           break;

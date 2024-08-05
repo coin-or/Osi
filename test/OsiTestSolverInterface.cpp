@@ -297,7 +297,7 @@ OsiTestSolverInterface::rowRimResize_(const int newSize)
       double* range = rowrange_;
       double* dual  = rowprice_;
       double* left  = lhs_;
-      maxNumrows_ = CoinMax(1000, (newSize * 5) / 4);
+      maxNumrows_ = std::max(1000, (newSize * 5) / 4);
       rowRimAllocator_();
       const int rownum = getNumRows();
       CoinDisjointCopyN(rub  , rownum, rowupper_);
@@ -329,7 +329,7 @@ OsiTestSolverInterface::colRimResize_(const int newSize)
       double* obj = objcoeffs_;
       double* sol = colsol_;
       double* rc  = rc_;
-      maxNumcols_ = CoinMax(1000, (newSize * 5) / 4);
+      maxNumcols_ = std::max(1000, (newSize * 5) / 4);
       colRimAllocator_();
       const int colnum = getNumCols();
       CoinDisjointCopyN(cub , colnum, colupper_);
@@ -1389,13 +1389,13 @@ OsiTestSolverInterface::applyColCut(const OsiColCut& cc)
    const double* lb_elem = cc.lbs().getElements();
    const int* lb_ind = cc.lbs().getIndices();
    for (i = cc.lbs().getNumElements() - 1; i >= 0; --i) {
-      collower_[lb_ind[i]] = CoinMax(collower_[lb_ind[i]], lb_elem[i]);
+      collower_[lb_ind[i]] = std::max(collower_[lb_ind[i]], lb_elem[i]);
    }
    
    const double* ub_elem = cc.ubs().getElements();
    const int* ub_ind = cc.ubs().getIndices();
    for (i = cc.ubs().getNumElements() - 1; i >= 0; --i) {
-      colupper_[ub_ind[i]] = CoinMin(colupper_[ub_ind[i]], ub_elem[i]);
+      colupper_[ub_ind[i]] = std::min(colupper_[ub_ind[i]], ub_elem[i]);
    }
 }
 

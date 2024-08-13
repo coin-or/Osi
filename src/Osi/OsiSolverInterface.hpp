@@ -695,7 +695,9 @@ public:
       recognise any modifications to the matrix).
     */
   virtual CoinPackedMatrix *getMutableMatrixByCol() const { return NULL; }
-
+  /// Modify a single element
+  virtual void modifyCoefficient(int row, int column, double newElement,
+				 bool keepZero = false);
   /// Get the solver's value for infinity
   virtual double getInfinity() const = 0;
   //@}

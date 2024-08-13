@@ -687,6 +687,14 @@ int OsiSolverInterface::addRows(CoinModel &modelObject)
     return -1;
   }
 }
+// modify one coefficient
+void OsiSolverInterface::modifyCoefficient(int row, int column,
+					   double newElement,
+					   bool keepZero)
+{
+  CoinPackedMatrix * matrix = getMutableMatrixByCol();
+  matrix->modifyCoefficient(row, column, newElement, keepZero);
+}
 /*  Strip off rows to get to this number of rows.
     If solver wants it can restore a copy of "base" (continuous) model here
 */

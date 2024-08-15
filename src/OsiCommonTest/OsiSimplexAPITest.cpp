@@ -520,7 +520,7 @@ void testReducedGradient(const OsiSolverInterface *si)
       break;
     }
     case OsiSimplex_isFree: {
-      OSIUNITTEST_ASSERT_ERROR(CoinAbs(testcbarj) <= dualTol,
+      OSIUNITTEST_ASSERT_ERROR(std::abs(testcbarj) <= dualTol,
         if (OsiUnitTest::verbosity >= 1)
             std::cout
           << "  cbar<" << j << "> = " << cbarj << " should be zero for a NBFR variable." << std::endl,
@@ -528,7 +528,7 @@ void testReducedGradient(const OsiSolverInterface *si)
       break;
     }
     case OsiSimplex_basic: {
-      OSIUNITTEST_ASSERT_ERROR(CoinAbs(testcbarj) <= dualTol,
+      OSIUNITTEST_ASSERT_ERROR(std::abs(testcbarj) <= dualTol,
         if (OsiUnitTest::verbosity >= 1)
             std::cout
           << "  cbar<" << j << "> = " << cbarj << " should be zero for a basic variable." << std::endl,

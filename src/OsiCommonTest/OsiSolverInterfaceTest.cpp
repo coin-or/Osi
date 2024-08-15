@@ -2427,7 +2427,7 @@ void testReducedCosts(const OsiSolverInterface *emptySi,
         break;
       }
       case CoinWarmStartBasis::isFree: {
-        if (CoinAbs(testcbarj) > dualTol) {
+        if (std::abs(testcbarj) > dualTol) {
           testcbarj_ok = false;
           if (OsiUnitTest::verbosity >= 1) {
             std::cout
@@ -2439,7 +2439,7 @@ void testReducedCosts(const OsiSolverInterface *emptySi,
         break;
       }
       case CoinWarmStartBasis::basic: {
-        if (CoinAbs(testcbarj) > dualTol) {
+        if (std::abs(testcbarj) > dualTol) {
           testcbarj_ok = false;
           if (OsiUnitTest::verbosity >= 1) {
             std::cout

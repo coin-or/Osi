@@ -1,4 +1,4 @@
-# Osi 0.108
+# Osi 0.108.11
 
 [![A COIN-OR Project](https://coin-or.github.io/coin-or-badge.png)](https://www.coin-or.org)
 
@@ -66,9 +66,9 @@ Code: [![DOI](https://zenodo.org/badge/173476455.svg)](https://zenodo.org/badge/
 
 ## CURRENT BUILD STATUS
 
-[![Windows Builds](https://github.com/coin-or/Osi/actions/workflows/windows-ci.yml/badge.svg?branch=stable/0.108)](https://github.com/coin-or/Osi/actions/workflows/windows-ci.yml?query=branch%3Astable/0.108)
+[![Windows Builds](https://github.com/coin-or/Osi/actions/workflows/windows-ci.yml/badge.svg?branch=releases/0.108.11)](https://github.com/coin-or/Osi/actions/workflows/windows-ci.yml?query=branch%3Areleases/0.108.11)
 
-[![Linux and MacOS Builds](https://github.com/coin-or/Osi/actions/workflows/linux-ci.yml/badge.svg?branch=stable/0.108)](https://github.com/coin-or/Osi/actions/workflows/linux-ci.yml?query=branch%3Astable/0.108)
+[![Linux and MacOS Builds](https://github.com/coin-or/Osi/actions/workflows/linux-ci.yml/badge.svg?branch=releases/0.108.11)](https://github.com/coin-or/Osi/actions/workflows/linux-ci.yml?query=branch%3Areleases/0.108.11)
 
 ## DOWNLOAD
 
@@ -159,7 +159,7 @@ following on the command line.
 ```
 wget https://raw.githubusercontent.com/coin-or/coinbrew/master/coinbrew
 chmod u+x coinbrew
-./coinbrew fetch Osi@0.108
+./coinbrew fetch Osi@0.108.11
 ./coinbrew build Osi
 ```
 For more detailed instructions on coinbrew, see https://coin-or.github.io/coinbrew.
@@ -182,10 +182,10 @@ make install
 
 If you have `Doxygen` available, you can build a HTML documentation by typing
 
-`make doxygen-docs` 
+`make doxydoc` 
 
 in the build directory. If Osi was built via `coinbrew`, then the build
-directory will be `./build/Osi/0.108` by default. The doxygen documentation main file
+directory will be `./build/Osi/0.108.11` by default. The doxygen documentation main file
 is found at `<build-dir>/doxydoc/html/index.html`.
 
 If you don't have `doxygen` installed locally, you can use also find the

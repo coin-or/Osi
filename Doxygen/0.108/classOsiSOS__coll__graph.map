@@ -1,5 +1,0 @@
-<map id="OsiSOS" name="OsiSOS">
-<area shape="rect" id="node1" title="Define Special Ordered Sets of type 1 and 2." alt="" coords="13,155,84,181"/>
-<area shape="rect" id="node2" href="$classOsiObject2.html" title="Define a class to add a bit of complexity to OsiObject This assumes 2 way branching." alt="" coords="5,80,92,107"/>
-<area shape="rect" id="node3" href="$classOsiObject.html" title="Abstract base class for ‘objects’." alt="" coords="9,5,89,32"/>
-</map>

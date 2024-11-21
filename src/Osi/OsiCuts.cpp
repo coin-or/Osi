@@ -528,8 +528,10 @@ bool OsiCuts::insertIfNotDuplicateAndClean(OsiRowCut &rc,
 	  //printf ("badly scaled cut - rhs %g els %g -> %g - type %d\n",rhs,smallest,largest,
 	  //	  typeCut);
 	  //if (rhs>1.0e5 && smallest < 1.0e-4)
-	  if (typeCut==61) // CglTwoMir
+	  if (typeCut==61)  {// CglTwoMir
+	    delete newCutPtr;
 	    return false;
+	  }
 	}
       }
       newCutPtr->setRow(numberElements,newIndices,newElements);

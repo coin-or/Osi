@@ -255,14 +255,21 @@ OsiRowCut::operator=(const OsiRowCut &rhs)
 void OsiRowCut::print() const
 {
   int i;
+  char temp[80];
   std::cout << "Row cut has " << row_.getNumElements()
             << " elements";
+#define MORE_PREC
+#ifndef MORE_PREC
   if (lb_ < -1.0e20 && ub_ < 1.0e20)
     std::cout << " with upper rhs of " << ub_;
   else if (lb_ > -1.0e20 && ub_ > 1.0e20)
     std::cout << " with lower rhs of " << lb_;
   else
     std::cout << " !!! with lower, upper rhs of " << lb_ << " and " << ub_;
+#else
+  sprintf(temp," lower %.10g, upper %.10g",lb_,ub_);
+  std::cout << temp;
+#endif
   std::cout << std::endl;
   for (i = 0; i < row_.getNumElements(); i++) {
     int colIndx = row_.getIndices()[i];

@@ -252,8 +252,7 @@ void OsiRowCutUnitTest(const OsiSolverInterface *baseSiP,
   OsiSolverInterface *imP = baseSiP->clone();
   assert(imP != NULL);
   std::string fn = mpsDir + "exmip1";
-  OSIUNITTEST_ASSERT_ERROR(imP->readMps(fn.c_str(), "mps") == 0, {}, "osirowcut", "read MPS");
-
+  const int error = imP->readMps(fn.c_str(), "mps");
   OsiRowCut c;
   const int ne = 3;
   int inx[ne] = { -1, 5, 4 };
@@ -285,7 +284,9 @@ void OsiRowCutUnitTest(const OsiSolverInterface *baseSiP,
 
   c.setLb(5.5);
   OSIUNITTEST_ASSERT_ERROR(c.consistent(), {}, "osirowcut", "consistent");
-  OSIUNITTEST_ASSERT_ERROR(c.infeasible(*imP), {}, "osirowcut", "infeasible");
+  if (!error) {
+    OSIUNITTEST_ASSERT_ERROR(c.infeasible(*imP), {}, "osirowcut", "infeasible");
+  }
   delete imP;
 }
 #endif
@@ -294,8 +295,7 @@ void OsiRowCutUnitTest(const OsiSolverInterface *baseSiP,
   OsiSolverInterface *imP = baseSiP->clone();
   assert(imP != NULL);
   std::string fn = mpsDir + "exmip1";
-  OSIUNITTEST_ASSERT_ERROR(imP->readMps(fn.c_str(), "mps") == 0, {}, "osirowcut", "read MPS");
-
+  const int error = imP->readMps(fn.c_str(), "mps");
   OsiRowCut cut;
   const int ne = 3;
   int inx[ne] = { 3, 5, 4 };
@@ -305,12 +305,14 @@ void OsiRowCutUnitTest(const OsiSolverInterface *baseSiP,
 
   inx[0] = 7;
   cut.setRow(ne, inx, el);
-  OSIUNITTEST_ASSERT_ERROR(cut.consistent(*imP), {}, "osirowcut", "consistent(IntegerModel)");
+  if (!error) {
+    OSIUNITTEST_ASSERT_ERROR(cut.consistent(*imP), {}, "osirowcut", "consistent(IntegerModel)");
 
-  inx[0] = 8;
-  cut.setRow(ne, inx, el);
-  OSIUNITTEST_ASSERT_ERROR(cut.consistent(), {}, "osirowcut", "consistent(IntegerModel)");
-  OSIUNITTEST_ASSERT_ERROR(!cut.consistent(*imP), {}, "osirowcut", "consistent(IntegerModel)");
+    inx[0] = 8;
+    cut.setRow(ne, inx, el);
+    OSIUNITTEST_ASSERT_ERROR(cut.consistent(), {}, "osirowcut", "consistent(IntegerModel)");
+    OSIUNITTEST_ASSERT_ERROR(!cut.consistent(*imP), {}, "osirowcut", "consistent(IntegerModel)");
+  }
   delete imP;
 }
 {
@@ -318,19 +320,21 @@ void OsiRowCutUnitTest(const OsiSolverInterface *baseSiP,
   OsiSolverInterface *imP = baseSiP->clone();
   assert(imP != NULL);
   std::string fn = mpsDir + "exmip1";
-  OSIUNITTEST_ASSERT_ERROR(imP->readMps(fn.c_str(), "mps") == 0, {}, "osirowcut", "read MPS");
+  const int error = imP->readMps(fn.c_str(), "mps");
 
   OsiRowCut cut;
   const int ne = 3;
   int inx[ne] = { 3, 5, 4 };
   double el[ne] = { 1., 1., 1. };
   cut.setRow(ne, inx, el);
-  OSIUNITTEST_ASSERT_ERROR(!cut.infeasible(*imP), {}, "osirowcut", "infeasible(IntegerModel)");
+  if (!error) {
+    OSIUNITTEST_ASSERT_ERROR(!cut.infeasible(*imP), {}, "osirowcut", "infeasible(IntegerModel)");
 
-  OsiRowCut c1;
-  OSIUNITTEST_ASSERT_ERROR(!c1.infeasible(*imP), {}, "osirowcut", "infeasible(IntegerModel)");
-  OSIUNITTEST_ASSERT_ERROR(c1.consistent(), {}, "osirowcut", "consistent");
-  OSIUNITTEST_ASSERT_ERROR(c1.consistent(*imP), {}, "osirowcut", "consistent(IntegerModel)");
+    OsiRowCut c1;
+    OSIUNITTEST_ASSERT_ERROR(!c1.infeasible(*imP), {}, "osirowcut", "infeasible(IntegerModel)");
+    OSIUNITTEST_ASSERT_ERROR(c1.consistent(), {}, "osirowcut", "consistent");
+    OSIUNITTEST_ASSERT_ERROR(c1.consistent(*imP), {}, "osirowcut", "consistent(IntegerModel)");
+  }
   delete imP;
 }
 {

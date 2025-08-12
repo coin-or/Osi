@@ -979,7 +979,7 @@ const CoinPresolveAction *OsiPresolve::presolve(CoinPresolveMatrix *prob)
       paction_ = dupcol_action::presolve(prob, paction_);
       possibleSkip;
 #ifdef CBC_PREPROCESS_EXPERIMENT
-      paction_ = twoxtwo_action::presolve(prob, paction_);
+      //paction_ = twoxtwo_action::presolve(prob, paction_);
 #endif
 #if PRESOLVE_DEBUG > 0
       if (monitor)

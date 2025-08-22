@@ -912,9 +912,14 @@ OsiSolverInterface::getAuxiliaryInfo() const
 
 void OsiSolverInterface::activateRowCutDebugger(const char *modelName)
 {
+#ifdef CHECK_KNOWN_SOLUTION
   delete rowCutDebugger_;
   rowCutDebugger_ = NULL; // so won't use in new
   rowCutDebugger_ = new OsiRowCutDebugger(*this, modelName);
+#else
+  printf("To activate OsiRowCutDebugger - code must be compiled with CHECK_KNOWN_SOLUTION\n");
+  exit(77);
+#endif
 }
 /* Activate debugger using full solution array.
    Only integer values need to be correct.

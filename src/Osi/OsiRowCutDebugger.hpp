@@ -4,7 +4,7 @@
 
 #ifndef OsiRowCutDebugger_H
 #define OsiRowCutDebugger_H
-
+#define CHECK_KNOWN_SOLUTION
 /*! \file OsiRowCutDebugger.hpp
 
   \brief Provides a facility to validate cut constraints to ensure that they

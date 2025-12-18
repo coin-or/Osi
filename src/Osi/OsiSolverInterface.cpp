@@ -186,9 +186,11 @@ bool OsiSolverInterface::isFreeBinary(int colIndex) const
     return false;
 }
 /*  Return array of column length
-    0 - continuous
-    1 - binary (may get fixed later)
-    2 - general integer (may get fixed later)
+  0 - OsiColumnType::Continuous
+  1 - OsiColumnType::Binary (may get fixed later)
+  2 - OsiColumnType::GeneralInteger (may get fixed later)
+  3 - OsiColumnType::SemiContinuous (if supported)
+  4 - OsiColumnType::SemiInteger (if supported)
 */
 const char *
 OsiSolverInterface::getColType(bool refresh) const
@@ -202,11 +204,11 @@ OsiSolverInterface::getColType(bool refresh) const
     for (int i = 0; i < numCols; ++i) {
       if (!isContinuous(i)) {
         if ((cu[i] == 1 || cu[i] == 0) && (cl[i] == 0 || cl[i] == 1))
-          columnType_[i] = 1;
+          columnType_[i] = OsiColumnType::Binary;
         else
-          columnType_[i] = 2;
+          columnType_[i] = OsiColumnType::GeneralInteger;
       } else {
-        columnType_[i] = 0;
+        columnType_[i] = OsiColumnType::Continuous;
       }
     }
   }
@@ -351,7 +353,7 @@ void OsiSolverInterface::addCol(int numberElements,
 }
 //-----------------------------------------------------------------------------
 /* Add a set of columns (primal variables) to the problem.
-   
+
   Default implementation simply makes repeated calls to addCol().
 */
 void OsiSolverInterface::addCols(const int numcols,
@@ -535,7 +537,7 @@ void OsiSolverInterface::addRow(int numberElements,
 }
 //-----------------------------------------------------------------------------
 /* Add a set of rows (constraints) to the problem.
-   
+
   The default implementation simply makes repeated calls to addRow().
 */
 void OsiSolverInterface::addRows(const int numrows, const CoinBigIndex *rowStarts,
@@ -1221,7 +1223,7 @@ int OsiSolverInterface::readMps(const char *filename,
   return numberErrors;
 }
 /* Read a problem in GMPL format from the given filenames.
-   
+
   Will only work if glpk installed
 */
 #ifdef COINUTILS_HAS_GLPK
@@ -1265,7 +1267,7 @@ int OsiSolverInterface::readGMPL(const char *filename, const char *dataname)
 }
 #endif
 /* Read a problem in MPS format from the given full filename.
-   
+
 This uses CoinMpsIO::readMps() to read
 the MPS file and returns the number of errors encountered.
 It also may return an array of set information
@@ -1701,7 +1703,7 @@ int OsiSolverInterface::canDoSimplexInterface() const
 }
 
 /* Tells solver that calls to getBInv etc are about to take place.
-   Underlying code may need mutable as this may be called from 
+   Underlying code may need mutable as this may be called from
    CglCut:;generateCuts which is const.  If that is too horrific then
    each solver e.g. BCP or CBC will have to do something outside
    main loop.
@@ -1731,7 +1733,7 @@ bool OsiSolverInterface::basisIsAvailable() const
    1. OsiWarmStartBasis resize operation is implemented
    more efficiently and
    2. It is ensured that effects on the solver are the same
- 
+
    (lh 100818)
    1. CoinWarmStartBasis is the relevant resize, and John's right, it needs
       to be reworked. The problem is that when new columns or rows are added,
@@ -1748,8 +1750,8 @@ void OsiSolverInterface::getBasisStatus(int *, int *) const
 }
 
 /* Set the status of structural/artificial variables and
-   factorize, update solution etc 
-   
+   factorize, update solution etc
+
    NOTE  artificials are treated as +1 elements so for <= rhs
    artificial will be at lower bound if constraint is tight
 */
@@ -1760,7 +1762,7 @@ int OsiSolverInterface::setBasisStatus(const int *, const int *)
     "OsiSolverInterface");
 }
 
-/* Perform a pivot by substituting a colIn for colOut in the basis. 
+/* Perform a pivot by substituting a colIn for colOut in the basis.
    The status of the leaving variable is given in statOut. Where
    1 is to upper bound, -1 to lower bound
 */
@@ -1771,15 +1773,15 @@ int OsiSolverInterface::pivot(int, int, int)
     "OsiSolverInterface");
 }
 
-/* Obtain a result of the primal pivot 
+/* Obtain a result of the primal pivot
    Outputs: colOut -- leaving column, outStatus -- its status,
    t -- step size, and, if dx!=NULL, *dx -- primal ray direction.
    Inputs: colIn -- entering column, sign -- direction of its change (+/-1).
    Both for colIn and colOut, artificial variables are index by
    the negative of the row index minus 1.
-   Return code (for now): 0 -- leaving variable found, 
+   Return code (for now): 0 -- leaving variable found,
    -1 -- everything else?
-   Clearly, more informative set of return values is required 
+   Clearly, more informative set of return values is required
    Primal and dual solutions are updated
 */
 int OsiSolverInterface::primalPivotResult(int, int,
@@ -1850,7 +1852,7 @@ void OsiSolverInterface::getBInvCol(int, double *) const
 /* Get warm start information.
    Return warm start information for the current state of the solver
    interface. If there is no valid warm start information, an empty warm
-   start object wil be returned.  This does not necessarily create an 
+   start object wil be returned.  This does not necessarily create an
    object - may just point to one.  must Delete set true if user
    should delete returned object.
    OsiClp version always returns pointer and false.
@@ -2045,10 +2047,10 @@ OsiSolverInterface::snapshot(bool createArrays) const
 }
 #endif
 /* Identify integer variables and create corresponding objects.
-  
+
    Record integer variables and create an OsiSimpleInteger object for each
    one.  All existing OsiSimpleInteger objects will be destroyed.
-   New 
+   New
 */
 void OsiSolverInterface::findIntegers(bool justCount)
 {
@@ -2121,7 +2123,7 @@ void OsiSolverInterface::findIntegers(bool justCount)
   delete[] marked;
 }
 /* Identify integer variables and SOS and create corresponding objects.
-  
+
       Record integer variables and create an OsiSimpleInteger object for each
       one.  All existing OsiSimpleInteger objects will be destroyed.
       If the solver supports SOS then do the same for SOS.
@@ -2145,7 +2147,7 @@ void OsiSolverInterface::deleteObjects()
 }
 
 /* Add in object information.
-  
+
    Objects are cloned; the owner can delete the originals.
 */
 void OsiSolverInterface::addObjects(int numberObjects, OsiObject **objects)
@@ -2298,8 +2300,8 @@ void OsiSolverInterface::deleteBranchingInfo(int numberDeleted, const int *which
     findIntegers(false);
   }
 }
-/* Get tight bounds. 
-   Returns number of bounds (row and column) tightened. 
+/* Get tight bounds.
+   Returns number of bounds (row and column) tightened.
    If infeasible returns number of infeasibilities. */
 int
 OsiSolverInterface::tightPrimalBounds(double * newRowLower,
@@ -2440,7 +2442,7 @@ OsiSolverInterface::tightPrimalBounds(double * newRowLower,
 	    double upperNew = upper;
 	    maxUp = std::max(maxUp,lower);
 	    maxDown = std::min(maxDown,upper);
-	    if (!infiniteLower && maxDown > lower + 1.0e-6) 
+	    if (!infiniteLower && maxDown > lower + 1.0e-6)
 	      lowerNew = std::max(maxDown-1.0e-6,lower);
 	    if (!infiniteUpper && maxUp < upper - 1.0e-6)
 	      upperNew = std::min(maxUp+1.0e-6,upper);
@@ -2958,7 +2960,7 @@ OsiSolverInterface::forceFeasible()
     infeasibility += object_[i]->feasibleRegion(this, &info);
   return infeasibility;
 }
-/* 
+/*
    For variables currently at bound, fix at bound if reduced cost >= gap
    Returns number fixed
 */
@@ -3016,15 +3018,15 @@ OsiSolverInterface::getSizeU() const
   as given by branch.  The user should provide an array of (empty)
   results which will be filled in.  See OsiSolveResult for more details
   (in OsiSolveBranch.?pp) but it will include a basis and primal solution.
-  
+
   The order of results is left to right at feasible leaf nodes so first one
   is down, down, .....
-  
+
   Returns number of feasible leaves.  Also sets number of solves done and number
   of iterations.
-  
+
   This is provided so a solver can do faster.
-  
+
   If forceBranch true then branch done even if satisfied
 */
 int OsiSolverInterface::solveBranches(int depth, const OsiSolverBranch *branch,
@@ -3486,7 +3488,7 @@ void OsiSolverInterface::checkCGraph(CoinMessageHandler *msgh)
   if (getNumCols() == 0 || getNumRows() == 0) {
     return;
   }
-  
+
   if (cgraph_) {
     if (cgraph_->size() == getNumCols() * 2) { // cgraph still valid
       return;
@@ -3495,7 +3497,7 @@ void OsiSolverInterface::checkCGraph(CoinMessageHandler *msgh)
     delete cgraph_;
     cgraph_ = NULL;
   }
-  
+
   double timeCG = CoinCpuTime();
   cgraph_ = new CoinStaticConflictGraph(getNumCols(), getColType(),
                                         getColLower(), getColUpper(),
@@ -3503,7 +3505,7 @@ void OsiSolverInterface::checkCGraph(CoinMessageHandler *msgh)
                                         getRightHandSide(), getRowRange());
   timeCG = CoinCpuTime()-timeCG;
 
-  if (msgh && msgh->logLevel()) 
+  if (msgh && msgh->logLevel())
     msgh->message(COIN_CGRAPH_INFO, messages()) << timeCG << cgraph_->density()*100.0 << ((timeCG>1.0) ? "!!" : "") << CoinMessageEol;
 
   // fixing variables discovered during the construction of conflict graph
@@ -3520,7 +3522,7 @@ void OsiSolverInterface::checkCGraph(CoinMessageHandler *msgh)
 void OsiSolverInterface::modifyByIndicators(double startBigM,
 					    double bigM)
 {
-  // dummy - needs coding - OsiClp version will normally be called 
+  // dummy - needs coding - OsiClp version will normally be called
   //OsiClpSolverInterface * thisModel =
   //dynamic_cast<OsiClpSolverInterface *>(this);
   //if (thisModel)

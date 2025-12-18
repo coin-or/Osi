@@ -24,6 +24,7 @@
 #include "OsiConfig.h"
 #include "OsiCollections.hpp"
 #include "OsiSolverParameters.hpp"
+#include "OsiColumnType.hpp"
 
 class CoinSnapshot;
 class CoinLpIO;
@@ -46,7 +47,7 @@ class OsiObject;
 
   Many OsiSolverInterface query methods return a const pointer to the
   requested read-only data. If the model data is changed or the solver
-  is called, these pointers may no longer be valid and should be 
+  is called, these pointers may no longer be valid and should be
   refreshed by invoking the member function to obtain an updated copy
   of the pointer.
   For example:
@@ -406,7 +407,7 @@ public:
   void copyParameters(OsiSolverInterface &rhs);
 
   /** \brief Return the integrality tolerance of the underlying solver.
-    
+
 	We should be able to get an integrality tolerance, but
         until that time just use the primal tolerance
 
@@ -454,7 +455,7 @@ public:
   */
   //@{
   /*! \brief Get an empty warm start object
-      
+
       This routine returns an empty warm start object. Its purpose is
       to provide a way for a client to acquire a warm start object of the
       appropriate type for the solver, which can then be resized and modified
@@ -474,14 +475,14 @@ public:
 
       Return warm start information for the current state of the solver
       interface. If there is no valid warm start information, an empty warm
-      start object wil be returned.  This does not necessarily create an 
+      start object wil be returned.  This does not necessarily create an
       object - may just point to one.  must Delete set true if user
       should delete returned object.
     */
   virtual CoinWarmStart *getPointerToWarmStart(bool &mustDelete);
 
   /** \brief Set warm start information.
-    
+
       Return true or false depending on whether the warm start information was
       accepted or not.
       By definition, a call to setWarmStart with a null parameter should
@@ -493,7 +494,7 @@ public:
 
   //---------------------------------------------------------------------------
   /**@name Hot start methods
-  
+
      Primarily used in strong branching. The user can create a hot start
      object --- a snapshot of the optimization process --- then reoptimize
      over and over again, starting from the same point.
@@ -606,7 +607,7 @@ public:
   virtual const double *getObjCoefficients() const = 0;
 
   /*! \brief Get the objective function sense
-    
+
       -  1 for minimisation (default)
       - -1 for maximisation
     */
@@ -663,12 +664,17 @@ public:
 
   /*! \brief Return an array[getNumCols()] of column types
 
-       - 0 - continuous
-       - 1 - binary
-       - 2 - general integer
-       - 3 - if supported - semi-continuous
-       - 4 - if supported - semi-continuous integer
-      
+      The array contains elements of type OsiColumnType::Code encoded as
+      chars. The predefined mappings are:
+        - \c OsiColumnType::Continuous (0): Continuous column
+        - \c OsiColumnType::Binary (1): Binary column (bounds in {0,1})
+        - \c OsiColumnType::GeneralInteger (2): General integer column
+        - \c OsiColumnType::SemiContinuous (3): Semi-continuous column
+        - \c OsiColumnType::SemiInteger (4): Semi-continuous integer column
+
+      Use the helpers in \c OsiColumnType to convert codes into textual
+      representations or descriptions.
+
       If \p refresh is true, the classification of integer variables as
       binary or general integer will be reevaluated. If the current bounds
       are [0,1], or if the variable is fixed at 0 or 1, it will be classified
@@ -683,14 +689,14 @@ public:
   virtual const CoinPackedMatrix *getMatrixByCol() const = 0;
 
   /*! \brief Get a pointer to a mutable row-wise copy of the matrix.
-    
+
       Returns NULL if the request is not meaningful (i.e., the OSI will not
       recognise any modifications to the matrix).
     */
   virtual CoinPackedMatrix *getMutableMatrixByRow() const { return NULL; }
 
   /*! \brief Get a pointer to a mutable column-wise copy of the matrix
-    
+
       Returns NULL if the request is not meaningful (i.e., the OSI will not
       recognise any modifications to the matrix).
     */
@@ -719,7 +725,7 @@ public:
   virtual const double *getReducedCost() const = 0;
 
   /** Get a pointer to array[getNumRows()] of row activity levels.
-    
+
       The row activity for a row is the left-hand side evaluated at the
       current solution.
     */
@@ -761,7 +767,7 @@ public:
   /** Get as many primal rays as the solver can provide. In case of proven
 	dual infeasibility there should (with high probability) be at least
 	one.
-   
+
 	\note
 	Implementors of solver interfaces note that the double pointers in
 	the vector should point to arrays of length getNumCols() and they
@@ -775,7 +781,7 @@ public:
     */
   virtual std::vector< double * > getPrimalRays(int maxNumRays) const = 0;
 
-  /** Get vector of indices of primal variables which are integer variables 
+  /** Get vector of indices of primal variables which are integer variables
 	but have fractional values in the current solution. */
   virtual OsiVectorInt getFractionalIndices(const double etol = 1.e-05)
     const;
@@ -790,7 +796,7 @@ public:
      convention: \c indexFirst points to the first index in the
      set, and \c indexLast points to a position one past the last index
      in the set.
-  
+
   */
   //@{
   /** Set an objective function coefficient */
@@ -928,7 +934,7 @@ public:
   virtual void setRowPrice(const double *rowprice) = 0;
 
   /** Fix variables at bound based on reduced cost
-    
+
 	For variables currently at bound, fix the variable at bound if the
 	reduced cost exceeds the gap. Return the number of variables fixed.
 
@@ -987,7 +993,7 @@ public:
   //@{
 
   /*! \brief Generate a standard name of the form Rnnnnnnn or Cnnnnnnn
-    
+
       Set \p rc to 'r' for a row name, 'c' for a column name.
       The `nnnnnnn' part is generated from ndx and will contain 7 digits
       by default, padded with zeros if necessary. As a special case,
@@ -1098,7 +1104,7 @@ public:
   virtual void deleteColNames(int tgtStart, int len);
 
   /*! \brief Set row and column names from a CoinMpsIO object.
-    
+
       Also sets the name of the objective function. If the name discipline
       is auto, you get what you asked for. This routine does not use
       setRowName or setColName.
@@ -1162,7 +1168,7 @@ public:
     const double obj, std::string name);
 
   /** Add a set of columns (primal variables) to the problem.
-    
+
       The default implementation simply makes repeated calls to
       addCol().
     */
@@ -1172,7 +1178,7 @@ public:
     const double *obj);
 
   /** Add a set of columns (primal variables) to the problem.
-    
+
       The default implementation simply makes repeated calls to
       addCol().
     */
@@ -1194,7 +1200,7 @@ public:
 #if 0
     /** */
     virtual void addCols(const CoinPackedMatrix& matrix,
-			 const double* collb, const double* colub,   
+			 const double* collb, const double* colub,
 			 const double* obj);
 #endif
 
@@ -1212,7 +1218,7 @@ public:
     = 0;
 
   /*! \brief Add a named row (constraint) to the problem.
-    
+
       The default implementation adds the row, then changes the name. This
       can surely be made more efficient within an OsiXXX class.
     */
@@ -1236,7 +1242,7 @@ public:
     const double rowrng, std::string name);
 
   /*! Add a row (constraint) to the problem.
-    
+
       Converts to addRow(CoinPackedVectorBase&,const double,const double).
     */
   virtual void addRow(int numberElements,
@@ -1244,7 +1250,7 @@ public:
     const double rowlb, const double rowub);
 
   /*! Add a set of rows (constraints) to the problem.
-    
+
       The default implementation simply makes repeated calls to
       addRow().
     */
@@ -1253,7 +1259,7 @@ public:
     const double *rowlb, const double *rowub);
 
   /** Add a set of rows (constraints) to the problem.
-    
+
       The default implementation simply makes repeated calls to
       addRow().
     */
@@ -1263,7 +1269,7 @@ public:
     const double *rowrng);
 
   /** Add a set of rows (constraints) to the problem.
-    
+
       The default implementation simply makes repeated calls to
       addRow().
     */
@@ -1275,7 +1281,7 @@ public:
   void addRows(const CoinBuild &buildObject);
 
   /*! Add rows from a CoinModel object.
-    
+
       Returns -1 if the object is in the wrong state (<i>i.e.</i>, has
       column-major information), otherwise the number of errors.
 
@@ -1290,7 +1296,7 @@ public:
 			 const double* rowlb, const double* rowub);
     /** */
     virtual void addRows(const CoinPackedMatrix& matrix,
-			 const char* rowsen, const double* rowrhs,   
+			 const char* rowsen, const double* rowrhs,
 			 const double* rowrng);
 #endif
 
@@ -1310,13 +1316,13 @@ public:
   virtual void replaceMatrixOptional(const CoinPackedMatrix &) {}
 
   /** \brief Replace the constraint matrix
-    
+
       And if it does matter (not used at present)
     */
   virtual void replaceMatrix(const CoinPackedMatrix &) { abort(); }
 
   /** \brief Save a copy of the base model
-    
+
       If solver wants it can save a copy of "base" (continuous) model here.
     */
   virtual void saveBaseModel() {}
@@ -1375,8 +1381,8 @@ public:
   /// Deletes branching information before columns deleted
   void deleteBranchingInfo(int numberDeleted, const int *which);
 
-  /** fill existing arrays with tight bounds. 
-      Returns number of bounds (row and column) tightened. 
+  /** fill existing arrays with tight bounds.
+      Returns number of bounds (row and column) tightened.
       If infeasible returns minus number of infeasibilities. */
   int tightPrimalBounds(double * rowLower,double * rowUpper,
 			double * columnLower, double * columnUpper,
@@ -1392,11 +1398,11 @@ public:
   //@{
   /*! \brief Load in a problem by copying the arguments. The constraints on
 	    the rows are given by lower and upper bounds.
-	
+
 	If a pointer is 0 then the following values are the default:
         <ul>
           <li> <code>colub</code>: all columns have upper bound infinity
-          <li> <code>collb</code>: all columns have lower bound 0 
+          <li> <code>collb</code>: all columns have lower bound 0
           <li> <code>rowub</code>: all rows have upper bound infinity
           <li> <code>rowlb</code>: all rows have lower bound -infinity
 	  <li> <code>obj</code>: all variables have 0 objective coefficient
@@ -1418,7 +1424,7 @@ public:
 
 	\warning
 	The arguments passed to this method will be freed using the
-	C++ <code>delete</code> and <code>delete[]</code> functions. 
+	C++ <code>delete</code> and <code>delete[]</code> functions.
     */
   virtual void assignProblem(CoinPackedMatrix *&matrix,
     double *&collb, double *&colub, double *&obj,
@@ -1427,11 +1433,11 @@ public:
 
   /*! \brief Load in a problem by copying the arguments.
 	    The constraints on the rows are given by sense/rhs/range triplets.
-	    
+
 	If a pointer is 0 then the following values are the default:
 	<ul>
           <li> <code>colub</code>: all columns have upper bound infinity
-          <li> <code>collb</code>: all columns have lower bound 0 
+          <li> <code>collb</code>: all columns have lower bound 0
 	  <li> <code>obj</code>: all variables have 0 objective coefficient
           <li> <code>rowsen</code>: all rows are >=
           <li> <code>rowrhs</code>: all right hand sides are 0
@@ -1450,12 +1456,12 @@ public:
 
   /*! \brief Load in a problem by assuming ownership of the arguments.
 	    The constraints on the rows are given by sense/rhs/range triplets.
-	
+
 	For default argument values see the matching loadProblem method.
 
 	\warning
 	The arguments passed to this method will be freed using the
-	C++ <code>delete</code> and <code>delete[]</code> functions. 
+	C++ <code>delete</code> and <code>delete[]</code> functions.
     */
   virtual void assignProblem(CoinPackedMatrix *&matrix,
     double *&collb, double *&colub, double *&obj,
@@ -1465,9 +1471,9 @@ public:
 
   /*! \brief Load in a problem by copying the arguments. The constraint
 	    matrix is is specified with standard column-major
-	    column starts / row indices / coefficients vectors. 
+	    column starts / row indices / coefficients vectors.
 	    The constraints on the rows are given by lower and upper bounds.
-    
+
       The matrix vectors must be gap-free. Note that <code>start</code> must
       have <code>numcols+1</code> entries so that the length of the last column
       can be calculated as <code>start[numcols]-start[numcols-1]</code>.
@@ -1485,9 +1491,9 @@ public:
 
   /*! \brief Load in a problem by copying the arguments. The constraint
 	    matrix is is specified with standard column-major
-	    column starts / row indices / coefficients vectors. 
+	    column starts / row indices / coefficients vectors.
 	    The constraints on the rows are given by sense/rhs/range triplets.
-    
+
       The matrix vectors must be gap-free. Note that <code>start</code> must
       have <code>numcols+1</code> entries so that the length of the last column
       can be calculated as <code>start[numcols]-start[numcols-1]</code>.
@@ -1514,7 +1520,7 @@ public:
     bool keepSolution = false);
 
   /*! \brief Read a problem in MPS format from the given filename.
-    
+
       The default implementation uses CoinMpsIO::readMps() to read
       the MPS file and returns the number of errors encountered.
     */
@@ -1522,7 +1528,7 @@ public:
     const char *extension = "mps");
 
   /*! \brief Read a problem in MPS format from the given full filename.
-    
+
       This uses CoinMpsIO::readMps() to read the MPS file and returns the
       number of errors encountered. It also may return an array of set
       information
@@ -1531,14 +1537,14 @@ public:
     int &numberSets, CoinSet **&sets);
 
   /*! \brief Read a problem in GMPL format from the given filenames.
-    
+
       The default implementation uses CoinMpsIO::readGMPL(). This capability
       is available only if the third-party package Glpk is installed.
     */
 #ifdef COINUTILS_HAS_GLPK
   virtual int readGMPL(const char *filename, const char *dataname = NULL);
 #endif
-  
+
   /*! \brief Write the problem in MPS format to the specified file.
 
       If objSense is non-zero, a value of -1.0 causes the problem to be
@@ -1556,7 +1562,7 @@ public:
 	formatType is
 	<ul>
 	  <li> 0 - normal
-	  <li> 1 - extra accuracy 
+	  <li> 1 - extra accuracy
 	  <li> 2 - IEEE hex
 	</ul>
 
@@ -1572,7 +1578,7 @@ public:
   /***********************************************************************/
   // Lp files
 
-  /** Write the problem into an Lp file of the given filename with the 
+  /** Write the problem into an Lp file of the given filename with the
       specified extension.
       Coefficients with value less than epsilon away from an integer value
       are written as integers.
@@ -1580,7 +1586,7 @@ public:
       Write non integer numbers with decimals digits after the decimal point.
 
       The written problem is always a minimization problem.
-      If the current problem is a maximization problem, the 
+      If the current problem is a maximization problem, the
       intended objective function for the written problem is the current
       objective function multiplied by -1. If the current problem is a
       minimization problem, the intended objective function for the
@@ -1588,7 +1594,7 @@ public:
       If objSense < 0, the intended objective function is multiplied by -1
       before writing the problem. It is left unchanged otherwise.
 
-      Write objective function name and constraint names if useRowNames is 
+      Write objective function name and constraint names if useRowNames is
       true. This version calls writeLpNative().
   */
   virtual void writeLp(const char *filename,
@@ -1599,8 +1605,8 @@ public:
     double objSense = 0.0,
     bool useRowNames = true) const;
 
-  /** Write the problem into the file pointed to by the parameter fp. 
-      Other parameters are similar to 
+  /** Write the problem into the file pointed to by the parameter fp.
+      Other parameters are similar to
       those of writeLp() with first parameter filename.
   */
   virtual void writeLp(FILE *fp,
@@ -1610,15 +1616,15 @@ public:
     double objSense = 0.0,
     bool useRowNames = true) const;
 
-  /** Write the problem into an Lp file. Parameters are similar to 
+  /** Write the problem into an Lp file. Parameters are similar to
       those of writeLp(), but in addition row names and column names
-      may be given. 
+      may be given.
 
-      Parameter rowNames may be NULL, in which case default row names 
+      Parameter rowNames may be NULL, in which case default row names
       are used. If rowNames is not NULL, it must have exactly one entry
       per row in the problem and one additional
       entry (rowNames[getNumRows()] with the objective function name.
-      These getNumRows()+1 entries must be distinct. If this is not the 
+      These getNumRows()+1 entries must be distinct. If this is not the
       case, default row names
       are used. In addition, format restrictions are imposed on names
       (see CoinLpIO::is_invalid_name() for details).
@@ -1626,7 +1632,7 @@ public:
       Similar remarks can be made for the parameter columnNames which
       must either be NULL or have exactly getNumCols() distinct entries.
 
-      Write objective function name and constraint names if 
+      Write objective function name and constraint names if
       useRowNames is true. */
   int writeLpNative(const char *filename,
     char const *const *const rowNames,
@@ -1637,8 +1643,8 @@ public:
     const double objSense = 0.0,
     const bool useRowNames = true) const;
 
-  /** Write the problem into the file pointed to by the parameter fp. 
-      Other parameters are similar to 
+  /** Write the problem into the file pointed to by the parameter fp.
+      Other parameters are similar to
       those of writeLpNative() with first parameter filename.
   */
   int writeLpNative(FILE *fp,
@@ -1718,17 +1724,17 @@ public:
   //---------------------------------------------------------------------------
 
   /**@name Message handling
-  
+
     See the COIN library documentation for additional information about
     COIN message facilities.
-  
+
   */
   //@{
   /** Pass in a message handler
-  
+
     It is the client's responsibility to destroy a message handler installed
     by this routine; it will not be destroyed when the solver interface is
-    destroyed. 
+    destroyed.
   */
   virtual void passInMessageHandler(CoinMessageHandler *handler);
   /// Set language
@@ -1760,14 +1766,14 @@ public:
   //@}
   //---------------------------------------------------------------------------
   /**@name Methods for dealing with discontinuities other than integers.
-  
+
      Osi should be able to know about SOS and other types.  This is an optional
      section where such information can be stored.
 
   */
   //@{
   /** \brief Identify integer variables and create corresponding objects.
-  
+
       Record integer variables and create an OsiSimpleInteger object for each
       one.  All existing OsiSimpleInteger objects will be destroyed.
       If justCount then no objects created and we just store numberIntegers_
@@ -1775,7 +1781,7 @@ public:
 
   void findIntegers(bool justCount);
   /** \brief Identify integer variables and SOS and create corresponding objects.
-  
+
       Record integer variables and create an OsiSimpleInteger object for each
       one.  All existing OsiSimpleInteger objects will be destroyed.
       If the solver supports SOS then do the same for SOS.
@@ -1805,7 +1811,7 @@ public:
   void deleteObjects();
 
   /** Add in object information.
-  
+
       Objects are cloned; the owner can delete the originals.
     */
   void addObjects(int numberObjects, OsiObject **objects);
@@ -1835,13 +1841,13 @@ public:
    *  Builds a conflict graph indicating relationship between binary variables
    */
   void checkCGraph(CoinMessageHandler *msgh = NULL);
-  
+
   //@}
 
   //---------------------------------------------------------------------------
 
   /*! @name Methods related to testing generated cuts
-  
+
     See the documentation for OsiRowCutDebugger for additional details.
   */
   //@{
@@ -1902,7 +1908,7 @@ public:
   //@{
 
   /*! \brief Return the simplex implementation level.
-  
+
       The return codes are:
       - 0: the simplex interface is not implemented.
       - 1: the Group 1 (tableau access) methods are implemented.
@@ -1923,7 +1929,7 @@ public:
   //@{
 
   /*! \brief Prepare the solver for the use of tableau access methods.
-  
+
     Prepares the solver for the use of the tableau access methods, if
     any such preparation is required.
 
@@ -1936,11 +1942,11 @@ public:
   virtual void disableFactorization() const;
 
   /*! \brief Check if an optimal basis is available.
-  
+
     Returns true if the problem has been solved to optimality and a
     basis is available. This should be used to see if the tableau access
     operations are possible and meaningful.
-    
+
     \note
     Implementors please note that this method may be called
     before #enableFactorization.
@@ -1951,7 +1957,7 @@ public:
   inline bool optimalBasisIsAvailable() const { return basisIsAvailable(); }
 
   /*! \brief Retrieve status information for column and row variables.
- 
+
     This method returns status as integer codes:
     <ul>
       <li> 0: free
@@ -2000,7 +2006,7 @@ public:
     double *duals, const double *c) const;
 
   /*! \brief Get a row of the tableau
-  
+
     If \p slack is not null, it will be loaded with the coefficients for
     the artificial (logical) variables (i.e., the row of the basis inverse).
   */
@@ -2016,7 +2022,7 @@ public:
   virtual void getBInvCol(int col, double *vec) const;
 
   /*! \brief Get indices of basic variables
-  
+
     If the logical (artificial) for row i is basic, the index should be coded
     as (#getNumCols + i).
     The order of indices must match the order of elements in the vectors
@@ -2044,7 +2050,7 @@ public:
 
   ///Undo whatever setting changes the above method had to make
   virtual void disableSimplexInterface();
-  /** Perform a pivot by substituting a colIn for colOut in the basis. 
+  /** Perform a pivot by substituting a colIn for colOut in the basis.
      The status of the leaving variable is given in outStatus. Where
      1 is to upper bound, -1 to lower bound
      Return code was undefined - now for OsiClp is 0 for okay,
@@ -2053,15 +2059,15 @@ public:
   */
   virtual int pivot(int colIn, int colOut, int outStatus);
 
-  /** Obtain a result of the primal pivot 
+  /** Obtain a result of the primal pivot
       Outputs: colOut -- leaving column, outStatus -- its status,
       t -- step size, and, if dx!=NULL, *dx -- primal ray direction.
       Inputs: colIn -- entering column, sign -- direction of its change (+/-1).
       Both for colIn and colOut, artificial variables are index by
       the negative of the row index minus 1.
-      Return code (for now): 0 -- leaving variable found, 
+      Return code (for now): 0 -- leaving variable found,
       -1 -- everything else?
-      Clearly, more informative set of return values is required 
+      Clearly, more informative set of return values is required
       Primal and dual solutions are updated
   */
   virtual int primalPivotResult(int colIn, int sign,

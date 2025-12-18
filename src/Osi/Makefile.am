@@ -24,6 +24,7 @@ libOsi_la_SOURCES = \
 	OsiCollections.hpp \
 	OsiCut.cpp OsiCut.hpp \
 	OsiCuts.cpp OsiCuts.hpp \
+	OsiColumnType.hpp \
 	OsiNames.cpp \
 	OsiPresolve.cpp OsiPresolve.hpp \
 	OsiRowCut.cpp OsiRowCut.hpp \
@@ -55,6 +56,7 @@ includecoin_HEADERS = \
 	OsiChooseVariable.hpp \
 	OsiColCut.hpp \
 	OsiCollections.hpp \
+	OsiColumnType.hpp \
 	OsiCut.hpp \
 	OsiCuts.hpp \
 	OsiPresolve.hpp \

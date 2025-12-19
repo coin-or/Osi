@@ -3537,13 +3537,6 @@ void OsiSolverInterface::checkCGraph(CoinMessageHandler *msgh)
   if (msgh && msgh->logLevel())
   if (msgh && msgh->logLevel())
     msgh->message(COIN_CGRAPH_INFO, messages()) << timeCG << cgraph_->density()*100.0 << ((timeCG>1.0) ? "!!" : "") << CoinMessageEol;
-
-  // fixing variables discovered during the construction of conflict graph
-  const std::vector< std::pair< size_t, std::pair< double, double > > > newBounds = cgraph_->updatedBounds();
-  for (size_t i = 0 ; i < newBounds.size(); i++) {
-    setColLower(newBounds[i].first, newBounds[i].second.first);
-    setColUpper(newBounds[i].first, newBounds[i].second.second);
-  }
 }
 /* Modify model to deal with indicators.
    startBigM are values in input.

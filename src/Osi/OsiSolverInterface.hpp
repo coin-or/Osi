@@ -1909,6 +1909,11 @@ public:
    */
   void checkCGraph(CoinMessageHandler *msgh = NULL);
 
+  /*! \brief Returns the time (in CPU seconds) spent building the conflict graph */
+  inline double getCGraphBuildTime() const { return cgraphBuildTime_; }
+
+  /*! \brief Returns the density of the conflict graph (0..1) */
+  inline double getCGraphDensity() const { return cgraphDensity_; }
 
   //@}
 
@@ -2306,6 +2311,12 @@ private:
   //@}
 
   CoinStaticConflictGraph *cgraph_;
+
+  /// Time (CPU seconds) spent building the conflict graph
+  double cgraphBuildTime_;
+
+  /// Density of the conflict graph
+  double cgraphDensity_;
 };
 
 //#############################################################################

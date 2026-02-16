@@ -980,6 +980,8 @@ OsiSolverInterface::OsiSolverInterface()
   , appDataEtc_(NULL)
   , ws_(NULL)
   , cgraph_(NULL)
+  , cgraphBuildTime_(0.0)
+  , cgraphDensity_(0.0)
 {
   setInitialData();
 }
@@ -1036,6 +1038,8 @@ void OsiSolverInterface::setInitialData()
   	delete cgraph_;
   	cgraph_ = NULL;
   }
+  cgraphBuildTime_ = 0.0;
+  cgraphDensity_ = 0.0;
 }
 
 //-------------------------------------------------------------------
@@ -1082,6 +1086,8 @@ OsiSolverInterface::OsiSolverInterface(const OsiSolverInterface &rhs)
   } else {
     cgraph_ = NULL;
   }
+  cgraphBuildTime_ = rhs.cgraphBuildTime_;
+  cgraphDensity_ = rhs.cgraphDensity_;
 }
 
 //-------------------------------------------------------------------
@@ -1173,6 +1179,8 @@ OsiSolverInterface::operator=(const OsiSolverInterface &rhs)
     } else {
       cgraph_ = NULL;
     }
+    cgraphBuildTime_ = rhs.cgraphBuildTime_;
+    cgraphDensity_ = rhs.cgraphDensity_;
   }
   return *this;
 }
@@ -3520,9 +3528,11 @@ void OsiSolverInterface::checkCGraph(CoinMessageHandler *msgh)
                                         primalTolerance, infinity, getColNames(),
                                         getRowNames());
   timeCG = CoinCpuTime()-timeCG;
+  cgraphBuildTime_ = timeCG;
+  cgraphDensity_ = cgraph_->density();
 
   if (msgh && msgh->logLevel())
-    msgh->message(COIN_CGRAPH_INFO, messages()) << timeCG << cgraph_->density()*100.0 << ((timeCG>1.0) ? "!!" : "") << CoinMessageEol;
+    msgh->message(COIN_CGRAPH_INFO, messages()) << timeCG << cgraphDensity_*100.0 << ((timeCG>1.0) ? "!!" : "") << CoinMessageEol;
 }
 /* Modify model to deal with indicators.
    startBigM are values in input.

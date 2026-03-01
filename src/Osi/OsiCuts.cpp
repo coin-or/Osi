@@ -433,17 +433,21 @@ static bool scaleCutIntegral(double* cutElem, int* cutIndex, int cutNz,
       return false;
   }
   scale = fabs(scale);
-  // Looks like we have a good scaling factor; scale and return;
+  // Pre-check that every scaled value rounds to an integer before modifying
+  // anything, so the caller's arrays are never left in a partially-scaled state.
   for (int i = 0; i < cutNz; ++i) {
     double value = cutElem[i]*scale;
-    cutElem[i] = floor(value+0.5);
-    assert (fabs(cutElem[i]-value)<1.0e-9);
+    if (fabs(floor(value+0.5)-value) >= 1.0e-9) return false;
   }
   {
     double value = cutRhs*scale;
-    cutRhs = floor(value+0.5);
-    assert (fabs(cutRhs-value)<1.0e-9);
+    if (fabs(floor(value+0.5)-value) >= 1.0e-9) return false;
   }
+  // Looks like we have a good scaling factor; scale and return.
+  for (int i = 0; i < cutNz; ++i) {
+    cutElem[i] = floor(cutElem[i]*scale+0.5);
+  }
+  cutRhs = floor(cutRhs*scale+0.5);
   return true;
 } /* scaleCutIntegral */
 // Returns value - floor but allowing for small errors

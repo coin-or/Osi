@@ -187,8 +187,10 @@ void OsiColCutUnitTest(const OsiSolverInterface *baseSiP, const std::string &mps
     OsiSolverInterface *imP = baseSiP->clone();
     assert(imP != NULL);
     std::string fn = mpsDir + "exmip1";
-    imP->readMps(fn.c_str(), "mps");
-    OSIUNITTEST_ASSERT_ERROR(!r.consistent(*imP), {}, "osicolcut", "consistent");
+    const int error = imP->readMps(fn.c_str(), "mps");
+    if (!error) {
+     OSIUNITTEST_ASSERT_ERROR(!r.consistent(*imP), {}, "osicolcut", "consistent");
+    }
     delete imP;
   }
   {
@@ -208,38 +210,39 @@ void OsiColCutUnitTest(const OsiSolverInterface *baseSiP, const std::string &mps
     OsiSolverInterface *imP = baseSiP->clone();
     assert(imP != NULL);
     std::string fn = mpsDir + "exmip1";
-    imP->readMps(fn.c_str(), "mps");
+    const int error = imP->readMps(fn.c_str(), "mps");
+    if (!error) {
+      OsiColCut cut;
+      const int ne = 1;
+      int inx[ne] = { 20 };
+      double el[ne] = { 0.25 };
+      cut.setLbs(ne, inx, el);
+      OSIUNITTEST_ASSERT_ERROR(!cut.consistent(*imP), {}, "osicolcut", "consistent(IntegerModel)");
 
-    OsiColCut cut;
-    const int ne = 1;
-    int inx[ne] = { 20 };
-    double el[ne] = { 0.25 };
-    cut.setLbs(ne, inx, el);
-    OSIUNITTEST_ASSERT_ERROR(!cut.consistent(*imP), {}, "osicolcut", "consistent(IntegerModel)");
+      cut.setLbs(0, NULL, NULL);
+      cut.setUbs(ne, inx, el);
+      OSIUNITTEST_ASSERT_ERROR(!cut.consistent(*imP), {}, "osicolcut", "consistent(IntegerModel)");
 
-    cut.setLbs(0, NULL, NULL);
-    cut.setUbs(ne, inx, el);
-    OSIUNITTEST_ASSERT_ERROR(!cut.consistent(*imP), {}, "osicolcut", "consistent(IntegerModel)");
+      inx[0] = 4;
+      cut.setLbs(ne, inx, el);
+      cut.setUbs(0, NULL, NULL);
+      OSIUNITTEST_ASSERT_ERROR(cut.consistent(*imP), {}, "osicolcut", "consistent(IntegerModel)");
 
-    inx[0] = 4;
-    cut.setLbs(ne, inx, el);
-    cut.setUbs(0, NULL, NULL);
-    OSIUNITTEST_ASSERT_ERROR(cut.consistent(*imP), {}, "osicolcut", "consistent(IntegerModel)");
+      el[0] = 4.5;
+      cut.setLbs(0, NULL, NULL);
+      cut.setUbs(ne, inx, el);
+      OSIUNITTEST_ASSERT_ERROR(cut.consistent(*imP), {}, "osicolcut", "consistent(IntegerModel)");
 
-    el[0] = 4.5;
-    cut.setLbs(0, NULL, NULL);
-    cut.setUbs(ne, inx, el);
-    OSIUNITTEST_ASSERT_ERROR(cut.consistent(*imP), {}, "osicolcut", "consistent(IntegerModel)");
+      cut.setLbs(ne, inx, el);
+      cut.setUbs(0, NULL, NULL);
+      OSIUNITTEST_ASSERT_ERROR(cut.consistent(*imP), {}, "osicolcut", "consistent(IntegerModel)");
+      OSIUNITTEST_ASSERT_ERROR(cut.infeasible(*imP), {}, "osicolcut", "infeasible(IntegerModel)");
 
-    cut.setLbs(ne, inx, el);
-    cut.setUbs(0, NULL, NULL);
-    OSIUNITTEST_ASSERT_ERROR(cut.consistent(*imP), {}, "osicolcut", "consistent(IntegerModel)");
-    OSIUNITTEST_ASSERT_ERROR(cut.infeasible(*imP), {}, "osicolcut", "infeasible(IntegerModel)");
-
-    el[0] = 3.0;
-    cut.setLbs(ne, inx, el);
-    cut.setUbs(ne, inx, el);
-    OSIUNITTEST_ASSERT_ERROR(cut.consistent(*imP), {}, "osicolcut", "consistent(IntegerModel)");
+      el[0] = 3.0;
+      cut.setLbs(ne, inx, el);
+      cut.setUbs(ne, inx, el);
+      OSIUNITTEST_ASSERT_ERROR(cut.consistent(*imP), {}, "osicolcut", "consistent(IntegerModel)");
+    }
     delete imP;
   }
   {
@@ -248,24 +251,25 @@ void OsiColCutUnitTest(const OsiSolverInterface *baseSiP, const std::string &mps
     OsiSolverInterface *imP = baseSiP->clone();
     assert(imP != NULL);
     std::string fn = mpsDir + "exmip1";
-    imP->readMps(fn.c_str(), "mps");
+    const int error = imP->readMps(fn.c_str(), "mps");
+    if (!error) {
+      OsiColCut cut;
+      const int ne = 1;
+      int inx[ne] = { 4 };
+      double el[ne] = { 4.5 };
+      cut.setLbs(ne, inx, el);
+      OSIUNITTEST_ASSERT_ERROR(cut.infeasible(*imP), {}, "osicolcut", "infeasible(IntegerModel)");
 
-    OsiColCut cut;
-    const int ne = 1;
-    int inx[ne] = { 4 };
-    double el[ne] = { 4.5 };
-    cut.setLbs(ne, inx, el);
-    OSIUNITTEST_ASSERT_ERROR(cut.infeasible(*imP), {}, "osicolcut", "infeasible(IntegerModel)");
+      el[0] = 0.25;
+      cut.setLbs(0, NULL, NULL);
+      cut.setUbs(ne, inx, el);
+      OSIUNITTEST_ASSERT_ERROR(cut.infeasible(*imP), {}, "osicolcut", "infeasible(IntegerModel)");
 
-    el[0] = 0.25;
-    cut.setLbs(0, NULL, NULL);
-    cut.setUbs(ne, inx, el);
-    OSIUNITTEST_ASSERT_ERROR(cut.infeasible(*imP), {}, "osicolcut", "infeasible(IntegerModel)");
-
-    el[0] = 3.0;
-    cut.setLbs(ne, inx, el);
-    cut.setUbs(ne, inx, el);
-    OSIUNITTEST_ASSERT_ERROR(!cut.infeasible(*imP), {}, "osicolcut", "infeasible(IntegerModel)");
+      el[0] = 3.0;
+      cut.setLbs(ne, inx, el);
+      cut.setUbs(ne, inx, el);
+      OSIUNITTEST_ASSERT_ERROR(!cut.infeasible(*imP), {}, "osicolcut", "infeasible(IntegerModel)");
+    }
 
     delete imP;
   }

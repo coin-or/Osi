@@ -2502,6 +2502,8 @@ void OsiGrbSolverInterface::deleteRows(const int num, const int *rowIndices)
     }
   }
 
+  GUROBI_CALL("deleteRows", GRBupdatemodel(getMutableLpPtr()));
+
   GUROBI_CALL("deleteRows", GRBdelconstrs(getLpPtr(OsiGrbSolverInterface::KEEPCACHED_COLUMN), num, const_cast< int * >(rowIndices)));
 
   if (nauxcols == 0 && getRowNames().empty())

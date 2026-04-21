@@ -33,9 +33,9 @@ class Summary {
     public:
         Summary() :
             minV( std::numeric_limits<double>::max() ),
-            maxV( std::numeric_limits<double>::min() ),
+            maxV( std::numeric_limits<double>::lowest() ),
             minAbsV( std::numeric_limits<double>::max() ),
-            maxAbsV(std:: numeric_limits<double>::min() ),
+            maxAbsV( std::numeric_limits<double>::lowest() ),
             avg(0.0),
             ratioLSA(0.0),
             percIntEl(0.0),
@@ -448,9 +448,20 @@ void OsiFeatures::compute(double *features, OsiSolverInterface *solver) {
 
         if (rowBin) {
             // pack, part and cov
-            if ( dbl_equal(minaRow, 1.0) && dbl_equal(maxaRow, 1.0)  ) {
-                if (dbl_equal(rhs[row], 1.0)) {
-                    switch (sense[row]) {
+            // Handle both canonical form (all +1 coefs) and negated form (all -1 coefs,
+            // flipped sense/RHS) — e.g. sorrell3 stores x_i+x_j<=1 as -x_i-x_j>=-1.
+            const bool allPlusOnes = dbl_equal(minaRow, 1.0) && dbl_equal(maxaRow, 1.0);
+            const bool allMinusOnes = dbl_equal(minaRow, -1.0) && dbl_equal(maxaRow, -1.0);
+            // Normalise negated rows: flip sense and negate rhs so the rest of the logic
+            // only needs to handle the canonical (+1 coefs) form.
+            const char effectiveSense = allMinusOnes
+                ? (sense[row] == 'L' ? 'G' : (sense[row] == 'G' ? 'L' : sense[row]))
+                : sense[row];
+            const double effectiveRhs = allMinusOnes ? -rhs[row] : rhs[row];
+
+            if ( allPlusOnes || allMinusOnes ) {
+                if (dbl_equal(effectiveRhs, 1.0)) {
+                    switch (effectiveSense) {
                         case 'E':
                             features[OFrowsPartitioning]++;
                             features[OFnzRowsPartitioning] += nzRow;
@@ -468,8 +479,8 @@ void OsiFeatures::compute(double *features, OsiSolverInterface *solver) {
                     }
                 } // rhs 1.0
                 else {
-                    if (rhs[row] >= 1.99) {
-                        switch (sense[row]) {
+                    if (effectiveRhs >= 1.99) {
+                        switch (effectiveSense) {
                             case 'E':
                                 features[OFrowsCardinality]++;
                                 features[OFnzRowsCardinality] += nzRow;
@@ -481,7 +492,7 @@ void OsiFeatures::compute(double *features, OsiSolverInterface *solver) {
                         }
                     } // rhs >= 2
                 } // rhs != 1
-            } // only ones LHS as coefs
+            } // only ones (or minus-ones) LHS as coefs
             else {
                 if (rhs[row] >= 1.1 ) {
                     if ( (maxaRow - minaRow >= 0.1) && (summRow.nNegVal == 0) ) { // different weights

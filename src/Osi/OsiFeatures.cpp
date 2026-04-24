@@ -11,8 +11,7 @@ bool dbl_equal( const double v1, const double v2 ) {
 }
 
 bool intVal( const double val ) {
-    double iv = round(val + 0.5);
-    return fabs(val - iv) <= 1e-16;
+    return fabs(val - round(val)) <= 1e-16;
 }
 
 // max size for features
@@ -415,7 +414,7 @@ void OsiFeatures::compute(double *features, OsiSolverInterface *solver) {
         }
 
         bool rowBin = (nBinRow == nzRow);
-        bool intCoefs = summRow.allIntEl;
+        bool intCoefs = (summRow.intEl == summRow.nEl);
 
         switch (nzRow) {
             case 1:

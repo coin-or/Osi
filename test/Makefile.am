@@ -117,6 +117,18 @@ singleton-bound-test: OsiSingletonBoundTest$(EXEEXT)
 .PHONY: singleton-bound-test
 
 ########################################################################
+#                    OsiFeatures extraction benchmark                  #
+########################################################################
+
+# Usage: make osi_features_bench
+# Then:  ./osi_features_bench <instance.mps[.gz]>
+
+osi_features_bench$(EXEEXT): osi_features_bench.cpp
+	$(CXX) $(CXXFLAGS) $(OSIFEATURES_CFLAGS) -o $@ $< $(OSIFEATURES_LIBS)
+
+.PHONY: osi-features-bench
+
+########################################################################
 #                          Cleaning stuff                              #
 ########################################################################
 
@@ -124,4 +136,5 @@ singleton-bound-test: OsiSingletonBoundTest$(EXEEXT)
 # output files of a program
 
 CLEANFILES = *.mps *.mps.gz *.lp test2out *.out.gz *.out \
-  OsiFeaturesTest$(EXEEXT) OsiSingletonBoundTest$(EXEEXT)
+  OsiFeaturesTest$(EXEEXT) OsiSingletonBoundTest$(EXEEXT) \
+  osi_features_bench$(EXEEXT)

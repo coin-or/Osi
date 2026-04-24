@@ -1753,6 +1753,18 @@ public:
   /// Return number of entries in U part of current factorization
   virtual CoinBigIndex getSizeU() const;
 #endif
+
+  /** Tighten variable bounds using singleton rows.
+      For each row with exactly one nonzero coefficient a*x, the row bounds
+      rl <= a*x <= ru imply bounds on x that may be tighter than the current
+      column bounds.
+
+      Returns the number of bound changes applied, or -1 if the implied bounds
+      are infeasible (i.e. some variable's implied lower bound exceeds its
+      implied upper bound). On output, nFixed reports how many variables
+      became newly fixed (only meaningful when return value >= 0). */
+  int tightenBoundsFromSingletonRows(int &nFixed);
+
   //@}
 
   //---------------------------------------------------------------------------

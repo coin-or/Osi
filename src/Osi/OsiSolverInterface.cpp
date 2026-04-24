@@ -3549,3 +3549,103 @@ void OsiSolverInterface::modifyByIndicators(double startBigM,
   abort();
 }
 
+
+// Compute implied bounds from singleton rows.
+//
+// For each row i with exactly one nonzero (a * x_j), the constraint
+// rl <= a * x_j <= ru implies:
+//   a > 0: x_j >= rl/a,  x_j <= ru/a
+//   a < 0: x_j >= ru/a,  x_j <= rl/a
+//
+// The tightest implied lower/upper across all singleton rows referencing x_j
+// is stored in newLo[j] / newUp[j] (initialised from colLo/colUp).
+//
+// Returns false if infeasible (some variable's implied lo > implied up).
+static bool computeSingletonRowBounds(
+  int nCols, int nRows,
+  const double *colLo, const double *colUp,
+  const double *rowLo, const double *rowUp,
+  const int *rowLen, const CoinBigIndex *rowStart,
+  const int *rowIdx, const double *rowEl,
+  double eps, double inf,
+  std::vector<double> &newLo, std::vector<double> &newUp)
+{
+  newLo.assign(colLo, colLo + nCols);
+  newUp.assign(colUp, colUp + nCols);
+
+  for (int i = 0; i < nRows; i++) {
+    if (rowLen[i] != 1)
+      continue;
+    const int j = rowIdx[rowStart[i]];
+    const double a = rowEl[rowStart[i]];
+    const double rl = rowLo[i], ru = rowUp[i];
+
+    double implLo, implUp;
+    if (a > eps) {
+      implLo = (rl <= -inf) ? -inf : rl / a;
+      implUp = (ru >= inf) ? inf : ru / a;
+    } else if (a < -eps) {
+      implLo = (ru >= inf) ? -inf : ru / a;
+      implUp = (rl <= -inf) ? inf : rl / a;
+    } else {
+      continue; // near-zero coefficient — skip
+    }
+
+    if (implLo > newLo[j] + eps)
+      newLo[j] = implLo;
+    if (implUp < newUp[j] - eps)
+      newUp[j] = implUp;
+  }
+
+  for (int j = 0; j < nCols; j++) {
+    if (newLo[j] > newUp[j] + eps)
+      return false; // infeasible
+  }
+  return true;
+}
+
+int OsiSolverInterface::tightenBoundsFromSingletonRows(int &nFixed)
+{
+  const int nCols = getNumCols();
+  const int nRows = getNumRows();
+  const double *colLo = getColLower();
+  const double *colUp = getColUpper();
+  double eps = 1e-8;
+  getDblParam(OsiPrimalTolerance, eps);
+  const double inf = getInfinity();
+
+  const CoinPackedMatrix *mat = getMatrixByRow();
+
+  std::vector<double> newLo, newUp;
+  const bool feasible = computeSingletonRowBounds(
+    nCols, nRows,
+    colLo, colUp,
+    getRowLower(), getRowUpper(),
+    mat->getVectorLengths(), mat->getVectorStarts(),
+    mat->getIndices(), mat->getElements(),
+    eps, inf, newLo, newUp);
+
+  if (!feasible)
+    return -1;
+
+  int nTightened = 0;
+  nFixed = 0;
+  for (int j = 0; j < nCols; j++) {
+    const bool wasFixed = (colUp[j] - colLo[j] < eps);
+    bool changed = false;
+    if (newLo[j] > colLo[j] + eps) {
+      setColLower(j, newLo[j]);
+      changed = true;
+    }
+    if (newUp[j] < colUp[j] - eps) {
+      setColUpper(j, newUp[j]);
+      changed = true;
+    }
+    if (changed) {
+      nTightened++;
+      if (!wasFixed && newUp[j] - newLo[j] < eps)
+        nFixed++;
+    }
+  }
+  return nTightened;
+}

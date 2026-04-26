@@ -9,6 +9,7 @@
 // Copyright (C) 2009 Humboldt University Berlin and others.
 // All Rights Reserved.
 
+// $Id$
 
 #include <iostream>
 #include <cassert>
@@ -1538,12 +1539,12 @@ std::vector< double * > OsiGrbSolverInterface::getDualRays(int maxNumRays,
 
   const int numcols = getNumCols();
   const int numrows = getNumRows();
-  int *index = new int[std::max(numcols, numrows)];
+  int *index = new int[CoinMax(numcols, numrows)];
   int i;
-  for (i = std::max(numcols, numrows) - 1; i >= 0; --i) {
+  for (i = CoinMax(numcols, numrows) - 1; i >= 0; --i) {
     index[i] = i;
   }
-  double *obj = new double[std::max(numcols, 2 * numrows)];
+  double *obj = new double[CoinMax(numcols, 2 * numrows)];
   CoinFillN(obj, numcols, 0.0);
   solver.setObjCoeffSet(index, index + numcols, obj);
 
@@ -1554,7 +1555,7 @@ std::vector< double * > OsiGrbSolverInterface::getDualRays(int maxNumRays,
   const double minusone = -1.0;
   const char *sense = getRowSense();
 
-  const CoinPackedVectorBase **cols = new const CoinPackedVectorBase *[numrows];
+  const CoinPackedVectorBase **cols = new const CoinPackedVectorBase *[2 * numrows]; //range constraints are decomposed into two constraints
   int newcols = 0;
   for (i = 0; i < numrows; ++i) {
     switch (sense[i]) {
@@ -1580,6 +1581,9 @@ std::vector< double * > OsiGrbSolverInterface::getDualRays(int maxNumRays,
 
   solver.addCols(newcols, cols, clb, cub, obj);
   delete[] index;
+  for (int k = 0; k < newcols; ++k) 
+    delete cols[k];                 
+  delete[] cols;
   delete[] cols;
   delete[] clb;
   delete[] cub;
@@ -2501,8 +2505,6 @@ void OsiGrbSolverInterface::deleteRows(const int num, const int *rowIndices)
         convertToNormalRow(rowIndices[i], 'E', 0.0);
     }
   }
-
-  GUROBI_CALL("deleteRows", GRBupdatemodel(getMutableLpPtr()));
 
   GUROBI_CALL("deleteRows", GRBdelconstrs(getLpPtr(OsiGrbSolverInterface::KEEPCACHED_COLUMN), num, const_cast< int * >(rowIndices)));
 

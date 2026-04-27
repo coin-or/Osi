@@ -1598,6 +1598,8 @@ std::vector< double * > OsiCpxSolverInterface::getDualRays(int maxNumRays,
 
   solver.addCols(newcols, cols, clb, cub, obj);
   delete[] index;
+  for (int k = 0; k < newcols; ++k)
+    delete cols[k];
   delete[] cols;
   delete[] clb;
   delete[] cub;

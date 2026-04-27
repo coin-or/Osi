@@ -1,3 +1,6 @@
+04/05/2026
+  - fixed that OsiCpxSolverInterface::getDualRays() did not free some temporarily allocated memory
+
 02/05/2026
   - fixed that OsiGrbSolverInterface::getDualRays() may not have allocated enough memory for an array and did not free some memory
 

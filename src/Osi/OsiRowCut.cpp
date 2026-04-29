@@ -40,6 +40,11 @@ void OsiRowCut::setRow(const CoinPackedVector &v)
   row_ = v;
 }
 
+void OsiRowCut::setRow(CoinPackedVector &&v)
+{
+  row_ = std::move(v);
+}
+
 //-------------------------------------------------------------------
 // Get the row
 //-------------------------------------------------------------------
@@ -215,6 +220,32 @@ OsiRowCut::OsiRowCut(const OsiRowCut &source)
   , ub_(source.ub_)
 {
   // Nothing to do here
+}
+
+//----------------------------------------------------------------
+// Move constructor
+//----------------------------------------------------------------
+OsiRowCut::OsiRowCut(OsiRowCut &&rhs) noexcept
+  : OsiCut(rhs)
+  , row_(std::move(rhs.row_))
+  , lb_(rhs.lb_)
+  , ub_(rhs.ub_)
+{
+}
+
+//----------------------------------------------------------------
+// Move assignment
+//----------------------------------------------------------------
+OsiRowCut &
+OsiRowCut::operator=(OsiRowCut &&rhs) noexcept
+{
+  if (this != &rhs) {
+    OsiCut::operator=(rhs);
+    row_ = std::move(rhs.row_);
+    lb_ = rhs.lb_;
+    ub_ = rhs.ub_;
+  }
+  return *this;
 }
 
 //----------------------------------------------------------------

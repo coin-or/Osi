@@ -34,6 +34,30 @@ OsiColCut::OsiColCut(const OsiColCut &source)
 }
 
 //----------------------------------------------------------------
+// Move constructor
+//----------------------------------------------------------------
+OsiColCut::OsiColCut(OsiColCut &&rhs) noexcept
+  : OsiCut(rhs)
+  , lbs_(std::move(rhs.lbs_))
+  , ubs_(std::move(rhs.ubs_))
+{
+}
+
+//----------------------------------------------------------------
+// Move assignment
+//----------------------------------------------------------------
+OsiColCut &
+OsiColCut::operator=(OsiColCut &&rhs) noexcept
+{
+  if (this != &rhs) {
+    OsiCut::operator=(rhs);
+    lbs_ = std::move(rhs.lbs_);
+    ubs_ = std::move(rhs.ubs_);
+  }
+  return *this;
+}
+
+//----------------------------------------------------------------
 // Clone
 //----------------------------------------------------------------
 OsiColCut *OsiColCut::clone() const

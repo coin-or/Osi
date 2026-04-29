@@ -123,8 +123,14 @@ public:
   /// Assignment operator
   OsiColCut &operator=(const OsiColCut &rhs);
 
+  /// Move assignment operator
+  OsiColCut &operator=(OsiColCut &&rhs) noexcept;
+
   /// Copy constructor
   OsiColCut(const OsiColCut &);
+
+  /// Move constructor
+  OsiColCut(OsiColCut &&rhs) noexcept;
 
   /// Default Constructor
   OsiColCut();

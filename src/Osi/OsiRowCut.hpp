@@ -67,6 +67,8 @@ public:
     bool testForDuplicateIndex = COIN_DEFAULT_VALUE_FOR_DUPLICATE);
   /// Set row elements from a packed vector
   OsiRowCut_inline void setRow(const CoinPackedVector &v);
+  /// Set row elements from a packed vector (move)
+  OsiRowCut_inline void setRow(CoinPackedVector &&v);
   /// Get row elements
   OsiRowCut_inline const CoinPackedVector &row() const;
   /// Get row elements for changing
@@ -165,8 +167,14 @@ public:
   /// Assignment operator
   OsiRowCut &operator=(const OsiRowCut &rhs);
 
+  /// Move assignment operator
+  OsiRowCut &operator=(OsiRowCut &&rhs) noexcept;
+
   /// Copy constructor
   OsiRowCut(const OsiRowCut &);
+
+  /// Move constructor
+  OsiRowCut(OsiRowCut &&rhs) noexcept;
 
   /// Clone
   virtual OsiRowCut *clone() const;
@@ -233,6 +241,10 @@ void OsiRowCut::setRow(int size,
 void OsiRowCut::setRow(const CoinPackedVector &v)
 {
   row_ = v;
+}
+void OsiRowCut::setRow(CoinPackedVector &&v)
+{
+  row_ = std::move(v);
 }
 
 //-------------------------------------------------------------------

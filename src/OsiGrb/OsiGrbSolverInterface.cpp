@@ -1554,7 +1554,7 @@ std::vector< double * > OsiGrbSolverInterface::getDualRays(int maxNumRays,
   const double minusone = -1.0;
   const char *sense = getRowSense();
 
-  const CoinPackedVectorBase **cols = new const CoinPackedVectorBase *[numrows];
+  const CoinPackedVectorBase **cols = new const CoinPackedVectorBase *[2 * numrows]; //ranged constraints are decomposed into two constraints
   int newcols = 0;
   for (i = 0; i < numrows; ++i) {
     switch (sense[i]) {
@@ -1580,6 +1580,8 @@ std::vector< double * > OsiGrbSolverInterface::getDualRays(int maxNumRays,
 
   solver.addCols(newcols, cols, clb, cub, obj);
   delete[] index;
+  for (int k = 0; k < newcols; ++k) 
+    delete cols[k];
   delete[] cols;
   delete[] clb;
   delete[] cub;

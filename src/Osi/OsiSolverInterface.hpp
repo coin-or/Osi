@@ -1838,6 +1838,11 @@ public:
   {
     return defaultHandler_;
   }
+  /// Set default handler flag (used to prevent handler override in initialSolve)
+  inline void setDefaultHandler(bool yesNo)
+  {
+    defaultHandler_ = yesNo;
+  }
   //@}
   //---------------------------------------------------------------------------
   /**@name Methods for dealing with discontinuities other than integers.

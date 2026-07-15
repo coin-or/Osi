@@ -86,9 +86,9 @@ void OsiPresolve::gutsOfDestroy()
   This code is intended to allow a known solution to be checked
   against presolve progress. debugSolution is set in CbcSolver
 */
+#endif
 double *debugSolution = NULL;
 int debugNumberColumns = -1;
-#endif 
 /* This version of presolve returns a pointer to a new presolved 
    model.  NULL if infeasible
 

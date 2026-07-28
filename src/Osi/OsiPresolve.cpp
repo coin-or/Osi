@@ -87,8 +87,8 @@ void OsiPresolve::gutsOfDestroy()
   against presolve progress. debugSolution is set in CbcSolver
 */
 #endif
-double *debugSolution = NULL;
-int debugNumberColumns = -1;
+OSILIB_EXPORT double *debugSolution = NULL;
+OSILIB_EXPORT int debugNumberColumns = -1;
 /* This version of presolve returns a pointer to a new presolved 
    model.  NULL if infeasible
 

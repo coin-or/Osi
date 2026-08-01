@@ -1922,9 +1922,19 @@ public:
 
   /*! \brief Sets a conflict graph
    *
-   *  Builds a conflict graph indicating relationship between binary variables
+   *  Builds a conflict graph indicating relationship between binary variables.
+   *
+   *  \param timeLimit absolute wall-clock deadline (CoinWallclockTime()
+   *         basis) for the graph-building scan, or -1.0 (default) to
+   *         disable it. On instances with many large/dense rows this scan
+   *         can otherwise take an arbitrarily long time with no way for a
+   *         caller with an overall time budget (e.g. CBC's -seconds limit)
+   *         to abort it. When the deadline is reached the graph is
+   *         finalized early with whatever was found so far (still sound,
+   *         just possibly incomplete) -- see CoinStaticConflictGraph::
+   *         timeLimitReached().
    */
-  void checkCGraph(CoinMessageHandler *msgh = NULL);
+  void checkCGraph(CoinMessageHandler *msgh = NULL, double timeLimit = -1.0);
 
   /*! \brief Returns the time (in CPU seconds) spent building the conflict graph */
   inline double getCGraphBuildTime() const { return cgraphBuildTime_; }

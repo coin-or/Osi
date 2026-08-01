@@ -3502,7 +3502,7 @@ void OsiSolverInterface::statistics(double &minimumNegative, double &maximumNega
   delete[] number;
 }
 
-void OsiSolverInterface::checkCGraph(CoinMessageHandler *msgh)
+void OsiSolverInterface::checkCGraph(CoinMessageHandler *msgh, double timeLimit)
 {
   if (getNumCols() == 0 || getNumRows() == 0) {
     return;
@@ -3526,13 +3526,14 @@ void OsiSolverInterface::checkCGraph(CoinMessageHandler *msgh)
                                         getMatrixByRow(), getRowSense(),
                                         getRightHandSide(), getRowRange(),
                                         primalTolerance, infinity, getColNames(),
-                                        getRowNames());
+                                        getRowNames(), timeLimit);
   timeCG = CoinCpuTime()-timeCG;
   cgraphBuildTime_ = timeCG;
   cgraphDensity_ = cgraph_->density();
 
   if (msgh && msgh->logLevel())
-    msgh->message(COIN_CGRAPH_INFO, messages()) << timeCG << cgraphDensity_*100.0 << ((timeCG>1.0) ? "!!" : "") << CoinMessageEol;
+    msgh->message(COIN_CGRAPH_INFO, messages()) << timeCG << cgraphDensity_*100.0
+      << (std::string((timeCG>1.0) ? "!!" : "") + (cgraph_->timeLimitReached() ? " (time limit reached, partial graph)" : "")) << CoinMessageEol;
 }
 /* Modify model to deal with indicators.
    startBigM are values in input.

@@ -17,6 +17,12 @@
 #include <cassert>
 #include <iostream>
 
+// Enable the debugSolution-based validation (checked against CglPreProcess.cpp's
+// matching DEBUG_PREPROCESS 2, see the comment there) so a known-good reference
+// solution can be tracked and checked through OsiPresolve's own column-count
+// changes, not just CglPreProcess's own internal passes.
+//#define DEBUG_PREPROCESS 2 -- disabled: causes false-positive exit(77) from nested (heuristic-driven) preProcessNonDefault calls that reuse a stale debugSolution mapping
+
 #include "CoinHelperFunctions.hpp"
 #include "CoinFinite.hpp"
 

@@ -3535,6 +3535,18 @@ void OsiSolverInterface::checkCGraph(CoinMessageHandler *msgh, double timeLimit)
     msgh->message(COIN_CGRAPH_INFO, messages()) << timeCG << cgraphDensity_*100.0
       << (std::string((timeCG>1.0) ? "!!" : "") + (cgraph_->timeLimitReached() ? " (time limit reached, partial graph)" : "")) << CoinMessageEol;
 }
+
+void OsiSolverInterface::setCGraph(CoinStaticConflictGraph *cg)
+{
+  if (cg == cgraph_)
+    return;
+
+  delete cgraph_;
+  cgraph_ = cg;
+  cgraphDensity_ = cg ? cg->density() : 0.0;
+  // Left as-is: no scan happened here, so reporting a build time would be a
+  // fiction. A caller that wants to time the load can do so itself.
+}
 /* Modify model to deal with indicators.
    startBigM are values in input.
    If bigM > 0.0 then use that,

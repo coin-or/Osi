@@ -1936,6 +1936,22 @@ public:
    */
   void checkCGraph(CoinMessageHandler *msgh = NULL, double timeLimit = -1.0);
 
+  /*! \brief Installs an externally supplied conflict graph, taking ownership
+   *
+   *  Replaces (and deletes) any graph this solver already holds, and refreshes
+   *  the cached density. Unlike checkCGraph() this never builds anything: it is
+   *  for handing over a graph that was constructed elsewhere -- in particular
+   *  one restored from a file by CoinStaticConflictGraph::load(), where the
+   *  point is to reproduce a specific earlier graph rather than to derive a
+   *  fresh one from the current matrix.
+   *
+   *  The caller is asserting that \p cg belongs to this model's column space.
+   *  Nothing checks it: checkCGraph() only rebuilds when the column count stops
+   *  matching, so a graph of the right size but the wrong provenance will be
+   *  used as-is. Pass NULL to simply drop the current graph.
+   */
+  void setCGraph(CoinStaticConflictGraph *cg);
+
   /*! \brief Returns the time (in CPU seconds) spent building the conflict graph */
   inline double getCGraphBuildTime() const { return cgraphBuildTime_; }
 

@@ -9,7 +9,7 @@
     This source contains a list of problem features that can be extracted from a Mixed-Integer Linear 
     Program (MIP) from an OsiSolverInterface object. All features are numeric and stored as double.
     All features are extracted in at most O(nz) time, where nz is the number of non-zeros in the 
-    constraint matrix. Currently 207 features are extracted.
+    constraint matrix. Currently 229 features are extracted.
 
     Some details on algorithm recommendation for CLP can be found in:
 
@@ -78,6 +78,13 @@ enum OsiFeature
   OFpercRowsVarBnd, //< percentage of constraints with only one variable
   OFrowsBinPacking, //< number of knapsack constraints, e.g. c1*x1 + c2*x2 ... <= b, cj and b integer, b >= 2, at least one cj >= 2 (binary vars)
   OFpercRowsBinPacking, //< percentage of knapsack constraints, e.g. c1*x1 + c2*x2 ... <= b, cj and b integer, b >= 2, at least one cj >= 2 (binary vars)
+  OFrowsHubImplication, //< number of "hub implication" rows: all binary, exactly one coefficient
+                         //< of the minority sign (like BinPacking) but rhs < 1.1 -- the shape of
+                         //< "x1 + x2 + ... + xk <= M*y" (i.e. "x1 OR x2 OR ... -> y"), written
+                         //< with y moved to the LHS as a single negated term and rhs folded to
+                         //< (typically) 0. BinPacking's own rhs >= 1.1 guard leaves this common
+                         //< form (rhs generally 0) uncounted, so it needs its own bucket.
+  OFpercRowsHubImplication, //< percentage of hub implication rows
   OFrowsMixedBin, //< constraint that involves binary and continuous variables
   OFpercRowsMixedBin, //< percentage constraint that involves binary and continuous variables
   OFrowsGenInt,  //< constraints with some general integer (not binary) variables
@@ -114,6 +121,8 @@ enum OsiFeature
   OFnzPercRowsVarBnd,
   OFnzRowsBinPacking,
   OFnzPercRowsBinPacking,
+  OFnzRowsHubImplication,
+  OFnzPercRowsHubImplication,
   OFnzRowsMixedBin,
   OFnzPercRowsMixedBin,
   OFnzRowsGenInt,
@@ -170,6 +179,46 @@ enum OsiFeature
   OFcolNzMax,
   OFcolNzAvg,
   OFcolNzStdDev,
+
+  /* statistics on the *intra-row* coefficient dynamic range, i.e. for each
+     row individually, (largest abs coefficient in that row) / (smallest
+     abs coefficient in that row). This is different from OFaRatioLSA, which
+     is a single ratio computed over *all* matrix coefficients globally: a
+     matrix can have a modest global ratio while still containing a handful
+     of rows that mix, say, a coefficient of 1 with a coefficient of 40000 --
+     exactly the kind of row that tends to make Clp's scaling (geometric in
+     particular, which is what "-scaling automatic" tries first) choose poor
+     scale factors and destabilize the simplex, even though no single global
+     statistic looks alarming. */
+  OFrowRatioLSAMax, //< largest per-row coefficient ratio (max/min |coef|) over all rows
+  OFrowRatioLSAAvg, //< average per-row coefficient ratio over all rows
+  OFrowRatioLSAStdDev, //< std. dev. of the per-row coefficient ratio
+  OFnRowsHighRatio, //< number of rows whose per-row coefficient ratio >= 1e2
+  OFpercRowsHighRatio, //< percentage of rows whose per-row coefficient ratio >= 1e2
+  OFnRowsSevereRatio, //< number of rows whose per-row coefficient ratio >= 1e4
+  OFpercRowsSevereRatio, //< percentage of rows whose per-row coefficient ratio >= 1e4
+
+  /* same idea, but per-column (largest/smallest |coef| within one column) */
+  OFcolRatioLSAMax, //< largest per-column coefficient ratio (max/min |coef|) over all columns
+  OFcolRatioLSAAvg, //< average per-column coefficient ratio over all columns
+  OFcolRatioLSAStdDev, //< std. dev. of the per-column coefficient ratio
+  OFnColsHighRatio, //< number of columns whose per-column coefficient ratio >= 1e2
+  OFpercColsHighRatio, //< percentage of columns whose per-column coefficient ratio >= 1e2
+  OFnColsSevereRatio, //< number of columns whose per-column coefficient ratio >= 1e4
+  OFpercColsSevereRatio, //< percentage of columns whose per-column coefficient ratio >= 1e4
+
+  /* joint density x coefficient-range indicator: rows/columns that are both
+     dense (nz >= 128, matching the existing "Least128Nz" bucket) *and*
+     badly scaled internally (per-row/per-column ratio >= 1e2) are the
+     riskiest for the simplex, since they interact numerically with many
+     other rows/columns in the same basis. A handful of instances can hide
+     this combination -- e.g. a few dense, wide-range rows among thousands
+     of well-scaled sparse +-1 rows -- so it is tracked explicitly rather
+     than relying on it showing up in the (averaged/maxed) statistics above. */
+  OFnDenseHighRatioRows, //< rows with nz >= 128 AND per-row ratio >= 1e2
+  OFpercDenseHighRatioRows,
+  OFnDenseHighRatioCols, //< columns with nz >= 128 AND per-column ratio >= 1e2
+  OFpercDenseHighRatioCols,
 
   // constraints with nz less or equal
   OFrowsLess4Nz,

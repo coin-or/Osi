@@ -28,6 +28,40 @@ typedef std::unordered_set<double> uSetD;
 // store at most this number of different values
 #define MAX_DIFF_VALUES 4096 
 
+// Streaming accumulator for a per-row/per-column coefficient-ratio
+// distribution (max/min |coef| within that single row or column). Uses
+// Welford's online algorithm so no extra pass or storage over the O(rows)
+// or O(cols) ratio values is needed, keeping OsiFeatures::compute() O(nz).
+class RatioAcc {
+    public:
+        RatioAcc() : maxV(0.0), mean(0.0L), m2(0.0L), count(0), nHigh(0), nSevere(0) { }
+
+        void add( double ratio ) {
+            ++count;
+            const long double delta = ((long double)ratio) - mean;
+            mean += delta / count;
+            const long double delta2 = ((long double)ratio) - mean;
+            m2 += delta * delta2;
+            if (ratio > maxV)
+                maxV = ratio;
+            if (ratio >= 1e2)
+                ++nHigh;
+            if (ratio >= 1e4)
+                ++nSevere;
+        }
+
+        double avg() const { return (double) mean; }
+        double stddev() const { return count > 0 ? (double) sqrtl(m2 / count) : 0.0; }
+
+        double maxV;
+        unsigned int nHigh;   // ratio >= 1e2
+        unsigned int nSevere; // ratio >= 1e4
+    private:
+        long double mean;
+        long double m2;
+        unsigned int count;
+};
+
 class Summary {
     public:
         Summary() :
@@ -163,6 +197,8 @@ const static char feat_names[OFCount][STR_SIZE] = {
     "rPercVarBnd",
     "rBinPacking",
     "rPercBinPacking",
+    "rHubImplication",
+    "rPercHubImplication",
     "rMixedBin",
     "rPercMixedBin",
     "rGenInt",
@@ -198,6 +234,8 @@ const static char feat_names[OFCount][STR_SIZE] = {
     "rNzPercRowsVarBnd", 
     "rNzRowsBinPacking", 
     "rNzPercRowsBinPacking", 
+    "rNzRowsHubImplication",
+    "rNzPercRowsHubImplication",
     "rNzRowsMixedBin", 
     "rNzPercRowsMixedBin", 
     "rNzRowsGenInt", 
@@ -249,6 +287,27 @@ const static char feat_names[OFCount][STR_SIZE] = {
     "colNzMax",
     "colNzAvg",
     "colNzStdDev",
+
+    "rowRatioLSAMax",
+    "rowRatioLSAAvg",
+    "rowRatioLSAStdDev",
+    "nRowsHighRatio",
+    "percRowsHighRatio",
+    "nRowsSevereRatio",
+    "percRowsSevereRatio",
+
+    "colRatioLSAMax",
+    "colRatioLSAAvg",
+    "colRatioLSAStdDev",
+    "nColsHighRatio",
+    "percColsHighRatio",
+    "nColsSevereRatio",
+    "percColsSevereRatio",
+
+    "nDenseHighRatioRows",
+    "percDenseHighRatioRows",
+    "nDenseHighRatioCols",
+    "percDenseHighRatioCols",
 
     "rowsLess4Nz",
     "rowsLess8Nz",
@@ -506,6 +565,17 @@ void OsiFeatures::compute(double *features, OsiSolverInterface *solver) {
                         features[OFrowsBinPacking]++;
                         features[OFnzRowsBinPacking] += nzRow;
                     }
+                } else {
+                    // Same "exactly one coefficient of the minority sign" shape as
+                    // BinPacking, just with rhs < 1.1 (typically 0) instead of >= 1.1 --
+                    // i.e. "x1 + x2 + ... + xk <= M*y" written as
+                    // "x1 + x2 + ... + xk - M*y <= 0" ("x1 OR x2 OR ... -> y"). BinPacking's
+                    // rhs >= 1.1 guard otherwise leaves this common form completely
+                    // unclassified (falls through to no bucket at all).
+                    if (summRow.nNegVal == 1 && nzRow >= 2) {
+                        features[OFrowsHubImplication]++;
+                        features[OFnzRowsHubImplication] += nzRow;
+                    }
                 }
             }
 
@@ -620,6 +690,7 @@ void OsiFeatures::compute(double *features, OsiSolverInterface *solver) {
     features[OFpercRowsPrec] = (features[OFrowsPrec] / (double)solver->getNumRows())*100.0;
     features[OFpercRowsVarBnd] = (features[OFrowsVarBnd] / (double)solver->getNumRows())*100.0;
     features[OFpercRowsBinPacking] = (features[OFrowsBinPacking] / (double)solver->getNumRows())*100.0;
+    features[OFpercRowsHubImplication] = (features[OFrowsHubImplication] / (double)solver->getNumRows())*100.0;
     features[OFpercRowsMixedBin] = (features[OFrowsMixedBin] / (double)solver->getNumRows())*100.0;
     features[OFpercRowsGenInt] = (features[OFrowsGenInt] / (double)solver->getNumRows())*100.0;
     features[OFpercRowsFlowBin] = (features[OFpercRowsFlowBin] / (double)solver->getNumRows())*100.0;
@@ -638,6 +709,7 @@ void OsiFeatures::compute(double *features, OsiSolverInterface *solver) {
     features[OFnzPercRowsPrec] = (features[OFnzRowsPrec] / features[OFnz])*100.0;
     features[OFnzPercRowsVarBnd] = (features[OFnzRowsVarBnd] / features[OFnz])*100.0;
     features[OFnzPercRowsBinPacking] = (features[OFnzRowsBinPacking] / features[OFnz])*100.0;
+    features[OFnzPercRowsHubImplication] = (features[OFnzRowsHubImplication] / features[OFnz])*100.0;
     features[OFnzPercRowsMixedBin] = (features[OFnzRowsMixedBin] / features[OFnz])*100.0;
     features[OFnzPercRowsGenInt] = (features[OFnzRowsGenInt] / features[OFnz])*100.0;
     features[OFnzPercRowsFlowBin] = (features[OFnzRowsFlowBin] / features[OFnz])*100.0;

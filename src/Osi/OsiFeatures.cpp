@@ -512,10 +512,33 @@ void OsiFeatures::compute(double *features, OsiSolverInterface *solver) {
             const bool allMinusOnes = dbl_equal(minaRow, -1.0) && dbl_equal(maxaRow, -1.0);
             // Normalise negated rows: flip sense and negate rhs so the rest of the logic
             // only needs to handle the canonical (+1 coefs) form.
-            const char effectiveSense = allMinusOnes
+            char effectiveSense = allMinusOnes
                 ? (sense[row] == 'L' ? 'G' : (sense[row] == 'G' ? 'L' : sense[row]))
                 : sense[row];
-            const double effectiveRhs = allMinusOnes ? -rhs[row] : rhs[row];
+            double effectiveRhs = allMinusOnes ? -rhs[row] : rhs[row];
+
+            // Resolve ranged ('R') rows where one bound is made redundant by binary variables
+            if (effectiveSense == 'R') {
+                const double rl = solver->getRowLower()[row];
+                const double ru = solver->getRowUpper()[row];
+                if (allPlusOnes) {
+                    if (rl <= 1e-12 && dbl_equal(ru, 1.0)) {
+                        effectiveSense = 'L';
+                        effectiveRhs = 1.0;
+                    } else if (dbl_equal(rl, 1.0) && ru >= nzRow - 1e-12) {
+                        effectiveSense = 'G';
+                        effectiveRhs = 1.0;
+                    }
+                } else if (allMinusOnes) {
+                    if (ru >= -1e-12 && dbl_equal(rl, -1.0)) {
+                        effectiveSense = 'L';
+                        effectiveRhs = 1.0;
+                    } else if (dbl_equal(ru, -1.0) && rl <= -(nzRow - 1e-12)) {
+                        effectiveSense = 'G';
+                        effectiveRhs = 1.0;
+                    }
+                }
+            }
 
             if ( allPlusOnes || allMinusOnes ) {
                 if (dbl_equal(effectiveRhs, 1.0)) {

@@ -386,9 +386,10 @@ static long computeGcd(long a, long b) {
   // Negating via unsigned long keeps the reduction itself well defined (plain
   // -LONG_MIN overflows); the only magnitude that could not be converted back
   // is 2^63, which requires both arguments to be LONG_MIN.
-  unsigned long ua = (a < 0) ? -static_cast< unsigned long >(a)
+  // (0UL - x rather than -x, which MSVC rejects with /sdl, warning C4146)
+  unsigned long ua = (a < 0) ? 0UL - static_cast< unsigned long >(a)
                              : static_cast< unsigned long >(a);
-  unsigned long ub = (b < 0) ? -static_cast< unsigned long >(b)
+  unsigned long ub = (b < 0) ? 0UL - static_cast< unsigned long >(b)
                              : static_cast< unsigned long >(b);
   // This is the standard Euclidean algorithm for gcd
   unsigned long remainder = 1;

@@ -36,7 +36,7 @@ The following is a list of derived Osi classes:
 |[CPLEX](https://www.ibm.com/analytics/cplex-optimizer)|OsiCpx| |
 |[DyLP](https://www.github.com/coin-or/DyLP)|OsiDylp| |
 |[GLPK](http://www.gnu.org/software/glpk/glpk.html)|OsiGlpk| Glpk |
-|[Gurobi](http://www.gurobi.com)|OsiGrb| |
+|[Gurobi](https://www.gurobi.com)|OsiGrb| |
 |[HiGHS](https://www.github.com/coin-or/HiGHS)|OsiHiGHS| under development |
 |[MOSEK](http://www.mosek.com)|OsiMsk| |
 |[SoPlex](http://soplex.zib.de)|OsiSpx| SoPlex < 4.0 |

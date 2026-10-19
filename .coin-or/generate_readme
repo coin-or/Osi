@@ -18,6 +18,20 @@ popd > /dev/null
 
 create_variables $SCRIPT_DIR/config.yml
 
+# Binary packages of this project that make_build_info lists (see
+# make_binary_packages in coinbrew's scripts/generate_readme)
+Package_Repology="coin-or-osi"
+Package_Arch="coin-or-osi"
+Package_Debian="coinor-libosi-dev"
+Package_Fedora="coin-or-Osi coin-or-Osi-devel"
+Package_FreeBSD="math/osi"
+Package_Homebrew="osi"
+Package_MSYS2="mingw-w64-ucrt-x86_64-coin-or-osi"
+Package_Conda="coin-or-osi"
+
+# The Doxygen documentation is published online
+Doxygen_URL=https://coin-or.github.io/$Description_Slug/Doxygen
+
 make_header
 
 echo "Osi (*O*pen *S*olver *I*nterface) provides an abstract base class to a generic linear programming (LP) solver, along with derived classes for specific solvers.

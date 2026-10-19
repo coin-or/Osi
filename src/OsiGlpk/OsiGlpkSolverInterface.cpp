@@ -375,11 +375,21 @@ void OGSI::branchAndBound()
   /*
   Assuming we have integer variables in the model, call glp_intopt.
 
-  glp_intopt does not require an optimal LP solution as a starting point, so
-  we can call it directly.
+  With the presolver, glp_intopt does not require an optimal LP solution as
+  a starting point. Without it (the default), glp_intopt needs an optimal
+  basic solution of the LP relaxation and fails otherwise (GLP_EROOT), so
+  solve the relaxation first. (lpx_intopt, which glp_intopt replaced, always
+  used the presolver.) If the relaxation has no optimal solution, the MIP
+  doesn't either, and initialSolve has set the status.
 */
   if (glp_get_num_int(model)) {
     int err = GLP_EFAIL;
+
+    if (iocp->presolve == GLP_OFF && glp_get_status(model) != GLP_OPT) {
+      initialSolve();
+      if (glp_get_status(model) != GLP_OPT)
+        return;
+    }
 
     err = glp_intopt(model,iocp);
     /*

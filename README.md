@@ -36,7 +36,7 @@ The following is a list of derived Osi classes:
 |[CPLEX](https://www.ibm.com/analytics/cplex-optimizer)|OsiCpx| |
 |[DyLP](https://www.github.com/coin-or/DyLP)|OsiDylp| |
 |[GLPK](http://www.gnu.org/software/glpk/glpk.html)|OsiGlpk| Glpk |
-|[Gurobi](http://www.gurobi.com)|OsiGrb| |
+|[Gurobi](https://www.gurobi.com)|OsiGrb| |
 |[MOSEK](http://www.mosek.com)|OsiMsk| |
 |[SoPlex](http://soplex.zib.de)|OsiSpx| SoPlex < 4.0 |
 |[SYMPHONY](https://www.github.com/coin-or/SYMPHONY)|OsiSym| |
@@ -50,7 +50,7 @@ Within COIN-OR, Osi is used by [Cgl](https://www.github.com/coin-or/Cgl), [Cbc](
 
 The main project managers are Lou Hafer (@LouHafer) and Matt Saltzmann (@mjsaltzman).
 
-An incomplete list of recent changes to Osi are found in the [CHANGELOG](Osi/CHANGELOG)
+An incomplete list of recent changes to Osi are found in the [CHANGELOG](CHANGELOG)
 
 
 Osi is written in C++ and is released as open source under the [Eclipse Public License 2.0](http://www.opensource.org/licenses/EPL-2.0).

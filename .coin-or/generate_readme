@@ -18,6 +18,20 @@ popd > /dev/null
 
 create_variables $SCRIPT_DIR/config.yml
 
+# Binary packages of this project that make_build_info lists (see
+# make_binary_packages in coinbrew's scripts/generate_readme)
+Package_Repology="coin-or-osi"
+Package_Arch="coin-or-osi"
+Package_Debian="coinor-libosi-dev"
+Package_Fedora="coin-or-Osi coin-or-Osi-devel"
+Package_FreeBSD="math/osi"
+Package_Homebrew="osi"
+Package_MSYS2="mingw-w64-ucrt-x86_64-coin-or-osi"
+Package_Conda="coin-or-osi"
+
+# The Doxygen documentation is published online
+Doxygen_URL=https://coin-or.github.io/$Description_Slug/Doxygen
+
 make_header
 
 echo "Osi (*O*pen *S*olver *I*nterface) provides an abstract base class to a generic linear programming (LP) solver, along with derived classes for specific solvers.
@@ -42,7 +56,7 @@ The following is a list of derived Osi classes:
 |[CPLEX](https://www.ibm.com/analytics/cplex-optimizer)|OsiCpx| |
 |[DyLP](https://www.github.com/coin-or/DyLP)|OsiDylp| |
 |[GLPK](http://www.gnu.org/software/glpk/glpk.html)|OsiGlpk| Glpk |
-|[Gurobi](http://www.gurobi.com)|OsiGrb| |
+|[Gurobi](https://www.gurobi.com)|OsiGrb| |
 |[MOSEK](http://www.mosek.com)|OsiMsk| |
 |[SoPlex](http://soplex.zib.de)|OsiSpx| SoPlex < 4.0 |
 |[SYMPHONY](https://www.github.com/coin-or/SYMPHONY)|OsiSym| |
@@ -56,7 +70,7 @@ Within COIN-OR, Osi is used by [Cgl](https://www.github.com/coin-or/Cgl), [Cbc](
 
 The main project managers are Lou Hafer (@LouHafer) and Matt Saltzmann (@mjsaltzman).
 
-An incomplete list of recent changes to Osi are found in the [CHANGELOG](Osi/CHANGELOG)
+An incomplete list of recent changes to Osi are found in the [CHANGELOG](CHANGELOG)
 "
 
 make_build_info

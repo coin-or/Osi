@@ -14,6 +14,16 @@ _This file is auto-generated from [config.yml](.coin-or/config.yml) using the
 To make changes, please edit [config.yml](.coin-or/config.yml) or the generation scripts
 [here](.coin-or/generate_readme) and [here](https://github.com/coin-or/coinbrew/blob/master/scripts/generate_readme)._
 
+## Video overview
+
+[![Watch the Osi developer overview](.github/media/repo-overview.jpg)](https://www.ngram.com/embed/osi-one-interface-for-multiple-lp-solvers-99dadef1403c49668c82d8f8d94cf145)
+
+An 88-second tour of Osi's solver interface, adapters, build path, and places to start contributing. [Watch the video](https://www.ngram.com/embed/osi-one-interface-for-multiple-lp-solvers-99dadef1403c49668c82d8f8d94cf145).
+
+[![Create a video like this for your repo](https://img.shields.io/badge/Create_a_video_like_this_for_your_repo-ngram-0D0D0D)](https://github.com/apps/ngram-ai/)
+
+<sub>Video created with ngram.</sub>
+
 Osi (*O*pen *S*olver *I*nterface) provides an abstract base class to a generic linear programming (LP) solver, along with derived classes for specific solvers.
 Many applications may be able to use the Osi to insulate themselves from a specific LP solver.
 That is, programs written to the OSI standard may be linked to any solver with an OSI interface and should produce correct results.

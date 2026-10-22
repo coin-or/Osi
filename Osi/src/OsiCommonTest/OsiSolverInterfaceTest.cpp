@@ -36,12 +36,12 @@ If you work on this code, please keep these conventions in mind:
 
   * This unit test is meant as a certification that OsiXXX correctly implements
     the OSI API specification. Don't step around it!
-  
+
     If OsiXXX is not capable of meeting a particular requirement and you edit
     the unit test code to avoid the test, don't just sweep it under the rug!
     Print a failure message saying the test has been skipped, or something
     else informative.
-    
+
     OsiVol is the worst offender for this (the underlying algorithm is not
     simplex and imposes serious limitations on the type of lp that vol can
     handle). Any simplex-oriented solver should *NOT* be exempted from any
@@ -1462,7 +1462,11 @@ void testNames(const OsiSolverInterface *emptySi, std::string fn)
   // std::cout << "Testing lazy names from MPS input file." << std::endl ;
   OSIUNITTEST_ASSERT_SEVERITY_EXPECTED(si->setIntParam(OsiNameDiscipline, 1) == true, recognisesOsiNames = false, solverName, "testNames: switch to lazy names", TestOutcome::NOTE, false);
 
-  OSIUNITTEST_ASSERT_ERROR(si->readMps(fn.c_str(), "mps") == 0, delete si; return, solverName, "testNames: read MPS");
+  const int error = si->readMps(fn.c_str(), "mps");
+  if (error) {
+    delete si;
+    return;
+  }
 
   OsiSolverInterface::OsiNameVec rowNames;
   int rowNameCnt;
@@ -2219,7 +2223,7 @@ void testObjFunctions(const OsiSolverInterface *emptySi,
 	  c1	  lower		  basic
 	  c2	  upper		  basic
 	  c3	  basic		  lower
-  
+
 */
 
 void testArtifStatus(const OsiSolverInterface *emptySi)
@@ -2464,7 +2468,7 @@ void testReducedCosts(const OsiSolverInterface *emptySi,
 /*
   Test the writeMps and writeMpsNative functions by loading a problem,
   writing it out to a file, reloading it, and solving.
-  
+
   Implicitly assumes readMps has already been tested.
 
   fn should be the path to exmip1.
@@ -2492,7 +2496,7 @@ void testWriteMps(const OsiSolverInterface *emptySi, std::string fn)
   /*
   Write a test output file with writeMpsNative, then read and solve. See if
   we get the right answer.
-  
+
   FIXME: Really, this test should verify values --- Vol could participate in
   that (lh, 070726).
 */
@@ -3430,7 +3434,7 @@ void testAddToEmptySystem(const OsiSolverInterface *emptySi,
   under test. OsiPresolve simply calls the underlying OsiXXX when it needs to
   solve a model. All the work involved with presolve and postsolve transforms
   is handled in OsiPresolve.
-  
+
   The problems are a selection of problems from Data/Sample. In particular,
   e226 is in the list by virtue of having a constant offset (7.113) defined
   for the objective, and p0201 is in the list because presolve (as of 071015)
@@ -3902,7 +3906,7 @@ void OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface *emptySi,
   std::string fn = mpsDir + "exmip1";
   OsiSolverInterface *exmip1Si = emptySi->clone();
   assert(exmip1Si != NULL);
-  OSIUNITTEST_ASSERT_ERROR(exmip1Si->readMps(fn.c_str(), "mps") == 0, return, *exmip1Si, "read MPS file");
+  const int error = exmip1Si->readMps(fn.c_str(), "mps");
   /*
   Test that the solver correctly handles row and column names.
 */
@@ -3921,7 +3925,7 @@ void OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface *emptySi,
 
   // Test that problem was loaded correctly
 
-  {
+  if (!error) {
     int nc = exmip1Si->getNumCols();
     int nr = exmip1Si->getNumRows();
     OSIUNITTEST_ASSERT_ERROR(nc == 8, return, *exmip1Si, "problem read correctly: number of columns");
@@ -4007,7 +4011,7 @@ void OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface *emptySi,
   }
 
   // Test matrixByCol method
-  {
+  if (!error) {
     const CoinPackedMatrix *goldmtx = BuildExmip1Mtx();
     OsiSolverInterface &si = *exmip1Si->clone();
     CoinPackedMatrix sm = *si.getMatrixByCol();
@@ -4027,7 +4031,7 @@ void OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface *emptySi,
   }
 
   // Test clone
-  {
+  if (!error) {
     OsiSolverInterface *si2;
     int ad = 13579;
     {
@@ -4128,7 +4132,7 @@ void OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface *emptySi,
   // end of clone testing
 
   // Test apply cuts method
-  {
+  if (!error) {
     OsiSolverInterface &im = *(exmip1Si->clone());
     OsiCuts cuts;
 
@@ -4287,7 +4291,9 @@ void OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface *emptySi,
   yet properly counting errors.
   -- lh, 100826 --
 */
-  testSettingSolutions(*exmip1Si);
+  if (!error) {
+    testSettingSolutions(*exmip1Si);
+  }
 
   // Test column type methods
   // skip for vol since it does not support this function
@@ -4376,17 +4382,23 @@ void OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface *emptySi,
   problem loaded. This routine also puts some stress on cloning --- it creates
   nine simultaneous clones of the OSI under test.
 */
-  testLoadAndAssignProblem(emptySi, exmip1Si);
-  testAddToEmptySystem(emptySi, volSolverInterface);
+  if (!error) {
+    testLoadAndAssignProblem(emptySi, exmip1Si);
+    testAddToEmptySystem(emptySi, volSolverInterface);
+  }
   /*
   Test write methods.
 */
-  testWriteMps(emptySi, fn);
-  testWriteLp(emptySi, fn);
+  if (!error) {
+    testWriteMps(emptySi, fn);
+    testWriteLp(emptySi, fn);
+  }
   /*
   Test the simplex portion of the OSI interface.
 */
-  testSimplexAPI(emptySi, mpsDir);
+  if (!error) {
+    testSimplexAPI(emptySi, mpsDir);
+  }
 
   // Add a Laci suggested test case
   // Load in a problem as column ordered matrix,
@@ -4395,7 +4407,7 @@ void OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface *emptySi,
   // extract the row ordered copy again and test whether it's ok.
   // (the same can be done with reversing the role
   //  of row and column ordered.)
-  {
+  if (!error) {
     OsiSolverInterface *si = emptySi->clone();
 
     si->loadProblem(
@@ -4440,7 +4452,7 @@ void OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface *emptySi,
 
     delete si;
   }
-  {
+  if (!error) {
     OsiSolverInterface *si = emptySi->clone();
 
     si->loadProblem(
@@ -4500,7 +4512,7 @@ void OsiSolverInterfaceCommonUnitTest(const OsiSolverInterface *emptySi,
 
   delete exmip1Si;
 
-  {
+  if (!error) {
     // Testing parameter settings
     OsiSolverInterface *si = emptySi->clone();
     int i;

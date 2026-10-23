@@ -1922,9 +1922,35 @@ public:
 
   /*! \brief Sets a conflict graph
    *
-   *  Builds a conflict graph indicating relationship between binary variables
+   *  Builds a conflict graph indicating relationship between binary variables.
+   *
+   *  \param timeLimit absolute wall-clock deadline (CoinWallclockTime()
+   *         basis) for the graph-building scan, or -1.0 (default) to
+   *         disable it. On instances with many large/dense rows this scan
+   *         can otherwise take an arbitrarily long time with no way for a
+   *         caller with an overall time budget (e.g. CBC's -seconds limit)
+   *         to abort it. When the deadline is reached the graph is
+   *         finalized early with whatever was found so far (still sound,
+   *         just possibly incomplete) -- see CoinStaticConflictGraph::
+   *         timeLimitReached().
    */
-  void checkCGraph(CoinMessageHandler *msgh = NULL);
+  void checkCGraph(CoinMessageHandler *msgh = NULL, double timeLimit = -1.0);
+
+  /*! \brief Installs an externally supplied conflict graph, taking ownership
+   *
+   *  Replaces (and deletes) any graph this solver already holds, and refreshes
+   *  the cached density. Unlike checkCGraph() this never builds anything: it is
+   *  for handing over a graph that was constructed elsewhere -- in particular
+   *  one restored from a file by CoinStaticConflictGraph::load(), where the
+   *  point is to reproduce a specific earlier graph rather than to derive a
+   *  fresh one from the current matrix.
+   *
+   *  The caller is asserting that \p cg belongs to this model's column space.
+   *  Nothing checks it: checkCGraph() only rebuilds when the column count stops
+   *  matching, so a graph of the right size but the wrong provenance will be
+   *  used as-is. Pass NULL to simply drop the current graph.
+   */
+  void setCGraph(CoinStaticConflictGraph *cg);
 
   /*! \brief Returns the time (in CPU seconds) spent building the conflict graph */
   inline double getCGraphBuildTime() const { return cgraphBuildTime_; }
